@@ -347,6 +347,22 @@ internal static class PluginRuntimeLog
   }
 
   /// <summary>
+  ///     Writes a warning log line with exception details.
+  /// </summary>
+  /// <param name="exception">The exception to include in the log entry.</param>
+  /// <param name="message">The message to write.</param>
+  public static void Warning(Exception exception, string message)
+  {
+    var pluginLog = Echoglossian.PluginLog;
+    if (pluginLog == null)
+    {
+      return;
+    }
+
+    pluginLog.Warning(exception, message);
+  }
+
+  /// <summary>
   ///     Writes an error log line.
   /// </summary>
   /// <param name="message">The message to write.</param>

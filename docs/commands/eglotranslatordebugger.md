@@ -22,6 +22,10 @@ create hot-path per-request logs.
 It also exposes a `Clear Dialogue Sessions` action that clears the retained
 runtime-only `Talk` / `BattleTalk` history used for context-aware translation.
 
+It now also shows the latest visible story-surface snapshot for supported
+story-facing surfaces and can hand the operator off directly to
+`/eglodbmanager`.
+
 When the dialogue-family LLM override is enabled, the window also shows:
 
 - the current primary engine
@@ -30,18 +34,26 @@ When the dialogue-family LLM override is enabled, the window also shows:
 
 ## Operator Action
 
-The window also exposes an explicit `Retranslate Visible Dialogue And Persist`
-button.
+The window also exposes an explicit
+`Retranslate Visible Story Text And Persist` button.
 
-Current first-pass scope:
+Current scope:
 
 - `Talk`
 - `BattleTalk`
+- `TalkSubtitle`
+- `CutSceneSelectString`
+- `TextGimmickHint`
 
 Behavior:
 
-- forces a fresh live translation for the currently visible dialogue line
-- persists the refreshed result through the dialogue DB path
-- prefers the refreshed row on later lookups by making it the newest matching
-  dialogue row
-- keeps session-aware runtime dialogue context out of the persisted row
+- forces a fresh live translation for the currently visible story-facing text
+- persists the refreshed result through the owning DB path when allowed
+- shows the latest visible provenance snapshot in the debugger
+- can open the owning table in `/eglodbmanager`
+- keeps runtime-only dialogue-context output out of canonical persisted rows
+
+## Related Guide
+
+For the shared debugger-to-DB-manager flow and extension rules, see
+[`docs/story-surface-debugger-db-manager-guide.md`](../story-surface-debugger-db-manager-guide.md).

@@ -13,7 +13,9 @@ namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 ///     handler so it can reuse the same cache-first, async translation pipeline as
 ///     Talk and BattleTalk while keeping the subtitle overlay independent.
 /// </summary>
-public sealed class TalkSubtitleHandler : IAddonTranslationHandler
+public sealed class TalkSubtitleHandler :
+    IAddonTranslationHandler,
+    IVisibleDialogueRetranslationHandler
 {
   private const string TalkSubtitleAddonName = "TalkSubtitle";
   private const int TextNodeId = 2;
@@ -99,6 +101,157 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
             handler(evt, args);
           }
         }));
+  }
+
+  /// <inheritdoc />
+  public async Task<VisibleDialogueRetranslationResult>
+      RetranslateVisibleTextAndPersistAsync()
+  {
+    const VisibleStorySurfaceKind surface = VisibleStorySurfaceKind.TalkSubtitle;
+    var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
+    string originalText;
+    int requestId;
+
+    lock (this.stateGate)
+    {
+      originalText = this.currentOriginalText;
+      if (string.IsNullOrWhiteSpace(originalText))
+      {
+        return new VisibleDialogueRetranslationResult(
+            false,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+      }
+
+      this.activeRequestId++;
+      requestId = this.activeRequestId;
+      this.currentTranslatedText = string.Empty;
+      this.currentReplacementText = string.Empty;
+      this.translationInFlight = true;
+    }
+
+    try
+    {
+      var translatedText = await this.translationService.TranslateAsync(
+          originalText,
+          ClientStateInterface.ClientLanguage.Humanize(),
+          LangDict[LanguageInt].Code,
+          TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              originalText,
+              translatedText,
+              ClientStateInterface.ClientLanguage.Humanize(),
+              LangDict[LanguageInt].Code))
+      {
+        lock (this.stateGate)
+        {
+          if (requestId == this.activeRequestId)
+          {
+            this.translationInFlight = false;
+          }
+        }
+
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoUsableTranslationMessage(surface));
+      }
+
+      var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
+      var translatedTalkSubtitle = new TalkSubtitleMessage(
+          originalText,
+          ClientStateInterface.ClientLanguage.Humanize(),
+          translatedText,
+          LangDict[LanguageInt].Code,
+          dialogueTranslationEngine,
+          DateTime.Now,
+          DateTime.Now);
+      var persistenceResult = await this.insertTalkSubtitleMessageAsync(
+          translatedTalkSubtitle).ConfigureAwait(false);
+      var persistenceSucceeded = !persistenceResult.StartsWith(
+          "ErrorSavingData:",
+          StringComparison.Ordinal) &&
+                                 !string.Equals(
+                                     persistenceResult,
+                                     "No data to save.",
+                                     StringComparison.Ordinal);
+      var replacementText = this.NormalizeForReplacement(translatedText);
+      var sourceChangedBeforeApply = false;
+      lock (this.stateGate)
+      {
+        sourceChangedBeforeApply = requestId != this.activeRequestId;
+        if (!sourceChangedBeforeApply)
+        {
+          this.translationInFlight = false;
+          this.currentTranslatedText = translatedText;
+          this.currentReplacementText = replacementText;
+        }
+      }
+
+      if (!sourceChangedBeforeApply)
+      {
+        this.RecordDiagnosticsSnapshot(
+            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+            originalText,
+            translatedText,
+            effectiveTranslationEngineId: dialogueTranslationEngine);
+        this.PublishOverlay(originalText, translatedText);
+      }
+
+      if (!persistenceSucceeded)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistenceFailedMessage(
+                surface,
+                persistenceResult));
+      }
+
+      if (sourceChangedBeforeApply)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            true,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(
+                surface));
+      }
+
+      return new VisibleDialogueRetranslationResult(
+          true,
+          true,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(surface));
+    }
+    catch (Exception ex)
+    {
+      lock (this.stateGate)
+      {
+        if (requestId == this.activeRequestId)
+        {
+          this.translationInFlight = false;
+        }
+      }
+
+      PluginRuntimeLog.Error(
+          $"[{TalkSubtitleAddonName}] Error retranslating visible TalkSubtitle text: {ex}");
+      return new VisibleDialogueRetranslationResult(
+          true,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslationFailedMessage(surface));
+    }
   }
 
   /// <summary>
@@ -297,6 +450,7 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
       this.lastFailedOriginalText = string.Empty;
     }
 
+    VisibleStorySurfaceDiagnosticsStore.Clear(VisibleStorySurfaceKind.TalkSubtitle);
     this.clearOverlay();
   }
 
@@ -367,6 +521,11 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
       this.lastFailedOriginalText = string.Empty;
     }
 
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+        originalText,
+        translatedText,
+        effectiveTranslationEngineId: this.GetDialogueTranslationEngineId());
     this.PublishOverlay(this.currentOriginalText, translatedText);
   }
 
@@ -432,6 +591,11 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
 
     translatedText = lookup.TranslatedTalkSubtitleMessage!;
     replacementText = this.NormalizeForReplacement(translatedText);
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.DbReuse,
+        originalText,
+        translatedText,
+        effectiveTranslationEngineId: this.GetDialogueTranslationEngineId());
     return true;
   }
 
@@ -618,6 +782,41 @@ public sealed class TalkSubtitleHandler : IAddonTranslationHandler
   {
     return this.translationService.GetEffectiveTranslationEngineId(
         TranslationSurfaceGroup.Dialogue);
+  }
+
+  /// <summary>
+  ///     Records the latest visible TalkSubtitle provenance snapshot for the
+  ///     debugger.
+  /// </summary>
+  /// <param name="provenance">The provenance label kind to expose.</param>
+  /// <param name="originalText">The original subtitle text.</param>
+  /// <param name="translatedText">The translated subtitle text.</param>
+  /// <param name="effectiveTranslationEngineId">
+  /// The effective dialogue translation engine identifier.
+  /// </param>
+  private void RecordDiagnosticsSnapshot(
+      VisibleStorySurfaceProvenanceKind provenance,
+      string originalText,
+      string translatedText,
+      int effectiveTranslationEngineId)
+  {
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.TalkSubtitle,
+            provenance,
+            VisibleStorySurfaceTableMap.Resolve(
+                VisibleStorySurfaceKind.TalkSubtitle),
+            string.Empty,
+            originalText,
+            string.Empty,
+            string.Empty,
+            translatedText,
+            string.Empty,
+            false,
+            effectiveTranslationEngineId,
+            DateTime.UtcNow,
+            null,
+            null));
   }
 
   /// <summary>

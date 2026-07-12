@@ -5124,5 +5124,423 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("AddonProbeDurationSecondsFormat", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerUnknown
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerUnknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceCanceled
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceDescription
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldColumn
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldDbTable
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldDbTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldEffectiveEngine
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldEffectiveEngine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldLastRetranslation
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldLastRetranslation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldObservedUtc
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldObservedUtc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldOriginalOptions
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldOriginalOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldOriginalSpeaker
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldOriginalSpeaker", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldOriginalText
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldOriginalText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldProvenance
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldProvenance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldRuntimeOnlyDialogueContext
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldRuntimeOnlyDialogueContext", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldSurface
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldSurface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldTranslatedOptions
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldTranslatedOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldTranslatedSpeaker
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldTranslatedSpeaker", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceFieldTranslatedText
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceFieldTranslatedText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNameBattleTalk
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNameBattleTalk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNameTalk
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNameTalk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNameTalkSubtitle
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNameTalkSubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNameTextGimmickHint
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNameTextGimmickHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNoColumns
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNoColumns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNoSnapshot
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNoSnapshot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNoUsableTranslation
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNoUsableTranslation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNoVisibleSurfaceAvailable
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNoVisibleSurfaceAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceNoVisibleText
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceNoVisibleText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfacePersistenceFailed
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfacePersistenceFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfacePersistedButVisibleChanged
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfacePersistedButVisibleChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceProvenanceDbReuse
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceProvenanceDbReuse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslationRuntimeOnlyContext
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslationRuntimeOnlyContext", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceRetranslatedAndPersisted
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceRetranslatedAndPersisted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceRetranslationFailed
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceRetranslationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceSectionTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceSectionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceUnexpectedFailure
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceUnexpectedFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceValueColumn
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceValueColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TranslatorDebuggerVisibleStorySurfaceViewInDbManager
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslatorDebuggerVisibleStorySurfaceViewInDbManager", resourceCulture);
+            }
+        }
     }
 }

@@ -25,3 +25,10 @@ Use this command when you want to:
 
 - This command is a UI entry point for database inspection.
 - Any destructive or bulk data operation should be treated carefully and only done with a clear understanding of the current schema.
+- `/eglotranslatordebugger` can now open this window on the table that owns the
+  latest visible supported story surface.
+
+## Related Guide
+
+For the shared debugger handoff and reusable inspection-table flow, see
+[`docs/story-surface-debugger-db-manager-guide.md`](../story-surface-debugger-db-manager-guide.md).

@@ -119,6 +119,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// <inheritdoc />
   public async Task<VisibleDialogueRetranslationResult> RetranslateVisibleTextAndPersistAsync()
   {
+    const VisibleStorySurfaceKind surface = VisibleStorySurfaceKind.BattleTalk;
+    var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
     if (!this.TryCaptureCurrentBattleTalkSource(
             out var originalName,
             out var originalText))
@@ -126,8 +128,9 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       return new VisibleDialogueRetranslationResult(
           false,
           false,
-          BattleTalkAddonName,
-          "No visible BattleTalk line is available to retranslate.");
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
     }
 
     int requestId;
@@ -184,8 +187,9 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         return new VisibleDialogueRetranslationResult(
             true,
             false,
-            BattleTalkAddonName,
-            "BattleTalk retranslation did not produce a usable translated result.");
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoUsableTranslationMessage(surface));
       }
 
       var translatedBattleTalkData = new BattleTalkMessage(
@@ -233,6 +237,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
       if (!sourceChangedBeforeApply)
       {
+        this.RecordDiagnosticsSnapshot(
+            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+            originalName,
+            originalText,
+            translatedName,
+            translatedText,
+            usedRuntimeOnlyDialogueContext: false,
+            dialogueTranslationEngine);
         this.PublishOverlay(
             originalName,
             originalText,
@@ -245,8 +257,11 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         return new VisibleDialogueRetranslationResult(
             true,
             false,
-            BattleTalkAddonName,
-            $"BattleTalk retranslation updated the live line, but persistence failed: {persistenceResult}");
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistenceFailedMessage(
+                surface,
+                persistenceResult));
       }
 
       if (sourceChangedBeforeApply)
@@ -254,15 +269,18 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         return new VisibleDialogueRetranslationResult(
             true,
             true,
-            BattleTalkAddonName,
-            "BattleTalk retranslation was persisted, but the visible line changed before the refreshed text could be applied.");
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(
+                surface));
       }
 
       return new VisibleDialogueRetranslationResult(
           true,
           true,
-          BattleTalkAddonName,
-          "BattleTalk visible dialogue was retranslated and persisted.");
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(surface));
     }
     catch (Exception ex)
     {
@@ -281,8 +299,9 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       return new VisibleDialogueRetranslationResult(
           true,
           false,
-          BattleTalkAddonName,
-          "BattleTalk retranslation failed before a usable result could be applied.");
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslationFailedMessage(surface));
     }
   }
 
@@ -442,6 +461,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         this.ResetStateLocked();
       }
 
+      VisibleStorySurfaceDiagnosticsStore.Clear(
+          VisibleStorySurfaceKind.BattleTalk);
       this.clearOverlay();
     });
   }
@@ -466,6 +487,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       this.ResetStateLocked();
     }
 
+    VisibleStorySurfaceDiagnosticsStore.Clear(VisibleStorySurfaceKind.BattleTalk);
     this.clearOverlay();
   }
 
@@ -756,6 +778,11 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
       string translatedName;
       string translatedText;
+      VisibleStorySurfaceProvenanceKind provenance;
+      bool usedRuntimeOnlyDialogueContext = false;
+      var dialogueTranslationEngine =
+          this.translationService.GetEffectiveTranslationEngineId(
+              TranslationSurfaceGroup.Dialogue);
 
       if (this.IsStoredTranslationUsable(
               foundBattleTalkMessage,
@@ -767,6 +794,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             : string.Empty;
         translatedText =
             foundBattleTalkMessage.TranslatedBattleTalkMessage ?? string.Empty;
+        provenance = VisibleStorySurfaceProvenanceKind.DbReuse;
       }
       else
       {
@@ -781,6 +809,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             this.translationService.WillUseDialogueContext(
                 dialogueContext,
                 TranslationSurfaceGroup.Dialogue);
+        usedRuntimeOnlyDialogueContext = usesRuntimeOnlyDialogueContext;
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
@@ -809,9 +838,6 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
         if (!usesRuntimeOnlyDialogueContext)
         {
-          var dialogueTranslationEngine =
-              this.translationService.GetEffectiveTranslationEngineId(
-                  TranslationSurfaceGroup.Dialogue);
           var translatedBattleTalkData = new BattleTalkMessage(
               originalName,
               originalText,
@@ -826,6 +852,13 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
               DateTime.Now);
 
           await this.insertBattleTalkMessageAsync(translatedBattleTalkData);
+          provenance = VisibleStorySurfaceProvenanceKind.FreshLiveTranslation;
+        }
+        else
+        {
+          provenance =
+              VisibleStorySurfaceProvenanceKind
+                  .FreshLiveTranslationRuntimeOnlyDialogueContext;
         }
       }
 
@@ -859,6 +892,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
       if (!string.IsNullOrWhiteSpace(translatedText))
       {
+        this.RecordDiagnosticsSnapshot(
+            provenance,
+            originalName,
+            originalText,
+            translatedName,
+            translatedText,
+            usedRuntimeOnlyDialogueContext,
+            dialogueTranslationEngine);
         this.PublishOverlay(
             originalName,
             originalText,
@@ -1277,6 +1318,49 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     originalName = string.Empty;
     originalText = string.Empty;
     return false;
+  }
+
+  /// <summary>
+  ///     Records the latest visible BattleTalk provenance snapshot for the
+  ///     debugger.
+  /// </summary>
+  /// <param name="provenance">The provenance label kind to expose.</param>
+  /// <param name="originalName">The original speaker name.</param>
+  /// <param name="originalText">The original BattleTalk text.</param>
+  /// <param name="translatedName">The translated speaker name.</param>
+  /// <param name="translatedText">The translated BattleTalk text.</param>
+  /// <param name="usedRuntimeOnlyDialogueContext">
+  /// Whether runtime-only dialogue context influenced the live translation.
+  /// </param>
+  /// <param name="effectiveTranslationEngineId">
+  /// The effective dialogue translation engine identifier.
+  /// </param>
+  private void RecordDiagnosticsSnapshot(
+      VisibleStorySurfaceProvenanceKind provenance,
+      string originalName,
+      string originalText,
+      string translatedName,
+      string translatedText,
+      bool usedRuntimeOnlyDialogueContext,
+      int effectiveTranslationEngineId)
+  {
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.BattleTalk,
+            provenance,
+            VisibleStorySurfaceTableMap.Resolve(
+                VisibleStorySurfaceKind.BattleTalk),
+            originalName,
+            originalText,
+            string.Empty,
+            translatedName,
+            translatedText,
+            string.Empty,
+            usedRuntimeOnlyDialogueContext,
+            effectiveTranslationEngineId,
+            DateTime.UtcNow,
+            null,
+            null));
   }
 
   /// <summary>

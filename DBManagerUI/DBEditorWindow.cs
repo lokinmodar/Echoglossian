@@ -150,6 +150,35 @@ namespace Echoglossian.DBManagerUI
     }
 
     /// <summary>
+    /// Opens the DB manager window and selects the requested table when it exists.
+    /// </summary>
+    /// <param name="tableName">The table name to select.</param>
+    public void OpenAndSelectTable(string tableName)
+    {
+      this.IsOpen = true;
+
+      if (this.tableNames == null)
+      {
+        this.InitializeTableNames();
+      }
+
+      if (this.tableNames == null)
+      {
+        return;
+      }
+
+      var matchedTable = DbTableNameMatcher.Match(this.tableNames, tableName);
+      if (matchedTable == null)
+      {
+        return;
+      }
+
+      this.selectedTable = matchedTable;
+      this.page = 0;
+      this.LoadRows();
+    }
+
+    /// <summary>
     /// Initializes the entity (table) name list.
     /// </summary>
     private void InitializeTableNames()

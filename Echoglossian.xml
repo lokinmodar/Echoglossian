@@ -2174,8 +2174,17 @@
                 ItemDetail addons, including trait-aware ActionDetail handling.
             </summary>
             <summary>
+                Hosts debug-only automatic addon-probe watches that start on login for
+                selected addons with early hidden-state value.
+            </summary>
+            <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
+            </summary>
+            <summary>
+                Handles the quest probe command used to inspect the complete quest data
+                shape from Lumina, the live quest progress resolver, and the current
+                QuestPlate database rows.
             </summary>
             <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
@@ -2736,6 +2745,11 @@
             Holds the translator debugger and metrics window instance.
             </summary>
         </member>
+        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
+            <summary>
+            Holds the currently active addon structure probe watch, if any.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -2895,6 +2909,11 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
+            <summary>
+                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -4262,6 +4281,109 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickAddonProbeInfrastructure">
+            <summary>
+                Ticks manual and automatic addon-probe watches, including the
+                debug-only login bootstrap for the default watch set.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetActiveAddonProbeWatchCount">
+            <summary>
+                Gets how many addon-probe watches are currently active across manual
+                and managed watch sets.
+            </summary>
+            <returns>The active probe-watch count.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopAllAddonProbeWatches(System.Boolean)">
+            <summary>
+                Stops every active addon-probe watch known to the plugin.
+            </summary>
+            <param name="suppressAutoUntilLogout">
+                Whether the current login session should suppress the default
+                automatic watch set after the stop completes.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManualAddonProbeWatch">
+            <summary>
+                Ticks the currently active manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManagedAddonProbeWatches">
+            <summary>
+                Ticks every managed addon-probe watch and prunes the disposed ones.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic addon-probe watch set when the player
+                logs in, then resets the gate on logout.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartDefaultAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic watch set used to capture early
+                structural state for pooled dialogue addons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartManagedAddonProbeWatch(System.String,System.Int32,System.TimeSpan,System.String)">
+            <summary>
+                Starts one managed addon-probe watch and tracks it for later stop or
+                pruning.
+            </summary>
+            <param name="addonName">The addon name to watch.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay alive.</param>
+            <param name="reason">The debug log reason attached to the startup.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManualAddonProbeWatch">
+            <summary>
+                Stops the current manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManagedAddonProbeWatches">
+            <summary>
+                Stops every managed automatic addon-probe watch.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log so we can
+            inspect its live node tree, component roots, and likely overlay anchors.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
+            <summary>
+            Parses the addon probe command arguments into an addon name, optional index,
+            and optional watch duration.
+            </summary>
+            <param name="args">The raw command arguments.</param>
+            <returns>The addon name, index, and duration to probe.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryParseAddonProbeDuration(System.String,System.TimeSpan@)">
+            <summary>
+            Parses one addon-probe duration token such as "90s" or "15m".
+            </summary>
+            <param name="token">The raw duration token.</param>
+            <param name="duration">Receives the parsed duration.</param>
+            <returns><see langword="true"/> when the token parsed successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LooksLikeAddonProbeDuration(System.String)">
+            <summary>
+            Determines whether a token looks like an addon-probe duration even when the
+            value is outside the accepted range.
+            </summary>
+            <param name="token">The token to inspect.</param>
+            <returns><see langword="true"/> when the token resembles a duration.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatAddonProbeDuration(System.TimeSpan)">
+            <summary>
+            Formats one addon-probe watch duration for chat feedback.
+            </summary>
+            <param name="duration">The duration to format.</param>
+            <returns>The human-readable duration string.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -4530,6 +4652,102 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
+            <summary>
+                Handles the quest probe command.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
+            <summary>
+                Tries to resolve the quest probe target from either a quest id or a
+                quest name.
+            </summary>
+            <param name="input">The command argument.</param>
+            <param name="questIdText">The resolved quest id as text.</param>
+            <param name="questName">The resolved quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>True when the quest could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the quest data structure for inspection.
+            </summary>
+            <param name="questIdText">The quest id as text.</param>
+            <param name="questName">The quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the raw Lumina quest row properties.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs all rows from the quest text sheet, not just the live todo
+                entries, so we can inspect the full structure of the quest sheet.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
+            <summary>
+                Logs the QuestPlate rows currently stored for the quest.
+            </summary>
+            <param name="questIdText">The quest id text.</param>
+            <param name="questName">The quest name.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Logs the resolved live quest progression snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves a human-readable quest name from a quest row.
+            </summary>
+            <param name="questRow">The quest row.</param>
+            <returns>The resolved quest name, if available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
+            <summary>
+                Converts quest text to a readable string for probe output.
+            </summary>
+            <param name="text">The quest text.</param>
+            <returns>The evaluated text string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
+            <summary>
+                Formats a probe value for log output.
+            </summary>
+            <param name="value">The value to format.</param>
+            <returns>A human-readable value string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Builds the raw quest sheet name used by the game files.
+            </summary>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>The quest text sheet name, if it can be derived.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest row id as text through reflection so the probe
+                stays compatible with generated sheet shapes.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest row id as text, or an empty string if unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest sheet identifier used to mount the quest text
+                sheet path.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -5459,14 +5677,20 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.RetranslateVisibleDialogueAndPersistAsync">
             <summary>
-                Retranslates the currently visible Talk or BattleTalk line using the
-                active engine and persists the refreshed result when a dialogue handler
-                can resolve a live source line.
+                Retranslates the currently visible story-facing text using the active
+                engine and persists the refreshed result when a registered handler can
+                resolve a live source payload.
             </summary>
             <returns>
-                A result describing whether a visible dialogue line was available and
-                whether the explicit retranslation succeeded.
+                A result describing whether a visible story-facing surface was
+                available and whether the explicit retranslation succeeded.
             </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OpenDbEditorForTable(System.String)">
+            <summary>
+            Opens the DB editor and preselects a requested table.
+            </summary>
+            <param name="tableName">The requested DB manager table name.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.OnEgloDbEditorCommand(System.String,System.String)">
             <summary>
@@ -6328,6 +6552,135 @@
             Draws editors for supported types. Strings are multiline with wrapping.
             </summary>
         </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.InspectionCell">
+            <summary>
+            Represents a single display-ready inspection cell.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionCell.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.InspectionCell"/> class.
+            </summary>
+            <param name="text">Inline text shown in the table cell.</param>
+            <param name="tooltipText">Optional full text shown on hover.</param>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Components.InspectionCell.Text">
+            <summary>
+            Gets the inline text shown in the table cell.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Components.InspectionCell.TooltipText">
+            <summary>
+            Gets the optional full text shown on hover.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.InspectionCellFormatter">
+            <summary>
+            Formats raw values into display-ready inspection cells.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.DBManagerUI.Components.InspectionCellFormatter.DefaultInlineTextLimit">
+            <summary>
+            The default inline text limit before overflow is moved to a tooltip.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionCellFormatter.Format(System.Object,System.Int32)">
+            <summary>
+            Formats a raw value into an inspection cell.
+            </summary>
+            <param name="value">The raw value to format.</param>
+            <param name="inlineTextLimit">The maximum inline text length.</param>
+            <returns>A display-ready cell.</returns>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.InspectionColumnDefinition">
+            <summary>
+            Represents one display column in a reusable inspection table.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionColumnDefinition.#ctor(System.String,Dalamud.Bindings.ImGui.ImGuiTableColumnFlags,System.Single)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.InspectionColumnDefinition"/> class.
+            </summary>
+            <param name="header">Column header label.</param>
+            <param name="flags">ImGui column sizing flags.</param>
+            <param name="initialWidth">Initial column width.</param>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Components.InspectionColumnDefinition.Header">
+            <summary>
+            Gets the column header label.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Components.InspectionColumnDefinition.Flags">
+            <summary>
+            Gets the ImGui sizing flags for the column.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Components.InspectionColumnDefinition.InitialWidth">
+            <summary>
+            Gets the initial width for the column.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.InspectionRow">
+            <summary>
+            Represents a single row in a reusable inspection table.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionRow.#ctor(System.Collections.Generic.IReadOnlyList{Echoglossian.DBManagerUI.Components.InspectionCell},System.Object)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.InspectionRow"/> class.
+            </summary>
+            <param name="cells">Display-ready cells for the row.</param>
+            <param name="payload">Optional context payload associated with the row.</param>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Components.InspectionRow.Cells">
+            <summary>
+            Gets the display-ready cells for the row.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.DBManagerUI.Components.InspectionRow.Payload">
+            <summary>
+            Gets the optional row payload for callbacks.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Components.InspectionTableView">
+            <summary>
+            Renders a reusable wrapped-text inspection table with optional selection
+            and double-click callbacks.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionTableView.#ctor(System.String,System.Func{System.Collections.Generic.IReadOnlyList{Echoglossian.DBManagerUI.Components.InspectionColumnDefinition}},System.Func{System.Collections.Generic.IReadOnlyList{Echoglossian.DBManagerUI.Components.InspectionRow}},System.String,System.String,System.String,System.Func{System.Collections.Generic.HashSet{System.Int32}},System.Action{Echoglossian.DBManagerUI.Components.InspectionRow})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.Components.InspectionTableView"/> class.
+            </summary>
+            <param name="tableId">Stable ImGui table identifier.</param>
+            <param name="getColumns">Accessor for current column definitions.</param>
+            <param name="getRows">Accessor for current rows.</param>
+            <param name="noRecordsLoadedMessage">Message shown when rows are unavailable.</param>
+            <param name="noRecordsFoundMessage">Message shown when the table is empty.</param>
+            <param name="noColumnsMessage">Message shown when no columns are available.</param>
+            <param name="getSelection">Optional selection state accessor.</param>
+            <param name="onRowDoubleClick">Optional double-click callback.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionTableView.Draw">
+            <summary>
+            Draws the inspection table.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionTableView.DrawSelectionCell(System.Collections.Generic.HashSet{System.Int32},System.Int32)">
+            <summary>
+            Draws the optional selection checkbox cell for a row.
+            </summary>
+            <param name="selection">Selection state store.</param>
+            <param name="rowIndex">The row index.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Components.InspectionTableView.DrawDataCell(System.Int32,System.Int32,Echoglossian.DBManagerUI.Components.InspectionRow)">
+            <summary>
+            Draws a single wrapped-text data cell.
+            </summary>
+            <param name="rowIndex">The row index.</param>
+            <param name="columnIndex">The zero-based data column index.</param>
+            <param name="row">The row being rendered.</param>
+        </member>
         <member name="T:Echoglossian.DBManagerUI.Components.Ui.TextInputHelpers">
             <summary>
             Helper methods for wrapped, multiline ImGui text inputs.
@@ -6365,6 +6718,12 @@
             <summary>
             Draws the window and its components.
             </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.OpenAndSelectTable(System.String)">
+            <summary>
+            Opens the DB manager window and selects the requested table when it exists.
+            </summary>
+            <param name="tableName">The table name to select.</param>
         </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.InitializeTableNames">
             <summary>
@@ -6469,6 +6828,21 @@
             <param name="db">DbContext instance.</param>
             <param name="entityClrType">Entity CLR type.</param>
             <returns>DbSet instance as object.</returns>
+        </member>
+        <member name="T:Echoglossian.DBManagerUI.Services.DbTableNameMatcher">
+            <summary>
+            Resolves DB manager table names from caller-supplied requests.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.Services.DbTableNameMatcher.Match(System.Collections.Generic.IReadOnlyList{System.String},System.String)">
+            <summary>
+            Finds the exact matching table name from the available DB manager tables.
+            </summary>
+            <param name="tables">The available table names.</param>
+            <param name="requestedTable">The requested table name.</param>
+            <returns>
+            The matched table name, or <see langword="null"/> when no exact match exists.
+            </returns>
         </member>
         <member name="T:Echoglossian.DBManagerUI.Services.PropertyEditorRegistry">
             <summary>Draws editors for property values by type.</summary>
@@ -9355,6 +9729,13 @@
                 Writes a scoped warning log line.
             </summary>
             <param name="scope">The logical scope to render inside square brackets.</param>
+            <param name="message">The message to write.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeLog.Warning(System.Exception,System.String)">
+            <summary>
+                Writes a warning log line with exception details.
+            </summary>
+            <param name="exception">The exception to include in the log entry.</param>
             <param name="message">The message to write.</param>
         </member>
         <member name="M:Echoglossian.PluginRuntimeLog.Error(System.String)">
@@ -12496,6 +12877,9 @@
                 A dictionary mapping addon events to combined delegates.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.RetranslateVisibleTextAndPersistAsync">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
             <summary>
                 Registers a local delegate for the specified addon event.
@@ -12530,14 +12914,14 @@
                 Resolves a CutSceneSelectString translation without blocking the game UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String},Echoglossian.Translators.TranslationSurfaceGroup)">
             <summary>
                 Translates the question and all options in a single batched request
                 when possible, falling back to per-item translation if the batch
                 parsing fails.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogIndividuallyAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogIndividuallyAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String},Echoglossian.Translators.TranslationSurfaceGroup)">
             <summary>
                 Falls back to translating each dialog element individually.
             </summary>
@@ -12590,11 +12974,47 @@
                 Builds a database lookup entity for the currently visible question and options.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateOrFallbackAsync(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateOrFallbackAsync(System.String,Echoglossian.Translators.TranslationSurfaceGroup)">
             <summary>
                 Translates a piece of text or falls back to the original text when the
                 translation service does not return content.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.HasUsableTranslatedDialogPayload(System.String,System.Collections.Generic.IReadOnlyList{System.String},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.String,System.String)">
+            <summary>
+                Determines whether the translated CutSceneSelectString payload
+                contains at least one usable translated question or option.
+            </summary>
+            <param name="originalQuestion">The original question text.</param>
+            <param name="originalOptions">The original option payload.</param>
+            <param name="translatedQuestion">The translated question text.</param>
+            <param name="translatedOptions">The translated option payload.</param>
+            <param name="sourceLang">The original language.</param>
+            <param name="targetLang">The target language.</param>
+            <returns>
+                <see langword="true" /> when at least one translated element is
+                usable for persistence; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.RecordDiagnosticsSnapshot(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.Collections.Generic.IReadOnlyList{System.String},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Int32)">
+            <summary>
+                Records the latest visible CutSceneSelectString provenance snapshot
+                for the debugger.
+            </summary>
+            <param name="provenance">The provenance label kind to expose.</param>
+            <param name="originalQuestion">The original question text.</param>
+            <param name="originalOptions">The original option payload.</param>
+            <param name="translatedQuestion">The translated question text.</param>
+            <param name="translatedOptions">The translated option payload.</param>
+            <param name="effectiveTranslationEngineId">
+            The effective dialogue translation engine identifier.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.GetDialogueTranslationEngineId">
+            <summary>
+                Resolves the effective dialogue translation engine identifier.
+            </summary>
+            <returns>The effective dialogue translation engine identifier.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.NormalizeForReplacement(System.String)">
             <summary>
@@ -15478,6 +15898,23 @@
                 to a known original source line; otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.RecordDiagnosticsSnapshot(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.String,System.String,System.String,System.Boolean,System.Int32)">
+            <summary>
+                Records the latest visible BattleTalk provenance snapshot for the
+                debugger.
+            </summary>
+            <param name="provenance">The provenance label kind to expose.</param>
+            <param name="originalName">The original speaker name.</param>
+            <param name="originalText">The original BattleTalk text.</param>
+            <param name="translatedName">The translated speaker name.</param>
+            <param name="translatedText">The translated BattleTalk text.</param>
+            <param name="usedRuntimeOnlyDialogueContext">
+            Whether runtime-only dialogue context influenced the live translation.
+            </param>
+            <param name="effectiveTranslationEngineId">
+            The effective dialogue translation engine identifier.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.TryMapVisibleSourceToOriginal(System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,System.String@,System.String@)">
             <summary>
                 Tries to map visible BattleTalk text back to a specific known original and
@@ -15580,60 +16017,71 @@
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.IVisibleDialogueRetranslationHandler">
             <summary>
                 Defines the runtime contract for explicitly retranslating the currently
-                visible dialogue line and persisting the refreshed result.
+                visible story-facing text and persisting the refreshed result.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.IVisibleDialogueRetranslationHandler.RetranslateVisibleTextAndPersistAsync">
             <summary>
-                Retranslates the currently visible dialogue line using the active
+                Retranslates the currently visible story-facing text using the active
                 translator configuration and persists the refreshed result when the
                 output is usable.
             </summary>
             <returns>
                 A <see cref="T:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult" /> describing whether
-                this handler had an active visible line, whether retranslating it
-                succeeded, and the user-facing outcome message.
+                this handler had an active visible story-facing surface, whether
+                retranslating it succeeded, and the user-facing outcome message.
             </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult">
             <summary>
-                Describes the outcome of one explicit visible-dialogue retranslation
+                Describes the outcome of one explicit visible story-surface retranslation
                 request.
             </summary>
             <param name="IsApplicable">
-            Whether the handler had an active visible dialogue line to operate on.
+            Whether the handler had an active visible story-facing payload to operate on.
             </param>
             <param name="Success">
             Whether the visible retranslation completed successfully for the current
-            line.
+            payload.
+            </param>
+            <param name="Surface">
+            The visible story surface that handled the request, when applicable.
             </param>
             <param name="SurfaceName">The surface that handled the request.</param>
             <param name="Message">The user-facing outcome message.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.#ctor(System.Boolean,System.Boolean,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.#ctor(System.Boolean,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind},System.String,System.String)">
             <summary>
-                Describes the outcome of one explicit visible-dialogue retranslation
+                Describes the outcome of one explicit visible story-surface retranslation
                 request.
             </summary>
             <param name="IsApplicable">
-            Whether the handler had an active visible dialogue line to operate on.
+            Whether the handler had an active visible story-facing payload to operate on.
             </param>
             <param name="Success">
             Whether the visible retranslation completed successfully for the current
-            line.
+            payload.
+            </param>
+            <param name="Surface">
+            The visible story surface that handled the request, when applicable.
             </param>
             <param name="SurfaceName">The surface that handled the request.</param>
             <param name="Message">The user-facing outcome message.</param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.IsApplicable">
             <summary>
-            Whether the handler had an active visible dialogue line to operate on.
+            Whether the handler had an active visible story-facing payload to operate on.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.Success">
             <summary>
             Whether the visible retranslation completed successfully for the current
-            line.
+            payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.Surface">
+            <summary>
+            The visible story surface that handled the request, when applicable.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult.SurfaceName">
@@ -15864,6 +16312,28 @@
             <param name="requestId">The request identifier used to reject stale results.</param>
             <returns>A task that completes when the translation state has been updated.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.RecordDiagnosticsSnapshot(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.String,System.String,System.String,System.Boolean,System.Int32)">
+            <summary>
+                Records the latest visible Talk provenance snapshot for the debugger.
+            </summary>
+            <param name="provenance">The provenance label kind to expose.</param>
+            <param name="originalName">The original speaker name.</param>
+            <param name="originalText">The original Talk text.</param>
+            <param name="translatedName">The translated speaker name.</param>
+            <param name="translatedText">The translated Talk text.</param>
+            <param name="usedRuntimeOnlyDialogueContext">
+            Whether runtime-only dialogue context influenced the live translation.
+            </param>
+            <param name="effectiveTranslationEngineId">
+            The effective dialogue translation engine identifier.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.GetDialogueTranslationEngineId">
+            <summary>
+                Resolves the effective dialogue translation engine identifier.
+            </summary>
+            <returns>The effective dialogue translation engine identifier.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ShouldApplyNativeTalkText">
             <summary>
                 Determines whether native Talk text should be replaced instead of leaving
@@ -15968,6 +16438,9 @@
             <returns>
                 A dictionary mapping addon events to combined delegates.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.RetranslateVisibleTextAndPersistAsync">
+            <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
             <summary>
@@ -16119,6 +16592,18 @@
                 dialogue-family routing path.
             </summary>
             <returns>The effective dialogue-family translation engine identifier.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.RecordDiagnosticsSnapshot(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.String,System.Int32)">
+            <summary>
+                Records the latest visible TalkSubtitle provenance snapshot for the
+                debugger.
+            </summary>
+            <param name="provenance">The provenance label kind to expose.</param>
+            <param name="originalText">The original subtitle text.</param>
+            <param name="translatedText">The translated subtitle text.</param>
+            <param name="effectiveTranslationEngineId">
+            The effective dialogue translation engine identifier.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.NormalizeForReplacement(System.String)">
             <summary>
@@ -16954,6 +17439,9 @@
                 A dictionary mapping addon events to combined delegates.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RetranslateVisibleTextAndPersistAsync">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
             <summary>
                 Registers a local delegate for the specified addon event.
@@ -17061,18 +17549,6 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage,System.String)">
-            <summary>
-                Determines whether a stored gimmick-hint row still represents a usable
-                translation for the current source line.
-            </summary>
-            <param name="textGimmickHintMessage">The stored gimmick-hint row to validate.</param>
-            <param name="originalText">The expected original gimmick-hint text.</param>
-            <returns>
-                <see langword="true" /> when the stored row contains a non-empty
-                translation for the same source line; otherwise, <see langword="false" />.
-            </returns>
-        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryGetCurrentResolvedTranslation(System.String@,System.String@,System.String@)">
             <summary>
                 Returns the active resolved translation currently held by the handler
@@ -17113,6 +17589,24 @@
                 overlay mode is enabled.
             </summary>
             <param name="translatedText">The translated gimmick-hint text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RecordDiagnosticsSnapshot(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.String,System.Int32)">
+            <summary>
+                Records the latest visible TextGimmickHint provenance snapshot for
+                the debugger.
+            </summary>
+            <param name="provenance">The provenance label kind to expose.</param>
+            <param name="originalText">The original gimmick-hint text.</param>
+            <param name="translatedText">The translated gimmick-hint text.</param>
+            <param name="effectiveTranslationEngineId">
+            The effective dialogue translation engine identifier.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.GetDialogueTranslationEngineId">
+            <summary>
+                Resolves the effective dialogue translation engine identifier.
+            </summary>
+            <returns>The effective dialogue translation engine identifier.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ShouldUseOverlay">
             <summary>
@@ -18061,6 +18555,46 @@
             <param name="addonLifecycle">The add-on lifecycle instance from which logging event listeners will be removed. Cannot be null.</param>
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy">
+            <summary>
+                Encapsulates the login-session gating rules for debug-only automatic
+                addon-probe watches.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldStartForCurrentLogin(System.Boolean,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+                Determines whether the current login session should start the default
+                automatic addon-probe watch set.
+            </summary>
+            <param name="isLoggedIn">Whether the client is currently logged in.</param>
+            <param name="hasStartedForCurrentLogin">
+                Whether the current login session already started its automatic probe
+                set.
+            </param>
+            <param name="isSuppressedUntilLogout">
+                Whether the user explicitly suppressed the automatic probe set until
+                the next logout.
+            </param>
+            <param name="activeManagedWatchCount">
+                How many managed automatic probe watches are currently alive.
+            </param>
+            <returns>
+                <see langword="true" /> when the automatic probe set should start.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldResetForLogout(System.Boolean,System.Boolean)">
+            <summary>
+                Determines whether the automatic login-session gate should reset
+                because the player logged out.
+            </summary>
+            <param name="wasLoggedIn">
+                Whether the client was logged in on the previous tick.
+            </param>
+            <param name="isLoggedIn">Whether the client is logged in now.</param>
+            <returns>
+                <see langword="true" /> when the automatic probe gate should reset.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
             <summary>
@@ -20299,6 +20833,327 @@
                 <c>true</c> when the overlay should display the original text.
             </returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot">
+            <summary>
+                Represents one runtime-only diagnostic snapshot for the most recently
+                resolved visible story-facing surface.
+            </summary>
+            <param name="Surface">The active story surface.</param>
+            <param name="Provenance">The provenance label kind shown to operators.</param>
+            <param name="TableName">The effective DB manager table name for handoff.</param>
+            <param name="OriginalSpeakerText">The original speaker text when applicable.</param>
+            <param name="OriginalText">The primary original text payload.</param>
+            <param name="OriginalOptionsText">The original options payload when applicable.</param>
+            <param name="TranslatedSpeakerText">The translated speaker text when applicable.</param>
+            <param name="TranslatedText">The primary translated text payload.</param>
+            <param name="TranslatedOptionsText">The translated options payload when applicable.</param>
+            <param name="UsedRuntimeOnlyDialogueContext">
+            Whether runtime-only dialogue context influenced the live translation.
+            </param>
+            <param name="EffectiveTranslationEngineId">
+            The effective translation engine identifier used for the snapshot.
+            </param>
+            <param name="ObservedAtUtc">
+            The UTC timestamp when this snapshot was last updated, either from a live
+            observation or from an explicit retranslation outcome.
+            </param>
+            <param name="LastRetranslationSuccess">
+            The latest explicit retranslation success flag for this surface.
+            </param>
+            <param name="LastRetranslationMessage">
+            The latest explicit retranslation outcome message for this surface.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.#ctor(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind,Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Int32,System.DateTime,System.Nullable{System.Boolean},System.String)">
+            <summary>
+                Represents one runtime-only diagnostic snapshot for the most recently
+                resolved visible story-facing surface.
+            </summary>
+            <param name="Surface">The active story surface.</param>
+            <param name="Provenance">The provenance label kind shown to operators.</param>
+            <param name="TableName">The effective DB manager table name for handoff.</param>
+            <param name="OriginalSpeakerText">The original speaker text when applicable.</param>
+            <param name="OriginalText">The primary original text payload.</param>
+            <param name="OriginalOptionsText">The original options payload when applicable.</param>
+            <param name="TranslatedSpeakerText">The translated speaker text when applicable.</param>
+            <param name="TranslatedText">The primary translated text payload.</param>
+            <param name="TranslatedOptionsText">The translated options payload when applicable.</param>
+            <param name="UsedRuntimeOnlyDialogueContext">
+            Whether runtime-only dialogue context influenced the live translation.
+            </param>
+            <param name="EffectiveTranslationEngineId">
+            The effective translation engine identifier used for the snapshot.
+            </param>
+            <param name="ObservedAtUtc">
+            The UTC timestamp when this snapshot was last updated, either from a live
+            observation or from an explicit retranslation outcome.
+            </param>
+            <param name="LastRetranslationSuccess">
+            The latest explicit retranslation success flag for this surface.
+            </param>
+            <param name="LastRetranslationMessage">
+            The latest explicit retranslation outcome message for this surface.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.Surface">
+            <summary>The active story surface.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.Provenance">
+            <summary>The provenance label kind shown to operators.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.TableName">
+            <summary>The effective DB manager table name for handoff.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.OriginalSpeakerText">
+            <summary>The original speaker text when applicable.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.OriginalText">
+            <summary>The primary original text payload.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.OriginalOptionsText">
+            <summary>The original options payload when applicable.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.TranslatedSpeakerText">
+            <summary>The translated speaker text when applicable.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.TranslatedText">
+            <summary>The primary translated text payload.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.TranslatedOptionsText">
+            <summary>The translated options payload when applicable.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.UsedRuntimeOnlyDialogueContext">
+            <summary>
+            Whether runtime-only dialogue context influenced the live translation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.EffectiveTranslationEngineId">
+            <summary>
+            The effective translation engine identifier used for the snapshot.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.ObservedAtUtc">
+            <summary>
+            The UTC timestamp when this snapshot was last updated, either from a live
+            observation or from an explicit retranslation outcome.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.LastRetranslationSuccess">
+            <summary>
+            The latest explicit retranslation success flag for this surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot.LastRetranslationMessage">
+            <summary>
+            The latest explicit retranslation outcome message for this surface.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore">
+            <summary>
+                Stores runtime-only visible story-surface diagnostics for the debugger.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.Clear">
+            <summary>
+            Clears all retained diagnostics snapshots.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.Clear(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+            Clears the retained diagnostics snapshot for one visible story surface.
+            </summary>
+            <param name="surface">The surface to clear.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.Record(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot)">
+            <summary>
+            Records the latest diagnostics snapshot for a visible story surface.
+            </summary>
+            <param name="snapshot">The snapshot to retain.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.SetRetranslationOutcome(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind,System.Boolean,System.String,System.DateTime)">
+            <summary>
+            Updates the latest explicit retranslation outcome for one story surface.
+            </summary>
+            <param name="surface">The surface that handled the request.</param>
+            <param name="success">Whether the explicit retranslation succeeded.</param>
+            <param name="message">The user-facing outcome message.</param>
+            <param name="observedAtUtc">
+            The UTC timestamp to store as the snapshot's latest update time for the
+            explicit retranslation outcome.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.GetLatestSnapshot">
+            <summary>
+            Gets the latest snapshot across all visible story surfaces.
+            </summary>
+            <returns>The latest snapshot, or <see langword="null"/> when none exist.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsStore.ResolveLatestSurfaceUnsafe">
+            <summary>
+                Resolves the retained surface with the most recent observed snapshot
+                timestamp.
+            </summary>
+            <returns>
+                The latest retained surface, or <see langword="null"/> when none
+                remain.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind">
+            <summary>
+                Identifies a player-visible story-facing surface that can expose
+                provenance and explicit retranslation diagnostics.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind.Talk">
+            <summary>
+            The standard Talk addon.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind.BattleTalk">
+            <summary>
+            The BattleTalk addon.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind.TalkSubtitle">
+            <summary>
+            The TalkSubtitle addon.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind.CutSceneSelectString">
+            <summary>
+            The CutSceneSelectString addon.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind.TextGimmickHint">
+            <summary>
+            The TextGimmickHint addon.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind">
+            <summary>
+                Identifies where the currently visible story-surface translation came
+                from for debugger provenance display.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind.DbReuse">
+            <summary>
+            The visible translation came from an existing DB row.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind.FreshLiveTranslation">
+            <summary>
+            The visible translation came from a fresh live translation.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind.FreshLiveTranslationRuntimeOnlyDialogueContext">
+            <summary>
+            The visible translation came from a fresh live translation that used
+            runtime-only dialogue context and therefore should not be persisted as a
+            canonical DB row.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceTableMap">
+            <summary>
+                Maps visible story surfaces to their DB manager table names.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceTableMap.Resolve(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+            Resolves the DB manager table name for one visible story surface.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <returns>The matching DB manager table name.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText">
+            <summary>
+                Resolves localized user-facing strings for visible story-surface
+                debugger and explicit retranslation flows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.ResolveSurfaceName(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+                Resolves the localized display name for one visible story surface.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <returns>The localized surface display name.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.ResolveProvenanceLabel(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind)">
+            <summary>
+                Resolves the localized provenance label for one diagnostics snapshot.
+            </summary>
+            <param name="provenance">The provenance kind to format.</param>
+            <returns>The localized provenance label.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetNoVisibleTextMessage(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+                Builds the user-facing message shown when no visible text is available
+                for one story surface.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <returns>The localized unavailable message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetNoUsableTranslationMessage(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+                Builds the user-facing message shown when a visible retranslation did
+                not produce usable translated content.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <returns>The localized unusable-result message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetPersistenceFailedMessage(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind,System.String)">
+            <summary>
+                Builds the user-facing message shown when a live refresh applied but
+                persistence failed.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <param name="persistenceResult">The persistence-layer detail.</param>
+            <returns>The localized persistence failure message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+                Builds the user-facing message shown when a refreshed result was
+                persisted but the visible source changed before apply.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <returns>The localized stale-apply message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+                Builds the user-facing message shown when explicit retranslation
+                succeeds and is persisted.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <returns>The localized success message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetRetranslationFailedMessage(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceKind)">
+            <summary>
+                Builds the user-facing message shown when explicit retranslation
+                fails before a usable result can be applied.
+            </summary>
+            <param name="surface">The visible story surface.</param>
+            <returns>The localized failure message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetNoVisibleSurfaceAvailableMessage">
+            <summary>
+                Gets the user-facing message shown when no visible story surface is
+                currently available for explicit retranslation.
+            </summary>
+            <returns>The localized unavailable message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetUnexpectedFailureMessage">
+            <summary>
+                Gets the user-facing message shown when a visible retranslation task
+                faults before it returns a structured result.
+            </summary>
+            <returns>The localized unexpected-failure message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.VisibleStorySurfaceText.GetCanceledMessage">
+            <summary>
+                Gets the user-facing message shown when a visible retranslation task
+                is canceled.
+            </summary>
+            <returns>The localized cancellation message.</returns>
+        </member>
         <member name="T:Echoglossian.SummaryQuest">
             <summary>
             Represents a journal summary quest entry and its translation state.
@@ -21254,6 +22109,58 @@
             </summary>
             <param name="fieldName">The name of the required field.</param>
         </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.VisibleStorySurfaceInspectionModelBuilder">
+            <summary>
+                Builds reusable inspection-table models for the latest visible
+                story-surface diagnostics snapshot.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.VisibleStorySurfaceInspectionModelBuilder.BuildColumns">
+            <summary>
+            Builds the shared inspection table columns used by the debugger.
+            </summary>
+            <returns>The shared debugger columns.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.VisibleStorySurfaceInspectionModelBuilder.BuildRows(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceDiagnosticsSnapshot)">
+            <summary>
+            Builds display-ready rows for a visible story-surface diagnostics snapshot.
+            </summary>
+            <param name="snapshot">The snapshot to render.</param>
+            <returns>The display-ready inspection rows.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.VisibleStorySurfaceInspectionModelBuilder.BuildRow(System.String,System.String)">
+            <summary>
+            Builds one debugger inspection row.
+            </summary>
+            <param name="field">The field label.</param>
+            <param name="value">The field value.</param>
+            <returns>The display-ready row.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.VisibleStorySurfaceInspectionModelBuilder.AddOptionalRow(System.Collections.Generic.ICollection{Echoglossian.DBManagerUI.Components.InspectionRow},System.String,System.String)">
+            <summary>
+            Adds one optional debugger inspection row when a value is available.
+            </summary>
+            <param name="rows">The row list to append to.</param>
+            <param name="field">The field label.</param>
+            <param name="value">The optional field value.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.VisibleStorySurfaceRetranslationDispatcher">
+            <summary>
+                Dispatches explicit visible retranslation requests across registered
+                story-facing addon handlers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.VisibleStorySurfaceRetranslationDispatcher.DispatchAsync(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}})">
+            <summary>
+                Dispatches the explicit retranslation request to the first applicable
+                visible story-surface handler.
+            </summary>
+            <param name="handlers">The registered addon handlers to inspect.</param>
+            <returns>
+                The first applicable visible retranslation result, or a non-applicable
+                result when no visible story surface is currently available.
+            </returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.Tabs.AboutTab">
             <summary>
             Displays the "About Echoglossian" tab content with logo and disclaimer.
@@ -21382,7 +22289,7 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawToastTypePage(Echoglossian.Config,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.Single@,System.Int64@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.GetToastGuiRouteStateText(Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState)">
             <summary>
                 Maps one effective toast route state to the localized UI label used
                 in the toast general page.
@@ -21670,15 +22577,18 @@
                 operator inspection.
             </summary>
         </member>
-        <member name="M:Echoglossian.TranslatorMetricsWindow.#ctor(Echoglossian.Config,System.Func{System.Threading.Tasks.Task{Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult}})">
+        <member name="M:Echoglossian.TranslatorMetricsWindow.#ctor(Echoglossian.Config,System.Action{System.String},System.Func{System.Threading.Tasks.Task{Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult}})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.TranslatorMetricsWindow" />
                 class.
             </summary>
             <param name="config">The active plugin configuration.</param>
+            <param name="openDbEditorForTable">
+                Delegate used to open the DB manager on the requested table.
+            </param>
             <param name="retranslateVisibleDialogueAsync">
-                Delegate used to explicitly retranslate the currently visible dialogue
-                line and persist the refreshed result.
+                Delegate used to explicitly retranslate the currently visible
+                story-facing text and persist the refreshed result.
             </param>
         </member>
         <member name="P:Echoglossian.TranslatorMetricsWindow.IsOpen">
@@ -21695,6 +22605,19 @@
             <summary>
                 Resolves a completed visible-dialogue retranslation task into the
                 session-scoped status message shown by the debugger window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslatorMetricsWindow.BuildVisibleStorySurfaceInspectionRows">
+            <summary>
+                Builds the reusable inspection rows for the latest retained visible
+                story-surface diagnostics snapshot.
+            </summary>
+            <returns>The reusable inspection rows for the latest snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.TranslatorMetricsWindow.DrawVisibleStorySurfaceDiagnostics">
+            <summary>
+                Draws the latest visible story-surface provenance snapshot and DB
+                manager handoff controls.
             </summary>
         </member>
         <member name="M:Echoglossian.TranslatorMetricsWindow.DrawDialogueOverrideStatus">
@@ -24029,6 +24952,196 @@
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondsFormat">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerUnknown">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceCanceled">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceDescription">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldColumn">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldDbTable">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldEffectiveEngine">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldLastRetranslation">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldObservedUtc">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldOriginalOptions">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldOriginalSpeaker">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldOriginalText">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldProvenance">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldRuntimeOnlyDialogueContext">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldSurface">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldTranslatedOptions">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldTranslatedSpeaker">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceFieldTranslatedText">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNameBattleTalk">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNameTalk">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNameTalkSubtitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNameTextGimmickHint">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNoColumns">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNoSnapshot">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNoUsableTranslation">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNoVisibleSurfaceAvailable">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceNoVisibleText">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfacePersistenceFailed">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfacePersistedButVisibleChanged">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceProvenanceDbReuse">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslationRuntimeOnlyContext">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceRetranslatedAndPersisted">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceRetranslationFailed">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceSectionTitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceUnexpectedFailure">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceValueColumn">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslatorDebuggerVisibleStorySurfaceViewInDbManager">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada.
             </summary>
