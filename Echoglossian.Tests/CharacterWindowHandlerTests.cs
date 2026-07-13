@@ -5,6 +5,8 @@
 
 using Echoglossian.NativeUI.AddonHandlers.Character;
 
+using System.Reflection;
+
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -55,10 +57,50 @@ public class CharacterWindowHandlerTests
     {
         var found = CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(
             originalText,
+            "pt-BR",
             out var translatedText);
 
         Assert.True(found);
         Assert.Equal(expectedTranslation, translatedText);
+    }
+
+    /// <summary>
+    ///     Ensures the local Character header fallback does not leak
+    ///     Portuguese text into non-Portuguese target languages.
+    /// </summary>
+    [Fact]
+    public void TryGetStableHeaderFallbackTranslation_NonPortugueseTargetLanguage_ReturnsFalse()
+    {
+        var found = CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(
+            "Attributes",
+            "iw",
+            out var translatedText);
+
+        Assert.False(found);
+        Assert.Equal(string.Empty, translatedText);
+    }
+
+    /// <summary>
+    ///     Ensures the root Character header fallback only extends the lookup
+    ///     sets for the Portuguese target language that actually owns the local
+    ///     fallback strings.
+    /// </summary>
+    [Fact]
+    public void AppendStableHeaderFallbackTranslations_NonPortugueseTargetLanguage_DoesNotInjectPortugueseTerms()
+    {
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var knownTexts = new HashSet<string>(StringComparer.Ordinal);
+
+        CharacterWindowHandler.AppendStableHeaderFallbackTranslations(
+            originalLookup,
+            translatedLookup,
+            knownTexts,
+            "iw");
+
+        Assert.Empty(originalLookup);
+        Assert.Empty(translatedLookup);
+        Assert.Empty(knownTexts);
     }
 
     /// <summary>
@@ -72,5 +114,22 @@ public class CharacterWindowHandlerTests
             CharacterWindowHandler.GetRootCharacterAppliedStateRefreshWindow();
 
         Assert.Equal(TimeSpan.FromSeconds(1), refreshWindow);
+    }
+
+    /// <summary>
+    ///     Ensures the shared Character-family runtime owns its complete
+    ///     readable-text traversal instead of inheriting the single-text
+    ///     MiniTalk bubble resolver from the generic GameWindow base.
+    /// </summary>
+    [Fact]
+    public void CharacterTextNodeWindowHandlerBase_OverridesTextNodeResolver()
+    {
+        var resolver = typeof(CharacterTextNodeWindowHandlerBase).GetMethod(
+            "ResolveTextNodeAddresses",
+            BindingFlags.Instance |
+            BindingFlags.NonPublic |
+            BindingFlags.DeclaredOnly);
+
+        Assert.NotNull(resolver);
     }
 }

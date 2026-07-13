@@ -16,15 +16,15 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 public unsafe class CharacterStatusSubWindowHandler
     : CharacterTextNodeWindowHandlerBase
 {
-    private static readonly HashSet<string> ExpectedTranslatedSectionTitles =
+    private static readonly HashSet<string> ExpectedOriginalSectionTitles =
     [
-        "Atributos",
-        "Propriedades Ofensivas",
-        "Propriedades Defensivas",
-        "Propriedades Físicas",
-        "Propriedades Mentais",
-        "Equipamento",
-        "Função",
+        "Attributes",
+        "Offensive Properties",
+        "Defensive Properties",
+        "Physical Properties",
+        "Mental Properties",
+        "Gear",
+        "Role",
     ];
 
     private bool frameworkUpdateRegistered;
@@ -150,7 +150,7 @@ public unsafe class CharacterStatusSubWindowHandler
             livePayload);
         translatedPayload = runtimeState.TranslatedPayload.ProjectToShape(
             livePayload);
-        if (!this.HasExpectedCharacterStatusCoverage(
+        if (!HasExpectedTranslatedSectionCoverage(
                 originalPayload,
                 translatedPayload))
         {
@@ -353,7 +353,7 @@ public unsafe class CharacterStatusSubWindowHandler
                     translatedProjection.StringArrayValues,
                     translatedProjection.TextNodes)
                 .ProjectToShape(referencePayload);
-            if (!this.HasExpectedCharacterStatusCoverage(
+            if (!HasExpectedTranslatedSectionCoverage(
                     projectedOriginalPayload,
                     projectedTranslatedPayload))
             {
@@ -379,22 +379,51 @@ public unsafe class CharacterStatusSubWindowHandler
     ///     expected section titles and differs meaningfully from the original
     ///     payload; otherwise <see langword="false" />.
     /// </returns>
-    private bool HasExpectedCharacterStatusCoverage(
+    internal static bool HasExpectedTranslatedSectionCoverage(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
-        var translatedTexts = translatedPayload.AtkValues.Values
-            .Concat(translatedPayload.StringArrayValues.Values)
-            .Concat(translatedPayload.TextNodes.Values)
-            .Where(text => !string.IsNullOrWhiteSpace(text))
-            .ToHashSet(StringComparer.Ordinal);
-        var matchedSectionTitles = ExpectedTranslatedSectionTitles.Count(
-            translatedTexts.Contains);
-        if (matchedSectionTitles < 3)
+        if (originalPayload.StructurallyEquals(translatedPayload))
         {
             return false;
         }
 
-        return !originalPayload.StructurallyEquals(translatedPayload);
+        var matchedSectionTitles = new HashSet<string>(StringComparer.Ordinal);
+        CollectChangedExpectedSectionTitles(
+            originalPayload.AtkValues,
+            translatedPayload.AtkValues,
+            matchedSectionTitles);
+        CollectChangedExpectedSectionTitles(
+            originalPayload.StringArrayValues,
+            translatedPayload.StringArrayValues,
+            matchedSectionTitles);
+        CollectChangedExpectedSectionTitles(
+            originalPayload.TextNodes,
+            translatedPayload.TextNodes,
+            matchedSectionTitles);
+        return matchedSectionTitles.Count >= 3;
+    }
+
+    private static void CollectChangedExpectedSectionTitles<TKey>(
+        IReadOnlyDictionary<TKey, string> originalValues,
+        IReadOnlyDictionary<TKey, string> translatedValues,
+        ISet<string> matchedSectionTitles)
+        where TKey : notnull
+    {
+        foreach (var (key, originalText) in originalValues)
+        {
+            if (!ExpectedOriginalSectionTitles.Contains(originalText) ||
+                !translatedValues.TryGetValue(key, out var translatedText) ||
+                string.IsNullOrWhiteSpace(translatedText) ||
+                string.Equals(
+                    originalText,
+                    translatedText,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            matchedSectionTitles.Add(originalText);
+        }
     }
 }

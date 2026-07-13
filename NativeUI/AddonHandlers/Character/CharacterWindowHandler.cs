@@ -13,6 +13,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 /// </summary>
 public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
 {
+    private const string StableHeaderFallbackLanguageCode = "pt-BR";
+
     private static readonly TimeSpan RootCharacterAppliedStateRefreshWindow =
         TimeSpan.FromSeconds(1);
 
@@ -174,8 +176,14 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     internal static void AppendStableHeaderFallbackTranslations(
         IDictionary<string, string> originalLookup,
         IDictionary<string, string> translatedLookup,
-        ISet<string> knownTexts)
+        ISet<string> knownTexts,
+        string targetLanguageCode)
     {
+        if (!SupportsStableHeaderFallbackLanguage(targetLanguageCode))
+        {
+            return;
+        }
+
         foreach (var (originalText, translatedText) in
                  StableHeaderFallbackTranslations)
         {
@@ -206,10 +214,25 @@ public unsafe class CharacterWindowHandler : CharacterTextNodeWindowHandlerBase
     /// </returns>
     internal static bool TryGetStableHeaderFallbackTranslation(
         string originalText,
+        string targetLanguageCode,
         out string translatedText)
     {
+        if (!SupportsStableHeaderFallbackLanguage(targetLanguageCode))
+        {
+            translatedText = string.Empty;
+            return false;
+        }
+
         return StableHeaderFallbackTranslations.TryGetValue(
             originalText,
             out translatedText!);
+    }
+
+    private static bool SupportsStableHeaderFallbackLanguage(
+        string targetLanguageCode)
+    {
+        return RuntimeLanguageHelper.LanguagesMatch(
+            targetLanguageCode,
+            StableHeaderFallbackLanguageCode);
     }
 }

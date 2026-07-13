@@ -66,6 +66,12 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                !string.IsNullOrWhiteSpace(visibleText);
     }
 
+    /// <inheritdoc />
+    protected override List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
+    {
+        return AddonTextNodeResolvers.ResolveReadableTextNodes(addon);
+    }
+
     /// <summary>
     ///     Determines whether the visible text can be resolved through the
     ///     canonical shared Character string-array payload.
@@ -148,8 +154,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             out var originalLookup,
             out var translatedLookup,
             out _);
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         foreach (var nodeAddress in nodeAddresses)
         {
             var textNode = (AtkTextNode*)nodeAddress;
@@ -359,7 +364,8 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             CharacterWindowHandler.AppendStableHeaderFallbackTranslations(
                 originalLookup,
                 translatedLookup,
-                knownTexts);
+                knownTexts,
+                targetLanguage);
         }
 
         return translatedLookup.Count > 0;
