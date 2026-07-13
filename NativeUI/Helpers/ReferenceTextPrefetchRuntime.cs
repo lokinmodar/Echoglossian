@@ -205,7 +205,10 @@ public unsafe partial class Echoglossian
         uint referenceId)
     {
         if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage))
+                out var sourceLanguage) ||
+            !this.TryCreateCapturedTranslationScope(
+                sourceLanguage,
+                out var scope))
         {
             return;
         }
@@ -216,9 +219,9 @@ public unsafe partial class Echoglossian
         }
 
         var originalRow = registration.CreateRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
             GetGameVersion(),
             originalPayload,
             null);
@@ -229,12 +232,14 @@ public unsafe partial class Echoglossian
             registration,
             originalPayload,
             existingRow,
-            sourceLanguage);
+            sourceLanguage,
+            scope);
         this.PrefetchReferenceTextDescription(
             registration,
             originalPayload,
             existingRow,
-            sourceLanguage);
+            sourceLanguage,
+            scope);
     }
 
     /// <summary>
@@ -245,11 +250,13 @@ public unsafe partial class Echoglossian
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
     /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     private void PrefetchReferenceTextName(
         ReferenceTextPrefetchRegistration registration,
         ReferenceTextCanonicalPayload originalPayload,
         ReferenceTextRowBase existingRow,
-        SourceClientLanguage sourceLanguage)
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedName))
@@ -257,8 +264,9 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var translationKey =
-            $"{registration.Key}|{originalPayload.ReferenceId}|Name|{originalPayload.Name}";
+        var translationKey = BuildReferenceTextScopedTranslationKey(
+            $"{registration.Key}|{originalPayload.ReferenceId}|Name|{originalPayload.Name}",
+            scope);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedName))
@@ -266,21 +274,22 @@ public unsafe partial class Echoglossian
             this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
-                sourceLanguage,
+                scope,
                 translatedName: cachedTranslatedName);
             return;
         }
 
+        var translationService = TranslationService;
         this.QueueTranslation(
             translationKey,
-            () => TranslationService.Translate(
+            () => translationService.Translate(
                 originalPayload.Name,
-                sourceLanguage.ProviderCode,
-                LangDict[LanguageInt].Code),
+                sourceLanguage,
+                scope.TargetLanguageCode),
             translatedName => this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
-                sourceLanguage,
+                scope,
                 translatedName: translatedName));
     }
 
@@ -292,11 +301,13 @@ public unsafe partial class Echoglossian
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
     /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     private void PrefetchReferenceTextDescription(
         ReferenceTextPrefetchRegistration registration,
         ReferenceTextCanonicalPayload originalPayload,
         ReferenceTextRowBase existingRow,
-        SourceClientLanguage sourceLanguage)
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedDescription))
@@ -304,8 +315,9 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var translationKey =
-            $"{registration.Key}|{originalPayload.ReferenceId}|Description|{originalPayload.Description}";
+        var translationKey = BuildReferenceTextScopedTranslationKey(
+            $"{registration.Key}|{originalPayload.ReferenceId}|Description|{originalPayload.Description}",
+            scope);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedDescription))
@@ -313,21 +325,22 @@ public unsafe partial class Echoglossian
             this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
-                sourceLanguage,
+                scope,
                 translatedDescription: cachedTranslatedDescription);
             return;
         }
 
+        var translationService = TranslationService;
         this.QueueTranslation(
             translationKey,
-            () => TranslationService.Translate(
+            () => translationService.Translate(
                 originalPayload.Description,
-                sourceLanguage.ProviderCode,
-                LangDict[LanguageInt].Code),
+                sourceLanguage,
+                scope.TargetLanguageCode),
             translatedDescription => this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
-                sourceLanguage,
+                scope,
                 translatedDescription: translatedDescription));
     }
 
@@ -337,13 +350,13 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="registration">The registration describing the sheet family.</param>
     /// <param name="referenceId">The sheet-row identifier.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
     private void ApplyReferenceTextTranslation(
         ReferenceTextPrefetchRegistration registration,
         uint referenceId,
-        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
         string? translatedName = null,
         string? translatedDescription = null)
     {
@@ -353,9 +366,9 @@ public unsafe partial class Echoglossian
         }
 
         var existingProbe = registration.CreateRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
             GetGameVersion(),
             originalPayload,
             null);
@@ -381,13 +394,26 @@ public unsafe partial class Echoglossian
                 : translatedPayload.TranslatedDescription;
 
         var translatedRow = registration.CreateRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
             GetGameVersion(),
             originalPayload,
             translatedPayload);
         registration.InsertRow(translatedRow);
+    }
+
+    /// <summary>
+    ///     Adds the complete operation scope to one reference-text payload key.
+    /// </summary>
+    /// <param name="payloadIdentity">The existing payload identity.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <returns>The source-scoped broker key.</returns>
+    private static string BuildReferenceTextScopedTranslationKey(
+        string payloadIdentity,
+        TranslationReuseScope scope)
+    {
+        return BuildTranslationReuseScopedKey(payloadIdentity, scope);
     }
 
     /// <summary>

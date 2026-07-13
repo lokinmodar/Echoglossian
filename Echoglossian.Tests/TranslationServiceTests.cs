@@ -17,6 +17,103 @@ namespace Echoglossian.Tests;
 public class TranslationServiceTests
 {
     /// <summary>
+    ///     Ensures distinct simplified and traditional Chinese client sources
+    ///     retain separate failure identities while sharing the provider code.
+    /// </summary>
+    [Fact]
+    public void Translate_ChineseClientSources_SeparateFailureIdentity()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = string.Empty,
+        };
+        var knownFailureSources = new HashSet<string>(StringComparer.Ordinal);
+        var lookupSources = new List<string>();
+        var recordedSources = new List<string>();
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 8,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+            {
+                lookupSources.Add(source);
+                return knownFailureSources.Contains(source);
+            },
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedSources.Add(source);
+                knownFailureSources.Add(source);
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                recordedSources.Add(source);
+                knownFailureSources.Add(source);
+            });
+
+        var chsResult = TranslateWithCapturedSource(
+            service,
+            "same text",
+            new SourceClientLanguage("chs", "zh-CN"),
+            "pt-BR");
+        var chtResult = TranslateWithCapturedSource(
+            service,
+            "same text",
+            new SourceClientLanguage("cht", "zh-CN"),
+            "pt-BR");
+
+        Assert.Equal("same text", chsResult);
+        Assert.Equal("same text", chtResult);
+        Assert.Equal(2, translator.SyncCalls);
+        Assert.Equal(["zh-CN", "zh-CN"], translator.SyncSourceLanguages);
+        Assert.Equal(["chs", "cht"], lookupSources);
+        Assert.Equal(["chs", "cht"], recordedSources);
+    }
+
+    /// <summary>
+    ///     Ensures an unresolved source contract fails before failure-cache,
+    ///     provider, or persistence activity.
+    /// </summary>
+    [Fact]
+    public void Translate_UnknownCapturedSource_PerformsNoWork()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "should-not-be-used",
+        };
+        var failureLookupCalls = 0;
+        var failureRecordCalls = 0;
+        var transientFailureRecordCalls = 0;
+        var service = new TranslationService(
+            text => text,
+            translator,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+            {
+                failureLookupCalls++;
+                return false;
+            },
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                failureRecordCalls++;
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                transientFailureRecordCalls++;
+            });
+
+        var result = TranslateWithCapturedSource(
+            service,
+            "unknown source text",
+            default,
+            "pt-BR");
+
+        Assert.Equal("unknown source text", result);
+        Assert.Equal(0, translator.SyncCalls);
+        Assert.Equal(0, failureLookupCalls);
+        Assert.Equal(0, failureRecordCalls);
+        Assert.Equal(0, transientFailureRecordCalls);
+    }
+
+    /// <summary>
     ///     Ensures the service sanitizes text before passing it to the translator.
     /// </summary>
     [Fact]
@@ -550,6 +647,8 @@ public class TranslationServiceTests
     /// </summary>
     private class RecordingTranslator : ITranslator
     {
+        private readonly List<string> syncSourceLanguages = [];
+
         /// <summary>
         ///     Gets or sets the synchronous result.
         /// </summary>
@@ -580,11 +679,18 @@ public class TranslationServiceTests
         /// </summary>
         public string? LastAsyncText { get; private set; }
 
+        /// <summary>
+        ///     Gets the provider source languages supplied to synchronous calls.
+        /// </summary>
+        public IReadOnlyList<string> SyncSourceLanguages =>
+            this.syncSourceLanguages;
+
         /// <inheritdoc/>
         public string? Translate(string text, string sourceLanguage, string targetLanguage)
         {
             this.SyncCalls++;
             this.LastSyncText = text;
+            this.syncSourceLanguages.Add(sourceLanguage);
             return this.SyncResult;
         }
 
@@ -595,6 +701,47 @@ public class TranslationServiceTests
             this.LastAsyncText = text;
             return Task.FromResult(this.AsyncResult);
         }
+    }
+
+    /// <summary>
+    ///     Invokes the captured-source translation overload under test.
+    /// </summary>
+    /// <param name="service">The translation service.</param>
+    /// <param name="text">The source text.</param>
+    /// <param name="sourceLanguage">The captured source contract.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <returns>The translated or fallback text.</returns>
+    private static string TranslateWithCapturedSource(
+        TranslationService service,
+        string text,
+        SourceClientLanguage sourceLanguage,
+        string targetLanguage)
+    {
+        var method = typeof(TranslationService).GetMethods()
+            .SingleOrDefault(candidate =>
+            {
+                if (candidate.Name != nameof(TranslationService.Translate))
+                {
+                    return false;
+                }
+
+                var parameters = candidate.GetParameters();
+                return parameters.Length >= 3 &&
+                       parameters[1].ParameterType ==
+                       typeof(SourceClientLanguage);
+            });
+        Assert.NotNull(method);
+
+        var arguments = method!.GetParameters()
+            .Select(parameter => parameter.Position switch
+            {
+                0 => text,
+                1 => (object)sourceLanguage,
+                2 => targetLanguage,
+                _ => parameter.DefaultValue,
+            })
+            .ToArray();
+        return Assert.IsType<string>(method.Invoke(service, arguments));
     }
 
     /// <summary>

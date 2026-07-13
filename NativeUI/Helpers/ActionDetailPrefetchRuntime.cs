@@ -122,13 +122,19 @@ public unsafe partial class Echoglossian
             !TryBuildActionTooltipCanonicalPayload(
                 actionId,
                 currentClassJobId,
-                out _))
+                out _) ||
+            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage) ||
+            !this.TryCreateCapturedTranslationScope(
+                sourceLanguage,
+                out var scope))
         {
             return false;
         }
 
-        var scopeKey =
-            $"{actionId}|{LangDict[LanguageInt].Code}|{this.configuration.ChosenTransEngine}|{GetGameVersion() ?? string.Empty}";
+        var scopeKey = BuildTranslationReuseScopedKey(
+            $"ActionDetailOnDemand|{actionId}|{GetGameVersion() ?? string.Empty}",
+            scope);
         var utcNow = DateTime.UtcNow;
         if (this.actionDetailOnDemandPrefetchUtcByScope.TryGetValue(
                 scopeKey,
@@ -139,7 +145,11 @@ public unsafe partial class Echoglossian
         }
 
         this.actionDetailOnDemandPrefetchUtcByScope[scopeKey] = utcNow;
-        this.PrefetchActionDetail(actionId, currentClassJobId);
+        this.PrefetchActionDetail(
+            actionId,
+            currentClassJobId,
+            sourceLanguage,
+            scope);
         return true;
     }
 
@@ -151,10 +161,35 @@ public unsafe partial class Echoglossian
     private void PrefetchActionDetail(uint actionId, byte currentClassJobId)
     {
         if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage))
+                out var sourceLanguage) ||
+            !this.TryCreateCapturedTranslationScope(
+                sourceLanguage,
+                out var scope))
         {
             return;
         }
+
+        this.PrefetchActionDetail(
+            actionId,
+            currentClassJobId,
+            sourceLanguage,
+            scope);
+    }
+
+    /// <summary>
+    ///     Prefetches one canonical action-tooltip payload using an immutable
+    ///     operation scope.
+    /// </summary>
+    /// <param name="actionId">The action row identifier.</param>
+    /// <param name="currentClassJobId">The current class-job identifier.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    private void PrefetchActionDetail(
+        uint actionId,
+        byte currentClassJobId,
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope)
+    {
 
         if (!TryBuildActionTooltipCanonicalPayload(
                 actionId,
@@ -165,9 +200,9 @@ public unsafe partial class Echoglossian
         }
 
         var originalRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
             GetGameVersion(),
             originalPayload);
         var existingRow = this.FindActionTooltip(originalRow) ?? originalRow;
@@ -176,11 +211,13 @@ public unsafe partial class Echoglossian
         this.PrefetchActionDetailName(
             originalPayload,
             existingRow,
-            sourceLanguage);
+            sourceLanguage,
+            scope);
         this.PrefetchActionDetailDescription(
             originalPayload,
             existingRow,
-            sourceLanguage);
+            sourceLanguage,
+            scope);
     }
 
     /// <summary>
@@ -189,10 +226,12 @@ public unsafe partial class Echoglossian
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
     /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     private void PrefetchActionDetailName(
         ActionTooltipCanonicalPayload originalPayload,
         ActionTooltip existingRow,
-        SourceClientLanguage sourceLanguage)
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedActionName))
@@ -201,7 +240,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            BuildActionDetailNameTranslationKey(originalPayload);
+            BuildActionDetailNameTranslationKey(originalPayload, scope);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedName))
@@ -209,21 +248,22 @@ public unsafe partial class Echoglossian
             this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
-                sourceLanguage,
+                scope,
                 translatedName: cachedTranslatedName);
             return;
         }
 
+        var translationService = TranslationService;
         this.QueueTranslation(
             translationKey,
-            () => TranslationService.Translate(
+            () => translationService.Translate(
                 originalPayload.Name,
-                sourceLanguage.ProviderCode,
-                LangDict[LanguageInt].Code),
+                sourceLanguage,
+                scope.TargetLanguageCode),
             translatedName => this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
-                sourceLanguage,
+                scope,
                 translatedName: translatedName));
     }
 
@@ -233,10 +273,12 @@ public unsafe partial class Echoglossian
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
     /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     private void PrefetchActionDetailDescription(
         ActionTooltipCanonicalPayload originalPayload,
         ActionTooltip existingRow,
-        SourceClientLanguage sourceLanguage)
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedActionDescription))
@@ -245,7 +287,7 @@ public unsafe partial class Echoglossian
         }
 
         var translationKey =
-            BuildActionDetailDescriptionTranslationKey(originalPayload);
+            BuildActionDetailDescriptionTranslationKey(originalPayload, scope);
         if (this.TryGetQueuedTranslation(
                 translationKey,
                 out var cachedTranslatedDescription))
@@ -253,21 +295,22 @@ public unsafe partial class Echoglossian
             this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
-                sourceLanguage,
+                scope,
                 translatedDescription: cachedTranslatedDescription);
             return;
         }
 
+        var translationService = TranslationService;
         this.QueueTranslation(
             translationKey,
-            () => TranslationService.Translate(
+            () => translationService.Translate(
                 originalPayload.Description,
-                sourceLanguage.ProviderCode,
-                LangDict[LanguageInt].Code),
+                sourceLanguage,
+                scope.TargetLanguageCode),
             translatedDescription => this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
-                sourceLanguage,
+                scope,
                 translatedDescription: translatedDescription));
     }
 
@@ -276,13 +319,13 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="actionId">The action row identifier.</param>
     /// <param name="currentClassJobId">The current class-job identifier.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
     private void ApplyActionDetailTranslation(
         uint actionId,
         uint currentClassJobId,
-        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
         string? translatedName = null,
         string? translatedDescription = null)
     {
@@ -295,9 +338,9 @@ public unsafe partial class Echoglossian
         }
 
         var existingProbe = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
             GetGameVersion(),
             originalPayload);
         var existingRow = this.FindActionTooltip(existingProbe);
@@ -325,16 +368,17 @@ public unsafe partial class Echoglossian
                 : translatedPayload.TranslatedDescription;
         this.TryPopulatePendingActionDetailTranslations(
             originalPayload,
-            translatedPayload);
+            translatedPayload,
+            scope);
         if (!translatedPayload.HasCompleteTranslation)
         {
             return;
         }
 
         var translatedRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
             GetGameVersion(),
             originalPayload,
             translatedPayload);
@@ -347,14 +391,16 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="translatedPayload">The partially translated payload.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     private void TryPopulatePendingActionDetailTranslations(
         ActionTooltipCanonicalPayload originalPayload,
-        ActionTooltipCanonicalPayload translatedPayload)
+        ActionTooltipCanonicalPayload translatedPayload,
+        TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedName) &&
             !string.IsNullOrWhiteSpace(originalPayload.Name) &&
             this.TryGetQueuedTranslation(
-                BuildActionDetailNameTranslationKey(originalPayload),
+                BuildActionDetailNameTranslationKey(originalPayload, scope),
                 out var cachedTranslatedName))
         {
             translatedPayload.TranslatedName = cachedTranslatedName;
@@ -363,7 +409,7 @@ public unsafe partial class Echoglossian
         if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedDescription) &&
             !string.IsNullOrWhiteSpace(originalPayload.Description) &&
             this.TryGetQueuedTranslation(
-                BuildActionDetailDescriptionTranslationKey(originalPayload),
+                BuildActionDetailDescriptionTranslationKey(originalPayload, scope),
                 out var cachedTranslatedDescription))
         {
             translatedPayload.TranslatedDescription =
@@ -375,24 +421,86 @@ public unsafe partial class Echoglossian
     ///     Builds the stable queued-translation key for one action-detail name.
     /// </summary>
     /// <param name="payload">The canonical payload.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     /// <returns>The stable queue key.</returns>
     private static string BuildActionDetailNameTranslationKey(
-        ActionTooltipCanonicalPayload payload)
+        ActionTooltipCanonicalPayload payload,
+        TranslationReuseScope scope)
     {
-        return
-            $"ActionDetailPrefetch|{payload.ActionId}|Name|{payload.Name}";
+        return BuildActionDetailScopedTranslationKey(
+            $"ActionDetailPrefetch|{payload.ActionId}|Name|{payload.Name}",
+            scope);
     }
 
     /// <summary>
     ///     Builds the stable queued-translation key for one action-detail description.
     /// </summary>
     /// <param name="payload">The canonical payload.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     /// <returns>The stable queue key.</returns>
     private static string BuildActionDetailDescriptionTranslationKey(
-        ActionTooltipCanonicalPayload payload)
+        ActionTooltipCanonicalPayload payload,
+        TranslationReuseScope scope)
     {
-        return
-            $"ActionDetailPrefetch|{payload.ActionId}|Description|{payload.Description}";
+        return BuildActionDetailScopedTranslationKey(
+            $"ActionDetailPrefetch|{payload.ActionId}|Description|{payload.Description}",
+            scope);
+    }
+
+    /// <summary>
+    ///     Adds the complete operation scope to one action-detail payload key.
+    /// </summary>
+    /// <param name="payloadIdentity">The existing payload identity.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <returns>The source-scoped broker key.</returns>
+    private static string BuildActionDetailScopedTranslationKey(
+        string payloadIdentity,
+        TranslationReuseScope scope)
+    {
+        return BuildTranslationReuseScopedKey(payloadIdentity, scope);
+    }
+
+    /// <summary>
+    ///     Adds a complete translation reuse scope to an existing payload key.
+    /// </summary>
+    /// <param name="payloadIdentity">The existing payload identity.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <returns>The source-scoped broker key.</returns>
+    private static string BuildTranslationReuseScopedKey(
+        string payloadIdentity,
+        TranslationReuseScope scope)
+    {
+        return $"{payloadIdentity}|Scope|{scope.SourceLanguageCode}|{scope.TargetLanguageCode}|{scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture) ?? "<none>"}|{scope.RequireMatchingEngine}";
+    }
+
+    /// <summary>
+    ///     Captures the current target and engine policy around a resolved
+    ///     source identity.
+    /// </summary>
+    /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The complete immutable scope, when available.</param>
+    /// <returns><see langword="true" /> when the scope is complete.</returns>
+    private bool TryCreateCapturedTranslationScope(
+        SourceClientLanguage sourceLanguage,
+        out TranslationReuseScope scope)
+    {
+        var targetLanguage =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.configuration.Lang);
+        if (string.IsNullOrWhiteSpace(sourceLanguage.PersistenceCode) ||
+            string.IsNullOrWhiteSpace(sourceLanguage.ProviderCode) ||
+            string.IsNullOrWhiteSpace(targetLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            this.configuration.ChosenTransEngine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
+        return true;
     }
 
     /// <summary>

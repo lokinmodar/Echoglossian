@@ -195,11 +195,18 @@ public partial class Echoglossian
   ///     missing translations through the shared paced broker.
   /// </summary>
   /// <param name="questId">The accepted quest identifier.</param>
-  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void PrefetchAcceptedQuest(
       uint questId,
       SourceClientLanguage sourceLanguage)
   {
+    if (!this.TryCreateCapturedTranslationScope(
+            sourceLanguage,
+            out var scope))
+    {
+      return;
+    }
+
     this.LogAcceptedQuestPrefetchEvent(
         "quest-start",
         questId,
@@ -222,7 +229,7 @@ public partial class Echoglossian
     var currentQuestSequenceText = questCanonicalData.CurrentSequenceText;
     var questPlate = this.CreateAcceptedQuestPrefetchPlate(
         questCanonicalData,
-        sourceLanguage);
+        scope);
     this.EmitAcceptedQuestPrefetchDiagnostic(questCanonicalData, questPlate);
     this.InsertQuestPlate(questPlate);
 
@@ -245,27 +252,32 @@ public partial class Echoglossian
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage);
+        sourceLanguage,
+        scope);
     this.PrefetchAcceptedQuestCurrentMessage(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage);
+        sourceLanguage,
+        scope);
     this.PrefetchAcceptedQuestSummaries(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage);
+        sourceLanguage,
+        scope);
     this.PrefetchAcceptedQuestObjectives(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage);
+        sourceLanguage,
+        scope);
     this.PrefetchAcceptedQuestSystemRows(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage);
+        sourceLanguage,
+        scope);
   }
 
   /// <summary>
@@ -276,11 +288,13 @@ public partial class Echoglossian
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
   /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void PrefetchAcceptedQuestName(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope scope)
   {
     if (!string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestName))
     {
@@ -292,8 +306,9 @@ public partial class Echoglossian
       return;
     }
 
-    var translationKey =
-        $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Name|{questProgressSnapshot.QuestName}";
+    var translationKey = BuildAcceptedQuestScopedTranslationKey(
+        $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Name|{questProgressSnapshot.QuestName}",
+        scope);
     if (this.TryGetQueuedTranslation(
             translationKey,
             out var cachedTranslatedQuestName))
@@ -307,16 +322,17 @@ public partial class Echoglossian
           questProgressSnapshot,
           currentQuestSequenceText,
           cachedTranslatedQuestName,
-          sourceLanguage);
+          scope);
       return;
     }
 
+    var translationService = TranslationService;
     var queued = this.QueueTranslation(
         translationKey,
-        () => TranslationService.Translate(
+        () => translationService.Translate(
             questProgressSnapshot.QuestName,
-            sourceLanguage.ProviderCode,
-            LangDict[LanguageInt].Code),
+            sourceLanguage,
+            scope.TargetLanguageCode),
         translatedQuestName =>
         {
           this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -329,7 +345,7 @@ public partial class Echoglossian
               questProgressSnapshot,
               currentQuestSequenceText,
               translatedQuestName,
-              sourceLanguage);
+              scope);
         });
     this.LogAcceptedQuestPrefetchTranslationEvent(
         questProgressSnapshot,
@@ -346,11 +362,13 @@ public partial class Echoglossian
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
   /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void PrefetchAcceptedQuestCurrentMessage(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope scope)
   {
     if (string.IsNullOrWhiteSpace(currentQuestSequenceText) ||
         !string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestMessage))
@@ -365,8 +383,9 @@ public partial class Echoglossian
       return;
     }
 
-    var translationKey =
-        $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Message|{currentQuestSequenceText}";
+    var translationKey = BuildAcceptedQuestScopedTranslationKey(
+        $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Message|{currentQuestSequenceText}",
+        scope);
     if (this.TryGetQueuedTranslation(
             translationKey,
             out var cachedTranslatedQuestMessage))
@@ -380,16 +399,17 @@ public partial class Echoglossian
           questProgressSnapshot,
           currentQuestSequenceText,
           cachedTranslatedQuestMessage,
-          sourceLanguage);
+          scope);
       return;
     }
 
+    var translationService = TranslationService;
     var queued = this.QueueTranslation(
         translationKey,
-        () => TranslationService.Translate(
+        () => translationService.Translate(
             currentQuestSequenceText,
-            sourceLanguage.ProviderCode,
-            LangDict[LanguageInt].Code),
+            sourceLanguage,
+            scope.TargetLanguageCode),
         translatedQuestMessage =>
         {
           this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -402,7 +422,7 @@ public partial class Echoglossian
               questProgressSnapshot,
               currentQuestSequenceText,
               translatedQuestMessage,
-              sourceLanguage);
+              scope);
         });
     this.LogAcceptedQuestPrefetchTranslationEvent(
         questProgressSnapshot,
@@ -418,11 +438,13 @@ public partial class Echoglossian
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
   /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void PrefetchAcceptedQuestSummaries(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope scope)
   {
     foreach (var questSequenceEntry in questProgressSnapshot.QuestSeqTexts)
     {
@@ -446,8 +468,9 @@ public partial class Echoglossian
         continue;
       }
 
-      var translationKey =
-          $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Summary|{questSequenceEntry.KeyText}|{questSequenceEntry.Text}";
+      var translationKey = BuildAcceptedQuestScopedTranslationKey(
+          $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Summary|{questSequenceEntry.KeyText}|{questSequenceEntry.Text}",
+          scope);
       if (this.TryGetQueuedTranslation(
               translationKey,
               out var cachedTranslatedSummaryText))
@@ -464,16 +487,17 @@ public partial class Echoglossian
             questSequenceEntry.KeyText,
             questSequenceEntry.Text,
             cachedTranslatedSummaryText,
-            sourceLanguage);
+            scope);
         continue;
       }
 
+      var translationService = TranslationService;
       var queued = this.QueueTranslation(
           translationKey,
-          () => TranslationService.Translate(
+          () => translationService.Translate(
               questSequenceEntry.Text,
-              sourceLanguage.ProviderCode,
-              LangDict[LanguageInt].Code),
+              sourceLanguage,
+              scope.TargetLanguageCode),
           translatedSummaryTextValue =>
           {
               this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -489,7 +513,7 @@ public partial class Echoglossian
                   questSequenceEntry.KeyText,
                   questSequenceEntry.Text,
                   translatedSummaryTextValue,
-                  sourceLanguage);
+                  scope);
           });
       this.LogAcceptedQuestPrefetchTranslationEvent(
           questProgressSnapshot,
@@ -507,11 +531,13 @@ public partial class Echoglossian
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
   /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void PrefetchAcceptedQuestObjectives(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope scope)
   {
     foreach (var questStep in questProgressSnapshot.QuestSteps)
     {
@@ -535,8 +561,9 @@ public partial class Echoglossian
         continue;
       }
 
-      var translationKey =
-          $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Objective|{questStep.KeyText}|{questStep.Text}";
+      var translationKey = BuildAcceptedQuestScopedTranslationKey(
+          $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Objective|{questStep.KeyText}|{questStep.Text}",
+          scope);
       if (this.TryGetQueuedTranslation(
               translationKey,
               out var cachedTranslatedObjectiveText))
@@ -553,16 +580,17 @@ public partial class Echoglossian
             questStep.KeyText,
             questStep.Text,
             cachedTranslatedObjectiveText,
-            sourceLanguage);
+            scope);
         continue;
       }
 
+      var translationService = TranslationService;
       var queued = this.QueueTranslation(
           translationKey,
-          () => TranslationService.Translate(
+          () => translationService.Translate(
               questStep.Text,
-              sourceLanguage.ProviderCode,
-              LangDict[LanguageInt].Code),
+              sourceLanguage,
+              scope.TargetLanguageCode),
           translatedObjectiveTextValue =>
           {
               this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -578,7 +606,7 @@ public partial class Echoglossian
                   questStep.KeyText,
                   questStep.Text,
                   translatedObjectiveTextValue,
-                  sourceLanguage);
+                  scope);
           });
       this.LogAcceptedQuestPrefetchTranslationEvent(
           questProgressSnapshot,
@@ -596,11 +624,13 @@ public partial class Echoglossian
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
   /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void PrefetchAcceptedQuestSystemRows(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope scope)
   {
     foreach (var questSystemText in questProgressSnapshot.QuestSystemTexts)
     {
@@ -624,8 +654,9 @@ public partial class Echoglossian
         continue;
       }
 
-      var translationKey =
-          $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|System|{questSystemText.KeyText}|{questSystemText.Text}";
+      var translationKey = BuildAcceptedQuestScopedTranslationKey(
+          $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|System|{questSystemText.KeyText}|{questSystemText.Text}",
+          scope);
       if (this.TryGetQueuedTranslation(
               translationKey,
               out var cachedTranslatedSystemRowText))
@@ -642,16 +673,17 @@ public partial class Echoglossian
             questSystemText.KeyText,
             questSystemText.Text,
             cachedTranslatedSystemRowText,
-            sourceLanguage);
+            scope);
         continue;
       }
 
+      var translationService = TranslationService;
       var queued = this.QueueTranslation(
           translationKey,
-          () => TranslationService.Translate(
+          () => translationService.Translate(
               questSystemText.Text,
-              sourceLanguage.ProviderCode,
-              LangDict[LanguageInt].Code),
+              sourceLanguage,
+              scope.TargetLanguageCode),
           translatedSystemTextValue =>
           {
               this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -667,7 +699,7 @@ public partial class Echoglossian
                   questSystemText.KeyText,
                   questSystemText.Text,
                   translatedSystemTextValue,
-                  sourceLanguage);
+                  scope);
           });
       this.LogAcceptedQuestPrefetchTranslationEvent(
           questProgressSnapshot,
@@ -685,12 +717,12 @@ public partial class Echoglossian
   /// <param name="questProgressSnapshot">The resolved quest snapshot.</param>
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="translatedQuestName">The translated quest name.</param>
-  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void ApplyAcceptedQuestNameTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string translatedQuestName,
-      SourceClientLanguage sourceLanguage)
+      TranslationReuseScope scope)
   {
     if (string.IsNullOrWhiteSpace(translatedQuestName))
     {
@@ -702,7 +734,7 @@ public partial class Echoglossian
         GetGameVersion());
     var questPlate = this.CreateAcceptedQuestPrefetchPlate(
         questCanonicalData,
-        sourceLanguage);
+        scope);
     questPlate.TranslatedQuestName = translatedQuestName;
     this.UpdateQuestPlate(questPlate);
   }
@@ -714,12 +746,12 @@ public partial class Echoglossian
   /// <param name="questProgressSnapshot">The resolved quest snapshot.</param>
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="translatedQuestMessage">The translated quest message.</param>
-  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void ApplyAcceptedQuestMessageTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string translatedQuestMessage,
-      SourceClientLanguage sourceLanguage)
+      TranslationReuseScope scope)
   {
     if (string.IsNullOrWhiteSpace(currentQuestSequenceText) ||
         string.IsNullOrWhiteSpace(translatedQuestMessage))
@@ -732,7 +764,7 @@ public partial class Echoglossian
         GetGameVersion());
     var questPlate = this.CreateAcceptedQuestPrefetchPlate(
         questCanonicalData,
-        sourceLanguage);
+        scope);
     questPlate.TranslatedQuestMessage = translatedQuestMessage;
 
     if (questCanonicalData.TryGetCurrentSequenceEntry(out var currentSequenceEntry))
@@ -762,14 +794,14 @@ public partial class Echoglossian
   /// <param name="summaryRowKey">The canonical summary-row key.</param>
   /// <param name="originalSummaryText">The original summary text.</param>
   /// <param name="translatedSummaryText">The translated summary text.</param>
-  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void ApplyAcceptedQuestSummaryTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string summaryRowKey,
       string originalSummaryText,
       string translatedSummaryText,
-      SourceClientLanguage sourceLanguage)
+      TranslationReuseScope scope)
   {
     if (string.IsNullOrWhiteSpace(originalSummaryText) ||
         string.IsNullOrWhiteSpace(translatedSummaryText))
@@ -782,7 +814,7 @@ public partial class Echoglossian
         GetGameVersion());
     var questPlate = this.CreateAcceptedQuestPrefetchPlate(
         questCanonicalData,
-        sourceLanguage);
+        scope);
     questPlate.SetTranslatedSummaryText(
         summaryRowKey,
         originalSummaryText,
@@ -808,14 +840,14 @@ public partial class Echoglossian
   /// <param name="objectiveRowKey">The canonical objective-row key.</param>
   /// <param name="originalObjectiveText">The original objective text.</param>
   /// <param name="translatedObjectiveText">The translated objective text.</param>
-  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void ApplyAcceptedQuestObjectiveTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string objectiveRowKey,
       string originalObjectiveText,
       string translatedObjectiveText,
-      SourceClientLanguage sourceLanguage)
+      TranslationReuseScope scope)
   {
     if (string.IsNullOrWhiteSpace(originalObjectiveText) ||
         string.IsNullOrWhiteSpace(translatedObjectiveText))
@@ -828,7 +860,7 @@ public partial class Echoglossian
         GetGameVersion());
     var questPlate = this.CreateAcceptedQuestPrefetchPlate(
         questCanonicalData,
-        sourceLanguage);
+        scope);
     questPlate.SetTranslatedObjectiveText(
         objectiveRowKey,
         originalObjectiveText,
@@ -845,14 +877,14 @@ public partial class Echoglossian
   /// <param name="systemRowKey">The canonical SYSTEM-row key.</param>
   /// <param name="originalSystemText">The original SYSTEM-row text.</param>
   /// <param name="translatedSystemText">The translated SYSTEM-row text.</param>
-  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   private void ApplyAcceptedQuestSystemTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string systemRowKey,
       string originalSystemText,
       string translatedSystemText,
-      SourceClientLanguage sourceLanguage)
+      TranslationReuseScope scope)
   {
     if (string.IsNullOrWhiteSpace(originalSystemText) ||
         string.IsNullOrWhiteSpace(translatedSystemText))
@@ -865,7 +897,7 @@ public partial class Echoglossian
         GetGameVersion());
     var questPlate = this.CreateAcceptedQuestPrefetchPlate(
         questCanonicalData,
-        sourceLanguage);
+        scope);
     questPlate.SetTranslatedSystemText(
         systemRowKey,
         originalSystemText,
@@ -878,17 +910,30 @@ public partial class Echoglossian
   ///     background prefetch runtime.
   /// </summary>
   /// <param name="questCanonicalData">The canonical quest payload.</param>
-  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
   /// <returns>The canonical quest plate snapshot.</returns>
   private QuestPlate CreateAcceptedQuestPrefetchPlate(
       QuestCanonicalData questCanonicalData,
-      SourceClientLanguage sourceLanguage)
+      TranslationReuseScope scope)
   {
     return questCanonicalData.ToQuestPlate(
-        sourceLanguage.PersistenceCode,
-        LangDict[LanguageInt].Code,
-        this.configuration.ChosenTransEngine,
+        scope.SourceLanguageCode,
+        scope.TargetLanguageCode,
+        scope.TranslationEngine!.Value,
         DateTime.Now);
+  }
+
+  /// <summary>
+  ///     Adds the complete operation scope to one accepted-quest payload key.
+  /// </summary>
+  /// <param name="payloadIdentity">The existing payload identity.</param>
+  /// <param name="scope">The immutable operation reuse scope.</param>
+  /// <returns>The source-scoped broker key.</returns>
+  private static string BuildAcceptedQuestScopedTranslationKey(
+      string payloadIdentity,
+      TranslationReuseScope scope)
+  {
+    return BuildTranslationReuseScopedKey(payloadIdentity, scope);
   }
 
   /// <summary>
