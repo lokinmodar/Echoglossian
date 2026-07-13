@@ -81,20 +81,20 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
-  ///     Creates a canonical quest plate snapshot using the current plugin
-  ///     language and engine settings.
+  ///     Creates a canonical quest plate snapshot using the captured source
+  ///     language and current engine settings.
   /// </summary>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <param name="questName">The quest name.</param>
   /// <param name="questMessage">The quest message.</param>
   /// <param name="questId">Optional quest id.</param>
   /// <returns>A canonical quest plate snapshot.</returns>
   protected QuestPlate CreateQuestPlate(
+      SourceClientLanguage sourceLanguage,
       string questName,
       string questMessage,
       string? questId = null)
   {
-    var sourceLanguage = this.ResolveCurrentSourceLanguage();
-
     return new QuestPlate(
         questName,
         questMessage,
@@ -112,6 +112,7 @@ internal abstract class QuestAddonHandlerBase
   /// <summary>
   ///     Creates a canonical quest plate snapshot with translated fields.
   /// </summary>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <param name="questName">The original quest name.</param>
   /// <param name="questMessage">The original quest message.</param>
   /// <param name="translatedQuestName">The translated quest name.</param>
@@ -119,14 +120,13 @@ internal abstract class QuestAddonHandlerBase
   /// <param name="questId">Optional quest id.</param>
   /// <returns>A translated quest plate snapshot.</returns>
   protected QuestPlate CreateTranslatedQuestPlate(
+      SourceClientLanguage sourceLanguage,
       string questName,
       string questMessage,
       string translatedQuestName,
       string translatedQuestMessage,
       string? questId = null)
   {
-    var sourceLanguage = this.ResolveCurrentSourceLanguage();
-
     return new QuestPlate(
         questName,
         questMessage,
@@ -145,11 +145,12 @@ internal abstract class QuestAddonHandlerBase
   ///     Translates the given text using the shared translation service.
   /// </summary>
   /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <returns>The translated text.</returns>
-  protected string Translate(string text)
+  protected string Translate(
+      string text,
+      SourceClientLanguage sourceLanguage)
   {
-    var sourceLanguage = this.ResolveCurrentSourceLanguage();
-
     return this.TranslationService.Translate(
         text,
         sourceLanguage.ProviderCode,
@@ -161,35 +162,16 @@ internal abstract class QuestAddonHandlerBase
   ///     service.
   /// </summary>
   /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <returns>The translated text task.</returns>
-  protected Task<string> TranslateAsync(string text)
+  protected Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage)
   {
-    var sourceLanguage = this.ResolveCurrentSourceLanguage();
-
     return this.TranslationService.TranslateAsync(
         text,
         sourceLanguage.ProviderCode,
         LangDict[LanguageInt].Code);
-  }
-
-  /// <summary>
-  ///     Resolves the current client source identity for a shared quest
-  ///     persistence or translation operation.
-  /// </summary>
-  /// <returns>The resolved source language.</returns>
-  /// <exception cref="InvalidOperationException">
-  ///     Thrown when the current client source language is unknown.
-  /// </exception>
-  private SourceClientLanguage ResolveCurrentSourceLanguage()
-  {
-    if (RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-            out var sourceLanguage))
-    {
-      return sourceLanguage;
-    }
-
-    throw new InvalidOperationException(
-        "The current client source language could not be resolved.");
   }
 
   /// <summary>

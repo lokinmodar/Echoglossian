@@ -14077,25 +14077,30 @@
                 Whether one or more translated payloads are still pending.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalDetail">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalDetail(System.Nullable{Echoglossian.SourceClientLanguage})">
             <summary>
                 Translates the active JournalDetail addon.
             </summary>
+            <param name="sourceLanguage">
+            The operation-captured source identity, or no value for disabled cleanup.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateCompletedQuest(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateCompletedQuest(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.SourceClientLanguage,System.Boolean@)">
             <summary>
                 Translates a completed JournalDetail quest view.
             </summary>
             <param name="journalDetail">The journal detail addon.</param>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="hasPendingTranslations">
                 Whether one or more translated payloads are still pending.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.SourceClientLanguage,System.Boolean@)">
             <summary>
                 Translates the active JournalDetail detail view.
             </summary>
             <param name="journalDetail">The live JournalDetail addon.</param>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="hasPendingTranslations">
                 Whether one or more translated payloads are still pending.
             </param>
@@ -14285,10 +14290,13 @@
                 written into the native UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateJournalQuests">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TranslateJournalQuests(System.Nullable{Echoglossian.SourceClientLanguage})">
             <summary>
                 Translates the active Journal quest list addon.
             </summary>
+            <param name="sourceLanguage">
+            The operation-captured source identity, or no value for disabled cleanup.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalQuestEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
@@ -14493,20 +14501,22 @@
             <param name="evt">The lifecycle event to handle.</param>
             <param name="handler">The delegate invoked for that event.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.CreateQuestPlate(System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.CreateQuestPlate(Echoglossian.SourceClientLanguage,System.String,System.String,System.String)">
             <summary>
-                Creates a canonical quest plate snapshot using the current plugin
-                language and engine settings.
+                Creates a canonical quest plate snapshot using the captured source
+                language and current engine settings.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="questName">The quest name.</param>
             <param name="questMessage">The quest message.</param>
             <param name="questId">Optional quest id.</param>
             <returns>A canonical quest plate snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.CreateTranslatedQuestPlate(System.String,System.String,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.CreateTranslatedQuestPlate(Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String)">
             <summary>
                 Creates a canonical quest plate snapshot with translated fields.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="questName">The original quest name.</param>
             <param name="questMessage">The original quest message.</param>
             <param name="translatedQuestName">The translated quest name.</param>
@@ -14514,30 +14524,22 @@
             <param name="questId">Optional quest id.</param>
             <returns>A translated quest plate snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.Translate(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.Translate(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Translates the given text using the shared translation service.
             </summary>
             <param name="text">Text to translate.</param>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <returns>The translated text.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TranslateAsync(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TranslateAsync(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Translates the given text asynchronously using the shared translation
                 service.
             </summary>
             <param name="text">Text to translate.</param>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <returns>The translated text task.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ResolveCurrentSourceLanguage">
-            <summary>
-                Resolves the current client source identity for a shared quest
-                persistence or translation operation.
-            </summary>
-            <returns>The resolved source language.</returns>
-            <exception cref="T:System.InvalidOperationException">
-                Thrown when the current client source language is unknown.
-            </exception>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryGetQueuedTranslation(System.String,System.String@)">
             <summary>
@@ -14985,10 +14987,11 @@
                 being written into the native UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.UpdateRecommendList">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.UpdateRecommendList(Echoglossian.SourceClientLanguage)">
             <summary>
                 Updates the visible quest names from the shared translation cache.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.OnRecommendListEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
@@ -15019,16 +15022,18 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RefreshRecommendListHoverTooltips">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RefreshRecommendListHoverTooltips(Echoglossian.SourceClientLanguage)">
             <summary>
                 Re-registers visible RecommendList hover targets using only cached or
                 already-persisted translations.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TranslateRecommendListHandler">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TranslateRecommendListHandler(Echoglossian.SourceClientLanguage)">
             <summary>
                 Runs the two-pass RecommendList translation flow.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TryGetRecommendListCachedText(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListTextCacheEntry@)">
             <summary>

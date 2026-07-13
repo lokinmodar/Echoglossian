@@ -98,7 +98,11 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Translates the active Journal quest list addon.
   /// </summary>
-  private unsafe void TranslateJournalQuests()
+  /// <param name="sourceLanguage">
+  /// The operation-captured source identity, or no value for disabled cleanup.
+  /// </param>
+  private unsafe void TranslateJournalQuests(
+      SourceClientLanguage? sourceLanguage)
   {
     if (!TryGetVisibleJournal(out var journal))
     {
@@ -112,6 +116,13 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       this.ClearJournalRuntimeState();
       return;
     }
+
+    if (!sourceLanguage.HasValue)
+    {
+      return;
+    }
+
+    var operationSourceLanguage = sourceLanguage.Value;
 
     if (!this.JournalUsesHoverTooltips)
     {
@@ -210,6 +221,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         }
 
         var questPlate = this.CreateQuestPlate(
+            operationSourceLanguage,
             originalQuestName,
             string.Empty,
             string.Empty);
@@ -221,6 +233,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
                 StringComparison.Ordinal))
         {
           questPlate = this.CreateQuestPlate(
+              operationSourceLanguage,
               liveQuestNameText,
               string.Empty,
               string.Empty);
@@ -340,7 +353,20 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       return;
     }
 
-    this.TranslateJournalQuests();
+    if (!this.Config.TranslateJournal ||
+        this.DisableTranslationAccordingToState())
+    {
+      this.TranslateJournalQuests(null);
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
+    this.TranslateJournalQuests(sourceLanguage);
   }
 
   /// <summary>
@@ -369,17 +395,22 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       return;
     }
 
-    if (this.lastAppliedDisplayMode != this.Config.JournalTranslationDisplayMode)
+    var shouldRefresh =
+        this.lastAppliedDisplayMode != this.Config.JournalTranslationDisplayMode ||
+        (this.hasPendingJournalTranslations &&
+         DateTime.UtcNow >= this.nextJournalRetryUtc);
+    if (!shouldRefresh)
     {
-      this.TranslateJournalQuests();
       return;
     }
 
-    if (this.hasPendingJournalTranslations &&
-        DateTime.UtcNow >= this.nextJournalRetryUtc)
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
     {
-      this.TranslateJournalQuests();
+      return;
     }
+
+    this.TranslateJournalQuests(sourceLanguage);
   }
 
   /// <summary>

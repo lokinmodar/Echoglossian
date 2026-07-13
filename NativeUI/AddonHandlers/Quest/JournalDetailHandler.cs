@@ -1268,7 +1268,11 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Translates the active JournalDetail addon.
   /// </summary>
-  private unsafe void TranslateJournalDetail()
+  /// <param name="sourceLanguage">
+  /// The operation-captured source identity, or no value for disabled cleanup.
+  /// </param>
+  private unsafe void TranslateJournalDetail(
+      SourceClientLanguage? sourceLanguage)
   {
     if (!TryGetVisibleJournalDetail(out var journalDetail))
     {
@@ -1283,16 +1287,27 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       return;
     }
 
+    if (!sourceLanguage.HasValue)
+    {
+      return;
+    }
+
+    var operationSourceLanguage = sourceLanguage.Value;
+
     if (!this.JournalDetailUsesHoverTooltips)
     {
       this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
     }
 
     var hasPendingTranslations = false;
-    if (!this.TranslateJournalBox(journalDetail, out hasPendingTranslations))
+    if (!this.TranslateJournalBox(
+            journalDetail,
+            operationSourceLanguage,
+            out hasPendingTranslations))
     {
       this.TranslateCompletedQuest(
           journalDetail,
+          operationSourceLanguage,
           out hasPendingTranslations);
     }
 
@@ -1307,11 +1322,13 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   ///     Translates a completed JournalDetail quest view.
   /// </summary>
   /// <param name="journalDetail">The journal detail addon.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <param name="hasPendingTranslations">
   ///     Whether one or more translated payloads are still pending.
   /// </param>
   private unsafe void TranslateCompletedQuest(
       AtkUnitBase* journalDetail,
+      SourceClientLanguage sourceLanguage,
       out bool hasPendingTranslations)
   {
     hasPendingTranslations = false;
@@ -1341,7 +1358,11 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       var questMessage = MemoryHelper.ReadSeStringAsString(
           out _,
           (nint)descriptionNode->NodeText.StringPtr.Value);
-      var questPlate = this.CreateQuestPlate(questName, questMessage, string.Empty);
+      var questPlate = this.CreateQuestPlate(
+          sourceLanguage,
+          questName,
+          questMessage,
+          string.Empty);
       if (QuestProgressResolver.TryResolveQuestProgress(
               questPlate,
               out var resolvedCompletedSnapshot))
@@ -1538,12 +1559,14 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   ///     Translates the active JournalDetail detail view.
   /// </summary>
   /// <param name="journalDetail">The live JournalDetail addon.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <param name="hasPendingTranslations">
   ///     Whether one or more translated payloads are still pending.
   /// </param>
   /// <returns><c>true</c> when the active detail pane is the current-quest view.</returns>
   private unsafe bool TranslateJournalBox(
       AtkUnitBase* journalDetail,
+      SourceClientLanguage sourceLanguage,
       out bool hasPendingTranslations)
   {
     hasPendingTranslations = false;
@@ -1607,7 +1630,11 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       var questName = liveQuestName;
       var questMessage = liveQuestMessage;
       var objectiveText = liveObjectiveText;
-      var questPlate = this.CreateQuestPlate(questName, questMessage, string.Empty);
+      var questPlate = this.CreateQuestPlate(
+          sourceLanguage,
+          questName,
+          questMessage,
+          string.Empty);
 
       QuestProgressSnapshot? questProgressSnapshot = null;
       if (QuestProgressResolver.TryResolveQuestProgress(
@@ -1625,7 +1652,11 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         questMessage = originalSnapshot.QuestMessage;
         objectiveText = originalSnapshot.ObjectiveText;
         summaryText = originalSnapshot.SummaryText;
-        questPlate = this.CreateQuestPlate(questName, questMessage, string.Empty);
+        questPlate = this.CreateQuestPlate(
+            sourceLanguage,
+            questName,
+            questMessage,
+            string.Empty);
         if (QuestProgressResolver.TryResolveQuestProgress(
                 questPlate,
                 out resolvedQuestProgressSnapshot))
@@ -1696,7 +1727,20 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       return;
     }
 
-    this.TranslateJournalDetail();
+    if (!this.configuration.TranslateJournalDetail ||
+        this.DisableTranslationAccordingToState())
+    {
+      this.TranslateJournalDetail(null);
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
+    this.TranslateJournalDetail(sourceLanguage);
   }
 
   /// <summary>
@@ -1728,17 +1772,23 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       return;
     }
 
-    if (this.lastAppliedDisplayMode != this.Config.JournalDetailTranslationDisplayMode)
+    var shouldRefresh =
+        this.lastAppliedDisplayMode !=
+        this.Config.JournalDetailTranslationDisplayMode ||
+        (this.hasPendingJournalDetailTranslations &&
+         DateTime.UtcNow >= this.nextJournalDetailRetryUtc);
+    if (!shouldRefresh)
     {
-      this.TranslateJournalDetail();
       return;
     }
 
-    if (this.hasPendingJournalDetailTranslations &&
-        DateTime.UtcNow >= this.nextJournalDetailRetryUtc)
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
     {
-      this.TranslateJournalDetail();
+      return;
     }
+
+    this.TranslateJournalDetail(sourceLanguage);
   }
 
   /// <summary>
