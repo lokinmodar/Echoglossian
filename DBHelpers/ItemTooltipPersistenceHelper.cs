@@ -143,6 +143,34 @@ public static class ItemTooltipPersistenceHelper
         string configDirectory,
         ItemTooltip probe)
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        return FindItemTooltip(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true));
+    }
+
+    /// <summary>
+    ///     Finds one canonical item-tooltip row using an explicit translation
+    ///     reuse scope.
+    /// </summary>
+    /// <param name="configDirectory">The plugin config directory containing SQLite.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ItemTooltip? FindItemTooltip(
+        string configDirectory,
+        ItemTooltip probe,
+        TranslationReuseScope scope)
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -159,17 +187,16 @@ public static class ItemTooltipPersistenceHelper
                 .AsNoTracking()
                 .Where(row =>
                     row.ItemId == probe.ItemId &&
-                    row.TranslationLang == probe.TranslationLang &&
-                    row.TranslationEngine == probe.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
                       (row.GameVersion == null ||
                        row.GameVersion == probe.GameVersion))) &&
                     row.SourceContentHash == probe.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                .FirstOrDefault(row => scope.Matches(
                     row.OriginalLang,
-                    probe.OriginalLang));
+                    row.TranslationLang,
+                    row.TranslationEngine));
         }
         catch
         {

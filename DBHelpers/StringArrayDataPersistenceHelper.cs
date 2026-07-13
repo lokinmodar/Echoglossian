@@ -136,6 +136,52 @@ public static class StringArrayDataPersistenceHelper
         string configDirectory,
         StringArrayDatas probe)
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        if (!HasCanonicalScope(probe))
+        {
+            using var context = new EchoglossianDbContext(configDirectory);
+            try
+            {
+                return IsValidForPersistence(probe)
+                    ? BuildLookupQuery(
+                            context.StringArrayDatas.AsNoTracking(),
+                            probe)
+                        .FirstOrDefault()
+                    : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        return FindStringArrayData(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true));
+    }
+
+    /// <summary>
+    ///     Finds a <see cref="StringArrayDatas" /> row using an explicit
+    ///     translation reuse scope.
+    /// </summary>
+    /// <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
+    /// <param name="probe">The probe payload that defines content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The matching row, or <see langword="null" /> when not found.</returns>
+    public static StringArrayDatas? FindStringArrayData(
+        string configDirectory,
+        StringArrayDatas probe,
+        TranslationReuseScope scope)
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -145,15 +191,55 @@ public static class StringArrayDataPersistenceHelper
                 return null;
             }
 
-            return BuildLookupQuery(
+            return BuildReuseLookupQuery(
                     context.StringArrayDatas.AsNoTracking(),
-                    probe)
+                    probe,
+                    scope)
                 .FirstOrDefault();
         }
         catch
         {
             return null;
         }
+    }
+
+    /// <summary>
+    ///     Builds a policy-aware lookup query for one row.
+    /// </summary>
+    /// <param name="rows">The source query.</param>
+    /// <param name="row">The row that defines content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The policy-compatible lookup query.</returns>
+    private static IEnumerable<StringArrayDatas> BuildReuseLookupQuery(
+        IQueryable<StringArrayDatas> rows,
+        StringArrayDatas row,
+        TranslationReuseScope scope)
+    {
+        var hasRequestedGameVersion =
+            GameVersionLookupHelper.HasRequestedVersion(row.GameVersion);
+        var matchingRows = HasCanonicalScope(row)
+            ? rows.Where(existing =>
+                existing.Type == row.Type &&
+                existing.ContextKey == row.ContextKey &&
+                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (existing.GameVersion == null ||
+                   existing.GameVersion == row.GameVersion))) &&
+                existing.SourceContentHash == row.SourceContentHash)
+            : rows.Where(existing =>
+                existing.Type == row.Type &&
+                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (existing.GameVersion == null ||
+                   existing.GameVersion == row.GameVersion))) &&
+                existing.FormattedRawData == row.FormattedRawData);
+
+        return matchingRows
+            .AsEnumerable()
+            .Where(existing => scope.Matches(
+                existing.OriginalLang,
+                existing.TranslationLang,
+                existing.TranslationEngine));
     }
 
     /// <summary>

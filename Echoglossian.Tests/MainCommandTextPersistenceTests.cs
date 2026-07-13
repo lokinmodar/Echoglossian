@@ -274,6 +274,67 @@ public class MainCommandTextPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures reference-text fallback reads honor the requested engine
+    ///     reuse policy while writes retain exact-engine history.
+    /// </summary>
+    [Fact]
+    public void MainCommandTextPersistence_AppliesEngineReusePolicy()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var payload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var stored = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 7, "7.3", payload);
+            var probe = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 0, "7.3", payload);
+            var compatibleScope = new TranslationReuseScope("en", "pt", 0, false);
+            var strictScope = new TranslationReuseScope("en", "pt", 0, true);
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                stored,
+                static context => context.MainCommandTexts);
+
+            Assert.Equal(
+                7,
+                ReferenceTextPersistenceHelper.FindReferenceText(
+                    configDir,
+                    probe,
+                    compatibleScope,
+                    static context => context.MainCommandTexts)?.TranslationEngine);
+            Assert.Null(ReferenceTextPersistenceHelper.FindReferenceText(
+                configDir,
+                probe,
+                strictScope,
+                static context => context.MainCommandTexts));
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                probe,
+                static context => context.MainCommandTexts);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.MainCommandTexts.Count());
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures the specific MainCommand cache resolves exact translated and
     ///     canonical original text lookups.
     /// </summary>

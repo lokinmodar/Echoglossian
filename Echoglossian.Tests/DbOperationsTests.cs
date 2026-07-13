@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using Dalamud.Game;
-using Dalamud.Plugin;
 
 using Xunit;
 using Echoglossian.Cache;
@@ -223,7 +222,6 @@ public class DbOperationsTests
     [InlineData("MiniTalk")]
     [InlineData("TextGimmickHint")]
     [InlineData("SelectString")]
-    [InlineData("GameWindow")]
     public void LegacyRetrieval_DifferentStoredSourceLanguage_SkipsWrongRow(
         string retrieval)
     {
@@ -256,7 +254,6 @@ public class DbOperationsTests
     [InlineData("MiniTalk")]
     [InlineData("TextGimmickHint")]
     [InlineData("SelectString")]
-    [InlineData("GameWindow")]
     public void LegacyRetrieval_RetranslationEnabled_UsesConfiguredEngine(
         string retrieval)
     {
@@ -580,6 +577,144 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Ensures legacy display-name source rows are recognized by canonical
+    ///     Talk, BattleTalk, and Quest writes without creating duplicates.
+    /// </summary>
+    /// <param name="legacySource">The legacy display-name source identity.</param>
+    /// <param name="canonicalSource">The matching canonical source identity.</param>
+    [Theory]
+    [InlineData("English", "en")]
+    [InlineData("Deutsch", "de")]
+    [InlineData("French", "fr")]
+    [InlineData("Japanese", "ja")]
+    public async Task LegacySourceWrites_MatchingCanonicalSourceUpdatesExistingRows(
+        string legacySource,
+        string canonicalSource)
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+
+        try
+        {
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 14,
+                TranslateAlreadyTranslatedTexts = true,
+            });
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.TalkMessage.Add(
+                    CreateTalkMessage(legacySource, 14, DateTime.Now));
+                context.BattleTalkMessage.Add(
+                    CreateBattleTalkMessage(legacySource, 14, DateTime.Now));
+                context.QuestPlate.Add(
+                    CreateQuestPlate(legacySource, 14, DateTime.Now));
+                context.SaveChanges();
+            }
+
+            await PluginEntry.UpsertTalkDataAsync(
+                CreateTalkMessage(canonicalSource, 14, DateTime.Now));
+            await PluginEntry.UpsertBattleTalkDataAsync(
+                CreateBattleTalkMessage(canonicalSource, 14, DateTime.Now));
+            plugin.InsertQuestPlate(
+                CreateQuestPlate(canonicalSource, 14, DateTime.Now));
+
+            using var verification = new EchoglossianDbContext(configDir);
+            Assert.Single(verification.TalkMessage);
+            Assert.Single(verification.BattleTalkMessage);
+            Assert.Single(verification.QuestPlate);
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures write-side legacy normalization does not collapse distinct
+    ///     extended or unknown source identities.
+    /// </summary>
+    [Fact]
+    public async Task LegacySourceWrites_ExtendedSourcesRemainDistinct()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+
+        try
+        {
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 14,
+                TranslateAlreadyTranslatedTexts = true,
+            });
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var sources = new[] { "chs", "cht", "tc", "unknown-source" };
+            foreach (var source in sources)
+            {
+                await PluginEntry.UpsertTalkDataAsync(
+                    CreateTalkMessage(source, 14, DateTime.Now));
+                await PluginEntry.UpsertBattleTalkDataAsync(
+                    CreateBattleTalkMessage(source, 14, DateTime.Now));
+                plugin.InsertQuestPlate(CreateQuestPlate(source, 14, DateTime.Now));
+            }
+
+            using var verification = new EchoglossianDbContext(configDir);
+            Assert.Equal(
+                sources.OrderBy(source => source),
+                verification.TalkMessage
+                    .Select(row => row.OriginalTalkMessageLang)
+                    .OrderBy(source => source));
+            Assert.Equal(
+                sources.OrderBy(source => source),
+                verification.BattleTalkMessage
+                    .Select(row => row.OriginalBattleTalkMessageLang)
+                    .OrderBy(source => source));
+            Assert.Equal(
+                sources.OrderBy(source => source),
+                verification.QuestPlate
+                    .Select(row => row.OriginalLang)
+                    .OrderBy(source => source));
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the payload-insensitive, active-configuration GameWindow
+    ///     lookup bypass is not exposed as a persistence API.
+    /// </summary>
+    [Fact]
+    public void LegacyGameWindowLookup_IsRemoved()
+    {
+        var method = typeof(PluginEntry).GetMethod(
+            "FindAndReturnGameWindow",
+            BindingFlags.Public | BindingFlags.Static);
+
+        Assert.Null(method);
+    }
+
+    /// <summary>
     ///     Runs one legacy retrieval against a deterministically staged pair of
     ///     competing persisted rows.
     /// </summary>
@@ -617,7 +752,6 @@ public class DbOperationsTests
 
         var previousClientState = PluginEntry.ClientStateInterface;
         var previousConfigDirectory = PluginEntry.ConfigDirectory;
-        var previousPluginInterface = PluginEntry.PluginInterface;
         var previousDataManager = PluginEntry.DManager;
         var previousLanguages = PluginEntry.LangDict;
         var activeInstanceField = typeof(PluginEntry).GetField(
@@ -642,7 +776,6 @@ public class DbOperationsTests
                     ClientLanguage.Japanese);
             PluginEntry.ConfigDirectory =
                 configDir + Path.DirectorySeparatorChar;
-            PluginEntry.PluginInterface = CreatePluginInterface(configDir);
             PluginEntry.DManager = null!;
             PluginEntry.LangDict = CreateTargetLanguages();
             activeInstanceField.SetValue(null, plugin);
@@ -689,7 +822,6 @@ public class DbOperationsTests
             activeInstanceField.SetValue(null, previousActiveInstance);
             PluginEntry.DManager = previousDataManager;
             PluginEntry.LangDict = previousLanguages;
-            PluginEntry.PluginInterface = previousPluginInterface;
             PluginEntry.ConfigDirectory = previousConfigDirectory;
             PluginEntry.ClientStateInterface = previousClientState;
             TryDeleteDirectory(configDir);
@@ -758,10 +890,6 @@ public class DbOperationsTests
             case "SelectString":
                 context.SelectString.Add(
                     CreateSelectString(sourceLanguage, engine, updatedDate));
-                break;
-            case "GameWindow":
-                context.GameWindow.Add(
-                    CreateGameWindow(sourceLanguage, engine, updatedDate));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(
@@ -832,8 +960,6 @@ public class DbOperationsTests
             "SelectString" => GetScope(
                 plugin.FindAndReturnCutSceneSelectStringMessage(
                     CreateSelectString("ja", 7, DateTime.Now))),
-            "GameWindow" => GetScope(PluginEntry.FindAndReturnGameWindow(
-                CreateGameWindow("ja", 7, DateTime.Now))),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(retrieval),
                 retrieval,
@@ -939,16 +1065,6 @@ public class DbOperationsTests
     private static (string?, int?) GetScope(SelectString? row)
     {
         return (row?.OriginalSelectStringLang, row?.TranslationEngine);
-    }
-
-    /// <summary>
-    ///     Gets the stored scope fields from a game-window row.
-    /// </summary>
-    /// <param name="row">The selected row.</param>
-    /// <returns>The row's source identity and engine.</returns>
-    private static (string?, int?) GetScope(GameWindow? row)
-    {
-        return (row?.OriginalWindowStringsLang, row?.TranslationEngine);
     }
 
     /// <summary>
@@ -1144,47 +1260,6 @@ public class DbOperationsTests
             updatedDate);
     }
 
-    /// <summary>
-    ///     Creates the semantic game-window row used by legacy lookup tests.
-    /// </summary>
-    /// <param name="sourceLanguage">The stored source identity.</param>
-    /// <param name="engine">The stored translation engine.</param>
-    /// <param name="updatedDate">The row update timestamp.</param>
-    /// <returns>The configured game-window row.</returns>
-    private static GameWindow CreateGameWindow(
-        string sourceLanguage,
-        int engine,
-        DateTime updatedDate)
-    {
-        return new GameWindow(
-            "LegacyTestWindow",
-            "[\"Original\"]",
-            sourceLanguage,
-            "[\"Traduzido\"]",
-            "pt-BR",
-            engine,
-            "test-version",
-            updatedDate,
-            updatedDate);
-    }
-
-    /// <summary>
-    ///     Creates a plugin-interface proxy that supplies the temporary config
-    ///     directory required by the static legacy GameWindow lookup.
-    /// </summary>
-    /// <param name="configDirectory">The temporary config directory.</param>
-    /// <returns>The configured plugin-interface proxy.</returns>
-    private static IDalamudPluginInterface CreatePluginInterface(
-        string configDirectory)
-    {
-        var pluginInterface = DispatchProxy.Create<
-            IDalamudPluginInterface,
-            PluginInterfaceProxy>();
-        ((PluginInterfaceProxy)(object)pluginInterface).ConfigDirectory =
-            configDirectory;
-        return pluginInterface;
-    }
-
     private static void TryDeleteDirectory(string path)
     {
         if (!Directory.Exists(path))
@@ -1265,33 +1340,4 @@ public class DbOperationsTests
         field.SetValue(plugin, value);
     }
 
-    /// <summary>
-    ///     Supplies the config-directory method required by the GameWindow
-    ///     retrieval test.
-    /// </summary>
-    private class PluginInterfaceProxy : DispatchProxy
-    {
-        /// <summary>
-        ///     Gets or sets the config directory returned by the proxy.
-        /// </summary>
-        public string ConfigDirectory { get; set; } = string.Empty;
-
-        /// <summary>
-        ///     Dispatches the config-directory method used by the lookup.
-        /// </summary>
-        /// <param name="targetMethod">The invoked interface method.</param>
-        /// <param name="args">The invoked method arguments.</param>
-        /// <returns>The configured directory.</returns>
-        protected override object? Invoke(
-            MethodInfo? targetMethod,
-            object?[]? args)
-        {
-            if (targetMethod?.Name == "GetPluginConfigDirectory")
-            {
-                return this.ConfigDirectory;
-            }
-
-            throw new NotSupportedException(targetMethod?.Name);
-        }
-    }
 }

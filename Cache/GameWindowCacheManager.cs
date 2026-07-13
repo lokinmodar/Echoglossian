@@ -367,11 +367,15 @@ public static class GameWindowCacheManager
               addonName,
               scope.SourceLanguageCode,
               scope.TargetLanguageCode,
-              scope.TranslationEngine ?? 0,
+              scope.TranslationEngine,
               version,
               originalJson,
               classJobId),
-          out var exactMatch)
+          out var exactMatch) &&
+          scope.Matches(
+              exactMatch.OriginalWindowStringsLang,
+              exactMatch.TranslationLang,
+              exactMatch.TranslationEngine)
           ? exactMatch
           : null;
     }
@@ -398,17 +402,26 @@ public static class GameWindowCacheManager
   {
     if (scope.RequireMatchingEngine)
     {
-      return ScopeCache.TryGetValue(
+      if (!ScopeCache.TryGetValue(
           BuildScopeKey(
               addonName,
               scope.SourceLanguageCode,
               scope.TargetLanguageCode,
-              scope.TranslationEngine ?? 0,
+              scope.TranslationEngine,
               version,
               classJobId),
-          out var scopedRows)
-          ? scopedRows
-          : null;
+          out var scopedRows))
+      {
+        return null;
+      }
+
+      var strictMatchingRows = scopedRows
+          .Where(row => scope.Matches(
+              row.OriginalWindowStringsLang,
+              row.TranslationLang,
+              row.TranslationEngine))
+          .ToList();
+      return strictMatchingRows.Count == 0 ? null : strictMatchingRows;
     }
 
     if (!Cache.TryGetValue(addonName, out var addonRows))
@@ -486,7 +499,7 @@ public static class GameWindowCacheManager
       string addonName,
       string sourceLanguage,
       string lang,
-      int engine,
+      int? engine,
       string? version,
       uint? classJobId)
   {
@@ -509,7 +522,7 @@ public static class GameWindowCacheManager
   private static void IndexRecord(GameWindow record)
   {
     var addonName = record.WindowAddonName!;
-    var translationEngine = record.TranslationEngine ?? 0;
+    var translationEngine = record.TranslationEngine;
     var addonBucket = GetAddonBucket(addonName);
     addonBucket.Add(record);
 
@@ -538,7 +551,7 @@ public static class GameWindowCacheManager
   private static void RemoveIndexedRecord(GameWindow record)
   {
     var addonName = record.WindowAddonName!;
-    var translationEngine = record.TranslationEngine ?? 0;
+    var translationEngine = record.TranslationEngine;
     GetAddonBucket(addonName).Remove(record);
 
     var normalizedSourceLanguage = RuntimeLanguageHelper.NormalizeLanguage(
@@ -580,21 +593,22 @@ public static class GameWindowCacheManager
       string addonName,
       string? sourceLanguage,
       string? lang,
-      int engine,
+      int? engine,
       string? version,
       uint? classJobId)
   {
     var normalizedSourceLanguage = RuntimeLanguageHelper.NormalizeLanguage(
         sourceLanguage);
     var normalizedTargetLanguage = RuntimeLanguageHelper.NormalizeLanguage(lang);
-    return $"{addonName}|{normalizedSourceLanguage}|{normalizedTargetLanguage}|{engine}|{version ?? string.Empty}|{classJobId?.ToString() ?? string.Empty}";
+    var engineIdentity = engine?.ToString() ?? "null";
+    return $"{addonName}|{normalizedSourceLanguage}|{normalizedTargetLanguage}|{engineIdentity}|{version ?? string.Empty}|{classJobId?.ToString() ?? string.Empty}";
   }
 
   private static string BuildExactKey(
       string addonName,
       string? sourceLanguage,
       string? lang,
-      int engine,
+      int? engine,
       string? version,
       string originalJson,
       uint? classJobId)

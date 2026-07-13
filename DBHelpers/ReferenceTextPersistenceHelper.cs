@@ -143,6 +143,39 @@ public static class ReferenceTextPersistenceHelper
         Func<EchoglossianDbContext, DbSet<TRow>> setSelector)
         where TRow : ReferenceTextRowBase
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        return FindReferenceText(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true),
+            setSelector);
+    }
+
+    /// <summary>
+    ///     Finds one canonical reference-text row using an explicit translation
+    ///     reuse scope.
+    /// </summary>
+    /// <typeparam name="TRow">The concrete row type.</typeparam>
+    /// <param name="configDirectory">The plugin config directory containing SQLite.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <param name="setSelector">Selects the matching DbSet.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static TRow? FindReferenceText<TRow>(
+        string configDirectory,
+        TRow probe,
+        TranslationReuseScope scope,
+        Func<EchoglossianDbContext, DbSet<TRow>> setSelector)
+        where TRow : ReferenceTextRowBase
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -160,8 +193,6 @@ public static class ReferenceTextPersistenceHelper
                 .AsNoTracking()
                 .Where(existing =>
                     existing.ReferenceId == probe.ReferenceId &&
-                    existing.TranslationLang == probe.TranslationLang &&
-                    existing.TranslationEngine == probe.TranslationEngine &&
                     ((!hasRequestedGameVersion &&
                       existing.GameVersion == null) ||
                      (hasRequestedGameVersion &&
@@ -169,9 +200,10 @@ public static class ReferenceTextPersistenceHelper
                        existing.GameVersion == probe.GameVersion))) &&
                     existing.SourceContentHash == probe.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(existing => RuntimeLanguageHelper.LanguagesMatch(
+                .FirstOrDefault(existing => scope.Matches(
                     existing.OriginalLang,
-                    probe.OriginalLang));
+                    existing.TranslationLang,
+                    existing.TranslationEngine));
         }
         catch
         {

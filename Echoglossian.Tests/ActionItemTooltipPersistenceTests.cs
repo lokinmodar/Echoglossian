@@ -808,6 +808,107 @@ public class ActionItemTooltipPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures canonical tooltip fallback reads honor engine-compatible and
+    ///     strict reuse scopes while writes retain exact-engine history.
+    /// </summary>
+    [Fact]
+    public void CanonicalTooltipPersistence_AppliesEngineReusePolicy()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var actionPayload = new ActionTooltipCanonicalPayload
+            {
+                ActionId = 15998,
+                Name = "Technical Step",
+                Description = "Begin dancing.",
+            };
+            var itemPayload = new ItemTooltipCanonicalPayload
+            {
+                ItemId = 4868,
+                Name = "Gysahl Greens",
+                Description = "A leafy vegetable.",
+            };
+            var traitPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                Name = "Enhanced Windmill",
+                Description = "Increases potency.",
+            };
+            var storedAction = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 7, "7.3", actionPayload);
+            var storedItem = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 7, "7.3", itemPayload);
+            var storedTrait = TraitPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 7, "7.3", traitPayload);
+            var actionProbe = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", actionPayload);
+            var itemProbe = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", itemPayload);
+            var traitProbe = TraitPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", traitPayload);
+            var compatibleScope = new TranslationReuseScope("en", "pt", 0, false);
+            var strictScope = new TranslationReuseScope("en", "pt", 0, true);
+
+            ActionTooltipPersistenceHelper.InsertActionTooltip(
+                configDir,
+                storedAction);
+            ItemTooltipPersistenceHelper.InsertItemTooltip(configDir, storedItem);
+            TraitPersistenceHelper.InsertTrait(configDir, storedTrait);
+
+            Assert.Equal(
+                7,
+                ActionTooltipPersistenceHelper.FindActionTooltip(
+                    configDir,
+                    actionProbe,
+                    compatibleScope)?.TranslationEngine);
+            Assert.Null(ActionTooltipPersistenceHelper.FindActionTooltip(
+                configDir,
+                actionProbe,
+                strictScope));
+            Assert.Equal(
+                7,
+                ItemTooltipPersistenceHelper.FindItemTooltip(
+                    configDir,
+                    itemProbe,
+                    compatibleScope)?.TranslationEngine);
+            Assert.Null(ItemTooltipPersistenceHelper.FindItemTooltip(
+                configDir,
+                itemProbe,
+                strictScope));
+            Assert.Equal(
+                7,
+                TraitPersistenceHelper.FindTrait(
+                    configDir,
+                    traitProbe,
+                    compatibleScope)?.TranslationEngine);
+            Assert.Null(TraitPersistenceHelper.FindTrait(
+                configDir,
+                traitProbe,
+                strictScope));
+
+            ActionTooltipPersistenceHelper.InsertActionTooltip(configDir, actionProbe);
+            ItemTooltipPersistenceHelper.InsertItemTooltip(configDir, itemProbe);
+            TraitPersistenceHelper.InsertTrait(configDir, traitProbe);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.ActionTooltip.Count());
+            Assert.Equal(2, validationContext.ItemTooltip.Count());
+            Assert.Equal(2, validationContext.Traits.Count());
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Creates a temporary config directory for persistence tests.
     /// </summary>
     /// <returns>The created directory path.</returns>

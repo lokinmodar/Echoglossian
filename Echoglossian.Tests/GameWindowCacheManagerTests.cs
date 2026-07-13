@@ -161,6 +161,48 @@ public class GameWindowCacheManagerTests
     }
 
     /// <summary>
+    ///     Ensures a strict engine-zero scope cannot reuse a legacy row whose
+    ///     translation engine is unknown.
+    /// </summary>
+    [Fact]
+    public void TryFindMatch_StrictEngineZeroRejectsNullEngineRow()
+    {
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            const string originalJson = "{\"textNodes\":{\"0\":\"Profile\"}}";
+            GameWindowCacheManager.Update(new GameWindow(
+                windowAddonName: "CharacterProfile",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"textNodes\":{\"0\":\"Perfil\"}}",
+                translationLang: "pt-BR",
+                translationEngine: null,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+
+            var match = GameWindowCacheManager.TryFindMatch(
+                "CharacterProfile",
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                originalJson);
+            var candidates = GameWindowCacheManager.GetCandidates(
+                "CharacterProfile",
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3");
+
+            Assert.Null(match);
+            Assert.Empty(candidates);
+        }
+        finally
+        {
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures ActionMenu replacement compacts only rows from the same
     ///     normalized source scope.
     /// </summary>

@@ -141,6 +141,34 @@ public static class TraitPersistenceHelper
         string configDirectory,
         Trait probe)
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        return FindTrait(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true));
+    }
+
+    /// <summary>
+    ///     Finds one canonical trait row using an explicit translation reuse
+    ///     scope.
+    /// </summary>
+    /// <param name="configDirectory">The plugin config directory containing SQLite.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static Trait? FindTrait(
+        string configDirectory,
+        Trait probe,
+        TranslationReuseScope scope)
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -157,17 +185,16 @@ public static class TraitPersistenceHelper
                 .AsNoTracking()
                 .Where(row =>
                     row.TraitId == probe.TraitId &&
-                    row.TranslationLang == probe.TranslationLang &&
-                    row.TranslationEngine == probe.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
                       (row.GameVersion == null ||
                        row.GameVersion == probe.GameVersion))) &&
                     row.SourceContentHash == probe.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                .FirstOrDefault(row => scope.Matches(
                     row.OriginalLang,
-                    probe.OriginalLang));
+                    row.TranslationLang,
+                    row.TranslationEngine));
         }
         catch
         {

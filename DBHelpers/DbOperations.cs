@@ -840,54 +840,6 @@ public partial class Echoglossian
   }
 
   /// <summary>
-  /// Finds and returns a GameWindow from the database.
-  /// </summary>
-  /// <param name="gameWindow">Formatted GameWindow to be found in the database</param>
-  /// <returns></returns>
-  public static GameWindow? FindAndReturnGameWindow(GameWindow gameWindow)
-  {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-    try
-    {
-      var activeConfiguration = GetActiveConfiguration();
-      if (activeConfiguration == null ||
-          !TranslationReuseScope.TryCreate(
-              activeConfiguration,
-              out var scope))
-      {
-        return null;
-      }
-
-      var existingGameWindow = context.GameWindow.AsNoTracking().Where(t =>
-          t.WindowAddonName == gameWindow.WindowAddonName &&
-          t.TranslationLang == gameWindow.TranslationLang);
-      var localFoundGameWindow = existingGameWindow.AsEnumerable().FirstOrDefault(t =>
-          scope.Matches(
-              t.OriginalWindowStringsLang,
-              t.TranslationLang,
-              t.TranslationEngine));
-      if (localFoundGameWindow == null)
-      {
-        return null;
-      }
-      if (localFoundGameWindow?.WindowAddonName !=
-          gameWindow.WindowAddonName)
-      {
-        return null;
-      }
-
-      return localFoundGameWindow;
-    }
-    catch (Exception e)
-    {
-      PluginRuntimeLog.Debug($"FindAndReturnGameWindow exception {e}");
-      return null;
-    }
-  }
-
-  /// <summary>
   /// Inserts a TalkMessage record into the database.
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
@@ -967,10 +919,13 @@ public partial class Echoglossian
       var matchingRows = context.TalkMessage.Where(t =>
           t.SenderName == talkMessage.SenderName &&
           t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
-          t.OriginalTalkMessageLang == talkMessage.OriginalTalkMessageLang &&
           t.TranslationLang == talkMessage.TranslationLang &&
           t.TranslationEngine == talkMessage.TranslationEngine);
-      var matchingRow = OrderTalkMessageLookupQuery(matchingRows).FirstOrDefault();
+      var matchingRow = OrderTalkMessageLookupQuery(matchingRows)
+          .AsEnumerable()
+          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+              t.OriginalTalkMessageLang,
+              talkMessage.OriginalTalkMessageLang));
       var now = DateTime.Now;
       if (matchingRow != null)
       {
@@ -1077,12 +1032,13 @@ public partial class Echoglossian
           t.SenderName == battleTalkMessage.SenderName &&
           t.OriginalBattleTalkMessage ==
           battleTalkMessage.OriginalBattleTalkMessage &&
-          t.OriginalBattleTalkMessageLang ==
-          battleTalkMessage.OriginalBattleTalkMessageLang &&
           t.TranslationLang == battleTalkMessage.TranslationLang &&
           t.TranslationEngine == battleTalkMessage.TranslationEngine);
       var matchingRow = OrderBattleTalkMessageLookupQuery(matchingRows)
-          .FirstOrDefault();
+          .AsEnumerable()
+          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+              t.OriginalBattleTalkMessageLang,
+              battleTalkMessage.OriginalBattleTalkMessageLang));
       var now = DateTime.Now;
       if (matchingRow != null)
       {
@@ -1519,13 +1475,17 @@ public partial class Echoglossian
 
     if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
     {
-      var questIdMatch = context.QuestPlate.FirstOrDefault(t =>
+      var questIdMatches = context.QuestPlate.Where(t =>
           t.QuestId == questPlate.QuestId &&
-          t.OriginalLang == questPlate.OriginalLang &&
           t.TranslationLang == questPlate.TranslationLang &&
           (!this.configuration.TranslateAlreadyTranslatedTexts ||
            t.TranslationEngine == questPlate.TranslationEngine) &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+      var questIdMatch = questIdMatches
+          .AsEnumerable()
+          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+              t.OriginalLang,
+              questPlate.OriginalLang));
 
       if (questIdMatch != null)
       {
@@ -1538,14 +1498,18 @@ public partial class Echoglossian
 
     if (!string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
     {
-      var questMessageMatch = context.QuestPlate.FirstOrDefault(t =>
+      var questMessageMatches = context.QuestPlate.Where(t =>
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
-          t.OriginalLang == questPlate.OriginalLang &&
           t.TranslationLang == questPlate.TranslationLang &&
           (!this.configuration.TranslateAlreadyTranslatedTexts ||
            t.TranslationEngine == questPlate.TranslationEngine) &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+      var questMessageMatch = questMessageMatches
+          .AsEnumerable()
+          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+              t.OriginalLang,
+              questPlate.OriginalLang));
 
       if (questMessageMatch != null)
       {
@@ -1554,13 +1518,17 @@ public partial class Echoglossian
       }
     }
 
-    var questNameMatch = context.QuestPlate.FirstOrDefault(t =>
+    var questNameMatches = context.QuestPlate.Where(t =>
         t.QuestName == questPlate.QuestName &&
-        t.OriginalLang == questPlate.OriginalLang &&
         t.TranslationLang == questPlate.TranslationLang &&
         (!this.configuration.TranslateAlreadyTranslatedTexts ||
          t.TranslationEngine == questPlate.TranslationEngine) &&
         (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+    var questNameMatch = questNameMatches
+        .AsEnumerable()
+        .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+            t.OriginalLang,
+            questPlate.OriginalLang));
 
     if (questNameMatch != null)
     {
