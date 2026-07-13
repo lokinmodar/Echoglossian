@@ -355,9 +355,31 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether one newly resolved payload pair should be
+    ///     persisted for the operation-captured source identity.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="translatedPayload">The resolved translated payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the payload is ready for persistence;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldPersistNewGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return this.ShouldPersistNewGameWindowPayload(
+            originalPayload,
+            translatedPayload);
+    }
+
+    /// <summary>
     ///     Normalizes one resolved translated payload before it is applied to
     ///     the live addon surface.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">
     ///     The original-facing payload currently visible in the addon.
     /// </param>
@@ -369,6 +391,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     The translated payload that should be applied for this addon.
     /// </returns>
     private protected virtual DbFirstGameWindowPayload NormalizeResolvedTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
@@ -412,6 +435,23 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload originalPayload)
     {
         return true;
+    }
+
+    /// <summary>
+    ///     Determines whether one newly observed payload should be queued for
+    ///     the operation-captured source identity.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when background translation may be queued;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldQueueNewGameWindowTranslation(
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload)
+    {
+        return this.ShouldQueueNewGameWindowTranslation(originalPayload);
     }
 
     /// <summary>
@@ -540,6 +580,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     canonical source other than persisted <see cref="GameWindow" />
     ///     rows.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The visible original-facing payload.</param>
     /// <param name="translatedPayload">
     ///     Receives the translated payload when resolution succeeds.
@@ -549,6 +590,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     otherwise <see langword="false" />.
     /// </returns>
     private protected virtual bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
@@ -561,6 +603,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     specific source other than persisted rows when the live UI is
     ///     already showing translated text.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="livePayload">The currently visible live payload.</param>
     /// <param name="originalPayload">
     ///     Receives the recovered original payload.
@@ -570,6 +613,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     resolved; otherwise <see langword="false" />.
     /// </returns>
     private protected virtual bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
@@ -952,6 +996,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             {
                 var supplementalResolved =
                     this.TryResolveSupplementalTranslatedPayload(
+                        operationSourceLanguage,
                         originalPayload,
                         out var supplementalTranslatedPayload);
 
@@ -1030,6 +1075,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (hasExactTranslatedPayload)
         {
             translatedPayload = this.NormalizeResolvedTranslatedPayload(
+                operationSourceLanguage,
                 originalPayload,
                 translatedPayload);
             hasExactTranslatedPayload =
@@ -1053,6 +1099,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     compatibleTranslatedPayload.ProjectToShape(originalPayload);
                 compatibleTranslatedPayload =
                     this.NormalizeResolvedTranslatedPayload(
+                        operationSourceLanguage,
                         compatibleOriginalPayload,
                         compatibleTranslatedPayload);
                 if (!this.ShouldAcceptResolvedTranslatedPayload(
@@ -1077,6 +1124,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         TrySupplementalTranslatedPayload:
             if (this.TryResolveSupplementalTranslatedPayload(
+                    operationSourceLanguage,
                     originalPayload,
                     out var supplementalTranslatedPayload))
             {
@@ -1085,6 +1133,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         originalPayload);
                 supplementalTranslatedPayload =
                     this.NormalizeResolvedTranslatedPayload(
+                        operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload);
                 if (!this.ShouldAcceptResolvedTranslatedPayload(
@@ -1095,6 +1144,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 }
 
                 if (this.ShouldPersistNewGameWindowPayload(
+                        operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload))
                 {
@@ -1116,7 +1166,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
         QueueNewTranslation:
-            if (!this.ShouldQueueNewGameWindowTranslation(originalPayload))
+            if (!this.ShouldQueueNewGameWindowTranslation(
+                    operationSourceLanguage,
+                    originalPayload))
             {
                 this.hoverTooltipManager.RemoveByPrefix(
                     this.hoverTooltipKeyPrefix);
@@ -1394,6 +1446,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
             return this.TryResolveSupplementalOriginalPayload(
+                sourceLanguage,
                 livePayload,
                 out var supplementalOriginalPayload)
                 ? supplementalOriginalPayload
@@ -1420,6 +1473,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         return this.TryResolveSupplementalOriginalPayload(
+            sourceLanguage,
             livePayload,
             out var finalSupplementalOriginalPayload)
             ? finalSupplementalOriginalPayload
@@ -1918,6 +1972,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Tries to resolve one exact persisted <see cref="GameWindow" />
     ///     payload pair for the provided original payload.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">
     ///     The original-facing payload currently visible in the addon flow.
     /// </param>
@@ -1930,16 +1985,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     and parsed successfully; otherwise <see langword="false" />.
     /// </returns>
     private protected bool TryResolveExactPersistedGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
         translatedPayload = DbFirstGameWindowPayload.Empty;
-        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage))
-        {
-            return false;
-        }
-
         var originalJson = originalPayload.Serialize();
         return this.TryFindGameWindow(
                    sourceLanguage,

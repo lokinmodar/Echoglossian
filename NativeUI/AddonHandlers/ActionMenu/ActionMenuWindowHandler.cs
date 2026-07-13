@@ -101,17 +101,23 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <inheritdoc />
     private protected override bool ShouldPersistNewGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
-        return this.ShouldAllowNewPayloadPersistence(originalPayload);
+        return this.ShouldAllowNewPayloadPersistence(
+            sourceLanguage,
+            originalPayload);
     }
 
     /// <inheritdoc />
     private protected override bool ShouldQueueNewGameWindowTranslation(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        return this.ShouldAllowNewPayloadTranslation(originalPayload);
+        return this.ShouldAllowNewPayloadTranslation(
+            sourceLanguage,
+            originalPayload);
     }
 
     /// <inheritdoc />
@@ -155,6 +161,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         }
 
         var translatedPayload = this.NormalizeResolvedTranslatedPayload(
+            sourceLanguage,
             originalPayload,
             translatedPayloadResult.Value,
             classJobId,
@@ -169,11 +176,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         var stablePayloadSignature = BuildStablePayloadSignature(
             originalPayload);
         var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            sourceLanguage,
             originalPayload,
             classJobId,
             classJobName);
         var (candidateCount, stableMatchCount) =
             this.GetPersistedCandidateDiagnostics(
+                sourceLanguage,
                 stablePayloadSignature,
                 classJobId);
         var sufficientCoverage =
@@ -198,10 +207,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <inheritdoc />
     private protected override DbFirstGameWindowPayload
         NormalizeResolvedTranslatedPayload(
+            SourceClientLanguage sourceLanguage,
             DbFirstGameWindowPayload originalPayload,
             DbFirstGameWindowPayload translatedPayload)
     {
         return this.NormalizeResolvedTranslatedPayload(
+            sourceLanguage,
             originalPayload,
             translatedPayload,
             GetCurrentClassJobId(),
@@ -212,12 +223,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Normalizes one resolved translated payload by merging canonical
     ///     ActionMenu lookups for the provided class/job scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original-facing payload.</param>
     /// <param name="translatedPayload">The translated payload candidate.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <param name="classJobName">The current class/job name.</param>
     /// <returns>The normalized translated payload.</returns>
     private DbFirstGameWindowPayload NormalizeResolvedTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
         uint? classJobId,
@@ -227,6 +240,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             .GetConfiguredTargetLanguageCode(this.config.Lang);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
@@ -276,6 +290,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
@@ -286,6 +301,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         var gameVersion = GetGameVersion();
         var classJobId = GetCurrentClassJobId();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out var persistedOriginalLookup,
             out _,
             classJobId,
@@ -328,6 +344,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
@@ -336,6 +353,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         var gameVersion = GetGameVersion();
         var classJobId = GetCurrentClassJobId();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
@@ -1273,23 +1291,27 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether the current payload is stable and novel enough to
     ///     justify persisting one new canonical ActionMenu row.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when one new row should be persisted;
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool ShouldAllowNewPayloadPersistence(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
         var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
         var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            sourceLanguage,
             originalPayload,
             classJobId,
             classJobName);
         var (candidateCount, stableMatchCount) =
             this.GetPersistedCandidateDiagnostics(
+                sourceLanguage,
                 stablePayloadSignature,
                 classJobId);
         var sufficientCoverage =
@@ -1313,23 +1335,27 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether the current payload is stable and unresolved
     ///     enough to justify one new remote translation request.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when one remote translation may be queued;
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool ShouldAllowNewPayloadTranslation(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
         var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
         var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            sourceLanguage,
             originalPayload,
             classJobId,
             classJobName);
         var (candidateCount, stableMatchCount) =
             this.GetPersistedCandidateDiagnostics(
+                sourceLanguage,
                 stablePayloadSignature,
                 classJobId);
         var sufficientCoverage =
@@ -1380,15 +1406,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     texts that are not already covered by canonical action or menu
     ///     sources.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when unresolved short texts remain;
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool HasMeaningfulUnseenTexts(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
         return this.HasMeaningfulUnseenTexts(
+            sourceLanguage,
             originalPayload,
             GetCurrentClassJobId(),
             GetPayloadClassJobName(originalPayload));
@@ -1399,6 +1428,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     texts that are not already covered by canonical action or menu
     ///     sources for the provided class/job scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <param name="classJobName">The current class/job name.</param>
@@ -1407,11 +1437,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool HasMeaningfulUnseenTexts(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         uint? classJobId,
         string? classJobName)
     {
         return this.CountMeaningfulUnseenTextsForDiagnostics(
+                   sourceLanguage,
                    originalPayload,
                    classJobId,
                    classJobName) > 0;
@@ -1421,14 +1453,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether one stable ActionMenu page signature already
     ///     exists in persisted ActionMenu rows for the current scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="stablePayloadSignature">The page signature to inspect.</param>
     /// <returns>
     ///     <see langword="true" /> when a persisted row already covers the
     ///     same stable page shape; otherwise <see langword="false" />.
     /// </returns>
-    private bool HasPersistedStableSignature(string stablePayloadSignature)
+    private bool HasPersistedStableSignature(
+        SourceClientLanguage sourceLanguage,
+        string stablePayloadSignature)
     {
         return this.HasPersistedStableSignature(
+            sourceLanguage,
             stablePayloadSignature,
             GetCurrentClassJobId());
     }
@@ -1438,6 +1474,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     exists in persisted ActionMenu rows for the provided class/job
     ///     scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="stablePayloadSignature">The page signature to inspect.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <returns>
@@ -1445,10 +1482,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     same stable page shape; otherwise <see langword="false" />.
     /// </returns>
     private bool HasPersistedStableSignature(
+        SourceClientLanguage sourceLanguage,
         string stablePayloadSignature,
         uint? classJobId)
     {
         return this.GetPersistedCandidateDiagnostics(
+            sourceLanguage,
             stablePayloadSignature,
             classJobId).StableMatchCount > 0;
     }
@@ -1457,11 +1496,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Counts the unresolved short texts for the current ActionMenu payload
     ///     using the same canonical fallback rules as the persistence gate.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original-facing payload.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <param name="classJobName">The current class/job name.</param>
     /// <returns>The count of short texts not yet covered by canonical data.</returns>
     private int CountMeaningfulUnseenTextsForDiagnostics(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         uint? classJobId,
         string? classJobName)
@@ -1470,6 +1511,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             this.config.Lang);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
@@ -1487,6 +1529,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     subset whose stable signature matches the supplied payload
     ///     signature.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="stablePayloadSignature">The stable signature to compare.</param>
     /// <param name="classJobId">The class/job scope to inspect.</param>
     /// <returns>
@@ -1495,6 +1538,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private (int CandidateCount, int StableMatchCount)
         GetPersistedCandidateDiagnostics(
+            SourceClientLanguage sourceLanguage,
             string stablePayloadSignature,
             uint? classJobId)
     {
@@ -1510,6 +1554,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                      GetGameVersion(),
                      classJobId))
         {
+            if (!MatchesPersistedSourceIdentity(
+                    row.OriginalWindowStringsLang,
+                    sourceLanguage))
+            {
+                continue;
+            }
+
             candidateCount++;
             if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
                 !TryParseSerializedPayload(
@@ -2104,6 +2155,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     previously translated window chrome can be reused without calling
     ///     the remote translator again.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalLookup">
     ///     Receives the translated-to-original reverse lookup.
     /// </param>
@@ -2111,6 +2163,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Receives the original-to-translated forward lookup.
     /// </param>
     private void BuildPersistedActionMenuLookups(
+        SourceClientLanguage sourceLanguage,
         out Dictionary<string, string> originalLookup,
         out Dictionary<string, string> translatedLookup,
         uint? classJobId = null,
@@ -2121,6 +2174,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         var ambiguousOriginalKeys = new HashSet<string>(StringComparer.Ordinal);
 
         this.AppendPersistedWindowLookups(
+            sourceLanguage,
             MainCommandWindowTitle,
             translatedLookup,
             originalLookup,
@@ -2128,6 +2182,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             expectedClassJobId: null,
             expectedClassJobName: null);
         this.AppendPersistedWindowLookups(
+            sourceLanguage,
             this.AddonName,
             translatedLookup,
             originalLookup,
@@ -2140,6 +2195,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Appends one persisted window's forward and reverse text pairs into
     ///     the ActionMenu fallback lookups.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="windowTitle">The persisted window title to read.</param>
     /// <param name="translatedLookup">The original-to-translated lookup.</param>
     /// <param name="originalLookup">The translated-to-original lookup.</param>
@@ -2147,6 +2203,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tracks translated texts that map to multiple originals.
     /// </param>
     private void AppendPersistedWindowLookups(
+        SourceClientLanguage sourceLanguage,
         string windowTitle,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
@@ -2162,7 +2219,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                      GetGameVersion(),
                      expectedClassJobId).OrderBy(candidate => candidate.Id))
         {
-            if (!TryParseSerializedPayload(
+            if (!MatchesPersistedSourceIdentity(
+                    row.OriginalWindowStringsLang,
+                    sourceLanguage) ||
+                !TryParseSerializedPayload(
                     row.OriginalWindowStrings,
                     out var rowOriginalPayload) ||
                 !TryParseSerializedPayload(

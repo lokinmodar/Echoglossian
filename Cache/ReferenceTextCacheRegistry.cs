@@ -267,6 +267,116 @@ public static class ReferenceTextCacheRegistry
     }
 
     /// <summary>
+    ///     Tries to resolve one exact translated text from the specific
+    ///     reference-text caches for one original-language scope.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <param name="originalLanguage">The persisted original-language code.</param>
+    /// <param name="translatedText">The resolved translated text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one translated text was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindTranslatedText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        string originalLanguage,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+
+        return GeneralActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               BuddyActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               CompanyActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               CraftActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               PetActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               EventActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               BgcArmyActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               AozActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               PvPActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               MountActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               MainCommandTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText) ||
+               EurekaMagiaActionTexts.TryFindTranslatedText(
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalText,
+                   originalLanguage,
+                   out translatedText);
+    }
+
+    /// <summary>
     ///     Tries to resolve one exact canonical original text from the specific
     ///     reference-text caches.
     /// </summary>
@@ -551,6 +661,128 @@ public static class ReferenceTextCacheRegistry
     }
 
     /// <summary>
+    ///     Tries to resolve one translated action-adjacent reference payload by
+    ///     stable identity and original-language scope.
+    /// </summary>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalLanguage">The persisted original-language code.</param>
+    /// <param name="payload">The translated payload, if any.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one translated payload was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindTranslatedActionIdentityPayload(
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalLanguage,
+        out ReferenceTextCanonicalPayload payload)
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        return TryFindTranslatedIdentityPayload(
+                   GeneralActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   BuddyActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   CompanyActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   CraftActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   PetActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   EventActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   BgcArmyActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   AozActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   PvPActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   MountActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   MainCommandTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   EurekaMagiaActionTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload);
+    }
+
+    /// <summary>
     ///     Tries to resolve one translated item-adjacent reference payload by
     ///     stable identity.
     /// </summary>
@@ -589,6 +821,48 @@ public static class ReferenceTextCacheRegistry
     }
 
     /// <summary>
+    ///     Tries to resolve one translated item-adjacent reference payload by
+    ///     stable identity and original-language scope.
+    /// </summary>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalLanguage">The persisted original-language code.</param>
+    /// <param name="payload">The translated payload, if any.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one translated payload was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindTranslatedItemIdentityPayload(
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalLanguage,
+        out ReferenceTextCanonicalPayload payload)
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        return TryFindTranslatedIdentityPayload(
+                   EventItemTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload) ||
+               TryFindTranslatedIdentityPayload(
+                   DeepDungeonItemTexts,
+                   referenceId,
+                   lang,
+                   engine,
+                   gameVersion,
+                   originalLanguage,
+                   out payload);
+    }
+
+    /// <summary>
     ///     Tries to resolve one translated payload by exact row identity from a
     ///     specific reference-text cache.
     /// </summary>
@@ -619,6 +893,60 @@ public static class ReferenceTextCacheRegistry
             lang,
             engine,
             gameVersion);
+        if (row == null)
+        {
+            return false;
+        }
+
+        var resolvedPayload = ReferenceTextCanonicalPayload.Deserialize(
+            row.CanonicalPayloadAsText);
+        if (resolvedPayload == null ||
+            string.IsNullOrWhiteSpace(resolvedPayload.TranslatedName) ||
+            (!string.IsNullOrWhiteSpace(resolvedPayload.Description) &&
+             string.IsNullOrWhiteSpace(
+                 resolvedPayload.TranslatedDescription)))
+        {
+            return false;
+        }
+
+        payload = resolvedPayload;
+        return true;
+    }
+
+    /// <summary>
+    ///     Tries to resolve one translated payload by exact row identity and
+    ///     original-language scope from a specific reference-text cache.
+    /// </summary>
+    /// <typeparam name="TRow">The specific persisted row type.</typeparam>
+    /// <param name="cacheStore">The cache store to query.</param>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalLanguage">The persisted original-language code.</param>
+    /// <param name="payload">The translated payload, if any.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one translated payload was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryFindTranslatedIdentityPayload<TRow>(
+        ReferenceTextCacheStore<TRow> cacheStore,
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalLanguage,
+        out ReferenceTextCanonicalPayload payload)
+        where TRow : ReferenceTextRowBase
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        var row = cacheStore.TryFindIdentityMatch(
+            referenceId,
+            lang,
+            engine,
+            gameVersion,
+            originalLanguage);
         if (row == null)
         {
             return false;

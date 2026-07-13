@@ -979,6 +979,7 @@ public unsafe partial class Echoglossian
                 targetLanguage,
                 engine,
                 gameVersion,
+                sourceLanguage.PersistenceCode,
                 out var translatedReferencePayload) &&
             TryBuildTranslatedActionTooltipPayloadFromReferencePayload(
                 translatedReferencePayload,
@@ -994,6 +995,7 @@ public unsafe partial class Echoglossian
                 engine,
                 gameVersion,
                 originalPayload.Name,
+                sourceLanguage.PersistenceCode,
                 out var translatedName))
         {
             translatedPayload = CreateTranslatedActionTooltipPayload(
@@ -1122,6 +1124,7 @@ public unsafe partial class Echoglossian
                 targetLanguage,
                 engine,
                 gameVersion,
+                sourceLanguage.PersistenceCode,
                 out var translatedReferencePayload) &&
             TryBuildTranslatedItemTooltipPayloadFromReferencePayload(
                 translatedReferencePayload,

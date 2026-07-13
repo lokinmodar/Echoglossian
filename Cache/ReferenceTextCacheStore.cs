@@ -192,6 +192,56 @@ public sealed class ReferenceTextCacheStore<TRow>
     }
 
     /// <summary>
+    ///     Tries to find the best translated reference-text row by stable
+    ///     identity and original-language scope.
+    /// </summary>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalLanguage">The persisted original-language code.</param>
+    /// <returns>The best translated row, or <see langword="null" />.</returns>
+    public TRow? TryFindIdentityMatch(
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalLanguage)
+    {
+        if (referenceId == 0 ||
+            string.IsNullOrWhiteSpace(lang) ||
+            string.IsNullOrWhiteSpace(originalLanguage))
+        {
+            return null;
+        }
+
+        if (!this.cache.TryGetValue(referenceId, out var rows) ||
+            rows.Count == 0)
+        {
+            return null;
+        }
+
+        return rows
+            .Where(row =>
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    originalLanguage) &&
+                RuntimeLanguageHelper.LanguagesMatch(
+                    row.TranslationLang,
+                    lang) &&
+                row.TranslationEngine == engine &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                    row.GameVersion,
+                    gameVersion) &&
+                HasCompleteTranslation(row))
+            .OrderByDescending(row => ComputeIdentityMatchScore(
+                row,
+                gameVersion))
+            .ThenByDescending(row => row.UpdatedDate)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
     ///     Tries to resolve one exact translated text from this cache scope.
     /// </summary>
     /// <param name="lang">The target language code.</param>
@@ -222,6 +272,7 @@ public sealed class ReferenceTextCacheStore<TRow>
                 lang,
                 engine,
                 gameVersion,
+                originalLanguage: null,
                 originalText,
                 out translatedText))
         {
@@ -234,6 +285,63 @@ public sealed class ReferenceTextCacheStore<TRow>
                 lang,
                 engine,
                 version: null,
+                originalLanguage: null,
+                originalText,
+                out translatedText);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Tries to resolve one exact translated text from an
+    ///     original-language-scoped cache.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <param name="originalLanguage">The persisted original-language code.</param>
+    /// <param name="translatedText">The resolved translated text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one translated text was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public bool TryFindTranslatedText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        string originalLanguage,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(lang) ||
+            string.IsNullOrWhiteSpace(originalText) ||
+            string.IsNullOrWhiteSpace(originalLanguage))
+        {
+            return false;
+        }
+
+        if (this.TryFindTranslatedTextInScope(
+                lang,
+                engine,
+                gameVersion,
+                originalLanguage,
+                originalText,
+                out translatedText))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(gameVersion))
+        {
+            return this.TryFindTranslatedTextInScope(
+                lang,
+                engine,
+                version: null,
+                originalLanguage,
                 originalText,
                 out translatedText);
         }
@@ -356,6 +464,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <param name="lang">The target language code.</param>
     /// <param name="engine">The translation-engine identifier.</param>
     /// <param name="version">The exact stored game-version scope.</param>
+    /// <param name="originalLanguage">The original-language scope, if any.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The translated text.</param>
     /// <returns>
@@ -366,15 +475,24 @@ public sealed class ReferenceTextCacheStore<TRow>
         string lang,
         int engine,
         string? version,
+        string? originalLanguage,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        var scopeKey = BuildScopeKey(lang, engine, version);
+        var scopeKey = BuildScopeKey(
+            lang,
+            engine,
+            version,
+            originalLanguage);
         if (!this.forwardTextLookupCache.TryGetValue(scopeKey, out var lookup))
         {
-            lookup = this.BuildForwardLookup(lang, engine, version);
+            lookup = this.BuildForwardLookup(
+                lang,
+                engine,
+                version,
+                originalLanguage);
             this.forwardTextLookupCache[scopeKey] = lookup;
         }
 
@@ -458,11 +576,13 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <param name="lang">The target language code.</param>
     /// <param name="engine">The translation-engine identifier.</param>
     /// <param name="version">The exact stored game-version scope.</param>
+    /// <param name="originalLanguage">The original-language scope, if any.</param>
     /// <returns>The lookup.</returns>
     private Dictionary<string, string> BuildForwardLookup(
         string lang,
         int engine,
-        string? version)
+        string? version,
+        string? originalLanguage)
     {
         var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -471,6 +591,10 @@ public sealed class ReferenceTextCacheStore<TRow>
             if (!RuntimeLanguageHelper.LanguagesMatch(
                     row.TranslationLang,
                     lang) ||
+                (originalLanguage != null &&
+                 !RuntimeLanguageHelper.LanguagesMatch(
+                     row.OriginalLang,
+                     originalLanguage)) ||
                 row.TranslationEngine != engine ||
                 !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
@@ -661,5 +785,24 @@ public sealed class ReferenceTextCacheStore<TRow>
     {
         return
             $"{RuntimeLanguageHelper.NormalizeLanguage(lang)}\u001F{engine}\u001F{version ?? string.Empty}";
+    }
+
+    /// <summary>
+    ///     Builds one forward-cache scope key including the requested original
+    ///     language when source-aware lookup is required.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <param name="originalLanguage">The original-language scope.</param>
+    /// <returns>The scope key.</returns>
+    private static string BuildScopeKey(
+        string lang,
+        int engine,
+        string? version,
+        string? originalLanguage)
+    {
+        return
+            $"{BuildScopeKey(lang, engine, version)}\u001F{RuntimeLanguageHelper.NormalizeLanguage(originalLanguage)}";
     }
 }

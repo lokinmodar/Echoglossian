@@ -198,6 +198,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
@@ -220,6 +221,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {

@@ -95,10 +95,12 @@ public unsafe class CharacterStatusSubWindowHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
         if (base.TryResolveSupplementalOriginalPayload(
+                sourceLanguage,
                 livePayload,
                 out originalPayload))
         {
@@ -118,10 +120,12 @@ public unsafe class CharacterStatusSubWindowHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
         if (base.TryResolveSupplementalTranslatedPayload(
+                sourceLanguage,
                 originalPayload,
                 out translatedPayload))
         {

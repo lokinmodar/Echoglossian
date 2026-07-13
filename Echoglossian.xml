@@ -666,6 +666,22 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve one exact translated text from the specific
+                reference-text caches for one original-language scope.
+            </summary>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalText">The original text to translate.</param>
+            <param name="originalLanguage">The persisted original-language code.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>
+                <see langword="true" /> when one translated text was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindOriginalText(System.String,System.Int32,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one exact canonical original text from the specific
@@ -710,6 +726,22 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(System.UInt32,System.String,System.Int32,System.String,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated action-adjacent reference payload by
+                stable identity and original-language scope.
+            </summary>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalLanguage">The persisted original-language code.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when one translated payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(System.UInt32,System.String,System.Int32,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated item-adjacent reference payload by
@@ -719,6 +751,22 @@
             <param name="lang">The target language code.</param>
             <param name="engine">The translation-engine identifier.</param>
             <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when one translated payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(System.UInt32,System.String,System.Int32,System.String,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated item-adjacent reference payload by
+                stable identity and original-language scope.
+            </summary>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalLanguage">The persisted original-language code.</param>
             <param name="payload">The translated payload, if any.</param>
             <returns>
                 <see langword="true" /> when one translated payload was found;
@@ -736,6 +784,24 @@
             <param name="lang">The target language code.</param>
             <param name="engine">The translation-engine identifier.</param>
             <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when one translated payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedIdentityPayload``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},System.UInt32,System.String,System.Int32,System.String,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated payload by exact row identity and
+                original-language scope from a specific reference-text cache.
+            </summary>
+            <typeparam name="TRow">The specific persisted row type.</typeparam>
+            <param name="cacheStore">The cache store to query.</param>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalLanguage">The persisted original-language code.</param>
             <param name="payload">The translated payload, if any.</param>
             <returns>
                 <see langword="true" /> when one translated payload was found;
@@ -790,6 +856,18 @@
             <param name="gameVersion">The current game version.</param>
             <returns>The best translated row, or <see langword="null" />.</returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
+            <summary>
+                Tries to find the best translated reference-text row by stable
+                identity and original-language scope.
+            </summary>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalLanguage">The persisted original-language code.</param>
+            <returns>The best translated row, or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one exact translated text from this cache scope.
@@ -798,6 +876,22 @@
             <param name="engine">The translation-engine identifier.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalText">The original text to translate.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>
+                <see langword="true" /> when one translated text was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String,System.String@)">
+            <summary>
+                Tries to resolve one exact translated text from an
+                original-language-scoped cache.
+            </summary>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalText">The original text to translate.</param>
+            <param name="originalLanguage">The persisted original-language code.</param>
             <param name="translatedText">The resolved translated text.</param>
             <returns>
                 <see langword="true" /> when one translated text was found;
@@ -838,13 +932,14 @@
                 Clears the in-memory cache.
             </summary>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindTranslatedTextInScope(System.String,System.Int32,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindTranslatedTextInScope(System.String,System.Int32,System.String,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one translated text from one cached scope.
             </summary>
             <param name="lang">The target language code.</param>
             <param name="engine">The translation-engine identifier.</param>
             <param name="version">The exact stored game-version scope.</param>
+            <param name="originalLanguage">The original-language scope, if any.</param>
             <param name="originalText">The original text to translate.</param>
             <param name="translatedText">The translated text.</param>
             <returns>
@@ -880,7 +975,7 @@
                 requested scope; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.BuildForwardLookup(System.String,System.Int32,System.String)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.BuildForwardLookup(System.String,System.Int32,System.String,System.String)">
             <summary>
                 Builds one forward original-to-translated lookup for one cached
                 scope.
@@ -888,6 +983,7 @@
             <param name="lang">The target language code.</param>
             <param name="engine">The translation-engine identifier.</param>
             <param name="version">The exact stored game-version scope.</param>
+            <param name="originalLanguage">The original-language scope, if any.</param>
             <returns>The lookup.</returns>
         </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.BuildReverseLookup(System.String,System.Int32,System.String)">
@@ -947,6 +1043,17 @@
             <param name="lang">The target language code.</param>
             <param name="engine">The translation-engine identifier.</param>
             <param name="version">The exact stored game-version scope.</param>
+            <returns>The scope key.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.BuildScopeKey(System.String,System.Int32,System.String,System.String)">
+            <summary>
+                Builds one forward-cache scope key including the requested original
+                language when source-aware lookup is required.
+            </summary>
+            <param name="lang">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="version">The exact stored game-version scope.</param>
+            <param name="originalLanguage">The original-language scope.</param>
             <returns>The scope key.</returns>
         </member>
         <member name="T:Echoglossian.Cache.StringArrayDataCacheManager">
@@ -10632,10 +10739,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetAppliedStatePreDrawRefreshWindow">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetPersistedGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
@@ -10647,14 +10754,15 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
             <summary>
                 Normalizes one resolved translated payload by merging canonical
                 ActionMenu lookups for the provided class/job scope.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The original-facing payload.</param>
             <param name="translatedPayload">The translated payload candidate.</param>
             <param name="classJobId">The current class/job identifier.</param>
@@ -10673,10 +10781,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
@@ -10980,22 +11088,24 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAllowNewPayloadPersistence(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAllowNewPayloadPersistence(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether the current payload is stable and novel enough to
                 justify persisting one new canonical ActionMenu row.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The current original-facing payload.</param>
             <returns>
                 <see langword="true" /> when one new row should be persisted;
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAllowNewPayloadTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldAllowNewPayloadTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether the current payload is stable and unresolved
                 enough to justify one new remote translation request.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The current original-facing payload.</param>
             <returns>
                 <see langword="true" /> when one remote translation may be queued;
@@ -11013,24 +11123,26 @@
                 entries; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasMeaningfulUnseenTexts(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether the current payload still contains any short
                 texts that are not already covered by canonical action or menu
                 sources.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The current original-facing payload.</param>
             <returns>
                 <see langword="true" /> when unresolved short texts remain;
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasMeaningfulUnseenTexts(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
             <summary>
                 Determines whether the current payload still contains any short
                 texts that are not already covered by canonical action or menu
                 sources for the provided class/job scope.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The current original-facing payload.</param>
             <param name="classJobId">The current class/job identifier.</param>
             <param name="classJobName">The current class/job name.</param>
@@ -11039,23 +11151,25 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasPersistedStableSignature(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasPersistedStableSignature(Echoglossian.SourceClientLanguage,System.String)">
             <summary>
                 Determines whether one stable ActionMenu page signature already
                 exists in persisted ActionMenu rows for the current scope.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="stablePayloadSignature">The page signature to inspect.</param>
             <returns>
                 <see langword="true" /> when a persisted row already covers the
                 same stable page shape; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasPersistedStableSignature(System.String,System.Nullable{System.UInt32})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.HasPersistedStableSignature(Echoglossian.SourceClientLanguage,System.String,System.Nullable{System.UInt32})">
             <summary>
                 Determines whether one stable ActionMenu page signature already
                 exists in persisted ActionMenu rows for the provided class/job
                 scope.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="stablePayloadSignature">The page signature to inspect.</param>
             <param name="classJobId">The current class/job identifier.</param>
             <returns>
@@ -11063,22 +11177,24 @@
                 same stable page shape; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CountMeaningfulUnseenTextsForDiagnostics(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CountMeaningfulUnseenTextsForDiagnostics(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.String)">
             <summary>
                 Counts the unresolved short texts for the current ActionMenu payload
                 using the same canonical fallback rules as the persistence gate.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The original-facing payload.</param>
             <param name="classJobId">The current class/job identifier.</param>
             <param name="classJobName">The current class/job name.</param>
             <returns>The count of short texts not yet covered by canonical data.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetPersistedCandidateDiagnostics(System.String,System.Nullable{System.UInt32})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetPersistedCandidateDiagnostics(Echoglossian.SourceClientLanguage,System.String,System.Nullable{System.UInt32})">
             <summary>
                 Counts the currently scoped persisted ActionMenu candidates and the
                 subset whose stable signature matches the supplied payload
                 signature.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="stablePayloadSignature">The stable signature to compare.</param>
             <param name="classJobId">The class/job scope to inspect.</param>
             <returns>
@@ -11279,12 +11395,13 @@
             </param>
             <returns>The canonicalized original-facing map.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildPersistedActionMenuLookups(System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Nullable{System.UInt32},System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildPersistedActionMenuLookups(Echoglossian.SourceClientLanguage,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Nullable{System.UInt32},System.String)">
             <summary>
                 Builds forward and reverse lookups from persisted ActionMenu rows so
                 previously translated window chrome can be reused without calling
                 the remote translator again.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalLookup">
                 Receives the translated-to-original reverse lookup.
             </param>
@@ -11292,11 +11409,12 @@
                 Receives the original-to-translated forward lookup.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendPersistedWindowLookups(System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.Nullable{System.UInt32},System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendPersistedWindowLookups(Echoglossian.SourceClientLanguage,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.Nullable{System.UInt32},System.String)">
             <summary>
                 Appends one persisted window's forward and reverse text pairs into
                 the ActionMenu fallback lookups.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="windowTitle">The persisted window title to read.</param>
             <param name="translatedLookup">The original-to-translated lookup.</param>
             <param name="originalLookup">The translated-to-original lookup.</param>
@@ -11926,10 +12044,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveProjectedModeSwitchPayloads(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
@@ -12060,10 +12178,10 @@
                 available for value-based apply; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryBuildCharacterLookups(System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.HashSet{System.String}@)">
@@ -12385,11 +12503,25 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldPersistNewGameWindowPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether one newly resolved payload pair should be
+                persisted for the operation-captured source identity.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalPayload">The original-facing payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns>
+                <see langword="true" /> when the payload is ready for persistence;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeResolvedTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Normalizes one resolved translated payload before it is applied to
                 the live addon surface.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">
                 The original-facing payload currently visible in the addon.
             </param>
@@ -12426,6 +12558,18 @@
             <param name="originalPayload">
                 The original-facing payload currently visible in the addon.
             </param>
+            <returns>
+                <see langword="true" /> when background translation may be queued;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether one newly observed payload should be queued for
+                the operation-captured source identity.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalPayload">The original-facing payload.</param>
             <returns>
                 <see langword="true" /> when background translation may be queued;
                 otherwise <see langword="false" />.
@@ -12523,12 +12667,13 @@
                 stable-key path.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
                 Tries to resolve a translated payload from one addon-specific
                 canonical source other than persisted <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />
                 rows.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The visible original-facing payload.</param>
             <param name="translatedPayload">
                 Receives the translated payload when resolution succeeds.
@@ -12538,12 +12683,13 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
                 Tries to recover one canonical original payload from one addon-
                 specific source other than persisted rows when the live UI is
                 already showing translated text.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="livePayload">The currently visible live payload.</param>
             <param name="originalPayload">
                 Receives the recovered original payload.
@@ -12828,11 +12974,12 @@
             <param name="gameWindow">The resolved row, if any.</param>
             <returns>True when a row was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryResolveExactPersistedGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryResolveExactPersistedGameWindowPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
                 Tries to resolve one exact persisted <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />
                 payload pair for the provided original payload.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">
                 The original-facing payload currently visible in the addon flow.
             </param>
@@ -13612,10 +13759,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler">
@@ -13641,10 +13788,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.ShouldCaptureAtkValue(System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue@,System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryRegisterCustomHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">

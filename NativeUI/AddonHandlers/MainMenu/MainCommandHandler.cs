@@ -77,6 +77,7 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
@@ -102,6 +103,7 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
@@ -243,10 +245,18 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
             return;
         }
 
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            return;
+        }
+
         if (!this.TryResolveExactPersistedGameWindowPayload(
+                sourceLanguage,
                 originalPayload,
                 out var translatedPayload) &&
             !this.TryResolveSupplementalTranslatedPayload(
+                sourceLanguage,
                 originalPayload,
                 out translatedPayload))
         {
