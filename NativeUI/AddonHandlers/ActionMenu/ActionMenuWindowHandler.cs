@@ -508,9 +508,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return PreserveSourceLevelSeparator(originalText, translatedText);
         }
 
-        if (fallbackLookup.TryGetValue(originalText, out translatedText))
+        if (TryFindFallbackLookupValue(
+                fallbackLookup,
+                originalText,
+                out translatedText))
         {
-            return PreserveSourceLevelSeparator(originalText, translatedText);
+            return translatedText;
         }
 
         if (TryResolveLevelAwareTranslatedText(
@@ -552,9 +555,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return PreserveSourceLevelSeparator(visibleText, originalText);
         }
 
-        if (fallbackLookup.TryGetValue(visibleText, out originalText))
+        if (TryFindFallbackLookupValue(
+                fallbackLookup,
+                visibleText,
+                out originalText))
         {
-            return PreserveSourceLevelSeparator(visibleText, originalText);
+            return originalText;
         }
 
         if (TryResolveLevelAwareOriginalText(

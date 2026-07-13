@@ -231,12 +231,11 @@ public class SourceScopedFallbackFlowTests
     }
 
     /// <summary>
-    ///     Ensures reverse ActionMenu recovery prefers an exact scoped full
-    ///     label instead of reconstructing an English level token from a base
-    ///     name pair.
+    ///     Ensures normalized exact scoped full labels win before forward and
+    ///     reverse decomposition when live labels contain line breaks.
     /// </summary>
     [Fact]
-    public void ActionMenuReverseFallback_ExactFullLabelPrecedesDecomposition()
+    public void ActionMenuFullLabelFallback_NormalizedSpacingPrecedesDecomposition()
     {
         using var runtimeScope = new TestRuntimeScope();
         GameWindowCacheManager.Clear();
@@ -281,11 +280,16 @@ public class SourceScopedFallbackFlowTests
             var sourceLanguage = new SourceClientLanguage("fr", "fr");
             var lookups = GetActionMenuLookups(handler, sourceLanguage);
             var originalText = ResolveActionMenuOriginalText(
-                "Corrida Nv. 20",
+                "Corrida\r\nNv. 20",
                 new TranslationReuseScope("fr", "pt-BR", 0, true),
                 lookups.OriginalLookup);
+            var translatedText = ResolveActionMenuTranslatedText(
+                "Sprint\r\nNiveau 20",
+                new TranslationReuseScope("fr", "pt-BR", 0, true),
+                lookups.TranslatedLookup);
 
             Assert.Equal("Sprint Niveau 20", originalText);
+            Assert.Equal("Corrida Nv. 20", translatedText);
         }
         finally
         {
@@ -468,6 +472,29 @@ public class SourceScopedFallbackFlowTests
         return Assert.IsType<string>(method.Invoke(
             null,
             [visibleText, scope, "test-version", originalLookup]));
+    }
+
+    /// <summary>
+    ///     Invokes the ActionMenu translated-text resolver with a source-scoped
+    ///     persisted forward lookup.
+    /// </summary>
+    /// <param name="originalText">The original live text.</param>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <param name="translatedLookup">The persisted original-to-translated lookup.</param>
+    /// <returns>The resolved translated text.</returns>
+    private static string ResolveActionMenuTranslatedText(
+        string originalText,
+        TranslationReuseScope scope,
+        IReadOnlyDictionary<string, string> translatedLookup)
+    {
+        var method = typeof(ActionMenuWindowHandler).GetMethod(
+            "ResolveTranslatedText",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+
+        return Assert.IsType<string>(method.Invoke(
+            null,
+            [originalText, scope, "test-version", translatedLookup]));
     }
 
     /// <summary>
