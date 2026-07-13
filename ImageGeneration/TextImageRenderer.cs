@@ -6,8 +6,8 @@
 namespace Echoglossian.ImageGeneration;
 
 /// <summary>
-/// Renders RTL (right-to-left) shaped text into a bitmap using a private font collection.
-/// Supports multiline wrapping and right alignment.
+/// Renders shaped text into a bitmap using a private font collection.
+/// Supports multiline wrapping and policy-selected text direction.
 /// </summary>
 public sealed class TextImageRenderer : IDisposable
 {
@@ -15,6 +15,7 @@ public sealed class TextImageRenderer : IDisposable
   private readonly Font font;
   private readonly bool fallbackFontUsed;
   private readonly float lineHeightScale;
+  private readonly bool rightToLeft;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="TextImageRenderer"/> class.
@@ -30,8 +31,29 @@ public sealed class TextImageRenderer : IDisposable
       float fontSize,
       FontStyle style = FontStyle.Regular,
       float lineHeightScale = 1.0f)
+    : this(fontPath, fontSize, style, lineHeightScale, rightToLeft: true)
+  {
+  }
+
+  /// <summary>
+  /// Initializes a direction-aware text renderer.
+  /// </summary>
+  /// <param name="fontPath">The path to the TTF font file to use.</param>
+  /// <param name="fontSize">The font size to use.</param>
+  /// <param name="style">The font style to apply.</param>
+  /// <param name="lineHeightScale">The relative multiline line height.</param>
+  /// <param name="rightToLeft">
+  /// Whether text uses right-to-left direction and far alignment.
+  /// </param>
+  internal TextImageRenderer(
+      string fontPath,
+      float fontSize,
+      FontStyle style,
+      float lineHeightScale,
+      bool rightToLeft)
   {
     this.lineHeightScale = Math.Clamp(lineHeightScale, 0.8f, 1.2f);
+    this.rightToLeft = rightToLeft;
     try
     {
       this.fontCollection.AddFontFile(fontPath);
@@ -46,10 +68,10 @@ public sealed class TextImageRenderer : IDisposable
   }
 
   /// <summary>
-  /// Renders RTL-shaped text into a bitmap.
-  /// Text will wrap automatically and be right-aligned.
+  /// Renders shaped text into a bitmap using the configured direction.
+  /// Text will wrap automatically and align to its logical leading edge.
   /// </summary>
-  /// <param name="text">The RTL text to render.</param>
+  /// <param name="text">The shaped text to render.</param>
   /// <param name="textColor">The color of the text.</param>
   /// <param name="backgroundColor">The background color.</param>
   /// <param name="maxWidth">Optional max width in pixels. If set, will cause line breaks.</param>
@@ -59,7 +81,7 @@ public sealed class TextImageRenderer : IDisposable
     using Bitmap dummy = new(1, 1);
     using Graphics measuringGraphics = Graphics.FromImage(dummy);
     measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-    using StringFormat format = CreateStringFormat();
+    using StringFormat format = CreateStringFormat(this.rightToLeft);
     var layout = this.BuildTextLayout(
         measuringGraphics,
         format,
@@ -93,7 +115,7 @@ public sealed class TextImageRenderer : IDisposable
   /// <summary>
   /// Measures the bitmap size required to render the provided shaped text.
   /// </summary>
-  /// <param name="text">The RTL text to measure.</param>
+  /// <param name="text">The shaped text to measure.</param>
   /// <param name="maxWidth">Optional max width in pixels used for wrapping.</param>
   /// <returns>The measured bitmap size.</returns>
   public Size MeasureShapedText(string text, int? maxWidth = null)
@@ -101,7 +123,7 @@ public sealed class TextImageRenderer : IDisposable
     using Bitmap dummy = new(1, 1);
     using Graphics measuringGraphics = Graphics.FromImage(dummy);
     measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-    using StringFormat format = CreateStringFormat();
+    using StringFormat format = CreateStringFormat(this.rightToLeft);
     var layout = this.BuildTextLayout(
         measuringGraphics,
         format,
@@ -246,18 +268,27 @@ public sealed class TextImageRenderer : IDisposable
   }
 
   /// <summary>
-  /// Creates the string format used for manual RTL line measurement and draw.
+  /// Creates the string format used for manual line measurement and draw.
   /// </summary>
+  /// <param name="rightToLeft">
+  /// Whether text uses right-to-left direction and far alignment.
+  /// </param>
   /// <returns>The configured string format.</returns>
-  private static StringFormat CreateStringFormat()
+  internal static StringFormat CreateStringFormat(bool rightToLeft)
   {
-    return new StringFormat(StringFormatFlags.DirectionRightToLeft)
+    var formatFlags = StringFormatFlags.NoWrap;
+    if (rightToLeft)
     {
-      Alignment = StringAlignment.Far,
+      formatFlags |= StringFormatFlags.DirectionRightToLeft;
+    }
+
+    return new StringFormat(formatFlags)
+    {
+      Alignment = rightToLeft
+          ? StringAlignment.Far
+          : StringAlignment.Near,
       LineAlignment = StringAlignment.Near,
-      FormatFlags =
-          StringFormatFlags.DirectionRightToLeft |
-          StringFormatFlags.NoWrap,
+      FormatFlags = formatFlags,
       Trimming = StringTrimming.Word,
     };
   }

@@ -17,6 +17,39 @@ namespace Echoglossian.Tests;
 public class TextImageRendererTests
 {
     /// <summary>
+    /// Ensures texture-backed LTR text uses normal direction and near
+    /// alignment instead of inheriting the RTL rasterization format.
+    /// </summary>
+    [Fact]
+    public void CreateStringFormat_LtrText_UsesLtrNearAlignment()
+    {
+        using var format = TextImageRenderer.CreateStringFormat(
+            rightToLeft: false);
+
+        Assert.Equal(StringAlignment.Near, format.Alignment);
+        Assert.Equal(
+            StringFormatFlags.NoWrap,
+            format.FormatFlags &
+            (StringFormatFlags.DirectionRightToLeft | StringFormatFlags.NoWrap));
+    }
+
+    /// <summary>
+    /// Ensures the existing RTL format remains right-to-left and far aligned.
+    /// </summary>
+    [Fact]
+    public void CreateStringFormat_RtlText_UsesRtlFarAlignment()
+    {
+        using var format = TextImageRenderer.CreateStringFormat(
+            rightToLeft: true);
+
+        Assert.Equal(StringAlignment.Far, format.Alignment);
+        Assert.Equal(
+            StringFormatFlags.DirectionRightToLeft | StringFormatFlags.NoWrap,
+            format.FormatFlags &
+            (StringFormatFlags.DirectionRightToLeft | StringFormatFlags.NoWrap));
+    }
+
+    /// <summary>
     ///     Ensures reducing the configured line-height scale produces a more
     ///     compact multiline texture at the same font size and width.
     /// </summary>
