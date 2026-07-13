@@ -37,22 +37,28 @@ namespace Echoglossian
     /// Translates the sentences passed to it using the selected engine.
     /// </summary>
     /// <param name="text">Text to be translated.</param>
+    /// <param name="sourceLanguage">The captured source client language.</param>
     /// <returns>Returns the translated text passed in the call parameter.</returns>
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
-    private string Translate(string text)
+    private string Translate(
+      string text,
+      SourceClientLanguage sourceLanguage)
     {
-      return TranslationService.Translate(text, ClientStateInterface.ClientLanguage.Humanize(), LangDict[LanguageInt].Code);
+      return TranslationService.Translate(text, sourceLanguage.ProviderCode, LangDict[LanguageInt].Code);
     }
 
     /// <summary>
     /// Translates the sentences passed to it using the selected engine.
     /// </summary>
     /// <param name="text">Text to be translated.</param>
+    /// <param name="sourceLanguage">The captured source client language.</param>
     /// <returns>Returns the translated text passed in the call parameter.</returns>
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
-    private Task<string> TranslateAsync(string text)
+    private Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage)
     {
-      return TranslationService.TranslateAsync(text, ClientStateInterface.ClientLanguage.Humanize(), LangDict[LanguageInt].Code);
+      return TranslationService.TranslateAsync(text, sourceLanguage.ProviderCode, LangDict[LanguageInt].Code);
     }
   }
 }

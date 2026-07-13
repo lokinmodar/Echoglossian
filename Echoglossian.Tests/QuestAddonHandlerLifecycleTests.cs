@@ -101,7 +101,7 @@ public class QuestAddonHandlerLifecycleTests
                 return false;
             },
             QueueTranslation = static (_, _, _) => false,
-            QueueTranslationBatch = static (_, _, _) => false,
+            QueueTranslationBatch = static (_, _, _, _) => false,
             RemoveHoverTooltipByPrefix = static _ => { },
             RegisterTranslatedHoverTooltipAddon = null!,
             RegisterTranslatedHoverTooltipTextNode = null!,

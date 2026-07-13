@@ -5836,12 +5836,13 @@
             <param name="values">The translated strings.</param>
             <returns>True when the payload contains a valid batch.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},System.Action{System.String[]})">
+        <member name="M:Echoglossian.Echoglossian.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},Echoglossian.SourceClientLanguage,System.Action{System.String[]})">
             <summary>
             Queues a batch translation request and stores the serialized array result.
             </summary>
             <param name="key">The cache key.</param>
             <param name="sourceTexts">The source texts to translate.</param>
+            <param name="sourceLanguage">The captured source client language.</param>
             <param name="onResolved">Optional callback invoked with the translated array.</param>
             <returns>True when the request is queued.</returns>
         </member>
@@ -5966,19 +5967,21 @@
             </summary>
             <returns><c>true</c> when the configuration changed.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.Translate(System.String)">
+        <member name="M:Echoglossian.Echoglossian.Translate(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
             Translates the sentences passed to it using the selected engine.
             </summary>
             <param name="text">Text to be translated.</param>
+            <param name="sourceLanguage">The captured source client language.</param>
             <returns>Returns the translated text passed in the call parameter.</returns>
             <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps.</exception>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TranslateAsync(System.String)">
+        <member name="M:Echoglossian.Echoglossian.TranslateAsync(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
             Translates the sentences passed to it using the selected engine.
             </summary>
             <param name="text">Text to be translated.</param>
+            <param name="sourceLanguage">The captured source client language.</param>
             <returns>Returns the translated text passed in the call parameter.</returns>
             <exception cref="T:System.Exception">Returns exception in case something goes wrong in the translation steps.</exception>
         </member>
@@ -14745,12 +14748,13 @@
             <param name="onResolved">Optional callback invoked after the text is cached.</param>
             <returns>True if the request was queued, false if one is already in flight.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},System.Action{System.String[]})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.QueueTranslationBatch(System.String,System.Collections.Generic.IReadOnlyCollection{System.String},Echoglossian.SourceClientLanguage,System.Action{System.String[]})">
             <summary>
                 Queues a batch translation request on the shared broker.
             </summary>
             <param name="key">Stable translation key.</param>
             <param name="sourceTexts">The source texts to translate.</param>
+            <param name="sourceLanguage">The captured source client language.</param>
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True if the request was queued.</returns>
         </member>
@@ -14913,6 +14917,7 @@
             </summary>
             <param name="key">Stable translation key.</param>
             <param name="sourceTexts">The source texts that will be translated.</param>
+            <param name="sourceLanguage">The captured source client language.</param>
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True when the request was queued.</returns>
         </member>

@@ -208,14 +208,20 @@ internal abstract class QuestAddonHandlerBase
   /// </summary>
   /// <param name="key">Stable translation key.</param>
   /// <param name="sourceTexts">The source texts to translate.</param>
+  /// <param name="sourceLanguage">The captured source client language.</param>
   /// <param name="onResolved">Optional callback invoked with the translated batch.</param>
   /// <returns>True if the request was queued.</returns>
   protected bool QueueTranslationBatch(
       string key,
       IReadOnlyCollection<string> sourceTexts,
+      SourceClientLanguage sourceLanguage,
       Action<string[]>? onResolved = null)
   {
-    return this.Dependencies.QueueTranslationBatch(key, sourceTexts, onResolved);
+    return this.Dependencies.QueueTranslationBatch(
+        key,
+        sourceTexts,
+        sourceLanguage,
+        onResolved);
   }
 
   /// <summary>
