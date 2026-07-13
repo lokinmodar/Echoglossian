@@ -5,6 +5,7 @@
 
 using Echoglossian.Cache;
 using Echoglossian.NativeUI.AddonHandlers.Common;
+using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System.Globalization;
@@ -20,6 +21,12 @@ namespace Echoglossian.NativeUI.AddonHandlers.ActionMenu;
 /// </summary>
 public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 {
+    private const uint SectionHeadingTextNodeId = 2;
+    private const uint WindowTitleTextNodeId = 3;
+    private const uint MenuEntryTextNodeId = 7;
+    private const uint ActionEntryTextNodeId = 10;
+    private const uint DescriptionTextNodeId = 71;
+    private const uint DisplayModeTextNodeId = 72;
     private const int SwitchViewAtkValueIndex = 0;
     private const int LevelAtkValueIndex = 10;
     private const int ClassJobAtkValueIndex = 12;
@@ -254,7 +261,15 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string visibleText)
     {
         return textNode != null &&
-               !string.IsNullOrWhiteSpace(visibleText);
+               ShouldCaptureActionMenuTextNode(
+                   textNode->AtkResNode.NodeId,
+                   visibleText);
+    }
+
+    /// <inheritdoc />
+    protected override unsafe List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
+    {
+        return ResolveActionMenuTextNodeAddresses(addon);
     }
 
     /// <inheritdoc />
@@ -743,6 +758,46 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             targetMatch.Groups["prefix"].Value,
             sourceSeparator,
             targetMatch.Groups["level"].Value);
+    }
+
+    /// <summary>
+    ///     Resolves the readable text nodes that belong to the active
+    ///     <c>ActionMenu</c> page so capture does not stop at the first
+    ///     readable child exposed by each top-level component.
+    /// </summary>
+    /// <param name="addon">The live addon instance.</param>
+    /// <returns>The readable text-node addresses in tree order.</returns>
+    internal static unsafe List<nint> ResolveActionMenuTextNodeAddresses(
+        AtkUnitBase* addon)
+    {
+        return AddonTextNodeResolvers.ResolveReadableTextNodes(addon);
+    }
+
+    /// <summary>
+    ///     Determines whether one observed ActionMenu text node should
+    ///     participate in payload capture.
+    /// </summary>
+    /// <param name="nodeId">The live text-node identifier.</param>
+    /// <param name="visibleText">The visible text content.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the node belongs to the active
+    ///     ActionMenu page surface; otherwise <see langword="false" />.
+    /// </returns>
+    internal static bool ShouldCaptureActionMenuTextNode(
+        uint nodeId,
+        string visibleText)
+    {
+        if (string.IsNullOrWhiteSpace(visibleText))
+        {
+            return false;
+        }
+
+        return nodeId is SectionHeadingTextNodeId or
+               WindowTitleTextNodeId or
+               MenuEntryTextNodeId or
+               ActionEntryTextNodeId or
+               DescriptionTextNodeId or
+               DisplayModeTextNodeId;
     }
 
     /// <summary>

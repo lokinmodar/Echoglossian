@@ -86,6 +86,47 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures the ActionMenu capture policy accepts the text-node ids
+    ///     observed in the live left rail, window title, command grid, and
+    ///     mode-description surfaces from the addon probe logs.
+    /// </summary>
+    /// <param name="nodeId">The observed text-node identifier.</param>
+    /// <param name="visibleText">One representative visible text.</param>
+    [Theory]
+    [InlineData(2u, "ACTIONS")]
+    [InlineData(3u, "Actions & Traits")]
+    [InlineData(7u, "Support Desk\r")]
+    [InlineData(10u, "Peloton\r\nLv. 20")]
+    [InlineData(71u, "Display job gauge description.")]
+    [InlineData(72u, "Display Mode")]
+    public void ShouldCaptureActionMenuTextNode_ReturnsTrueForObservedNodeIds(
+        uint nodeId,
+        string visibleText)
+    {
+        var shouldCapture = ActionMenuWindowHandler
+            .ShouldCaptureActionMenuTextNode(
+                nodeId,
+                visibleText);
+
+        Assert.True(shouldCapture);
+    }
+
+    /// <summary>
+    ///     Ensures the ActionMenu capture policy rejects node ids and texts
+    ///     that do not belong to the active page surface.
+    /// </summary>
+    [Fact]
+    public void ShouldCaptureActionMenuTextNode_ReturnsFalseForIrrelevantInputs()
+    {
+        Assert.False(ActionMenuWindowHandler.ShouldCaptureActionMenuTextNode(
+            99,
+            "Untracked Surface"));
+        Assert.False(ActionMenuWindowHandler.ShouldCaptureActionMenuTextNode(
+            7,
+            " "));
+    }
+
+    /// <summary>
     ///     Ensures level-aware action-name resolution can translate a visible
     ///     ActionMenu label by reusing the canonical action-tooltip cache.
     /// </summary>
