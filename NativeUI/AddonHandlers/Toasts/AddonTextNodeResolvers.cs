@@ -127,6 +127,31 @@ internal static unsafe class AddonTextNodeResolvers
   }
 
   /// <summary>
+  ///     Resolves every readable, visible text node found anywhere in the live
+  ///     addon tree.
+  /// </summary>
+  /// <param name="addon">The live addon instance.</param>
+  /// <returns>
+  ///     A list of readable, visible text-node addresses in tree order.
+  /// </returns>
+  public static List<nint> ResolveReadableTextNodes(AtkUnitBase* addon)
+  {
+    var textNodes = new List<nint>();
+    if (addon == null)
+    {
+      return textNodes;
+    }
+
+    var seen = new HashSet<nint>();
+    CollectReadableTextNodes(
+        addon->UldManager.NodeList,
+        (int)addon->UldManager.NodeListCount,
+        textNodes,
+        seen);
+    return textNodes;
+  }
+
+  /// <summary>
   ///     Resolves the first text node found anywhere in the provided node list,
   ///     including nested component node lists.
   /// </summary>

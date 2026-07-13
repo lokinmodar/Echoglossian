@@ -66,6 +66,66 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    protected override bool ShouldCaptureAtkValue(
+        int index,
+        in AtkValue value,
+        string visibleText)
+    {
+        return index >= FirstMainCommandPayloadIndex &&
+               index <= LastMainCommandPayloadIndex;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryResolveSupplementalTranslatedPayload(
+        DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload translatedPayload)
+    {
+        translatedPayload = DbFirstGameWindowPayload.Empty;
+
+        if (!MainCommandCanonicalTextResolver.TryResolveTranslatedIntMap(
+                originalPayload.AtkValues,
+                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                    this.config.Lang),
+                this.config.ChosenTransEngine,
+                GetGameVersion(),
+                out var translatedAtkValues))
+        {
+            return false;
+        }
+
+        translatedPayload = new DbFirstGameWindowPayload(
+            translatedAtkValues,
+            [],
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
+        return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryResolveSupplementalOriginalPayload(
+        DbFirstGameWindowPayload livePayload,
+        out DbFirstGameWindowPayload originalPayload)
+    {
+        originalPayload = DbFirstGameWindowPayload.Empty;
+
+        if (!MainCommandCanonicalTextResolver.TryResolveOriginalIntMap(
+                livePayload.AtkValues,
+                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                    this.config.Lang),
+                this.config.ChosenTransEngine,
+                GetGameVersion(),
+                out var originalAtkValues))
+        {
+            return false;
+        }
+
+        originalPayload = new DbFirstGameWindowPayload(
+            originalAtkValues,
+            [],
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
+        return true;
+    }
+
+    /// <inheritdoc />
     private protected override bool TryRegisterCustomHoverTooltips(
         AtkUnitBase* addon,
         DbFirstGameWindowPayload originalPayload,
@@ -178,10 +238,17 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
         var originalPayload = CaptureRefreshPayload(
             atkValues,
             refreshArgs.AtkValueCount);
-        if (originalPayload.IsEmpty ||
-            !this.TryResolveExactPersistedGameWindowPayload(
+        if (originalPayload.IsEmpty)
+        {
+            return;
+        }
+
+        if (!this.TryResolveExactPersistedGameWindowPayload(
                 originalPayload,
-                out var translatedPayload))
+                out var translatedPayload) &&
+            !this.TryResolveSupplementalTranslatedPayload(
+                originalPayload,
+                out translatedPayload))
         {
             return;
         }

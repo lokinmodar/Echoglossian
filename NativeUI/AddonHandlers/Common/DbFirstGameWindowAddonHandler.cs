@@ -62,6 +62,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private DateTime appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
 
     private DateTime nextRetryUtc = DateTime.MinValue;
+    private int refreshRequested;
 
     /// <summary>
     ///     Clears the shared DB-first in-memory session caches so one fresh
@@ -222,6 +223,36 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         string visibleText)
     {
         return true;
+    }
+
+    /// <summary>
+    ///     Determines whether one visible <c>AtkValue</c> string should
+    ///     participate in the canonical payload for this addon.
+    /// </summary>
+    /// <param name="index">The live ATK value index.</param>
+    /// <param name="value">The live ATK value.</param>
+    /// <param name="visibleText">The currently visible text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the ATK value is stable enough to
+    ///     capture and later reapply; otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldCaptureAtkValue(
+        int index,
+        in AtkValue value,
+        string visibleText)
+    {
+        return true;
+    }
+
+    /// <summary>
+    ///     Resolves the text-node addresses that participate in capture,
+    ///     apply, restore, and hover registration for this addon.
+    /// </summary>
+    /// <param name="addon">The live addon instance.</param>
+    /// <returns>The text-node addresses in stable tree order.</returns>
+    protected virtual List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
+    {
+        return AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon);
     }
 
     /// <summary>
@@ -646,6 +677,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
         var shouldContinueAppliedStateRefresh =
             this.ShouldContinueAppliedStateRefreshOnPreDraw();
+        var refreshRequested = Interlocked.Exchange(
+            ref this.refreshRequested,
+            0) != 0;
 
         if (this.lastResolvedState != null &&
             this.lastAppliedDisplayMode != null &&
@@ -701,8 +735,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        if (this.lastAppliedDisplayMode == displayMode &&
-            !shouldContinueAppliedStateRefresh)
+        if (DbFirstPreDrawRefreshPolicy.ShouldShortCircuit(
+                sameDisplayMode: this.lastAppliedDisplayMode == displayMode,
+                shouldContinueAppliedStateRefresh:
+                shouldContinueAppliedStateRefresh,
+                refreshRequested: refreshRequested,
+                hasRuntimeState: this.runtimeState != null,
+                usesHoverTooltips: usesHoverTooltips,
+                hasLastResolvedState: this.lastResolvedState != null))
         {
             if (this.runtimeState != null)
             {
@@ -714,17 +754,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 return;
             }
-
-            if (usesHoverTooltips &&
-                this.lastResolvedState != null)
-            {
-                this.hoverTooltipManager.TouchByPrefix(
-                    this.hoverTooltipKeyPrefix);
-                return;
-            }
         }
 
-        if (this.runtimeState == null && DateTime.UtcNow < this.nextRetryUtc)
+        if (!refreshRequested &&
+            this.runtimeState == null &&
+            DateTime.UtcNow < this.nextRetryUtc)
         {
             return;
         }
@@ -1188,6 +1222,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     continue;
                 }
 
+                if (!this.ShouldCaptureAtkValue(index, in value, text))
+                {
+                    continue;
+                }
+
                 atkValues[index] = text;
             }
         }
@@ -1239,8 +1278,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     {
         var capturedNodes = new SortedDictionary<string, string>(
             StringComparer.Ordinal);
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in nodeAddresses)
@@ -1903,6 +1941,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         {
                             StringArrayDataCacheManager.Update(task.Result);
                             ClearFailedPayloadRetry(payloadKey);
+                            this.RequestRefresh();
                             return;
                         }
 
@@ -1921,6 +1960,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                             task.Result)
                         {
                             ClearFailedPayloadRetry(payloadKey);
+                            this.RequestRefresh();
                             return;
                         }
 
@@ -1932,6 +1972,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         _ = translationTask.ContinueWith(
             completedTask => InFlightPayloads.TryRemove(payloadKey, out _),
             TaskScheduler.Default);
+    }
+
+    /// <summary>
+    /// Requests one fresh pre-draw re-resolution pass after background
+    /// translation or persistence work completes.
+    /// </summary>
+    private void RequestRefresh()
+    {
+        Interlocked.Exchange(ref this.refreshRequested, 1);
+        this.nextRetryUtc = DateTime.MinValue;
+        this.ArmAppliedStatePreDrawRefreshWindow();
     }
 
     /// <summary>
@@ -2298,7 +2349,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
-        var textNodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon);
+        var textNodeAddresses = this.ResolveTextNodeAddresses(addon);
         if (textNodeAddresses.Count == 0)
         {
             return;
@@ -2460,8 +2511,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         AtkUnitBase* addon,
         IReadOnlyDictionary<string, string> translatedTextNodes)
     {
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in nodeAddresses)
@@ -2517,8 +2567,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return false;
         }
 
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         if (nodeAddresses.Count == 0)
         {
             return false;
