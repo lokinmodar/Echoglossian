@@ -9820,6 +9820,29 @@
             </summary>
             <returns>The normalized current game language code.</returns>
         </member>
+        <member name="M:Echoglossian.RuntimeLanguageHelper.TryResolveSourceLanguage(Dalamud.Game.ClientLanguage,Echoglossian.SourceClientLanguage@)">
+            <summary>
+                Resolves a client language into its stable persisted identity and
+                provider input code.
+            </summary>
+            <param name="clientLanguage">The raw Dalamud client language.</param>
+            <param name="sourceLanguage">The resolved source-language contract.</param>
+            <returns>
+                <see langword="true" /> when the client language has a known
+                identity; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(Echoglossian.SourceClientLanguage@)">
+            <summary>
+                Resolves the currently active client language into its stable
+                persisted identity and provider input code.
+            </summary>
+            <param name="sourceLanguage">The resolved source-language contract.</param>
+            <returns>
+                <see langword="true" /> when the current client language has a
+                known identity; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(System.Int32)">
             <summary>
                 Gets the configured translation target language as a normalized
@@ -9846,6 +9869,28 @@
             </summary>
             <param name="language">The raw language value.</param>
             <returns>The normalized language code, or an empty string.</returns>
+        </member>
+        <member name="T:Echoglossian.SourceClientLanguage">
+            <summary>
+                Represents a source client language as separate persistence and
+                translation-provider identities.
+            </summary>
+            <param name="PersistenceCode">The code persisted with translated rows.</param>
+            <param name="ProviderCode">The code supplied to translation providers.</param>
+        </member>
+        <member name="M:Echoglossian.SourceClientLanguage.#ctor(System.String,System.String)">
+            <summary>
+                Represents a source client language as separate persistence and
+                translation-provider identities.
+            </summary>
+            <param name="PersistenceCode">The code persisted with translated rows.</param>
+            <param name="ProviderCode">The code supplied to translation providers.</param>
+        </member>
+        <member name="P:Echoglossian.SourceClientLanguage.PersistenceCode">
+            <summary>The code persisted with translated rows.</summary>
+        </member>
+        <member name="P:Echoglossian.SourceClientLanguage.ProviderCode">
+            <summary>The code supplied to translation providers.</summary>
         </member>
         <member name="T:Echoglossian.TranslationActivationGuard">
             <summary>
@@ -10125,6 +10170,69 @@
                 such as database migrations.
             </summary>
             <returns>The localized synthetic error prefixes.</returns>
+        </member>
+        <member name="T:Echoglossian.TranslationReuseScope">
+            <summary>
+                Defines the source, target, and engine compatibility required to reuse
+                a persisted translation.
+            </summary>
+            <param name="SourceLanguageCode">The requested persisted source identity.</param>
+            <param name="TargetLanguageCode">The requested normalized target code.</param>
+            <param name="TranslationEngine">The selected translation engine.</param>
+            <param name="RequireMatchingEngine">
+                Whether reuse requires the selected translation engine.
+            </param>
+        </member>
+        <member name="M:Echoglossian.TranslationReuseScope.#ctor(System.String,System.String,System.Nullable{System.Int32},System.Boolean)">
+            <summary>
+                Defines the source, target, and engine compatibility required to reuse
+                a persisted translation.
+            </summary>
+            <param name="SourceLanguageCode">The requested persisted source identity.</param>
+            <param name="TargetLanguageCode">The requested normalized target code.</param>
+            <param name="TranslationEngine">The selected translation engine.</param>
+            <param name="RequireMatchingEngine">
+                Whether reuse requires the selected translation engine.
+            </param>
+        </member>
+        <member name="P:Echoglossian.TranslationReuseScope.SourceLanguageCode">
+            <summary>The requested persisted source identity.</summary>
+        </member>
+        <member name="P:Echoglossian.TranslationReuseScope.TargetLanguageCode">
+            <summary>The requested normalized target code.</summary>
+        </member>
+        <member name="P:Echoglossian.TranslationReuseScope.TranslationEngine">
+            <summary>The selected translation engine.</summary>
+        </member>
+        <member name="P:Echoglossian.TranslationReuseScope.RequireMatchingEngine">
+            <summary>
+                Whether reuse requires the selected translation engine.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationReuseScope.TryCreate(Echoglossian.Config,Echoglossian.TranslationReuseScope@)">
+            <summary>
+                Creates the current translation reuse scope from runtime language
+                and configuration state.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="scope">The resolved reuse scope when available.</param>
+            <returns>
+                <see langword="true" /> when a complete source and target scope
+                can be resolved; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationReuseScope.Matches(System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+                Determines whether one stored translation belongs to this reuse
+                scope.
+            </summary>
+            <param name="storedSourceLanguage">The persisted source identity.</param>
+            <param name="storedTargetLanguage">The persisted target language.</param>
+            <param name="storedEngine">The persisted translation engine.</param>
+            <returns>
+                <see langword="true" /> when the stored values are compatible with
+                this scope; otherwise <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.ImageGeneration.CachedTextureEntry">
             <summary>
