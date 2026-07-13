@@ -238,3 +238,77 @@ PASS: 0 errors, 78 existing/concurrent warnings
 dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
 PASS: 534/534
 ```
+
+## Final Lifecycle Review
+
+The two remaining lifecycle findings were addressed without changing
+translation, persistence, native handlers, overlay layout, hover layout, or
+`Echoglossian.xml`.
+
+### Root Causes
+
+1. Overlay and hover callers disposed their draw leases immediately after
+   `ImGui.Image` submitted commands. Lease counting therefore protected only
+   command construction, not the remainder of the host frame.
+2. Worker and pending limits belonged to each generation. Replacing a
+   generation canceled its token but retained its queue/map, and a provider
+   operation that ignored cancellation allowed every later generation to start
+   another bounded set of workers.
+
+### Implementation
+
+- Disposed draw leases now enter a service-owned deferred release queue. The
+  queue is drained at the beginning of the next `UiBuilder.Draw` callback via
+  `BeginDrawFrame`, which is a provably later host frame than the one that
+  submitted the image command.
+- `Clear` still retires cache ownership immediately, but an evicted wrapper is
+  not disposed until its prior-frame leases are released. Final plugin disposal
+  drains any remaining releases after retiring cache ownership.
+- Worker concurrency is now counted across the entire service rather than per
+  generation. A canceled provider call that ignores its token continues to own
+  one globally bounded slot; current-generation work remains admitted and
+  starts as soon as a slot exits.
+- `Clear` and `Dispose` immediately clear the retired generation's queued work
+  and keyed pending map. Thus retained stale keys are bounded by running global
+  workers, while queued keys belong only to the bounded current generation.
+
+### TDD Evidence
+
+The focused RED run failed for the expected missing contracts:
+
+- `CS1061`: no `BeginDrawFrame`
+- `CS1061`: no global active-worker statistic
+- `CS1061`: no queued-work statistic
+
+The deterministic regressions use controlled completion signals and verify:
+
+- a lease disposed after simulated image submission survives same-frame LRU
+  eviction and is released only when the next draw frame begins
+- five repeated clears around a blocked upload retain one global worker, drop
+  stale queued keys, and run only the newest admitted request when capacity
+  returns
+- repeated dispose cancels the running token, removes queued state, and safely
+  disposes a late stale upload
+- same-key post-clear work remains schedulable without stale completion
+  removing or publishing it
+
+Final commands and results:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~RtlTexturePresentationServiceTests"
+PASS: 12/12
+
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~RtlTexturePresentationServiceTests|FullyQualifiedName~TextImageRendererTests|FullyQualifiedName~TextTextureCacheBudgetTests|FullyQualifiedName~HoverTooltipLayoutPolicyTests"
+PASS: 28/28
+
+dotnet build Echoglossian.sln -c Debug --no-restore
+PASS: 0 errors, 2 known warnings
+
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+PASS: 524/524
+```
+
+In-game verification remains appropriate for repeated configuration clears
+while RTL overlays/tooltips are visible and for plugin unload immediately after
+a texture-backed frame. No automated concern remains in the owned lifecycle
+boundary.

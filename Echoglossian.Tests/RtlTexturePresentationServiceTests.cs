@@ -72,11 +72,11 @@ public class RtlTexturePresentationServiceTests
     }
 
     /// <summary>
-    /// Ensures eviction retires a texture without disposing it while the
-    /// current draw still owns a lease.
+    /// Ensures lease disposal after image submission retains an evicted
+    /// texture until the next host draw frame begins.
     /// </summary>
     [Fact]
-    public async Task TryRender_EvictionWhileBlockIsLeased_DefersTextureDisposal()
+    public async Task BeginDrawFrame_EvictedSubmittedTexture_ReleasesOnNextFrame()
     {
         var starts = new ConcurrentDictionary<string, TaskCompletionSource<bool>>();
         var completions = new ConcurrentDictionary<
@@ -99,7 +99,9 @@ public class RtlTexturePresentationServiceTests
         await starts.GetOrAdd("first", _ => NewSignal()).Task.WaitAsync(
             TimeSpan.FromSeconds(5));
         completions.GetOrAdd("first", _ => NewTextureSignal()).SetResult(firstTexture);
+        service.BeginDrawFrame();
         var firstBlock = WaitForRenderedBlock(service, firstRequest);
+        firstBlock.Texture!.Dispose();
 
         Assert.Null(service.TryRender(secondRequest));
         await starts.GetOrAdd("second", _ => NewSignal()).Task.WaitAsync(
@@ -109,10 +111,104 @@ public class RtlTexturePresentationServiceTests
 
         Assert.Equal(0, firstTexture.DisposeCount);
 
-        firstBlock.Texture!.Dispose();
+        service.BeginDrawFrame();
 
         Assert.Equal(1, firstTexture.DisposeCount);
         secondBlock.Texture!.Dispose();
+    }
+
+    /// <summary>
+    /// Ensures repeated clears share one global worker cap, discard stale
+    /// queued generations, and retain the newest request for later execution.
+    /// </summary>
+    [Fact]
+    public async Task Clear_RepeatedWithBlockedUpload_GloballyBoundsRetiredWork()
+    {
+        var firstCompletion = NewTextureSignal();
+        var creationStarted = new ConcurrentQueue<
+            TaskCompletionSource<TextureCreationRequest>>();
+        var firstStart = NewCreationRequestSignal();
+        var currentStart = NewCreationRequestSignal();
+        creationStarted.Enqueue(firstStart);
+        creationStarted.Enqueue(currentStart);
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (request, _) =>
+            {
+                Assert.True(creationStarted.TryDequeue(out var started));
+                started.SetResult(request);
+                return request.Text == "blocked"
+                    ? firstCompletion.Task
+                    : Task.FromResult<IDalamudTextureWrap>(
+                        new FakeTextureWrap(width: 20, height: 10));
+            },
+            pendingTextureCapacity: 2,
+            maxConcurrentTextureCreations: 1);
+
+        Assert.Null(service.TryRender(CreateRequest(2, "ar", "blocked")));
+        await firstStart.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        for (var generation = 0; generation < 5; generation++)
+        {
+            service.Clear();
+            Assert.Null(service.TryRender(
+                CreateRequest(2, "ar", $"retired-{generation}")));
+
+            var stats = service.GetDebugStats();
+            Assert.Equal(1, stats.ActiveTextureWorkerCount);
+            Assert.InRange(stats.QueuedTextureCount, 0, 1);
+        }
+
+        service.Clear();
+        var currentRequest = CreateRequest(2, "ar", "current");
+        Assert.Null(service.TryRender(currentRequest));
+
+        firstCompletion.SetResult(new FakeTextureWrap(width: 10, height: 10));
+        var startedCurrentRequest = await currentStart.Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+
+        Assert.Equal("current", startedCurrentRequest.Text);
+        var completedBlock = WaitForRenderedBlock(service, currentRequest);
+        completedBlock.Texture!.Dispose();
+    }
+
+    /// <summary>
+    /// Ensures disposal cancels running work and removes all queued keys even
+    /// when a provider operation does not complete.
+    /// </summary>
+    [Fact]
+    public async Task Dispose_BlockedUpload_CancelsAndDropsQueuedState()
+    {
+        var creationStarted = NewCancellationSignal();
+        var blockedCompletion = NewTextureSignal();
+        var service = new RtlTexturePresentationService(
+            new Config(),
+            (_, cancellationToken) =>
+            {
+                creationStarted.SetResult(cancellationToken);
+                return blockedCompletion.Task;
+            },
+            pendingTextureCapacity: 2,
+            maxConcurrentTextureCreations: 1);
+
+        Assert.Null(service.TryRender(CreateRequest(2, "ar", "running")));
+        var cancellationToken = await creationStarted.Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+        Assert.Null(service.TryRender(CreateRequest(2, "ar", "queued")));
+
+        service.Dispose();
+        service.Dispose();
+
+        var stats = service.GetDebugStats();
+        Assert.True(cancellationToken.IsCancellationRequested);
+        Assert.Equal(0, stats.QueuedTextureCount);
+        Assert.InRange(stats.ActiveTextureWorkerCount, 0, 1);
+
+        var staleTexture = new FakeTextureWrap(width: 10, height: 10);
+        blockedCompletion.SetResult(staleTexture);
+        Assert.True(SpinWait.SpinUntil(
+            () => staleTexture.DisposeCount == 1,
+            TimeSpan.FromSeconds(5)));
     }
 
     /// <summary>
@@ -151,12 +247,12 @@ public class RtlTexturePresentationServiceTests
 
         service.Clear();
         Assert.Null(service.TryRender(request));
-        await secondStart.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         Assert.True(firstToken.IsCancellationRequested);
 
         var staleTexture = new FakeTextureWrap(width: 90, height: 20);
         firstCompletion.SetResult(staleTexture);
+        await secondStart.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(SpinWait.SpinUntil(
             () => staleTexture.DisposeCount == 1,
             TimeSpan.FromSeconds(5)));
@@ -407,6 +503,17 @@ public class RtlTexturePresentationServiceTests
     private static TaskCompletionSource<CancellationToken> NewCancellationSignal()
     {
         return new TaskCompletionSource<CancellationToken>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    /// <summary>
+    /// Creates a continuation-safe texture-request signal.
+    /// </summary>
+    /// <returns>The new signal.</returns>
+    private static TaskCompletionSource<TextureCreationRequest>
+        NewCreationRequestSignal()
+    {
+        return new TaskCompletionSource<TextureCreationRequest>(
             TaskCreationOptions.RunContinuationsAsynchronously);
     }
 

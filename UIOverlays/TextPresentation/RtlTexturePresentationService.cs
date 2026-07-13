@@ -59,7 +59,9 @@ internal sealed class RtlTexturePresentationService : IDisposable
   private readonly Dictionary<string, RetryState> retryAfterByKey =
       new(StringComparer.Ordinal);
   private readonly LinkedList<string> retryAccessOrder = new();
+  private readonly Queue<RetainedTexture> deferredTextureLeaseReleases = new();
   private GenerationState currentGeneration = new(0);
+  private int activeTextureWorkerCount;
   private bool disposed;
 
   /// <summary>
@@ -191,10 +193,29 @@ internal sealed class RtlTexturePresentationService : IDisposable
     }
   }
 
+  /// <summary>
+  /// Begins one host draw frame and releases leases submitted during the prior
+  /// frame, after the host has completed that frame's command processing.
+  /// </summary>
+  public void BeginDrawFrame()
+  {
+    List<RetainedTexture> releases;
+    lock (this.lifecycleLock)
+    {
+      releases = this.DrainDeferredTextureLeaseReleases();
+    }
+
+    foreach (var retainedTexture in releases)
+    {
+      retainedTexture.Release();
+    }
+  }
+
   /// <inheritdoc/>
   public void Dispose()
   {
     GenerationState retiredGeneration;
+    List<RetainedTexture> deferredReleases;
     lock (this.lifecycleLock)
     {
       if (this.disposed)
@@ -204,12 +225,19 @@ internal sealed class RtlTexturePresentationService : IDisposable
 
       this.disposed = true;
       retiredGeneration = this.currentGeneration;
+      this.DiscardPendingTextureWork(retiredGeneration);
       this.DisposeCompletedTextures(retiredGeneration);
       this.textureCache.Dispose();
       this.ClearRetryState();
+      deferredReleases = this.DrainDeferredTextureLeaseReleases();
     }
 
     retiredGeneration.Cancellation.Cancel();
+    foreach (var retainedTexture in deferredReleases)
+    {
+      retainedTexture.Release();
+    }
+
     this.ClearAdaptiveWidthState();
     GC.SuppressFinalize(this);
   }
@@ -230,6 +258,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
       retiredGeneration = this.currentGeneration;
       this.currentGeneration = new GenerationState(
           retiredGeneration.Epoch + 1);
+      this.DiscardPendingTextureWork(retiredGeneration);
       this.DisposeCompletedTextures(retiredGeneration);
       this.textureCache.Clear();
       this.ClearRetryState();
@@ -248,16 +277,22 @@ internal sealed class RtlTexturePresentationService : IDisposable
       long EstimatedMemoryBytes,
       int AdaptiveWidthCount,
       int PendingTextureCount,
-      int RetryStateCount) GetDebugStats()
+      int RetryStateCount,
+      int QueuedTextureCount,
+      int ActiveTextureWorkerCount) GetDebugStats()
   {
     (int Count, long EstimatedMemoryBytes) textureStats;
     int pendingTextureCount;
     int retryStateCount;
+    int queuedTextureCount;
+    int activeWorkerCount;
     lock (this.lifecycleLock)
     {
       textureStats = this.textureCache.GetDebugStats();
       pendingTextureCount = this.currentGeneration.PendingByKey.Count;
       retryStateCount = this.retryAfterByKey.Count;
+      queuedTextureCount = this.currentGeneration.Queue.Count;
+      activeWorkerCount = this.activeTextureWorkerCount;
     }
 
     int adaptiveWidthCount;
@@ -271,7 +306,9 @@ internal sealed class RtlTexturePresentationService : IDisposable
         textureStats.EstimatedMemoryBytes,
         adaptiveWidthCount,
         pendingTextureCount,
-        retryStateCount);
+        retryStateCount,
+        queuedTextureCount,
+        activeWorkerCount);
   }
 
   /// <summary>
@@ -335,8 +372,9 @@ internal sealed class RtlTexturePresentationService : IDisposable
   private void EnsureTextureWorkers(GenerationState generation)
   {
     var workersToStart = Math.Min(
-        this.maxConcurrentTextureCreations - generation.ActiveWorkerCount,
+        this.maxConcurrentTextureCreations - this.activeTextureWorkerCount,
         generation.Queue.Count);
+    this.activeTextureWorkerCount += workersToStart;
     generation.ActiveWorkerCount += workersToStart;
     for (var workerIndex = 0; workerIndex < workersToStart; workerIndex++)
     {
@@ -362,7 +400,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
             generation.Cancellation.IsCancellationRequested ||
             !generation.Queue.TryDequeue(out work!))
         {
-          generation.ActiveWorkerCount--;
+          this.CompleteTextureWorker(generation);
           return;
         }
 
@@ -431,6 +469,32 @@ internal sealed class RtlTexturePresentationService : IDisposable
   }
 
   /// <summary>
+  /// Retires one globally counted worker and starts eligible current work when
+  /// capacity becomes available.
+  /// </summary>
+  /// <param name="generation">The generation whose worker is ending.</param>
+  private void CompleteTextureWorker(GenerationState generation)
+  {
+    generation.ActiveWorkerCount--;
+    this.activeTextureWorkerCount--;
+    if (!this.disposed)
+    {
+      this.EnsureTextureWorkers(this.currentGeneration);
+    }
+  }
+
+  /// <summary>
+  /// Removes all queued and keyed work owned by a retired generation.
+  /// Running provider calls remain cancellation-bound and globally capped.
+  /// </summary>
+  /// <param name="generation">The generation being retired.</param>
+  private void DiscardPendingTextureWork(GenerationState generation)
+  {
+    generation.Queue.Clear();
+    generation.PendingByKey.Clear();
+  }
+
+  /// <summary>
   /// Publishes completed uploads into the LRU on the requesting draw thread.
   /// </summary>
   /// <param name="generation">The active lifecycle generation.</param>
@@ -495,7 +559,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
             "Texture cache entry does not support draw leasing.");
       }
 
-      texture = retainedTexture.Acquire();
+      texture = retainedTexture.Acquire(this.DeferTextureLeaseRelease);
       return true;
     }
     catch (TextureCacheMissException)
@@ -503,6 +567,48 @@ internal sealed class RtlTexturePresentationService : IDisposable
       texture = null!;
       return false;
     }
+  }
+
+  /// <summary>
+  /// Defers one submitted draw lease until a later host draw frame begins.
+  /// </summary>
+  /// <param name="retainedTexture">The retained cache owner.</param>
+  private void DeferTextureLeaseRelease(RetainedTexture retainedTexture)
+  {
+    var releaseImmediately = false;
+    lock (this.lifecycleLock)
+    {
+      if (this.disposed)
+      {
+        releaseImmediately = true;
+      }
+      else
+      {
+        this.deferredTextureLeaseReleases.Enqueue(retainedTexture);
+      }
+    }
+
+    if (releaseImmediately)
+    {
+      retainedTexture.Release();
+    }
+  }
+
+  /// <summary>
+  /// Drains texture leases whose submitting host frame has completed.
+  /// </summary>
+  /// <returns>The retained owners ready for release.</returns>
+  private List<RetainedTexture> DrainDeferredTextureLeaseReleases()
+  {
+    var releases = new List<RetainedTexture>(
+        this.deferredTextureLeaseReleases.Count);
+    while (this.deferredTextureLeaseReleases.TryDequeue(
+               out var retainedTexture))
+    {
+      releases.Add(retainedTexture);
+    }
+
+    return releases;
   }
 
   /// <summary>
@@ -1009,7 +1115,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
     /// Acquires one explicit draw lease.
     /// </summary>
     /// <returns>A texture wrapper that releases the lease on disposal.</returns>
-    public IDalamudTextureWrap Acquire()
+    public IDalamudTextureWrap Acquire(Action<RetainedTexture> deferRelease)
     {
       lock (this.textureLock)
       {
@@ -1019,7 +1125,11 @@ internal sealed class RtlTexturePresentationService : IDisposable
         }
 
         this.leaseCount++;
-        return new TextureLease(this, this.width, this.height);
+        return new TextureLease(
+            this,
+            deferRelease,
+            this.width,
+            this.height);
       }
     }
 
@@ -1090,17 +1200,24 @@ internal sealed class RtlTexturePresentationService : IDisposable
   {
     private readonly int width;
     private readonly int height;
+    private readonly Action<RetainedTexture> deferRelease;
     private RetainedTexture? owner;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TextureLease"/> class.
     /// </summary>
     /// <param name="owner">The retained cache owner.</param>
+    /// <param name="deferRelease">The frame-aware release callback.</param>
     /// <param name="width">The texture width.</param>
     /// <param name="height">The texture height.</param>
-    public TextureLease(RetainedTexture owner, int width, int height)
+    public TextureLease(
+        RetainedTexture owner,
+        Action<RetainedTexture> deferRelease,
+        int width,
+        int height)
     {
       this.owner = owner;
+      this.deferRelease = deferRelease;
       this.width = width;
       this.height = height;
     }
@@ -1115,7 +1232,11 @@ internal sealed class RtlTexturePresentationService : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-      Interlocked.Exchange(ref this.owner, null)?.Release();
+      var retainedTexture = Interlocked.Exchange(ref this.owner, null);
+      if (retainedTexture != null)
+      {
+        this.deferRelease(retainedTexture);
+      }
     }
   }
 
