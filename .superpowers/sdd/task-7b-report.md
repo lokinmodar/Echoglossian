@@ -140,3 +140,57 @@ git diff --check
   SQLitePCLRaw 2.1.11 `NU1903` warnings remain.
 - Full suite: 523 passed, 0 failed, 0 skipped.
 - Diff check: passed.
+
+## P2 Test-Wiring Follow-up
+
+The remaining re-review finding was valid: the prior prefetch regression tests
+called dispatch wrappers with test-created scopes and persistence callbacks, so
+they stopped before the production entry-to-row persistence boundary.
+
+ActionDetail name, ReferenceText name, and accepted-quest name prefetch now
+invoke narrow production orchestration seams. Each seam captures the live
+source and configuration once, uses the existing source-scoped broker, builds
+a real `ActionTooltip`, concrete reference-text row, or `QuestPlate`, and calls
+the existing production persistence delegate. The existing shared queue,
+translation service, row creators, lookups, and insert/update operations remain
+in place; no queue, cache, or parallel pipeline was added.
+
+The replacement tests mutate the live source resolver and configuration after
+queueing but before the broker completion callback. They assert the exact
+captured broker key and the source, target, and engine on the actual row sent to
+persistence. The cache-hit cases mutate live state during broker lookup, after
+entry capture but before synchronous row persistence. Unknown-source cases
+enter through each production family seam and assert zero broker lookup,
+queueing, translation, and persistence activity.
+
+RED command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter "FullyQualifiedName~PrefetchBrokerSourceScopeTests"
+```
+
+RED result: test compilation failed only on the intentionally missing
+`RunActionDetailNamePrefetchEntry`, `RunReferenceTextNamePrefetchEntry`, and
+`RunAcceptedQuestNamePrefetchEntry` production seams.
+
+Focused GREEN result for the same command: 9 passed, 0 failed.
+
+Broader affected command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~TranslationServiceTests|FullyQualifiedName~PrefetchBrokerSourceScopeTests|FullyQualifiedName~QueuedTranslationBrokerTests|FullyQualifiedName~TranslationFailureCacheManagerTests"
+```
+
+Broader affected result: 34 passed, 0 failed.
+
+Fresh validation:
+
+```powershell
+dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+git diff --check
+```
+
+- Build: passed with 0 errors; the existing Multilingual App Toolkit and
+  SQLitePCLRaw 2.1.11 `NU1903` warnings remain.
+- Full suite: 534 passed, 0 failed, 0 skipped.

@@ -33,6 +33,19 @@ internal delegate bool QueuePrefetchTranslationDelegate(
     Action<string>? onResolved);
 
 /// <summary>
+///     Resolves one prefetch translation from an operation-captured source and
+///     target contract.
+/// </summary>
+/// <param name="sourceText">The source text to translate.</param>
+/// <param name="sourceLanguage">The captured source language.</param>
+/// <param name="targetLanguage">The captured target language.</param>
+/// <returns>The translated text.</returns>
+internal delegate string ResolvePrefetchTranslationDelegate(
+    string sourceText,
+    SourceClientLanguage sourceLanguage,
+    string targetLanguage);
+
+/// <summary>
 ///     Describes how one production prefetch dispatch entered the broker.
 /// </summary>
 internal enum PrefetchTranslationDispatchResult
@@ -259,8 +272,7 @@ public unsafe partial class Echoglossian
         this.PrefetchActionDetailName(
             originalPayload,
             existingRow,
-            sourceLanguage,
-            scope);
+            sourceLanguage);
         this.PrefetchActionDetailDescription(
             originalPayload,
             existingRow,
@@ -274,12 +286,10 @@ public unsafe partial class Echoglossian
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
     /// <param name="sourceLanguage">The resolved source language.</param>
-    /// <param name="scope">The immutable operation reuse scope.</param>
     private void PrefetchActionDetailName(
         ActionTooltipCanonicalPayload originalPayload,
         ActionTooltip existingRow,
-        SourceClientLanguage sourceLanguage,
-        TranslationReuseScope scope)
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedActionName))
@@ -288,22 +298,21 @@ public unsafe partial class Echoglossian
         }
 
         var translationService = TranslationService;
-        DispatchActionDetailPrefetchTranslation(
+        RunActionDetailNamePrefetchEntry(
             $"ActionDetailPrefetch|{originalPayload.ActionId}|Name|{originalPayload.Name}",
-            sourceLanguage,
-            scope,
+            originalPayload,
+            GetGameVersion(),
+            () => sourceLanguage,
+            this.configuration,
             this.TryGetQueuedTranslation,
             this.QueueTranslation,
-            () => translationService.Translate(
-                originalPayload.Name,
-                sourceLanguage,
-                scope.TargetLanguageCode),
-            (translatedName, capturedScope, _) =>
-                this.ApplyActionDetailTranslation(
-                    originalPayload.ActionId,
-                    originalPayload.ClassJobId,
-                    capturedScope,
-                    translatedName: translatedName));
+            (sourceText, capturedSource, targetLanguage) =>
+                translationService.Translate(
+                    sourceText,
+                    capturedSource,
+                    targetLanguage),
+            this.FindActionTooltip,
+            row => this.InsertActionTooltip(row));
     }
 
     /// <summary>
@@ -367,15 +376,53 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        var translatedRow = CreateActionDetailTranslationRow(
+            originalPayload,
+            GetGameVersion(),
+            scope,
+            this.FindActionTooltip,
+            this.TryGetQueuedTranslation,
+            translatedName,
+            translatedDescription);
+        if (translatedRow == null)
+        {
+            return;
+        }
+
+        this.InsertActionTooltip(translatedRow);
+    }
+
+    /// <summary>
+    ///     Builds the canonical translated action row sent to production
+    ///     persistence after broker completion.
+    /// </summary>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <param name="findRow">The production row lookup.</param>
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    /// <param name="translatedName">The translated action name, if any.</param>
+    /// <param name="translatedDescription">The translated description, if any.</param>
+    /// <returns>The complete canonical row, or <see langword="null" />.</returns>
+    private static ActionTooltip? CreateActionDetailTranslationRow(
+        ActionTooltipCanonicalPayload originalPayload,
+        string? gameVersion,
+        TranslationReuseScope scope,
+        Func<ActionTooltip, ActionTooltip?> findRow,
+        TryGetPrefetchTranslationDelegate tryGetTranslation,
+        string? translatedName = null,
+        string? translatedDescription = null)
+    {
         var existingProbe = ActionTooltipPersistenceHelper.CreateCanonicalRow(
             scope.SourceLanguageCode,
             scope.TargetLanguageCode,
             scope.TranslationEngine!.Value,
-            GetGameVersion(),
+            gameVersion,
             originalPayload);
-        var existingRow = this.FindActionTooltip(existingProbe);
+        var existingRow = findRow(existingProbe);
         var translatedPayload = existingRow == null
-            ? originalPayload
+            ? ActionTooltipCanonicalPayload.Deserialize(
+                originalPayload.Serialize()) ?? originalPayload
             : ActionTooltipCanonicalPayload.Deserialize(
                     existingRow.CanonicalPayloadAsText) ??
                 originalPayload;
@@ -396,23 +443,23 @@ public unsafe partial class Echoglossian
             !string.IsNullOrWhiteSpace(translatedDescription)
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
-        this.TryPopulatePendingActionDetailTranslations(
+        TryPopulatePendingActionDetailTranslations(
             originalPayload,
             translatedPayload,
-            scope);
+            scope,
+            tryGetTranslation);
         if (!translatedPayload.HasCompleteTranslation)
         {
-            return;
+            return null;
         }
 
-        var translatedRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+        return ActionTooltipPersistenceHelper.CreateCanonicalRow(
             scope.SourceLanguageCode,
             scope.TargetLanguageCode,
             scope.TranslationEngine!.Value,
-            GetGameVersion(),
+            gameVersion,
             originalPayload,
             translatedPayload);
-        this.InsertActionTooltip(translatedRow);
     }
 
     /// <summary>
@@ -422,14 +469,16 @@ public unsafe partial class Echoglossian
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="translatedPayload">The partially translated payload.</param>
     /// <param name="scope">The immutable operation reuse scope.</param>
-    private void TryPopulatePendingActionDetailTranslations(
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    private static void TryPopulatePendingActionDetailTranslations(
         ActionTooltipCanonicalPayload originalPayload,
         ActionTooltipCanonicalPayload translatedPayload,
-        TranslationReuseScope scope)
+        TranslationReuseScope scope,
+        TryGetPrefetchTranslationDelegate tryGetTranslation)
     {
         if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedName) &&
             !string.IsNullOrWhiteSpace(originalPayload.Name) &&
-            this.TryGetQueuedTranslation(
+            tryGetTranslation(
                 BuildActionDetailNameTranslationKey(originalPayload, scope),
                 out var cachedTranslatedName))
         {
@@ -438,7 +487,7 @@ public unsafe partial class Echoglossian
 
         if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedDescription) &&
             !string.IsNullOrWhiteSpace(originalPayload.Description) &&
-            this.TryGetQueuedTranslation(
+            tryGetTranslation(
                 BuildActionDetailDescriptionTranslationKey(originalPayload, scope),
                 out var cachedTranslatedDescription))
         {
@@ -523,6 +572,58 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Runs the production ActionDetail name-prefetch entry through broker
+    ///     completion and canonical row persistence.
+    /// </summary>
+    /// <param name="payloadIdentity">The action-name payload identity.</param>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="sourceLanguageResolver">Resolves the live source language.</param>
+    /// <param name="configuration">The live translation configuration.</param>
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    /// <param name="queueTranslation">The shared broker queue operation.</param>
+    /// <param name="translate">The production translation operation.</param>
+    /// <param name="findRow">The production action-row lookup.</param>
+    /// <param name="persistRow">The production action-row persistence operation.</param>
+    /// <returns>The production dispatch result.</returns>
+    internal static PrefetchTranslationDispatchResult
+        RunActionDetailNamePrefetchEntry(
+            string payloadIdentity,
+            ActionTooltipCanonicalPayload originalPayload,
+            string? gameVersion,
+            Func<SourceClientLanguage?> sourceLanguageResolver,
+            Config configuration,
+            TryGetPrefetchTranslationDelegate tryGetTranslation,
+            QueuePrefetchTranslationDelegate queueTranslation,
+            ResolvePrefetchTranslationDelegate translate,
+            Func<ActionTooltip, ActionTooltip?> findRow,
+            Action<ActionTooltip> persistRow)
+    {
+        return RunCapturedPrefetchEntry(
+            payloadIdentity,
+            originalPayload.Name,
+            sourceLanguageResolver,
+            configuration,
+            tryGetTranslation,
+            queueTranslation,
+            translate,
+            (translatedName, capturedScope, _) =>
+            {
+                var translatedRow = CreateActionDetailTranslationRow(
+                    originalPayload,
+                    gameVersion,
+                    capturedScope,
+                    findRow,
+                    tryGetTranslation,
+                    translatedName: translatedName);
+                if (translatedRow != null)
+                {
+                    persistRow(translatedRow);
+                }
+            });
+    }
+
+    /// <summary>
     ///     Adds a complete translation reuse scope to an existing payload key.
     /// </summary>
     /// <param name="payloadIdentity">The existing payload identity.</param>
@@ -533,6 +634,57 @@ public unsafe partial class Echoglossian
         TranslationReuseScope scope)
     {
         return $"{payloadIdentity}|Scope|{scope.SourceLanguageCode}|{scope.TargetLanguageCode}|{scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture) ?? "<none>"}|{scope.RequireMatchingEngine}";
+    }
+
+    /// <summary>
+    ///     Captures live source/configuration once and routes a production
+    ///     prefetch entry through the existing scoped broker.
+    /// </summary>
+    /// <param name="payloadIdentity">The existing payload identity.</param>
+    /// <param name="sourceText">The source text to translate.</param>
+    /// <param name="sourceLanguageResolver">Resolves the live source language.</param>
+    /// <param name="configuration">The live translation configuration.</param>
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    /// <param name="queueTranslation">The shared broker queue operation.</param>
+    /// <param name="translate">The production translation operation.</param>
+    /// <param name="onCompleted">The production persistence callback.</param>
+    /// <returns>The production dispatch result.</returns>
+    private static PrefetchTranslationDispatchResult RunCapturedPrefetchEntry(
+        string payloadIdentity,
+        string sourceText,
+        Func<SourceClientLanguage?> sourceLanguageResolver,
+        Config configuration,
+        TryGetPrefetchTranslationDelegate tryGetTranslation,
+        QueuePrefetchTranslationDelegate queueTranslation,
+        ResolvePrefetchTranslationDelegate translate,
+        Action<string, TranslationReuseScope, bool> onCompleted)
+    {
+        var sourceLanguage = sourceLanguageResolver();
+        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+            configuration.Lang);
+        if (!sourceLanguage.HasValue ||
+            string.IsNullOrWhiteSpace(targetLanguage))
+        {
+            return PrefetchTranslationDispatchResult.Rejected;
+        }
+
+        var capturedSourceLanguage = sourceLanguage.Value;
+        var scope = new TranslationReuseScope(
+            capturedSourceLanguage.PersistenceCode,
+            targetLanguage,
+            configuration.ChosenTransEngine,
+            configuration.TranslateAlreadyTranslatedTexts);
+        return DispatchScopedPrefetchTranslation(
+            BuildTranslationReuseScopedKey(payloadIdentity, scope),
+            capturedSourceLanguage,
+            scope,
+            tryGetTranslation,
+            queueTranslation,
+            () => translate(
+                sourceText,
+                capturedSourceLanguage,
+                scope.TargetLanguageCode),
+            onCompleted);
     }
 
     /// <summary>
