@@ -72,7 +72,12 @@ public static class StringArrayDataCacheManager
 
         var existing = rows.FirstOrDefault(row =>
             row.ContextKey == newRecord.ContextKey &&
-            row.TranslationLang == newRecord.TranslationLang &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.OriginalLang,
+                newRecord.OriginalLang) &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.TranslationLang,
+                newRecord.TranslationLang) &&
             row.TranslationEngine == newRecord.TranslationEngine &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
@@ -91,22 +96,19 @@ public static class StringArrayDataCacheManager
     /// </summary>
     /// <param name="type">The logical payload type.</param>
     /// <param name="contextKey">The semantic surface context.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine id.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
     /// <param name="sourceContentHash">The stable source payload hash.</param>
     /// <returns>The matching cached row, or <see langword="null" />.</returns>
     public static StringArrayDatas? TryFindCanonicalMatch(
         string type,
         string contextKey,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string sourceContentHash)
     {
         if (string.IsNullOrWhiteSpace(type) ||
             string.IsNullOrWhiteSpace(contextKey) ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
             return null;
@@ -119,8 +121,10 @@ public static class StringArrayDataCacheManager
 
         return rows.FirstOrDefault(row =>
             row.ContextKey == contextKey &&
-            row.TranslationLang == lang &&
-            row.TranslationEngine == engine &&
+            scope.Matches(
+                row.OriginalLang,
+                row.TranslationLang,
+                row.TranslationEngine) &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
                 gameVersion) &&
@@ -133,20 +137,17 @@ public static class StringArrayDataCacheManager
     /// </summary>
     /// <param name="type">The logical payload type.</param>
     /// <param name="contextKey">The semantic surface context.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine id.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
     /// <returns>The matching cached rows.</returns>
     public static IReadOnlyList<StringArrayDatas> GetCandidates(
         string type,
         string contextKey,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion)
     {
         if (string.IsNullOrWhiteSpace(type) ||
-            string.IsNullOrWhiteSpace(contextKey) ||
-            string.IsNullOrWhiteSpace(lang))
+            string.IsNullOrWhiteSpace(contextKey))
         {
             return [];
         }
@@ -159,12 +160,63 @@ public static class StringArrayDataCacheManager
         return rows
             .Where(row =>
                 row.ContextKey == contextKey &&
-                row.TranslationLang == lang &&
-                row.TranslationEngine == engine &&
+                scope.Matches(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion))
             .ToList();
+    }
+
+    /// <summary>
+    ///     Provides the legacy canonical lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="type">The logical payload type.</param>
+    /// <param name="contextKey">The semantic surface context.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="sourceContentHash">The stable source-content hash.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static StringArrayDatas? TryFindCanonicalMatch(
+        string type,
+        string contextKey,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string sourceContentHash)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? TryFindCanonicalMatch(
+                type,
+                contextKey,
+                scope,
+                gameVersion,
+                sourceContentHash)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the legacy candidate lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="type">The logical payload type.</param>
+    /// <param name="contextKey">The semantic surface context.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <returns>The matching rows.</returns>
+    public static IReadOnlyList<StringArrayDatas> GetCandidates(
+        string type,
+        string contextKey,
+        string lang,
+        int engine,
+        string? gameVersion)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? GetCandidates(type, contextKey, scope, gameVersion)
+            : [];
     }
 
     /// <summary>
@@ -174,6 +226,34 @@ public static class StringArrayDataCacheManager
     {
         Cache.Clear();
         PluginRuntimeLog.Debug("[StringArrayDataCacheManager] Cleared StringArrayData cache.");
+    }
+
+    /// <summary>
+    ///     Resolves a source-aware scope for an unmigrated caller.
+    /// </summary>
+    /// <param name="targetLanguage">The requested target language.</param>
+    /// <param name="translationEngine">The requested translation engine.</param>
+    /// <param name="scope">The resolved source-aware scope.</param>
+    /// <returns>Whether the current source language was resolved.</returns>
+    private static bool TryCreateLegacyScope(
+        string targetLanguage,
+        int translationEngine,
+        out TranslationReuseScope scope)
+    {
+        if (string.IsNullOrWhiteSpace(targetLanguage) ||
+            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            translationEngine,
+            true);
+        return true;
     }
 }
 

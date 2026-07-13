@@ -68,7 +68,12 @@ public static class ItemTooltipCacheManager
 
         var existing = rows.FirstOrDefault(row =>
             row.ItemId == newRecord.ItemId &&
-            row.TranslationLang == newRecord.TranslationLang &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.OriginalLang,
+                newRecord.OriginalLang) &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.TranslationLang,
+                newRecord.TranslationLang) &&
             row.TranslationEngine == newRecord.TranslationEngine &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
@@ -86,20 +91,17 @@ public static class ItemTooltipCacheManager
     ///     Tries to find one canonical item-tooltip row in memory.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The matching row, or <see langword="null" />.</returns>
     public static ItemTooltip? TryFindCanonicalMatch(
         uint itemId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string sourceContentHash)
     {
         if (itemId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
             return null;
@@ -112,10 +114,10 @@ public static class ItemTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion) &&
@@ -133,20 +135,17 @@ public static class ItemTooltipCacheManager
     ///     payload.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="requestedGameVersion">The current game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The best matching historical row, or <see langword="null" />.</returns>
     public static ItemTooltip? TryFindHistoricalCanonicalMatch(
         uint itemId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? requestedGameVersion,
         string sourceContentHash)
     {
         if (itemId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(requestedGameVersion) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
@@ -160,10 +159,10 @@ public static class ItemTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 row.SourceContentHash == sourceContentHash &&
                 !string.IsNullOrWhiteSpace(row.GameVersion) &&
                 !string.Equals(
@@ -180,8 +179,7 @@ public static class ItemTooltipCacheManager
     ///     identity when the stricter canonical hash does not match.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="classJobCategoryId">
     ///     The preferred class-job-category identifier.
@@ -189,12 +187,11 @@ public static class ItemTooltipCacheManager
     /// <returns>The best translated row, or <see langword="null" />.</returns>
     public static ItemTooltip? TryFindIdentityMatch(
         uint itemId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         uint classJobCategoryId)
     {
-        if (itemId == 0 || string.IsNullOrWhiteSpace(lang))
+        if (itemId == 0)
         {
             return null;
         }
@@ -206,10 +203,10 @@ public static class ItemTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion))
@@ -219,6 +216,73 @@ public static class ItemTooltipCacheManager
                 classJobCategoryId))
             .ThenByDescending(row => row.UpdatedDate)
             .FirstOrDefault();
+    }
+
+    /// <summary>
+    ///     Provides the legacy canonical lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="itemId">The item row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="sourceContentHash">The stable source-content hash.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ItemTooltip? TryFindCanonicalMatch(
+        uint itemId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string sourceContentHash)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? TryFindCanonicalMatch(itemId, scope, gameVersion, sourceContentHash)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the legacy historical lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="itemId">The item row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="requestedGameVersion">The current game version.</param>
+    /// <param name="sourceContentHash">The stable source-content hash.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ItemTooltip? TryFindHistoricalCanonicalMatch(
+        uint itemId,
+        string lang,
+        int engine,
+        string? requestedGameVersion,
+        string sourceContentHash)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? TryFindHistoricalCanonicalMatch(
+                itemId,
+                scope,
+                requestedGameVersion,
+                sourceContentHash)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the legacy identity lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="itemId">The item row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobCategoryId">The preferred category identifier.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ItemTooltip? TryFindIdentityMatch(
+        uint itemId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        uint classJobCategoryId)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? TryFindIdentityMatch(itemId, scope, gameVersion, classJobCategoryId)
+            : null;
     }
 
     /// <summary>
@@ -345,5 +409,33 @@ public static class ItemTooltipCacheManager
                (string.IsNullOrWhiteSpace(row.ItemDescription) ||
                 !string.IsNullOrWhiteSpace(
                     row.TranslatedItemDescription));
+    }
+
+    /// <summary>
+    ///     Resolves a source-aware scope for an unmigrated caller.
+    /// </summary>
+    /// <param name="targetLanguage">The requested target language.</param>
+    /// <param name="translationEngine">The requested translation engine.</param>
+    /// <param name="scope">The resolved source-aware scope.</param>
+    /// <returns>Whether the current source language was resolved.</returns>
+    private static bool TryCreateLegacyScope(
+        string targetLanguage,
+        int translationEngine,
+        out TranslationReuseScope scope)
+    {
+        if (string.IsNullOrWhiteSpace(targetLanguage) ||
+            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            translationEngine,
+            true);
+        return true;
     }
 }

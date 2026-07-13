@@ -75,7 +75,12 @@ public static class ActionTooltipCacheManager
 
         var existing = rows.FirstOrDefault(row =>
             row.ActionId == newRecord.ActionId &&
-            row.TranslationLang == newRecord.TranslationLang &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.OriginalLang,
+                newRecord.OriginalLang) &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.TranslationLang,
+                newRecord.TranslationLang) &&
             row.TranslationEngine == newRecord.TranslationEngine &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
@@ -95,20 +100,17 @@ public static class ActionTooltipCacheManager
     ///     Tries to find one canonical action-tooltip row in memory.
     /// </summary>
     /// <param name="actionId">The action row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The matching row, or <see langword="null" />.</returns>
     public static ActionTooltip? TryFindCanonicalMatch(
         uint actionId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string sourceContentHash)
     {
         if (actionId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
             return null;
@@ -121,10 +123,10 @@ public static class ActionTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion) &&
@@ -142,20 +144,17 @@ public static class ActionTooltipCacheManager
     ///     payload.
     /// </summary>
     /// <param name="actionId">The action row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="requestedGameVersion">The current game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The best matching historical row, or <see langword="null" />.</returns>
     public static ActionTooltip? TryFindHistoricalCanonicalMatch(
         uint actionId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? requestedGameVersion,
         string sourceContentHash)
     {
         if (actionId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(requestedGameVersion) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
@@ -169,10 +168,10 @@ public static class ActionTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 row.SourceContentHash == sourceContentHash &&
                 !string.IsNullOrWhiteSpace(row.GameVersion) &&
                 !string.Equals(
@@ -189,8 +188,7 @@ public static class ActionTooltipCacheManager
     ///     identity when the stricter canonical hash does not match.
     /// </summary>
     /// <param name="actionId">The action row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="classJobId">The preferred class-job identifier.</param>
     /// <param name="classJobCategoryId">
@@ -199,13 +197,12 @@ public static class ActionTooltipCacheManager
     /// <returns>The best translated row, or <see langword="null" />.</returns>
     public static ActionTooltip? TryFindIdentityMatch(
         uint actionId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         uint classJobId,
         uint classJobCategoryId)
     {
-        if (actionId == 0 || string.IsNullOrWhiteSpace(lang))
+        if (actionId == 0)
         {
             return null;
         }
@@ -217,10 +214,10 @@ public static class ActionTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion))
@@ -237,8 +234,7 @@ public static class ActionTooltipCacheManager
     ///     Tries to resolve one translated action text by exact original text
     ///     from the canonical action-tooltip cache.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The resolved translated text.</param>
@@ -247,23 +243,20 @@ public static class ActionTooltipCacheManager
     ///     canonical action-tooltip storage; otherwise <see langword="false" />.
     /// </returns>
     public static bool TryFindTranslatedText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalText))
+        if (string.IsNullOrWhiteSpace(originalText))
         {
             return false;
         }
 
         if (TryFindTranslatedTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 originalText,
                 out translatedText))
@@ -274,8 +267,7 @@ public static class ActionTooltipCacheManager
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return TryFindTranslatedTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 originalText,
                 out translatedText);
@@ -288,8 +280,7 @@ public static class ActionTooltipCacheManager
     ///     Tries to resolve one canonical original action text by exact
     ///     translated text from the cached action-tooltip rows.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="translatedText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -298,23 +289,20 @@ public static class ActionTooltipCacheManager
     ///     found; otherwise <see langword="false" />.
     /// </returns>
     public static bool TryFindOriginalText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string translatedText,
         out string originalText)
     {
         originalText = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(translatedText))
+        if (string.IsNullOrWhiteSpace(translatedText))
         {
             return false;
         }
 
         if (TryFindOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 translatedText,
                 out originalText))
@@ -325,8 +313,7 @@ public static class ActionTooltipCacheManager
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return TryFindOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 translatedText,
                 out originalText);
@@ -339,8 +326,7 @@ public static class ActionTooltipCacheManager
     ///     Determines whether one canonical original action text already
     ///     exists in the cached action-tooltip rows for the requested scope.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The canonical original text to test.</param>
     /// <returns>
@@ -348,20 +334,17 @@ public static class ActionTooltipCacheManager
     ///     canonical action-tooltip storage; otherwise <see langword="false" />.
     /// </returns>
     public static bool ContainsOriginalText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText)
     {
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalText))
+        if (string.IsNullOrWhiteSpace(originalText))
         {
             return false;
         }
 
         if (TryContainsOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 originalText))
         {
@@ -371,13 +354,159 @@ public static class ActionTooltipCacheManager
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return TryContainsOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 originalText);
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Provides the legacy canonical lookup shape until callers migrate to
+    ///     the shared reuse scope.
+    /// </summary>
+    /// <param name="actionId">The action row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="sourceContentHash">The stable source-content hash.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ActionTooltip? TryFindCanonicalMatch(
+        uint actionId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string sourceContentHash)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? TryFindCanonicalMatch(
+                actionId,
+                scope,
+                gameVersion,
+                sourceContentHash)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the legacy historical lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="actionId">The action row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="requestedGameVersion">The current game version.</param>
+    /// <param name="sourceContentHash">The stable source-content hash.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ActionTooltip? TryFindHistoricalCanonicalMatch(
+        uint actionId,
+        string lang,
+        int engine,
+        string? requestedGameVersion,
+        string sourceContentHash)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? TryFindHistoricalCanonicalMatch(
+                actionId,
+                scope,
+                requestedGameVersion,
+                sourceContentHash)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the legacy identity lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="actionId">The action row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobId">The preferred class-job identifier.</param>
+    /// <param name="classJobCategoryId">The preferred category identifier.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ActionTooltip? TryFindIdentityMatch(
+        uint actionId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        uint classJobId,
+        uint classJobCategoryId)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? TryFindIdentityMatch(
+                actionId,
+                scope,
+                gameVersion,
+                classJobId,
+                classJobCategoryId)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the legacy forward text lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <returns>Whether a translation was found.</returns>
+    public static bool TryFindTranslatedText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+        return TryCreateLegacyScope(lang, engine, out var scope) &&
+               TryFindTranslatedText(
+                   scope,
+                   gameVersion,
+                   originalText,
+                   out translatedText);
+    }
+
+    /// <summary>
+    ///     Provides the legacy reverse text lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <returns>Whether an original text was found.</returns>
+    public static bool TryFindOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string translatedText,
+        out string originalText)
+    {
+        originalText = string.Empty;
+        return TryCreateLegacyScope(lang, engine, out var scope) &&
+               TryFindOriginalText(
+                   scope,
+                   gameVersion,
+                   translatedText,
+                   out originalText);
+    }
+
+    /// <summary>
+    ///     Provides the legacy original-text check until callers migrate.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <returns>Whether the original text exists.</returns>
+    public static bool ContainsOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope) &&
+               ContainsOriginalText(scope, gameVersion, originalText);
     }
 
     /// <summary>
@@ -396,8 +525,7 @@ public static class ActionTooltipCacheManager
     /// <summary>
     ///     Tries to resolve one translated action text from one cached scope.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game version scope.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The translated text.</param>
@@ -406,18 +534,17 @@ public static class ActionTooltipCacheManager
     ///     exact scope; otherwise <see langword="false" />.
     /// </returns>
     private static bool TryFindTranslatedTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        var scopeKey = BuildTextLookupScopeKey(lang, engine, version);
+        var scopeKey = BuildTextLookupScopeKey(scope, version);
         if (!TextLookupCache.TryGetValue(scopeKey, out var lookup))
         {
-            lookup = BuildTextLookup(lang, engine, version);
+            lookup = BuildTextLookup(scope, version);
             TextLookupCache[scopeKey] = lookup;
         }
 
@@ -430,8 +557,7 @@ public static class ActionTooltipCacheManager
     ///     Tries to resolve one canonical original action text from one cached
     ///     reverse lookup scope.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game version scope.</param>
     /// <param name="translatedText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved original text.</param>
@@ -440,18 +566,17 @@ public static class ActionTooltipCacheManager
     ///     this exact scope; otherwise <see langword="false" />.
     /// </returns>
     private static bool TryFindOriginalTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string translatedText,
         out string originalText)
     {
         originalText = string.Empty;
 
-        var scopeKey = BuildTextLookupScopeKey(lang, engine, version);
+        var scopeKey = BuildTextLookupScopeKey(scope, version);
         if (!ReverseTextLookupCache.TryGetValue(scopeKey, out var lookup))
         {
-            lookup = BuildReverseTextLookup(lang, engine, version);
+            lookup = BuildReverseTextLookup(scope, version);
             ReverseTextLookupCache[scopeKey] = lookup;
         }
 
@@ -464,8 +589,7 @@ public static class ActionTooltipCacheManager
     ///     Determines whether one exact canonical original action text exists
     ///     inside one cached action-tooltip scope.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game version scope.</param>
     /// <param name="originalText">The canonical original text to test.</param>
     /// <returns>
@@ -473,17 +597,16 @@ public static class ActionTooltipCacheManager
     ///     requested scope; otherwise <see langword="false" />.
     /// </returns>
     private static bool TryContainsOriginalTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string originalText)
     {
         return Cache.Values.SelectMany(static rows => rows)
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 string.Equals(
                     row.GameVersion,
                     version,
@@ -507,23 +630,21 @@ public static class ActionTooltipCacheManager
     ///     Builds one translated-text lookup for a single action-tooltip cache
     ///     scope.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game version scope.</param>
     /// <returns>The translated-text lookup map.</returns>
     private static Dictionary<string, string> BuildTextLookup(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
         var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var row in Cache.Values.SelectMany(static rows => rows))
         {
-            if (!RuntimeLanguageHelper.LanguagesMatch(
+            if (!scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) ||
-                row.TranslationEngine != engine ||
+                    row.TranslationEngine) ||
                 !string.Equals(
                     row.GameVersion,
                     version,
@@ -553,13 +674,11 @@ public static class ActionTooltipCacheManager
     ///     Builds one reverse translated-text lookup for a single
     ///     action-tooltip cache scope.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game version scope.</param>
     /// <returns>The reverse translated-text lookup map.</returns>
     private static Dictionary<string, string> BuildReverseTextLookup(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
         var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -567,10 +686,10 @@ public static class ActionTooltipCacheManager
 
         foreach (var row in Cache.Values.SelectMany(static rows => rows))
         {
-            if (!RuntimeLanguageHelper.LanguagesMatch(
+            if (!scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) ||
-                row.TranslationEngine != engine ||
+                    row.TranslationEngine) ||
                 !string.Equals(
                     row.GameVersion,
                     version,
@@ -793,15 +912,48 @@ public static class ActionTooltipCacheManager
     /// <summary>
     ///     Builds one stable scope key for translated-text lookups.
     /// </summary>
-    /// <param name="lang">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game version scope.</param>
     /// <returns>The stable scope key.</returns>
     private static string BuildTextLookupScopeKey(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
-        return $"{lang}|{engine}|{version ?? string.Empty}";
+        var source = RuntimeLanguageHelper.NormalizeLanguage(
+            scope.SourceLanguageCode);
+        var target = RuntimeLanguageHelper.NormalizeLanguage(
+            scope.TargetLanguageCode);
+        var engine = scope.RequireMatchingEngine
+            ? scope.TranslationEngine?.ToString() ?? string.Empty
+            : "*";
+        return $"{source}|{target}|{engine}|{version ?? string.Empty}";
+    }
+
+    /// <summary>
+    ///     Resolves a source-aware scope for an unmigrated caller.
+    /// </summary>
+    /// <param name="targetLanguage">The requested target language.</param>
+    /// <param name="translationEngine">The requested translation engine.</param>
+    /// <param name="scope">The resolved source-aware scope.</param>
+    /// <returns>Whether the current source language was resolved.</returns>
+    private static bool TryCreateLegacyScope(
+        string targetLanguage,
+        int translationEngine,
+        out TranslationReuseScope scope)
+    {
+        if (string.IsNullOrWhiteSpace(targetLanguage) ||
+            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            translationEngine,
+            true);
+        return true;
     }
 }

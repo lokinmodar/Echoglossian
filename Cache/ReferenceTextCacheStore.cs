@@ -92,6 +92,9 @@ public sealed class ReferenceTextCacheStore<TRow>
         var existing = rows.FirstOrDefault(row =>
             row.ReferenceId == newRecord.ReferenceId &&
             RuntimeLanguageHelper.LanguagesMatch(
+                row.OriginalLang,
+                newRecord.OriginalLang) &&
+            RuntimeLanguageHelper.LanguagesMatch(
                 row.TranslationLang,
                 newRecord.TranslationLang) &&
             row.TranslationEngine == newRecord.TranslationEngine &&
@@ -113,20 +116,17 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Tries to find one canonical row in memory.
     /// </summary>
     /// <param name="referenceId">The sheet-row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The matching row, or <see langword="null" />.</returns>
     public TRow? TryFindCanonicalMatch(
         uint referenceId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string sourceContentHash)
     {
         if (referenceId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
             return null;
@@ -139,10 +139,10 @@ public sealed class ReferenceTextCacheStore<TRow>
         }
 
         return rows.FirstOrDefault(row =>
-            RuntimeLanguageHelper.LanguagesMatch(
+            scope.Matches(
+                row.OriginalLang,
                 row.TranslationLang,
-                lang) &&
-            row.TranslationEngine == engine &&
+                row.TranslationEngine) &&
             GameVersionLookupHelper.MatchesStoredVersion(
             row.GameVersion,
             gameVersion) &&
@@ -154,17 +154,15 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     identity when the stricter canonical hash does not match.
     /// </summary>
     /// <param name="referenceId">The sheet-row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <returns>The best translated row, or <see langword="null" />.</returns>
     public TRow? TryFindIdentityMatch(
         uint referenceId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion)
     {
-        if (referenceId == 0 || string.IsNullOrWhiteSpace(lang))
+        if (referenceId == 0)
         {
             return null;
         }
@@ -177,59 +175,10 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
-                    row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion))
-            .OrderByDescending(row => ComputeIdentityMatchScore(
-                row,
-                gameVersion))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
-    }
-
-    /// <summary>
-    ///     Tries to find the best translated reference-text row by stable
-    ///     identity and original-language scope.
-    /// </summary>
-    /// <param name="referenceId">The sheet-row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
-    /// <param name="originalLanguage">The persisted original-language code.</param>
-    /// <returns>The best translated row, or <see langword="null" />.</returns>
-    public TRow? TryFindIdentityMatch(
-        uint referenceId,
-        string lang,
-        int engine,
-        string? gameVersion,
-        string originalLanguage)
-    {
-        if (referenceId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalLanguage))
-        {
-            return null;
-        }
-
-        if (!this.cache.TryGetValue(referenceId, out var rows) ||
-            rows.Count == 0)
-        {
-            return null;
-        }
-
-        return rows
-            .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
                     row.OriginalLang,
-                    originalLanguage) &&
-                RuntimeLanguageHelper.LanguagesMatch(
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion) &&
@@ -244,8 +193,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <summary>
     ///     Tries to resolve one exact translated text from this cache scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The resolved translated text.</param>
@@ -254,25 +202,21 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     public bool TryFindTranslatedText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalText))
+        if (string.IsNullOrWhiteSpace(originalText))
         {
             return false;
         }
 
         if (this.TryFindTranslatedTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
-                originalLanguage: null,
                 originalText,
                 out translatedText))
         {
@@ -282,66 +226,8 @@ public sealed class ReferenceTextCacheStore<TRow>
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return this.TryFindTranslatedTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
-                originalLanguage: null,
-                originalText,
-                out translatedText);
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    ///     Tries to resolve one exact translated text from an
-    ///     original-language-scoped cache.
-    /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
-    /// <param name="originalText">The original text to translate.</param>
-    /// <param name="originalLanguage">The persisted original-language code.</param>
-    /// <param name="translatedText">The resolved translated text.</param>
-    /// <returns>
-    ///     <see langword="true" /> when one translated text was found;
-    ///     otherwise <see langword="false" />.
-    /// </returns>
-    public bool TryFindTranslatedText(
-        string lang,
-        int engine,
-        string? gameVersion,
-        string originalText,
-        string originalLanguage,
-        out string translatedText)
-    {
-        translatedText = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalText) ||
-            string.IsNullOrWhiteSpace(originalLanguage))
-        {
-            return false;
-        }
-
-        if (this.TryFindTranslatedTextInScope(
-                lang,
-                engine,
-                gameVersion,
-                originalLanguage,
-                originalText,
-                out translatedText))
-        {
-            return true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gameVersion))
-        {
-            return this.TryFindTranslatedTextInScope(
-                lang,
-                engine,
-                version: null,
-                originalLanguage,
                 originalText,
                 out translatedText);
         }
@@ -353,8 +239,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Tries to resolve one exact canonical original text from this cache
     ///     scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="translatedText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -363,23 +248,20 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     public bool TryFindOriginalText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string translatedText,
         out string originalText)
     {
         originalText = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(translatedText))
+        if (string.IsNullOrWhiteSpace(translatedText))
         {
             return false;
         }
 
         if (this.TryFindOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 translatedText,
                 out originalText))
@@ -390,8 +272,7 @@ public sealed class ReferenceTextCacheStore<TRow>
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return this.TryFindOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 translatedText,
                 out originalText);
@@ -404,8 +285,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Determines whether one canonical original text already exists in
     ///     this cache for the requested scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The canonical original text to test.</param>
     /// <returns>
@@ -413,20 +293,17 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     public bool ContainsOriginalText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText)
     {
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalText))
+        if (string.IsNullOrWhiteSpace(originalText))
         {
             return false;
         }
 
         if (this.ContainsOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 originalText))
         {
@@ -436,13 +313,180 @@ public sealed class ReferenceTextCacheStore<TRow>
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return this.ContainsOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 originalText);
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Provides the legacy canonical lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="sourceContentHash">The source-content hash.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public TRow? TryFindCanonicalMatch(
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string sourceContentHash)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? this.TryFindCanonicalMatch(
+                referenceId,
+                scope,
+                gameVersion,
+                sourceContentHash)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the legacy identity lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public TRow? TryFindIdentityMatch(
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope)
+            ? this.TryFindIdentityMatch(referenceId, scope, gameVersion)
+            : null;
+    }
+
+    /// <summary>
+    ///     Provides the source-explicit identity lookup shape until callers
+    ///     migrate to the shared scope.
+    /// </summary>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="originalLanguage">The persisted source language.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public TRow? TryFindIdentityMatch(
+        uint referenceId,
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalLanguage)
+    {
+        var scope = new TranslationReuseScope(
+            originalLanguage,
+            lang,
+            engine,
+            true);
+        return this.TryFindIdentityMatch(referenceId, scope, gameVersion);
+    }
+
+    /// <summary>
+    ///     Provides the legacy forward text lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <returns>Whether a translation was found.</returns>
+    public bool TryFindTranslatedText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        out string translatedText)
+    {
+        translatedText = string.Empty;
+        return TryCreateLegacyScope(lang, engine, out var scope) &&
+               this.TryFindTranslatedText(
+                   scope,
+                   gameVersion,
+                   originalText,
+                   out translatedText);
+    }
+
+    /// <summary>
+    ///     Provides the source-explicit forward lookup shape until callers
+    ///     migrate to the shared scope.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <param name="originalLanguage">The persisted source language.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <returns>Whether a translation was found.</returns>
+    public bool TryFindTranslatedText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText,
+        string originalLanguage,
+        out string translatedText)
+    {
+        var scope = new TranslationReuseScope(
+            originalLanguage,
+            lang,
+            engine,
+            true);
+        return this.TryFindTranslatedText(
+            scope,
+            gameVersion,
+            originalText,
+            out translatedText);
+    }
+
+    /// <summary>
+    ///     Provides the legacy reverse text lookup shape until callers migrate.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="translatedText">The translated text.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <returns>Whether an original text was found.</returns>
+    public bool TryFindOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string translatedText,
+        out string originalText)
+    {
+        originalText = string.Empty;
+        return TryCreateLegacyScope(lang, engine, out var scope) &&
+               this.TryFindOriginalText(
+                   scope,
+                   gameVersion,
+                   translatedText,
+                   out originalText);
+    }
+
+    /// <summary>
+    ///     Provides the legacy original-text check until callers migrate.
+    /// </summary>
+    /// <param name="lang">The target language code.</param>
+    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="gameVersion">The game version.</param>
+    /// <param name="originalText">The original text.</param>
+    /// <returns>Whether the original text exists.</returns>
+    public bool ContainsOriginalText(
+        string lang,
+        int engine,
+        string? gameVersion,
+        string originalText)
+    {
+        return TryCreateLegacyScope(lang, engine, out var scope) &&
+               this.ContainsOriginalText(scope, gameVersion, originalText);
     }
 
     /// <summary>
@@ -461,10 +505,8 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <summary>
     ///     Tries to resolve one translated text from one cached scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
-    /// <param name="originalLanguage">The original-language scope, if any.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The translated text.</param>
     /// <returns>
@@ -472,27 +514,19 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool TryFindTranslatedTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
-        string? originalLanguage,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        var scopeKey = BuildScopeKey(
-            lang,
-            engine,
-            version,
-            originalLanguage);
+        var scopeKey = BuildScopeKey(scope, version);
         if (!this.forwardTextLookupCache.TryGetValue(scopeKey, out var lookup))
         {
             lookup = this.BuildForwardLookup(
-                lang,
-                engine,
-                version,
-                originalLanguage);
+                scope,
+                version);
             this.forwardTextLookupCache[scopeKey] = lookup;
         }
 
@@ -502,8 +536,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <summary>
     ///     Tries to resolve one original text from one cached scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <param name="translatedText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved original text.</param>
@@ -512,18 +545,17 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool TryFindOriginalTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string translatedText,
         out string originalText)
     {
         originalText = string.Empty;
 
-        var scopeKey = BuildScopeKey(lang, engine, version);
+        var scopeKey = BuildScopeKey(scope, version);
         if (!this.reverseTextLookupCache.TryGetValue(scopeKey, out var lookup))
         {
-            lookup = this.BuildReverseLookup(lang, engine, version);
+            lookup = this.BuildReverseLookup(scope, version);
             this.reverseTextLookupCache[scopeKey] = lookup;
         }
 
@@ -534,8 +566,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Determines whether one exact canonical original text exists in one
     ///     cache scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <param name="originalText">The canonical original text to test.</param>
     /// <returns>
@@ -543,17 +574,16 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     requested scope; otherwise <see langword="false" />.
     /// </returns>
     private bool ContainsOriginalTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string originalText)
     {
         return this.cache.Values.SelectMany(static rows => rows)
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 string.Equals(
                     row.GameVersion,
                     version,
@@ -573,29 +603,21 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Builds one forward original-to-translated lookup for one cached
     ///     scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
-    /// <param name="originalLanguage">The original-language scope, if any.</param>
     /// <returns>The lookup.</returns>
     private Dictionary<string, string> BuildForwardLookup(
-        string lang,
-        int engine,
-        string? version,
-        string? originalLanguage)
+        TranslationReuseScope scope,
+        string? version)
     {
         var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var row in this.cache.Values.SelectMany(static rows => rows))
         {
-            if (!RuntimeLanguageHelper.LanguagesMatch(
+            if (!scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) ||
-                (originalLanguage != null &&
-                 !RuntimeLanguageHelper.LanguagesMatch(
-                     row.OriginalLang,
-                     originalLanguage)) ||
-                row.TranslationEngine != engine ||
+                    row.TranslationEngine) ||
                 !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     version))
@@ -620,13 +642,11 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Builds one reverse translated-to-original lookup for one cached
     ///     scope while excluding ambiguous mappings.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <returns>The lookup.</returns>
     private Dictionary<string, string> BuildReverseLookup(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
         var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -634,10 +654,10 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         foreach (var row in this.cache.Values.SelectMany(static rows => rows))
         {
-            if (!RuntimeLanguageHelper.LanguagesMatch(
+            if (!scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) ||
-                row.TranslationEngine != engine ||
+                    row.TranslationEngine) ||
                 !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     version))
@@ -772,37 +792,50 @@ public sealed class ReferenceTextCacheStore<TRow>
     }
 
     /// <summary>
-    ///     Builds one cache scope key from language, engine, and version.
+    ///     Builds one cache key from the complete reuse scope and version.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <returns>The scope key.</returns>
     private static string BuildScopeKey(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
-        return
-            $"{RuntimeLanguageHelper.NormalizeLanguage(lang)}\u001F{engine}\u001F{version ?? string.Empty}";
+        var source = RuntimeLanguageHelper.NormalizeLanguage(
+            scope.SourceLanguageCode);
+        var target = RuntimeLanguageHelper.NormalizeLanguage(
+            scope.TargetLanguageCode);
+        var engine = scope.RequireMatchingEngine
+            ? scope.TranslationEngine?.ToString() ?? string.Empty
+            : "*";
+        return $"{source}\u001F{target}\u001F{engine}\u001F{version ?? string.Empty}";
     }
 
     /// <summary>
-    ///     Builds one forward-cache scope key including the requested original
-    ///     language when source-aware lookup is required.
+    ///     Resolves a source-aware scope for an unmigrated caller.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
-    /// <param name="version">The exact stored game-version scope.</param>
-    /// <param name="originalLanguage">The original-language scope.</param>
-    /// <returns>The scope key.</returns>
-    private static string BuildScopeKey(
-        string lang,
-        int engine,
-        string? version,
-        string? originalLanguage)
+    /// <param name="targetLanguage">The requested target language.</param>
+    /// <param name="translationEngine">The requested translation engine.</param>
+    /// <param name="scope">The resolved source-aware scope.</param>
+    /// <returns>Whether the current source language was resolved.</returns>
+    private static bool TryCreateLegacyScope(
+        string targetLanguage,
+        int translationEngine,
+        out TranslationReuseScope scope)
     {
-        return
-            $"{BuildScopeKey(lang, engine, version)}\u001F{RuntimeLanguageHelper.NormalizeLanguage(originalLanguage)}";
+        if (string.IsNullOrWhiteSpace(targetLanguage) ||
+            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            translationEngine,
+            true);
+        return true;
     }
 }
