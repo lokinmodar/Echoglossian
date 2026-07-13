@@ -460,7 +460,8 @@ public class DbOperationsTests
     }
 
     /// <summary>
-    ///     Runs one legacy retrieval against two competing persisted rows.
+    ///     Runs one legacy retrieval against a deterministically staged pair of
+    ///     competing persisted rows.
     /// </summary>
     /// <param name="retrieval">The retrieval path to invoke.</param>
     /// <param name="translateAlreadyTranslatedTexts">
@@ -529,16 +530,38 @@ public class DbOperationsTests
             using (var context = new EchoglossianDbContext(configDir))
             {
                 context.Database.Migrate();
-                SeedLegacyRetrievalRows(
+                var newer = new DateTime(
+                    2026,
+                    7,
+                    13,
+                    12,
+                    0,
+                    0,
+                    DateTimeKind.Local);
+                var older = newer.AddMinutes(-1);
+
+                SeedLegacyRetrievalRow(
                     context,
                     retrieval,
                     preferredSourceLanguage,
                     preferredEngine,
+                    newer);
+                context.SaveChanges();
+
+                var rejectedResult = InvokeLegacyRetrieval(plugin, retrieval);
+                Assert.Null(rejectedResult.SourceLanguage);
+                Assert.Null(rejectedResult.TranslationEngine);
+
+                SeedLegacyRetrievalRow(
+                    context,
+                    retrieval,
                     eligibleSourceLanguage,
-                    eligibleEngine);
+                    eligibleEngine,
+                    older);
                 context.SaveChanges();
             }
 
+            ReloadLegacyToastCache(plugin, retrieval);
             return InvokeLegacyRetrieval(plugin, retrieval);
         }
         finally
@@ -554,142 +577,98 @@ public class DbOperationsTests
     }
 
     /// <summary>
-    ///     Seeds competing rows with identical legacy semantic identities.
+    ///     Seeds one row with the supplied legacy semantic identity.
     /// </summary>
     /// <param name="context">The temporary database context.</param>
     /// <param name="retrieval">The retrieval path under test.</param>
-    /// <param name="preferredSourceLanguage">The first row's source identity.</param>
-    /// <param name="preferredEngine">The first row's engine.</param>
-    /// <param name="eligibleSourceLanguage">The second row's source identity.</param>
-    /// <param name="eligibleEngine">The second row's engine.</param>
-    private static void SeedLegacyRetrievalRows(
+    /// <param name="sourceLanguage">The row's source identity.</param>
+    /// <param name="engine">The row's engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    private static void SeedLegacyRetrievalRow(
         EchoglossianDbContext context,
         string retrieval,
-        string preferredSourceLanguage,
-        int preferredEngine,
-        string eligibleSourceLanguage,
-        int eligibleEngine)
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
     {
-        var newer = new DateTime(2026, 7, 13, 12, 0, 0, DateTimeKind.Local);
-        var older = newer.AddMinutes(-1);
-
         switch (retrieval)
         {
             case "Talk":
-                context.TalkMessage.AddRange(
-                    CreateTalkMessage(preferredSourceLanguage, preferredEngine, newer),
-                    CreateTalkMessage(eligibleSourceLanguage, eligibleEngine, older));
+                context.TalkMessage.Add(
+                    CreateTalkMessage(sourceLanguage, engine, updatedDate));
                 break;
             case "Toast":
             case "ToastReturn":
-                context.ToastMessage.AddRange(
+                context.ToastMessage.Add(
                     CreateToastMessage(
                         "NonError",
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateToastMessage(
-                        "NonError",
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                        sourceLanguage,
+                        engine,
+                        updatedDate));
                 break;
             case "ErrorToast":
-                context.ToastMessage.AddRange(
+                context.ToastMessage.Add(
                     CreateToastMessage(
                         "Error",
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateToastMessage(
-                        "Error",
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                        sourceLanguage,
+                        engine,
+                        updatedDate));
                 break;
             case "BattleTalk":
-                context.BattleTalkMessage.AddRange(
-                    CreateBattleTalkMessage(
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateBattleTalkMessage(
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                context.BattleTalkMessage.Add(
+                    CreateBattleTalkMessage(sourceLanguage, engine, updatedDate));
                 break;
             case "QuestPlate":
             case "QuestPlateByName":
-                context.QuestPlate.AddRange(
-                    CreateQuestPlate(
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateQuestPlate(
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                context.QuestPlate.Add(
+                    CreateQuestPlate(sourceLanguage, engine, updatedDate));
                 break;
             case "TalkSubtitle":
-                context.TalkSubtitleMessage.AddRange(
-                    CreateTalkSubtitleMessage(
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateTalkSubtitleMessage(
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                context.TalkSubtitleMessage.Add(
+                    CreateTalkSubtitleMessage(sourceLanguage, engine, updatedDate));
                 break;
             case "MiniTalk":
-                context.MiniTalkMessage.AddRange(
-                    CreateMiniTalkMessage(
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateMiniTalkMessage(
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                context.MiniTalkMessage.Add(
+                    CreateMiniTalkMessage(sourceLanguage, engine, updatedDate));
                 break;
             case "TextGimmickHint":
-                context.TextGimmickHintMessage.AddRange(
-                    CreateTextGimmickHintMessage(
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateTextGimmickHintMessage(
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                context.TextGimmickHintMessage.Add(
+                    CreateTextGimmickHintMessage(sourceLanguage, engine, updatedDate));
                 break;
             case "SelectString":
-                context.SelectString.AddRange(
-                    CreateSelectString(
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateSelectString(
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                context.SelectString.Add(
+                    CreateSelectString(sourceLanguage, engine, updatedDate));
                 break;
             case "GameWindow":
-                context.GameWindow.AddRange(
-                    CreateGameWindow(
-                        preferredSourceLanguage,
-                        preferredEngine,
-                        newer),
-                    CreateGameWindow(
-                        eligibleSourceLanguage,
-                        eligibleEngine,
-                        older));
+                context.GameWindow.Add(
+                    CreateGameWindow(sourceLanguage, engine, updatedDate));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(
                     nameof(retrieval),
                     retrieval,
                     "Unknown legacy retrieval.");
+        }
+    }
+
+    /// <summary>
+    ///     Reloads a toast cache after the second staged row is persisted.
+    /// </summary>
+    /// <param name="plugin">The plugin instance owning the cache.</param>
+    /// <param name="retrieval">The legacy retrieval path under test.</param>
+    private static void ReloadLegacyToastCache(
+        PluginEntry plugin,
+        string retrieval)
+    {
+        switch (retrieval)
+        {
+            case "Toast":
+            case "ToastReturn":
+                plugin.LoadAllOtherToasts();
+                break;
+            case "ErrorToast":
+                plugin.LoadAllErrorToasts();
+                break;
         }
     }
 
