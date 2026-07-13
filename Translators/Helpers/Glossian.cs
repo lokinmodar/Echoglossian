@@ -41,16 +41,7 @@ namespace Echoglossian
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
     private string Translate(string text)
     {
-      if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-              out var sourceLanguage))
-      {
-        return string.Empty;
-      }
-
-      return TranslationService.Translate(
-          text,
-          sourceLanguage.ProviderCode,
-          LangDict[LanguageInt].Code);
+      return TranslationService.Translate(text, ClientStateInterface.ClientLanguage.Humanize(), LangDict[LanguageInt].Code);
     }
 
     /// <summary>
@@ -61,16 +52,7 @@ namespace Echoglossian
     /// <exception cref="Exception">Returns exception in case something goes wrong in the translation steps.</exception>
     private Task<string> TranslateAsync(string text)
     {
-      if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-              out var sourceLanguage))
-      {
-        return Task.FromResult(string.Empty);
-      }
-
-      return TranslationService.TranslateAsync(
-          text,
-          sourceLanguage.ProviderCode,
-          LangDict[LanguageInt].Code);
+      return TranslationService.TranslateAsync(text, ClientStateInterface.ClientLanguage.Humanize(), LangDict[LanguageInt].Code);
     }
   }
 }
