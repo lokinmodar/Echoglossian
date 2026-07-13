@@ -10877,30 +10877,12 @@
             <param name="text">The text to parse.</param>
             <param name="prefix">The visible text before the level token.</param>
             <param name="separator">The separator before the level token.</param>
-            <param name="levelLabel">The level label prefix.</param>
+            <param name="levelToken">The complete trailing level token.</param>
             <param name="levelNumber">The trailing level number.</param>
             <returns>
                 <see langword="true" /> when the text contains one trailing level
                 token; otherwise <see langword="false" />.
             </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeTranslatedLevelToken(System.String,System.String,System.String)">
-            <summary>
-                Normalizes one translated level token for the target language.
-            </summary>
-            <param name="levelLabel">The source level label.</param>
-            <param name="levelNumber">The trailing level number.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <returns>The normalized translated level token.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeOriginalLevelToken(System.String,System.String)">
-            <summary>
-                Normalizes one translated level token back to the canonical English
-                source token.
-            </summary>
-            <param name="levelLabel">The visible translated level label.</param>
-            <param name="levelNumber">The trailing level number.</param>
-            <returns>The canonical English level token.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.NormalizeResolvedLevelSeparator(System.String)">
             <summary>
@@ -11975,7 +11957,7 @@
                 projected successfully; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.HasExpectedTranslatedSectionCoverage(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.HasMeaningfulTranslatedSectionCoverage(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether one projected CharacterStatus payload pair is
                 rich enough to be trusted as the latest canonical fallback.
@@ -11984,9 +11966,19 @@
             <param name="translatedPayload">The projected translated payload.</param>
             <returns>
                 <see langword="true" /> when the translated payload contains enough
-                expected section titles and differs meaningfully from the original
+                changed corresponding slots and differs meaningfully from the original
                 payload; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.CountChangedCorrespondingTexts``1(System.Collections.Generic.IReadOnlyDictionary{``0,System.String},System.Collections.Generic.IReadOnlyDictionary{``0,System.String})">
+            <summary>
+                Counts corresponding non-empty payload slots whose translated text
+                differs meaningfully from the original text.
+            </summary>
+            <typeparam name="TKey">The payload slot key type.</typeparam>
+            <param name="originalValues">The original-facing payload slots.</param>
+            <param name="translatedValues">The translated payload slots.</param>
+            <returns>The number of meaningfully changed corresponding slots.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase">
             <summary>
@@ -12167,41 +12159,6 @@
                 The time span during which the root Character handler may keep
                 refreshing after lifecycle events to translate the title, tabs,
                 gear-set label, and current job name.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.IsStableCharacterHeaderText(System.String)">
-            <summary>
-                Determines whether one visible text belongs to the stable root
-                header of the Character window and should therefore be captured
-                even when it is not yet part of the canonical lookup.
-            </summary>
-            <param name="visibleText">The currently visible text.</param>
-            <returns>
-                <see langword="true" /> when the text is one stable root-header
-                label; otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.AppendStableHeaderFallbackTranslations(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.String)">
-            <summary>
-                Appends one local fallback translation set for the stable root
-                Character header labels so the window title and tab labels can
-                still translate even when the current DB-first canonical payloads
-                do not include them.
-            </summary>
-            <param name="originalLookup">The translated-to-original lookup.</param>
-            <param name="translatedLookup">The original-to-translated lookup.</param>
-            <param name="knownTexts">The known-text set to extend.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(System.String,System.String,System.String@)">
-            <summary>
-                Tries to resolve one local fallback translation for the stable root
-                Character header labels.
-            </summary>
-            <param name="originalText">The original English header text.</param>
-            <param name="translatedText">The translated fallback text.</param>
-            <returns>
-                <see langword="true" /> when a local fallback exists; otherwise
-                <see langword="false" />.
             </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler">

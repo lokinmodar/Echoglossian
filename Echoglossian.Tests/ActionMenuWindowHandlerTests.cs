@@ -142,11 +142,11 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
-    ///     Ensures level-aware action-name resolution can translate a visible
-    ///     ActionMenu label by reusing the canonical action-tooltip cache.
+    ///     Ensures base-name-only action resolution preserves the captured
+    ///     level token and separator verbatim.
     /// </summary>
     [Fact]
-    public void MergeResolvedTranslatedPayload_UsesLevelAwareActionTooltipLookup()
+    public void MergeResolvedTranslatedPayload_BaseNameOnlyPreservesLevelToken()
     {
         ActionTooltipCacheManager.Clear();
 
@@ -189,7 +189,7 @@ public class ActionMenuWindowHandlerTests
                     new Dictionary<string, string>(StringComparer.Ordinal));
 
             Assert.Equal(
-                "Pelotão\r\nNv. 20",
+                "Pelotão\r\nLv. 20",
                 mergedPayload.AtkValues[17]);
         }
         finally
@@ -199,8 +199,8 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
-    ///     Ensures level-aware trait-name resolution can translate a visible
-    ///     ActionMenu label by reusing the canonical trait cache.
+    ///     Ensures level-aware trait-name resolution preserves the captured
+    ///     level token while reusing the canonical trait cache.
     /// </summary>
     [Fact]
     public void MergeResolvedTranslatedPayload_UsesLevelAwareTraitLookup()
@@ -246,7 +246,7 @@ public class ActionMenuWindowHandlerTests
                     new Dictionary<string, string>(StringComparer.Ordinal));
 
             Assert.Equal(
-                "Moinho Aprimorado\r\nNv. 15",
+                "Moinho Aprimorado\r\nLv. 15",
                 mergedPayload.AtkValues[17]);
         }
         finally
@@ -290,7 +290,7 @@ public class ActionMenuWindowHandlerTests
                 });
 
         Assert.Equal(
-            "Pelotão Nv. 20",
+            "Pelotão Lv. 20",
             mergedPayload.AtkValues[17]);
     }
 

@@ -16,20 +16,19 @@ namespace Echoglossian.Tests;
 public class CharacterStatusSubWindowHandlerTests
 {
     /// <summary>
-    ///     Ensures the CharacterStatus canonical fallback accepts translated
-    ///     payloads in non-Portuguese target languages as long as enough stable
-    ///     section titles changed relative to the original payload.
+    ///     Ensures the CharacterStatus canonical fallback accepts three changed
+    ///     corresponding slots from a non-English original payload.
     /// </summary>
     [Fact]
-    public void HasExpectedTranslatedSectionCoverage_NonPortugueseTranslatedPayload_ReturnsTrue()
+    public void HasMeaningfulTranslatedSectionCoverage_NonEnglishOriginalPayload_ReturnsTrue()
     {
         var originalPayload = new DbFirstGameWindowPayload(
             new SortedDictionary<int, string>
             {
-                [1] = "Attributes",
-                [2] = "Offensive Properties",
-                [3] = "Defensive Properties",
-                [4] = "Strength",
+                [1] = "Attribute",
+                [2] = "Offensive Eigenschaften",
+                [3] = "Defensive Eigenschaften",
+                [4] = "Stärke",
             },
             new SortedDictionary<int, string>(),
             new SortedDictionary<string, string>(StringComparer.Ordinal));
@@ -45,7 +44,7 @@ public class CharacterStatusSubWindowHandlerTests
             new SortedDictionary<string, string>(StringComparer.Ordinal));
 
         var hasCoverage =
-            CharacterStatusSubWindowHandler.HasExpectedTranslatedSectionCoverage(
+            CharacterStatusSubWindowHandler.HasMeaningfulTranslatedSectionCoverage(
                 originalPayload,
                 translatedPayload);
 
@@ -57,7 +56,7 @@ public class CharacterStatusSubWindowHandlerTests
     ///     canonical fallbacks.
     /// </summary>
     [Fact]
-    public void HasExpectedTranslatedSectionCoverage_UnchangedPayload_ReturnsFalse()
+    public void HasMeaningfulTranslatedSectionCoverage_UnchangedPayload_ReturnsFalse()
     {
         var payload = new DbFirstGameWindowPayload(
             new SortedDictionary<int, string>
@@ -70,7 +69,7 @@ public class CharacterStatusSubWindowHandlerTests
             new SortedDictionary<string, string>(StringComparer.Ordinal));
 
         var hasCoverage =
-            CharacterStatusSubWindowHandler.HasExpectedTranslatedSectionCoverage(
+            CharacterStatusSubWindowHandler.HasMeaningfulTranslatedSectionCoverage(
                 payload,
                 payload);
 

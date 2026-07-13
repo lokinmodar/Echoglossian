@@ -13,6 +13,7 @@ using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.LanguagesHandling;
 using Echoglossian.NativeUI.AddonHandlers.ActionMenu;
+using Echoglossian.NativeUI.AddonHandlers.Character;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
 
@@ -27,6 +28,123 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class SourceScopedFallbackFlowTests
 {
+    /// <summary>
+    ///     Ensures an empty source-scoped Character cache cannot synthesize a
+    ///     Portuguese root-header translation.
+    /// </summary>
+    [Fact]
+    public void CharacterFallback_EmptyScopedCaches_DoesNotSynthesizeHeader()
+    {
+        using var runtimeScope = new TestRuntimeScope();
+        StringArrayDataCacheManager.Clear();
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            var handler = new CharacterWindowHandler(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                },
+                null!,
+                null!);
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Character",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+            var found = TryResolveCharacterTranslatedPayload(
+                handler,
+                new SourceClientLanguage("en", "en"),
+                originalPayload,
+                out var translatedPayload);
+
+            Assert.False(found);
+            Assert.Empty(translatedPayload.AtkValues);
+            Assert.Empty(translatedPayload.StringArrayValues);
+            Assert.Empty(translatedPayload.TextNodes);
+        }
+        finally
+        {
+            StringArrayDataCacheManager.Clear();
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures Character fallback reuse requires the operation-captured
+    ///     source while retaining matching-source persisted reuse.
+    /// </summary>
+    [Fact]
+    public void CharacterPersistedFallback_RequiresMatchingSource()
+    {
+        using var runtimeScope = new TestRuntimeScope();
+        StringArrayDataCacheManager.Clear();
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            var handler = new CharacterWindowHandler(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                },
+                null!,
+                null!);
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Personnage",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+            var translatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Personagem",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+            GameWindowCacheManager.Update(new GameWindow(
+                windowAddonName: "Character",
+                originalWindowStrings: originalPayload.Serialize(),
+                originalWindowStringsLang: "fr",
+                translatedWindowStrings: translatedPayload.Serialize(),
+                translationLang: "pt",
+                translationEngine: 0,
+                gameVersion: "test-version",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+
+            var matchingFound = TryResolveCharacterTranslatedPayload(
+                handler,
+                new SourceClientLanguage("fr", "fr"),
+                originalPayload,
+                out var matchingPayload);
+            var mismatchedFound = TryResolveCharacterTranslatedPayload(
+                handler,
+                new SourceClientLanguage("de", "de"),
+                originalPayload,
+                out var mismatchedPayload);
+
+            Assert.True(matchingFound);
+            Assert.Equal("Personagem", matchingPayload.AtkValues[17]);
+            Assert.False(mismatchedFound);
+            Assert.Empty(mismatchedPayload.AtkValues);
+        }
+        finally
+        {
+            StringArrayDataCacheManager.Clear();
+            GameWindowCacheManager.Clear();
+        }
+    }
+
     /// <summary>
     ///     Ensures ActionMenu recovery and diagnostics ignore a persisted row
     ///     from a different operation-captured source language.
@@ -105,6 +223,69 @@ public class SourceScopedFallbackFlowTests
             Assert.Empty(mismatchedLookups.OriginalLookup);
             Assert.Equal("Sprint", mismatchedResolvedPayload.AtkValues[17]);
             Assert.Equal(0, mismatchedDiagnostics.CandidateCount);
+        }
+        finally
+        {
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures reverse ActionMenu recovery prefers an exact scoped full
+    ///     label instead of reconstructing an English level token from a base
+    ///     name pair.
+    /// </summary>
+    [Fact]
+    public void ActionMenuReverseFallback_ExactFullLabelPrecedesDecomposition()
+    {
+        using var runtimeScope = new TestRuntimeScope();
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            var handler = new ActionMenuWindowHandler(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                },
+                null!,
+                null!);
+            var persistedOriginalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Sprint Niveau 20",
+                    [18] = "Sprint",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+            var persistedTranslatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Corrida Nv. 20",
+                    [18] = "Corrida",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+            GameWindowCacheManager.Update(new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: persistedOriginalPayload.Serialize(),
+                originalWindowStringsLang: "fr",
+                translatedWindowStrings: persistedTranslatedPayload.Serialize(),
+                translationLang: "pt",
+                translationEngine: 0,
+                gameVersion: "test-version",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+
+            var sourceLanguage = new SourceClientLanguage("fr", "fr");
+            var lookups = GetActionMenuLookups(handler, sourceLanguage);
+            var originalText = ResolveActionMenuOriginalText(
+                "Corrida Nv. 20",
+                new TranslationReuseScope("fr", "pt-BR", 0, true),
+                lookups.OriginalLookup);
+
+            Assert.Equal("Sprint Niveau 20", originalText);
         }
         finally
         {
@@ -233,6 +414,60 @@ public class SourceScopedFallbackFlowTests
         return (
             Assert.IsType<Dictionary<string, string>>(arguments[outputOffset]),
             Assert.IsType<Dictionary<string, string>>(arguments[outputOffset + 1]));
+    }
+
+    /// <summary>
+    ///     Invokes the Character supplemental translated-payload flow.
+    /// </summary>
+    /// <param name="handler">The Character handler.</param>
+    /// <param name="sourceLanguage">The operation-captured source.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="translatedPayload">The resolved translated payload.</param>
+    /// <returns>True when a source-scoped canonical row resolves the payload.</returns>
+    private static bool TryResolveCharacterTranslatedPayload(
+        CharacterWindowHandler handler,
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        out DbFirstGameWindowPayload translatedPayload)
+    {
+        var method = typeof(CharacterTextNodeWindowHandlerBase).GetMethod(
+            "TryResolveSupplementalTranslatedPayload",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+
+        var arguments = new object?[]
+        {
+            sourceLanguage,
+            originalPayload,
+            null,
+        };
+        var found = Assert.IsType<bool>(method.Invoke(handler, arguments));
+        translatedPayload = Assert.IsType<DbFirstGameWindowPayload>(
+            arguments[2]);
+        return found;
+    }
+
+    /// <summary>
+    ///     Invokes the ActionMenu original-text resolver with a source-scoped
+    ///     persisted reverse lookup.
+    /// </summary>
+    /// <param name="visibleText">The translated visible text.</param>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <param name="originalLookup">The persisted translated-to-original lookup.</param>
+    /// <returns>The resolved original text.</returns>
+    private static string ResolveActionMenuOriginalText(
+        string visibleText,
+        TranslationReuseScope scope,
+        IReadOnlyDictionary<string, string> originalLookup)
+    {
+        var method = typeof(ActionMenuWindowHandler).GetMethod(
+            "ResolveOriginalText",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+
+        return Assert.IsType<string>(method.Invoke(
+            null,
+            [visibleText, scope, "test-version", originalLookup]));
     }
 
     /// <summary>

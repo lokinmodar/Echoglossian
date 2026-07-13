@@ -286,9 +286,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         var gameWindowRowsScanned = 0;
         var gameWindowRowsResolved = 0;
 
-        var targetLanguage =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang);
         foreach (var contextKey in this.GetCharacterStructuredContextKeys())
         {
             var candidates = StringArrayDataCacheManager.GetCandidates(
@@ -364,18 +361,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 translatedLookup,
                 knownTexts,
                 requireDifference: true);
-        }
-
-        if (string.Equals(
-                this.AddonName,
-                "Character",
-                StringComparison.Ordinal))
-        {
-            CharacterWindowHandler.AppendStableHeaderFallbackTranslations(
-                originalLookup,
-                translatedLookup,
-                knownTexts,
-                targetLanguage);
         }
 
         return translatedLookup.Count > 0;

@@ -39,7 +39,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static readonly TimeSpan AppliedStateRefreshWindow =
         TimeSpan.FromMilliseconds(250);
     private static readonly Regex TrailingLevelTokenPattern = new(
-        @"^(?<prefix>.*?)(?<separator>\s*)(?<level>(?:Lv\.|Nv\.|Level|Nível)\s*\d+)$",
+        @"^(?:(?<prefix>.+?)(?<separator>\r?\n|[ \t]+)(?<level>(?:\p{Lu}\p{Ll}{0,11}\.?|\p{Lu}{1,5}\.|\p{Ll}{1,12}\.?|\p{Lo}{1,12}\.?)[ \t]*\d+)|(?<prefix>.+)(?<separator>)(?<level>\p{Lu}\p{Ll}{0,11}\.[ \t]*\d+))$",
         RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
     private readonly Config config;
@@ -499,16 +499,6 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        if (TryResolveLevelAwareTranslatedText(
-                originalText,
-                scope,
-                gameVersion,
-                fallbackLookup,
-                out var levelAwareTranslatedText))
-        {
-            return levelAwareTranslatedText;
-        }
-
         if (TryFindTranslatedCanonicalText(
                 scope,
                 gameVersion,
@@ -521,6 +511,16 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         if (fallbackLookup.TryGetValue(originalText, out translatedText))
         {
             return PreserveSourceLevelSeparator(originalText, translatedText);
+        }
+
+        if (TryResolveLevelAwareTranslatedText(
+                originalText,
+                scope,
+                gameVersion,
+                fallbackLookup,
+                out var levelAwareTranslatedText))
+        {
+            return levelAwareTranslatedText;
         }
 
         return originalText;
@@ -543,16 +543,6 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        if (TryResolveLevelAwareOriginalText(
-                visibleText,
-                scope,
-                gameVersion,
-                fallbackLookup,
-                out var levelAwareOriginalText))
-        {
-            return levelAwareOriginalText;
-        }
-
         if (TryFindOriginalCanonicalText(
                 scope,
                 gameVersion,
@@ -565,6 +555,16 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         if (fallbackLookup.TryGetValue(visibleText, out originalText))
         {
             return PreserveSourceLevelSeparator(visibleText, originalText);
+        }
+
+        if (TryResolveLevelAwareOriginalText(
+                visibleText,
+                scope,
+                gameVersion,
+                fallbackLookup,
+                out var levelAwareOriginalText))
+        {
+            return levelAwareOriginalText;
         }
 
         return visibleText;
@@ -831,8 +831,8 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 originalText,
                 out var originalPrefix,
                 out var separator,
-                out var levelLabel,
-                out var levelNumber))
+                out var levelToken,
+                out _))
         {
             return false;
         }
@@ -853,10 +853,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         translatedText = string.Concat(
             translatedPrefix,
             NormalizeResolvedLevelSeparator(separator),
-            NormalizeTranslatedLevelToken(
-                levelLabel,
-                levelNumber,
-                scope.TargetLanguageCode));
+            levelToken);
         return true;
     }
 
@@ -886,8 +883,8 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 visibleText,
                 out var visiblePrefix,
                 out var separator,
-                out var levelLabel,
-                out var levelNumber))
+                out var levelToken,
+                out _))
         {
             return false;
         }
@@ -908,7 +905,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         originalText = string.Concat(
             resolvedOriginalPrefix,
             NormalizeResolvedLevelSeparator(separator),
-            NormalizeOriginalLevelToken(levelLabel, levelNumber));
+            levelToken);
         return true;
     }
 
@@ -989,7 +986,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <param name="text">The text to parse.</param>
     /// <param name="prefix">The visible text before the level token.</param>
     /// <param name="separator">The separator before the level token.</param>
-    /// <param name="levelLabel">The level label prefix.</param>
+    /// <param name="levelToken">The complete trailing level token.</param>
     /// <param name="levelNumber">The trailing level number.</param>
     /// <returns>
     ///     <see langword="true" /> when the text contains one trailing level
@@ -999,12 +996,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string text,
         out string prefix,
         out string separator,
-        out string levelLabel,
+        out string levelToken,
         out string levelNumber)
     {
         prefix = string.Empty;
         separator = string.Empty;
-        levelLabel = string.Empty;
+        levelToken = string.Empty;
         levelNumber = string.Empty;
 
         var match = TrailingLevelTokenPattern.Match(text);
@@ -1015,63 +1012,17 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
         prefix = match.Groups["prefix"].Value;
         separator = match.Groups["separator"].Value;
-        var levelValue = match.Groups["level"].Value;
-        var numberIndex = levelValue.Length - 1;
-        while (numberIndex >= 0 && char.IsDigit(levelValue[numberIndex]))
+        levelToken = match.Groups["level"].Value;
+        var numberStart = levelToken.Length - 1;
+        while (numberStart >= 0 && char.IsDigit(levelToken[numberStart]))
         {
-            numberIndex--;
+            numberStart--;
         }
 
-        if (numberIndex < 0 || numberIndex >= levelValue.Length - 1)
-        {
-            return false;
-        }
-
-        levelLabel = levelValue[..(numberIndex + 1)].TrimEnd();
-        levelNumber = levelValue[(numberIndex + 1)..];
+        levelNumber = levelToken[(numberStart + 1)..];
         return !string.IsNullOrWhiteSpace(prefix) &&
-               !string.IsNullOrWhiteSpace(levelLabel) &&
+               !string.IsNullOrWhiteSpace(levelToken) &&
                !string.IsNullOrWhiteSpace(levelNumber);
-    }
-
-    /// <summary>
-    ///     Normalizes one translated level token for the target language.
-    /// </summary>
-    /// <param name="levelLabel">The source level label.</param>
-    /// <param name="levelNumber">The trailing level number.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <returns>The normalized translated level token.</returns>
-    private static string NormalizeTranslatedLevelToken(
-        string levelLabel,
-        string levelNumber,
-        string targetLanguage)
-    {
-        if (RuntimeLanguageHelper.NormalizeLanguage(targetLanguage)
-                .StartsWith("pt", StringComparison.OrdinalIgnoreCase))
-        {
-            return $"Nv. {levelNumber}";
-        }
-
-        return $"{levelLabel} {levelNumber}";
-    }
-
-    /// <summary>
-    ///     Normalizes one translated level token back to the canonical English
-    ///     source token.
-    /// </summary>
-    /// <param name="levelLabel">The visible translated level label.</param>
-    /// <param name="levelNumber">The trailing level number.</param>
-    /// <returns>The canonical English level token.</returns>
-    private static string NormalizeOriginalLevelToken(
-        string levelLabel,
-        string levelNumber)
-    {
-        if (levelLabel is "Nv." or "Nível")
-        {
-            return $"Lv. {levelNumber}";
-        }
-
-        return $"{levelLabel} {levelNumber}";
     }
 
     /// <summary>

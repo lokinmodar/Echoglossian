@@ -12,97 +12,10 @@ using Xunit;
 namespace Echoglossian.Tests;
 
 /// <summary>
-///     Covers narrow root-header capture rules for the main Character window.
+///     Covers narrow runtime rules for the main Character window.
 /// </summary>
 public class CharacterWindowHandlerTests
 {
-    /// <summary>
-    ///     Ensures stable root header labels remain explicitly capturable so
-    ///     the window title and tab names can participate in Character DB-first
-    ///     translation even when subwindow payloads own the denser body text.
-    /// </summary>
-    [Theory]
-    [InlineData("Character", true)]
-    [InlineData("Attributes", true)]
-    [InlineData("Profile", true)]
-    [InlineData("Classes/Jobs", true)]
-    [InlineData("Reputation", true)]
-    [InlineData("Gear Set", false)]
-    [InlineData("Strength", false)]
-    [InlineData("", false)]
-    public void IsStableCharacterHeaderText_ReturnsExpectedResult(
-        string visibleText,
-        bool expected)
-    {
-        var actual = CharacterWindowHandler.IsStableCharacterHeaderText(
-            visibleText);
-
-        Assert.Equal(expected, actual);
-    }
-
-    /// <summary>
-    ///     Ensures the root Character header labels have local fallback
-    ///     translations so the window title and tab labels remain translatable
-    ///     even when the DB-first canonical rows omit them.
-    /// </summary>
-    [Theory]
-    [InlineData("Character", "Personagem")]
-    [InlineData("Attributes", "Atributos")]
-    [InlineData("Profile", "Perfil")]
-    [InlineData("Classes/Jobs", "Classes/Profissões")]
-    [InlineData("Reputation", "Reputação")]
-    public void TryGetStableHeaderFallbackTranslation_ReturnsExpectedValue(
-        string originalText,
-        string expectedTranslation)
-    {
-        var found = CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(
-            originalText,
-            "pt-BR",
-            out var translatedText);
-
-        Assert.True(found);
-        Assert.Equal(expectedTranslation, translatedText);
-    }
-
-    /// <summary>
-    ///     Ensures the local Character header fallback does not leak
-    ///     Portuguese text into non-Portuguese target languages.
-    /// </summary>
-    [Fact]
-    public void TryGetStableHeaderFallbackTranslation_NonPortugueseTargetLanguage_ReturnsFalse()
-    {
-        var found = CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(
-            "Attributes",
-            "iw",
-            out var translatedText);
-
-        Assert.False(found);
-        Assert.Equal(string.Empty, translatedText);
-    }
-
-    /// <summary>
-    ///     Ensures the root Character header fallback only extends the lookup
-    ///     sets for the Portuguese target language that actually owns the local
-    ///     fallback strings.
-    /// </summary>
-    [Fact]
-    public void AppendStableHeaderFallbackTranslations_NonPortugueseTargetLanguage_DoesNotInjectPortugueseTerms()
-    {
-        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-        var knownTexts = new HashSet<string>(StringComparer.Ordinal);
-
-        CharacterWindowHandler.AppendStableHeaderFallbackTranslations(
-            originalLookup,
-            translatedLookup,
-            knownTexts,
-            "iw");
-
-        Assert.Empty(originalLookup);
-        Assert.Empty(translatedLookup);
-        Assert.Empty(knownTexts);
-    }
-
     /// <summary>
     ///     Ensures the root Character handler uses a bounded post-lifecycle
     ///     settling window instead of permanent pre-draw polling.

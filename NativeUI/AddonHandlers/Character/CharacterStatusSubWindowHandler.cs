@@ -16,16 +16,7 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 public unsafe class CharacterStatusSubWindowHandler
     : CharacterTextNodeWindowHandlerBase
 {
-    private static readonly HashSet<string> ExpectedOriginalSectionTitles =
-    [
-        "Attributes",
-        "Offensive Properties",
-        "Defensive Properties",
-        "Physical Properties",
-        "Mental Properties",
-        "Gear",
-        "Role",
-    ];
+    private const int MinimumChangedSectionSlots = 3;
 
     private bool frameworkUpdateRegistered;
     private DateTime nextRequestedUpdateUtc = DateTime.MinValue;
@@ -156,7 +147,7 @@ public unsafe class CharacterStatusSubWindowHandler
             livePayload);
         translatedPayload = runtimeState.TranslatedPayload.ProjectToShape(
             livePayload);
-        if (!HasExpectedTranslatedSectionCoverage(
+        if (!HasMeaningfulTranslatedSectionCoverage(
                 originalPayload,
                 translatedPayload))
         {
@@ -356,7 +347,7 @@ public unsafe class CharacterStatusSubWindowHandler
                     translatedProjection.StringArrayValues,
                     translatedProjection.TextNodes)
                 .ProjectToShape(referencePayload);
-            if (!HasExpectedTranslatedSectionCoverage(
+            if (!HasMeaningfulTranslatedSectionCoverage(
                     projectedOriginalPayload,
                     projectedTranslatedPayload))
             {
@@ -379,10 +370,10 @@ public unsafe class CharacterStatusSubWindowHandler
     /// <param name="translatedPayload">The projected translated payload.</param>
     /// <returns>
     ///     <see langword="true" /> when the translated payload contains enough
-    ///     expected section titles and differs meaningfully from the original
+    ///     changed corresponding slots and differs meaningfully from the original
     ///     payload; otherwise <see langword="false" />.
     /// </returns>
-    internal static bool HasExpectedTranslatedSectionCoverage(
+    internal static bool HasMeaningfulTranslatedSectionCoverage(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
@@ -391,42 +382,48 @@ public unsafe class CharacterStatusSubWindowHandler
             return false;
         }
 
-        var matchedSectionTitles = new HashSet<string>(StringComparer.Ordinal);
-        CollectChangedExpectedSectionTitles(
-            originalPayload.AtkValues,
-            translatedPayload.AtkValues,
-            matchedSectionTitles);
-        CollectChangedExpectedSectionTitles(
-            originalPayload.StringArrayValues,
-            translatedPayload.StringArrayValues,
-            matchedSectionTitles);
-        CollectChangedExpectedSectionTitles(
-            originalPayload.TextNodes,
-            translatedPayload.TextNodes,
-            matchedSectionTitles);
-        return matchedSectionTitles.Count >= 3;
+        var changedSlots = CountChangedCorrespondingTexts(
+                               originalPayload.AtkValues,
+                               translatedPayload.AtkValues) +
+                           CountChangedCorrespondingTexts(
+                               originalPayload.StringArrayValues,
+                               translatedPayload.StringArrayValues) +
+                           CountChangedCorrespondingTexts(
+                               originalPayload.TextNodes,
+                               translatedPayload.TextNodes);
+        return changedSlots >= MinimumChangedSectionSlots;
     }
 
-    private static void CollectChangedExpectedSectionTitles<TKey>(
+    /// <summary>
+    ///     Counts corresponding non-empty payload slots whose translated text
+    ///     differs meaningfully from the original text.
+    /// </summary>
+    /// <typeparam name="TKey">The payload slot key type.</typeparam>
+    /// <param name="originalValues">The original-facing payload slots.</param>
+    /// <param name="translatedValues">The translated payload slots.</param>
+    /// <returns>The number of meaningfully changed corresponding slots.</returns>
+    private static int CountChangedCorrespondingTexts<TKey>(
         IReadOnlyDictionary<TKey, string> originalValues,
-        IReadOnlyDictionary<TKey, string> translatedValues,
-        ISet<string> matchedSectionTitles)
+        IReadOnlyDictionary<TKey, string> translatedValues)
         where TKey : notnull
     {
+        var changedSlots = 0;
         foreach (var (key, originalText) in originalValues)
         {
-            if (!ExpectedOriginalSectionTitles.Contains(originalText) ||
+            if (string.IsNullOrWhiteSpace(originalText) ||
                 !translatedValues.TryGetValue(key, out var translatedText) ||
                 string.IsNullOrWhiteSpace(translatedText) ||
                 string.Equals(
-                    originalText,
-                    translatedText,
+                    originalText.Trim(),
+                    translatedText.Trim(),
                     StringComparison.Ordinal))
             {
                 continue;
             }
 
-            matchedSectionTitles.Add(originalText);
+            changedSlots++;
         }
+
+        return changedSlots;
     }
 }
