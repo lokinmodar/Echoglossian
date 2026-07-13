@@ -513,7 +513,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 originalText,
                 out translatedText))
         {
-            return translatedText;
+            return PreserveSourceLevelSeparator(originalText, translatedText);
         }
 
         if (TryResolveLevelAwareTranslatedText(
@@ -560,7 +560,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 visibleText,
                 out originalText))
         {
-            return originalText;
+            return PreserveSourceLevelSeparator(visibleText, originalText);
         }
 
         if (TryResolveLevelAwareOriginalText(

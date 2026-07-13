@@ -288,8 +288,8 @@ public class SourceScopedFallbackFlowTests
                 new TranslationReuseScope("fr", "pt-BR", 0, true),
                 lookups.TranslatedLookup);
 
-            Assert.Equal("Sprint Niveau 20", originalText);
-            Assert.Equal("Corrida Nv. 20", translatedText);
+            Assert.Equal("Sprint\r\nNiveau 20", originalText);
+            Assert.Equal("Corrida\r\nNv. 20", translatedText);
         }
         finally
         {
