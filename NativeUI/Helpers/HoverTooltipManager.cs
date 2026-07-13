@@ -210,6 +210,8 @@ public sealed class HoverTooltipManager
                     hoveredEntry.Body,
                     hoveredEntry.UseGeneralFont,
                     textColor);
+                using var titleTextureLease = titleBlock?.Texture;
+                using var bodyTextureLease = bodyBlock?.Texture;
 
                 if (titleBlock == null && bodyBlock == null)
                 {

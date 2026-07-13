@@ -9,6 +9,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
+using System.Collections.Concurrent;
 using System.Numerics;
 
 using Xunit;
@@ -41,7 +42,7 @@ public class RtlTexturePresentationServiceTests
         var creationCount = 0;
         using var service = new RtlTexturePresentationService(
             new Config(),
-            request =>
+            (request, _) =>
             {
                 Interlocked.Increment(ref creationCount);
                 creationStarted.TrySetResult(request);
@@ -64,16 +65,233 @@ public class RtlTexturePresentationServiceTests
 
         var texture = new FakeTextureWrap(width: 120, height: 30);
         uploadCompletion.SetResult(texture);
-        Assert.True(
-            SpinWait.SpinUntil(
+        var completedResult = WaitForRenderedBlock(service, request);
+
+        Assert.False(completedResult.RightAligned);
+        completedResult.Texture!.Dispose();
+    }
+
+    /// <summary>
+    /// Ensures eviction retires a texture without disposing it while the
+    /// current draw still owns a lease.
+    /// </summary>
+    [Fact]
+    public async Task TryRender_EvictionWhileBlockIsLeased_DefersTextureDisposal()
+    {
+        var starts = new ConcurrentDictionary<string, TaskCompletionSource<bool>>();
+        var completions = new ConcurrentDictionary<
+            string,
+            TaskCompletionSource<IDalamudTextureWrap>>();
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (request, _) =>
+            {
+                starts.GetOrAdd(request.Text, _ => NewSignal()).TrySetResult(true);
+                return completions.GetOrAdd(request.Text, _ => NewTextureSignal()).Task;
+            },
+            textureCacheCapacity: 1);
+        var firstRequest = CreateRequest(2, "ar", "first");
+        var secondRequest = CreateRequest(2, "ar", "second");
+        var firstTexture = new FakeTextureWrap(width: 100, height: 20);
+        var secondTexture = new FakeTextureWrap(width: 100, height: 20);
+
+        Assert.Null(service.TryRender(firstRequest));
+        await starts.GetOrAdd("first", _ => NewSignal()).Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+        completions.GetOrAdd("first", _ => NewTextureSignal()).SetResult(firstTexture);
+        var firstBlock = WaitForRenderedBlock(service, firstRequest);
+
+        Assert.Null(service.TryRender(secondRequest));
+        await starts.GetOrAdd("second", _ => NewSignal()).Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+        completions.GetOrAdd("second", _ => NewTextureSignal()).SetResult(secondTexture);
+        var secondBlock = WaitForRenderedBlock(service, secondRequest);
+
+        Assert.Equal(0, firstTexture.DisposeCount);
+
+        firstBlock.Texture!.Dispose();
+
+        Assert.Equal(1, firstTexture.DisposeCount);
+        secondBlock.Texture!.Dispose();
+    }
+
+    /// <summary>
+    /// Ensures clear retires old work atomically and lets the same key start a
+    /// fresh generation that stale completion cannot remove.
+    /// </summary>
+    [Fact]
+    public async Task Clear_PendingSameKey_RetiresOldWorkAndStartsFreshCreation()
+    {
+        var starts = new ConcurrentQueue<
+            TaskCompletionSource<CancellationToken>>();
+        var completions = new ConcurrentQueue<
+            TaskCompletionSource<IDalamudTextureWrap>>();
+        var firstStart = NewCancellationSignal();
+        var secondStart = NewCancellationSignal();
+        var firstCompletion = NewTextureSignal();
+        var secondCompletion = NewTextureSignal();
+        starts.Enqueue(firstStart);
+        starts.Enqueue(secondStart);
+        completions.Enqueue(firstCompletion);
+        completions.Enqueue(secondCompletion);
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (_, cancellationToken) =>
+            {
+                Assert.True(starts.TryDequeue(out var start));
+                Assert.True(completions.TryDequeue(out var completion));
+                start.SetResult(cancellationToken);
+                return completion.Task;
+            },
+            maxConcurrentTextureCreations: 1);
+        var request = CreateRequest(2, "ar", "same key");
+
+        Assert.Null(service.TryRender(request));
+        var firstToken = await firstStart.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        service.Clear();
+        Assert.Null(service.TryRender(request));
+        await secondStart.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.True(firstToken.IsCancellationRequested);
+
+        var staleTexture = new FakeTextureWrap(width: 90, height: 20);
+        firstCompletion.SetResult(staleTexture);
+        Assert.True(SpinWait.SpinUntil(
+            () => staleTexture.DisposeCount == 1,
+            TimeSpan.FromSeconds(5)));
+        Assert.Null(service.TryRender(request));
+
+        var currentTexture = new FakeTextureWrap(width: 100, height: 20);
+        secondCompletion.SetResult(currentTexture);
+        var completedBlock = WaitForRenderedBlock(service, request);
+
+        Assert.Equal(0, currentTexture.DisposeCount);
+        completedBlock.Texture!.Dispose();
+    }
+
+    /// <summary>
+    /// Ensures pending work has fixed admission and concurrency bounds while
+    /// rejected requests remain eligible after capacity becomes available.
+    /// </summary>
+    [Fact]
+    public async Task TryRender_UniqueMissBurst_BoundsPendingAndConcurrentWork()
+    {
+        var starts = new ConcurrentDictionary<string, TaskCompletionSource<bool>>();
+        var completions = new ConcurrentDictionary<
+            string,
+            TaskCompletionSource<IDalamudTextureWrap>>();
+        var creationCount = 0;
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (request, _) =>
+            {
+                Interlocked.Increment(ref creationCount);
+                starts.GetOrAdd(request.Text, _ => NewSignal()).TrySetResult(true);
+                return completions.GetOrAdd(request.Text, _ => NewTextureSignal()).Task;
+            },
+            pendingTextureCapacity: 2,
+            maxConcurrentTextureCreations: 1);
+        var firstRequest = CreateRequest(2, "ar", "one");
+        var secondRequest = CreateRequest(2, "ar", "two");
+        var thirdRequest = CreateRequest(2, "ar", "three");
+        var rejectedRequest = CreateRequest(2, "ar", "four");
+
+        Assert.Null(service.TryRender(firstRequest));
+        await starts.GetOrAdd("one", _ => NewSignal()).Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+        Assert.Null(service.TryRender(secondRequest));
+        Assert.Null(service.TryRender(thirdRequest));
+        Assert.Equal(2, service.GetDebugStats().PendingTextureCount);
+        Assert.Equal(1, Volatile.Read(ref creationCount));
+
+        completions.GetOrAdd("one", _ => NewTextureSignal()).SetResult(
+            new FakeTextureWrap(width: 10, height: 10));
+        await starts.GetOrAdd("two", _ => NewSignal()).Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+
+        Assert.Null(service.TryRender(thirdRequest));
+        Assert.Null(service.TryRender(rejectedRequest));
+        Assert.Equal(2, service.GetDebugStats().PendingTextureCount);
+        Assert.Equal(2, Volatile.Read(ref creationCount));
+
+        completions.GetOrAdd("two", _ => NewTextureSignal()).SetResult(
+            new FakeTextureWrap(width: 10, height: 10));
+        await starts.GetOrAdd("three", _ => NewSignal()).Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+        Assert.Equal(3, Volatile.Read(ref creationCount));
+
+        completions.GetOrAdd("three", _ => NewTextureSignal()).SetResult(
+            new FakeTextureWrap(width: 10, height: 10));
+        var completedBlock = WaitForRenderedBlock(service, thirdRequest);
+        completedBlock.Texture!.Dispose();
+    }
+
+    /// <summary>
+    /// Ensures one-off failures cannot retain more cooldown keys than the
+    /// configured bound.
+    /// </summary>
+    [Fact]
+    public void TryRender_OneOffFailures_BoundsRetryState()
+    {
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (_, _) => Task.FromException<IDalamudTextureWrap>(
+                new InvalidOperationException("expected failure")),
+            retryStateCapacity: 2,
+            maxConcurrentTextureCreations: 1);
+
+        for (var index = 0; index < 3; index++)
+        {
+            Assert.Null(service.TryRender(
+                CreateRequest(2, "ar", $"failed-{index}")));
+            Assert.True(SpinWait.SpinUntil(
                 () => service.GetDebugStats().PendingTextureCount == 0,
                 TimeSpan.FromSeconds(5)));
+        }
 
-        var completedResult = service.TryRender(request);
+        Assert.Equal(2, service.GetDebugStats().RetryStateCount);
+    }
 
-        Assert.NotNull(completedResult);
-        Assert.Same(texture, completedResult.Texture);
-        Assert.False(completedResult.RightAligned);
+    /// <summary>
+    /// Ensures the cache key uses the exact font bits and final raster colors
+    /// from the same resolved request supplied to texture creation.
+    /// </summary>
+    [Fact]
+    public void TryRender_CloseRasterInputs_DoNotAliasCacheKeys()
+    {
+        var creationRequests = new ConcurrentQueue<TextureCreationRequest>();
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (request, _) =>
+            {
+                creationRequests.Enqueue(request);
+                return Task.FromResult<IDalamudTextureWrap>(
+                    new FakeTextureWrap(width: 10, height: 10));
+            });
+        var firstRequest = CreateRequest(
+            2,
+            "ar",
+            "exact inputs",
+            fontScale: 1.00001f,
+            textColor: new Vector4(0.4999f, 1f, 1f, 1f));
+        var secondRequest = CreateRequest(
+            2,
+            "ar",
+            "exact inputs",
+            fontScale: 1.00002f,
+            textColor: new Vector4(0.5001f, 1f, 1f, 1f));
+
+        var firstBlock = WaitForRenderedBlock(service, firstRequest);
+        firstBlock.Texture!.Dispose();
+        var secondBlock = WaitForRenderedBlock(service, secondRequest);
+        secondBlock.Texture!.Dispose();
+
+        Assert.Equal(2, creationRequests.Count);
+        Assert.True(creationRequests.TryDequeue(out var firstCreation));
+        Assert.True(creationRequests.TryDequeue(out var secondCreation));
+        Assert.NotEqual(firstCreation.FontSize, secondCreation.FontSize);
+        Assert.NotEqual(firstCreation.TextColor.ToArgb(), secondCreation.TextColor.ToArgb());
     }
 
     /// <summary>
@@ -85,7 +303,7 @@ public class RtlTexturePresentationServiceTests
     {
         using var service = new RtlTexturePresentationService(
             new Config(),
-            _ => Task.FromResult<IDalamudTextureWrap>(
+            (_, _) => Task.FromResult<IDalamudTextureWrap>(
                 new FakeTextureWrap(width: 1, height: 1)),
             adaptiveWidthCacheCapacity: 2);
 
@@ -103,28 +321,103 @@ public class RtlTexturePresentationServiceTests
     }
 
     /// <summary>
+    /// Ensures close viewport inputs remain distinct because the width policy
+    /// receives their exact values.
+    /// </summary>
+    [Fact]
+    public void ResolveAdaptiveHoverTooltipMaxWidth_CloseViewports_DoNotAliasKeys()
+    {
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (_, _) => Task.FromResult<IDalamudTextureWrap>(
+                new FakeTextureWrap(width: 1, height: 1)));
+        var request = CreateRequest(2, "ar", "short text");
+
+        var firstWidth = service.ResolveAdaptiveHoverTooltipMaxWidth(
+            request,
+            viewportWidth: 1000.1f);
+        var secondWidth = service.ResolveAdaptiveHoverTooltipMaxWidth(
+            request,
+            viewportWidth: 1000.2f);
+
+        Assert.NotEqual(firstWidth, secondWidth);
+        Assert.Equal(2, service.GetDebugStats().AdaptiveWidthCount);
+    }
+
+    /// <summary>
     /// Creates a texture layout request for one language and sample text.
     /// </summary>
     /// <param name="languageId">The target language identifier.</param>
     /// <param name="languageCode">The target language code.</param>
     /// <param name="text">The sample text.</param>
+    /// <param name="fontScale">The request font scale.</param>
+    /// <param name="textColor">The request text color.</param>
     /// <returns>The configured layout request.</returns>
     private static TextLayoutRequest CreateRequest(
         int languageId,
         string languageCode,
-        string text)
+        string text,
+        float fontScale = 1f,
+        Vector4? textColor = null)
     {
         return new TextLayoutRequest(
             text,
             languageId,
             languageCode,
             480f,
-            1f,
+            fontScale,
             ShouldUseGeneralFont: false,
-            Vector4.One,
+            textColor ?? Vector4.One,
             Vector4.Zero,
             TranslationOverlaySurfaceId.ItemDetail,
             CenterAligned: false);
+    }
+
+    /// <summary>
+    /// Pumps draw-thread publication until the controlled upload is available.
+    /// </summary>
+    /// <param name="service">The presentation service.</param>
+    /// <param name="request">The request whose block is expected.</param>
+    /// <returns>The completed render block.</returns>
+    private static RenderedTextBlock WaitForRenderedBlock(
+        RtlTexturePresentationService service,
+        TextLayoutRequest request)
+    {
+        RenderedTextBlock? renderedBlock = null;
+        Assert.True(SpinWait.SpinUntil(
+            () => (renderedBlock = service.TryRender(request)) != null,
+            TimeSpan.FromSeconds(5)));
+        return renderedBlock!;
+    }
+
+    /// <summary>
+    /// Creates a continuation-safe boolean signal.
+    /// </summary>
+    /// <returns>The new signal.</returns>
+    private static TaskCompletionSource<bool> NewSignal()
+    {
+        return new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    /// <summary>
+    /// Creates a continuation-safe cancellation-token signal.
+    /// </summary>
+    /// <returns>The new signal.</returns>
+    private static TaskCompletionSource<CancellationToken> NewCancellationSignal()
+    {
+        return new TaskCompletionSource<CancellationToken>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    /// <summary>
+    /// Creates a continuation-safe texture completion signal.
+    /// </summary>
+    /// <returns>The new signal.</returns>
+    private static TaskCompletionSource<IDalamudTextureWrap> NewTextureSignal()
+    {
+        return new TaskCompletionSource<IDalamudTextureWrap>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     /// <summary>
@@ -132,6 +425,8 @@ public class RtlTexturePresentationServiceTests
     /// </summary>
     private sealed class FakeTextureWrap : IDalamudTextureWrap
     {
+        private int disposeCount;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeTextureWrap"/> class.
         /// </summary>
@@ -143,6 +438,11 @@ public class RtlTexturePresentationServiceTests
             this.Height = height;
         }
 
+        /// <summary>
+        /// Gets the thread-safe disposal count.
+        /// </summary>
+        public int DisposeCount => Volatile.Read(ref this.disposeCount);
+
         public ImTextureID Handle => default;
 
         public int Width { get; }
@@ -152,6 +452,7 @@ public class RtlTexturePresentationServiceTests
         /// <inheritdoc/>
         public void Dispose()
         {
+            Interlocked.Increment(ref this.disposeCount);
         }
     }
 }

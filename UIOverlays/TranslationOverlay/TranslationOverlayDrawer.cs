@@ -701,6 +701,9 @@ namespace Echoglossian
             horizontalPadding);
       }
 
+      using var bodyTextureLease = bodyBlock?.Texture;
+      using var titleTextureLease = titleBlock?.Texture;
+
       var desiredWidth = baseWidth;
       if (config.AutoSizeToTextWithMaxWidth)
       {

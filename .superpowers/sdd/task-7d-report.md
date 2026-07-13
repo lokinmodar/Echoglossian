@@ -134,3 +134,107 @@ blocked at test-project compilation by concurrent, unstaged changes in
 not yet present in the shared worktree. Task 7D did not edit or stage that
 work. The complete 8/8 focused, 0-error build, and 525/525 full-suite results
 above were recorded after all Task 7D behavior and compatibility changes.
+
+## Review Hardening
+
+Task 7D review findings were addressed only in the asynchronous texture
+presentation boundary and its direct draw callers/tests. No translation,
+database, persistence, or `Echoglossian.xml` changes belong to this patch.
+
+### Root Causes
+
+1. Background completion inserted directly into `TextTextureCache`, whose LRU
+   immediately disposed evicted wrappers even when a returned render block
+   still referenced one for the current ImGui draw.
+2. Scheduling captured an epoch under `lifecycleLock` but inserted and started
+   `Lazy<Task>` work afterward. `Clear` could therefore retire the epoch before
+   stale work entered the pending dictionary, and stale completion removed by
+   key without proving ownership of the current entry.
+3. The pending dictionary and failed-key cooldown dictionary were unbounded,
+   and each admitted unique key owned an independent `Task.Run`.
+4. Cache keys independently rounded floats and source `Vector4` colors instead
+   of keying the exact resolved font, width, line-height, direction, and final
+   GDI ARGB values supplied to rasterization.
+
+### Implementation
+
+- Completed uploads now wait in a generation-owned completion queue and are
+  published into the texture LRU only by `TryRender` on the draw thread.
+- Cached textures use reference-counted draw leases. LRU eviction, `Clear`, and
+  `Dispose` retire ownership immediately but defer the underlying wrapper's
+  disposal until overlay or hover drawing releases its lease.
+- Each lifecycle generation owns its cancellation source, pending map, bounded
+  FIFO, completion queue, and worker count. The default limits are 16 admitted
+  requests and two workers. Generation replacement is atomic, old workers
+  cannot access the newer generation's map, and the task factory is invoked
+  under the generation gate before background GDI work begins.
+- Retry cooldown state is a 128-entry LRU and expired entries are pruned on
+  unrelated requests, so one-off failed text cannot accumulate indefinitely.
+- Texture keys are built from one `TextureCreationRequest` using exact float
+  bits, final ARGB integers, exact integer wrap width, direction, and
+  length-prefixed strings. Adaptive-width keys likewise use one captured input
+  set with exact viewport and configured-width bits.
+- Existing pending/null fallback, LTR/RTL direction, outer alignment,
+  line-height, wrapping, and adaptive-width behavior are unchanged.
+
+### TDD Evidence
+
+The focused red run failed at compilation for the expected missing
+cancellation-aware seam, capacity controls, and retry statistics. Production
+code was changed only after that red run.
+
+The deterministic tests use controlled `TaskCompletionSource` gates and no
+sleep calls. They verify:
+
+- forced one-entry LRU eviction cannot dispose a held current-draw lease
+- `Clear` cancels the old generation, starts the same key again immediately,
+  disposes stale output, and prevents stale completion from removing new work
+- a two-entry pending queue and one-worker limit apply backpressure while a
+  rejected request remains eligible when capacity opens
+- three one-off failures retain only two configured cooldown entries
+- close font/color inputs and close viewport widths do not alias keys
+- existing texture LTR/RTL, cache budget, and tooltip layout coverage remains
+  green
+
+Focused review-hardening result:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~RtlTexturePresentationServiceTests|FullyQualifiedName~TextImageRendererTests|FullyQualifiedName~TextTextureCacheBudgetTests|FullyQualifiedName~HoverTooltipLayoutPolicyTests"
+PASS: 26/26 before concurrent unrelated prefetch compilation became incomplete
+```
+
+Final repository validation was retried after the owned changes. The shared
+worktree was temporarily blocked before tests by concurrent, unstaged issue work in
+`NativeUI/Helpers/ActionDetailPrefetchRuntime.cs:304`, which references the
+not-yet-defined `RunActionDetailNamePrefetchEntry`. That file and its related
+`PrefetchBrokerSourceScopeTests.cs` changes are not owned, edited, or staged by
+Task 7D.
+
+To verify Task 7D without stashing, reverting, or incorporating those files, a
+disposable local clone of committed `HEAD` was created and only the four owned
+C# file diffs were applied. Fresh validation there produced:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~RtlTexturePresentationServiceTests|FullyQualifiedName~TextImageRendererTests|FullyQualifiedName~TextTextureCacheBudgetTests|FullyQualifiedName~HoverTooltipLayoutPolicyTests"
+PASS: 26/26
+
+dotnet build Echoglossian.sln -c Debug --no-restore
+PASS: 0 errors, 2 known warnings
+
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+PASS: 529/529
+
+git diff --check -- <owned files and report>
+PASS
+```
+
+After the concurrent prefetch work left the shared working tree, the mandated
+commands were rerun there against the final owned files:
+
+```text
+dotnet build Echoglossian.sln -c Debug --no-restore
+PASS: 0 errors, 78 existing/concurrent warnings
+
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+PASS: 534/534
+```

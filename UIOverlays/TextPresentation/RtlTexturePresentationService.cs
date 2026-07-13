@@ -32,26 +32,35 @@ internal sealed record TextureCreationRequest(
 internal sealed class RtlTexturePresentationService : IDisposable
 {
   private const int DefaultAdaptiveWidthCacheCapacity = 128;
+  private const int DefaultMaxConcurrentTextureCreations = 2;
+  private const int DefaultPendingTextureCapacity = 16;
+  private const int DefaultRetryStateCapacity = 128;
+  private const int DefaultTextureCacheCapacity = 128;
   private const long DefaultSoftByteBudget = 32L * 1024L * 1024L;
   private const long DefaultHardByteBudget = 64L * 1024L * 1024L;
   private static readonly TimeSpan FailureCooldown = TimeSpan.FromSeconds(10);
   private readonly Config configuration;
   private readonly TextTextureCache textureCache;
-  private readonly Func<TextureCreationRequest, Task<IDalamudTextureWrap>>
-      createTextureAsync;
+  private readonly Func<
+      TextureCreationRequest,
+      CancellationToken,
+      Task<IDalamudTextureWrap>> createTextureAsync;
   private readonly int adaptiveWidthCacheCapacity;
+  private readonly int maxConcurrentTextureCreations;
+  private readonly int pendingTextureCapacity;
+  private readonly int retryStateCapacity;
+  private readonly Func<DateTime> getUtcNow;
   private readonly Dictionary<string, float> adaptiveHoverTooltipWidthByKey =
       new(StringComparer.Ordinal);
   private readonly LinkedList<string> adaptiveHoverTooltipWidthAccessOrder =
       new();
   private readonly object adaptiveWidthCacheLock = new();
   private readonly object lifecycleLock = new();
-  private readonly ConcurrentDictionary<string, Lazy<Task>>
-      pendingTextureCreations = new(StringComparer.Ordinal);
-  private readonly ConcurrentDictionary<string, DateTime> retryAfterByKey =
+  private readonly Dictionary<string, RetryState> retryAfterByKey =
       new(StringComparer.Ordinal);
+  private readonly LinkedList<string> retryAccessOrder = new();
+  private GenerationState currentGeneration = new(0);
   private bool disposed;
-  private int generationEpoch;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="RtlTexturePresentationService"/> class.
@@ -63,8 +72,10 @@ internal sealed class RtlTexturePresentationService : IDisposable
       ITextureProvider textureProvider)
     : this(
         configuration,
-        request => CreateTextureAsync(textureProvider, request),
-        DefaultAdaptiveWidthCacheCapacity)
+        (request, cancellationToken) => CreateTextureAsync(
+            textureProvider,
+            request,
+            cancellationToken))
   {
   }
 
@@ -78,18 +89,46 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// <param name="adaptiveWidthCacheCapacity">
   /// The maximum number of adaptive-width measurements to retain.
   /// </param>
+  /// <param name="textureCacheCapacity">
+  /// The maximum number of completed textures to retain.
+  /// </param>
+  /// <param name="pendingTextureCapacity">
+  /// The maximum number of queued and running texture requests.
+  /// </param>
+  /// <param name="maxConcurrentTextureCreations">
+  /// The maximum number of texture workers for one lifecycle generation.
+  /// </param>
+  /// <param name="retryStateCapacity">
+  /// The maximum number of failed-key cooldown entries to retain.
+  /// </param>
+  /// <param name="getUtcNow">The clock used for retry cooldowns.</param>
   internal RtlTexturePresentationService(
       Config configuration,
-      Func<TextureCreationRequest, Task<IDalamudTextureWrap>> createTextureAsync,
-      int adaptiveWidthCacheCapacity = DefaultAdaptiveWidthCacheCapacity)
+      Func<
+          TextureCreationRequest,
+          CancellationToken,
+          Task<IDalamudTextureWrap>> createTextureAsync,
+      int adaptiveWidthCacheCapacity = DefaultAdaptiveWidthCacheCapacity,
+      int textureCacheCapacity = DefaultTextureCacheCapacity,
+      int pendingTextureCapacity = DefaultPendingTextureCapacity,
+      int maxConcurrentTextureCreations =
+          DefaultMaxConcurrentTextureCreations,
+      int retryStateCapacity = DefaultRetryStateCapacity,
+      Func<DateTime>? getUtcNow = null)
   {
     this.configuration = configuration;
     this.createTextureAsync = createTextureAsync;
     this.adaptiveWidthCacheCapacity = Math.Max(
         1,
         adaptiveWidthCacheCapacity);
+    this.pendingTextureCapacity = Math.Max(1, pendingTextureCapacity);
+    this.maxConcurrentTextureCreations = Math.Max(
+        1,
+        Math.Min(maxConcurrentTextureCreations, this.pendingTextureCapacity));
+    this.retryStateCapacity = Math.Max(1, retryStateCapacity);
+    this.getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
     this.textureCache = new TextTextureCache(
-        maxCapacity: 128,
+        maxCapacity: Math.Max(1, textureCacheCapacity),
         inactivityTimeoutSeconds: 60,
         softByteBudget: DefaultSoftByteBudget,
         hardByteBudget: DefaultHardByteBudget);
@@ -102,33 +141,14 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// <param name="request">The presentation request.</param>
   /// <returns>
   /// The rendered block when cached generation has completed; otherwise,
-  /// <see langword="null"/> while creation is pending or cooling down.
+  /// <see langword="null"/> while creation is pending, cooling down, or the
+  /// bounded work queue is full.
   /// </returns>
   public RenderedTextBlock? TryRender(TextLayoutRequest request)
   {
-    var cacheKey = this.BuildCacheKey(request);
-    if (this.pendingTextureCreations.ContainsKey(cacheKey))
-    {
-      return null;
-    }
-
-    if (this.retryAfterByKey.TryGetValue(cacheKey, out var retryAfter))
-    {
-      if (retryAfter > DateTime.UtcNow)
-      {
-        return null;
-      }
-
-      this.retryAfterByKey.TryRemove(cacheKey, out _);
-    }
-
-    if (this.TryGetCachedTexture(cacheKey, out var cachedTexture))
-    {
-      return this.CreateRenderedBlock(request, cachedTexture);
-    }
-
     var creationRequest = this.BuildTextureCreationRequest(request);
-    int scheduledEpoch;
+    var cacheKey = BuildCacheKey(creationRequest);
+
     lock (this.lifecycleLock)
     {
       if (this.disposed)
@@ -136,26 +156,45 @@ internal sealed class RtlTexturePresentationService : IDisposable
         return null;
       }
 
-      scheduledEpoch = this.generationEpoch;
-    }
+      var generation = this.currentGeneration;
+      this.PublishCompletedTextures(generation);
 
-    var pendingCreation = this.pendingTextureCreations.GetOrAdd(
-        cacheKey,
-        _ => new Lazy<Task>(
-            () => Task.Run(
-                () => this.CreateAndCacheTextureAsync(
-                    cacheKey,
-                    request,
-                    creationRequest,
-                    scheduledEpoch)),
-            LazyThreadSafetyMode.ExecutionAndPublication));
-    _ = pendingCreation.Value;
-    return null;
+      if (this.TryGetCachedTextureLease(cacheKey, out var cachedTexture))
+      {
+        return this.CreateRenderedBlock(request, cachedTexture);
+      }
+
+      var now = this.getUtcNow();
+      this.PruneExpiredRetryState(now);
+      if (this.retryAfterByKey.TryGetValue(cacheKey, out var retryState) &&
+          retryState.RetryAfterUtc > now)
+      {
+        this.TouchRetryState(retryState);
+        return null;
+      }
+
+      if (generation.PendingByKey.ContainsKey(cacheKey) ||
+          generation.PendingByKey.Count >= this.pendingTextureCapacity)
+      {
+        return null;
+      }
+
+      var work = new PendingTextureCreation(
+          cacheKey,
+          request.SurfaceId,
+          request.LanguageCode,
+          creationRequest);
+      generation.PendingByKey.Add(cacheKey, work);
+      generation.Queue.Enqueue(work);
+      this.EnsureTextureWorkers(generation);
+      return null;
+    }
   }
 
   /// <inheritdoc/>
   public void Dispose()
   {
+    GenerationState retiredGeneration;
     lock (this.lifecycleLock)
     {
       if (this.disposed)
@@ -164,25 +203,23 @@ internal sealed class RtlTexturePresentationService : IDisposable
       }
 
       this.disposed = true;
-      this.generationEpoch++;
+      retiredGeneration = this.currentGeneration;
+      this.DisposeCompletedTextures(retiredGeneration);
       this.textureCache.Dispose();
+      this.ClearRetryState();
     }
 
-    lock (this.adaptiveWidthCacheLock)
-    {
-      this.adaptiveHoverTooltipWidthByKey.Clear();
-      this.adaptiveHoverTooltipWidthAccessOrder.Clear();
-    }
-
-    this.retryAfterByKey.Clear();
+    retiredGeneration.Cancellation.Cancel();
+    this.ClearAdaptiveWidthState();
     GC.SuppressFinalize(this);
   }
 
   /// <summary>
-  /// Clears generated texture state.
+  /// Clears generated texture state and atomically starts a new work generation.
   /// </summary>
   public void Clear()
   {
+    GenerationState retiredGeneration;
     lock (this.lifecycleLock)
     {
       if (this.disposed)
@@ -190,33 +227,37 @@ internal sealed class RtlTexturePresentationService : IDisposable
         return;
       }
 
-      this.generationEpoch++;
+      retiredGeneration = this.currentGeneration;
+      this.currentGeneration = new GenerationState(
+          retiredGeneration.Epoch + 1);
+      this.DisposeCompletedTextures(retiredGeneration);
       this.textureCache.Clear();
+      this.ClearRetryState();
     }
 
-    lock (this.adaptiveWidthCacheLock)
-    {
-      this.adaptiveHoverTooltipWidthByKey.Clear();
-      this.adaptiveHoverTooltipWidthAccessOrder.Clear();
-    }
-
-    this.retryAfterByKey.Clear();
+    retiredGeneration.Cancellation.Cancel();
+    this.ClearAdaptiveWidthState();
   }
 
   /// <summary>
-  /// Gets debug information about texture, measurement, and pending state.
+  /// Gets debug information about texture, measurement, pending, and retry state.
   /// </summary>
   /// <returns>Current cache counts and estimated texture memory usage.</returns>
   public (
       int Count,
       long EstimatedMemoryBytes,
       int AdaptiveWidthCount,
-      int PendingTextureCount) GetDebugStats()
+      int PendingTextureCount,
+      int RetryStateCount) GetDebugStats()
   {
     (int Count, long EstimatedMemoryBytes) textureStats;
+    int pendingTextureCount;
+    int retryStateCount;
     lock (this.lifecycleLock)
     {
       textureStats = this.textureCache.GetDebugStats();
+      pendingTextureCount = this.currentGeneration.PendingByKey.Count;
+      retryStateCount = this.retryAfterByKey.Count;
     }
 
     int adaptiveWidthCount;
@@ -229,13 +270,12 @@ internal sealed class RtlTexturePresentationService : IDisposable
         textureStats.Count,
         textureStats.EstimatedMemoryBytes,
         adaptiveWidthCount,
-        this.pendingTextureCreations.Count);
+        pendingTextureCount,
+        retryStateCount);
   }
 
   /// <summary>
   /// Resolves the adaptive wrap width used for texture-backed hover tooltips.
-  /// Results are cached by text, font, and viewport characteristics so
-  /// measurement is paid at most once per retained layout input.
   /// </summary>
   /// <param name="request">The hover tooltip layout request.</param>
   /// <param name="viewportWidth">The current main-viewport width.</param>
@@ -244,9 +284,10 @@ internal sealed class RtlTexturePresentationService : IDisposable
       TextLayoutRequest request,
       float viewportWidth)
   {
-    var cacheKey = this.BuildHoverTooltipWidthKey(
+    var resolvedInputs = this.BuildAdaptiveWidthInputs(
         request,
         viewportWidth);
+    var cacheKey = BuildHoverTooltipWidthKey(resolvedInputs);
     lock (this.adaptiveWidthCacheLock)
     {
       if (this.adaptiveHoverTooltipWidthByKey.TryGetValue(
@@ -260,8 +301,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
     }
 
     var resolvedWidth = this.ResolveAdaptiveHoverTooltipMaxWidthCore(
-        request,
-        viewportWidth);
+        resolvedInputs);
     lock (this.adaptiveWidthCacheLock)
     {
       if (this.adaptiveHoverTooltipWidthByKey.TryGetValue(
@@ -289,119 +329,187 @@ internal sealed class RtlTexturePresentationService : IDisposable
   }
 
   /// <summary>
-  /// Creates one texture asynchronously and inserts it into the bounded cache.
+  /// Starts only enough workers to service queued work within the concurrency cap.
   /// </summary>
-  /// <param name="cacheKey">The complete layout cache key.</param>
-  /// <param name="request">The source presentation request.</param>
-  /// <param name="creationRequest">The resolved rasterization inputs.</param>
-  /// <param name="scheduledEpoch">The clear/dispose generation epoch.</param>
-  /// <returns>A task representing the creation operation.</returns>
-  private async Task CreateAndCacheTextureAsync(
-      string cacheKey,
-      TextLayoutRequest request,
-      TextureCreationRequest creationRequest,
-      int scheduledEpoch)
+  /// <param name="generation">The active lifecycle generation.</param>
+  private void EnsureTextureWorkers(GenerationState generation)
   {
-    IDalamudTextureWrap? generatedTexture = null;
-    var textureHandedToCache = false;
-    try
+    var workersToStart = Math.Min(
+        this.maxConcurrentTextureCreations - generation.ActiveWorkerCount,
+        generation.Queue.Count);
+    generation.ActiveWorkerCount += workersToStart;
+    for (var workerIndex = 0; workerIndex < workersToStart; workerIndex++)
     {
-      generatedTexture = await this.createTextureAsync(creationRequest)
-          .ConfigureAwait(false);
-      if (generatedTexture == null)
-      {
-        throw new InvalidOperationException(
-            "Texture creation returned no texture.");
-      }
+      _ = Task.Run(() => this.ProcessTextureQueueAsync(generation));
+    }
+  }
 
+  /// <summary>
+  /// Processes queued texture work for one lifecycle generation.
+  /// </summary>
+  /// <param name="generation">The generation owned by this worker.</param>
+  /// <returns>A task representing worker completion.</returns>
+  private async Task ProcessTextureQueueAsync(GenerationState generation)
+  {
+    while (true)
+    {
+      PendingTextureCreation work;
+      Task<IDalamudTextureWrap> creationTask;
       lock (this.lifecycleLock)
       {
-        if (this.disposed || this.generationEpoch != scheduledEpoch)
+        if (this.disposed ||
+            !ReferenceEquals(this.currentGeneration, generation) ||
+            generation.Cancellation.IsCancellationRequested ||
+            !generation.Queue.TryDequeue(out work!))
         {
-          generatedTexture.Dispose();
-          generatedTexture = null;
+          generation.ActiveWorkerCount--;
           return;
         }
 
-        textureHandedToCache = true;
-        var cachedTexture = this.textureCache.GetOrCreate(
-            cacheKey,
-            () => generatedTexture);
-        if (!ReferenceEquals(cachedTexture, generatedTexture))
+        try
         {
-          generatedTexture.Dispose();
+          creationTask = this.createTextureAsync(
+              work.CreationRequest,
+              generation.Cancellation.Token);
         }
-
-        generatedTexture = null;
+        catch (Exception ex)
+        {
+          creationTask = Task.FromException<IDalamudTextureWrap>(ex);
+        }
       }
 
-      this.retryAfterByKey.TryRemove(cacheKey, out _);
-    }
-    catch (Exception ex)
-    {
-      if (!textureHandedToCache)
+      IDalamudTextureWrap? generatedTexture = null;
+      Exception? creationException = null;
+      try
       {
-        generatedTexture?.Dispose();
+        generatedTexture = await creationTask.ConfigureAwait(false);
+        if (generatedTexture == null)
+        {
+          throw new InvalidOperationException(
+              "Texture creation returned no texture.");
+        }
+      }
+      catch (Exception ex)
+      {
+        creationException = ex;
       }
 
-      bool shouldReport;
+      var shouldReportFailure = false;
       lock (this.lifecycleLock)
       {
-        shouldReport =
-            !this.disposed && this.generationEpoch == scheduledEpoch;
+        var isCurrentGeneration =
+            !this.disposed &&
+            ReferenceEquals(this.currentGeneration, generation) &&
+            !generation.Cancellation.IsCancellationRequested;
+        if (isCurrentGeneration &&
+            generation.PendingByKey.TryGetValue(work.CacheKey, out var pending) &&
+            ReferenceEquals(pending, work))
+        {
+          generation.PendingByKey.Remove(work.CacheKey);
+          if (creationException == null)
+          {
+            generation.Completed.Enqueue(
+                new CompletedTextureCreation(work, generatedTexture!));
+            generatedTexture = null;
+          }
+          else if (creationException is not OperationCanceledException)
+          {
+            this.AddRetryState(
+                work.CacheKey,
+                this.getUtcNow() + FailureCooldown);
+            shouldReportFailure = true;
+          }
+        }
       }
 
-      if (shouldReport)
+      generatedTexture?.Dispose();
+      if (shouldReportFailure)
       {
-        this.retryAfterByKey[cacheKey] = DateTime.UtcNow + FailureCooldown;
-        PluginRuntimeLog.Warning(
-            $"Failed to generate text texture for surface '{request.SurfaceId}' and language '{request.LanguageCode}': {ex.Message}");
+        LogCreationFailure(work, creationException!);
       }
-    }
-    finally
-    {
-      this.pendingTextureCreations.TryRemove(cacheKey, out _);
     }
   }
 
   /// <summary>
-  /// Tries to read an existing texture without invoking synchronous creation.
+  /// Publishes completed uploads into the LRU on the requesting draw thread.
   /// </summary>
-  /// <param name="cacheKey">The complete layout cache key.</param>
-  /// <param name="texture">The cached texture when found.</param>
+  /// <param name="generation">The active lifecycle generation.</param>
+  private void PublishCompletedTextures(GenerationState generation)
+  {
+    while (generation.Completed.TryDequeue(out var completion))
+    {
+      var owner = new RetainedTexture(completion.Texture);
+      try
+      {
+        var cachedTexture = this.textureCache.GetOrCreate(
+            completion.Work.CacheKey,
+            () => owner);
+        if (!ReferenceEquals(cachedTexture, owner))
+        {
+          owner.Dispose();
+        }
+
+        this.RemoveRetryState(completion.Work.CacheKey);
+      }
+      catch (Exception ex)
+      {
+        owner.Dispose();
+        this.AddRetryState(
+            completion.Work.CacheKey,
+            this.getUtcNow() + FailureCooldown);
+        LogCreationFailure(completion.Work, ex);
+      }
+    }
+  }
+
+  /// <summary>
+  /// Disposes uploads that completed before a lifecycle transition but were not published.
+  /// </summary>
+  /// <param name="generation">The retired generation.</param>
+  private void DisposeCompletedTextures(GenerationState generation)
+  {
+    while (generation.Completed.TryDequeue(out var completion))
+    {
+      completion.Texture.Dispose();
+    }
+  }
+
+  /// <summary>
+  /// Tries to acquire a draw lease for an existing cached texture.
+  /// </summary>
+  /// <param name="cacheKey">The exact raster input key.</param>
+  /// <param name="texture">The leased texture when found.</param>
   /// <returns><see langword="true"/> when the texture is cached.</returns>
-  private bool TryGetCachedTexture(
+  private bool TryGetCachedTextureLease(
       string cacheKey,
       out IDalamudTextureWrap texture)
   {
-    lock (this.lifecycleLock)
+    try
     {
-      if (this.disposed)
+      var cachedTexture = this.textureCache.GetOrCreate(
+          cacheKey,
+          static () => throw new TextureCacheMissException());
+      if (cachedTexture is not RetainedTexture retainedTexture)
       {
-        texture = null!;
-        return false;
+        throw new InvalidOperationException(
+            "Texture cache entry does not support draw leasing.");
       }
 
-      try
-      {
-        texture = this.textureCache.GetOrCreate(
-            cacheKey,
-            static () => throw new TextureCacheMissException());
-        return true;
-      }
-      catch (TextureCacheMissException)
-      {
-        texture = null!;
-        return false;
-      }
+      texture = retainedTexture.Acquire();
+      return true;
+    }
+    catch (TextureCacheMissException)
+    {
+      texture = null!;
+      return false;
     }
   }
 
   /// <summary>
-  /// Creates the measured presentation block for a cached texture.
+  /// Creates the measured presentation block for a leased texture.
   /// </summary>
   /// <param name="request">The source presentation request.</param>
-  /// <param name="texture">The cached texture.</param>
+  /// <param name="texture">The leased cached texture.</param>
   /// <returns>The completed rendered block.</returns>
   private RenderedTextBlock CreateRenderedBlock(
       TextLayoutRequest request,
@@ -416,7 +524,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
   }
 
   /// <summary>
-  /// Resolves the complete rasterization inputs for one request.
+  /// Resolves the complete rasterization inputs exactly once for one request.
   /// </summary>
   /// <param name="request">The source presentation request.</param>
   /// <returns>The direction-aware texture creation request.</returns>
@@ -437,103 +545,99 @@ internal sealed class RtlTexturePresentationService : IDisposable
         LanguagePresentationPolicy.ShouldRightAlign(request.LanguageId));
   }
 
-  private string BuildCacheKey(TextLayoutRequest request)
+  /// <summary>
+  /// Builds a key from the exact resolved values supplied to rasterization.
+  /// </summary>
+  /// <param name="request">The resolved raster request.</param>
+  /// <returns>The complete raster cache key.</returns>
+  private static string BuildCacheKey(TextureCreationRequest request)
   {
-    var fontPath = this.ResolveFontPath(request);
-    var fontSize = this.ResolveFontSize(request).ToString(
-        "0.###",
-        CultureInfo.InvariantCulture);
-    var maxWidth = this.ResolveMaxWidth(request)?.ToString(
-        CultureInfo.InvariantCulture) ?? "none";
-    var lineHeightScale = Math.Clamp(
-        this.configuration.TexturePresentationLineHeightScale,
-        0.8f,
-        1.2f).ToString("0.###", CultureInfo.InvariantCulture);
-    var textColor = this.SerializeColor(request.TextColor);
-    var backgroundColor = this.SerializeColor(request.BackgroundColor);
-    var direction = LanguagePresentationPolicy.ShouldRightAlign(request.LanguageId)
-        ? "rtl"
-        : "ltr";
-
     return string.Join(
         "|",
-        request.LanguageId.ToString(CultureInfo.InvariantCulture),
-        request.LanguageCode,
-        request.SurfaceId.ToString(),
-        fontPath,
-        fontSize,
-        maxWidth,
-        lineHeightScale,
-        direction,
-        request.ShouldUseGeneralFont ? "general" : "language",
-        request.CenterAligned ? "center" : "edge",
-        textColor,
-        backgroundColor,
-        request.Text);
+        SerializeKeyString(request.FontPath),
+        SerializeFloatBits(request.FontSize),
+        request.TextColor.ToArgb().ToString("X8", CultureInfo.InvariantCulture),
+        request.BackgroundColor.ToArgb().ToString(
+            "X8",
+            CultureInfo.InvariantCulture),
+        request.MaxWidth?.ToString(CultureInfo.InvariantCulture) ?? "none",
+        SerializeFloatBits(request.LineHeightScale),
+        request.RightToLeft ? "rtl" : "ltr",
+        SerializeKeyString(request.Text));
   }
 
-  private string BuildHoverTooltipWidthKey(
+  /// <summary>
+  /// Captures every input used by adaptive tooltip width resolution.
+  /// </summary>
+  /// <param name="request">The source layout request.</param>
+  /// <param name="viewportWidth">The exact viewport width.</param>
+  /// <returns>The resolved measurement inputs.</returns>
+  private AdaptiveWidthInputs BuildAdaptiveWidthInputs(
       TextLayoutRequest request,
       float viewportWidth)
   {
-    var fontPath = this.ResolveFontPath(request);
-    var fontSize = this.ResolveFontSize(request).ToString(
-        "0.###",
-        CultureInfo.InvariantCulture);
-    var lineHeightScale = Math.Clamp(
-        this.configuration.TexturePresentationLineHeightScale,
-        0.8f,
-        1.2f).ToString("0.###", CultureInfo.InvariantCulture);
-    var viewportWidthKey = Math.Round(
+    return new AdaptiveWidthInputs(
+        request.Text,
+        this.ResolveFontPath(request),
+        this.ResolveFontSize(request),
+        Math.Clamp(
+            this.configuration.TexturePresentationLineHeightScale,
+            0.8f,
+            1.2f),
+        LanguagePresentationPolicy.ShouldRightAlign(request.LanguageId),
         viewportWidth,
-        0,
-        MidpointRounding.AwayFromZero).ToString(CultureInfo.InvariantCulture);
-    var configuredWidthKey = Math.Max(
-        240f,
-        this.configuration.HoverTooltipMaxWidth).ToString(
-        "0.###",
-        CultureInfo.InvariantCulture);
+        this.configuration.HoverTooltipMaxWidth);
+  }
 
+  /// <summary>
+  /// Builds an adaptive-width key from the exact values used by measurement.
+  /// </summary>
+  /// <param name="inputs">The captured measurement inputs.</param>
+  /// <returns>The complete adaptive-width cache key.</returns>
+  private static string BuildHoverTooltipWidthKey(AdaptiveWidthInputs inputs)
+  {
     return string.Join(
         "|",
         "hover-tooltip-width",
-        request.LanguageId.ToString(CultureInfo.InvariantCulture),
-        request.LanguageCode,
-        fontPath,
-        fontSize,
-        lineHeightScale,
-        configuredWidthKey,
-        viewportWidthKey,
-        request.ShouldUseGeneralFont ? "general" : "language",
-        request.Text);
+        SerializeKeyString(inputs.FontPath),
+        SerializeFloatBits(inputs.FontSize),
+        SerializeFloatBits(inputs.LineHeightScale),
+        inputs.RightToLeft ? "rtl" : "ltr",
+        SerializeFloatBits(inputs.ViewportWidth),
+        SerializeFloatBits(inputs.ConfiguredMaxWidth),
+        SerializeKeyString(inputs.Text));
   }
 
+  /// <summary>
+  /// Resolves adaptive width using the captured measurement inputs.
+  /// </summary>
+  /// <param name="inputs">The exact measurement inputs.</param>
+  /// <returns>The resolved tooltip width.</returns>
   private float ResolveAdaptiveHoverTooltipMaxWidthCore(
-      TextLayoutRequest request,
-      float viewportWidth)
+      AdaptiveWidthInputs inputs)
   {
+    var resolvedConfiguration = new Config
+    {
+      HoverTooltipMaxWidth = inputs.ConfiguredMaxWidth,
+    };
     TextImageRenderer? renderer = null;
     try
     {
       return HoverTooltipLayoutPolicy.ResolveTextureMaxWidth(
-          this.configuration,
-          viewportWidth,
-          request.Text,
+          resolvedConfiguration,
+          inputs.ViewportWidth,
+          inputs.Text,
           width =>
           {
             renderer ??= new TextImageRenderer(
-                this.ResolveFontPath(request),
-                this.ResolveFontSize(request),
+                inputs.FontPath,
+                inputs.FontSize,
                 FontStyle.Regular,
-                Math.Clamp(
-                    this.configuration.TexturePresentationLineHeightScale,
-                    0.8f,
-                    1.2f),
-                LanguagePresentationPolicy.ShouldRightAlign(
-                    request.LanguageId));
+                inputs.LineHeightScale,
+                inputs.RightToLeft);
             return this.MeasureTooltipHeight(
                 renderer,
-                request.Text,
+                inputs.Text,
                 width);
           });
     }
@@ -543,6 +647,13 @@ internal sealed class RtlTexturePresentationService : IDisposable
     }
   }
 
+  /// <summary>
+  /// Measures tooltip height at one candidate width.
+  /// </summary>
+  /// <param name="renderer">The configured text renderer.</param>
+  /// <param name="text">The text to measure.</param>
+  /// <param name="width">The candidate width.</param>
+  /// <returns>The measured height.</returns>
   private float MeasureTooltipHeight(
       TextImageRenderer renderer,
       string text,
@@ -554,6 +665,11 @@ internal sealed class RtlTexturePresentationService : IDisposable
     return measuredSize.Height;
   }
 
+  /// <summary>
+  /// Resolves the font file used for one request.
+  /// </summary>
+  /// <param name="request">The source layout request.</param>
+  /// <returns>The resolved font path.</returns>
   private string ResolveFontPath(TextLayoutRequest request)
   {
     if (!request.ShouldUseGeneralFont &&
@@ -567,14 +683,24 @@ internal sealed class RtlTexturePresentationService : IDisposable
       return FontFilePath;
     }
 
-    return DummyFontFilePath;
+    return DummyFontFilePath ?? string.Empty;
   }
 
+  /// <summary>
+  /// Resolves the exact raster font size.
+  /// </summary>
+  /// <param name="request">The source layout request.</param>
+  /// <returns>The resolved font size.</returns>
   private float ResolveFontSize(TextLayoutRequest request)
   {
     return Math.Max(1.0f, this.configuration.FontSize * request.FontScale);
   }
 
+  /// <summary>
+  /// Resolves the integer raster wrapping width.
+  /// </summary>
+  /// <param name="request">The source layout request.</param>
+  /// <returns>The resolved width or <see langword="null"/>.</returns>
   private int? ResolveMaxWidth(TextLayoutRequest request)
   {
     if (request.MaxWidth <= 0f)
@@ -585,13 +711,11 @@ internal sealed class RtlTexturePresentationService : IDisposable
     return Math.Max(1, (int)Math.Ceiling(request.MaxWidth));
   }
 
-  private string SerializeColor(Vector4 color)
-  {
-    return string.Create(
-        CultureInfo.InvariantCulture,
-        $"{color.X:0.###},{color.Y:0.###},{color.Z:0.###},{color.W:0.###}");
-  }
-
+  /// <summary>
+  /// Converts an ImGui color into the final GDI color supplied to rendering.
+  /// </summary>
+  /// <param name="color">The source color.</param>
+  /// <returns>The resolved GDI color.</returns>
   private Color ToColor(Vector4 color)
   {
     var alpha = this.ClampColorChannel(color.W);
@@ -601,9 +725,143 @@ internal sealed class RtlTexturePresentationService : IDisposable
     return Color.FromArgb(alpha, red, green, blue);
   }
 
+  /// <summary>
+  /// Converts one normalized color channel to its final byte value.
+  /// </summary>
+  /// <param name="value">The normalized channel.</param>
+  /// <returns>The byte-range integer channel.</returns>
   private int ClampColorChannel(float value)
   {
     return (int)Math.Round(Math.Clamp(value, 0f, 1f) * 255f);
+  }
+
+  /// <summary>
+  /// Adds or refreshes one bounded retry cooldown entry.
+  /// </summary>
+  /// <param name="cacheKey">The failed raster key.</param>
+  /// <param name="retryAfterUtc">The next eligible creation time.</param>
+  private void AddRetryState(string cacheKey, DateTime retryAfterUtc)
+  {
+    if (this.retryAfterByKey.TryGetValue(cacheKey, out var existingState))
+    {
+      this.retryAccessOrder.Remove(existingState.AccessNode);
+      this.retryAfterByKey.Remove(cacheKey);
+    }
+
+    while (this.retryAfterByKey.Count >= this.retryStateCapacity &&
+           this.retryAccessOrder.First is { } oldestNode)
+    {
+      this.retryAfterByKey.Remove(oldestNode.Value);
+      this.retryAccessOrder.RemoveFirst();
+    }
+
+    var accessNode = this.retryAccessOrder.AddLast(cacheKey);
+    this.retryAfterByKey.Add(
+        cacheKey,
+        new RetryState(retryAfterUtc, accessNode));
+  }
+
+  /// <summary>
+  /// Moves one retry entry to the most-recently-used position.
+  /// </summary>
+  /// <param name="retryState">The retry state to touch.</param>
+  private void TouchRetryState(RetryState retryState)
+  {
+    this.retryAccessOrder.Remove(retryState.AccessNode);
+    this.retryAccessOrder.AddLast(retryState.AccessNode);
+  }
+
+  /// <summary>
+  /// Removes expired retry entries without waiting for the same text to return.
+  /// </summary>
+  /// <param name="now">The current UTC time.</param>
+  private void PruneExpiredRetryState(DateTime now)
+  {
+    var node = this.retryAccessOrder.First;
+    while (node != null)
+    {
+      var next = node.Next;
+      if (this.retryAfterByKey.TryGetValue(node.Value, out var state) &&
+          state.RetryAfterUtc <= now)
+      {
+        this.retryAfterByKey.Remove(node.Value);
+        this.retryAccessOrder.Remove(node);
+      }
+
+      node = next;
+    }
+  }
+
+  /// <summary>
+  /// Removes one retry entry after successful publication.
+  /// </summary>
+  /// <param name="cacheKey">The successful raster key.</param>
+  private void RemoveRetryState(string cacheKey)
+  {
+    if (!this.retryAfterByKey.Remove(cacheKey, out var retryState))
+    {
+      return;
+    }
+
+    this.retryAccessOrder.Remove(retryState.AccessNode);
+  }
+
+  /// <summary>
+  /// Clears all retry cooldown state.
+  /// </summary>
+  private void ClearRetryState()
+  {
+    this.retryAfterByKey.Clear();
+    this.retryAccessOrder.Clear();
+  }
+
+  /// <summary>
+  /// Clears adaptive-width measurement state.
+  /// </summary>
+  private void ClearAdaptiveWidthState()
+  {
+    lock (this.adaptiveWidthCacheLock)
+    {
+      this.adaptiveHoverTooltipWidthByKey.Clear();
+      this.adaptiveHoverTooltipWidthAccessOrder.Clear();
+    }
+  }
+
+  /// <summary>
+  /// Serializes a float without losing any input bits.
+  /// </summary>
+  /// <param name="value">The float value.</param>
+  /// <returns>The exact bit-pattern key segment.</returns>
+  private static string SerializeFloatBits(float value)
+  {
+    return BitConverter.SingleToInt32Bits(value).ToString(
+        "X8",
+        CultureInfo.InvariantCulture);
+  }
+
+  /// <summary>
+  /// Serializes a string with its length so delimiters cannot alias key fields.
+  /// </summary>
+  /// <param name="value">The exact string value.</param>
+  /// <returns>The length-prefixed key segment.</returns>
+  private static string SerializeKeyString(string value)
+  {
+    return string.Create(
+        CultureInfo.InvariantCulture,
+        $"{value.Length}:{value}");
+  }
+
+  /// <summary>
+  /// Logs one current-generation creation or publication failure.
+  /// </summary>
+  /// <param name="work">The failed work item.</param>
+  /// <param name="exception">The failure.</param>
+  private static void LogCreationFailure(
+      PendingTextureCreation work,
+      Exception exception)
+  {
+    PluginRuntimeLog.Warning(
+        $"Failed to generate text texture for surface '{work.SurfaceId}' and language '{work.LanguageCode}': {exception.Message}");
   }
 
   /// <summary>
@@ -611,11 +869,15 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// </summary>
   /// <param name="textureProvider">The Dalamud texture provider.</param>
   /// <param name="request">The resolved rasterization inputs.</param>
+  /// <param name="cancellationToken">The lifecycle cancellation token.</param>
   /// <returns>The uploaded texture.</returns>
   private static async Task<IDalamudTextureWrap> CreateTextureAsync(
       ITextureProvider textureProvider,
-      TextureCreationRequest request)
+      TextureCreationRequest request,
+      CancellationToken cancellationToken)
   {
+    await Task.Yield();
+    cancellationToken.ThrowIfCancellationRequested();
     using TextImageRenderer renderer = new(
         request.FontPath,
         request.FontSize,
@@ -627,11 +889,234 @@ internal sealed class RtlTexturePresentationService : IDisposable
         request.TextColor,
         request.BackgroundColor,
         request.MaxWidth);
+    cancellationToken.ThrowIfCancellationRequested();
     using MemoryStream stream = new();
     bitmap.Save(stream, ImageFormat.Png);
+    cancellationToken.ThrowIfCancellationRequested();
     stream.Position = 0;
     return await textureProvider.CreateFromImageAsync(stream)
         .ConfigureAwait(false);
+  }
+
+  /// <summary>
+  /// Captures one lifecycle generation's queue and publication state.
+  /// </summary>
+  private sealed class GenerationState
+  {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GenerationState"/> class.
+    /// </summary>
+    /// <param name="epoch">The lifecycle generation number.</param>
+    public GenerationState(int epoch)
+    {
+      this.Epoch = epoch;
+    }
+
+    public int Epoch { get; }
+
+    public CancellationTokenSource Cancellation { get; } = new();
+
+    public Queue<PendingTextureCreation> Queue { get; } = new();
+
+    public Dictionary<string, PendingTextureCreation> PendingByKey { get; } =
+        new(StringComparer.Ordinal);
+
+    public Queue<CompletedTextureCreation> Completed { get; } = new();
+
+    public int ActiveWorkerCount { get; set; }
+  }
+
+  /// <summary>
+  /// Represents one admitted texture creation request.
+  /// </summary>
+  /// <param name="CacheKey">The exact raster cache key.</param>
+  /// <param name="SurfaceId">The source surface for diagnostics.</param>
+  /// <param name="LanguageCode">The source language for diagnostics.</param>
+  /// <param name="CreationRequest">The exact raster inputs.</param>
+  private sealed record PendingTextureCreation(
+      string CacheKey,
+      TranslationOverlaySurfaceId SurfaceId,
+      string LanguageCode,
+      TextureCreationRequest CreationRequest);
+
+  /// <summary>
+  /// Represents one uploaded texture awaiting draw-thread publication.
+  /// </summary>
+  /// <param name="Work">The originating work item.</param>
+  /// <param name="Texture">The uploaded texture.</param>
+  private sealed record CompletedTextureCreation(
+      PendingTextureCreation Work,
+      IDalamudTextureWrap Texture);
+
+  /// <summary>
+  /// Captures exact adaptive-width policy and measurement inputs.
+  /// </summary>
+  /// <param name="Text">The logical tooltip text.</param>
+  /// <param name="FontPath">The resolved font path.</param>
+  /// <param name="FontSize">The resolved font size.</param>
+  /// <param name="LineHeightScale">The resolved line-height scale.</param>
+  /// <param name="RightToLeft">Whether measurement uses RTL format.</param>
+  /// <param name="ViewportWidth">The exact viewport width.</param>
+  /// <param name="ConfiguredMaxWidth">The exact configured width cap.</param>
+  private sealed record AdaptiveWidthInputs(
+      string Text,
+      string FontPath,
+      float FontSize,
+      float LineHeightScale,
+      bool RightToLeft,
+      float ViewportWidth,
+      float ConfiguredMaxWidth);
+
+  /// <summary>
+  /// Stores one bounded retry cooldown entry.
+  /// </summary>
+  /// <param name="RetryAfterUtc">The next eligible creation time.</param>
+  /// <param name="AccessNode">The retry LRU node.</param>
+  private sealed record RetryState(
+      DateTime RetryAfterUtc,
+      LinkedListNode<string> AccessNode);
+
+  /// <summary>
+  /// Owns a cached texture and delays final disposal while draw leases exist.
+  /// </summary>
+  private sealed class RetainedTexture : IDalamudTextureWrap
+  {
+    private readonly object textureLock = new();
+    private readonly int width;
+    private readonly int height;
+    private IDalamudTextureWrap? texture;
+    private int leaseCount;
+    private bool retired;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RetainedTexture"/> class.
+    /// </summary>
+    /// <param name="texture">The owned uploaded texture.</param>
+    public RetainedTexture(IDalamudTextureWrap texture)
+    {
+      this.texture = texture;
+      this.width = texture.Width;
+      this.height = texture.Height;
+    }
+
+    public ImTextureID Handle => this.GetHandle();
+
+    public int Width => this.width;
+
+    public int Height => this.height;
+
+    /// <summary>
+    /// Acquires one explicit draw lease.
+    /// </summary>
+    /// <returns>A texture wrapper that releases the lease on disposal.</returns>
+    public IDalamudTextureWrap Acquire()
+    {
+      lock (this.textureLock)
+      {
+        if (this.retired || this.texture == null)
+        {
+          throw new ObjectDisposedException(nameof(RetainedTexture));
+        }
+
+        this.leaseCount++;
+        return new TextureLease(this, this.width, this.height);
+      }
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+      IDalamudTextureWrap? textureToDispose = null;
+      lock (this.textureLock)
+      {
+        if (this.retired)
+        {
+          return;
+        }
+
+        this.retired = true;
+        if (this.leaseCount == 0)
+        {
+          textureToDispose = this.texture;
+          this.texture = null;
+        }
+      }
+
+      textureToDispose?.Dispose();
+    }
+
+    /// <summary>
+    /// Gets the underlying texture handle while ownership is retained.
+    /// </summary>
+    /// <returns>The texture handle.</returns>
+    public ImTextureID GetHandle()
+    {
+      lock (this.textureLock)
+      {
+        return (this.texture ??
+            throw new ObjectDisposedException(nameof(RetainedTexture))).Handle;
+      }
+    }
+
+    /// <summary>
+    /// Releases one draw lease and performs deferred disposal when retired.
+    /// </summary>
+    public void Release()
+    {
+      IDalamudTextureWrap? textureToDispose = null;
+      lock (this.textureLock)
+      {
+        if (this.leaseCount <= 0)
+        {
+          return;
+        }
+
+        this.leaseCount--;
+        if (this.retired && this.leaseCount == 0)
+        {
+          textureToDispose = this.texture;
+          this.texture = null;
+        }
+      }
+
+      textureToDispose?.Dispose();
+    }
+  }
+
+  /// <summary>
+  /// Represents one caller-owned texture draw lease.
+  /// </summary>
+  private sealed class TextureLease : IDalamudTextureWrap
+  {
+    private readonly int width;
+    private readonly int height;
+    private RetainedTexture? owner;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextureLease"/> class.
+    /// </summary>
+    /// <param name="owner">The retained cache owner.</param>
+    /// <param name="width">The texture width.</param>
+    /// <param name="height">The texture height.</param>
+    public TextureLease(RetainedTexture owner, int width, int height)
+    {
+      this.owner = owner;
+      this.width = width;
+      this.height = height;
+    }
+
+    public ImTextureID Handle => (this.owner ??
+        throw new ObjectDisposedException(nameof(TextureLease))).GetHandle();
+
+    public int Width => this.width;
+
+    public int Height => this.height;
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+      Interlocked.Exchange(ref this.owner, null)?.Release();
+    }
   }
 
   /// <summary>
