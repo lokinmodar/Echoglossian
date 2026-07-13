@@ -27,6 +27,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       = new();
 
   private bool currentToDoListDataReady;
+  private bool hasPendingToDoListTranslations;
 
   private JournalTranslationDisplayMode? lastAppliedDisplayMode;
 
@@ -125,20 +126,44 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       this.toDoRuntimeEntries[entryKey] = entryValue;
     }
 
-    if (blockingQuestLabels.Count != 0)
+    var availability = ToDoListRuntimeAvailability.FromCounts(
+        runtimeEntries.Count,
+        blockingQuestLabels.Count);
+    this.currentToDoListDataReady = availability.HasRenderableEntries;
+    this.hasPendingToDoListTranslations =
+        availability.HasPendingTranslations;
+
+    if (!availability.HasRenderableEntries)
     {
-      this.currentToDoListDataReady = false;
-      this.nextToDoListRetryUtc = DateTime.UtcNow + ToDoListRetryInterval;
+      this.nextToDoListRetryUtc = availability.HasPendingTranslations
+          ? DateTime.UtcNow + ToDoListRetryInterval
+          : DateTime.MinValue;
       this.RestoreToDoListOriginals(todoList);
       this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
       this.lastAppliedDisplayMode = null;
-      this.NotifyToDoListWaitingForQuestData(blockingQuestLabels);
+      if (availability.HasPendingTranslations)
+      {
+        this.NotifyToDoListWaitingForQuestData(blockingQuestLabels);
+      }
+      else
+      {
+        this.ClearToDoListWaitingState();
+      }
+
       return;
     }
 
-    this.currentToDoListDataReady = true;
-    this.nextToDoListRetryUtc = DateTime.MinValue;
-    this.ClearToDoListWaitingState();
+    if (availability.HasPendingTranslations)
+    {
+      this.nextToDoListRetryUtc = DateTime.UtcNow + ToDoListRetryInterval;
+      this.NotifyToDoListWaitingForQuestData(blockingQuestLabels);
+    }
+    else
+    {
+      this.nextToDoListRetryUtc = DateTime.MinValue;
+      this.ClearToDoListWaitingState();
+    }
+
     this.ApplyToDoListPresentation(todoList);
   }
 
@@ -929,14 +954,18 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       return;
     }
 
-    if (!this.currentToDoListDataReady)
+    if (!this.currentToDoListDataReady ||
+        this.hasPendingToDoListTranslations)
     {
       if (DateTime.UtcNow >= this.nextToDoListRetryUtc)
       {
         this.RefreshToDoList();
       }
 
-      return;
+      if (!this.currentToDoListDataReady)
+      {
+        return;
+      }
     }
 
     if (this.lastAppliedDisplayMode != this.Config.ToDoListTranslationDisplayMode)
@@ -962,6 +991,25 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     this.toDoNativeMutationKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
     this.currentToDoListDataReady = false;
+    this.hasPendingToDoListTranslations = false;
+    this.lastAppliedDisplayMode = null;
+    this.nextToDoListRetryUtc = DateTime.MinValue;
+    this.ClearToDoListWaitingState();
+  }
+
+  /// <inheritdoc />
+  public override unsafe void OnPluginUnload()
+  {
+    if (TryGetVisibleToDoList(out var todoList))
+    {
+      this.RestoreToDoListOriginals(todoList);
+    }
+
+    this.toDoRuntimeEntries.Clear();
+    this.toDoNativeMutationKeys.Clear();
+    this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
+    this.currentToDoListDataReady = false;
+    this.hasPendingToDoListTranslations = false;
     this.lastAppliedDisplayMode = null;
     this.nextToDoListRetryUtc = DateTime.MinValue;
     this.ClearToDoListWaitingState();

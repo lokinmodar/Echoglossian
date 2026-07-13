@@ -710,7 +710,7 @@
     <value>Quest windows</value>
   </data>
   <data name="TooltipTabTitle" xml:space="preserve">
-    <value>Tooltips</value>
+    <value>Details &amp; hover</value>
   </data>
   <data name="SelectionDialogsTabTitle" xml:space="preserve">
     <value>Selection dialogs</value>
@@ -1025,7 +1025,13 @@
     <value>This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, Plugin Overlay translation only keeps the native addon intact and uses Plugin Overlays, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in our Plugin Overlay.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Plugin Tooltip appearance</value>
+    <value>Hover Plugin Tooltip appearance</value>
+  </data>
+  <data name="HoverTooltipFontScaleLabel" xml:space="preserve">
+    <value>Plugin Tooltip font scale</value>
+  </data>
+  <data name="HoverTooltipMaxWidthLabel" xml:space="preserve">
+    <value>Plugin Tooltip max width</value>
   </data>
   <data name="HoverTooltipTextColorLabel" xml:space="preserve">
     <value>Plugin Tooltip text color</value>
@@ -1037,7 +1043,13 @@
     <value>Plugin Tooltip background opacity</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>These colors apply to Plugin Tooltips used by quest and DB-first UI surfaces.</value>
+    <value>These settings apply to hover Plugin Tooltips used by quest and DB-first UI surfaces.</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleLabel" xml:space="preserve">
+    <value>Texture text line height</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleDescription" xml:space="preserve">
+    <value>Applies to texture-backed complex-script text across hover tooltips and overlays.</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
       <value>Translate Game Main Menu</value>
@@ -1100,7 +1112,7 @@
     <value>Could not fetch models. Is Ollama running locally?</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Enable action/item detail translation and shared Plugin Tooltips</value>
+    <value>Enable action/item detail translation</value>
   </data>
   <data name="NoModelsAvailable" xml:space="preserve">
     <value>No models available.</value>

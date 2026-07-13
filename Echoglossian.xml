@@ -2015,6 +2015,18 @@
         <member name="F:Echoglossian.Config.HoverTooltipBackgroundOpacity">
             <summary>Background opacity used by Echoglossian hover tooltips.</summary>
         </member>
+        <member name="F:Echoglossian.Config.HoverTooltipFontScale">
+            <summary>Font scale used by Echoglossian hover tooltips.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.HoverTooltipMaxWidth">
+            <summary>Maximum width used by Echoglossian hover tooltips.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TexturePresentationLineHeightScale">
+            <summary>
+                Shared line-height scale used by texture-backed complex-script text
+                such as RTL hover tooltips and overlay-only surfaces.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateWideTextToast">
             <summary>Translate wide-format toast messages.</summary>
         </member>
@@ -2861,6 +2873,13 @@
         <member name="M:Echoglossian.Echoglossian.RefreshAddonHandlerRegistrations">
             <summary>
                 Re-registers addon handlers according to the current config.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResetRuntimeTranslationPresentationState">
+            <summary>
+                Clears live translation presentation state and runtime-only caches so
+                language or engine changes do not leave stale translated UI state on
+                screen.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.ReportRuntimeTranslationFailure(System.Int32,Echoglossian.TranslationFailureClassification)">
@@ -5936,6 +5955,17 @@
             <param name="config">Overlay configurations.</param>
             <param name="customTitle">Custom overlay title.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ResolveOverlayRenderWidthLimit(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Single,System.Single,System.Single)">
+            <summary>
+            Resolves the maximum window width available for one overlay render pass
+            before the content is rasterized or measured.
+            </summary>
+            <param name="config">The overlay configuration being drawn.</param>
+            <param name="baseWidth">The overlay width derived from addon geometry.</param>
+            <param name="minWidth">The minimum allowed width.</param>
+            <param name="maxWidth">The maximum allowed width.</param>
+            <returns>The width limit to use for content generation.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.MeasureOverlayTextWidth(System.String,System.String[],System.Boolean,System.Single,System.Single)">
             <summary>
             Measures the width of the overlay text using the same font family and
@@ -6000,13 +6030,23 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.DrawOverlayLine(System.String,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.DrawOverlayLine(System.String,System.Boolean,System.Boolean)">
             <summary>
                 Draws one overlay text line, centering it horizontally when enabled.
             </summary>
             <param name="line">The line to draw.</param>
             <param name="centerAligned">
                 Whether to center-align the line in the available content region.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawRenderedTextBlock(Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock,System.Boolean)">
+            <summary>
+            Draws one rendered block, aligning rasterized RTL content to the right
+            edge by default.
+            </summary>
+            <param name="block">The measured block to draw.</param>
+            <param name="centerAligned">
+            Whether the caller normally centers content in the available region.
             </param>
         </member>
         <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
@@ -10119,13 +10159,16 @@
             Supports multiline wrapping and right alignment.
             </summary>
         </member>
-        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.#ctor(System.String,System.Single,System.Drawing.FontStyle)">
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.#ctor(System.String,System.Single,System.Drawing.FontStyle,System.Single)">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.ImageGeneration.TextImageRenderer"/> class.
             </summary>
             <param name="fontPath">The path to the TTF font file to use.</param>
             <param name="fontSize">The font size to use.</param>
             <param name="style">The font style to apply (bold, italic, etc.).</param>
+            <param name="lineHeightScale">
+            The relative line-height scale used for multiline layout.
+            </param>
         </member>
         <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.RenderShapedText(System.String,System.Drawing.Color,System.Drawing.Color,System.Nullable{System.Int32})">
             <summary>
@@ -10138,6 +10181,14 @@
             <param name="maxWidth">Optional max width in pixels. If set, will cause line breaks.</param>
             <returns>A bitmap containing the shaped RTL text.</returns>
         </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.MeasureShapedText(System.String,System.Nullable{System.Int32})">
+            <summary>
+            Measures the bitmap size required to render the provided shaped text.
+            </summary>
+            <param name="text">The RTL text to measure.</param>
+            <param name="maxWidth">Optional max width in pixels used for wrapping.</param>
+            <returns>The measured bitmap size.</returns>
+        </member>
         <member name="P:Echoglossian.ImageGeneration.TextImageRenderer.FallbackFontUsed">
             <summary>
             Gets a value indicating whether a fallback font was used due to font load failure.
@@ -10146,25 +10197,49 @@
         <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.Dispose">
             <inheritdoc/>
         </member>
-        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.MeasureTextSize(System.String,System.Nullable{System.Int32})">
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.BuildTextLayout(System.Drawing.Graphics,System.Drawing.StringFormat,System.String,System.Nullable{System.Int32})">
             <summary>
-            Measures the size of the given text when rendered with the current font.
+            Builds the wrapped line layout used for both measuring and drawing.
             </summary>
-            <param name="text"></param>
-            <param name="maxWidth"></param>
-            <returns></returns>
+            <param name="graphics">The measurement graphics context.</param>
+            <param name="format">The string format used for measurement.</param>
+            <param name="text">The text to layout.</param>
+            <param name="maxWidth">The optional wrap width.</param>
+            <returns>The resolved text layout.</returns>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.ResolveWrappedLines(System.Drawing.Graphics,System.Drawing.StringFormat,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Resolves wrapped text lines for manual multiline layout.
+            </summary>
+            <param name="graphics">The measurement graphics context.</param>
+            <param name="format">The string format used for measurement.</param>
+            <param name="text">The text to wrap.</param>
+            <param name="maxWidth">The optional wrap width.</param>
+            <returns>The ordered line collection.</returns>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.CreateStringFormat">
+            <summary>
+            Creates the string format used for manual RTL line measurement and draw.
+            </summary>
+            <returns>The configured string format.</returns>
         </member>
         <member name="T:Echoglossian.ImageGeneration.TextTextureCache">
             <summary>
             LRU cache for storing generated text textures with timeout and memory tracking.
             </summary>
         </member>
-        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.#ctor(System.Int32,System.Int32)">
+        <member name="M:Echoglossian.ImageGeneration.TextTextureCache.#ctor(System.Int32,System.Int32,System.Int64,System.Int64)">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.ImageGeneration.TextTextureCache"/> class.
             </summary>
             <param name="maxCapacity">Maximum number of textures allowed.</param>
             <param name="inactivityTimeoutSeconds">Seconds after which inactive entries are evicted.</param>
+            <param name="softByteBudget">
+            Soft in-memory budget that triggers eviction of older entries.
+            </param>
+            <param name="hardByteBudget">
+            Hard in-memory budget for any single cached texture.
+            </param>
         </member>
         <member name="M:Echoglossian.ImageGeneration.TextTextureCache.GetOrCreate(System.String,System.Func{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap})">
             <summary>
@@ -10198,6 +10273,33 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:Echoglossian.ImageGeneration.TextTextureGenerator">
+            <summary>
+            Generates textures from text using a specified font and size.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureGenerator.#ctor(Dalamud.Plugin.Services.ITextureProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.ImageGeneration.TextTextureGenerator"/> class.
+            </summary>
+            <param name="textureProvider">The texture provider used to upload images.</param>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextTextureGenerator.CreateTextTextureAsync(System.String,System.String,System.Single,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Drawing.FontStyle,System.Nullable{System.Int32},System.Single)">
+            <summary>
+            Creates a texture from the specified text using the given font and size.
+            </summary>
+            <param name="text">The logical text to rasterize.</param>
+            <param name="fontPath">The font file path used for rasterization.</param>
+            <param name="fontSize">The font size in pixels.</param>
+            <param name="textColor">The rasterized foreground color.</param>
+            <param name="backgroundColor">The rasterized background color.</param>
+            <param name="fontStyle">The font style used during rasterization.</param>
+            <param name="maxWidth">Optional pixel width used for wrapping.</param>
+            <param name="lineHeightScale">
+            Shared line-height scale used during multiline rasterization.
+            </param>
+            <returns>The uploaded Dalamud texture.</returns>
+        </member>
         <member name="T:Echoglossian.LanguagesHandling.LanguageEngineSupport">
             <summary>
             Provides supported engine lists per language code, computed from vendor-verified language sets
@@ -10224,7 +10326,7 @@
             </list>
             </para>
             <remarks>
-            - Vendor sets reflect official public endpoints or official language pages as of 2026-05-15.
+            - Vendor sets reflect official public endpoints or official language pages as of 2026-07-12.
             - GTranslate follows Google’s language set; we mirror Google for that engine.
             - LibreTranslate’s list can vary by instance; we use the canonical list exposed by the public upstream instance.
             - Region normalization is applied per engine (e.g., <c>pt-PT</c>, <c>pt-BR</c>, <c>zh-CN</c>, <c>zh-TW</c>).
@@ -10268,7 +10370,8 @@
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetGoogleCommonCodes">
             <summary>
-            Common Google/GTranslate codes we explicitly track; uncommon codes are still treated as supported.
+            Google/GTranslate codes verified against the current official supported-language page for
+            the languages exposed by the plugin.
             </summary>
         </member>
         <member name="M:Echoglossian.LanguagesHandling.LanguageEngineSupport.GetDeepLCodes">
@@ -10377,6 +10480,9 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
@@ -10504,6 +10610,27 @@
             <returns>
                 The target text with the source separator restored when applicable;
                 otherwise the original target text.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveActionMenuTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the readable text nodes that belong to the active
+                <c>ActionMenu</c> page so capture does not stop at the first
+                readable child exposed by each top-level component.
+            </summary>
+            <param name="addon">The live addon instance.</param>
+            <returns>The readable text-node addresses in tree order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldCaptureActionMenuTextNode(System.UInt32,System.String)">
+            <summary>
+                Determines whether one observed ActionMenu text node should
+                participate in payload capture.
+            </summary>
+            <param name="nodeId">The live text-node identifier.</param>
+            <param name="visibleText">The visible text content.</param>
+            <returns>
+                <see langword="true" /> when the node belongs to the active
+                ActionMenu page surface; otherwise <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareTranslatedText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
@@ -11666,7 +11793,7 @@
                 projected successfully; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.HasExpectedCharacterStatusCoverage(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.HasExpectedTranslatedSectionCoverage(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether one projected CharacterStatus payload pair is
                 rich enough to be trusted as the latest canonical fallback.
@@ -11700,6 +11827,9 @@
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CanCaptureSupplementalCharacterText(System.String)">
@@ -11854,7 +11984,7 @@
                 label; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.AppendStableHeaderFallbackTranslations(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.AppendStableHeaderFallbackTranslations(System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.String)">
             <summary>
                 Appends one local fallback translation set for the stable root
                 Character header labels so the window title and tab labels can
@@ -11865,7 +11995,7 @@
             <param name="translatedLookup">The original-to-translated lookup.</param>
             <param name="knownTexts">The known-text set to extend.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterWindowHandler.TryGetStableHeaderFallbackTranslation(System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one local fallback translation for the stable root
                 Character header labels.
@@ -11972,6 +12102,27 @@
                 <see langword="true" /> when the text node is stable enough to
                 capture and later reapply; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldCaptureAtkValue(System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue@,System.String)">
+            <summary>
+                Determines whether one visible <c>AtkValue</c> string should
+                participate in the canonical payload for this addon.
+            </summary>
+            <param name="index">The live ATK value index.</param>
+            <param name="value">The live ATK value.</param>
+            <param name="visibleText">The currently visible text.</param>
+            <returns>
+                <see langword="true" /> when the ATK value is stable enough to
+                capture and later reapply; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the text-node addresses that participate in capture,
+                apply, restore, and hover registration for this addon.
+            </summary>
+            <param name="addon">The live addon instance.</param>
+            <returns>The text-node addresses in stable tree order.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeCapturedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
             <summary>
@@ -12507,6 +12658,12 @@
             <param name="payload">The original payload.</param>
             <param name="payloadKey">The stable payload key.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RequestRefresh">
+            <summary>
+            Requests one fresh pre-draw re-resolution pass after background
+            translation or persistence work completes.
+            </summary>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryGetFailedPayloadRetryUtc(System.String,System.DateTime@)">
             <summary>
                 Tries to resolve the next retry instant for one payload that
@@ -12846,6 +13003,41 @@
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState.TranslatedPayload">
             <summary>The translated payload.</summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstPreDrawRefreshPolicy">
+            <summary>
+            Centralizes the pre-draw short-circuit decision for DB-first addon handlers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstPreDrawRefreshPolicy.ShouldShortCircuit(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Determines whether the current pre-draw pass can skip a full DB-first
+            refresh and keep the existing applied state.
+            </summary>
+            <param name="sameDisplayMode">
+            Whether the effective display mode still matches the last applied mode.
+            </param>
+            <param name="shouldContinueAppliedStateRefresh">
+            Whether the handler is still inside its bounded post-lifecycle refresh
+            window.
+            </param>
+            <param name="refreshRequested">
+            Whether background translation work explicitly requested one fresh
+            re-resolution pass.
+            </param>
+            <param name="hasRuntimeState">
+            Whether translated native state is currently applied.
+            </param>
+            <param name="usesHoverTooltips">
+            Whether the current display mode still depends on hover registrations.
+            </param>
+            <param name="hasLastResolvedState">
+            Whether one prior resolved payload pair exists for tooltip refresh.
+            </param>
+            <returns>
+            <see langword="true"/> when the handler may short-circuit the current
+            pre-draw pass; otherwise, <see langword="false"/>.
+            </returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.SyncCutSceneSelectStringOverlayBoundsDelegate">
             <summary>
                 Synchronizes the overlay bounds for the visible CutSceneSelectString addon.
@@ -13151,6 +13343,18 @@
             </summary>
             <returns>Always <see langword="true" />.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler">
             <summary>
                 Handles DB-first translation for the main command menu.
@@ -13169,6 +13373,15 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.OnLifecycleEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.ShouldCaptureAtkValue(System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue@,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryResolveSupplementalOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler.TryRegisterCustomHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
@@ -13620,7 +13833,7 @@
             <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
             <returns>True when the node is visible and the bounds are usable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Boolean@)">
             <summary>
                 Applies translations to the active Journal detail box.
             </summary>
@@ -13636,28 +13849,45 @@
             <param name="objectiveNode">The objective text node.</param>
             <param name="summaryContainerNode">The summary container node, if any.</param>
             <param name="summaryNode">The optional summary text node.</param>
+            <param name="hasPendingTranslations">
+                Whether one or more translated payloads are still pending.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalDetail">
             <summary>
                 Translates the active JournalDetail addon.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateCompletedQuest(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateCompletedQuest(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Boolean@)">
             <summary>
                 Translates a completed JournalDetail quest view.
             </summary>
             <param name="journalDetail">The journal detail addon.</param>
+            <param name="hasPendingTranslations">
+                Whether one or more translated payloads are still pending.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Boolean@)">
             <summary>
                 Translates the active JournalDetail detail view.
             </summary>
             <param name="journalDetail">The live JournalDetail addon.</param>
+            <param name="hasPendingTranslations">
+                Whether one or more translated payloads are still pending.
+            </param>
             <returns><c>true</c> when the active detail pane is the current-quest view.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.OnJournalDetailEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Handles JournalDetail refresh events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.OnJournalDetailPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Retries JournalDetail application after delayed DB persistence and
+                reacts to display-mode changes while the addon remains open.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
@@ -13669,6 +13899,29 @@
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.OnPluginUnload">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetVisibleJournalDetail(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Tries to resolve the visible JournalDetail addon.
+            </summary>
+            <param name="journalDetail">The visible JournalDetail addon.</param>
+            <returns>True when the addon is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RestoreJournalDetailOriginals(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Restores the original JournalDetail text snapshot for the currently
+                visible quest scope.
+            </summary>
+            <param name="journalDetail">The live JournalDetail addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ClearJournalDetailRuntimeState">
+            <summary>
+                Clears JournalDetail runtime state after the visible UI has been
+                restored.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot">
             <summary>
@@ -13820,12 +14073,23 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Retries Journal quest-list application after delayed DB persistence
+                and reacts to display-mode changes while the addon remains open.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Clears Journal quest-list hover registrations when the addon closes.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnPluginUnload">
+            <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListCachedText(System.String,System.String@)">
             <summary>
@@ -13878,6 +14142,34 @@
             </summary>
             <param name="nodeKey">The live quest-name node key.</param>
             <param name="originalText">The original quest title.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetVisibleJournal(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Tries to resolve the visible Journal addon.
+            </summary>
+            <param name="journal">The visible Journal addon.</param>
+            <returns>True when the Journal addon is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalQuestListNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*@)">
+            <summary>
+                Tries to resolve the visible Journal quest-list component.
+            </summary>
+            <param name="journal">The live Journal addon.</param>
+            <param name="questListNode">The visible quest-list component.</param>
+            <returns>True when the visible quest-list component was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RestoreJournalOriginals(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Restores original Journal quest-list text for any row that is
+                currently mutated by this handler.
+            </summary>
+            <param name="journal">The live Journal addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ClearJournalRuntimeState">
+            <summary>
+                Clears Journal quest-list runtime state after the visible UI has been
+                restored.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TrimJournalListRuntimeState(System.Collections.Generic.HashSet{System.String},System.Collections.Generic.HashSet{System.IntPtr})">
             <summary>
@@ -13963,6 +14255,12 @@
                 Returns the event handlers required to drive the quest addon flow.
             </summary>
             <returns>A dictionary mapping addon events to combined delegates.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.OnPluginUnload">
+            <summary>
+                Clears any visible native quest UI state when the handler is being
+                rebuilt or the plugin is unloading.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
             <summary>
@@ -15085,6 +15383,9 @@
             <param name="type">The lifecycle event.</param>
             <param name="args">The lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.OnPluginUnload">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest">
             <summary>
                 Represents one visible ToDoList quest row and the objective rows
@@ -15151,6 +15452,54 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.TranslatedText">
             <summary>The translated text from the DB.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListRuntimeAvailability">
+            <summary>
+            Describes whether the current ToDoList runtime can render any translated
+            state and whether it still has pending quest rows to retry.
+            </summary>
+            <param name="HasRenderableEntries">
+            Whether the current runtime resolved at least one visible quest or
+            objective row.
+            </param>
+            <param name="HasPendingTranslations">
+            Whether at least one visible quest still lacks canonical translated data.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListRuntimeAvailability.#ctor(System.Boolean,System.Boolean)">
+            <summary>
+            Describes whether the current ToDoList runtime can render any translated
+            state and whether it still has pending quest rows to retry.
+            </summary>
+            <param name="HasRenderableEntries">
+            Whether the current runtime resolved at least one visible quest or
+            objective row.
+            </param>
+            <param name="HasPendingTranslations">
+            Whether at least one visible quest still lacks canonical translated data.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListRuntimeAvailability.HasRenderableEntries">
+            <summary>
+            Whether the current runtime resolved at least one visible quest or
+            objective row.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListRuntimeAvailability.HasPendingTranslations">
+            <summary>
+            Whether at least one visible quest still lacks canonical translated data.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListRuntimeAvailability.FromCounts(System.Int32,System.Int32)">
+            <summary>
+            Builds one availability snapshot from the current resolved-entry and
+            blocking-quest counts.
+            </summary>
+            <param name="resolvedEntryCount">The number of resolved runtime rows.</param>
+            <param name="blockingQuestCount">
+            The number of visible quests still waiting on translated data.
+            </param>
+            <returns>The derived availability snapshot.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
             <summary>
@@ -16698,6 +17047,16 @@
                 A list of readable, visible text-node addresses in tree order.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves every readable, visible text node found anywhere in the live
+                addon tree.
+            </summary>
+            <param name="addon">The live addon instance.</param>
+            <returns>
+                A list of readable, visible text-node addresses in tree order.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
             <summary>
                 Resolves the first text node found anywhere in the provided node list,
@@ -16725,14 +17084,19 @@
             <param name="nodeCount">The number of nodes in the list.</param>
             <returns>The first readable text node, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
             <summary>
                 Collects readable, visible text nodes from a node list.
             </summary>
             <param name="nodeList">The node list to inspect.</param>
             <param name="nodeCount">The number of nodes in the list.</param>
             <param name="results">Receives the collected node addresses.</param>
-            <param name="seen">Receives the node addresses already collected.</param>
+            <param name="seenTextNodes">
+                Receives the text-node addresses already collected.
+            </param>
+            <param name="visitedNodes">
+                Receives every structural node address already traversed.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
             <summary>
@@ -16761,13 +17125,29 @@
             <param name="node">The node to inspect.</param>
             <returns>The first readable text node, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
             <summary>
                 Collects readable, visible text nodes from a single node subtree.
             </summary>
             <param name="node">The node to inspect.</param>
             <param name="results">Receives the collected node addresses.</param>
-            <param name="seen">Receives the node addresses already collected.</param>
+            <param name="seenTextNodes">
+                Receives the text-node addresses already collected.
+            </param>
+            <param name="visitedNodes">
+                Receives every structural node address already traversed.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.TryVisitNodeAddress(System.Collections.Generic.HashSet{System.IntPtr},System.IntPtr)">
+            <summary>
+                Records one structural node address for the current traversal.
+            </summary>
+            <param name="visitedNodes">The addresses already traversed.</param>
+            <param name="nodeAddress">The structural node address to record.</param>
+            <returns>
+                <see langword="true" /> when the node was not visited before;
+                otherwise <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.HasReadableText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
@@ -19506,12 +19886,47 @@
             <param name="sourceLanguage">The source language.</param>
             <param name="targetLanguage">The target language.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.HoverTooltipLayoutPolicy">
+            <summary>
+            Resolves shared layout values for plugin-managed hover tooltips.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipLayoutPolicy.ResolveTextureFontScale(Echoglossian.Config)">
+            <summary>
+                Resolves the font scale used for texture-backed hover tooltips.
+            </summary>
+            <param name="config">The live plugin configuration.</param>
+            <returns>The clamped font scale.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipLayoutPolicy.ResolveTextureMaxWidth(Echoglossian.Config,System.Single)">
+            <summary>
+                Resolves the maximum width used for texture-backed hover tooltips.
+            </summary>
+            <param name="config">The live plugin configuration.</param>
+            <param name="viewportWidth">The current main-viewport width.</param>
+            <returns>The clamped tooltip width.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipLayoutPolicy.ResolveTextureMaxWidth(Echoglossian.Config,System.Single,System.String,System.Func{System.Single,System.Single})">
+            <summary>
+                Resolves the maximum width used for texture-backed hover tooltips,
+                including adaptive widening for long text and optional measured
+                candidate selection for very long text.
+            </summary>
+            <param name="config">The live plugin configuration.</param>
+            <param name="viewportWidth">The current main-viewport width.</param>
+            <param name="text">The tooltip text being laid out.</param>
+            <param name="measureHeightAtWidth">
+            Optional callback used to measure rendered text height at one candidate
+            width. Only invoked for very long text.
+            </param>
+            <returns>The resolved tooltip width.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.HoverTooltipManager">
             <summary>
                 Tracks hover rectangles and draws DelvUI-style tooltips on the cursor.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.#ctor(Echoglossian.Config,Echoglossian.PluginUI.Helpers.UINewFontHandler)">
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.#ctor(Echoglossian.Config,Echoglossian.PluginUI.Helpers.UINewFontHandler,Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.HoverTooltipManager" />
                 class.
@@ -19706,6 +20121,105 @@
             <param name="title">The title line.</param>
             <param name="body">The body text.</param>
             <returns>The combined tooltip text.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver">
+            <summary>
+                Resolves canonical original and translated MainCommand labels from the
+                sheet-backed <see cref="T:Echoglossian.EFCoreSqlite.Models.MainCommandText" /> cache.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveTranslatedIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.Int32,System.String}@)">
+            <summary>
+                Tries to translate one integer-keyed MainCommand payload map from
+                canonical cache data.
+            </summary>
+            <param name="sourceValues">The original visible values.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="translatedValues">
+                Receives the translated values when any entry resolves.
+            </param>
+            <returns>
+                <see langword="true" /> when at least one visible entry resolves to
+                a different translated value; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveOriginalIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.Int32,System.String}@)">
+            <summary>
+                Tries to recover one canonical original integer-keyed MainCommand
+                payload map from visible translated values.
+            </summary>
+            <param name="sourceValues">The currently visible values.</param>
+            <param name="targetLanguage">The active target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalValues">
+                Receives the canonical original values when any entry resolves.
+            </param>
+            <returns>
+                <see langword="true" /> when at least one visible entry resolves to
+                a different canonical original value; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveTranslatedTextMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.String,System.String}@)">
+            <summary>
+                Tries to translate one text-node MainCommand payload map from
+                canonical cache data.
+            </summary>
+            <param name="sourceValues">The original visible values.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="translatedValues">
+                Receives the translated values when any entry resolves.
+            </param>
+            <returns>
+                <see langword="true" /> when at least one visible entry resolves to
+                a different translated value; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveOriginalTextMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.String,System.String}@)">
+            <summary>
+                Tries to recover one canonical original text-node MainCommand
+                payload map from visible translated values.
+            </summary>
+            <param name="sourceValues">The currently visible values.</param>
+            <param name="targetLanguage">The active target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="originalValues">
+                Receives the canonical original values when any entry resolves.
+            </param>
+            <returns>
+                <see langword="true" /> when at least one visible entry resolves to
+                a different canonical original value; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.ResolveTranslatedText(System.String,System.String,System.Int32,System.String)">
+            <summary>
+                Resolves one translated MainCommand label from canonical cache,
+                falling back to the original text when no exact translation exists.
+            </summary>
+            <param name="originalText">The original visible text.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The translated text, or the original text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.ResolveOriginalText(System.String,System.String,System.Int32,System.String)">
+            <summary>
+                Resolves one canonical original MainCommand label from canonical
+                cache, falling back to the visible text when no exact reverse match
+                exists.
+            </summary>
+            <param name="visibleText">The currently visible text.</param>
+            <param name="targetLanguage">The active target language code.</param>
+            <param name="engine">The translation-engine identifier.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The canonical original text, or the visible text.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper">
             <summary>
@@ -23296,6 +23810,16 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip appearance.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipFontScaleLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip font scale.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.HoverTooltipMaxWidthLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip max width.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.HoverTooltipBackgroundColorLabel">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip background color.
@@ -23314,6 +23838,16 @@
         <member name="P:Echoglossian.Properties.Resources.HoverTooltipTextColorLabel">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip text color.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TexturePresentationLineHeightScaleLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Texture text line height.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TexturePresentationLineHeightScaleDescription">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Applies to texture-backed complex-script text across hover tooltips and overlays..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ImguiAdjustmentsLabel">
@@ -27680,6 +28214,267 @@
                 task result contains the translated text.
             </returns>
         </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.LanguagePresentationPolicy">
+            <summary>
+            Centralizes per-language presentation and activation capabilities for
+            translated ImGui surfaces.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.LanguagePresentationPolicy.IsRtlLanguage(System.Int32)">
+            <summary>
+            Gets whether the provided language uses the approved RTL presentation
+            path.
+            </summary>
+            <param name="languageId">The selected language identifier.</param>
+            <returns>
+            <see langword="true"/> when the language should use the RTL path;
+            otherwise, <see langword="false"/>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.LanguagePresentationPolicy.ShouldRightAlign(System.Int32)">
+            <summary>
+            Gets whether translated plugin-owned text for the provided language
+            should align to the right edge by default.
+            </summary>
+            <param name="languageId">The selected language identifier.</param>
+            <returns>
+            <see langword="true"/> when the language uses RTL alignment semantics;
+            otherwise, <see langword="false"/>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.LanguagePresentationPolicy.UsesTexturePresentation(System.Int32)">
+            <summary>
+            Gets whether the language should be rendered through the texture-backed
+            complex-text presentation path for plugin-owned ImGui surfaces.
+            </summary>
+            <param name="languageId">The selected language identifier.</param>
+            <returns>
+            <see langword="true"/> when the language should avoid plain ImGui text;
+            otherwise, <see langword="false"/>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.LanguagePresentationPolicy.RequiresOverlayOnly(System.Int32)">
+            <summary>
+            Gets whether the language must remain overlay-only in the plugin.
+            </summary>
+            <param name="languageId">The selected language identifier.</param>
+            <returns>
+            <see langword="true"/> when native mutation must stay disabled;
+            otherwise, <see langword="false"/>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.LanguagePresentationPolicy.IsUnsupportedLanguage(System.Int32)">
+            <summary>
+            Gets whether the language remains unsupported by the current plugin
+            runtime.
+            </summary>
+            <param name="languageId">The selected language identifier.</param>
+            <returns>
+            <see langword="true"/> when activation must stay blocked; otherwise,
+            <see langword="false"/>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.LanguagePresentationPolicy.ApplyLanguageFlags(Echoglossian.Config)">
+            <summary>
+            Applies the current language presentation flags to the live config.
+            </summary>
+            <param name="config">The configuration to update.</param>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock">
+            <summary>
+            Represents one measured block of rendered text content.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock.#ctor(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.Numerics.Vector2,Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap,System.Collections.Generic.IReadOnlyList{System.String},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock"/> class.
+            </summary>
+            <param name="backendKind">The backend used to render the block.</param>
+            <param name="measuredSize">The measured block size in pixels.</param>
+            <param name="texture">
+            The backing texture when the block was rasterized.
+            </param>
+            <param name="lines">
+            The plain text lines when the block uses the standard ImGui path.
+            </param>
+            <param name="rightAligned">
+            Whether the rendered block should align to the right edge by default.
+            </param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock.BackendKind">
+            <summary>
+            Gets the backend used to render the block.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock.MeasuredSize">
+            <summary>
+            Gets the measured block size in pixels.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock.Texture">
+            <summary>
+            Gets the backing texture when the block was rasterized.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock.Lines">
+            <summary>
+            Gets the logical lines when the block uses plain ImGui text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock.RightAligned">
+            <summary>
+            Gets a value indicating whether the block should align to the right edge.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService">
+            <summary>
+            Generates and caches texture-backed render blocks for complex-script text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,Dalamud.Plugin.Services.ITextureProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService"/> class.
+            </summary>
+            <param name="configuration">The live plugin configuration.</param>
+            <param name="textureProvider">The texture provider used to upload images.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.TryRender(Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest)">
+            <summary>
+            Tries to produce a measured render block for the provided texture-backed
+            presentation request.
+            </summary>
+            <param name="request">The presentation request.</param>
+            <returns>
+            The rendered block when generation succeeded; otherwise,
+            <see langword="null"/>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.Clear">
+            <summary>
+            Clears generated texture state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.GetDebugStats">
+            <summary>
+            Gets debug information about the underlying cache.
+            </summary>
+            <returns>Current cache count and estimated memory usage.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.ResolveAdaptiveHoverTooltipMaxWidth(Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.Single)">
+            <summary>
+            Resolves the adaptive wrap width used for texture-backed hover tooltips.
+            Results are cached by text, font, and viewport characteristics so
+            measurement is paid at most once per unique layout input.
+            </summary>
+            <param name="request">The hover tooltip layout request.</param>
+            <param name="viewportWidth">The current main-viewport width.</param>
+            <returns>The resolved hover-tooltip wrap width.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest">
+            <summary>
+            Describes one translated text presentation request for an ImGui-owned
+            surface.
+            </summary>
+            <param name="Text">The logical text to present.</param>
+            <param name="LanguageId">The selected target language identifier.</param>
+            <param name="LanguageCode">The selected target language code.</param>
+            <param name="MaxWidth">The maximum content width available to the backend.</param>
+            <param name="FontScale">The relative font scale requested by the surface.</param>
+            <param name="ShouldUseGeneralFont">
+            Whether the general/original-text font path should be used.
+            </param>
+            <param name="TextColor">The foreground text color.</param>
+            <param name="BackgroundColor">The preferred background color.</param>
+            <param name="SurfaceId">The surface requesting presentation.</param>
+            <param name="CenterAligned">
+            Whether the caller normally centers the content in the available region.
+            </param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.#ctor(System.String,System.Int32,System.String,System.Single,System.Single,System.Boolean,System.Numerics.Vector4,System.Numerics.Vector4,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,System.Boolean)">
+            <summary>
+            Describes one translated text presentation request for an ImGui-owned
+            surface.
+            </summary>
+            <param name="Text">The logical text to present.</param>
+            <param name="LanguageId">The selected target language identifier.</param>
+            <param name="LanguageCode">The selected target language code.</param>
+            <param name="MaxWidth">The maximum content width available to the backend.</param>
+            <param name="FontScale">The relative font scale requested by the surface.</param>
+            <param name="ShouldUseGeneralFont">
+            Whether the general/original-text font path should be used.
+            </param>
+            <param name="TextColor">The foreground text color.</param>
+            <param name="BackgroundColor">The preferred background color.</param>
+            <param name="SurfaceId">The surface requesting presentation.</param>
+            <param name="CenterAligned">
+            Whether the caller normally centers the content in the available region.
+            </param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.Text">
+            <summary>The logical text to present.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.LanguageId">
+            <summary>The selected target language identifier.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.LanguageCode">
+            <summary>The selected target language code.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.MaxWidth">
+            <summary>The maximum content width available to the backend.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.FontScale">
+            <summary>The relative font scale requested by the surface.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.ShouldUseGeneralFont">
+            <summary>
+            Whether the general/original-text font path should be used.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.TextColor">
+            <summary>The foreground text color.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.BackgroundColor">
+            <summary>The preferred background color.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.SurfaceId">
+            <summary>The surface requesting presentation.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.CenterAligned">
+            <summary>
+            Whether the caller normally centers the content in the available region.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind">
+            <summary>
+            Identifies the backend used to present translated text on ImGui-owned
+            surfaces.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind.PlainImGui">
+            <summary>
+            Uses the existing plain ImGui text APIs.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind.RtlTexture">
+            <summary>
+            Uses a texture generated from RTL text.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.TextPresentationResolver">
+            <summary>
+            Resolves which presentation backend should be used for a text request.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.TextPresentationResolver.ResolveBackendKind(Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest)">
+            <summary>
+            Resolves the backend kind for the provided request.
+            </summary>
+            <param name="request">The presentation request.</param>
+            <returns>The resolved backend kind.</returns>
+        </member>
         <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId">
             <summary>
                 Identifies one overlay surface using a stable internal key that does not
@@ -27822,30 +28617,6 @@
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for chat bubble translations.
             </summary>
             <param name="config"></param>
-            <returns></returns>
-        </member>
-        <member name="T:TextTextureGenerator">
-            <summary>
-            Generates textures from text using a specified font and size.
-            </summary>
-        </member>
-        <member name="M:TextTextureGenerator.#ctor(Dalamud.Plugin.Services.ITextureProvider)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TextTextureGenerator"/> class.
-            </summary>
-            <param name="textureProvider"></param>
-        </member>
-        <member name="M:TextTextureGenerator.CreateTextTextureAsync(System.String,System.String,System.Single,System.Nullable{System.Drawing.Color},System.Nullable{System.Drawing.Color},System.Drawing.FontStyle,System.Nullable{System.Int32})">
-            <summary>
-            Creates a texture from the specified text using the given font and size.
-            </summary>
-            <param name="text"></param>
-            <param name="fontPath"></param>
-            <param name="fontSize"></param>
-            <param name="textColor"></param>
-            <param name="backgroundColor"></param>
-            <param name="fontStyle"></param>
-            <param name="maxWidth"></param>
             <returns></returns>
         </member>
         <member name="T:Microsoft.Extensions.DependencyInjection.DiscoveredServicesExtensions">

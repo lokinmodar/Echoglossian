@@ -17,6 +17,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
   private const string JournalListHoverPrefix = "JournalList-";
 
+  private static readonly TimeSpan JournalRetryInterval =
+      TimeSpan.FromSeconds(2);
+
   private readonly Dictionary<string, string> journalListTextCache =
       new(StringComparer.Ordinal);
 
@@ -28,6 +31,12 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   private readonly HashSet<nint> journalListNativeMutationNodeKeys =
       [];
 
+  private bool hasPendingJournalTranslations;
+
+  private JournalTranslationDisplayMode? lastAppliedDisplayMode;
+
+  private DateTime nextJournalRetryUtc = DateTime.MinValue;
+
   /// <summary>
   ///     Initializes a new instance of the <see cref="JournalHandler" /> class.
   /// </summary>
@@ -37,6 +46,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PreUpdate, this.OnJournalQuestEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnJournalQuestEvent);
+    this.RegisterHandler(AddonEvent.PreDraw, this.OnJournalPreDrawEvent);
     this.RegisterHandler(AddonEvent.PreHide, this.OnJournalCleanupEvent);
     this.RegisterHandler(AddonEvent.PreFinalize, this.OnJournalCleanupEvent);
   }
@@ -90,16 +100,16 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   /// </summary>
   private unsafe void TranslateJournalQuests()
   {
-    if (!this.Config.TranslateJournal)
+    if (!TryGetVisibleJournal(out var journal))
     {
       return;
     }
 
-    var atkStage = AtkStage.Instance();
-    var journal =
-        atkStage->RaptureAtkUnitManager->GetAddonByName("Journal");
-    if (journal == null || !journal->IsVisible)
+    if (!this.Config.TranslateJournal ||
+        this.DisableTranslationAccordingToState())
     {
+      this.RestoreJournalOriginals(journal);
+      this.ClearJournalRuntimeState();
       return;
     }
 
@@ -108,16 +118,10 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
     }
 
+    var hasPendingTranslations = false;
     try
     {
-      var questListRoot = journal->GetNodeById(25);
-      if (questListRoot == null || !questListRoot->IsVisible())
-      {
-        return;
-      }
-
-      var questListNode = questListRoot->GetAsAtkComponentNode()->Component;
-      if (questListNode == null)
+      if (!TryGetJournalQuestListNode(journal, out var questListNode))
       {
         return;
       }
@@ -234,6 +238,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               originalQuestName);
           var translatedQuestNameReady = !string.IsNullOrWhiteSpace(
               foundQuestPlate.TranslatedQuestName);
+          hasPendingTranslations |= !translatedQuestNameReady;
           var translatedQuestName = string.IsNullOrWhiteSpace(
                   foundQuestPlate.TranslatedQuestName)
               ? originalQuestName
@@ -283,6 +288,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         this.RememberJournalListOriginalText(
             questNameNodeKey,
             originalQuestName);
+        hasPendingTranslations = true;
         if (!this.JournalWritesNativeTranslation &&
             this.journalListNativeMutationNodeKeys.Remove(questNameNodeKey) &&
             !string.Equals(
@@ -310,6 +316,11 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       this.TrimJournalListRuntimeState(
           visibleJournalQuestNames,
           visibleJournalQuestNodeKeys);
+      this.hasPendingJournalTranslations = hasPendingTranslations;
+      this.nextJournalRetryUtc = hasPendingTranslations
+          ? DateTime.UtcNow + JournalRetryInterval
+          : DateTime.MinValue;
+      this.lastAppliedDisplayMode = this.Config.JournalTranslationDisplayMode;
     }
     catch (Exception e)
     {
@@ -333,22 +344,73 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
-  ///     Clears Journal quest-list hover registrations when the addon closes.
+  ///     Retries Journal quest-list application after delayed DB persistence
+  ///     and reacts to display-mode changes while the addon remains open.
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
   /// <param name="args">The addon lifecycle arguments.</param>
-  private void OnJournalCleanupEvent(AddonEvent type, AddonArgs args)
+  private unsafe void OnJournalPreDrawEvent(AddonEvent type, AddonArgs args)
   {
     if (!string.Equals(args.AddonName, JournalAddonName, StringComparison.Ordinal))
     {
       return;
     }
 
-    this.journalListTextCache.Clear();
-    this.journalListHoverCache.Clear();
-    this.journalListOriginalTextCache.Clear();
-    this.journalListNativeMutationNodeKeys.Clear();
-    this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
+    if (!TryGetVisibleJournal(out var journal))
+    {
+      return;
+    }
+
+    if (!this.Config.TranslateJournal ||
+        this.DisableTranslationAccordingToState())
+    {
+      this.RestoreJournalOriginals(journal);
+      this.ClearJournalRuntimeState();
+      return;
+    }
+
+    if (this.lastAppliedDisplayMode != this.Config.JournalTranslationDisplayMode)
+    {
+      this.TranslateJournalQuests();
+      return;
+    }
+
+    if (this.hasPendingJournalTranslations &&
+        DateTime.UtcNow >= this.nextJournalRetryUtc)
+    {
+      this.TranslateJournalQuests();
+    }
+  }
+
+  /// <summary>
+  ///     Clears Journal quest-list hover registrations when the addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private unsafe void OnJournalCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (!string.Equals(args.AddonName, JournalAddonName, StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    if (TryGetVisibleJournal(out var journal))
+    {
+      this.RestoreJournalOriginals(journal);
+    }
+
+    this.ClearJournalRuntimeState();
+  }
+
+  /// <inheritdoc />
+  public override unsafe void OnPluginUnload()
+  {
+    if (TryGetVisibleJournal(out var journal))
+    {
+      this.RestoreJournalOriginals(journal);
+    }
+
+    this.ClearJournalRuntimeState();
   }
 
   /// <summary>
@@ -462,6 +524,120 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     }
 
     this.journalListOriginalTextCache[nodeKey] = originalText;
+  }
+
+  /// <summary>
+  ///     Tries to resolve the visible Journal addon.
+  /// </summary>
+  /// <param name="journal">The visible Journal addon.</param>
+  /// <returns>True when the Journal addon is visible.</returns>
+  private static unsafe bool TryGetVisibleJournal(out AtkUnitBase* journal)
+  {
+    journal = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+        JournalAddonName);
+    return journal != null && journal->IsVisible;
+  }
+
+  /// <summary>
+  ///     Tries to resolve the visible Journal quest-list component.
+  /// </summary>
+  /// <param name="journal">The live Journal addon.</param>
+  /// <param name="questListNode">The visible quest-list component.</param>
+  /// <returns>True when the visible quest-list component was resolved.</returns>
+  private static unsafe bool TryGetJournalQuestListNode(
+      AtkUnitBase* journal,
+      out AtkComponentBase* questListNode)
+  {
+    questListNode = null;
+    if (journal == null || !journal->IsVisible)
+    {
+      return false;
+    }
+
+    var questListRoot = journal->GetNodeById(25);
+    if (questListRoot == null || !questListRoot->IsVisible())
+    {
+      return false;
+    }
+
+    var questListComponentNode = questListRoot->GetAsAtkComponentNode();
+    if (questListComponentNode == null || questListComponentNode->Component == null)
+    {
+      return false;
+    }
+
+    questListNode = questListComponentNode->Component;
+    return true;
+  }
+
+  /// <summary>
+  ///     Restores original Journal quest-list text for any row that is
+  ///     currently mutated by this handler.
+  /// </summary>
+  /// <param name="journal">The live Journal addon.</param>
+  private unsafe void RestoreJournalOriginals(AtkUnitBase* journal)
+  {
+    if (!TryGetJournalQuestListNode(journal, out var questListNode))
+    {
+      this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
+      return;
+    }
+
+    for (var i = 0; i < questListNode->UldManager.NodeListCount; i++)
+    {
+      var rowNode = questListNode->UldManager.NodeList[i];
+      if (rowNode == null ||
+          !rowNode->IsVisible() ||
+          rowNode->NodeId == 5 ||
+          rowNode->Type == NodeType.Collision ||
+          rowNode->Type == NodeType.Res)
+      {
+        continue;
+      }
+
+      var questItemNode = rowNode->GetAsAtkComponentNode();
+      if (questItemNode == null || questItemNode->Component == null)
+      {
+        continue;
+      }
+
+      var questNameNode = questItemNode->Component->UldManager.SearchNodeById(3);
+      if (questNameNode == null ||
+          !questNameNode->IsVisible() ||
+          questNameNode->Type != NodeType.Text)
+      {
+        continue;
+      }
+
+      var questNameNodeKey = (nint)questNameNode;
+      if (!this.journalListNativeMutationNodeKeys.Remove(questNameNodeKey) ||
+          !this.TryGetJournalListOriginalText(
+              questNameNodeKey,
+              out var originalQuestName))
+      {
+        continue;
+      }
+
+      questNameNode->GetAsAtkTextNode()->SetText(originalQuestName);
+    }
+
+    this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
+  }
+
+  /// <summary>
+  ///     Clears Journal quest-list runtime state after the visible UI has been
+  ///     restored.
+  /// </summary>
+  private void ClearJournalRuntimeState()
+  {
+    this.journalListTextCache.Clear();
+    this.journalListHoverCache.Clear();
+    this.journalListOriginalTextCache.Clear();
+    this.journalListNativeMutationNodeKeys.Clear();
+    this.hasPendingJournalTranslations = false;
+    this.lastAppliedDisplayMode = null;
+    this.nextJournalRetryUtc = DateTime.MinValue;
+    this.RemoveHoverTooltipsByPrefix(JournalListHoverPrefix);
   }
 
   /// <summary>

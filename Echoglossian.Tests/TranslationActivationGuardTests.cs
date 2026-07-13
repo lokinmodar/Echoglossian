@@ -15,13 +15,16 @@ namespace Echoglossian.Tests;
 public class TranslationActivationGuardTests
 {
     /// <summary>
-    /// Ensures unsupported languages short-circuit translation activation.
+    /// Ensures stale persisted unsupported flags do not keep normal supported
+    /// languages blocked now that hard-coded unsupported ids are no longer the
+    /// source of truth.
     /// </summary>
     [Fact]
-    public void GetBlockReason_UnsupportedLanguage_ReturnsUnsupportedLanguage()
+    public void GetBlockReason_EnglishWithStaleUnsupportedFlag_DoesNotReturnUnsupportedLanguage()
     {
         var config = new Config
         {
+            Lang = 28,
             UnsupportedLanguage = true,
         };
 
@@ -34,7 +37,34 @@ public class TranslationActivationGuardTests
 
         var result = TranslationActivationGuard.GetBlockReason(config, language);
 
-        Assert.Equal(
+        Assert.NotEqual(
+            TranslationActivationGuard.BlockReason.UnsupportedLanguage,
+            result);
+    }
+
+    /// <summary>
+    /// Ensures stale persisted unsupported flags do not keep approved RTL
+    /// languages blocked.
+    /// </summary>
+    [Fact]
+    public void GetBlockReason_RtlLanguageWithStaleUnsupportedFlag_DoesNotReturnUnsupportedLanguage()
+    {
+        var config = new Config
+        {
+            Lang = 2,
+            UnsupportedLanguage = true,
+        };
+
+        var language = new LanguageInfo(
+            "ar",
+            "Arabic",
+            "NotoSansArabic-Medium.ttf",
+            string.Empty,
+            [ (int)Echoglossian.TransEngines.Google ]);
+
+        var result = TranslationActivationGuard.GetBlockReason(config, language);
+
+        Assert.NotEqual(
             TranslationActivationGuard.BlockReason.UnsupportedLanguage,
             result);
     }

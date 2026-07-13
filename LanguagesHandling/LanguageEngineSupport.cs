@@ -30,7 +30,7 @@ namespace Echoglossian.LanguagesHandling
     /// </list>
     /// </para>
     /// <remarks>
-    /// - Vendor sets reflect official public endpoints or official language pages as of 2026-05-15.
+    /// - Vendor sets reflect official public endpoints or official language pages as of 2026-07-12.
     /// - GTranslate follows Google’s language set; we mirror Google for that engine.
     /// - LibreTranslate’s list can vary by instance; we use the canonical list exposed by the public upstream instance.
     /// - Region normalization is applied per engine (e.g., <c>pt-PT</c>, <c>pt-BR</c>, <c>zh-CN</c>, <c>zh-TW</c>).
@@ -83,10 +83,10 @@ namespace Echoglossian.LanguagesHandling
         private static readonly Dictionary<int, HashSet<string>> VendorSets =
             new Dictionary<int, HashSet<string>>
             {
-                // GOOGLE — explicit common codes we track; anything else is assumed supported as well.
+                // GOOGLE — plugin-exposed codes verified against the official supported-language page.
                 { Google, new HashSet<string>(GetGoogleCommonCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // GTRANSLATE — tracks Google (mirror Google logic).
+                // GTRANSLATE — tracks Google.
                 { GTranslate, new HashSet<string>(GetGoogleCommonCodes(), StringComparer.OrdinalIgnoreCase) },
 
                 // DEEPL — official supported languages; includes 2025 expansion (he, vi, th, id, zh).
@@ -141,12 +141,6 @@ namespace Echoglossian.LanguagesHandling
                     // Manual exceptions.
                     if (ManualInclusionsPerEngine.TryGetValue(engine, out var manual)
                         && normalized.Any(c => manual.Contains(c)))
-                    {
-                        _ = engines.Add(engine);
-                    }
-
-                    // Google/GTranslate: include even if a rare code variant isn't in our common list.
-                    if ((engine == Google || engine == GTranslate) && engines.Contains(engine) == false)
                     {
                         _ = engines.Add(engine);
                     }
@@ -334,121 +328,30 @@ namespace Echoglossian.LanguagesHandling
         // ------------------------
 
         /// <summary>
-        /// Common Google/GTranslate codes we explicitly track; uncommon codes are still treated as supported.
+        /// Google/GTranslate codes verified against the current official supported-language page for
+        /// the languages exposed by the plugin.
         /// </summary>
         private static IEnumerable<string> GetGoogleCommonCodes()
         {
-            // Practical superset covering codes you use today; Google supports many more.
-            yield return "af";
-            yield return "am";
-            yield return "ar";
-            yield return "az";
-            yield return "be";
-            yield return "bg";
-            yield return "bn";
-            yield return "bs";
-            yield return "ca";
-            yield return "ceb";
-            yield return "cs";
-            yield return "cy";
-            yield return "da";
-            yield return "de";
-            yield return "el";
-            yield return "en";
-            yield return "eo";
-            yield return "es";
-            yield return "et";
-            yield return "eu";
-            yield return "fa";
-            yield return "fi";
-            yield return "fil";
-            yield return "fr";
-            yield return "fy";
-            yield return "ga";
-            yield return "gd";
-            yield return "gl";
-            yield return "gu";
-            yield return "ha";
-            yield return "haw";
-            yield return "he";
-            yield return "hi";
-            yield return "hr";
-            yield return "ht";
-            yield return "hu";
-            yield return "hy";
-            yield return "id";
-            yield return "ig";
-            yield return "is";
-            yield return "it";
-            yield return "ja";
-            yield return "jv";
-            yield return "ka";
-            yield return "kk";
-            yield return "km";
-            yield return "kn";
-            yield return "ko";
-            yield return "ku";
-            yield return "ky";
-            yield return "la";
-            yield return "lb";
-            yield return "lo";
-            yield return "lt";
-            yield return "lv";
-            yield return "mk";
-            yield return "ml";
-            yield return "mn";
-            yield return "mr";
-            yield return "ms";
-            yield return "mt";
-            yield return "my";
-            yield return "nb";
-            yield return "ne";
-            yield return "nl";
-            yield return "nn";
-            yield return "no";
-            yield return "ny";
-            yield return "or";
-            yield return "pa";
-            yield return "pl";
-            yield return "ps";
-            yield return "pt";
-            yield return "pt-BR";
-            yield return "pt-PT";
-            yield return "ro";
-            yield return "ru";
-            yield return "rw";
-            yield return "si";
-            yield return "sk";
-            yield return "sl";
-            yield return "sm";
-            yield return "sn";
-            yield return "so";
-            yield return "sq";
-            yield return "sr";
-            yield return "st";
-            yield return "su";
-            yield return "sv";
-            yield return "sw";
-            yield return "ta";
-            yield return "te";
-            yield return "tg";
-            yield return "th";
-            yield return "ti";
-            yield return "tl";
-            yield return "tr";
-            yield return "tt";
-            yield return "uk";
-            yield return "ur";
-            yield return "uz";
-            yield return "vi";
-            yield return "vo";
-            yield return "xh";
-            yield return "yi";
-            yield return "yo";
-            yield return "zh";
-            yield return "zh-CN";
-            yield return "zh-TW";
-            yield return "zu";
+            var codes = new[]
+            {
+                "ace", "af", "am", "ar", "as", "az", "ba", "be", "bg", "bho", "bn", "br", "bs",
+                "bua", "ca", "ceb", "ckb", "co", "cs", "cy", "da", "de", "doi", "dv", "dz", "el",
+                "en", "eo", "es", "es-MX", "et", "eu", "fa", "ff", "fi", "fil", "fr", "fr-CA",
+                "fy", "ga", "gd", "gl", "gom", "gu", "ha", "haw", "he", "hi", "hr", "ht", "hu",
+                "hy", "id", "ig", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "ku",
+                "ky", "la", "lb", "lmo", "lo", "lt", "lv", "mg", "mi", "mk", "ml", "mn", "mr",
+                "ms", "mt", "my", "nb", "ne", "nl", "nn", "no", "nso", "ny", "oc", "or", "pa",
+                "pap", "pl", "ps", "pt", "pt-BR", "pt-PT", "ro", "ru", "rw", "sd", "si", "sk",
+                "sl", "sm", "sn", "so", "sq", "sr", "st", "su", "sv", "sw", "ta", "te", "tg",
+                "th", "ti", "tk", "tl", "tr", "tt", "ug", "uk", "ur", "uz", "vi", "xh", "yi",
+                "yo", "yua", "yue", "zh", "zh-CN", "zh-TW", "zu",
+            };
+
+            foreach (var code in codes)
+            {
+                yield return code;
+            }
         }
 
         /// <summary>
@@ -587,7 +490,7 @@ namespace Echoglossian.LanguagesHandling
         {
             var codes = new[]
             {
-                "af", "am", "ar", "as", "az", "ba", "be", "bg", "bho", "bn", "bo", "brx", "bs", "ca", "cs", "cy", "da", "de", "doi", "dsb", "dv", "el", "en", "es", "et", "eu", "fa",
+                "af", "am", "ar", "as", "az", "ba", "be", "bg", "bho", "bn", "bo", "brx", "bs", "ca", "cs", "cy", "da", "de", "doi", "dsb", "dv", "el", "en", "es", "es-MX", "et", "eu", "fa",
                 "fi", "fil", "fj", "fo", "fr", "fr-CA", "ga", "gl", "gom", "gu", "ha", "he", "hi", "hne", "hr", "hsb", "ht", "hu", "hy", "id", "ig", "ikt", "is", "it", "iu",
                 "iu-Latn", "ja", "ka", "kk", "km", "kmr", "kn", "ko", "ks", "ku", "ky", "lb", "ln", "lo", "lt", "lug", "lv", "lzh", "mai", "mg", "mi", "mk", "ml", "mn-Cyrl",
                 "mn-Mong", "mni", "mr", "ms", "mt", "mww", "my", "nb", "ne", "nl", "nso", "nya", "or", "otq", "pa", "pl", "prs", "ps", "pt", "pt-PT", "ro", "ru", "run", "rw",
@@ -649,6 +552,7 @@ namespace Echoglossian.LanguagesHandling
             {
                 "en", "sq", "ar", "az", "eu", "bn", "bg", "ca", "zh-Hans", "zh-Hant", "cs", "da", "nl", "eo", "et", "fi", "fr", "gl", "de", "el", "he", "hi", "hu", "id", "ga", "it",
                 "ja", "ko", "ky", "lv", "lt", "ms", "nb", "fa", "pl", "pt", "pt-BR", "ro", "ru", "sr", "sk", "sl", "es", "sv", "tl", "th", "tr", "uk", "ur", "vi",
+                "sw",
             };
 
             foreach (var x in codes)

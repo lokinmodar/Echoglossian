@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
 using Newtonsoft.Json;
 
 namespace Echoglossian;
@@ -63,6 +65,7 @@ public partial class Echoglossian
 
     if (translationChanged)
     {
+      this.ResetRuntimeTranslationPresentationState();
       this.RebuildTranslationServiceSafely();
       this.RebuildQueuedTranslationBroker();
       this.RebuildToastGuiRuntimes();
@@ -290,5 +293,41 @@ public partial class Echoglossian
 
     this.hoverTooltipManager.Clear();
     this.EgloAddonHandler();
+  }
+
+  /// <summary>
+  ///     Clears live translation presentation state and runtime-only caches so
+  ///     language or engine changes do not leave stale translated UI state on
+  ///     screen.
+  /// </summary>
+  private void ResetRuntimeTranslationPresentationState()
+  {
+    this.hoverTooltipManager.Clear();
+    this.rtlTexturePresentationService.Clear();
+    this.ClearOverlay(this.talkOverlay, clearText: true);
+    this.ClearOverlay(this.battleTalkOverlay, clearText: true);
+    this.ClearOverlay(this.talkSubtitleOverlay, clearText: true);
+    this.ClearOverlay(this.toastOverlay, clearText: true);
+    this.ClearOverlay(this.errorToastOverlay, clearText: true);
+    this.ClearOverlay(this.areaToastOverlay, clearText: true);
+    this.ClearOverlay(this.classChangeToastOverlay, clearText: true);
+    this.ClearOverlay(this.questToastOverlay, clearText: true);
+    this.ClearOverlay(this.cutSceneSelectStringOverlay, clearText: true);
+    this.ClearOverlay(this.textGimmickHintOverlay, clearText: true);
+    this.ClearOverlay(this.chatBubbleOverlay, clearText: true);
+    this.ClearOverlay(this.actionDetailOverlay, clearText: true);
+    this.ClearOverlay(this.itemDetailOverlay, clearText: true);
+    this.DisposeMiniTalkBubbleOverlays();
+    DialogueTranslationSessionStore.Clear();
+    QuestUiTranslationCache.Clear();
+    QuestHoverTranslationCache.Clear();
+    DbFirstGameWindowAddonHandler.ClearSessionCaches();
+    QuestProgressResolver.Clear();
+    QuestTodoProgressResolver.Clear();
+    this.ClearAcceptedQuestPrefetchState();
+    this.ClearActionDetailPrefetchState();
+    this.ClearItemDetailPrefetchState();
+    this.ClearTraitDetailPrefetchState();
+    this.ClearReferenceTextPrefetchState();
   }
 }

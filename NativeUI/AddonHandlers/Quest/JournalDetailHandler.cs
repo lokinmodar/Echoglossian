@@ -17,6 +17,9 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
   private const string JournalDetailHoverPrefix = "JournalDetail-";
 
+  private static readonly TimeSpan JournalDetailRetryInterval =
+      TimeSpan.FromSeconds(2);
+
   private readonly Dictionary<string, string> journalDetailTextCache =
       new(StringComparer.Ordinal);
 
@@ -25,6 +28,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           new(StringComparer.Ordinal);
 
   private string currentJournalDetailScopeKey = string.Empty;
+
+  private bool hasPendingJournalDetailTranslations;
+
+  private JournalTranslationDisplayMode? lastAppliedDisplayMode;
+
+  private DateTime nextJournalDetailRetryUtc = DateTime.MinValue;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="JournalDetailHandler" />
@@ -37,6 +46,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     this.RegisterHandler(AddonEvent.PreUpdate, this.OnJournalDetailEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnJournalDetailEvent);
     this.RegisterHandler(AddonEvent.PostRequestedUpdate, this.OnJournalDetailEvent);
+    this.RegisterHandler(AddonEvent.PreDraw, this.OnJournalDetailPreDrawEvent);
     this.RegisterHandler(AddonEvent.PreHide, this.OnJournalDetailCleanupEvent);
     this.RegisterHandler(AddonEvent.PreFinalize, this.OnJournalDetailCleanupEvent);
   }
@@ -749,6 +759,9 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="objectiveNode">The objective text node.</param>
   /// <param name="summaryContainerNode">The summary container node, if any.</param>
   /// <param name="summaryNode">The optional summary text node.</param>
+  /// <param name="hasPendingTranslations">
+  ///     Whether one or more translated payloads are still pending.
+  /// </param>
   private unsafe void TranslateQuestOnJournalBox(
       AtkComponentBase* journalBox,
       QuestPlate? foundQuestPlate,
@@ -761,8 +774,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       AtkTextNode* descriptionNode,
       AtkTextNode* objectiveNode,
       AtkResNode* summaryContainerNode,
-      AtkTextNode* summaryNode)
+      AtkTextNode* summaryNode,
+      out bool hasPendingTranslations)
   {
+    hasPendingTranslations = false;
     string translatedQuestName = questName;
     string translatedQuestObjective = objectiveText;
     var translatedQuestNameReady = false;
@@ -1242,6 +1257,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         }
       }
     }
+
+    hasPendingTranslations =
+        !translatedQuestNameReady ||
+        !translatedQuestDescriptionReady ||
+        !translatedQuestObjectiveReady ||
+        !translatedQuestSummaryReady;
   }
 
   /// <summary>
@@ -1249,16 +1270,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   private unsafe void TranslateJournalDetail()
   {
-    if (!this.configuration.TranslateJournalDetail)
+    if (!TryGetVisibleJournalDetail(out var journalDetail))
     {
       return;
     }
 
-    var atkStage = AtkStage.Instance();
-    var journalDetail =
-        atkStage->RaptureAtkUnitManager->GetAddonByName(JournalDetailAddonName);
-    if (journalDetail == null || !journalDetail->IsVisible)
+    if (!this.configuration.TranslateJournalDetail ||
+        this.DisableTranslationAccordingToState())
     {
+      this.RestoreJournalDetailOriginals(journalDetail);
+      this.ClearJournalDetailRuntimeState();
       return;
     }
 
@@ -1267,18 +1288,33 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
     }
 
-    if (!this.TranslateJournalBox(journalDetail))
+    var hasPendingTranslations = false;
+    if (!this.TranslateJournalBox(journalDetail, out hasPendingTranslations))
     {
-      this.TranslateCompletedQuest(journalDetail);
+      this.TranslateCompletedQuest(
+          journalDetail,
+          out hasPendingTranslations);
     }
+
+    this.hasPendingJournalDetailTranslations = hasPendingTranslations;
+    this.nextJournalDetailRetryUtc = hasPendingTranslations
+        ? DateTime.UtcNow + JournalDetailRetryInterval
+        : DateTime.MinValue;
+    this.lastAppliedDisplayMode = this.Config.JournalDetailTranslationDisplayMode;
   }
 
   /// <summary>
   ///     Translates a completed JournalDetail quest view.
   /// </summary>
   /// <param name="journalDetail">The journal detail addon.</param>
-  private unsafe void TranslateCompletedQuest(AtkUnitBase* journalDetail)
+  /// <param name="hasPendingTranslations">
+  ///     Whether one or more translated payloads are still pending.
+  /// </param>
+  private unsafe void TranslateCompletedQuest(
+      AtkUnitBase* journalDetail,
+      out bool hasPendingTranslations)
   {
+    hasPendingTranslations = false;
     try
     {
       var questNameNode = journalDetail->GetTextNodeById(38);
@@ -1487,6 +1523,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
               forceEnabled: true);
         }
       }
+
+      hasPendingTranslations =
+          !translatedQuestNameReady ||
+          !translatedQuestMessageReady;
     }
     catch (Exception e)
     {
@@ -1498,9 +1538,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   ///     Translates the active JournalDetail detail view.
   /// </summary>
   /// <param name="journalDetail">The live JournalDetail addon.</param>
+  /// <param name="hasPendingTranslations">
+  ///     Whether one or more translated payloads are still pending.
+  /// </param>
   /// <returns><c>true</c> when the active detail pane is the current-quest view.</returns>
-  private unsafe bool TranslateJournalBox(AtkUnitBase* journalDetail)
+  private unsafe bool TranslateJournalBox(
+      AtkUnitBase* journalDetail,
+      out bool hasPendingTranslations)
   {
+    hasPendingTranslations = false;
     try
     {
       var questNameNode = journalDetail->GetTextNodeById(38);
@@ -1617,7 +1663,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           descriptionNode,
           objectiveNode,
           summaryBox,
-          summaryNode);
+          summaryNode,
+          out hasPendingTranslations);
     }
     catch (Exception e)
     {
@@ -1653,12 +1700,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
-  ///     Clears JournalDetail hover registrations and runtime cache when the
-  ///     detail addon closes.
+  ///     Retries JournalDetail application after delayed DB persistence and
+  ///     reacts to display-mode changes while the addon remains open.
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
   /// <param name="args">The addon lifecycle arguments.</param>
-  private void OnJournalDetailCleanupEvent(AddonEvent type, AddonArgs args)
+  private unsafe void OnJournalDetailPreDrawEvent(AddonEvent type, AddonArgs args)
   {
     if (!string.Equals(
             args.AddonName,
@@ -1668,9 +1715,207 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       return;
     }
 
+    if (!TryGetVisibleJournalDetail(out var journalDetail))
+    {
+      return;
+    }
+
+    if (!this.configuration.TranslateJournalDetail ||
+        this.DisableTranslationAccordingToState())
+    {
+      this.RestoreJournalDetailOriginals(journalDetail);
+      this.ClearJournalDetailRuntimeState();
+      return;
+    }
+
+    if (this.lastAppliedDisplayMode != this.Config.JournalDetailTranslationDisplayMode)
+    {
+      this.TranslateJournalDetail();
+      return;
+    }
+
+    if (this.hasPendingJournalDetailTranslations &&
+        DateTime.UtcNow >= this.nextJournalDetailRetryUtc)
+    {
+      this.TranslateJournalDetail();
+    }
+  }
+
+  /// <summary>
+  ///     Clears JournalDetail hover registrations and runtime cache when the
+  ///     detail addon closes.
+  /// </summary>
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private unsafe void OnJournalDetailCleanupEvent(AddonEvent type, AddonArgs args)
+  {
+    if (!string.Equals(
+            args.AddonName,
+            JournalDetailAddonName,
+            StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    if (TryGetVisibleJournalDetail(out var journalDetail))
+    {
+      this.RestoreJournalDetailOriginals(journalDetail);
+    }
+
+    this.ClearJournalDetailRuntimeState();
+  }
+
+  /// <inheritdoc />
+  public override unsafe void OnPluginUnload()
+  {
+    if (TryGetVisibleJournalDetail(out var journalDetail))
+    {
+      this.RestoreJournalDetailOriginals(journalDetail);
+    }
+
+    this.ClearJournalDetailRuntimeState();
+  }
+
+  /// <summary>
+  ///     Tries to resolve the visible JournalDetail addon.
+  /// </summary>
+  /// <param name="journalDetail">The visible JournalDetail addon.</param>
+  /// <returns>True when the addon is visible.</returns>
+  private static unsafe bool TryGetVisibleJournalDetail(
+      out AtkUnitBase* journalDetail)
+  {
+    journalDetail = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+        JournalDetailAddonName);
+    return journalDetail != null && journalDetail->IsVisible;
+  }
+
+  /// <summary>
+  ///     Restores the original JournalDetail text snapshot for the currently
+  ///     visible quest scope.
+  /// </summary>
+  /// <param name="journalDetail">The live JournalDetail addon.</param>
+  private unsafe void RestoreJournalDetailOriginals(AtkUnitBase* journalDetail)
+  {
+    if (journalDetail == null ||
+        string.IsNullOrWhiteSpace(this.currentJournalDetailScopeKey) ||
+        !this.TryGetJournalDetailOriginalSnapshot(
+            this.currentJournalDetailScopeKey,
+            out var originalSnapshot))
+    {
+      this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+      return;
+    }
+
+    var questNameNode = journalDetail->GetTextNodeById(38);
+    if (questNameNode != null)
+    {
+      questNameNode->SetText(originalSnapshot.QuestName ?? string.Empty);
+    }
+
+    var currentQuestDetailNode = journalDetail->GetNodeById(43);
+    if (currentQuestDetailNode != null && currentQuestDetailNode->IsVisible())
+    {
+      var journalBox = currentQuestDetailNode->GetComponent();
+      if (journalBox != null)
+      {
+        var descriptionResNode = journalBox->UldManager.SearchNodeById(8);
+        if (descriptionResNode != null && descriptionResNode->Type == NodeType.Text)
+        {
+          descriptionResNode->GetAsAtkTextNode()->SetText(
+              originalSnapshot.QuestMessage ?? string.Empty);
+        }
+
+        var objectiveComponentNode = journalBox->UldManager.SearchNodeById(12);
+        if (objectiveComponentNode != null &&
+            objectiveComponentNode->GetComponent() != null)
+        {
+          var objectiveResNode = objectiveComponentNode->GetComponent()->UldManager
+              .SearchNodeById(3);
+          if (objectiveResNode != null && objectiveResNode->Type == NodeType.Text)
+          {
+            objectiveResNode->GetAsAtkTextNode()->SetText(
+                originalSnapshot.ObjectiveText ?? string.Empty);
+          }
+        }
+
+        var summaryContainerNode = journalBox->UldManager.SearchNodeById(52);
+        if (summaryContainerNode != null && summaryContainerNode->IsVisible())
+        {
+          var summaryComponent = summaryContainerNode->GetComponent();
+          var summaryResNode = summaryComponent != null
+              ? summaryComponent->UldManager.SearchNodeById(2)
+              : null;
+          if (summaryResNode != null && summaryResNode->Type == NodeType.Text)
+          {
+            var summaryNode = summaryResNode->GetAsAtkTextNode();
+            if (summaryNode != null)
+            {
+              if (originalSnapshot.SummaryNodeWidth != 0)
+              {
+                summaryNode->SetWidth(originalSnapshot.SummaryNodeWidth);
+              }
+
+              if (originalSnapshot.SummaryNodeFontSize != 0)
+              {
+                summaryNode->FontSize = originalSnapshot.SummaryNodeFontSize;
+              }
+
+              summaryNode->TextFlags = originalSnapshot.SummaryNodeTextFlags;
+              summaryNode->SetText(originalSnapshot.SummaryText ?? string.Empty);
+              summaryNode->ResizeNodeForCurrentText();
+            }
+          }
+
+          if (originalSnapshot.SummaryContainerHeight != 0)
+          {
+            summaryContainerNode->SetHeight(originalSnapshot.SummaryContainerHeight);
+          }
+        }
+
+        for (var i = 0; i < originalSnapshot.AdditionalSummaryNodeAddresses.Count; i++)
+        {
+          var additionalSummaryNode =
+              (AtkTextNode*)originalSnapshot.AdditionalSummaryNodeAddresses[i];
+          if (additionalSummaryNode == null)
+          {
+            continue;
+          }
+
+          var originalAdditionalSummaryText = i < originalSnapshot.AdditionalSummaryTexts.Count
+              ? originalSnapshot.AdditionalSummaryTexts[i]
+              : string.Empty;
+          additionalSummaryNode->SetText(originalAdditionalSummaryText ?? string.Empty);
+          additionalSummaryNode->ResizeNodeForCurrentText();
+        }
+      }
+    }
+    else
+    {
+      var completedDescriptionNode = journalDetail->GetNodeById(46);
+      if (completedDescriptionNode != null &&
+          completedDescriptionNode->IsVisible() &&
+          completedDescriptionNode->Type == NodeType.Text)
+      {
+        completedDescriptionNode->GetAsAtkTextNode()->SetText(
+            originalSnapshot.QuestMessage ?? string.Empty);
+      }
+    }
+
+    this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+  }
+
+  /// <summary>
+  ///     Clears JournalDetail runtime state after the visible UI has been
+  ///     restored.
+  /// </summary>
+  private void ClearJournalDetailRuntimeState()
+  {
     this.journalDetailTextCache.Clear();
     this.journalDetailOriginalCache.Clear();
     this.currentJournalDetailScopeKey = string.Empty;
+    this.hasPendingJournalDetailTranslations = false;
+    this.lastAppliedDisplayMode = null;
+    this.nextJournalDetailRetryUtc = DateTime.MinValue;
     this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
   }
 

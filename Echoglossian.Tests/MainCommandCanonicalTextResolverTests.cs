@@ -8,6 +8,7 @@ using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.Helpers;
 using System.Security.Cryptography;
 using System.Text;
+using Xunit;
 
 namespace Echoglossian.Tests;
 
@@ -15,11 +16,20 @@ namespace Echoglossian.Tests;
 ///     Covers canonical MainCommand text resolution used by the live
 ///     <c>_MainCommand</c> and <c>AddonContextMenuTitle</c> handlers.
 /// </summary>
-public class MainCommandCanonicalTextResolverTests
+public class MainCommandCanonicalTextResolverTests : IDisposable
 {
     private const int TestTranslationEngine = 91042;
     private const string TestTargetLanguage = "fa";
     private const string TestGameVersion = "resolver-test";
+
+    /// <summary>
+    ///     Initializes a new instance of the
+    ///     <see cref="MainCommandCanonicalTextResolverTests" /> class.
+    /// </summary>
+    public MainCommandCanonicalTextResolverTests()
+    {
+        ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+    }
 
     /// <summary>
     ///     Ensures integer-keyed payload maps can reuse canonical MainCommand
@@ -225,5 +235,11 @@ public class MainCommandCanonicalTextResolverTests
 
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(builder.ToString()));
         return Convert.ToHexString(bytes);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ReferenceTextCacheRegistry.MainCommandTexts.Clear();
     }
 }

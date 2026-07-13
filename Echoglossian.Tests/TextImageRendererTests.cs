@@ -1,0 +1,68 @@
+// <copyright file="TextImageRendererTests.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using Echoglossian.ImageGeneration;
+
+using System.Drawing;
+
+using Xunit;
+
+namespace Echoglossian.Tests;
+
+/// <summary>
+/// Covers image-backed text rasterization behavior.
+/// </summary>
+public class TextImageRendererTests
+{
+    /// <summary>
+    ///     Ensures reducing the configured line-height scale produces a more
+    ///     compact multiline texture at the same font size and width.
+    /// </summary>
+    [Fact]
+    public void RenderShapedText_ReducedLineHeightScale_ProducesShorterBitmap()
+    {
+        const string text =
+            "اگر اشتباه‌های بازرسی بریزارد درست باشد.\n" +
+            "او همچنین توضیح می‌دهد که شمشیرهای برنجی.\n" +
+            "گزارش بازرس: به کاستا دل سول رسیدم.";
+
+        using TextImageRenderer defaultRenderer =
+            new("missing-font.ttf", 24f, FontStyle.Regular, 1.0f);
+        using TextImageRenderer compactRenderer =
+            new("missing-font.ttf", 24f, FontStyle.Regular, 0.9f);
+        using Bitmap defaultBitmap = defaultRenderer.RenderShapedText(
+            text,
+            Color.White,
+            Color.Transparent,
+            480);
+        using Bitmap compactBitmap = compactRenderer.RenderShapedText(
+            text,
+            Color.White,
+            Color.Transparent,
+            480);
+
+        Assert.True(compactBitmap.Height < defaultBitmap.Height);
+    }
+
+    /// <summary>
+    ///     Ensures wider measurements for the same long tooltip text reduce
+    ///     the total measured height.
+    /// </summary>
+    [Fact]
+    public void MeasureShapedText_WiderMaxWidth_ProducesShorterMeasurement()
+    {
+        const string text =
+            "اگر اشتباه‌های بازرسی بریزارد درست باشد، پس دزد خیالی با جا زدن خود به عنوان یکی از شمشیرهای برنجی " +
+            "زیر نظر استاد گوگورومو برای محافظت از ضیافت استخدام شده بود.";
+
+        using TextImageRenderer renderer =
+            new("missing-font.ttf", 24f, FontStyle.Regular, 0.9f);
+        var narrowMeasurement = renderer.MeasureShapedText(text, 420);
+        var wideMeasurement = renderer.MeasureShapedText(text, 760);
+
+        Assert.True(wideMeasurement.Height < narrowMeasurement.Height);
+        Assert.True(wideMeasurement.Width > narrowMeasurement.Width);
+    }
+}

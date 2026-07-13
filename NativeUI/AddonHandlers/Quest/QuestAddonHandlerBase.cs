@@ -8,7 +8,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 /// <summary>
 ///     Shared base implementation for standalone quest addon handlers.
 /// </summary>
-internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
+internal abstract class QuestAddonHandlerBase
+    : IAddonTranslationHandler, IPluginUnloadAwareAddonHandler
 {
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>>
       eventHandlers = new();
@@ -51,6 +52,14 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
             handler(evt, args);
           }
         }));
+  }
+
+  /// <summary>
+  ///     Clears any visible native quest UI state when the handler is being
+  ///     rebuilt or the plugin is unloading.
+  /// </summary>
+  public virtual void OnPluginUnload()
+  {
   }
 
   /// <summary>

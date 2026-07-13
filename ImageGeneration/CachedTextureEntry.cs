@@ -10,6 +10,8 @@ namespace Echoglossian.ImageGeneration;
 /// </summary>
 internal sealed class CachedTextureEntry
 {
+  private readonly long estimatedMemoryBytes;
+
   /// <summary>
   /// Initializes a new instance of the <see cref="CachedTextureEntry"/> class.
   /// </summary>
@@ -18,6 +20,7 @@ internal sealed class CachedTextureEntry
   {
     this.Texture = texture;
     this.LastAccessed = DateTime.UtcNow;
+    this.estimatedMemoryBytes = texture.Width * texture.Height * 4L;
   }
 
   /// <summary>
@@ -36,6 +39,6 @@ internal sealed class CachedTextureEntry
   /// <returns>Estimated memory footprint in bytes (width × height × 4).</returns>
   public long EstimateMemoryBytes()
   {
-    return this.Texture.Width * this.Texture.Height * 4L;
+    return this.estimatedMemoryBytes;
   }
 }
