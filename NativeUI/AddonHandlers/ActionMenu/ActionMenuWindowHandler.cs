@@ -132,6 +132,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <inheritdoc />
     private protected override async Task<bool>
         TranslateAndPersistGameWindowPayloadAsync(
+            SourceClientLanguage sourceLanguage,
             DbFirstGameWindowPayload originalPayload)
     {
         var classJobId = GetCurrentClassJobId();
@@ -144,7 +145,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 originalPayload.AtkValues,
                 originalPayload.StringArrayValues,
                 originalPayload.TextNodes,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                     this.config.Lang),
                 this.HandlerTranslationService);
@@ -187,6 +188,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         }
 
         this.PersistResolvedGameWindowPayload(
+            sourceLanguage,
             originalPayload,
             translatedPayload,
             classJobId);

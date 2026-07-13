@@ -30,6 +30,21 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures the shared GameWindow runtime cannot reuse a persisted row
+    ///     from a different source client language.
+    /// </summary>
+    [Fact]
+    public void MatchesPersistedSourceIdentity_ReturnsFalseForDifferentSource()
+    {
+        var sourceLanguage = new SourceClientLanguage("de", "de");
+
+        var matches = DbFirstGameWindowAddonHandler
+            .MatchesPersistedSourceIdentity("en", sourceLanguage);
+
+        Assert.False(matches);
+    }
+
+    /// <summary>
     ///     Ensures a translated action label preserves the original line break
     ///     before the trailing level token.
     /// </summary>
