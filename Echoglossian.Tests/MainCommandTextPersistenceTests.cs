@@ -3,14 +3,19 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+
+using PluginEntry = Echoglossian.Echoglossian;
 
 namespace Echoglossian.Tests;
 
@@ -330,6 +335,74 @@ public class MainCommandTextPersistenceTests
         }
         finally
         {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the live reference-text fallback passes its configured
+    ///     engine reuse policy through to persistence.
+    /// </summary>
+    [Fact]
+    public void LiveReferenceTextFallback_CompatiblePolicyReusesDifferentEngineRow()
+    {
+        var configDir = CreateTempConfigDir();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var payload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var stored = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 7, "7.3", payload);
+            var probe = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 0, "7.3", payload);
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                stored,
+                static context => context.MainCommandTexts);
+
+            var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
+                typeof(PluginEntry));
+            var configurationField = typeof(PluginEntry).GetField(
+                "configuration",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(configurationField);
+            configurationField.SetValue(plugin, new Config
+            {
+                TranslateAlreadyTranslatedTexts = false,
+            });
+            var findMethod = typeof(PluginEntry).GetMethods(
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(method =>
+                    method.Name == "FindReferenceText" &&
+                    method.IsGenericMethodDefinition &&
+                    method.GetParameters().Length == 3)
+                .MakeGenericMethod(typeof(MainCommandText));
+            Func<EchoglossianDbContext, DbSet<MainCommandText>> setSelector =
+                static context => context.MainCommandTexts;
+
+            var row = Assert.IsType<MainCommandText>(findMethod.Invoke(
+                plugin,
+                [probe, ReferenceTextCacheRegistry.MainCommandTexts, setSelector]));
+
+            Assert.Equal(7, row.TranslationEngine);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
             TryDeleteDirectory(configDir);
         }
     }

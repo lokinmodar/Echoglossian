@@ -666,7 +666,17 @@ public class DbOperationsTests
                 context.Database.Migrate();
             }
 
-            var sources = new[] { "chs", "cht", "tc", "unknown-source" };
+            var sources = new[]
+            {
+                "chs",
+                "cht",
+                "tc",
+                "pt",
+                "pt-BR",
+                "he",
+                "iw",
+                "unknown-source",
+            };
             foreach (var source in sources)
             {
                 await PluginEntry.UpsertTalkDataAsync(
@@ -692,6 +702,53 @@ public class DbOperationsTests
                 verification.QuestPlate
                     .Select(row => row.OriginalLang)
                     .OrderBy(source => source));
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures quest writes retain separate exact-engine history even when
+    ///     reads are configured to reuse translations from another engine.
+    /// </summary>
+    [Fact]
+    public void QuestWrites_CompatibleReadPolicyPreservesExactEngineRows()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+
+        try
+        {
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 0,
+                TranslateAlreadyTranslatedTexts = false,
+            });
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.QuestPlate.Add(CreateQuestPlate("en", 7, DateTime.Now));
+                context.SaveChanges();
+            }
+
+            plugin.InsertQuestPlate(CreateQuestPlate("en", 0, DateTime.Now));
+
+            using var verification = new EchoglossianDbContext(configDir);
+            Assert.Equal(
+                new int?[] { 0, 7 },
+                verification.QuestPlate
+                    .OrderBy(row => row.TranslationEngine)
+                    .Select(row => row.TranslationEngine)
+                    .ToArray());
         }
         finally
         {

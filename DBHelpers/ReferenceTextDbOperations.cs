@@ -56,6 +56,7 @@ public partial class Echoglossian
         var row = ReferenceTextPersistenceHelper.FindReferenceText(
             ConfigDirectory,
             probe,
+            scope,
             setSelector);
         if (row != null)
         {

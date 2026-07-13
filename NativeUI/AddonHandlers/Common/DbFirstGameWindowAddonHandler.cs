@@ -1634,7 +1634,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
             row = StringArrayDataPersistenceHelper.FindStringArrayData(
                 ConfigDirectory,
-                probe);
+                probe,
+                scope);
             if (row != null &&
                 MatchesPersistedSourceIdentity(
                     row.OriginalLang,

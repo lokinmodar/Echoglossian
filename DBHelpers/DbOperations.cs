@@ -923,7 +923,7 @@ public partial class Echoglossian
           t.TranslationEngine == talkMessage.TranslationEngine);
       var matchingRow = OrderTalkMessageLookupQuery(matchingRows)
           .AsEnumerable()
-          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
               t.OriginalTalkMessageLang,
               talkMessage.OriginalTalkMessageLang));
       var now = DateTime.Now;
@@ -1036,7 +1036,7 @@ public partial class Echoglossian
           t.TranslationEngine == battleTalkMessage.TranslationEngine);
       var matchingRow = OrderBattleTalkMessageLookupQuery(matchingRows)
           .AsEnumerable()
-          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
               t.OriginalBattleTalkMessageLang,
               battleTalkMessage.OriginalBattleTalkMessageLang));
       var now = DateTime.Now;
@@ -1478,12 +1478,11 @@ public partial class Echoglossian
       var questIdMatches = context.QuestPlate.Where(t =>
           t.QuestId == questPlate.QuestId &&
           t.TranslationLang == questPlate.TranslationLang &&
-          (!this.configuration.TranslateAlreadyTranslatedTexts ||
-           t.TranslationEngine == questPlate.TranslationEngine) &&
+          t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
       var questIdMatch = questIdMatches
           .AsEnumerable()
-          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
               t.OriginalLang,
               questPlate.OriginalLang));
 
@@ -1502,12 +1501,11 @@ public partial class Echoglossian
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
           t.TranslationLang == questPlate.TranslationLang &&
-          (!this.configuration.TranslateAlreadyTranslatedTexts ||
-           t.TranslationEngine == questPlate.TranslationEngine) &&
+          t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
       var questMessageMatch = questMessageMatches
           .AsEnumerable()
-          .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
               t.OriginalLang,
               questPlate.OriginalLang));
 
@@ -1521,12 +1519,11 @@ public partial class Echoglossian
     var questNameMatches = context.QuestPlate.Where(t =>
         t.QuestName == questPlate.QuestName &&
         t.TranslationLang == questPlate.TranslationLang &&
-        (!this.configuration.TranslateAlreadyTranslatedTexts ||
-         t.TranslationEngine == questPlate.TranslationEngine) &&
+        t.TranslationEngine == questPlate.TranslationEngine &&
         (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
     var questNameMatch = questNameMatches
         .AsEnumerable()
-        .FirstOrDefault(t => RuntimeLanguageHelper.LanguagesMatch(
+        .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
             t.OriginalLang,
             questPlate.OriginalLang));
 
@@ -1536,6 +1533,50 @@ public partial class Echoglossian
     }
 
     return questNameMatch;
+  }
+
+  /// <summary>
+  ///     Compares write-side source identities while recognizing only the four
+  ///     historical display names persisted by supported game languages.
+  /// </summary>
+  /// <param name="left">The persisted source identity.</param>
+  /// <param name="right">The incoming source identity.</param>
+  /// <returns>True when both values identify the same write-side source.</returns>
+  private static bool LegacyWriteSourceLanguagesMatch(
+      string? left,
+      string? right)
+  {
+    var normalizedLeft = NormalizeLegacyWriteSourceLanguage(left);
+    var normalizedRight = NormalizeLegacyWriteSourceLanguage(right);
+
+    return !string.IsNullOrWhiteSpace(normalizedLeft) &&
+           string.Equals(
+               normalizedLeft,
+               normalizedRight,
+               StringComparison.OrdinalIgnoreCase);
+  }
+
+  /// <summary>
+  ///     Normalizes only approved legacy display names for write identity.
+  /// </summary>
+  /// <param name="language">The source identity to normalize.</param>
+  /// <returns>The approved canonical identity or the trimmed input.</returns>
+  private static string NormalizeLegacyWriteSourceLanguage(string? language)
+  {
+    if (string.IsNullOrWhiteSpace(language))
+    {
+      return string.Empty;
+    }
+
+    var trimmed = language.Trim();
+    return trimmed.ToLowerInvariant() switch
+    {
+      "english" or "en" => "en",
+      "deutsch" or "de" => "de",
+      "french" or "fr" => "fr",
+      "japanese" or "ja" => "ja",
+      _ => trimmed,
+    };
   }
 
   /// <summary>

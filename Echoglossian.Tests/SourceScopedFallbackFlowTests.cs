@@ -10,12 +10,15 @@ using System.Runtime.CompilerServices;
 using Dalamud.Plugin.Services;
 
 using Echoglossian.Cache;
+using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.LanguagesHandling;
 using Echoglossian.NativeUI.AddonHandlers.ActionMenu;
 using Echoglossian.NativeUI.AddonHandlers.Character;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
+
+using Microsoft.EntityFrameworkCore;
 
 using Xunit;
 
@@ -142,6 +145,102 @@ public class SourceScopedFallbackFlowTests
         {
             StringArrayDataCacheManager.Clear();
             GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the live structured-payload DB fallback passes its configured
+    ///     engine reuse policy through to persistence.
+    /// </summary>
+    [Fact]
+    public void StructuredPayloadPersistedFallback_CompatiblePolicyReusesDifferentEngineRow()
+    {
+        using var runtimeScope = new TestRuntimeScope();
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        StringArrayDataCacheManager.Clear();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalPayload = new StringArrayStructuredPayload
+            {
+                Type = "Character",
+                ContextKey = "Character:Profile",
+                SchemaVersion = 1,
+            };
+            originalPayload.Slots[0] = new StringArrayStructuredSlot
+            {
+                SemanticKey = "name",
+                OriginalText = "Profile",
+                IsVisible = true,
+                IsTranslatable = true,
+            };
+            var translatedPayload = new StringArrayStructuredPayload
+            {
+                Type = "Character",
+                ContextKey = "Character:Profile",
+                SchemaVersion = 1,
+            };
+            translatedPayload.Slots[0] = new StringArrayStructuredSlot
+            {
+                SemanticKey = "name",
+                OriginalText = "Profile",
+                TranslatedText = "Perfil",
+                IsVisible = true,
+                IsTranslatable = true,
+            };
+            StringArrayDataPersistenceHelper.InsertStringArrayData(
+                configDir,
+                StringArrayDataPersistenceHelper.CreateCanonicalRow(
+                    "Character",
+                    "en",
+                    "pt-BR",
+                    7,
+                    "test-version",
+                    originalPayload,
+                    translatedPayload));
+            var handler = new CharacterWindowHandler(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                    TranslateAlreadyTranslatedTexts = false,
+                },
+                null!,
+                null!);
+            var method = typeof(DbFirstGameWindowAddonHandler).GetMethod(
+                "TryFindStructuredPayload",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(method);
+            var arguments = new object?[]
+            {
+                new SourceClientLanguage("en", "en"),
+                originalPayload,
+                null,
+            };
+
+            var found = Assert.IsType<bool>(method.Invoke(handler, arguments));
+            var resolvedPayload = Assert.IsType<StringArrayStructuredPayload>(
+                arguments[2]);
+
+            Assert.True(found);
+            Assert.Equal("Perfil", resolvedPayload.Slots[0].TranslatedText);
+        }
+        finally
+        {
+            StringArrayDataCacheManager.Clear();
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
         }
     }
 
@@ -616,6 +715,29 @@ public class SourceScopedFallbackFlowTests
             BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.NotNull(field);
         field.SetValue(runtime, value);
+    }
+
+    /// <summary>
+    ///     Deletes a temporary test directory when possible.
+    /// </summary>
+    /// <param name="path">The directory to delete.</param>
+    private static void TryDeleteDirectory(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.Delete(path, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     /// <summary>

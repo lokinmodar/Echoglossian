@@ -112,3 +112,59 @@ PASS
 The build continues to report pre-existing warnings, including `NU1903` for
 `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 and existing nullable/obsolete API warnings.
 No warning was introduced in a Task 7C-owned file.
+
+## P1 Review Follow-up
+
+### Root Cause Confirmation
+
+- The live Action/Item/Trait, ReferenceText, and StringArray fallback paths
+  constructed the correct `TranslationReuseScope` but called compatibility
+  wrappers that rebuilt a strict scope.
+- Talk, BattleTalk, and Quest write matching used the read-oriented
+  `RuntimeLanguageHelper.LanguagesMatch`, which also aliases identities such as
+  `pt`/`pt-BR` and `he`/`iw`.
+- Quest save lookup made exact-engine identity conditional on the read/reuse
+  setting and could merge a second engine into the first engine's row.
+
+### RED
+
+The focused P1 run failed 5/5 regressions for the expected behavior:
+
+```text
+LiveTooltipFallback_CompatiblePolicyReusesDifferentEngineRows
+  expected engine 7, received null
+LiveReferenceTextFallback_CompatiblePolicyReusesDifferentEngineRow
+  expected persisted row, received null
+StructuredPayloadPersistedFallback_CompatiblePolicyReusesDifferentEngineRow
+  expected true, received false
+LegacySourceWrites_ExtendedSourcesRemainDistinct
+  pt-BR and iw rows were merged into pt and he rows
+QuestWrites_CompatibleReadPolicyPreservesExactEngineRows
+  expected engines [0, 7], received [0]
+```
+
+### Implementation
+
+- All five live production fallback callers now pass their already-constructed
+  explicit scope to the policy-aware persistence overload.
+- Write-side source matching now recognizes only `English`/`en`,
+  `Deutsch`/`de`, `French`/`fr`, and `Japanese`/`ja`; other source identities
+  compare only to themselves.
+- All QuestId, quest-message, and quest-name save lookup branches now require
+  exact translation-engine identity regardless of read/reuse configuration.
+
+### GREEN and Validation
+
+```text
+Focused P1 regressions: PASS 5/5
+Direct persistence/fallback classes: PASS 77/77
+dotnet build Echoglossian.sln -c Debug --no-restore
+  PASS: 0 errors, 79 existing/concurrent warnings
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+  PASS: 519/519
+git diff --check
+  PASS
+```
+
+The shared worktree still contains unrelated renderer changes and the unstaged
+generated `Echoglossian.xml`; neither is part of the Task 7C follow-up.

@@ -63,7 +63,8 @@ public partial class Echoglossian
 
         var row = ActionTooltipPersistenceHelper.FindActionTooltip(
             ConfigDirectory,
-            probe);
+            probe,
+            scope);
         if (row != null)
         {
             ActionTooltipCacheManager.Update(row);
@@ -133,7 +134,8 @@ public partial class Echoglossian
 
         var row = TraitPersistenceHelper.FindTrait(
             ConfigDirectory,
-            probe);
+            probe,
+            scope);
         if (row != null)
         {
             TraitCacheManager.Update(row);
@@ -205,7 +207,8 @@ public partial class Echoglossian
 
         var row = ItemTooltipPersistenceHelper.FindItemTooltip(
             ConfigDirectory,
-            probe);
+            probe,
+            scope);
         if (row != null)
         {
             ItemTooltipCacheManager.Update(row);

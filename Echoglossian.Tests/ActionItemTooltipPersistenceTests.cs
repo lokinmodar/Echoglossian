@@ -3,12 +3,18 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+using System.Runtime.CompilerServices;
+
+using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.NativeUI.Helpers;
 
 using Microsoft.EntityFrameworkCore;
 
 using Xunit;
+
+using PluginEntry = Echoglossian.Echoglossian;
 
 namespace Echoglossian.Tests;
 
@@ -904,6 +910,89 @@ public class ActionItemTooltipPersistenceTests
         }
         finally
         {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures live tooltip fallback reads pass their configured engine
+    ///     reuse policy through to persistence.
+    /// </summary>
+    [Fact]
+    public void LiveTooltipFallback_CompatiblePolicyReusesDifferentEngineRows()
+    {
+        var configDir = CreateTempConfigDir();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        ActionTooltipCacheManager.Clear();
+        ItemTooltipCacheManager.Clear();
+        TraitCacheManager.Clear();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var actionPayload = new ActionTooltipCanonicalPayload
+            {
+                ActionId = 15998,
+                Name = "Technical Step",
+                Description = "Begin dancing.",
+            };
+            var itemPayload = new ItemTooltipCanonicalPayload
+            {
+                ItemId = 4868,
+                Name = "Gysahl Greens",
+                Description = "A leafy vegetable.",
+            };
+            var traitPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                Name = "Enhanced Windmill",
+                Description = "Increases potency.",
+            };
+            var storedAction = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 7, "7.3", actionPayload);
+            var storedItem = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 7, "7.3", itemPayload);
+            var storedTrait = TraitPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 7, "7.3", traitPayload);
+            var actionProbe = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", actionPayload);
+            var itemProbe = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", itemPayload);
+            var traitProbe = TraitPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", traitPayload);
+
+            ActionTooltipPersistenceHelper.InsertActionTooltip(
+                configDir,
+                storedAction);
+            ItemTooltipPersistenceHelper.InsertItemTooltip(configDir, storedItem);
+            TraitPersistenceHelper.InsertTrait(configDir, storedTrait);
+
+            var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
+                typeof(PluginEntry));
+            var configurationField = typeof(PluginEntry).GetField(
+                "configuration",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(configurationField);
+            configurationField.SetValue(plugin, new Config
+            {
+                TranslateAlreadyTranslatedTexts = false,
+            });
+
+            Assert.Equal(7, plugin.FindActionTooltip(actionProbe)?.TranslationEngine);
+            Assert.Equal(7, plugin.FindItemTooltip(itemProbe)?.TranslationEngine);
+            Assert.Equal(7, plugin.FindTrait(traitProbe)?.TranslationEngine);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+            ItemTooltipCacheManager.Clear();
+            TraitCacheManager.Clear();
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
             TryDeleteDirectory(configDir);
         }
     }
