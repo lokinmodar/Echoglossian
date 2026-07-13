@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 
 /// <summary>
@@ -30,6 +32,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   private readonly Action<string, string, string> updateOverlay;
 
   private int activeRequestId;
+  private string currentSourceLanguageCode = string.Empty;
   private string currentOriginalName = string.Empty;
   private string currentOriginalText = string.Empty;
   private string currentReplacementName = string.Empty;
@@ -115,6 +118,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
             out var sourceLanguage))
     {
+      this.InvalidateStateForSource(null);
       return new VisibleDialogueRetranslationResult(
           false,
           false,
@@ -122,6 +126,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
           surfaceName,
           VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
     }
+
+    this.InvalidateStateForSource(sourceLanguage);
 
     if (!this.TryCaptureCurrentTalkSource(out var originalName, out var originalText))
     {
@@ -136,6 +142,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     int requestId;
     lock (this.stateGate)
     {
+      this.currentSourceLanguageCode = sourceLanguage.PersistenceCode;
       this.currentOriginalName = originalName;
       this.currentOriginalText = originalText;
       this.currentReplacementName = string.Empty;
@@ -214,7 +221,11 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       var sourceChangedBeforeApply = false;
       lock (this.stateGate)
       {
-        sourceChangedBeforeApply = requestId != this.activeRequestId;
+        sourceChangedBeforeApply =
+            requestId != this.activeRequestId ||
+            !NativeRuntimeSourceScope.MatchesSource(
+                this.currentSourceLanguageCode,
+                sourceLanguage);
         if (!sourceChangedBeforeApply)
         {
           this.translationInFlight = false;
@@ -337,8 +348,11 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
             out var sourceLanguage))
     {
+      this.InvalidateStateForSource(null);
       return;
     }
+
+    this.InvalidateStateForSource(sourceLanguage);
 
     this.RemapTranslatedRefreshSourceToOriginal(
         ref originalName,
@@ -369,6 +383,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     if (this.TryGetCachedTranslation(
             originalName,
             originalText,
+            sourceLanguage,
             out var translatedName,
             out var translatedText))
     {
@@ -413,7 +428,11 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       return;
     }
 
-    if (this.TryQueueTranslation(originalName, originalText, out var requestId))
+    if (this.TryQueueTranslation(
+            originalName,
+            originalText,
+            sourceLanguage,
+            out var requestId))
     {
       this.clearOverlay();
       Task.Run(() => this.ResolveTranslationAsync(
@@ -437,10 +456,14 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       return;
     }
 
-    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
     {
+      this.InvalidateStateForSource(null);
       return;
     }
+
+    this.InvalidateStateForSource(sourceLanguage);
 
     var addonPtr = GameGuiInterface.GetAddonByName(TalkAddonName);
     if (addonPtr.Address == IntPtr.Zero)
@@ -470,6 +493,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     }
 
     if (!this.TryGetCurrentResolvedTranslation(
+            sourceLanguage,
             out var translatedName,
             out var translatedText,
             out var replacementName,
@@ -525,6 +549,66 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   }
 
   /// <summary>
+  ///     Restores plugin-owned native mutation and clears resolved dialogue
+  ///     state when the operation source changes or cannot be resolved.
+  /// </summary>
+  /// <param name="sourceLanguage">
+  ///     The operation-captured source, or no value when source resolution
+  ///     failed.
+  /// </param>
+  private unsafe void InvalidateStateForSource(
+      SourceClientLanguage? sourceLanguage)
+  {
+    bool shouldInvalidate;
+    lock (this.stateGate)
+    {
+      shouldInvalidate =
+          !string.IsNullOrWhiteSpace(this.currentSourceLanguageCode) &&
+          !NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage);
+    }
+
+    if (!shouldInvalidate)
+    {
+      if (!sourceLanguage.HasValue)
+      {
+        this.clearOverlay();
+      }
+
+      return;
+    }
+
+    var addonPtr = GameGuiInterface.GetAddonByName(TalkAddonName);
+    if (addonPtr.Address != IntPtr.Zero)
+    {
+      var talkAddon = (AtkUnitBase*)addonPtr.Address;
+      if (talkAddon != null && talkAddon->IsVisible)
+      {
+        this.TryRestoreOriginalTalkText(
+            talkAddon->GetTextNodeById(NameNodeId),
+            talkAddon->GetTextNodeById(TextNodeId));
+      }
+    }
+
+    lock (this.stateGate)
+    {
+      this.activeRequestId++;
+      this.currentSourceLanguageCode = string.Empty;
+      this.currentOriginalName = string.Empty;
+      this.currentOriginalText = string.Empty;
+      this.currentReplacementName = string.Empty;
+      this.currentReplacementText = string.Empty;
+      this.currentTranslatedName = string.Empty;
+      this.currentTranslatedText = string.Empty;
+      this.translationInFlight = false;
+    }
+
+    VisibleStorySurfaceDiagnosticsStore.Clear(VisibleStorySurfaceKind.Talk);
+    this.clearOverlay();
+  }
+
+  /// <summary>
   ///     Clears the active Talk state when the addon receives a new event or
   ///     leaves the screen.
   /// </summary>
@@ -557,6 +641,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     lock (this.stateGate)
     {
       this.activeRequestId++;
+      this.currentSourceLanguageCode = string.Empty;
       this.currentOriginalName = string.Empty;
       this.currentOriginalText = string.Empty;
       this.currentReplacementName = string.Empty;
@@ -970,6 +1055,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     lock (this.stateGate)
     {
       this.activeRequestId++;
+      this.currentSourceLanguageCode = sourceLanguage.PersistenceCode;
       this.currentOriginalName = originalName;
       this.currentOriginalText = originalText;
       this.currentReplacementName = this.NormalizeForReplacement(translatedName);
@@ -1103,7 +1189,10 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
       lock (this.stateGate)
       {
-        if (requestId != this.activeRequestId)
+        if (requestId != this.activeRequestId ||
+            !NativeRuntimeSourceScope.MatchesSource(
+                this.currentSourceLanguageCode,
+                sourceLanguage))
         {
           return;
         }
@@ -1248,6 +1337,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   ///     line ready for native replacement; otherwise, <see langword="false" />.
   /// </returns>
   private bool TryGetCurrentResolvedTranslation(
+      SourceClientLanguage sourceLanguage,
       out string translatedName,
       out string translatedText,
       out string replacementName,
@@ -1255,7 +1345,10 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   {
     lock (this.stateGate)
     {
-      if (!string.IsNullOrWhiteSpace(this.currentTranslatedText))
+      if (NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage) &&
+          !string.IsNullOrWhiteSpace(this.currentTranslatedText))
       {
         translatedName = this.currentTranslatedName;
         translatedText = this.currentTranslatedText;
@@ -1287,14 +1380,19 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   private bool TryGetCachedTranslation(
       string originalName,
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out string translatedName,
       out string translatedText)
   {
     lock (this.stateGate)
     {
-      var matchesCurrentSource =
-          this.currentOriginalName == originalName &&
-          this.currentOriginalText == originalText;
+      var matchesCurrentSource = NativeRuntimeSourceScope.MatchesDialogueState(
+          this.currentSourceLanguageCode,
+          this.currentOriginalName,
+          this.currentOriginalText,
+          sourceLanguage,
+          originalName,
+          originalText);
       var hasTranslation = !string.IsNullOrWhiteSpace(this.currentTranslatedText);
 
       if (matchesCurrentSource && hasTranslation)
@@ -1326,13 +1424,18 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   private bool TryQueueTranslation(
       string originalName,
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out int requestId)
   {
     lock (this.stateGate)
     {
-      var sourceChanged =
-          this.currentOriginalName != originalName ||
-          this.currentOriginalText != originalText;
+      var sourceChanged = !NativeRuntimeSourceScope.MatchesDialogueState(
+          this.currentSourceLanguageCode,
+          this.currentOriginalName,
+          this.currentOriginalText,
+          sourceLanguage,
+          originalName,
+          originalText);
       var hasTranslation = !string.IsNullOrWhiteSpace(this.currentTranslatedText);
 
       if (!sourceChanged && (this.translationInFlight || hasTranslation))
@@ -1341,6 +1444,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         return false;
       }
 
+      this.currentSourceLanguageCode = sourceLanguage.PersistenceCode;
       this.currentOriginalName = originalName;
       this.currentOriginalText = originalText;
       this.currentReplacementName = string.Empty;

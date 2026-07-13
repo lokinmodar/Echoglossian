@@ -716,11 +716,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
                     out var resolvedSourceLanguage))
             {
+                this.InvalidateResolvedStateForSource(null);
                 return;
             }
 
             sourceLanguage = resolvedSourceLanguage;
         }
+
+        this.InvalidateResolvedStateForSource(sourceLanguage);
 
         this.TryFinalizeDeferredCleanup();
         this.ArmAppliedStatePreDrawRefreshWindow();
@@ -735,13 +738,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     protected virtual void OnPreDrawEvent(AddonEvent evt, AddonArgs args)
     {
         var isEnabled = this.enabledSelector(this.config);
-        var sourceLanguage = default(SourceClientLanguage);
-        if (isEnabled &&
-            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out sourceLanguage))
+        SourceClientLanguage? sourceLanguage = null;
+        if (isEnabled)
         {
-            return;
+            if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                    out var resolvedSourceLanguage))
+            {
+                this.InvalidateResolvedStateForSource(null);
+                return;
+            }
+
+            sourceLanguage = resolvedSourceLanguage;
         }
+
+        this.InvalidateResolvedStateForSource(sourceLanguage);
 
         this.TryFinalizeDeferredCleanup();
 
@@ -754,6 +764,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
+        var operationSourceLanguage = sourceLanguage.GetValueOrDefault();
         var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
             this.displayModeSelector(this.config),
             this.config.OverlayOnlyLanguage);
@@ -810,6 +821,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 this.ApplyPayload(
                     visibleAddon,
+                    operationSourceLanguage,
                     originalPayload,
                     translatedPayload,
                     this.lastResolvedState.PayloadKey,
@@ -847,7 +859,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
-        this.RefreshOrQueue(sourceLanguage);
+        this.RefreshOrQueue(operationSourceLanguage);
     }
 
     /// <summary>
@@ -932,6 +944,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         var operationSourceLanguage = sourceLanguage.Value;
+        var operationScope = this.CreateReuseScope(operationSourceLanguage);
 
         if (!this.TryGetVisibleAddon(out var addon))
         {
@@ -977,7 +990,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             var originalStructuredPayload =
                 this.BuildStructuredPayload(originalPayload);
             var structuredPayloadKey =
-                this.BuildPayloadKey(originalStructuredPayload);
+                this.BuildPayloadKey(
+                    operationScope,
+                    originalStructuredPayload);
 
             DbFirstStructuredStringArrayProjection projection = default!;
             var exactStructuredMatch = this.TryFindStructuredPayload(
@@ -1007,6 +1022,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                             originalPayload);
                     this.ApplyPayload(
                         addon,
+                        operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload,
                         structuredPayloadKey,
@@ -1046,6 +1062,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
             this.ApplyPayload(
                 addon,
+                operationSourceLanguage,
                 originalPayload,
                 new DbFirstGameWindowPayload(
                     projection.AtkValues,
@@ -1059,7 +1076,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         var originalJson = originalPayload.Serialize();
-        var payloadKey = this.BuildPayloadKey(originalJson);
+        var payloadKey = this.BuildPayloadKey(operationScope, originalJson);
 
         var translatedPayload = DbFirstGameWindowPayload.Empty;
         var hasExactTranslatedPayload =
@@ -1110,9 +1127,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 }
 
                 var compatiblePayloadKey = this.BuildPayloadKey(
+                    operationScope,
                     compatibleOriginalPayload.Serialize());
                 this.ApplyPayload(
                     addon,
+                    operationSourceLanguage,
                     compatibleOriginalPayload,
                     compatibleTranslatedPayload,
                     compatiblePayloadKey,
@@ -1156,6 +1175,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 this.ApplyPayload(
                     addon,
+                    operationSourceLanguage,
                     originalPayload,
                     supplementalTranslatedPayload,
                     payloadKey,
@@ -1195,6 +1215,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         this.ApplyPayload(
             addon,
+            operationSourceLanguage,
             originalPayload,
             translatedPayload,
             payloadKey,
@@ -1254,6 +1275,26 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         this.deferredCleanupEvent = default;
         this.deferredCleanupUtc = DateTime.MinValue;
         this.appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    ///     Clears resolved state from another client source before any runtime
+    ///     short-circuit, native reapply, or hover reuse can observe it.
+    /// </summary>
+    /// <param name="sourceLanguage">
+    ///     The operation-captured source identity, or no value when the source
+    ///     cannot be resolved.
+    /// </param>
+    private void InvalidateResolvedStateForSource(
+        SourceClientLanguage? sourceLanguage)
+    {
+        if ((this.runtimeState != null &&
+             this.runtimeState.ShouldInvalidateFor(sourceLanguage)) ||
+            (this.lastResolvedState != null &&
+             this.lastResolvedState.ShouldInvalidateFor(sourceLanguage)))
+        {
+            this.ClearResolvedState();
+        }
     }
 
     /// <summary>
@@ -1483,27 +1524,51 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <summary>
     ///     Builds a stable in-flight key for one payload.
     /// </summary>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
     /// <param name="originalJson">The serialized original payload.</param>
     /// <returns>The stable payload key.</returns>
-    private string BuildPayloadKey(string originalJson)
+    private string BuildPayloadKey(
+        TranslationReuseScope scope,
+        string originalJson)
     {
-        var targetLanguageCode =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang);
-        return $"{this.addonName}|{targetLanguageCode}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalJson}";
+        return DbFirstGameWindowWorkKey.Build(
+            this.addonName,
+            scope,
+            GetGameVersion(),
+            originalJson);
     }
 
     /// <summary>
     ///     Builds a stable in-flight key for one canonical structured payload.
     /// </summary>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <returns>The stable payload key.</returns>
-    private string BuildPayloadKey(StringArrayStructuredPayload originalPayload)
+    private string BuildPayloadKey(
+        TranslationReuseScope scope,
+        StringArrayStructuredPayload originalPayload)
     {
-        var targetLanguageCode =
+        return DbFirstGameWindowWorkKey.Build(
+            this.addonName,
+            scope,
+            GetGameVersion(),
+            originalPayload.ComputeSourceContentHash());
+    }
+
+    /// <summary>
+    ///     Creates the complete reuse scope for one operation-captured source.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <returns>The immutable reuse scope for the current operation.</returns>
+    private TranslationReuseScope CreateReuseScope(
+        SourceClientLanguage sourceLanguage)
+    {
+        return new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang);
-        return $"{this.addonName}|{targetLanguageCode}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalPayload.ComputeSourceContentHash()}";
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
     }
 
     /// <summary>
@@ -1944,18 +2009,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (classJobId.HasValue)
         {
             gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
-                window.WindowAddonName == this.addonName &&
-                RuntimeLanguageHelper.LanguagesMatch(
-                    window.OriginalWindowStringsLang,
-                    sourceLanguage.PersistenceCode) &&
-                RuntimeLanguageHelper.LanguagesMatch(
-                    window.TranslationLang,
-                    language) &&
-                window.TranslationEngine == this.config.ChosenTransEngine &&
-                (window.GameVersion == null ||
-                 window.GameVersion == gameVersion) &&
-                window.ClassJobId == classJobId &&
-                window.OriginalWindowStrings == originalJson);
+                DbFirstGameWindowFallbackPolicy.Matches(
+                    window,
+                    this.addonName,
+                    scope,
+                    gameVersion,
+                    classJobId,
+                    originalJson));
             if (gameWindow != null)
             {
                 GameWindowCacheManager.Update(gameWindow);
@@ -1964,17 +2024,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
-            window.WindowAddonName == this.addonName &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                window.OriginalWindowStringsLang,
-                sourceLanguage.PersistenceCode) &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                window.TranslationLang,
-                language) &&
-            window.TranslationEngine == this.config.ChosenTransEngine &&
-            (window.GameVersion == null || window.GameVersion == gameVersion) &&
-            window.ClassJobId == null &&
-            window.OriginalWindowStrings == originalJson);
+            DbFirstGameWindowFallbackPolicy.Matches(
+                window,
+                this.addonName,
+                scope,
+                gameVersion,
+                classJobId: null,
+                originalJson));
         if (gameWindow != null)
         {
             GameWindowCacheManager.Update(gameWindow);
@@ -2281,11 +2337,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Applies a translated payload to the live addon.
     /// </summary>
     /// <param name="addon">The live addon.</param>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original payload.</param>
     /// <param name="translatedPayload">The translated payload.</param>
     /// <param name="payloadKey">The stable payload key.</param>
     private void ApplyPayload(
         AtkUnitBase* addon,
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
         string payloadKey,
@@ -2406,6 +2464,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         this.lastResolvedState = new DbFirstGameWindowRuntimeState(
+            sourceLanguage.PersistenceCode,
             payloadKey,
             originalPayload,
             translatedPayloadToApply);
@@ -2413,6 +2472,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
         {
             this.runtimeState = new DbFirstGameWindowRuntimeState(
+                sourceLanguage.PersistenceCode,
                 payloadKey,
                 originalPayload,
                 translatedPayloadToApply);
@@ -3373,12 +3433,161 @@ internal readonly record struct DbFirstGameWindowPayload(
 /// <summary>
 ///     Tracks the currently applied DB-first payload for one addon instance.
 /// </summary>
+/// <param name="SourceLanguageCode">The canonical persistence source identity.</param>
 /// <param name="PayloadKey">The stable payload key.</param>
 /// <param name="OriginalPayload">The original payload.</param>
 /// <param name="TranslatedPayload">The translated payload.</param>
 internal sealed record DbFirstGameWindowRuntimeState(
+    string SourceLanguageCode,
     string PayloadKey,
     DbFirstGameWindowPayload OriginalPayload,
-    DbFirstGameWindowPayload TranslatedPayload);
+    DbFirstGameWindowPayload TranslatedPayload)
+{
+    /// <summary>
+    ///     Determines whether this state belongs to the operation-captured
+    ///     client source.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source, if resolved.</param>
+    /// <returns>True when source identity matches.</returns>
+    public bool MatchesSource(SourceClientLanguage? sourceLanguage)
+    {
+        return NativeRuntimeSourceScope.MatchesSource(
+            this.SourceLanguageCode,
+            sourceLanguage);
+    }
+
+    /// <summary>
+    ///     Determines whether this state must be discarded before reuse.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source, if resolved.</param>
+    /// <returns>True when source identity is missing or changed.</returns>
+    public bool ShouldInvalidateFor(SourceClientLanguage? sourceLanguage)
+    {
+        return !this.MatchesSource(sourceLanguage);
+    }
+}
+
+/// <summary>
+///     Matches native runtime state against operation-captured source identity.
+/// </summary>
+internal static class NativeRuntimeSourceScope
+{
+    /// <summary>
+    ///     Determines whether a stored canonical source belongs to the current
+    ///     operation source.
+    /// </summary>
+    /// <param name="storedSourceLanguageCode">The stored canonical source code.</param>
+    /// <param name="sourceLanguage">The operation-captured source, if resolved.</param>
+    /// <returns>True when both source identities are compatible.</returns>
+    public static bool MatchesSource(
+        string? storedSourceLanguageCode,
+        SourceClientLanguage? sourceLanguage)
+    {
+        return sourceLanguage.HasValue &&
+               !string.IsNullOrWhiteSpace(storedSourceLanguageCode) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   storedSourceLanguageCode,
+                   sourceLanguage.Value.PersistenceCode);
+    }
+
+    /// <summary>
+    ///     Determines whether one dialogue cache entry matches source, speaker,
+    ///     and visible source text.
+    /// </summary>
+    /// <param name="storedSourceLanguageCode">The stored canonical source code.</param>
+    /// <param name="storedOriginalName">The stored source speaker.</param>
+    /// <param name="storedOriginalText">The stored source text.</param>
+    /// <param name="sourceLanguage">The operation-captured source.</param>
+    /// <param name="originalName">The current source speaker.</param>
+    /// <param name="originalText">The current source text.</param>
+    /// <returns>True when the complete dialogue cache identity matches.</returns>
+    public static bool MatchesDialogueState(
+        string? storedSourceLanguageCode,
+        string storedOriginalName,
+        string storedOriginalText,
+        SourceClientLanguage sourceLanguage,
+        string originalName,
+        string originalText)
+    {
+        return MatchesSource(storedSourceLanguageCode, sourceLanguage) &&
+               string.Equals(
+                   storedOriginalName,
+                   originalName,
+                   StringComparison.Ordinal) &&
+               string.Equals(
+                   storedOriginalText,
+                   originalText,
+                   StringComparison.Ordinal);
+    }
+}
+
+/// <summary>
+///     Builds source-scoped DB-first in-flight and failure-cooldown keys.
+/// </summary>
+internal static class DbFirstGameWindowWorkKey
+{
+    /// <summary>
+    ///     Builds one stable work key from the complete captured reuse scope.
+    /// </summary>
+    /// <param name="addonName">The owning addon name.</param>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="payloadIdentity">The serialized payload or source hash.</param>
+    /// <returns>The source-scoped work key.</returns>
+    public static string Build(
+        string addonName,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        string payloadIdentity)
+    {
+        return string.Join(
+            '|',
+            addonName,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture) ??
+            "null",
+            scope.RequireMatchingEngine ? "strict" : "compatible",
+            gameVersion,
+            payloadIdentity);
+    }
+}
+
+/// <summary>
+///     Applies the established reuse scope to non-preloaded GameWindow DB
+///     fallback candidates while retaining payload and context validation.
+/// </summary>
+internal static class DbFirstGameWindowFallbackPolicy
+{
+    /// <summary>
+    ///     Determines whether one persisted row is compatible with an exact
+    ///     DB-first fallback request.
+    /// </summary>
+    /// <param name="candidate">The persisted candidate.</param>
+    /// <param name="addonName">The owning addon name.</param>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobId">The exact class/job discriminator.</param>
+    /// <param name="originalJson">The exact serialized original payload.</param>
+    /// <returns>True when the row is compatible with the request.</returns>
+    public static bool Matches(
+        GameWindow candidate,
+        string addonName,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        uint? classJobId,
+        string originalJson)
+    {
+        return candidate.WindowAddonName == addonName &&
+               scope.Matches(
+                   candidate.OriginalWindowStringsLang,
+                   candidate.TranslationLang,
+                   candidate.TranslationEngine) &&
+               (candidate.GameVersion == null ||
+                candidate.GameVersion == gameVersion) &&
+               candidate.ClassJobId == classJobId &&
+               candidate.OriginalWindowStrings == originalJson;
+    }
+}
 
 

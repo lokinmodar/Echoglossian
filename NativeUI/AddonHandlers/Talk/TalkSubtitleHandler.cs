@@ -5,6 +5,8 @@
 
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 
 /// <summary>
@@ -33,10 +35,12 @@ public sealed class TalkSubtitleHandler :
   private readonly Action<string, string, string> updateOverlay;
 
   private int activeRequestId;
+  private string currentSourceLanguageCode = string.Empty;
   private string currentOriginalText = string.Empty;
   private string currentReplacementText = string.Empty;
   private string currentTranslatedText = string.Empty;
   private string lastFailedOriginalText = string.Empty;
+  private string lastFailedSourceLanguageCode = string.Empty;
   private bool translationInFlight;
 
   /// <summary>
@@ -112,6 +116,7 @@ public sealed class TalkSubtitleHandler :
     if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
             out var sourceLanguage))
     {
+      this.InvalidateStateForSource(null);
       return new VisibleDialogueRetranslationResult(
           false,
           false,
@@ -119,6 +124,8 @@ public sealed class TalkSubtitleHandler :
           surfaceName,
           VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
     }
+
+    this.InvalidateStateForSource(sourceLanguage);
 
     string originalText;
     int requestId;
@@ -138,6 +145,7 @@ public sealed class TalkSubtitleHandler :
 
       this.activeRequestId++;
       requestId = this.activeRequestId;
+      this.currentSourceLanguageCode = sourceLanguage.PersistenceCode;
       this.currentTranslatedText = string.Empty;
       this.currentReplacementText = string.Empty;
       this.translationInFlight = true;
@@ -195,7 +203,11 @@ public sealed class TalkSubtitleHandler :
       var sourceChangedBeforeApply = false;
       lock (this.stateGate)
       {
-        sourceChangedBeforeApply = requestId != this.activeRequestId;
+        sourceChangedBeforeApply =
+            requestId != this.activeRequestId ||
+            !NativeRuntimeSourceScope.MatchesSource(
+                this.currentSourceLanguageCode,
+                sourceLanguage);
         if (!sourceChangedBeforeApply)
         {
           this.translationInFlight = false;
@@ -333,15 +345,23 @@ public sealed class TalkSubtitleHandler :
     if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
             out var sourceLanguage))
     {
+      this.InvalidateStateForSource(null);
       return;
     }
 
+    this.InvalidateStateForSource(sourceLanguage);
+
     if (this.TryGetCachedTranslation(
             originalText,
+            sourceLanguage,
             out var translatedText,
             out var replacementText))
     {
-      this.SetResolvedState(originalText, translatedText, replacementText);
+      this.SetResolvedState(
+          originalText,
+          translatedText,
+          replacementText,
+          sourceLanguage);
       this.PublishOverlay(originalText, translatedText);
 
       if (this.ShouldApplyNativeTalkSubtitleText())
@@ -361,7 +381,8 @@ public sealed class TalkSubtitleHandler :
       this.SetResolvedState(
           originalText,
           storedTranslatedText,
-          storedReplacementText);
+          storedReplacementText,
+          sourceLanguage);
       this.PublishOverlay(originalText, storedTranslatedText);
 
       if (this.ShouldApplyNativeTalkSubtitleText())
@@ -377,7 +398,10 @@ public sealed class TalkSubtitleHandler :
       atkValues[0].SetManagedString(string.Empty);
     }
 
-    if (this.TryQueueTranslation(originalText, out var requestId))
+    if (this.TryQueueTranslation(
+            originalText,
+            sourceLanguage,
+            out var requestId))
     {
       this.ClearOverlayForPendingState(originalText);
       Task.Run(() => this.ResolveTranslationAsync(
@@ -403,10 +427,14 @@ public sealed class TalkSubtitleHandler :
       return;
     }
 
-    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
     {
+      this.InvalidateStateForSource(null);
       return;
     }
+
+    this.InvalidateStateForSource(sourceLanguage);
 
     var addonPtr = GameGuiInterface.GetAddonByName(TalkSubtitleAddonName);
     if (addonPtr.Address == IntPtr.Zero)
@@ -421,6 +449,7 @@ public sealed class TalkSubtitleHandler :
     }
 
     if (!this.TryGetCurrentResolvedTranslation(
+            sourceLanguage,
             out var translatedText,
             out var replacementText))
     {
@@ -460,6 +489,84 @@ public sealed class TalkSubtitleHandler :
   }
 
   /// <summary>
+  ///     Restores plugin-owned subtitle text and clears resolved state when the
+  ///     operation source changes or cannot be resolved.
+  /// </summary>
+  /// <param name="sourceLanguage">
+  ///     The operation-captured source, or no value when source resolution
+  ///     failed.
+  /// </param>
+  private unsafe void InvalidateStateForSource(
+      SourceClientLanguage? sourceLanguage)
+  {
+    var originalText = string.Empty;
+    var replacementText = string.Empty;
+    var shouldInvalidate = false;
+    lock (this.stateGate)
+    {
+      shouldInvalidate =
+          !string.IsNullOrWhiteSpace(this.currentSourceLanguageCode) &&
+          !NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage);
+      if (shouldInvalidate)
+      {
+        originalText = this.currentOriginalText;
+        replacementText = this.currentReplacementText;
+      }
+    }
+
+    if (!shouldInvalidate)
+    {
+      if (!sourceLanguage.HasValue)
+      {
+        this.clearOverlay();
+      }
+
+      return;
+    }
+
+    var addonPtr = GameGuiInterface.GetAddonByName(TalkSubtitleAddonName);
+    if (addonPtr.Address != IntPtr.Zero)
+    {
+      var addon = (AtkUnitBase*)addonPtr.Address;
+      if (addon != null && addon->IsVisible)
+      {
+        foreach (var nodeId in new[]
+                 {
+                   TextNodeId,
+                   AltTextNodeId,
+                   AltTextNodeId2,
+                 })
+        {
+          var textNode = addon->GetTextNodeById((uint)nodeId);
+          if (textNode != null &&
+              this.TextMatches(this.ReadNodeText(textNode), replacementText))
+          {
+            textNode->SetText(originalText);
+          }
+        }
+      }
+    }
+
+    lock (this.stateGate)
+    {
+      this.activeRequestId++;
+      this.currentSourceLanguageCode = string.Empty;
+      this.currentOriginalText = string.Empty;
+      this.currentTranslatedText = string.Empty;
+      this.currentReplacementText = string.Empty;
+      this.translationInFlight = false;
+      this.lastFailedOriginalText = string.Empty;
+      this.lastFailedSourceLanguageCode = string.Empty;
+    }
+
+    VisibleStorySurfaceDiagnosticsStore.Clear(
+        VisibleStorySurfaceKind.TalkSubtitle);
+    this.clearOverlay();
+  }
+
+  /// <summary>
   ///     Clears the in-memory TalkSubtitle state when the addon hides or is finalized.
   /// </summary>
   /// <param name="type">The lifecycle event that triggered the reset.</param>
@@ -469,11 +576,13 @@ public sealed class TalkSubtitleHandler :
     lock (this.stateGate)
     {
       this.activeRequestId++;
+      this.currentSourceLanguageCode = string.Empty;
       this.currentOriginalText = string.Empty;
       this.currentTranslatedText = string.Empty;
       this.currentReplacementText = string.Empty;
       this.translationInFlight = false;
       this.lastFailedOriginalText = string.Empty;
+      this.lastFailedSourceLanguageCode = string.Empty;
     }
 
     VisibleStorySurfaceDiagnosticsStore.Clear(VisibleStorySurfaceKind.TalkSubtitle);
@@ -514,10 +623,15 @@ public sealed class TalkSubtitleHandler :
       lock (this.stateGate)
       {
         if (requestId == this.activeRequestId &&
+            NativeRuntimeSourceScope.MatchesSource(
+                this.currentSourceLanguageCode,
+                sourceLanguage) &&
             this.TextMatches(this.currentOriginalText, originalText))
         {
           this.translationInFlight = false;
           this.lastFailedOriginalText = originalText;
+          this.lastFailedSourceLanguageCode =
+              sourceLanguage.PersistenceCode;
         }
       }
 
@@ -538,7 +652,10 @@ public sealed class TalkSubtitleHandler :
 
     lock (this.stateGate)
     {
-      if (requestId != this.activeRequestId)
+      if (requestId != this.activeRequestId ||
+          !NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage))
       {
         return;
       }
@@ -547,6 +664,7 @@ public sealed class TalkSubtitleHandler :
       this.currentReplacementText = replacementText;
       this.translationInFlight = false;
       this.lastFailedOriginalText = string.Empty;
+      this.lastFailedSourceLanguageCode = string.Empty;
     }
 
     this.RecordDiagnosticsSnapshot(
@@ -554,7 +672,7 @@ public sealed class TalkSubtitleHandler :
         originalText,
         translatedText,
         effectiveTranslationEngineId: this.GetDialogueTranslationEngineId());
-    this.PublishOverlay(this.currentOriginalText, translatedText);
+    this.PublishOverlay(originalText, translatedText);
   }
 
   /// <summary>
@@ -570,12 +688,16 @@ public sealed class TalkSubtitleHandler :
   /// </returns>
   private bool TryGetCachedTranslation(
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out string translatedText,
       out string replacementText)
   {
     lock (this.stateGate)
     {
-      if (this.TextMatches(this.currentOriginalText, originalText) &&
+      if (NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage) &&
+          this.TextMatches(this.currentOriginalText, originalText) &&
           !string.IsNullOrWhiteSpace(this.currentTranslatedText))
       {
         translatedText = this.currentTranslatedText;
@@ -641,12 +763,16 @@ public sealed class TalkSubtitleHandler :
   ///     otherwise, <see langword="false" />.
   /// </returns>
   private bool TryGetCurrentResolvedTranslation(
+      SourceClientLanguage sourceLanguage,
       out string translatedText,
       out string replacementText)
   {
     lock (this.stateGate)
     {
-      if (!string.IsNullOrWhiteSpace(this.currentTranslatedText))
+      if (NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage) &&
+          !string.IsNullOrWhiteSpace(this.currentTranslatedText))
       {
         translatedText = this.currentTranslatedText;
         replacementText = this.currentReplacementText;
@@ -671,15 +797,22 @@ public sealed class TalkSubtitleHandler :
   /// </returns>
   private bool TryQueueTranslation(
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out int requestId)
   {
     lock (this.stateGate)
     {
-      if (this.TextMatches(this.currentOriginalText, originalText))
+      if (NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage) &&
+          this.TextMatches(this.currentOriginalText, originalText))
       {
         if (this.translationInFlight ||
             !string.IsNullOrWhiteSpace(this.currentTranslatedText) ||
-            this.TextMatches(this.lastFailedOriginalText, originalText))
+            (NativeRuntimeSourceScope.MatchesSource(
+                 this.lastFailedSourceLanguageCode,
+                 sourceLanguage) &&
+             this.TextMatches(this.lastFailedOriginalText, originalText)))
         {
           requestId = this.activeRequestId;
           return false;
@@ -687,6 +820,7 @@ public sealed class TalkSubtitleHandler :
       }
 
       this.activeRequestId++;
+      this.currentSourceLanguageCode = sourceLanguage.PersistenceCode;
       this.currentOriginalText = originalText;
       this.currentTranslatedText = string.Empty;
       this.currentReplacementText = string.Empty;
@@ -705,15 +839,18 @@ public sealed class TalkSubtitleHandler :
   private void SetResolvedState(
       string originalText,
       string translatedText,
-      string replacementText)
+      string replacementText,
+      SourceClientLanguage sourceLanguage)
   {
     lock (this.stateGate)
     {
+      this.currentSourceLanguageCode = sourceLanguage.PersistenceCode;
       this.currentOriginalText = originalText;
       this.currentTranslatedText = translatedText;
       this.currentReplacementText = replacementText;
       this.translationInFlight = false;
       this.lastFailedOriginalText = string.Empty;
+      this.lastFailedSourceLanguageCode = string.Empty;
     }
   }
 

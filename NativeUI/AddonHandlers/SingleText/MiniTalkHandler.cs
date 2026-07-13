@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
 namespace Echoglossian.NativeUI.AddonHandlers.SingleText;
 
 /// <summary>
@@ -84,11 +86,15 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
     public string CurrentOriginalText { get; set; } = string.Empty;
 
+    public string CurrentSourceLanguageCode { get; set; } = string.Empty;
+
     public string CurrentReplacementText { get; set; } = string.Empty;
 
     public string CurrentTranslatedText { get; set; } = string.Empty;
 
     public string LastFailedOriginalText { get; set; } = string.Empty;
+
+    public string LastFailedSourceLanguageCode { get; set; } = string.Empty;
 
     public bool TranslationInFlight { get; set; }
   }
@@ -353,6 +359,15 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      this.InvalidateStateForSource(null);
+      return;
+    }
+
+    this.InvalidateStateForSource(sourceLanguage);
+
     var bubbleTextNodes = this.resolveMiniTalkBubbleTextNodes(addon);
     if (bubbleTextNodes == null || bubbleTextNodes.Count == 0)
     {
@@ -385,7 +400,11 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} bubble=0x{bubbleNodeAddress:X} visible-capture overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} swap={this.ShouldSwapTexts()}");
 
-      if (this.TryCaptureOrQueueMiniTalkSource(bubbleNodeAddress, originalText, type.ToString()))
+      if (this.TryCaptureOrQueueMiniTalkSource(
+              bubbleNodeAddress,
+              originalText,
+              type.ToString(),
+              sourceLanguage))
       {
         continue;
       }
@@ -407,10 +426,14 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return;
     }
 
-    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
     {
+      this.InvalidateStateForSource(null);
       return;
     }
+
+    this.InvalidateStateForSource(sourceLanguage);
 
     var bubbleTextNodes = this.resolveMiniTalkBubbleTextNodes(addon);
     if (bubbleTextNodes == null || bubbleTextNodes.Count == 0)
@@ -441,7 +464,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       if (this.TryHandleVisibleSourceChange(
               bubbleNodeAddress,
               visibleOriginalText,
-              $"{type}-visible-reconcile"))
+              $"{type}-visible-reconcile",
+              sourceLanguage))
       {
         continue;
       }
@@ -451,6 +475,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
       if (!this.TryGetCurrentResolvedTranslation(
               bubbleNodeAddress,
+              sourceLanguage,
               out var resolvedOriginalText,
               out var translatedText,
               out var replacementText))
@@ -458,7 +483,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         if (this.TryCaptureOrQueueMiniTalkSource(
                 bubbleNodeAddress,
                 visibleOriginalText,
-                $"{type}-visible-fallback"))
+                $"{type}-visible-fallback",
+                sourceLanguage))
         {
           continue;
         }
@@ -556,6 +582,55 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Restores plugin-owned bubble mutations and clears all resolved state
+  ///     when the operation source changes or cannot be resolved.
+  /// </summary>
+  /// <param name="sourceLanguage">
+  ///     The operation-captured source, or no value when source resolution
+  ///     failed.
+  /// </param>
+  private void InvalidateStateForSource(
+      SourceClientLanguage? sourceLanguage)
+  {
+    List<KeyValuePair<nint, BubbleState>> bubbleStates;
+    List<nint> overlayKeysToClear;
+    lock (this.stateGate)
+    {
+      var shouldInvalidate = this.bubbleStates.Values.Any(state =>
+          !string.IsNullOrWhiteSpace(state.CurrentSourceLanguageCode) &&
+          !NativeRuntimeSourceScope.MatchesSource(
+              state.CurrentSourceLanguageCode,
+              sourceLanguage));
+      if (!shouldInvalidate)
+      {
+        bubbleStates = [];
+        overlayKeysToClear = !sourceLanguage.HasValue
+            ? this.bubbleStates.Keys.ToList()
+            : [];
+      }
+      else
+      {
+        bubbleStates = this.bubbleStates.ToList();
+        overlayKeysToClear = [];
+        this.bubbleStates.Clear();
+      }
+    }
+
+    foreach (var bubbleKey in overlayKeysToClear)
+    {
+      this.clearOverlay(bubbleKey, true);
+    }
+
+    foreach (var bubbleState in bubbleStates)
+    {
+      this.TryRestoreNativeLayout(
+          bubbleState.Value.NativeLayoutSnapshot,
+          bubbleState.Value.NativeLayoutOriginalText);
+      this.clearOverlay(bubbleState.Key, true);
+    }
+  }
+
+  /// <summary>
   ///     Resolves a MiniTalk translation without blocking the game UI and
   ///     persists the result for future cache hits.
   /// </summary>
@@ -595,10 +670,15 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       {
         if (this.TryGetBubbleState(bubbleKey, out var state) &&
             requestId == state.ActiveRequestId &&
+            NativeRuntimeSourceScope.MatchesSource(
+                state.CurrentSourceLanguageCode,
+                sourceLanguage) &&
             this.TextMatches(state.CurrentOriginalText, originalText))
         {
           state.TranslationInFlight = false;
           state.LastFailedOriginalText = originalText;
+          state.LastFailedSourceLanguageCode =
+              sourceLanguage.PersistenceCode;
         }
       }
 
@@ -623,7 +703,10 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     lock (this.stateGate)
     {
       if (!this.TryGetBubbleState(bubbleKey, out var state) ||
-          requestId != state.ActiveRequestId)
+          requestId != state.ActiveRequestId ||
+          !NativeRuntimeSourceScope.MatchesSource(
+              state.CurrentSourceLanguageCode,
+              sourceLanguage))
       {
         return;
       }
@@ -632,6 +715,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       state.CurrentReplacementText = replacementText;
       state.TranslationInFlight = false;
       state.LastFailedOriginalText = string.Empty;
+      state.LastFailedSourceLanguageCode = string.Empty;
     }
 
     this.PublishOverlay(bubbleKey, originalText, translatedText);
@@ -651,12 +735,16 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   private bool TryGetCachedTranslation(
       nint bubbleKey,
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out string translatedText,
       out string replacementText)
   {
     lock (this.stateGate)
     {
       if (this.TryGetBubbleState(bubbleKey, out var state) &&
+          NativeRuntimeSourceScope.MatchesSource(
+              state.CurrentSourceLanguageCode,
+              sourceLanguage) &&
           this.TextMatches(state.CurrentOriginalText, originalText) &&
           !string.IsNullOrWhiteSpace(state.CurrentTranslatedText))
       {
@@ -756,6 +844,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// </returns>
   private bool TryGetCurrentResolvedTranslation(
       nint bubbleKey,
+      SourceClientLanguage sourceLanguage,
       out string originalText,
       out string translatedText,
       out string replacementText)
@@ -763,6 +852,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     lock (this.stateGate)
     {
       if (this.TryGetBubbleState(bubbleKey, out var state) &&
+          NativeRuntimeSourceScope.MatchesSource(
+              state.CurrentSourceLanguageCode,
+              sourceLanguage) &&
           !string.IsNullOrWhiteSpace(state.CurrentTranslatedText))
       {
         originalText = state.CurrentOriginalText;
@@ -791,16 +883,23 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   private bool TryQueueTranslation(
       nint bubbleKey,
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out int requestId)
   {
     lock (this.stateGate)
     {
       var state = this.GetOrCreateBubbleState(bubbleKey);
-      if (this.TextMatches(state.CurrentOriginalText, originalText))
+      if (NativeRuntimeSourceScope.MatchesSource(
+              state.CurrentSourceLanguageCode,
+              sourceLanguage) &&
+          this.TextMatches(state.CurrentOriginalText, originalText))
       {
         if (state.TranslationInFlight ||
             !string.IsNullOrWhiteSpace(state.CurrentTranslatedText) ||
-            this.TextMatches(state.LastFailedOriginalText, originalText))
+            (NativeRuntimeSourceScope.MatchesSource(
+                 state.LastFailedSourceLanguageCode,
+                 sourceLanguage) &&
+             this.TextMatches(state.LastFailedOriginalText, originalText)))
         {
           requestId = state.ActiveRequestId;
           return false;
@@ -808,6 +907,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       }
 
       state.ActiveRequestId++;
+      state.CurrentSourceLanguageCode = sourceLanguage.PersistenceCode;
       state.CurrentOriginalText = originalText;
       state.CurrentTranslatedText = string.Empty;
       state.CurrentReplacementText = string.Empty;
@@ -828,16 +928,19 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       nint bubbleKey,
       string originalText,
       string translatedText,
-      string replacementText)
+      string replacementText,
+      SourceClientLanguage sourceLanguage)
   {
     lock (this.stateGate)
     {
       var state = this.GetOrCreateBubbleState(bubbleKey);
+      state.CurrentSourceLanguageCode = sourceLanguage.PersistenceCode;
       state.CurrentOriginalText = originalText;
       state.CurrentTranslatedText = translatedText;
       state.CurrentReplacementText = replacementText;
       state.TranslationInFlight = false;
       state.LastFailedOriginalText = string.Empty;
+      state.LastFailedSourceLanguageCode = string.Empty;
     }
   }
 
@@ -1317,7 +1420,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   private bool TryHandleVisibleSourceChange(
       nint bubbleKey,
       string visibleOriginalText,
-      string trigger)
+      string trigger,
+      SourceClientLanguage sourceLanguage)
   {
     var shouldReconcile = false;
 
@@ -1342,7 +1446,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     return this.TryCaptureOrQueueMiniTalkSource(
         bubbleKey,
         visibleOriginalText,
-        trigger);
+        trigger,
+        sourceLanguage);
   }
 
   /// <summary>
@@ -1360,17 +1465,13 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   private bool TryCaptureOrQueueMiniTalkSource(
       nint bubbleKey,
       string originalText,
-      string trigger)
+      string trigger,
+      SourceClientLanguage sourceLanguage)
   {
-    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-            out var sourceLanguage))
-    {
-      return false;
-    }
-
     if (this.TryGetCachedTranslation(
             bubbleKey,
             originalText,
+            sourceLanguage,
             out var translatedText,
             out _))
     {
@@ -1381,7 +1482,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           bubbleKey,
           originalText,
           translatedText,
-          this.NormalizeForReplacement(translatedText));
+          this.NormalizeForReplacement(translatedText),
+          sourceLanguage);
       this.PublishOverlay(bubbleKey, originalText, translatedText, trigger);
       return true;
     }
@@ -1399,7 +1501,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           bubbleKey,
           originalText,
           storedMiniTalk!.TranslatedMiniTalkMessage!,
-          this.NormalizeForReplacement(storedMiniTalk.TranslatedMiniTalkMessage!));
+          this.NormalizeForReplacement(storedMiniTalk.TranslatedMiniTalkMessage!),
+          sourceLanguage);
       this.PublishOverlay(
           bubbleKey,
           originalText,
@@ -1408,7 +1511,11 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return true;
     }
 
-    if (this.TryQueueTranslation(bubbleKey, originalText, out var requestId))
+    if (this.TryQueueTranslation(
+            bubbleKey,
+            originalText,
+            sourceLanguage,
+            out var requestId))
     {
       // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={trigger} cache-miss -> queued translation request #{requestId}");
