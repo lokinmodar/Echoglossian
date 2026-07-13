@@ -10,11 +10,13 @@
 
 ## Global Constraints
 
-- Source language is always RuntimeLanguageHelper.GetCurrentGameLanguageCode() for persisted identity.
+- Source identity is always resolved from the current ClientLanguage raw value; it never defaults to English.
+- Raw values 0, 1, 2, 3, 4, 5, 6, and 7 persist respectively as ja, en, de, fr, chs, cht, ko, and tc.
+- Provider source codes are ja, en, de, fr, zh-CN, zh-CN, ko, and zh-TW respectively; they are not cache identities.
 - A row is reusable only when source and target language match the requested scope.
 - TranslateAlreadyTranslatedTexts true additionally requires the active engine; false permits another compatible engine.
 - Empty or unknown stored source language is not reusable.
-- Keep provider-facing ClientLanguage.Humanize() separate from persisted identity.
+- An unknown runtime client language fails closed: no provider call, cache reuse, persistence, or native mutation.
 - Do not add a schema migration. Normalize legacy source names during comparison.
 - Preserve existing game-version and source-content hash checks.
 - Overlay-only mode must not mutate native addon state.
@@ -24,9 +26,10 @@
 
 ## File Map
 
+- Create: GeneralHelpers/SourceClientLanguage.cs - separate persistence identity and provider source code for the live client.
 - Create: GeneralHelpers/TranslationReuseScope.cs - shared source/target/engine predicate.
 - Create: Echoglossian.Tests/TranslationReuseScopeTests.cs - pure scope regression tests.
-- Modify: GeneralHelpers/RuntimeLanguageHelper.cs - central current-client source identity.
+- Modify: GeneralHelpers/RuntimeLanguageHelper.cs - central raw ClientLanguage resolver and legacy normalization.
 - Modify: DBHelpers/DbOperations.cs - all dialogue, toast, quest, select-string, hint, and legacy GameWindow retrieval paths.
 - Modify: DBHelpers/EntitiesHelper.cs and NativeUI/Helpers/GenericAddonHandlerHelper.cs - normalized source writes.
 - Modify: Cache/ActionTooltipCacheManager.cs, Cache/ItemTooltipCacheManager.cs, Cache/TraitCacheManager.cs, Cache/ReferenceTextCacheStore.cs, Cache/ReferenceTextCacheRegistry.cs, Cache/StringArrayDataCacheManager.cs, Cache/GameWindowCacheManager.cs - scoped lookup APIs.
@@ -38,12 +41,15 @@
 ## Task 1: Shared Scope Contract
 
 **Files:**
+- Create: GeneralHelpers/SourceClientLanguage.cs
 - Create: GeneralHelpers/TranslationReuseScope.cs
 - Modify: GeneralHelpers/RuntimeLanguageHelper.cs
 - Create: Echoglossian.Tests/TranslationReuseScopeTests.cs
 
 **Interfaces:**
-- Produces TranslationReuseScope.Create(Config config).
+- Produces bool RuntimeLanguageHelper.TryResolveSourceLanguage(ClientLanguage clientLanguage, out SourceClientLanguage sourceLanguage).
+- Produces bool RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out SourceClientLanguage sourceLanguage).
+- Produces bool TranslationReuseScope.TryCreate(Config config, out TranslationReuseScope scope).
 - Produces bool TranslationReuseScope.Matches(string? storedSourceLanguage, string? storedTargetLanguage, int? storedEngine).
 
 - [ ] **Step 1: Write failing unit tests**
@@ -78,30 +84,118 @@ public void Matches_RetranslationEnabled_RequiresActiveEngine()
 
     Assert.False(scope.Matches("en", "iw", 7));
 }
+
+[Theory]
+[InlineData(4, "chs", "zh-CN")]
+[InlineData(5, "cht", "zh-CN")]
+[InlineData(6, "ko", "ko")]
+[InlineData(7, "tc", "zh-TW")]
+public void TryResolveSourceLanguage_ExtendedClientValue_ReturnsDistinctIdentity(
+    int rawClientLanguage,
+    string expectedPersistenceCode,
+    string expectedProviderCode)
+{
+    var resolved = RuntimeLanguageHelper.TryResolveSourceLanguage(
+        (ClientLanguage)rawClientLanguage,
+        out var sourceLanguage);
+
+    Assert.True(resolved);
+    Assert.Equal(expectedPersistenceCode, sourceLanguage.PersistenceCode);
+    Assert.Equal(expectedProviderCode, sourceLanguage.ProviderCode);
+}
+
+[Fact]
+public void TryResolveSourceLanguage_UnknownClientValue_ReturnsFalse()
+{
+    var resolved = RuntimeLanguageHelper.TryResolveSourceLanguage(
+        (ClientLanguage)99,
+        out _);
+
+    Assert.False(resolved);
+}
 ~~~
 
 - [ ] **Step 2: Run the test and observe RED**
 
 Run: dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter FullyQualifiedName~TranslationReuseScopeTests
 
-Expected: compile failure because TranslationReuseScope is missing.
+Expected: compile failure because SourceClientLanguage and the TryResolve APIs are missing.
 
 - [ ] **Step 3: Implement the pure scope value object**
 
 ~~~csharp
+internal readonly record struct SourceClientLanguage(
+    string PersistenceCode,
+    string ProviderCode);
+
+public static bool TryResolveSourceLanguage(
+    ClientLanguage clientLanguage,
+    out SourceClientLanguage sourceLanguage)
+{
+    sourceLanguage = (int)clientLanguage switch
+    {
+        0 => new SourceClientLanguage("ja", "ja"),
+        1 => new SourceClientLanguage("en", "en"),
+        2 => new SourceClientLanguage("de", "de"),
+        3 => new SourceClientLanguage("fr", "fr"),
+        4 => new SourceClientLanguage("chs", "zh-CN"),
+        5 => new SourceClientLanguage("cht", "zh-CN"),
+        6 => new SourceClientLanguage("ko", "ko"),
+        7 => new SourceClientLanguage("tc", "zh-TW"),
+        _ => default,
+    };
+
+    if (!string.IsNullOrWhiteSpace(sourceLanguage.PersistenceCode))
+    {
+        return true;
+    }
+
+    try
+    {
+        var hostCode = NormalizeLanguage(clientLanguage.ToCode());
+        if (!string.IsNullOrWhiteSpace(hostCode))
+        {
+            sourceLanguage = new SourceClientLanguage(hostCode, hostCode);
+            return true;
+        }
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+        // The current host does not expose an identity for this raw value.
+    }
+
+    return false;
+}
+
 internal readonly record struct TranslationReuseScope(
     string SourceLanguageCode,
     string TargetLanguageCode,
     int? TranslationEngine,
     bool RequireMatchingEngine)
 {
-    public static TranslationReuseScope Create(Config config)
+    public static bool TryCreate(Config config, out TranslationReuseScope scope)
     {
-        return new TranslationReuseScope(
-            RuntimeLanguageHelper.GetCurrentGameLanguageCode(),
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(config.Lang),
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        var targetLanguage =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(config.Lang);
+        if (string.IsNullOrWhiteSpace(targetLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
             config.ChosenTransEngine,
             config.TranslateAlreadyTranslatedTexts);
+        return true;
     }
 
     public bool Matches(
@@ -120,7 +214,7 @@ internal readonly record struct TranslationReuseScope(
 }
 ~~~
 
-Do not put provider aliases in this type. RuntimeLanguageHelper remains the only converter from ClientState.ClientLanguage to a source-language code.
+Do not put provider aliases in TranslationReuseScope. SourceClientLanguage is the only place where the raw client value maps to a persistence identity and provider code. Do not add a default English case.
 
 - [ ] **Step 4: Run the test and observe GREEN**
 
@@ -131,11 +225,11 @@ Expected: all scope tests pass.
 - [ ] **Step 5: Commit**
 
 ~~~powershell
-git add -- GeneralHelpers/TranslationReuseScope.cs GeneralHelpers/RuntimeLanguageHelper.cs Echoglossian.Tests/TranslationReuseScopeTests.cs
-git commit -m "#139 Add canonical translation reuse scope"
+git add -- GeneralHelpers/SourceClientLanguage.cs GeneralHelpers/TranslationReuseScope.cs GeneralHelpers/RuntimeLanguageHelper.cs Echoglossian.Tests/TranslationReuseScopeTests.cs
+git commit -m "#139 Add extended client language scope"
 ~~~
 
-## Task 2: Normalize Every Persisted Source-Language Write
+## Task 2: Persist Resolved Source Identities and Use Provider Codes
 
 **Files:**
 - Modify: DBHelpers/EntitiesHelper.cs
@@ -149,22 +243,34 @@ git commit -m "#139 Add canonical translation reuse scope"
 - Modify: NativeUI/AddonHandlers/CutSceneSelectString/CutSceneSelectStringHandler.cs
 - Modify: NativeUI/AddonHandlers/Quest/QuestAddonHandlerBase.cs
 - Modify: NativeUI/AddonHandlers/Toasts/TextGimmickHintHandler.cs
+- Modify: NativeUI/AddonHandlers/Talk/TalkHandler.cs
+- Modify: NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs
+- Modify: NativeUI/AddonHandlers/Talk/TalkSubtitleHandler.cs
+- Modify: NativeUI/AddonHandlers/SingleText/MiniTalkHandler.cs
+- Modify: NativeUI/AddonHandlers/Toasts/ToastGuiSupportedToastRuntime.cs
+- Modify: NativeUI/AddonHandlers/Toasts/ToastGuiCaptureRuntime.cs
+- Modify: NativeUI/AddonHandlers/Toasts/QuestToastRuntime.cs
+- Modify: NativeUI/AddonHandlers/Toasts/AddonTextToastHandler.cs
+- Modify: Translators/Helpers/Glossian.cs
 - Test: Echoglossian.Tests/DbOperationsTests.cs and Echoglossian.Tests/RuntimeLanguageHelperTests.cs
 
 **Interfaces:**
-- All OriginalLang and equivalent fields receive the normalized current game language code.
-- TranslationService calls retain the provider-facing source language separately.
+- All OriginalLang and equivalent fields receive SourceClientLanguage.PersistenceCode.
+- Every live-client TranslationService call receives SourceClientLanguage.ProviderCode.
+- A caller that cannot resolve the source client language returns before cache lookup, provider submission, persistence, or native mutation.
 
 - [ ] **Step 1: Write a failing persisted identity test**
 
 ~~~csharp
 [Fact]
-public void FormatToastMessage_PersistsNormalizedCurrentSourceLanguage()
+public void FormatToastMessage_PersistsResolvedSourceIdentity()
 {
     var row = plugin.FormatToastMessage("Area", "Test");
 
+    Assert.True(RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+        out var sourceLanguage));
     Assert.Equal(
-        RuntimeLanguageHelper.GetCurrentGameLanguageCode(),
+        sourceLanguage.PersistenceCode,
         row.OriginalToastMessageLang);
 }
 ~~~
@@ -180,19 +286,24 @@ Expected: the stored field contains the old Humanize value, such as English.
 - [ ] **Step 3: Split provider input from persisted identity**
 
 ~~~csharp
-var providerSourceLanguage = ClientStateInterface.ClientLanguage.Humanize();
-var persistedSourceLanguage =
-    RuntimeLanguageHelper.GetCurrentGameLanguageCode();
+if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+        out var sourceLanguage))
+{
+    return;
+}
 
 var translatedText = TranslationService.Translate(
     originalText,
-    providerSourceLanguage,
+    sourceLanguage.ProviderCode,
     targetLanguage);
 
-row.OriginalLang = persistedSourceLanguage;
+row.OriginalLang = sourceLanguage.PersistenceCode;
 ~~~
 
-Apply this only to row constructors and SetOriginalLang calls. Leave logging and provider calls unchanged.
+Apply this to all live-client translation submissions, row constructors, and
+SetOriginalLang calls in the listed files. Do not pass Humanize(), ToString(),
+or a raw enum number to TranslationService. A source-resolution failure must
+return before any native state change.
 
 - [ ] **Step 4: Run focused persistence tests**
 
@@ -204,7 +315,7 @@ Expected: all selected tests pass.
 
 ~~~powershell
 git add -- DBHelpers/EntitiesHelper.cs NativeUI/Helpers NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs NativeUI/AddonHandlers/CutSceneSelectString NativeUI/AddonHandlers/Quest/QuestAddonHandlerBase.cs NativeUI/AddonHandlers/Toasts/TextGimmickHintHandler.cs Echoglossian.Tests/DbOperationsTests.cs Echoglossian.Tests/RuntimeLanguageHelperTests.cs
-git commit -m "#139 Persist canonical client source language"
+git commit -m "#139 Persist resolved client source identities"
 ~~~
 
 ## Task 3: Apply the Scope to Legacy Database Retrieval
@@ -215,7 +326,8 @@ git commit -m "#139 Persist canonical client source language"
 - Test: Echoglossian.Tests/DbOperationsTests.cs
 
 **Interfaces:**
-- Each stored entity retrieval uses TranslationReuseScope.Create(this.configuration).
+- Each stored entity retrieval uses TranslationReuseScope.TryCreate(this.configuration, out scope).
+- A failed scope resolution returns no stored row and queues no translation work.
 - The existing semantic identity remains the SQL predicate; source, target, and engine policy are applied before selection.
 
 - [ ] **Step 1: Add failing cross-source and engine tests**
@@ -247,7 +359,10 @@ Expected: at least one mismatched-source row is returned.
 - [ ] **Step 3: Apply the scope after the existing semantic query**
 
 ~~~csharp
-var scope = TranslationReuseScope.Create(this.configuration);
+if (!TranslationReuseScope.TryCreate(this.configuration, out var scope))
+{
+    return null;
+}
 var candidates = existingTalkMessage
     .AsEnumerable()
     .Where(row => scope.Matches(
@@ -351,7 +466,10 @@ For persistence upserts, include the stored source language in existing-row sele
 - [ ] **Step 4: Update callers in one compiler-driven pass**
 
 ~~~csharp
-var scope = TranslationReuseScope.Create(this.configuration);
+if (!TranslationReuseScope.TryCreate(this.configuration, out var scope))
+{
+    return null;
+}
 var row = ActionTooltipCacheManager.TryFindCanonicalMatch(
     actionId,
     scope,
@@ -474,6 +592,16 @@ public void TranslationReuseScope_TargetOrSourceChange_RejectsPriorRow()
     Assert.False(changedSource.Matches("en", "iw", 4));
     Assert.False(changedTarget.Matches("en", "iw", 4));
 }
+
+[Fact]
+public void TranslationReuseScope_ChineseClientIdentities_DoNotCrossReuse()
+{
+    var simplifiedChina = new TranslationReuseScope("chs", "iw", 4, false);
+
+    Assert.True(simplifiedChina.Matches("chs", "iw", 4));
+    Assert.False(simplifiedChina.Matches("cht", "iw", 4));
+    Assert.False(simplifiedChina.Matches("tc", "iw", 4));
+}
 ~~~
 
 - [ ] **Step 2: Run the build**
@@ -494,7 +622,9 @@ Expected: exit code 0 and all tests pass.
 2. Change target language and verify he rows do not appear.
 3. Change active engine with TranslateAlreadyTranslatedTexts enabled and verify the prior-engine row is not reused.
 4. Change FFXIV client to German, Japanese, or French and verify the English-source row is not reused.
-5. Return to the original client language and verify only scope-compatible rows are reused.
+5. On an extended client, verify raw values 4, 5, 6, and 7 persist chs, cht, ko, and tc and submit zh-CN, zh-CN, ko, and zh-TW to the provider.
+6. Verify a row created by raw client value 4 is not reused by raw client value 5, even though both provider calls use zh-CN.
+7. Return to the original client language and verify only scope-compatible rows are reused.
 
 - [ ] **Step 5: Commit verification adjustments**
 
@@ -505,9 +635,9 @@ git commit -m "#139 Verify canonical translation reuse transitions"
 
 ## Plan Self-Review
 
-- Spec coverage: Tasks 1-4 establish and apply one source/target/engine scope to persistence and caches. Task 5 removes handler-local translation semantics. Task 6 validates source, target, engine, and client-language transitions.
+- Spec coverage: Task 1 resolves source identities from raw client values and constructs a fail-closed scope. Tasks 2-4 carry that identity through provider calls, persistence, and caches. Task 5 removes handler-local translation semantics. Task 6 validates source, target, engine, client-language, and Chinese-client transitions.
 - Placeholder scan: each behavior has a named owner, test, command, and commit boundary.
-- Type consistency: TranslationReuseScope is created from Config, passed to cache and persistence lookups, and evaluates stored source, target, and engine uniformly.
+- Type consistency: SourceClientLanguage supplies persistence and provider codes; TranslationReuseScope.TryCreate consumes the persistence code and is passed to cache and persistence lookups for uniform source, target, and engine evaluation.
 
 ## Execution Handoff
 
