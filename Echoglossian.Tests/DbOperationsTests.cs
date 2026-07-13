@@ -7,11 +7,13 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using Dalamud.Game;
+using Dalamud.Plugin;
 
 using Xunit;
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.EFCoreSqlite.Models.Journal;
 using Echoglossian.LanguagesHandling;
 using Echoglossian.Translators;
 using Microsoft.EntityFrameworkCore;
@@ -205,6 +207,72 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Ensures every legacy lookup skips a preferred semantic match stored
+    ///     for a different client language before selecting a row.
+    /// </summary>
+    /// <param name="retrieval">The legacy retrieval path under test.</param>
+    [Theory]
+    [InlineData("Talk")]
+    [InlineData("Toast")]
+    [InlineData("ToastReturn")]
+    [InlineData("ErrorToast")]
+    [InlineData("BattleTalk")]
+    [InlineData("QuestPlate")]
+    [InlineData("QuestPlateByName")]
+    [InlineData("TalkSubtitle")]
+    [InlineData("MiniTalk")]
+    [InlineData("TextGimmickHint")]
+    [InlineData("SelectString")]
+    [InlineData("GameWindow")]
+    public void LegacyRetrieval_DifferentStoredSourceLanguage_SkipsWrongRow(
+        string retrieval)
+    {
+        var result = RunLegacyRetrieval(
+            retrieval,
+            translateAlreadyTranslatedTexts: false,
+            preferredSourceLanguage: "en",
+            preferredEngine: 4,
+            eligibleSourceLanguage: "ja",
+            eligibleEngine: 4);
+
+        Assert.Equal("ja", result.SourceLanguage);
+        Assert.Equal(4, result.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Ensures every legacy lookup uses the configured engine policy before
+    ///     selecting a preferred semantic match during explicit retranslation.
+    /// </summary>
+    /// <param name="retrieval">The legacy retrieval path under test.</param>
+    [Theory]
+    [InlineData("Talk")]
+    [InlineData("Toast")]
+    [InlineData("ToastReturn")]
+    [InlineData("ErrorToast")]
+    [InlineData("BattleTalk")]
+    [InlineData("QuestPlate")]
+    [InlineData("QuestPlateByName")]
+    [InlineData("TalkSubtitle")]
+    [InlineData("MiniTalk")]
+    [InlineData("TextGimmickHint")]
+    [InlineData("SelectString")]
+    [InlineData("GameWindow")]
+    public void LegacyRetrieval_RetranslationEnabled_UsesConfiguredEngine(
+        string retrieval)
+    {
+        var result = RunLegacyRetrieval(
+            retrieval,
+            translateAlreadyTranslatedTexts: true,
+            preferredSourceLanguage: "ja",
+            preferredEngine: 7,
+            eligibleSourceLanguage: "ja",
+            eligibleEngine: 4);
+
+        Assert.Equal("ja", result.SourceLanguage);
+        Assert.Equal(4, result.TranslationEngine);
+    }
+
+    /// <summary>
     ///     Ensures explicit Talk retranslation persistence updates the existing
     ///     row for the same source line and engine instead of growing duplicate
     ///     exact-engine history.
@@ -391,6 +459,633 @@ public class DbOperationsTests
         }
     }
 
+    /// <summary>
+    ///     Runs one legacy retrieval against two competing persisted rows.
+    /// </summary>
+    /// <param name="retrieval">The retrieval path to invoke.</param>
+    /// <param name="translateAlreadyTranslatedTexts">
+    ///     Whether the active scope requires the configured engine.
+    /// </param>
+    /// <param name="preferredSourceLanguage">
+    ///     The source identity on the row preferred by legacy selection.
+    /// </param>
+    /// <param name="preferredEngine">
+    ///     The engine on the row preferred by legacy selection.
+    /// </param>
+    /// <param name="eligibleSourceLanguage">
+    ///     The source identity on the row eligible for the active scope.
+    /// </param>
+    /// <param name="eligibleEngine">
+    ///     The engine on the row eligible for the active scope.
+    /// </param>
+    /// <returns>The source identity and engine on the selected row.</returns>
+    private static (string? SourceLanguage, int? TranslationEngine)
+        RunLegacyRetrieval(
+            string retrieval,
+            bool translateAlreadyTranslatedTexts,
+            string preferredSourceLanguage,
+            int preferredEngine,
+            string eligibleSourceLanguage,
+            int eligibleEngine)
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousPluginInterface = PluginEntry.PluginInterface;
+        var previousDataManager = PluginEntry.DManager;
+        var previousLanguages = PluginEntry.LangDict;
+        var activeInstanceField = typeof(PluginEntry).GetField(
+            "activeInstance",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(activeInstanceField);
+        var previousActiveInstance = activeInstanceField.GetValue(null);
+
+        try
+        {
+            var config = new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 4,
+                TranslateAlreadyTranslatedTexts =
+                    translateAlreadyTranslatedTexts,
+            };
+            var plugin = CreateFormattingPlugin(config);
+
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(
+                    ClientLanguage.Japanese);
+            PluginEntry.ConfigDirectory =
+                configDir + Path.DirectorySeparatorChar;
+            PluginEntry.PluginInterface = CreatePluginInterface(configDir);
+            PluginEntry.DManager = null!;
+            PluginEntry.LangDict = CreateTargetLanguages();
+            activeInstanceField.SetValue(null, plugin);
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                SeedLegacyRetrievalRows(
+                    context,
+                    retrieval,
+                    preferredSourceLanguage,
+                    preferredEngine,
+                    eligibleSourceLanguage,
+                    eligibleEngine);
+                context.SaveChanges();
+            }
+
+            return InvokeLegacyRetrieval(plugin, retrieval);
+        }
+        finally
+        {
+            activeInstanceField.SetValue(null, previousActiveInstance);
+            PluginEntry.DManager = previousDataManager;
+            PluginEntry.LangDict = previousLanguages;
+            PluginEntry.PluginInterface = previousPluginInterface;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.ClientStateInterface = previousClientState;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Seeds competing rows with identical legacy semantic identities.
+    /// </summary>
+    /// <param name="context">The temporary database context.</param>
+    /// <param name="retrieval">The retrieval path under test.</param>
+    /// <param name="preferredSourceLanguage">The first row's source identity.</param>
+    /// <param name="preferredEngine">The first row's engine.</param>
+    /// <param name="eligibleSourceLanguage">The second row's source identity.</param>
+    /// <param name="eligibleEngine">The second row's engine.</param>
+    private static void SeedLegacyRetrievalRows(
+        EchoglossianDbContext context,
+        string retrieval,
+        string preferredSourceLanguage,
+        int preferredEngine,
+        string eligibleSourceLanguage,
+        int eligibleEngine)
+    {
+        var newer = new DateTime(2026, 7, 13, 12, 0, 0, DateTimeKind.Local);
+        var older = newer.AddMinutes(-1);
+
+        switch (retrieval)
+        {
+            case "Talk":
+                context.TalkMessage.AddRange(
+                    CreateTalkMessage(preferredSourceLanguage, preferredEngine, newer),
+                    CreateTalkMessage(eligibleSourceLanguage, eligibleEngine, older));
+                break;
+            case "Toast":
+            case "ToastReturn":
+                context.ToastMessage.AddRange(
+                    CreateToastMessage(
+                        "NonError",
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateToastMessage(
+                        "NonError",
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "ErrorToast":
+                context.ToastMessage.AddRange(
+                    CreateToastMessage(
+                        "Error",
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateToastMessage(
+                        "Error",
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "BattleTalk":
+                context.BattleTalkMessage.AddRange(
+                    CreateBattleTalkMessage(
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateBattleTalkMessage(
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "QuestPlate":
+            case "QuestPlateByName":
+                context.QuestPlate.AddRange(
+                    CreateQuestPlate(
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateQuestPlate(
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "TalkSubtitle":
+                context.TalkSubtitleMessage.AddRange(
+                    CreateTalkSubtitleMessage(
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateTalkSubtitleMessage(
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "MiniTalk":
+                context.MiniTalkMessage.AddRange(
+                    CreateMiniTalkMessage(
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateMiniTalkMessage(
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "TextGimmickHint":
+                context.TextGimmickHintMessage.AddRange(
+                    CreateTextGimmickHintMessage(
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateTextGimmickHintMessage(
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "SelectString":
+                context.SelectString.AddRange(
+                    CreateSelectString(
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateSelectString(
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            case "GameWindow":
+                context.GameWindow.AddRange(
+                    CreateGameWindow(
+                        preferredSourceLanguage,
+                        preferredEngine,
+                        newer),
+                    CreateGameWindow(
+                        eligibleSourceLanguage,
+                        eligibleEngine,
+                        older));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(retrieval),
+                    retrieval,
+                    "Unknown legacy retrieval.");
+        }
+    }
+
+    /// <summary>
+    ///     Invokes one legacy retrieval and returns the selected row scope.
+    /// </summary>
+    /// <param name="plugin">The configured plugin instance.</param>
+    /// <param name="retrieval">The retrieval path to invoke.</param>
+    /// <returns>The selected row's source identity and engine.</returns>
+    private static (string? SourceLanguage, int? TranslationEngine)
+        InvokeLegacyRetrieval(PluginEntry plugin, string retrieval)
+    {
+        return retrieval switch
+        {
+            "Talk" => GetScope(plugin.FindAndReturnTalkMessage(
+                CreateTalkMessage("ja", 7, DateTime.Now))),
+            "Toast" => GetToastScopeAfterFind(
+                plugin,
+                CreateToastMessage("NonError", "ja", 7, DateTime.Now),
+                findError: false),
+            "ToastReturn" => GetScope(plugin.FindAndReturnToastMessage(
+                CreateToastMessage("NonError", "ja", 7, DateTime.Now))),
+            "ErrorToast" => GetToastScopeAfterFind(
+                plugin,
+                CreateToastMessage("Error", "ja", 7, DateTime.Now),
+                findError: true),
+            "BattleTalk" => GetScope(plugin.FindAndReturnBattleTalkMessage(
+                CreateBattleTalkMessage("ja", 7, DateTime.Now))),
+            "QuestPlate" => GetScope(plugin.FindQuestPlate(
+                CreateQuestPlate("ja", 7, DateTime.Now))),
+            "QuestPlateByName" => GetScope(plugin.FindQuestPlateByName(
+                CreateQuestPlate("ja", 7, DateTime.Now))),
+            "TalkSubtitle" => GetScope(
+                plugin.FindAndReturnTalkSubtitleMessage(
+                    CreateTalkSubtitleMessage("ja", 7, DateTime.Now))),
+            "MiniTalk" => GetScope(plugin.FindAndReturnMiniTalkMessage(
+                CreateMiniTalkMessage("ja", 7, DateTime.Now))),
+            "TextGimmickHint" => GetScope(
+                plugin.FindAndReturnTextGimmickHintMessage(
+                    CreateTextGimmickHintMessage("ja", 7, DateTime.Now))),
+            "SelectString" => GetScope(
+                plugin.FindAndReturnCutSceneSelectStringMessage(
+                    CreateSelectString("ja", 7, DateTime.Now))),
+            "GameWindow" => GetScope(PluginEntry.FindAndReturnGameWindow(
+                CreateGameWindow("ja", 7, DateTime.Now))),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(retrieval),
+                retrieval,
+                "Unknown legacy retrieval."),
+        };
+    }
+
+    /// <summary>
+    ///     Invokes one boolean toast lookup and returns its selected row scope.
+    /// </summary>
+    /// <param name="plugin">The configured plugin instance.</param>
+    /// <param name="request">The toast lookup request.</param>
+    /// <param name="findError">Whether to invoke the error-toast lookup.</param>
+    /// <returns>The selected toast row's source identity and engine.</returns>
+    private static (string? SourceLanguage, int? TranslationEngine)
+        GetToastScopeAfterFind(
+            PluginEntry plugin,
+            ToastMessage request,
+            bool findError)
+    {
+        plugin.FoundToastMessage = null;
+        _ = findError
+            ? plugin.FindErrorToastMessage(request)
+            : plugin.FindToastMessage(request);
+        return GetScope(plugin.FoundToastMessage);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a Talk row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(TalkMessage? row)
+    {
+        return (row?.OriginalTalkMessageLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a toast row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(ToastMessage? row)
+    {
+        return (row?.OriginalLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a BattleTalk row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(BattleTalkMessage? row)
+    {
+        return (row?.OriginalBattleTalkMessageLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a quest row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(QuestPlate? row)
+    {
+        return (row?.OriginalLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a TalkSubtitle row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(TalkSubtitleMessage? row)
+    {
+        return (row?.OriginalTalkSubtitleMessageLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a MiniTalk row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(MiniTalkMessage? row)
+    {
+        return (row?.OriginalMiniTalkMessageLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a text-gimmick row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(TextGimmickHintMessage? row)
+    {
+        return (row?.OriginalLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a select-string row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(SelectString? row)
+    {
+        return (row?.OriginalSelectStringLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the stored scope fields from a game-window row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity and engine.</returns>
+    private static (string?, int?) GetScope(GameWindow? row)
+    {
+        return (row?.OriginalWindowStringsLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Creates the semantic Talk row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured Talk row.</returns>
+    private static TalkMessage CreateTalkMessage(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new TalkMessage(
+            "Krile",
+            "The plan remains unchanged.",
+            sourceLanguage,
+            sourceLanguage,
+            "Krile",
+            "O plano permanece inalterado.",
+            "pt-BR",
+            engine,
+            null,
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates the semantic toast row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="toastType">The stored toast type.</param>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured toast row.</returns>
+    private static ToastMessage CreateToastMessage(
+        string toastType,
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new ToastMessage(
+            toastType,
+            "The duty is ready.",
+            sourceLanguage,
+            "A missão está pronta.",
+            "pt-BR",
+            engine,
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates the semantic BattleTalk row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured BattleTalk row.</returns>
+    private static BattleTalkMessage CreateBattleTalkMessage(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new BattleTalkMessage(
+            "Alphinaud",
+            "Hold the line!",
+            sourceLanguage,
+            sourceLanguage,
+            "Alphinaud",
+            "Segurem a linha!",
+            "pt-BR",
+            engine,
+            null,
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates the semantic quest row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured quest row.</returns>
+    private static QuestPlate CreateQuestPlate(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new QuestPlate(
+            "A Test of Resolve",
+            "Speak with the attendant.",
+            sourceLanguage,
+            "Um Teste de Determinação",
+            "Fale com o atendente.",
+            null,
+            "pt-BR",
+            engine,
+            updatedDate,
+            updatedDate,
+            "test-version");
+    }
+
+    /// <summary>
+    ///     Creates the semantic TalkSubtitle row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured TalkSubtitle row.</returns>
+    private static TalkSubtitleMessage CreateTalkSubtitleMessage(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new TalkSubtitleMessage(
+            "The way is clear.",
+            sourceLanguage,
+            "O caminho está livre.",
+            "pt-BR",
+            engine,
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates the semantic MiniTalk row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured MiniTalk row.</returns>
+    private static MiniTalkMessage CreateMiniTalkMessage(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new MiniTalkMessage(
+            "Over here!",
+            sourceLanguage,
+            "Por aqui!",
+            "pt-BR",
+            engine,
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates the semantic text-gimmick row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured text-gimmick row.</returns>
+    private static TextGimmickHintMessage CreateTextGimmickHintMessage(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new TextGimmickHintMessage(
+            "Examine the device.",
+            sourceLanguage,
+            "Examine o dispositivo.",
+            "pt-BR",
+            engine,
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates the semantic select-string row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured select-string row.</returns>
+    private static SelectString CreateSelectString(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new SelectString(
+            "Proceed?",
+            sourceLanguage,
+            "[\"Proceed.\"]",
+            "Prosseguir?",
+            "[\"Prosseguir.\"]",
+            "pt-BR",
+            engine,
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates the semantic game-window row used by legacy lookup tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The stored source identity.</param>
+    /// <param name="engine">The stored translation engine.</param>
+    /// <param name="updatedDate">The row update timestamp.</param>
+    /// <returns>The configured game-window row.</returns>
+    private static GameWindow CreateGameWindow(
+        string sourceLanguage,
+        int engine,
+        DateTime updatedDate)
+    {
+        return new GameWindow(
+            "LegacyTestWindow",
+            "[\"Original\"]",
+            sourceLanguage,
+            "[\"Traduzido\"]",
+            "pt-BR",
+            engine,
+            "test-version",
+            updatedDate,
+            updatedDate);
+    }
+
+    /// <summary>
+    ///     Creates a plugin-interface proxy that supplies the temporary config
+    ///     directory required by the static legacy GameWindow lookup.
+    /// </summary>
+    /// <param name="configDirectory">The temporary config directory.</param>
+    /// <returns>The configured plugin-interface proxy.</returns>
+    private static IDalamudPluginInterface CreatePluginInterface(
+        string configDirectory)
+    {
+        var pluginInterface = DispatchProxy.Create<
+            IDalamudPluginInterface,
+            PluginInterfaceProxy>();
+        ((PluginInterfaceProxy)(object)pluginInterface).ConfigDirectory =
+            configDirectory;
+        return pluginInterface;
+    }
+
     private static void TryDeleteDirectory(string path)
     {
         if (!Directory.Exists(path))
@@ -412,11 +1107,11 @@ public class DbOperationsTests
     ///     Creates the minimal plugin instance required by entity formatters.
     /// </summary>
     /// <returns>The formatting-only plugin instance.</returns>
-    private static PluginEntry CreateFormattingPlugin()
+    private static PluginEntry CreateFormattingPlugin(Config? config = null)
     {
         var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
             typeof(PluginEntry));
-        var config = new Config
+        config ??= new Config
         {
             Lang = 28,
             ChosenTransEngine = 0,
@@ -437,6 +1132,23 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Creates the target-language table required by reuse-scope tests.
+    /// </summary>
+    /// <returns>A language table containing the configured Portuguese target.</returns>
+    private static Dictionary<int, LanguageInfo> CreateTargetLanguages()
+    {
+        return new Dictionary<int, LanguageInfo>
+        {
+            [28] = new LanguageInfo(
+                "pt-BR",
+                "Portuguese",
+                string.Empty,
+                string.Empty,
+                []),
+        };
+    }
+
+    /// <summary>
     ///     Sets one private plugin field on a formatting-only instance.
     /// </summary>
     /// <param name="plugin">The plugin instance.</param>
@@ -452,5 +1164,35 @@ public class DbOperationsTests
             BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.NotNull(field);
         field.SetValue(plugin, value);
+    }
+
+    /// <summary>
+    ///     Supplies the config-directory method required by the GameWindow
+    ///     retrieval test.
+    /// </summary>
+    private class PluginInterfaceProxy : DispatchProxy
+    {
+        /// <summary>
+        ///     Gets or sets the config directory returned by the proxy.
+        /// </summary>
+        public string ConfigDirectory { get; set; } = string.Empty;
+
+        /// <summary>
+        ///     Dispatches the config-directory method used by the lookup.
+        /// </summary>
+        /// <param name="targetMethod">The invoked interface method.</param>
+        /// <param name="args">The invoked method arguments.</param>
+        /// <returns>The configured directory.</returns>
+        protected override object? Invoke(
+            MethodInfo? targetMethod,
+            object?[]? args)
+        {
+            if (targetMethod?.Name == "GetPluginConfigDirectory")
+            {
+                return this.ConfigDirectory;
+            }
+
+            throw new NotSupportedException(targetMethod?.Name);
+        }
     }
 }
