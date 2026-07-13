@@ -213,6 +213,67 @@ public class MainCommandTextPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures identical MainCommand canonical identity cannot update or
+    ///     read across distinct source languages.
+    /// </summary>
+    [Fact]
+    public void MainCommandTextPersistence_PreservesDistinctSourceLanguages()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var payload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                IconId = 1234,
+                CategoryId = 7,
+                MainCommandCategoryId = 3,
+                Unknown0 = 9,
+                SortId = 40,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var english = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 0, "7.3", payload);
+            var german = CreateCanonicalMainCommandTextRow(
+                "de", "pt", 0, "7.3", payload);
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                english,
+                static context => context.MainCommandTexts);
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                german,
+                static context => context.MainCommandTexts);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.MainCommandTexts.Count());
+
+            var englishMatch = ReferenceTextPersistenceHelper.FindReferenceText(
+                configDir,
+                english,
+                static context => context.MainCommandTexts);
+            var germanMatch = ReferenceTextPersistenceHelper.FindReferenceText(
+                configDir,
+                german,
+                static context => context.MainCommandTexts);
+            Assert.Equal("en", englishMatch?.OriginalLang);
+            Assert.Equal("de", germanMatch?.OriginalLang);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures the specific MainCommand cache resolves exact translated and
     ///     canonical original text lookups.
     /// </summary>

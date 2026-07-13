@@ -92,15 +92,20 @@ public static class ActionTooltipPersistenceHelper
                 GameVersionLookupHelper.HasRequestedVersion(
                     actionTooltip.GameVersion);
 
-            var existing = context.ActionTooltip.FirstOrDefault(row =>
-                row.ActionId == actionTooltip.ActionId &&
-                row.TranslationLang == actionTooltip.TranslationLang &&
-                row.TranslationEngine == actionTooltip.TranslationEngine &&
-                ((!hasRequestedGameVersion && row.GameVersion == null) ||
-                 (hasRequestedGameVersion &&
-                  (row.GameVersion == null ||
-                   row.GameVersion == actionTooltip.GameVersion))) &&
-                row.SourceContentHash == actionTooltip.SourceContentHash);
+            var existing = context.ActionTooltip
+                .Where(row =>
+                    row.ActionId == actionTooltip.ActionId &&
+                    row.TranslationLang == actionTooltip.TranslationLang &&
+                    row.TranslationEngine == actionTooltip.TranslationEngine &&
+                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (row.GameVersion == null ||
+                       row.GameVersion == actionTooltip.GameVersion))) &&
+                    row.SourceContentHash == actionTooltip.SourceContentHash)
+                .AsEnumerable()
+                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    actionTooltip.OriginalLang));
             if (existing != null)
             {
                 MergeValues(existing, actionTooltip);
@@ -152,7 +157,7 @@ public static class ActionTooltipPersistenceHelper
 
             return context.ActionTooltip
                 .AsNoTracking()
-                .FirstOrDefault(row =>
+                .Where(row =>
                     row.ActionId == probe.ActionId &&
                     row.TranslationLang == probe.TranslationLang &&
                     row.TranslationEngine == probe.TranslationEngine &&
@@ -160,7 +165,11 @@ public static class ActionTooltipPersistenceHelper
                      (hasRequestedGameVersion &&
                       (row.GameVersion == null ||
                        row.GameVersion == probe.GameVersion))) &&
-                    row.SourceContentHash == probe.SourceContentHash);
+                    row.SourceContentHash == probe.SourceContentHash)
+                .AsEnumerable()
+                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    probe.OriginalLang));
         }
         catch
         {
@@ -177,6 +186,7 @@ public static class ActionTooltipPersistenceHelper
     {
         return row != null &&
                row.ActionId > 0 &&
+               !string.IsNullOrWhiteSpace(row.OriginalLang) &&
                !string.IsNullOrWhiteSpace(row.TranslationLang) &&
                !string.IsNullOrWhiteSpace(row.SourceContentHash);
     }

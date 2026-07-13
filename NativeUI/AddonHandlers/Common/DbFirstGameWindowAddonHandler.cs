@@ -1843,12 +1843,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguageCode,
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
         var classJobId = this.GetLookupGameWindowClassJobId(livePayload);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.addonName,
-                     targetLanguageCode,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion(),
                      classJobId))
         {
@@ -1909,13 +1913,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     {
         var language = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
             this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            language,
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
         var gameVersion = GetGameVersion();
         var classJobId = this.GetLookupGameWindowClassJobId(originalPayload);
 
         gameWindow = GameWindowCacheManager.TryFindMatch(
             this.addonName,
-            language,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             originalJson,
             classJobId);
@@ -2040,13 +2048,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguageCode,
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
         var classJobId = this.GetLookupGameWindowClassJobId(originalPayload);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.addonName,
-                     targetLanguageCode,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion(),
                      classJobId))
         {

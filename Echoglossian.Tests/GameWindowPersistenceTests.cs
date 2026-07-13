@@ -456,6 +456,114 @@ public class GameWindowPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures normal and ActionMenu upserts remain source-separated while
+    ///     ActionMenu still collapses payload variants from the same source.
+    /// </summary>
+    [Fact]
+    public void InsertGameWindow_PreservesDistinctSourceScopes()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            const string profilePayload = "{\"textNodes\":{\"0\":\"Profile\"}}";
+            GameWindowPersistenceHelper.InsertGameWindow(
+                configDir,
+                CreateGameWindow("CharacterProfile", "en", profilePayload));
+            GameWindowPersistenceHelper.InsertGameWindow(
+                configDir,
+                CreateGameWindow("CharacterProfile", "de", profilePayload));
+
+            GameWindowPersistenceHelper.InsertGameWindow(
+                configDir,
+                CreateGameWindow(
+                    "ActionMenu",
+                    "en",
+                    "{\"atkValues\":{\"17\":\"Peloton\"}}",
+                    classJobId: 38));
+            GameWindowPersistenceHelper.InsertGameWindow(
+                configDir,
+                CreateGameWindow(
+                    "ActionMenu",
+                    "English",
+                    "{\"atkValues\":{\"17\":\"Cascade\"}}",
+                    classJobId: 38));
+            GameWindowPersistenceHelper.InsertGameWindow(
+                configDir,
+                CreateGameWindow(
+                    "ActionMenu",
+                    "de",
+                    "{\"atkValues\":{\"17\":\"Peloton\"}}",
+                    classJobId: 38));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var profileRows = validationContext.GameWindow
+                .Where(row => row.WindowAddonName == "CharacterProfile")
+                .OrderBy(row => row.OriginalWindowStringsLang)
+                .ToList();
+            var actionRows = validationContext.GameWindow
+                .Where(row => row.WindowAddonName == "ActionMenu")
+                .OrderBy(row => row.OriginalWindowStringsLang)
+                .ToList();
+
+            Assert.Equal(2, profileRows.Count);
+            Assert.Equal(["de", "en"], profileRows.Select(row => row.OriginalWindowStringsLang));
+            Assert.Equal(2, actionRows.Count);
+            Assert.Contains(
+                actionRows,
+                row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalWindowStringsLang,
+                    "en") &&
+                    row.OriginalWindowStrings!.Contains("Cascade", StringComparison.Ordinal));
+            Assert.Contains(
+                actionRows,
+                row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalWindowStringsLang,
+                    "de"));
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Creates one GameWindow persistence row for source-scope tests.
+    /// </summary>
+    /// <param name="addonName">The addon name.</param>
+    /// <param name="sourceLanguage">The original payload language.</param>
+    /// <param name="originalPayload">The serialized original payload.</param>
+    /// <param name="classJobId">The optional class/job scope.</param>
+    /// <returns>The persistence row.</returns>
+    private static GameWindow CreateGameWindow(
+        string addonName,
+        string sourceLanguage,
+        string originalPayload,
+        uint? classJobId = null)
+    {
+        return new GameWindow(
+            windowAddonName: addonName,
+            originalWindowStrings: originalPayload,
+            originalWindowStringsLang: sourceLanguage,
+            translatedWindowStrings: "{\"translated\":true}",
+            translationLang: "pt-BR",
+            translationEngine: 0,
+            gameVersion: "7.3",
+            createdDate: DateTime.UtcNow,
+            updatedDate: DateTime.UtcNow,
+            classJobId: classJobId);
+    }
+
+    /// <summary>
     ///     Deletes a temporary test directory when possible.
     /// </summary>
     /// <param name="path">The path to delete.</param>

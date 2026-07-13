@@ -87,15 +87,20 @@ public static class ReferenceTextPersistenceHelper
             var set = setSelector(context);
             var hasRequestedGameVersion =
                 GameVersionLookupHelper.HasRequestedVersion(row.GameVersion);
-            var existing = set.FirstOrDefault(existing =>
-                existing.ReferenceId == row.ReferenceId &&
-                existing.TranslationLang == row.TranslationLang &&
-                existing.TranslationEngine == row.TranslationEngine &&
-                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
-                 (hasRequestedGameVersion &&
-                  (existing.GameVersion == null ||
-                   existing.GameVersion == row.GameVersion))) &&
-                existing.SourceContentHash == row.SourceContentHash);
+            var existing = set
+                .Where(existing =>
+                    existing.ReferenceId == row.ReferenceId &&
+                    existing.TranslationLang == row.TranslationLang &&
+                    existing.TranslationEngine == row.TranslationEngine &&
+                    ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (existing.GameVersion == null ||
+                       existing.GameVersion == row.GameVersion))) &&
+                    existing.SourceContentHash == row.SourceContentHash)
+                .AsEnumerable()
+                .FirstOrDefault(existing => RuntimeLanguageHelper.LanguagesMatch(
+                    existing.OriginalLang,
+                    row.OriginalLang));
             if (existing != null)
             {
                 MergeValues(existing, row);
@@ -153,7 +158,7 @@ public static class ReferenceTextPersistenceHelper
 
             return set
                 .AsNoTracking()
-                .FirstOrDefault(existing =>
+                .Where(existing =>
                     existing.ReferenceId == probe.ReferenceId &&
                     existing.TranslationLang == probe.TranslationLang &&
                     existing.TranslationEngine == probe.TranslationEngine &&
@@ -162,7 +167,11 @@ public static class ReferenceTextPersistenceHelper
                      (hasRequestedGameVersion &&
                       (existing.GameVersion == null ||
                        existing.GameVersion == probe.GameVersion))) &&
-                    existing.SourceContentHash == probe.SourceContentHash);
+                    existing.SourceContentHash == probe.SourceContentHash)
+                .AsEnumerable()
+                .FirstOrDefault(existing => RuntimeLanguageHelper.LanguagesMatch(
+                    existing.OriginalLang,
+                    probe.OriginalLang));
         }
         catch
         {
@@ -182,6 +191,7 @@ public static class ReferenceTextPersistenceHelper
     {
         return row != null &&
                row.ReferenceId > 0 &&
+               !string.IsNullOrWhiteSpace(row.OriginalLang) &&
                !string.IsNullOrWhiteSpace(row.TranslationLang) &&
                !string.IsNullOrWhiteSpace(row.SourceContentHash);
     }

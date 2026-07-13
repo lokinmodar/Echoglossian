@@ -328,8 +328,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
-                     targetLanguage,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion()).OrderBy(candidate => candidate.Id))
         {
             gameWindowRowsScanned++;

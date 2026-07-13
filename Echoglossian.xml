@@ -267,13 +267,12 @@
                 Clears all cached GameWindow entries.
             </summary>
         </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.TryFindMatch(System.String,System.String,System.Int32,System.String,System.String,System.Nullable{System.UInt32})">
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.TryFindMatch(System.String,Echoglossian.TranslationReuseScope,System.String,System.String,System.Nullable{System.UInt32})">
             <summary>
                 Attempts to find a matching GameWindow entry in the in-memory cache.
             </summary>
             <param name="addonName">The addon name to match.</param>
-            <param name="lang">The translation language code to match.</param>
-            <param name="engine">The translation engine ID to match.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="version">The game version string to match (nullable allowed).</param>
             <param name="classJobId">
                 The optional class/job identifier to match for job-sensitive windows.
@@ -281,19 +280,42 @@
             <param name="originalJson">The serialized original content to match.</param>
             <returns>A matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> if found; otherwise, <see langword="null"/>.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetCandidates(System.String,System.String,System.Int32,System.String,System.Nullable{System.UInt32})">
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetCandidates(System.String,Echoglossian.TranslationReuseScope,System.String,System.Nullable{System.UInt32})">
             <summary>
                 Returns cached candidates for one addon lookup scope so runtimes can
                 recover original payloads from already-translated live UI.
             </summary>
             <param name="addonName">The addon name to match.</param>
-            <param name="lang">The translation language code to match.</param>
-            <param name="engine">The translation engine ID to match.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="version">The game version string to match.</param>
             <param name="classJobId">
                 The optional class/job identifier to match for job-sensitive windows.
             </param>
             <returns>The matching cached rows.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.TryGetExactMatch(System.String,Echoglossian.TranslationReuseScope,System.String,System.String,System.Nullable{System.UInt32})">
+            <summary>
+                Finds one exact original-payload match for a single stored version
+                and class/job scope.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game version.</param>
+            <param name="originalJson">The serialized original payload.</param>
+            <param name="classJobId">The exact stored class/job scope.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetScopedRows(System.String,Echoglossian.TranslationReuseScope,System.String,System.Nullable{System.UInt32})">
+            <summary>
+                Gets rows for one exact stored version and class/job scope, using the
+                indexed engine when required and a scoped scan for engine-agnostic
+                reuse.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game version.</param>
+            <param name="classJobId">The exact stored class/job scope.</param>
+            <returns>The matching rows, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.Cache.GameWindowCacheManager.TryFindExistingCacheRow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
@@ -6427,13 +6449,22 @@
             <param name="row">The row to validate.</param>
             <returns>True when the row has a safe persistence identity.</returns>
         </member>
-        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.BuildLookupQuery(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.BuildLookupQuery(System.Linq.IQueryable{Echoglossian.EFCoreSqlite.Models.StringArrayDatas},Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
             <summary>
                 Builds the lookup query for one row.
             </summary>
-            <param name="context">The active DB context.</param>
+            <param name="rows">The source query.</param>
             <param name="row">The row that defines the lookup scope.</param>
             <returns>The lookup query.</returns>
+        </member>
+        <member name="M:Echoglossian.StringArrayDataPersistenceHelper.LegacySourceLanguagesMatch(System.String,System.String)">
+            <summary>
+                Compares legacy source identities while preserving matching
+                source-less legacy rows.
+            </summary>
+            <param name="storedSource">The stored legacy source identity.</param>
+            <param name="requestedSource">The incoming legacy source identity.</param>
+            <returns>Whether the legacy source identities match.</returns>
         </member>
         <member name="M:Echoglossian.StringArrayDataPersistenceHelper.HasCanonicalScope(Echoglossian.EFCoreSqlite.Models.StringArrayDatas)">
             <summary>
@@ -11712,10 +11743,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldReuseCompatiblePayloads">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldRefreshAppliedStateOnPreDraw">
@@ -11727,12 +11758,13 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldAllowNewPayloadPersistence(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.ShouldAllowNewPayloadPersistence(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether the current Class payload is stable enough to
                 justify creating one persisted shape or queueing one fresh remote
                 translation.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The current original-facing payload.</param>
             <returns>
                 <see langword="true" /> when the payload is stable enough to create
@@ -11751,21 +11783,23 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.HasPersistedClassRows">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.HasPersistedClassRows(Echoglossian.SourceClientLanguage)">
             <summary>
                 Determines whether one persisted Class row already exists for the
                 current language and engine scope.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <returns>
                 <see langword="true" /> when at least one persisted row exists;
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.HasMeaningfulUnseenClassTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterClassSubWindowHandler.HasMeaningfulUnseenClassTexts(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether the current Class payload introduces enough new
                 stable text to justify expanding the canonical bank.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The current original-facing payload.</param>
             <returns>
                 <see langword="true" /> when the payload contains a meaningful set
@@ -11818,10 +11852,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldReuseCompatiblePayloads">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldPersistNewGameWindowPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldRefreshAppliedStateOnPreDraw">
@@ -11833,23 +11867,25 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.OnCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldAllowNewPayloadPersistence(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.ShouldAllowNewPayloadPersistence(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Determines whether the current Repute payload is stable enough to
                 justify creating one new persisted shape or queueing fresh remote
                 translation.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The current original-facing payload.</param>
             <returns>
                 <see langword="true" /> when the payload is stable enough to create
                 one new persisted shape; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.HasPersistedReputeRows">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterReputeSubWindowHandler.HasPersistedReputeRows(Echoglossian.SourceClientLanguage)">
             <summary>
                 Determines whether one persisted Repute row already exists for the
                 current language and engine scope.
             </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
             <returns>
                 <see langword="true" /> when at least one persisted row exists;
                 otherwise <see langword="false" />.

@@ -90,15 +90,20 @@ public static class TraitPersistenceHelper
             var hasRequestedGameVersion =
                 GameVersionLookupHelper.HasRequestedVersion(trait.GameVersion);
 
-            var existing = context.Traits.FirstOrDefault(row =>
-                row.TraitId == trait.TraitId &&
-                row.TranslationLang == trait.TranslationLang &&
-                row.TranslationEngine == trait.TranslationEngine &&
-                ((!hasRequestedGameVersion && row.GameVersion == null) ||
-                 (hasRequestedGameVersion &&
-                  (row.GameVersion == null ||
-                   row.GameVersion == trait.GameVersion))) &&
-                row.SourceContentHash == trait.SourceContentHash);
+            var existing = context.Traits
+                .Where(row =>
+                    row.TraitId == trait.TraitId &&
+                    row.TranslationLang == trait.TranslationLang &&
+                    row.TranslationEngine == trait.TranslationEngine &&
+                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (row.GameVersion == null ||
+                       row.GameVersion == trait.GameVersion))) &&
+                    row.SourceContentHash == trait.SourceContentHash)
+                .AsEnumerable()
+                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    trait.OriginalLang));
             if (existing != null)
             {
                 MergeValues(existing, trait);
@@ -150,7 +155,7 @@ public static class TraitPersistenceHelper
 
             return context.Traits
                 .AsNoTracking()
-                .FirstOrDefault(row =>
+                .Where(row =>
                     row.TraitId == probe.TraitId &&
                     row.TranslationLang == probe.TranslationLang &&
                     row.TranslationEngine == probe.TranslationEngine &&
@@ -158,7 +163,11 @@ public static class TraitPersistenceHelper
                      (hasRequestedGameVersion &&
                       (row.GameVersion == null ||
                        row.GameVersion == probe.GameVersion))) &&
-                    row.SourceContentHash == probe.SourceContentHash);
+                    row.SourceContentHash == probe.SourceContentHash)
+                .AsEnumerable()
+                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    probe.OriginalLang));
         }
         catch
         {
@@ -175,6 +184,7 @@ public static class TraitPersistenceHelper
     {
         return row != null &&
                row.TraitId > 0 &&
+               !string.IsNullOrWhiteSpace(row.OriginalLang) &&
                !string.IsNullOrWhiteSpace(row.TranslationLang) &&
                !string.IsNullOrWhiteSpace(row.SourceContentHash);
     }

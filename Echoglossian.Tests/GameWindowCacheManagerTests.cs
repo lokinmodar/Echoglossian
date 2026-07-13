@@ -52,8 +52,7 @@ public class GameWindowCacheManagerTests
 
             var candidates = GameWindowCacheManager.GetCandidates(
                 "ActionMenu",
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 classJobId: 38);
 
@@ -105,8 +104,7 @@ public class GameWindowCacheManagerTests
 
             var candidates = GameWindowCacheManager.GetCandidates(
                 "CharacterProfile",
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3");
 
             var row = Assert.Single(candidates);
@@ -118,5 +116,122 @@ public class GameWindowCacheManagerTests
         {
             GameWindowCacheManager.Clear();
         }
+    }
+
+    /// <summary>
+    ///     Ensures exact cache lookup requires matching source identity.
+    /// </summary>
+    [Fact]
+    public void TryFindMatch_RequiresMatchingSourceLanguage()
+    {
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            const string originalJson = "{\"textNodes\":{\"0\":\"Profile\"}}";
+            GameWindowCacheManager.Update(new GameWindow(
+                windowAddonName: "CharacterProfile",
+                originalWindowStrings: originalJson,
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: "{\"textNodes\":{\"0\":\"Perfil\"}}",
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "7.3",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+
+            var matching = GameWindowCacheManager.TryFindMatch(
+                "CharacterProfile",
+                new TranslationReuseScope("English", "pt-BR", 0, true),
+                "7.3",
+                originalJson);
+            var mismatching = GameWindowCacheManager.TryFindMatch(
+                "CharacterProfile",
+                new TranslationReuseScope("de", "pt-BR", 0, true),
+                "7.3",
+                originalJson);
+
+            Assert.NotNull(matching);
+            Assert.Null(mismatching);
+        }
+        finally
+        {
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures ActionMenu replacement compacts only rows from the same
+    ///     normalized source scope.
+    /// </summary>
+    [Fact]
+    public void Update_ActionMenuRetainsDistinctSourceRows()
+    {
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            GameWindowCacheManager.Update(CreateActionMenuRow(
+                "en",
+                "Peloton",
+                "Pelotao",
+                DateTime.UtcNow.AddSeconds(-2)));
+            GameWindowCacheManager.Update(CreateActionMenuRow(
+                "de",
+                "Peloton",
+                "Peloton DE",
+                DateTime.UtcNow.AddSeconds(-1)));
+            GameWindowCacheManager.Update(CreateActionMenuRow(
+                "English",
+                "Cascade",
+                "Cascata",
+                DateTime.UtcNow));
+
+            var english = Assert.Single(GameWindowCacheManager.GetCandidates(
+                "ActionMenu",
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                classJobId: 38));
+            var german = Assert.Single(GameWindowCacheManager.GetCandidates(
+                "ActionMenu",
+                new TranslationReuseScope("German", "pt-BR", 0, true),
+                "7.3",
+                classJobId: 38));
+
+            Assert.Contains("Cascade", english.OriginalWindowStrings);
+            Assert.Contains("Peloton", german.OriginalWindowStrings);
+            Assert.Equal("de", german.OriginalWindowStringsLang);
+        }
+        finally
+        {
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Creates one ActionMenu row for source-scoped cache tests.
+    /// </summary>
+    /// <param name="sourceLanguage">The original payload language.</param>
+    /// <param name="originalText">The original visible text.</param>
+    /// <param name="translatedText">The translated visible text.</param>
+    /// <param name="updatedAt">The row update timestamp.</param>
+    /// <returns>The cache row.</returns>
+    private static GameWindow CreateActionMenuRow(
+        string sourceLanguage,
+        string originalText,
+        string translatedText,
+        DateTime updatedAt)
+    {
+        return new GameWindow(
+            windowAddonName: "ActionMenu",
+            originalWindowStrings: $"{{\"atkValues\":{{\"17\":\"{originalText}\"}}}}",
+            originalWindowStringsLang: sourceLanguage,
+            translatedWindowStrings: $"{{\"atkValues\":{{\"17\":\"{translatedText}\"}}}}",
+            translationLang: "pt-BR",
+            translationEngine: 0,
+            gameVersion: "7.3",
+            createdDate: updatedAt,
+            updatedDate: updatedAt,
+            classJobId: 38);
     }
 }

@@ -35,7 +35,9 @@ public static class GameWindowPersistenceHelper
 
         try
         {
-            if (gameWindow is null || string.IsNullOrWhiteSpace(gameWindow.WindowAddonName))
+            if (gameWindow is null ||
+                string.IsNullOrWhiteSpace(gameWindow.WindowAddonName) ||
+                string.IsNullOrWhiteSpace(gameWindow.OriginalWindowStringsLang))
             {
                 return "Invalid data.";
             }
@@ -124,6 +126,9 @@ public static class GameWindowPersistenceHelper
             .FirstOrDefault(g =>
                 g.WindowAddonName == gameWindow.WindowAddonName &&
                 RuntimeLanguageHelper.LanguagesMatch(
+                    g.OriginalWindowStringsLang,
+                    gameWindow.OriginalWindowStringsLang) &&
+                RuntimeLanguageHelper.LanguagesMatch(
                     g.TranslationLang,
                     gameWindow.TranslationLang) &&
                 g.ClassJobId == gameWindow.ClassJobId &&
@@ -152,6 +157,9 @@ public static class GameWindowPersistenceHelper
                     g.WindowAddonName,
                     ActionMenuWindowName,
                     StringComparison.Ordinal) &&
+                RuntimeLanguageHelper.LanguagesMatch(
+                    g.OriginalWindowStringsLang,
+                    gameWindow.OriginalWindowStringsLang) &&
                 RuntimeLanguageHelper.LanguagesMatch(
                     g.TranslationLang,
                     gameWindow.TranslationLang) &&

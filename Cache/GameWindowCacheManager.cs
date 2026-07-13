@@ -133,8 +133,7 @@ public static class GameWindowCacheManager
   ///     Attempts to find a matching GameWindow entry in the in-memory cache.
   /// </summary>
   /// <param name="addonName">The addon name to match.</param>
-  /// <param name="lang">The translation language code to match.</param>
-  /// <param name="engine">The translation engine ID to match.</param>
+  /// <param name="scope">The required translation reuse scope.</param>
   /// <param name="version">The game version string to match (nullable allowed).</param>
   /// <param name="classJobId">
   ///     The optional class/job identifier to match for job-sensitive windows.
@@ -143,13 +142,14 @@ public static class GameWindowCacheManager
   /// <returns>A matching <see cref="GameWindow"/> if found; otherwise, <see langword="null"/>.</returns>
   public static GameWindow? TryFindMatch(
       string addonName,
-      string lang,
-      int engine,
+      TranslationReuseScope scope,
       string? version,
       string originalJson,
       uint? classJobId = null)
   {
-    if (string.IsNullOrWhiteSpace(addonName) || string.IsNullOrWhiteSpace(lang))
+    if (string.IsNullOrWhiteSpace(addonName) ||
+        string.IsNullOrWhiteSpace(scope.SourceLanguageCode) ||
+        string.IsNullOrWhiteSpace(scope.TargetLanguageCode))
     {
       PluginRuntimeLog.Warning(
           "GameWindowCacheManager.TryFindMatch",
@@ -157,58 +157,47 @@ public static class GameWindowCacheManager
       return null;
     }
 
-    if (ExactCache.TryGetValue(
-            BuildExactKey(
-                addonName,
-                lang,
-                engine,
-                version,
-                originalJson,
-                classJobId),
-            out var exactMatch))
+    var exactMatch = TryGetExactMatch(
+        addonName,
+        scope,
+        version,
+        originalJson,
+        classJobId);
+    if (exactMatch != null)
     {
       return exactMatch;
     }
 
     if (!string.IsNullOrWhiteSpace(version) &&
-        ExactCache.TryGetValue(
-            BuildExactKey(
-                addonName,
-                lang,
-                engine,
-                version: null,
-                originalJson,
-                classJobId),
-            out var versionAgnosticMatch))
+        TryGetExactMatch(
+            addonName,
+            scope,
+            version: null,
+            originalJson,
+            classJobId) is { } versionAgnosticMatch)
     {
       return versionAgnosticMatch;
     }
 
     if (classJobId.HasValue &&
-        ExactCache.TryGetValue(
-            BuildExactKey(
-                addonName,
-                lang,
-                engine,
-                version,
-                originalJson,
-                classJobId: null),
-            out var legacyExactMatch))
+        TryGetExactMatch(
+            addonName,
+            scope,
+            version,
+            originalJson,
+            classJobId: null) is { } legacyExactMatch)
     {
       return legacyExactMatch;
     }
 
     if (classJobId.HasValue &&
         !string.IsNullOrWhiteSpace(version) &&
-        ExactCache.TryGetValue(
-            BuildExactKey(
-                addonName,
-                lang,
-                engine,
-                version: null,
-                originalJson,
-                classJobId: null),
-            out var legacyVersionAgnosticMatch))
+        TryGetExactMatch(
+            addonName,
+            scope,
+            version: null,
+            originalJson,
+            classJobId: null) is { } legacyVersionAgnosticMatch)
     {
       return legacyVersionAgnosticMatch;
     }
@@ -221,8 +210,7 @@ public static class GameWindowCacheManager
   ///     recover original payloads from already-translated live UI.
   /// </summary>
   /// <param name="addonName">The addon name to match.</param>
-  /// <param name="lang">The translation language code to match.</param>
-  /// <param name="engine">The translation engine ID to match.</param>
+  /// <param name="scope">The required translation reuse scope.</param>
   /// <param name="version">The game version string to match.</param>
   /// <param name="classJobId">
   ///     The optional class/job identifier to match for job-sensitive windows.
@@ -230,30 +218,31 @@ public static class GameWindowCacheManager
   /// <returns>The matching cached rows.</returns>
   public static IReadOnlyList<GameWindow> GetCandidates(
       string addonName,
-      string lang,
-      int engine,
+      TranslationReuseScope scope,
       string? version,
       uint? classJobId = null)
   {
-    if (string.IsNullOrWhiteSpace(addonName) || string.IsNullOrWhiteSpace(lang))
+    if (string.IsNullOrWhiteSpace(addonName) ||
+        string.IsNullOrWhiteSpace(scope.SourceLanguageCode) ||
+        string.IsNullOrWhiteSpace(scope.TargetLanguageCode))
     {
       return [];
     }
 
-    var exactRows = ScopeCache.TryGetValue(
-        BuildScopeKey(addonName, lang, engine, version, classJobId),
-        out var scopedRows)
-        ? scopedRows
-        : null;
+    var exactRows = GetScopedRows(
+        addonName,
+        scope,
+        version,
+        classJobId);
 
     List<GameWindow>? legacyRows = null;
     if (classJobId.HasValue)
     {
-      legacyRows = ScopeCache.TryGetValue(
-          BuildScopeKey(addonName, lang, engine, version, classJobId: null),
-          out var legacyScopedRows)
-          ? legacyScopedRows
-          : null;
+      legacyRows = GetScopedRows(
+          addonName,
+          scope,
+          version,
+          classJobId: null);
     }
 
     if (string.IsNullOrWhiteSpace(version))
@@ -271,20 +260,20 @@ public static class GameWindowCacheManager
       return MergeCandidateLists(exactRows, legacyRows);
     }
 
-    var versionAgnosticRows = ScopeCache.TryGetValue(
-        BuildScopeKey(addonName, lang, engine, version: null, classJobId),
-        out var fallbackRows)
-        ? fallbackRows
-        : null;
+    var versionAgnosticRows = GetScopedRows(
+        addonName,
+        scope,
+        version: null,
+        classJobId);
 
     List<GameWindow>? legacyVersionAgnosticRows = null;
     if (classJobId.HasValue)
     {
-      legacyVersionAgnosticRows = ScopeCache.TryGetValue(
-          BuildScopeKey(addonName, lang, engine, version: null, classJobId: null),
-          out var legacyFallbackRows)
-          ? legacyFallbackRows
-          : null;
+      legacyVersionAgnosticRows = GetScopedRows(
+          addonName,
+          scope,
+          version: null,
+          classJobId: null);
     }
 
     if (exactRows == null || exactRows.Count == 0)
@@ -355,6 +344,94 @@ public static class GameWindowCacheManager
   }
 
   /// <summary>
+  ///     Finds one exact original-payload match for a single stored version
+  ///     and class/job scope.
+  /// </summary>
+  /// <param name="addonName">The addon name.</param>
+  /// <param name="scope">The required translation reuse scope.</param>
+  /// <param name="version">The exact stored game version.</param>
+  /// <param name="originalJson">The serialized original payload.</param>
+  /// <param name="classJobId">The exact stored class/job scope.</param>
+  /// <returns>The matching row, or <see langword="null" />.</returns>
+  private static GameWindow? TryGetExactMatch(
+      string addonName,
+      TranslationReuseScope scope,
+      string? version,
+      string originalJson,
+      uint? classJobId)
+  {
+    if (scope.RequireMatchingEngine)
+    {
+      return ExactCache.TryGetValue(
+          BuildExactKey(
+              addonName,
+              scope.SourceLanguageCode,
+              scope.TargetLanguageCode,
+              scope.TranslationEngine ?? 0,
+              version,
+              originalJson,
+              classJobId),
+          out var exactMatch)
+          ? exactMatch
+          : null;
+    }
+
+    return GetScopedRows(addonName, scope, version, classJobId)?
+        .FirstOrDefault(row => row.OriginalWindowStrings == originalJson);
+  }
+
+  /// <summary>
+  ///     Gets rows for one exact stored version and class/job scope, using the
+  ///     indexed engine when required and a scoped scan for engine-agnostic
+  ///     reuse.
+  /// </summary>
+  /// <param name="addonName">The addon name.</param>
+  /// <param name="scope">The required translation reuse scope.</param>
+  /// <param name="version">The exact stored game version.</param>
+  /// <param name="classJobId">The exact stored class/job scope.</param>
+  /// <returns>The matching rows, or <see langword="null" />.</returns>
+  private static List<GameWindow>? GetScopedRows(
+      string addonName,
+      TranslationReuseScope scope,
+      string? version,
+      uint? classJobId)
+  {
+    if (scope.RequireMatchingEngine)
+    {
+      return ScopeCache.TryGetValue(
+          BuildScopeKey(
+              addonName,
+              scope.SourceLanguageCode,
+              scope.TargetLanguageCode,
+              scope.TranslationEngine ?? 0,
+              version,
+              classJobId),
+          out var scopedRows)
+          ? scopedRows
+          : null;
+    }
+
+    if (!Cache.TryGetValue(addonName, out var addonRows))
+    {
+      return null;
+    }
+
+    var matchingRows = addonRows
+        .Where(row =>
+            scope.Matches(
+                row.OriginalWindowStringsLang,
+                row.TranslationLang,
+                row.TranslationEngine) &&
+            string.Equals(
+                row.GameVersion,
+                version,
+                StringComparison.Ordinal) &&
+            row.ClassJobId == classJobId)
+        .ToList();
+    return matchingRows.Count == 0 ? null : matchingRows;
+  }
+
+  /// <summary>
   ///     Tries to find an existing cached row that should be replaced by the
   ///     supplied record.
   /// </summary>
@@ -367,6 +444,9 @@ public static class GameWindowCacheManager
     {
       return addonBucket.FirstOrDefault(g =>
           RuntimeLanguageHelper.LanguagesMatch(
+              g.OriginalWindowStringsLang,
+              newRecord.OriginalWindowStringsLang) &&
+          RuntimeLanguageHelper.LanguagesMatch(
               g.TranslationLang,
               newRecord.TranslationLang) &&
           g.ClassJobId == newRecord.ClassJobId &&
@@ -377,6 +457,9 @@ public static class GameWindowCacheManager
     }
 
     return addonBucket.FirstOrDefault(g =>
+        RuntimeLanguageHelper.LanguagesMatch(
+            g.OriginalWindowStringsLang,
+            newRecord.OriginalWindowStringsLang) &&
         RuntimeLanguageHelper.LanguagesMatch(
             g.TranslationLang,
             newRecord.TranslationLang) &&
@@ -401,6 +484,7 @@ public static class GameWindowCacheManager
 
   private static List<GameWindow> GetScopeBucket(
       string addonName,
+      string sourceLanguage,
       string lang,
       int engine,
       string? version,
@@ -408,6 +492,7 @@ public static class GameWindowCacheManager
   {
     var scopeKey = BuildScopeKey(
         addonName,
+        sourceLanguage,
         lang,
         engine,
         version,
@@ -428,18 +513,22 @@ public static class GameWindowCacheManager
     var addonBucket = GetAddonBucket(addonName);
     addonBucket.Add(record);
 
-    var normalizedLanguage =
+    var normalizedSourceLanguage = RuntimeLanguageHelper.NormalizeLanguage(
+        record.OriginalWindowStringsLang);
+    var normalizedTargetLanguage =
         RuntimeLanguageHelper.NormalizeLanguage(record.TranslationLang);
     GetScopeBucket(
         addonName,
-        normalizedLanguage,
+        normalizedSourceLanguage,
+        normalizedTargetLanguage,
         translationEngine,
         record.GameVersion,
         record.ClassJobId).Add(record);
 
     ExactCache[BuildExactKey(
         addonName,
-        normalizedLanguage,
+        normalizedSourceLanguage,
+        normalizedTargetLanguage,
         translationEngine,
         record.GameVersion,
         record.OriginalWindowStrings ?? string.Empty,
@@ -452,11 +541,14 @@ public static class GameWindowCacheManager
     var translationEngine = record.TranslationEngine ?? 0;
     GetAddonBucket(addonName).Remove(record);
 
-    var normalizedLanguage =
+    var normalizedSourceLanguage = RuntimeLanguageHelper.NormalizeLanguage(
+        record.OriginalWindowStringsLang);
+    var normalizedTargetLanguage =
         RuntimeLanguageHelper.NormalizeLanguage(record.TranslationLang);
     var scopeBucket = GetScopeBucket(
         addonName,
-        normalizedLanguage,
+        normalizedSourceLanguage,
+        normalizedTargetLanguage,
         translationEngine,
         record.GameVersion,
         record.ClassJobId);
@@ -466,7 +558,8 @@ public static class GameWindowCacheManager
       ScopeCache.Remove(
           BuildScopeKey(
               addonName,
-              normalizedLanguage,
+              normalizedSourceLanguage,
+              normalizedTargetLanguage,
               translationEngine,
               record.GameVersion,
               record.ClassJobId));
@@ -475,7 +568,8 @@ public static class GameWindowCacheManager
     ExactCache.Remove(
         BuildExactKey(
             addonName,
-            normalizedLanguage,
+            normalizedSourceLanguage,
+            normalizedTargetLanguage,
             translationEngine,
             record.GameVersion,
             record.OriginalWindowStrings ?? string.Empty,
@@ -484,24 +578,28 @@ public static class GameWindowCacheManager
 
   private static string BuildScopeKey(
       string addonName,
+      string? sourceLanguage,
       string? lang,
       int engine,
       string? version,
       uint? classJobId)
   {
-    var normalizedLanguage = RuntimeLanguageHelper.NormalizeLanguage(lang);
-    return $"{addonName}|{normalizedLanguage}|{engine}|{version ?? string.Empty}|{classJobId?.ToString() ?? string.Empty}";
+    var normalizedSourceLanguage = RuntimeLanguageHelper.NormalizeLanguage(
+        sourceLanguage);
+    var normalizedTargetLanguage = RuntimeLanguageHelper.NormalizeLanguage(lang);
+    return $"{addonName}|{normalizedSourceLanguage}|{normalizedTargetLanguage}|{engine}|{version ?? string.Empty}|{classJobId?.ToString() ?? string.Empty}";
   }
 
   private static string BuildExactKey(
       string addonName,
+      string? sourceLanguage,
       string? lang,
       int engine,
       string? version,
       string originalJson,
       uint? classJobId)
   {
-    return $"{BuildScopeKey(addonName, lang, engine, version, classJobId)}|{originalJson}";
+    return $"{BuildScopeKey(addonName, sourceLanguage, lang, engine, version, classJobId)}|{originalJson}";
   }
 
   private static IReadOnlyList<GameWindow> MergeCandidateLists(

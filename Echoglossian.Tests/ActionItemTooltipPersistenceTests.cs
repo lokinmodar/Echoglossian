@@ -705,6 +705,109 @@ public class ActionItemTooltipPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures canonical action, item, and trait rows with the same stable
+    ///     identity remain separated by source language on write and read.
+    /// </summary>
+    [Fact]
+    public void CanonicalTooltipPersistence_PreservesDistinctSourceLanguages()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var actionPayload = new ActionTooltipCanonicalPayload
+            {
+                ActionId = 15998,
+                IconId = 1,
+                Name = "Technical Step",
+                Description = "Begin dancing.",
+            };
+            var englishAction = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", actionPayload);
+            var germanAction = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                "de", "pt", 0, "7.3", actionPayload);
+
+            var itemPayload = new ItemTooltipCanonicalPayload
+            {
+                ItemId = 4868,
+                IconId = 1,
+                Name = "Gysahl Greens",
+                Description = "A leafy vegetable.",
+            };
+            var englishItem = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", itemPayload);
+            var germanItem = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                "de", "pt", 0, "7.3", itemPayload);
+
+            var traitPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Increases potency.",
+            };
+            var englishTrait = TraitPersistenceHelper.CreateCanonicalRow(
+                "en", "pt", 0, "7.3", traitPayload);
+            var germanTrait = TraitPersistenceHelper.CreateCanonicalRow(
+                "de", "pt", 0, "7.3", traitPayload);
+
+            ActionTooltipPersistenceHelper.InsertActionTooltip(configDir, englishAction);
+            ActionTooltipPersistenceHelper.InsertActionTooltip(configDir, germanAction);
+            ItemTooltipPersistenceHelper.InsertItemTooltip(configDir, englishItem);
+            ItemTooltipPersistenceHelper.InsertItemTooltip(configDir, germanItem);
+            TraitPersistenceHelper.InsertTrait(configDir, englishTrait);
+            TraitPersistenceHelper.InsertTrait(configDir, germanTrait);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.ActionTooltip.Count());
+            Assert.Equal(2, validationContext.ItemTooltip.Count());
+            Assert.Equal(2, validationContext.Traits.Count());
+
+            Assert.Equal(
+                "en",
+                ActionTooltipPersistenceHelper.FindActionTooltip(
+                    configDir,
+                    englishAction)?.OriginalLang);
+            Assert.Equal(
+                "de",
+                ActionTooltipPersistenceHelper.FindActionTooltip(
+                    configDir,
+                    germanAction)?.OriginalLang);
+            Assert.Equal(
+                "en",
+                ItemTooltipPersistenceHelper.FindItemTooltip(
+                    configDir,
+                    englishItem)?.OriginalLang);
+            Assert.Equal(
+                "de",
+                ItemTooltipPersistenceHelper.FindItemTooltip(
+                    configDir,
+                    germanItem)?.OriginalLang);
+            Assert.Equal(
+                "en",
+                TraitPersistenceHelper.FindTrait(
+                    configDir,
+                    englishTrait)?.OriginalLang);
+            Assert.Equal(
+                "de",
+                TraitPersistenceHelper.FindTrait(
+                    configDir,
+                    germanTrait)?.OriginalLang);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Creates a temporary config directory for persistence tests.
     /// </summary>
     /// <returns>The created directory path.</returns>

@@ -96,7 +96,9 @@ public static class StringArrayDataPersistenceHelper
                 return "Invalid data.";
             }
 
-            var existing = BuildLookupQuery(context, stringArrayData)
+            var existing = BuildLookupQuery(
+                    context.StringArrayDatas,
+                    stringArrayData)
                 .FirstOrDefault();
             if (existing != null)
             {
@@ -143,8 +145,9 @@ public static class StringArrayDataPersistenceHelper
                 return null;
             }
 
-            return BuildLookupQuery(context, probe)
-                .AsNoTracking()
+            return BuildLookupQuery(
+                    context.StringArrayDatas.AsNoTracking(),
+                    probe)
                 .FirstOrDefault();
         }
         catch
@@ -168,18 +171,19 @@ public static class StringArrayDataPersistenceHelper
             return false;
         }
 
-        return HasCanonicalScope(row) ||
-               !string.IsNullOrWhiteSpace(row.FormattedRawData);
+        return HasCanonicalScope(row)
+            ? !string.IsNullOrWhiteSpace(row.OriginalLang)
+            : !string.IsNullOrWhiteSpace(row.FormattedRawData);
     }
 
     /// <summary>
     ///     Builds the lookup query for one row.
     /// </summary>
-    /// <param name="context">The active DB context.</param>
+    /// <param name="rows">The source query.</param>
     /// <param name="row">The row that defines the lookup scope.</param>
     /// <returns>The lookup query.</returns>
-    private static IQueryable<StringArrayDatas> BuildLookupQuery(
-        EchoglossianDbContext context,
+    private static IEnumerable<StringArrayDatas> BuildLookupQuery(
+        IQueryable<StringArrayDatas> rows,
         StringArrayDatas row)
     {
         var hasRequestedGameVersion =
@@ -187,27 +191,60 @@ public static class StringArrayDataPersistenceHelper
 
         if (HasCanonicalScope(row))
         {
-            return context.StringArrayDatas.Where(existing =>
+            return rows
+                .Where(existing =>
+                    existing.Type == row.Type &&
+                    existing.ContextKey == row.ContextKey &&
+                    existing.TranslationLang == row.TranslationLang &&
+                    existing.TranslationEngine == row.TranslationEngine &&
+                    ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (existing.GameVersion == null ||
+                       existing.GameVersion == row.GameVersion))) &&
+                    existing.SourceContentHash == row.SourceContentHash)
+                .AsEnumerable()
+                .Where(existing => RuntimeLanguageHelper.LanguagesMatch(
+                    existing.OriginalLang,
+                    row.OriginalLang));
+        }
+
+        return rows
+            .Where(existing =>
                 existing.Type == row.Type &&
-                existing.ContextKey == row.ContextKey &&
                 existing.TranslationLang == row.TranslationLang &&
                 existing.TranslationEngine == row.TranslationEngine &&
                 ((!hasRequestedGameVersion && existing.GameVersion == null) ||
                  (hasRequestedGameVersion &&
                   (existing.GameVersion == null ||
                    existing.GameVersion == row.GameVersion))) &&
-                existing.SourceContentHash == row.SourceContentHash);
+                existing.FormattedRawData == row.FormattedRawData)
+            .AsEnumerable()
+            .Where(existing => LegacySourceLanguagesMatch(
+                existing.OriginalLang,
+                row.OriginalLang));
+    }
+
+    /// <summary>
+    ///     Compares legacy source identities while preserving matching
+    ///     source-less legacy rows.
+    /// </summary>
+    /// <param name="storedSource">The stored legacy source identity.</param>
+    /// <param name="requestedSource">The incoming legacy source identity.</param>
+    /// <returns>Whether the legacy source identities match.</returns>
+    private static bool LegacySourceLanguagesMatch(
+        string? storedSource,
+        string? requestedSource)
+    {
+        if (string.IsNullOrWhiteSpace(storedSource) ||
+            string.IsNullOrWhiteSpace(requestedSource))
+        {
+            return string.IsNullOrWhiteSpace(storedSource) &&
+                   string.IsNullOrWhiteSpace(requestedSource);
         }
 
-        return context.StringArrayDatas.Where(existing =>
-            existing.Type == row.Type &&
-            existing.TranslationLang == row.TranslationLang &&
-            existing.TranslationEngine == row.TranslationEngine &&
-            ((!hasRequestedGameVersion && existing.GameVersion == null) ||
-             (hasRequestedGameVersion &&
-              (existing.GameVersion == null ||
-               existing.GameVersion == row.GameVersion))) &&
-            existing.FormattedRawData == row.FormattedRawData);
+        return RuntimeLanguageHelper.LanguagesMatch(
+            storedSource,
+            requestedSource);
     }
 
     /// <summary>

@@ -1510,15 +1510,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             string stablePayloadSignature,
             uint? classJobId)
     {
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var candidateCount = 0;
         var stableMatchCount = 0;
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
-                     targetLanguage,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion(),
                      classJobId))
         {
@@ -2140,11 +2138,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         uint? expectedClassJobId,
         string? expectedClassJobName)
     {
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      windowTitle,
-                     RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                         this.config.Lang),
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion(),
                      expectedClassJobId).OrderBy(candidate => candidate.Id))
         {
