@@ -9815,10 +9815,13 @@
         </member>
         <member name="M:Echoglossian.RuntimeLanguageHelper.GetCurrentGameLanguageCode">
             <summary>
-                Gets the current native client language as a normalized language
-                code.
+                Gets the current native client language as a persisted source
+                identity.
             </summary>
-            <returns>The normalized current game language code.</returns>
+            <returns>
+                The current persisted source identity, or an empty string when the
+                client language cannot be resolved.
+            </returns>
         </member>
         <member name="M:Echoglossian.RuntimeLanguageHelper.TryResolveSourceLanguage(Dalamud.Game.ClientLanguage,Echoglossian.SourceClientLanguage@)">
             <summary>

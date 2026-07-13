@@ -26,19 +26,18 @@ public static class RuntimeLanguageHelper
         };
 
     /// <summary>
-    ///     Gets the current native client language as a normalized language
-    ///     code.
+    ///     Gets the current native client language as a persisted source
+    ///     identity.
     /// </summary>
-    /// <returns>The normalized current game language code.</returns>
+    /// <returns>
+    ///     The current persisted source identity, or an empty string when the
+    ///     client language cannot be resolved.
+    /// </returns>
     public static string GetCurrentGameLanguageCode()
     {
-        return ClientStateInterface.ClientLanguage switch
-        {
-            ClientLanguage.Japanese => "ja",
-            ClientLanguage.German => "de",
-            ClientLanguage.French => "fr",
-            _ => "en",
-        };
+        return TryResolveCurrentSourceLanguage(out var sourceLanguage)
+            ? sourceLanguage.PersistenceCode
+            : string.Empty;
     }
 
     /// <summary>
@@ -73,6 +72,8 @@ public static class RuntimeLanguageHelper
             return true;
         }
 
+        // Only host-defined future values may use ToCode; raw undefined values
+        // remain unresolved even when a host fallback code exists.
         if (!Enum.IsDefined(clientLanguage))
         {
             return false;
