@@ -15,20 +15,47 @@ Every translation lookup has these independent dimensions:
 
 | Dimension | Source of truth | Rule |
 | --- | --- | --- |
-| Source language | `IClientState.ClientLanguage` | Must match the language of the stored original payload. |
+| Source client language | `IClientState.ClientLanguage` raw value | Must resolve to the same stored client-content identity. |
 | Target language | selected plugin language, normalized | Must always match. |
 | Translation engine | selected engine and `TranslateAlreadyTranslatedTexts` | Must match only when the toggle requests retranslation by the selected engine. |
 | Game version | current game version | Existing version and source-hash rules remain in effect. |
 | Source content | visible/canonical original payload | Must match whenever a source hash or complete original payload is available. |
 
-`RuntimeLanguageHelper.GetCurrentGameLanguageCode()` is the canonical source
-language identity for persistence and cache compatibility. New persisted rows
-store that normalized code. Existing rows using `English`, `Deutsch`,
-`French`, or `Japanese` remain readable through normalized comparison.
+The canonical source contract is a resolved client-language pair, not a
+plugin-local `switch` that defaults unknown clients to English:
 
-An empty or unrecognized stored source language is never reusable. This fails
-closed: the text is captured and translated again instead of reusing an unsafe
-row. An equal source hash does not override the client-language boundary.
+| Raw `ClientLanguage` value | Stored source identity | Provider source code |
+| --- | --- | --- |
+| `0` | `ja` | `ja` |
+| `1` | `en` | `en` |
+| `2` | `de` | `de` |
+| `3` | `fr` | `fr` |
+| `4` | `chs` | `zh-CN` |
+| `5` | `cht` | `zh-CN` |
+| `6` | `ko` | `ko` |
+| `7` | `tc` | `zh-TW` |
+
+The values follow the FFXIV client-language ordering used by
+[Lumina `Language`](https://github.com/NotAdam/Lumina/blob/master/src/Lumina/Data/Language.cs)
+and [FFXIVClientStructs `ExcelLanguage`](https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Common/Component/Excel/ExcelLanguage.cs),
+with Lumina's leading `None` omitted by `ClientLanguage`.
+
+`RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(...)` is the sole
+resolver for this pair. It resolves the known raw values above first, then uses
+`ClientLanguage.ToCode()` only as a fail-closed-compatible extension point for
+future host values. New persisted rows store the source identity, while
+translation providers receive the provider source code. `chs`, `cht`, and `tc`
+deliberately remain distinct stored identities even where two client values use
+the same provider code; no cache or database row may cross those
+client-language boundaries.
+
+Existing rows using `English`, `Deutsch`, `French`, or `Japanese` remain
+readable through normalized comparison.
+
+An empty or unrecognized stored source identity is never reusable. An unknown
+runtime client value also fails closed: the plugin does not reuse, persist, or
+translate a row with a guessed source language. An equal source hash does not
+override the client-language boundary.
 
 ## Engine Semantics
 
@@ -48,8 +75,8 @@ matching.
 
 Every surface follows one translation flow:
 
-1. Capture original text from the live client and attach the current normalized
-   source-language code.
+1. Resolve the live `ClientLanguage` to its stored source identity and provider
+   source code, then capture original text with that pair.
 2. Resolve only a stored row in the canonical reuse scope.
 3. On a cache miss, submit the source text through the shared translation
    service and persist the result with the full scope.
@@ -61,17 +88,17 @@ maps, or custom compatibility rules.
 
 ### Shared Compatibility Guard
 
-Add one shared helper that evaluates a stored source language, stored target
+Add one shared helper that evaluates a stored source identity, stored target
 language, stored engine, and requested scope. All cache and persistence
 lookups use it after their surface-specific identity filters. No handler may
 implement a local source-language exception.
 
-Provider calls continue to receive the current `ClientLanguage`-derived
-language value expected by their adapters. This work does not globally replace
-`ClientStateInterface.ClientLanguage.Humanize()` in translation requests;
-those calls already derive from the live client and several providers retain
-their own source-language mapping. Persisted identity uses the normalized
-helper code instead.
+TranslationService receives the resolved provider source code, not
+`ClientStateInterface.ClientLanguage.Humanize()`. Engine adapters may still
+normalize that code for vendor-specific APIs, but no caller may pass a display
+name or an enum number as a provider language. This keeps source identity
+derived from the live client while making Chinese and Korean inputs usable by
+code-oriented providers.
 
 ### Persistence and Cache Coverage
 
@@ -105,9 +132,11 @@ layered over the live client payload.
 
 ## Data Compatibility
 
-No schema migration is required. Existing source language names are normalized
-by `RuntimeLanguageHelper.LanguagesMatch`. Rows without a usable source
-language remain in the database but are not selected by source-ambiguous
+No schema migration is required. The existing source-language text columns
+store the canonical source identities. Legacy source language names are
+normalized by `RuntimeLanguageHelper.LanguagesMatch`; they map only to their
+equivalent `ja`, `en`, `de`, or `fr` identities. Rows without a usable source
+identity remain in the database but are not selected by source-ambiguous
 lookups. Fresh rows replace them naturally through the existing persistence
 paths.
 
@@ -116,7 +145,8 @@ paths.
 Add regression tests that prove:
 
 1. A row from English cannot be reused while the current source is Japanese,
-   German, or French, even with the same target language and engine.
+   German, French, `chs`, `cht`, `ko`, or `tc`, even with the same target
+   language and engine.
 2. A different target language is never reusable.
 3. Engine reuse follows `TranslateAlreadyTranslatedTexts` without weakening
    source or target matching.
@@ -130,9 +160,18 @@ Add regression tests that prove:
    literal English-to-Portuguese fallback.
 8. `ActionMenu` does not synthesize an English `Lv.` source label for a
    non-English game client.
+9. Raw client values `4`, `5`, `6`, and `7` resolve respectively to stored
+   identities `chs`, `cht`, `ko`, and `tc`, and provider codes `zh-CN`,
+   `zh-CN`, `ko`, and `zh-TW`.
+10. Two rows with source identities `chs` and `cht` cannot be reused across
+    each other even though both provider calls use `zh-CN`.
+11. An unknown raw client value has no translation scope and cannot trigger a
+    provider call, cache reuse, persistence, or native mutation.
 
 Run the standard build and full test suite. In-game validation covers an
 English-to-RTL session followed by switching the FFXIV client language and
 then the target language and engine, confirming that the previous translation
 does not reappear on Character, ActionMenu, native GameWindow, ActionDetail,
-ItemDetail, and dialogue surfaces.
+ItemDetail, and dialogue surfaces. Where regional clients are available, run
+the same matrix for client values `4`, `5`, `6`, and `7` and verify that
+Chinese source identities do not cross-reuse.
