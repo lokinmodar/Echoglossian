@@ -150,6 +150,12 @@ public unsafe partial class Echoglossian
     /// <param name="currentClassJobId">The current class-job identifier.</param>
     private void PrefetchActionDetail(uint actionId, byte currentClassJobId)
     {
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            return;
+        }
+
         if (!TryBuildActionTooltipCanonicalPayload(
                 actionId,
                 currentClassJobId,
@@ -159,7 +165,7 @@ public unsafe partial class Echoglossian
         }
 
         var originalRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -167,8 +173,14 @@ public unsafe partial class Echoglossian
         var existingRow = this.FindActionTooltip(originalRow) ?? originalRow;
         this.InsertActionTooltip(originalRow);
 
-        this.PrefetchActionDetailName(originalPayload, existingRow);
-        this.PrefetchActionDetailDescription(originalPayload, existingRow);
+        this.PrefetchActionDetailName(
+            originalPayload,
+            existingRow,
+            sourceLanguage);
+        this.PrefetchActionDetailDescription(
+            originalPayload,
+            existingRow,
+            sourceLanguage);
     }
 
     /// <summary>
@@ -176,9 +188,11 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchActionDetailName(
         ActionTooltipCanonicalPayload originalPayload,
-        ActionTooltip existingRow)
+        ActionTooltip existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedActionName))
@@ -195,6 +209,7 @@ public unsafe partial class Echoglossian
             this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedName: cachedTranslatedName);
             return;
         }
@@ -203,11 +218,12 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Name,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code),
             translatedName => this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedName: translatedName));
     }
 
@@ -216,9 +232,11 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchActionDetailDescription(
         ActionTooltipCanonicalPayload originalPayload,
-        ActionTooltip existingRow)
+        ActionTooltip existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedActionDescription))
@@ -235,6 +253,7 @@ public unsafe partial class Echoglossian
             this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedDescription: cachedTranslatedDescription);
             return;
         }
@@ -243,11 +262,12 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Description,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code),
             translatedDescription => this.ApplyActionDetailTranslation(
                 originalPayload.ActionId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedDescription: translatedDescription));
     }
 
@@ -256,11 +276,13 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="actionId">The action row identifier.</param>
     /// <param name="currentClassJobId">The current class-job identifier.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
     private void ApplyActionDetailTranslation(
         uint actionId,
         uint currentClassJobId,
+        SourceClientLanguage sourceLanguage,
         string? translatedName = null,
         string? translatedDescription = null)
     {
@@ -273,7 +295,7 @@ public unsafe partial class Echoglossian
         }
 
         var existingProbe = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -310,7 +332,7 @@ public unsafe partial class Echoglossian
         }
 
         var translatedRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),

@@ -3,15 +3,20 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+using System.Runtime.CompilerServices;
+
+using Dalamud.Game;
+
 using Xunit;
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.LanguagesHandling;
 using Echoglossian.Translators;
 using Microsoft.EntityFrameworkCore;
 
 using PluginEntry = Echoglossian.Echoglossian;
-using Echoglossian.EFCoreSqlite.Models;
 
 namespace Echoglossian.Tests;
 
@@ -21,6 +26,61 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class DbOperationsTests
 {
+    /// <summary>
+    ///     Ensures newly formatted rows persist the resolved source identity
+    ///     rather than the client-language display name.
+    /// </summary>
+    [Fact]
+    public void FormatToastMessage_PersistsResolvedSourceIdentity()
+    {
+        var originalClientState = PluginEntry.ClientStateInterface;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            var plugin = CreateFormattingPlugin();
+
+            var row = plugin.FormatToastMessage("Area", "Test");
+
+            Assert.NotNull(row);
+            Assert.True(RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage));
+            Assert.Equal(
+                sourceLanguage.PersistenceCode,
+                row.OriginalLang);
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = originalClientState;
+        }
+    }
+
+    /// <summary>
+    ///     Ensures formatting fails closed when the current client language
+    ///     has no resolved source identity.
+    /// </summary>
+    [Fact]
+    public void FormatToastMessage_UnresolvedSourceLanguage_ReturnsNull()
+    {
+        var originalClientState = PluginEntry.ClientStateInterface;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState((ClientLanguage)99);
+            var plugin = CreateFormattingPlugin();
+
+            var row = plugin.FormatToastMessage("Area", "Test");
+
+            Assert.Null(row);
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = originalClientState;
+        }
+    }
+
     /// <summary>
     ///     Ensures translation-failure cache preload keeps EF filtering SQL-safe
     ///     and only loads failure reasons that are meant to persist.
@@ -346,5 +406,51 @@ public class DbOperationsTests
         {
             // Best-effort cleanup for temp test DB folders.
         }
+    }
+
+    /// <summary>
+    ///     Creates the minimal plugin instance required by entity formatters.
+    /// </summary>
+    /// <returns>The formatting-only plugin instance.</returns>
+    private static PluginEntry CreateFormattingPlugin()
+    {
+        var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
+            typeof(PluginEntry));
+        var config = new Config
+        {
+            Lang = 28,
+            ChosenTransEngine = 0,
+        };
+        var languages = new Dictionary<int, LanguageInfo>
+        {
+            [28] = new LanguageInfo(
+                "pt-BR",
+                "Portuguese",
+                string.Empty,
+                string.Empty,
+                []),
+        };
+
+        SetPrivateField(plugin, "configuration", config);
+        SetPrivateField(plugin, "languagesDictionary", languages);
+        return plugin;
+    }
+
+    /// <summary>
+    ///     Sets one private plugin field on a formatting-only instance.
+    /// </summary>
+    /// <param name="plugin">The plugin instance.</param>
+    /// <param name="fieldName">The private field name.</param>
+    /// <param name="value">The value to assign.</param>
+    private static void SetPrivateField(
+        PluginEntry plugin,
+        string fieldName,
+        object value)
+    {
+        var field = typeof(PluginEntry).GetField(
+            fieldName,
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(field);
+        field.SetValue(plugin, value);
     }
 }

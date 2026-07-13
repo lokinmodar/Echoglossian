@@ -407,6 +407,11 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
+    {
+      return;
+    }
+
     var bubbleTextNodes = this.resolveMiniTalkBubbleTextNodes(addon);
     if (bubbleTextNodes == null || bubbleTextNodes.Count == 0)
     {
@@ -554,20 +559,23 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   ///     Resolves a MiniTalk translation without blocking the game UI and
   ///     persists the result for future cache hits.
   /// </summary>
+  /// <param name="bubbleKey">The native bubble node address.</param>
   /// <param name="originalText">The original MiniTalk text.</param>
   /// <param name="requestId">The request identifier used to reject stale updates.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation attempt finishes.</returns>
   private async Task ResolveTranslationAsync(
       nint bubbleKey,
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue) ?? string.Empty;
     }
@@ -603,7 +611,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
     var translatedMiniTalk = new MiniTalkMessage(
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         translatedText,
         LangDict[LanguageInt].Code,
         this.GetDialogueTranslationEngineId(),
@@ -678,7 +686,16 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       out string translatedText,
       out string replacementText)
   {
-    var lookup = this.findMiniTalkMessage(this.BuildLookupMessage(originalText));
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      translatedText = string.Empty;
+      replacementText = string.Empty;
+      return false;
+    }
+
+    var lookup = this.findMiniTalkMessage(
+        this.BuildLookupMessage(originalText, sourceLanguage));
     if (lookup == null ||
         !string.Equals(
             lookup.OriginalMiniTalkMessage,
@@ -803,6 +820,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// <summary>
   ///     Sets the resolved in-memory state for the current MiniTalk line.
   /// </summary>
+  /// <param name="bubbleKey">The native bubble node address.</param>
   /// <param name="originalText">The original MiniTalk text.</param>
   /// <param name="translatedText">The translated MiniTalk text.</param>
   /// <param name="replacementText">The translated text normalized for native replacement.</param>
@@ -910,12 +928,15 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   ///     Builds a lookup entity matching the MiniTalk database schema.
   /// </summary>
   /// <param name="originalText">The original MiniTalk text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A formatted <see cref="MiniTalkMessage" /> suitable for DB lookup.</returns>
-  private MiniTalkMessage BuildLookupMessage(string originalText)
+  private MiniTalkMessage BuildLookupMessage(
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return new MiniTalkMessage(
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         LangDict[LanguageInt].Code,
         this.GetDialogueTranslationEngineId(),
@@ -1329,6 +1350,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   ///     translation work and publishes the overlay when a translation becomes
   ///     available.
   /// </summary>
+  /// <param name="bubbleKey">The native bubble node address.</param>
   /// <param name="originalText">The original MiniTalk text to resolve.</param>
   /// <param name="trigger">The log trigger label associated with the call.</param>
   /// <returns>
@@ -1340,6 +1362,12 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       string originalText,
       string trigger)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return false;
+    }
+
     if (this.TryGetCachedTranslation(
             bubbleKey,
             originalText,
@@ -1358,7 +1386,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return true;
     }
 
-    var lookupMiniTalk = this.BuildLookupMessage(originalText);
+    var lookupMiniTalk = this.BuildLookupMessage(
+        originalText,
+        sourceLanguage);
     var storedMiniTalk = this.findMiniTalkMessage(lookupMiniTalk);
     if (this.IsStoredTranslationUsable(storedMiniTalk, originalText))
     {
@@ -1384,7 +1414,11 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       //     $"[MiniTalk] trigger={trigger} cache-miss -> queued translation request #{requestId}");
 
       this.PublishOverlay(bubbleKey, originalText, string.Empty, trigger);
-      Task.Run(() => this.ResolveTranslationAsync(bubbleKey, originalText, requestId));
+      Task.Run(() => this.ResolveTranslationAsync(
+          bubbleKey,
+          originalText,
+          requestId,
+          sourceLanguage));
       return true;
     }
 

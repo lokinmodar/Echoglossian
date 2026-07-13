@@ -109,6 +109,17 @@ public sealed class TalkSubtitleHandler :
   {
     const VisibleStorySurfaceKind surface = VisibleStorySurfaceKind.TalkSubtitle;
     var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return new VisibleDialogueRetranslationResult(
+          false,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+    }
+
     string originalText;
     int requestId;
 
@@ -136,14 +147,14 @@ public sealed class TalkSubtitleHandler :
     {
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
 
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
               translatedText,
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.PersistenceCode,
               LangDict[LanguageInt].Code))
       {
         lock (this.stateGate)
@@ -165,7 +176,7 @@ public sealed class TalkSubtitleHandler :
       var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
       var translatedTalkSubtitle = new TalkSubtitleMessage(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.PersistenceCode,
           translatedText,
           LangDict[LanguageInt].Code,
           dialogueTranslationEngine,
@@ -319,6 +330,12 @@ public sealed class TalkSubtitleHandler :
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     if (this.TryGetCachedTranslation(
             originalText,
             out var translatedText,
@@ -337,6 +354,7 @@ public sealed class TalkSubtitleHandler :
 
     if (this.TryLoadStoredTranslation(
             originalText,
+            sourceLanguage,
             out var storedTranslatedText,
             out var storedReplacementText))
     {
@@ -362,7 +380,10 @@ public sealed class TalkSubtitleHandler :
     if (this.TryQueueTranslation(originalText, out var requestId))
     {
       this.ClearOverlayForPendingState(originalText);
-      Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
+      Task.Run(() => this.ResolveTranslationAsync(
+          originalText,
+          requestId,
+          sourceLanguage));
     }
   }
 
@@ -378,6 +399,11 @@ public sealed class TalkSubtitleHandler :
   {
     if (args.AddonName != TalkSubtitleAddonName ||
         !this.ShouldApplyNativeTalkSubtitleText())
+    {
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
     {
       return;
     }
@@ -460,17 +486,19 @@ public sealed class TalkSubtitleHandler :
   /// </summary>
   /// <param name="originalText">The original TalkSubtitle text.</param>
   /// <param name="requestId">The request identifier used to reject stale updates.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation attempt finishes.</returns>
   private async Task ResolveTranslationAsync(
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue) ?? string.Empty;
     }
@@ -499,7 +527,7 @@ public sealed class TalkSubtitleHandler :
     var replacementText = this.NormalizeForReplacement(translatedText);
     var translatedTalkSubtitle = new TalkSubtitleMessage(
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         translatedText,
         LangDict[LanguageInt].Code,
         this.GetDialogueTranslationEngineId(),
@@ -565,6 +593,7 @@ public sealed class TalkSubtitleHandler :
   ///     Attempts to load a stored TalkSubtitle translation from the database.
   /// </summary>
   /// <param name="originalText">The source TalkSubtitle text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="translatedText">Receives the translated text.</param>
   /// <param name="replacementText">Receives the normalized replacement text.</param>
   /// <returns>
@@ -573,10 +602,12 @@ public sealed class TalkSubtitleHandler :
   /// </returns>
   private bool TryLoadStoredTranslation(
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out string translatedText,
       out string replacementText)
   {
-    var lookup = this.findTalkSubtitleMessage(this.BuildLookupMessage(originalText));
+    var lookup = this.findTalkSubtitleMessage(
+        this.BuildLookupMessage(originalText, sourceLanguage));
     if (lookup == null ||
         !string.Equals(
             lookup.OriginalTalkSubtitleMessage,
@@ -758,14 +789,17 @@ public sealed class TalkSubtitleHandler :
   ///     already used in the database.
   /// </summary>
   /// <param name="originalText">The original TalkSubtitle text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>
   ///     A formatted <see cref="TalkSubtitleMessage" /> suitable for DB lookup.
   /// </returns>
-  private TalkSubtitleMessage BuildLookupMessage(string originalText)
+  private TalkSubtitleMessage BuildLookupMessage(
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return new TalkSubtitleMessage(
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         LangDict[LanguageInt].Code,
         this.GetDialogueTranslationEngineId(),

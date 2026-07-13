@@ -92,12 +92,18 @@ internal sealed class QuestToastRuntime
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     // PluginRuntimeLog.Debug(
     //     $"[QuestToast] trigger=IToastGui.QuestToast captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
     var requestId = this.BeginRequest(originalText);
-    var lookupToast = this.BuildLookupMessage(originalText);
+    var lookupToast = this.BuildLookupMessage(originalText, sourceLanguage);
     var storedToast = this.findToastMessage(lookupToast);
     if (storedToast != null &&
         !string.IsNullOrWhiteSpace(storedToast.TranslatedToastMessage))
@@ -114,7 +120,10 @@ internal sealed class QuestToastRuntime
 
     this.PublishOverlay(originalText, string.Empty, "IToastGui.QuestToast");
 
-    Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
+    Task.Run(() => this.ResolveTranslationAsync(
+        originalText,
+        requestId,
+        sourceLanguage));
   }
 
   /// <summary>
@@ -166,15 +175,19 @@ internal sealed class QuestToastRuntime
   /// </summary>
   /// <param name="originalText">The original quest toast text.</param>
   /// <param name="requestId">The request identifier used to reject stale updates.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation attempt finishes.</returns>
-  private async Task ResolveTranslationAsync(string originalText, int requestId)
+  private async Task ResolveTranslationAsync(
+      string originalText,
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch (Exception ex)
@@ -197,7 +210,7 @@ internal sealed class QuestToastRuntime
         new ToastMessage(
             QuestToastType,
             originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             translatedText,
             LangDict[LanguageInt].Code,
             this.config.ChosenTransEngine,
@@ -286,13 +299,16 @@ internal sealed class QuestToastRuntime
   ///     schema already used by the plugin.
   /// </summary>
   /// <param name="originalText">The original quest toast text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A lookup <see cref="ToastMessage" /> for quest toast history.</returns>
-  private ToastMessage BuildLookupMessage(string originalText)
+  private ToastMessage BuildLookupMessage(
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return new ToastMessage(
         QuestToastType,
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         LangDict[LanguageInt].Code,
         this.config.ChosenTransEngine,

@@ -12,14 +12,23 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="sender">Message sender name.</param>
   /// <param name="text">Message text.</param>
-  /// <returns>Returns <see cref="TalkMessage" />.</returns>
-  public TalkMessage FormatTalkMessage(string sender, string text)
+  /// <returns>
+  ///     The formatted <see cref="TalkMessage" />, or <see langword="null" />
+  ///     when the current source language cannot be resolved.
+  /// </returns>
+  public TalkMessage? FormatTalkMessage(string sender, string text)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
     return new TalkMessage(
         sender,
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
+        sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
         this.languagesDictionary[this.configuration.Lang].Code,
@@ -34,14 +43,24 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="sender">Message sender name.</param>
   /// <param name="text">Message text.</param>
-  /// <returns>Returns <see cref="BattleTalkMessage" />.</returns>
-  public BattleTalkMessage FormatBattleTalkMessage(string sender, string text)
+  /// <returns>
+  ///     The formatted <see cref="BattleTalkMessage" />, or
+  ///     <see langword="null" /> when the current source language cannot be
+  ///     resolved.
+  /// </returns>
+  public BattleTalkMessage? FormatBattleTalkMessage(string sender, string text)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
     return new BattleTalkMessage(
         sender,
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
+        sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
         this.languagesDictionary[this.configuration.Lang].Code,
@@ -51,12 +70,27 @@ public partial class Echoglossian
         DateTime.Now);
   }
 
-  public ToastMessage FormatToastMessage(string type, string text)
+  /// <summary>
+  ///     Formats a <see cref="ToastMessage" /> for the database.
+  /// </summary>
+  /// <param name="type">The toast type.</param>
+  /// <param name="text">The original toast text.</param>
+  /// <returns>
+  ///     The formatted <see cref="ToastMessage" />, or <see langword="null" />
+  ///     when the current source language cannot be resolved.
+  /// </returns>
+  public ToastMessage? FormatToastMessage(string type, string text)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
     return new ToastMessage(
         type,
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         this.languagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
@@ -64,12 +98,27 @@ public partial class Echoglossian
         DateTime.Now);
   }
 
-  public QuestPlate FormatQuestPlate(string questName, string questMessage)
+  /// <summary>
+  ///     Formats a <see cref="QuestPlate" /> for the database.
+  /// </summary>
+  /// <param name="questName">The original quest name.</param>
+  /// <param name="questMessage">The original quest message.</param>
+  /// <returns>
+  ///     The formatted <see cref="QuestPlate" />, or <see langword="null" />
+  ///     when the current source language cannot be resolved.
+  /// </returns>
+  public QuestPlate? FormatQuestPlate(string questName, string questMessage)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
     return new QuestPlate(
         questName,
         questMessage,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
         string.Empty,
@@ -80,11 +129,26 @@ public partial class Echoglossian
         GetGameVersion());
   }
 
-  public TalkSubtitleMessage FormatTalkSubtitleMessage(string text)
+  /// <summary>
+  ///     Formats a <see cref="TalkSubtitleMessage" /> for the database.
+  /// </summary>
+  /// <param name="text">The original subtitle text.</param>
+  /// <returns>
+  ///     The formatted <see cref="TalkSubtitleMessage" />, or
+  ///     <see langword="null" /> when the current source language cannot be
+  ///     resolved.
+  /// </returns>
+  public TalkSubtitleMessage? FormatTalkSubtitleMessage(string text)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
     return new TalkSubtitleMessage(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         this.languagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
@@ -96,12 +160,22 @@ public partial class Echoglossian
   ///     Formats a <see cref="TextGimmickHintMessage" /> for the database.
   /// </summary>
   /// <param name="text">The original text gimmick hint message.</param>
-  /// <returns>Returns <see cref="TextGimmickHintMessage" />.</returns>
-  public TextGimmickHintMessage FormatTextGimmickHintMessage(string text)
+  /// <returns>
+  ///     The formatted <see cref="TextGimmickHintMessage" />, or
+  ///     <see langword="null" /> when the current source language cannot be
+  ///     resolved.
+  /// </returns>
+  public TextGimmickHintMessage? FormatTextGimmickHintMessage(string text)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
     return new TextGimmickHintMessage(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         this.languagesDictionary[this.configuration.Lang].Code,
         this.configuration.ChosenTransEngine,
@@ -114,14 +188,23 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="question">The original question/title text.</param>
   /// <param name="options">The original options rendered by the addon.</param>
-  /// <returns>Returns <see cref="SelectString" />.</returns>
-  public SelectString FormatCutSceneSelectString(
+  /// <returns>
+  ///     The formatted <see cref="SelectString" />, or <see langword="null" />
+  ///     when the current source language cannot be resolved.
+  /// </returns>
+  public SelectString? FormatCutSceneSelectString(
       string question,
       List<string> options)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
     return new SelectString(
         question,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         JsonConvert.SerializeObject(options),
         string.Empty,
         string.Empty,

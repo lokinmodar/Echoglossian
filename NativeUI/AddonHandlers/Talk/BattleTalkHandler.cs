@@ -121,6 +121,17 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   {
     const VisibleStorySurfaceKind surface = VisibleStorySurfaceKind.BattleTalk;
     var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return new VisibleDialogueRetranslationResult(
+          false,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+    }
+
     if (!this.TryCaptureCurrentBattleTalkSource(
             out var originalName,
             out var originalText))
@@ -153,14 +164,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     {
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
       var translatedName = this.ShouldTranslateBattleTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
               originalName,
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.ProviderCode,
               LangDict[LanguageInt].Code,
               TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
           : string.Empty;
@@ -171,7 +182,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
               translatedText,
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.PersistenceCode,
               LangDict[LanguageInt].Code))
       {
         lock (this.stateGate)
@@ -195,8 +206,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       var translatedBattleTalkData = new BattleTalkMessage(
           originalName,
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.PersistenceCode,
+          sourceLanguage.PersistenceCode,
           translatedName,
           translatedText,
           LangDict[LanguageInt].Code,
@@ -376,6 +387,12 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     if (this.TryGetCachedTranslation(
             originalName,
             originalText,
@@ -419,7 +436,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       Task.Run(() => this.ResolveTranslationAsync(
           originalName,
           originalText,
-          requestId));
+          requestId,
+          sourceLanguage));
     }
   }
 
@@ -657,12 +675,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// </summary>
   /// <param name="originalName">The original sender name.</param>
   /// <param name="originalText">The original BattleTalk text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>
   ///     A formatted <see cref="BattleTalkMessage" /> suitable for DB lookup.
   /// </returns>
   private BattleTalkMessage BuildLookupMessage(
       string originalName,
-      string originalText)
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     var dialogueTranslationEngine =
         this.translationService.GetEffectiveTranslationEngineId(
@@ -670,8 +690,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     return new BattleTalkMessage(
         originalName,
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
+        sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
         LangDict[LanguageInt].Code,
@@ -765,15 +785,20 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// <param name="requestId">
   ///     The request identifier used to reject stale results.
   /// </param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation state has been updated.</returns>
   private async Task ResolveTranslationAsync(
       string originalName,
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     try
     {
-      var lookup = this.BuildLookupMessage(originalName, originalText);
+      var lookup = this.BuildLookupMessage(
+          originalName,
+          originalText,
+          sourceLanguage);
       var foundBattleTalkMessage = this.findBattleTalkMessage(lookup);
 
       string translatedName;
@@ -813,7 +838,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.ProviderCode,
             LangDict[LanguageInt].Code,
             dialogueContext,
             TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
@@ -825,7 +850,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           {
             translatedName = await this.translationService.TranslateAsync(
                 originalName,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code,
                 TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
           }
@@ -841,8 +866,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           var translatedBattleTalkData = new BattleTalkMessage(
               originalName,
               originalText,
-              ClientStateInterface.ClientLanguage.Humanize(),
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.PersistenceCode,
+              sourceLanguage.PersistenceCode,
               translatedName,
               translatedText,
               LangDict[LanguageInt].Code,
@@ -1126,6 +1151,12 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     if (this.TryGetCachedTranslation(
             originalName,
             originalText,
@@ -1149,7 +1180,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       Task.Run(() => this.ResolveTranslationAsync(
           originalName,
           originalText,
-          requestId));
+          requestId,
+          sourceLanguage));
     }
   }
 

@@ -110,11 +110,18 @@ internal sealed class ToastGuiSupportedToastRuntime
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var requestId = this.BeginNormalRequest(originalText, options);
     var storedToast = this.findToastMessage(
         this.BuildLookupMessage(
             NormalToastType,
-            originalText));
+            originalText,
+            sourceLanguage));
     if (this.IsStoredTranslationUsable(
             storedToast,
             originalText,
@@ -129,7 +136,10 @@ internal sealed class ToastGuiSupportedToastRuntime
     }
 
     this.PublishNormalOverlay(originalText, string.Empty, "IToastGui.Toast");
-    Task.Run(() => this.ResolveNormalTranslationAsync(originalText, requestId));
+    Task.Run(() => this.ResolveNormalTranslationAsync(
+        originalText,
+        requestId,
+        sourceLanguage));
   }
 
   /// <summary>
@@ -154,11 +164,18 @@ internal sealed class ToastGuiSupportedToastRuntime
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var requestId = this.BeginErrorRequest(originalText);
     var storedToast = this.findToastMessage(
         this.BuildLookupMessage(
             ErrorToastType,
-            originalText));
+            originalText,
+            sourceLanguage));
     if (this.IsStoredTranslationUsable(
             storedToast,
             originalText,
@@ -173,7 +190,10 @@ internal sealed class ToastGuiSupportedToastRuntime
     }
 
     this.PublishErrorOverlay(originalText, string.Empty, "IToastGui.ErrorToast");
-    Task.Run(() => this.ResolveErrorTranslationAsync(originalText, requestId));
+    Task.Run(() => this.ResolveErrorTranslationAsync(
+        originalText,
+        requestId,
+        sourceLanguage));
   }
 
   /// <summary>
@@ -321,17 +341,19 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </summary>
   /// <param name="originalText">The original toast text.</param>
   /// <param name="requestId">The active request identifier.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes after the translation attempt.</returns>
   private async Task ResolveNormalTranslationAsync(
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch
@@ -348,7 +370,7 @@ internal sealed class ToastGuiSupportedToastRuntime
         new ToastMessage(
             NormalToastType,
             originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             translatedText,
             LangDict[LanguageInt].Code,
             this.config.ChosenTransEngine,
@@ -374,17 +396,19 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </summary>
   /// <param name="originalText">The original toast text.</param>
   /// <param name="requestId">The active request identifier.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes after the translation attempt.</returns>
   private async Task ResolveErrorTranslationAsync(
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch
@@ -401,7 +425,7 @@ internal sealed class ToastGuiSupportedToastRuntime
         new ToastMessage(
             ErrorToastType,
             originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             translatedText,
             LangDict[LanguageInt].Code,
             this.config.ChosenTransEngine,
@@ -744,15 +768,17 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </summary>
   /// <param name="toastType">The persisted toast type.</param>
   /// <param name="originalText">The original toast text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A lookup <see cref="ToastMessage" />.</returns>
   private ToastMessage BuildLookupMessage(
       string toastType,
-      string originalText)
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return new ToastMessage(
         toastType,
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         LangDict[LanguageInt].Code,
         this.config.ChosenTransEngine,

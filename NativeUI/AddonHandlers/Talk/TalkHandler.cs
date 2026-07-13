@@ -112,6 +112,17 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   {
     const VisibleStorySurfaceKind surface = VisibleStorySurfaceKind.Talk;
     var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return new VisibleDialogueRetranslationResult(
+          false,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+    }
+
     if (!this.TryCaptureCurrentTalkSource(out var originalName, out var originalText))
     {
       return new VisibleDialogueRetranslationResult(
@@ -140,14 +151,14 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     {
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.ProviderCode,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
       var translatedName = this.ShouldTranslateTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
               originalName,
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.ProviderCode,
               LangDict[LanguageInt].Code,
               TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
           : string.Empty;
@@ -158,7 +169,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
               translatedText,
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.PersistenceCode,
               LangDict[LanguageInt].Code))
       {
         lock (this.stateGate)
@@ -180,8 +191,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       var translatedTalkData = new TalkMessage(
           originalName,
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage.PersistenceCode,
+          sourceLanguage.PersistenceCode,
           translatedName,
           translatedText,
           LangDict[LanguageInt].Code,
@@ -323,6 +334,12 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     var originalText = this.ReadTalkAtkString(atkValues[0]);
     var originalName = this.ReadTalkAtkString(atkValues[1]);
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     this.RemapTranslatedRefreshSourceToOriginal(
         ref originalName,
         ref originalText);
@@ -375,6 +392,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     if (this.TryLoadStoredTranslation(
             originalName,
             originalText,
+            sourceLanguage,
             out var storedTranslatedName,
             out var storedTranslatedText))
     {
@@ -401,7 +419,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       Task.Run(() => this.ResolveTranslationAsync(
           originalName,
           originalText,
-          requestId));
+          requestId,
+          sourceLanguage));
     }
   }
 
@@ -414,6 +433,11 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   private unsafe void OnApplyNativeTalkText(AddonEvent type, AddonArgs args)
   {
     if (args.AddonName != TalkAddonName)
+    {
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
     {
       return;
     }
@@ -623,10 +647,12 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   /// </summary>
   /// <param name="originalName">The original sender name.</param>
   /// <param name="originalText">The original Talk message text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A formatted <see cref="TalkMessage" /> suitable for DB lookup.</returns>
   private TalkMessage BuildLookupMessage(
       string originalName,
-      string originalText)
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     var dialogueTranslationEngine =
         this.translationService.GetEffectiveTranslationEngineId(
@@ -634,8 +660,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     return new TalkMessage(
         originalName,
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
+        sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
         LangDict[LanguageInt].Code,
@@ -910,6 +936,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   /// </summary>
   /// <param name="originalName">The original sender name.</param>
   /// <param name="originalText">The original Talk text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="translatedName">Receives the translated sender name.</param>
   /// <param name="translatedText">Receives the translated Talk text.</param>
   /// <returns>
@@ -919,11 +946,15 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   private bool TryLoadStoredTranslation(
       string originalName,
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out string translatedName,
       out string translatedText)
   {
     var foundTalkMessage = this.findTalkMessage(
-        this.BuildLookupMessage(originalName, originalText));
+        this.BuildLookupMessage(
+            originalName,
+            originalText,
+            sourceLanguage));
     if (foundTalkMessage == null)
     {
       translatedName = string.Empty;
@@ -971,15 +1002,20 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   /// <param name="originalName">The original sender name.</param>
   /// <param name="originalText">The original Talk text.</param>
   /// <param name="requestId">The request identifier used to reject stale results.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation state has been updated.</returns>
   private async Task ResolveTranslationAsync(
       string originalName,
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     try
     {
-      var lookup = this.BuildLookupMessage(originalName, originalText);
+      var lookup = this.BuildLookupMessage(
+          originalName,
+          originalText,
+          sourceLanguage);
       var foundTalkMessage = this.findTalkMessage(lookup);
 
       string translatedName;
@@ -1015,7 +1051,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.ProviderCode,
             LangDict[LanguageInt].Code,
             dialogueContext,
             TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
@@ -1023,7 +1059,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         translatedName = this.ShouldTranslateTalkNpcNames() && !originalName.IsNullOrEmpty()
             ? await this.translationService.TranslateAsync(
                 originalName,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code,
                 TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
             : string.Empty;
@@ -1044,8 +1080,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
           var translatedTalkData = new TalkMessage(
               originalName,
               originalText,
-              ClientStateInterface.ClientLanguage.Humanize(),
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.PersistenceCode,
+              sourceLanguage.PersistenceCode,
               translatedName,
               translatedText,
               LangDict[LanguageInt].Code,

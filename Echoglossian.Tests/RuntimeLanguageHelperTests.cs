@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Game;
+
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -13,6 +15,31 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class RuntimeLanguageHelperTests
 {
+    /// <summary>
+    ///     Ensures the current-client resolver fails closed for an unknown
+    ///     runtime client-language value.
+    /// </summary>
+    [Fact]
+    public void TryResolveCurrentSourceLanguage_UnknownClientValue_ReturnsFalse()
+    {
+        var originalClientState = global::Echoglossian.Echoglossian.ClientStateInterface;
+
+        try
+        {
+            global::Echoglossian.Echoglossian.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState((ClientLanguage)99);
+
+            var resolved = RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out _);
+
+            Assert.False(resolved);
+        }
+        finally
+        {
+            global::Echoglossian.Echoglossian.ClientStateInterface = originalClientState;
+        }
+    }
+
     /// <summary>
     ///     Ensures native game language names normalize to their expected
     ///     comparison codes.

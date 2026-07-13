@@ -2654,7 +2654,10 @@
             </summary>
             <param name="sender">Message sender name.</param>
             <param name="text">Message text.</param>
-            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" />.</returns>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" />, or <see langword="null" />
+                when the current source language cannot be resolved.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatBattleTalkMessage(System.String,System.String)">
             <summary>
@@ -2662,14 +2665,55 @@
             </summary>
             <param name="sender">Message sender name.</param>
             <param name="text">Message text.</param>
-            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" />.</returns>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" />, or
+                <see langword="null" /> when the current source language cannot be
+                resolved.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatToastMessage(System.String,System.String)">
+            <summary>
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for the database.
+            </summary>
+            <param name="type">The toast type.</param>
+            <param name="text">The original toast text.</param>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" />, or <see langword="null" />
+                when the current source language cannot be resolved.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatQuestPlate(System.String,System.String)">
+            <summary>
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" /> for the database.
+            </summary>
+            <param name="questName">The original quest name.</param>
+            <param name="questMessage">The original quest message.</param>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" />, or <see langword="null" />
+                when the current source language cannot be resolved.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatTalkSubtitleMessage(System.String)">
+            <summary>
+                Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage" /> for the database.
+            </summary>
+            <param name="text">The original subtitle text.</param>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage" />, or
+                <see langword="null" /> when the current source language cannot be
+                resolved.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatTextGimmickHintMessage(System.String)">
             <summary>
                 Formats a <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" /> for the database.
             </summary>
             <param name="text">The original text gimmick hint message.</param>
-            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" />.</returns>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" />, or
+                <see langword="null" /> when the current source language cannot be
+                resolved.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatCutSceneSelectString(System.String,System.Collections.Generic.List{System.String})">
             <summary>
@@ -2677,7 +2721,10 @@
             </summary>
             <param name="question">The original question/title text.</param>
             <param name="options">The original options rendered by the addon.</param>
-            <returns>Returns <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" />.</returns>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" />, or <see langword="null" />
+                when the current source language cannot be resolved.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatGameWindow(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
@@ -3218,14 +3265,15 @@
             </summary>
             <returns>True when the background prefetch should run.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuest(System.UInt32)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuest(System.UInt32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the canonical text for one accepted quest and schedules any
                 missing translations through the shared paced broker.
             </summary>
             <param name="questId">The accepted quest identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestName(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestName(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated quest name for an accepted quest when it is
                 not yet persisted.
@@ -3233,8 +3281,9 @@
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the current quest-body message for an accepted quest when it
                 is not yet persisted.
@@ -3242,32 +3291,36 @@
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSummaries(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSummaries(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches all SEQ summary rows for an accepted quest.
             </summary>
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestObjectives(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestObjectives(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches all TODO rows for an accepted quest.
             </summary>
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSystemRows(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSystemRows(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches all SYSTEM rows for an accepted quest.
             </summary>
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="existingQuestPlate">The existing persisted quest plate, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestNameTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestNameTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Applies a prefetched quest-name translation into the canonical quest
                 plate row.
@@ -3275,8 +3328,9 @@
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="translatedQuestName">The translated quest name.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestMessageTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestMessageTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Applies a prefetched current-message translation into the canonical
                 quest plate row.
@@ -3284,43 +3338,51 @@
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
             <param name="translatedQuestMessage">The translated quest message.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSummaryTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSummaryTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Applies a prefetched SEQ summary translation into the canonical quest
                 plate row.
             </summary>
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="summaryRowKey">The canonical summary-row key.</param>
             <param name="originalSummaryText">The original summary text.</param>
             <param name="translatedSummaryText">The translated summary text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestObjectiveTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestObjectiveTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Applies a prefetched TODO translation into the canonical quest plate
                 row.
             </summary>
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="objectiveRowKey">The canonical objective-row key.</param>
             <param name="originalObjectiveText">The original objective text.</param>
             <param name="translatedObjectiveText">The translated objective text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSystemTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyAcceptedQuestSystemTranslation(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Applies a prefetched SYSTEM-row translation into the canonical quest
                 plate row.
             </summary>
             <param name="questProgressSnapshot">The resolved quest snapshot.</param>
             <param name="currentQuestSequenceText">The current SEQ row text.</param>
+            <param name="systemRowKey">The canonical SYSTEM-row key.</param>
             <param name="originalSystemText">The original SYSTEM-row text.</param>
             <param name="translatedSystemText">The translated SYSTEM-row text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.CreateAcceptedQuestPrefetchPlate(Echoglossian.QuestCanonicalData)">
+        <member name="M:Echoglossian.Echoglossian.CreateAcceptedQuestPrefetchPlate(Echoglossian.QuestCanonicalData,Echoglossian.SourceClientLanguage)">
             <summary>
                 Creates the canonical accepted-quest quest plate snapshot used by the
                 background prefetch runtime.
             </summary>
             <param name="questCanonicalData">The canonical quest payload.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>The canonical quest plate snapshot.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.EmitAcceptedQuestPrefetchDiagnostic(Echoglossian.QuestCanonicalData,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
@@ -3417,26 +3479,29 @@
             <param name="actionId">The action row identifier.</param>
             <param name="currentClassJobId">The current class-job identifier.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchActionDetailName(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchActionDetailName(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated action name when it is not yet persisted.
             </summary>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchActionDetailDescription(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchActionDetailDescription(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated action description when it is not yet persisted.
             </summary>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyActionDetailTranslation(System.UInt32,System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyActionDetailTranslation(System.UInt32,System.UInt32,Echoglossian.SourceClientLanguage,System.String,System.String)">
             <summary>
                 Applies one resolved action-tooltip translation into canonical storage.
             </summary>
             <param name="actionId">The action row identifier.</param>
             <param name="currentClassJobId">The current class-job identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedName">The translated name, if any.</param>
             <param name="translatedDescription">The translated description, if any.</param>
         </member>
@@ -4558,25 +4623,28 @@
             </summary>
             <param name="itemId">The item row identifier.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchItemDetailName(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchItemDetailName(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated item name when it is not yet persisted.
             </summary>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchItemDetailDescription(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchItemDetailDescription(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated item description when it is not yet persisted.
             </summary>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyItemDetailTranslation(System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyItemDetailTranslation(System.UInt32,Echoglossian.SourceClientLanguage,System.String,System.String)">
             <summary>
                 Applies one resolved item-tooltip translation into canonical storage.
             </summary>
             <param name="itemId">The item row identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedName">The translated name, if any.</param>
             <param name="translatedDescription">The translated description, if any.</param>
         </member>
@@ -5056,7 +5124,7 @@
             <param name="registration">The registration describing the sheet family.</param>
             <param name="referenceId">The sheet-row identifier.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceTextName(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceTextName(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated reference-text name when it is not yet
                 persisted.
@@ -5064,8 +5132,9 @@
             <param name="registration">The registration describing the sheet family.</param>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceTextDescription(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceTextDescription(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated reference-text description when it is not
                 yet persisted.
@@ -5073,14 +5142,16 @@
             <param name="registration">The registration describing the sheet family.</param>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyReferenceTextTranslation(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyReferenceTextTranslation(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.UInt32,Echoglossian.SourceClientLanguage,System.String,System.String)">
             <summary>
                 Applies one resolved reference-text translation into canonical
                 storage.
             </summary>
             <param name="registration">The registration describing the sheet family.</param>
             <param name="referenceId">The sheet-row identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedName">The translated name, if any.</param>
             <param name="translatedDescription">The translated description, if any.</param>
         </member>
@@ -5530,26 +5601,29 @@
             <param name="traitId">The trait row identifier.</param>
             <param name="currentClassJobId">The current class-job identifier.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchTraitDetailName(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.EFCoreSqlite.Models.Trait)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchTraitDetailName(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated trait name when it is not yet persisted.
             </summary>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchTraitDetailDescription(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.EFCoreSqlite.Models.Trait)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchTraitDetailDescription(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.SourceClientLanguage)">
             <summary>
                 Prefetches the translated trait description when it is not yet persisted.
             </summary>
             <param name="originalPayload">The canonical original payload.</param>
             <param name="existingRow">The currently persisted row, if any.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyTraitDetailTranslation(System.UInt32,System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ApplyTraitDetailTranslation(System.UInt32,System.UInt32,Echoglossian.SourceClientLanguage,System.String,System.String)">
             <summary>
                 Applies one resolved trait translation into canonical storage.
             </summary>
             <param name="traitId">The trait row identifier.</param>
             <param name="currentClassJobId">The current class-job identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedName">The translated name, if any.</param>
             <param name="translatedDescription">The translated description, if any.</param>
         </member>
@@ -15771,13 +15845,15 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ResolveTranslationAsync(System.IntPtr,System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ResolveTranslationAsync(System.IntPtr,System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a MiniTalk translation without blocking the game UI and
                 persists the result for future cache hits.
             </summary>
+            <param name="bubbleKey">The native bubble node address.</param>
             <param name="originalText">The original MiniTalk text.</param>
             <param name="requestId">The request identifier used to reject stale updates.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation attempt finishes.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryGetCachedTranslation(System.IntPtr,System.String,System.String@,System.String@)">
@@ -15843,6 +15919,7 @@
             <summary>
                 Sets the resolved in-memory state for the current MiniTalk line.
             </summary>
+            <param name="bubbleKey">The native bubble node address.</param>
             <param name="originalText">The original MiniTalk text.</param>
             <param name="translatedText">The translated MiniTalk text.</param>
             <param name="replacementText">The translated text normalized for native replacement.</param>
@@ -15886,11 +15963,12 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.BuildLookupMessage(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.BuildLookupMessage(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a lookup entity matching the MiniTalk database schema.
             </summary>
             <param name="originalText">The original MiniTalk text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.MiniTalkMessage" /> suitable for DB lookup.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.GetDialogueTranslationEngineId">
@@ -16029,6 +16107,7 @@
                 translation work and publishes the overlay when a translation becomes
                 available.
             </summary>
+            <param name="bubbleKey">The native bubble node address.</param>
             <param name="originalText">The original MiniTalk text to resolve.</param>
             <param name="trigger">The log trigger label associated with the call.</param>
             <returns>
@@ -16183,13 +16262,14 @@
             <param name="originalName">The original sender name to write back.</param>
             <param name="originalText">The original text to write back.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.BuildLookupMessage(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.BuildLookupMessage(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a lookup entity matching the historical BattleTalk message schema
                 already used in the database.
             </summary>
             <param name="originalName">The original sender name.</param>
             <param name="originalText">The original BattleTalk text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>
                 A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.BattleTalkMessage" /> suitable for DB lookup.
             </returns>
@@ -16231,7 +16311,7 @@
             <param name="originalName">The visible speaker name.</param>
             <returns>The normalized session key.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ResolveTranslationAsync(System.String,System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.ResolveTranslationAsync(System.String,System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a BattleTalk translation from cache or external translation and
                 stores the result as the current translation state.
@@ -16241,6 +16321,7 @@
             <param name="requestId">
                 The request identifier used to reject stale results.
             </param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation state has been updated.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,System.String,System.String)">
@@ -16636,13 +16717,14 @@
             <param name="textNode">The Talk message text node.</param>
             <returns>True when at least one node was restored.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.BuildLookupMessage(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.BuildLookupMessage(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a lookup entity matching the historical Talk message schema already
                 used in the database.
             </summary>
             <param name="originalName">The original sender name.</param>
             <param name="originalText">The original Talk message text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkMessage" /> suitable for DB lookup.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ApplyTranslatedRefreshValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String,System.String)">
@@ -16748,13 +16830,14 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryLoadStoredTranslation(System.String,System.String,System.String@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.TryLoadStoredTranslation(System.String,System.String,Echoglossian.SourceClientLanguage,System.String@,System.String@)">
             <summary>
                 Tries to load an existing Talk translation synchronously from the
                 database so saved lines can still swap immediately during refresh.
             </summary>
             <param name="originalName">The original sender name.</param>
             <param name="originalText">The original Talk text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedName">Receives the translated sender name.</param>
             <param name="translatedText">Receives the translated Talk text.</param>
             <returns>
@@ -16762,7 +16845,7 @@
                 Talk line; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ResolveTranslationAsync(System.String,System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.ResolveTranslationAsync(System.String,System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a Talk translation from cache or external translation and stores
                 the result as the current translation state.
@@ -16770,6 +16853,7 @@
             <param name="originalName">The original sender name.</param>
             <param name="originalText">The original Talk text.</param>
             <param name="requestId">The request identifier used to reject stale results.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation state has been updated.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.RecordDiagnosticsSnapshot(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.String,System.String,System.String,System.Boolean,System.Int32)">
@@ -16932,13 +17016,14 @@
             <param name="type">The lifecycle event that triggered the reset.</param>
             <param name="args">The addon arguments associated with the reset.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ResolveTranslationAsync(System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.ResolveTranslationAsync(System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a TalkSubtitle translation without blocking the game UI and
                 persists the result for future cache hits.
             </summary>
             <param name="originalText">The original TalkSubtitle text.</param>
             <param name="requestId">The request identifier used to reject stale updates.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation attempt finishes.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TryGetCachedTranslation(System.String,System.String@,System.String@)">
@@ -16954,11 +17039,12 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TryLoadStoredTranslation(System.String,System.String@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.TryLoadStoredTranslation(System.String,Echoglossian.SourceClientLanguage,System.String@,System.String@)">
             <summary>
                 Attempts to load a stored TalkSubtitle translation from the database.
             </summary>
             <param name="originalText">The source TalkSubtitle text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedText">Receives the translated text.</param>
             <param name="replacementText">Receives the normalized replacement text.</param>
             <returns>
@@ -17036,12 +17122,13 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.BuildLookupMessage(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.BuildLookupMessage(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a lookup entity matching the historical TalkSubtitle schema
                 already used in the database.
             </summary>
             <param name="originalText">The original TalkSubtitle text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>
                 A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage" /> suitable for DB lookup.
             </returns>
@@ -17791,13 +17878,14 @@
             <param name="translatedText">The resolved translated text.</param>
             <param name="requestId">The active request identifier.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ResolveTranslationAsync(System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ResolveTranslationAsync(System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a quest toast translation asynchronously and publishes or caches
                 the result when it still belongs to the latest toast request.
             </summary>
             <param name="originalText">The original quest toast text.</param>
             <param name="requestId">The request identifier used to reject stale updates.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation attempt finishes.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ScheduleOverlayClearAsync(System.Int32)">
@@ -17830,12 +17918,13 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.BuildLookupMessage(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.BuildLookupMessage(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds the historical quest toast lookup entity that matches the toast DB
                 schema already used by the plugin.
             </summary>
             <param name="originalText">The original quest toast text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A lookup <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for quest toast history.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.ShouldUseOverlay">
@@ -18308,13 +18397,14 @@
             <param name="toastType">The persisted toast type.</param>
             <param name="originalText">The original toast text.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryBeginPrefetch(System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.TryBeginPrefetch(System.String,System.String,Echoglossian.SourceClientLanguage,System.String@)">
             <summary>
                 Starts one background prefetch request when the same toast line is not
                 already being resolved.
             </summary>
             <param name="toastType">The persisted toast type.</param>
             <param name="originalText">The original toast text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="inFlightKey">
                 Receives the unique in-flight key for the request.
             </param>
@@ -18323,7 +18413,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ResolveTranslationAsync(System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.ResolveTranslationAsync(System.String,System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves one toast translation asynchronously and persists it into the
                 existing toast history tables when successful.
@@ -18331,15 +18421,17 @@
             <param name="toastType">The persisted toast type.</param>
             <param name="originalText">The original toast text.</param>
             <param name="inFlightKey">The key representing the queued request.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation attempt finishes.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildLookupMessage(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildLookupMessage(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a lookup entity matching the historical toast schema already
                 used by the plugin database.
             </summary>
             <param name="toastType">The persisted toast type.</param>
             <param name="originalText">The original toast text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for DB lookup.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">
@@ -18355,13 +18447,14 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildInFlightKey(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiCaptureRuntime.BuildInFlightKey(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds the in-flight key used to deduplicate concurrent callback
                 prefetch requests.
             </summary>
             <param name="toastType">The persisted toast type.</param>
             <param name="originalText">The original toast text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>The stable in-flight dedupe key.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState">
@@ -18575,20 +18668,22 @@
             <param name="translatedText">The translated toast text.</param>
             <param name="requestId">The active request identifier.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveNormalTranslationAsync(System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveNormalTranslationAsync(System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves one supported normal-toast line asynchronously.
             </summary>
             <param name="originalText">The original toast text.</param>
             <param name="requestId">The active request identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes after the translation attempt.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveErrorTranslationAsync(System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ResolveErrorTranslationAsync(System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves one supported error-toast line asynchronously.
             </summary>
             <param name="originalText">The original toast text.</param>
             <param name="requestId">The active request identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes after the translation attempt.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BeginNormalRequest(System.String,Dalamud.Game.Gui.Toast.ToastOptions)">
@@ -18739,13 +18834,14 @@
             </param>
             <returns>The overlay text to display.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BuildLookupMessage(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.BuildLookupMessage(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds one toast DB lookup entity using the plugin's existing toast
                 persistence schema.
             </summary>
             <param name="toastType">The persisted toast type.</param>
             <param name="originalText">The original toast text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A lookup <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" />.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.IsStoredTranslationUsable(Echoglossian.EFCoreSqlite.Models.ToastMessage,System.String,System.String)">

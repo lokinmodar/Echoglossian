@@ -204,13 +204,19 @@ public unsafe partial class Echoglossian
         ReferenceTextPrefetchRegistration registration,
         uint referenceId)
     {
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            return;
+        }
+
         if (!registration.TryBuildPayload(referenceId, out var originalPayload))
         {
             return;
         }
 
         var originalRow = registration.CreateRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -222,11 +228,13 @@ public unsafe partial class Echoglossian
         this.PrefetchReferenceTextName(
             registration,
             originalPayload,
-            existingRow);
+            existingRow,
+            sourceLanguage);
         this.PrefetchReferenceTextDescription(
             registration,
             originalPayload,
-            existingRow);
+            existingRow,
+            sourceLanguage);
     }
 
     /// <summary>
@@ -236,10 +244,12 @@ public unsafe partial class Echoglossian
     /// <param name="registration">The registration describing the sheet family.</param>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchReferenceTextName(
         ReferenceTextPrefetchRegistration registration,
         ReferenceTextCanonicalPayload originalPayload,
-        ReferenceTextRowBase existingRow)
+        ReferenceTextRowBase existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedName))
@@ -256,6 +266,7 @@ public unsafe partial class Echoglossian
             this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
+                sourceLanguage,
                 translatedName: cachedTranslatedName);
             return;
         }
@@ -264,11 +275,12 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Name,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code),
             translatedName => this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
+                sourceLanguage,
                 translatedName: translatedName));
     }
 
@@ -279,10 +291,12 @@ public unsafe partial class Echoglossian
     /// <param name="registration">The registration describing the sheet family.</param>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchReferenceTextDescription(
         ReferenceTextPrefetchRegistration registration,
         ReferenceTextCanonicalPayload originalPayload,
-        ReferenceTextRowBase existingRow)
+        ReferenceTextRowBase existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedDescription))
@@ -299,6 +313,7 @@ public unsafe partial class Echoglossian
             this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
+                sourceLanguage,
                 translatedDescription: cachedTranslatedDescription);
             return;
         }
@@ -307,11 +322,12 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Description,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code),
             translatedDescription => this.ApplyReferenceTextTranslation(
                 registration,
                 originalPayload.ReferenceId,
+                sourceLanguage,
                 translatedDescription: translatedDescription));
     }
 
@@ -321,11 +337,13 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="registration">The registration describing the sheet family.</param>
     /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
     private void ApplyReferenceTextTranslation(
         ReferenceTextPrefetchRegistration registration,
         uint referenceId,
+        SourceClientLanguage sourceLanguage,
         string? translatedName = null,
         string? translatedDescription = null)
     {
@@ -335,7 +353,7 @@ public unsafe partial class Echoglossian
         }
 
         var existingProbe = registration.CreateRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -363,7 +381,7 @@ public unsafe partial class Echoglossian
                 : translatedPayload.TranslatedDescription;
 
         var translatedRow = registration.CreateRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),

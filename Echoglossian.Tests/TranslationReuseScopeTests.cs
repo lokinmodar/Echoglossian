@@ -146,7 +146,7 @@ public class TranslationReuseScopeTests
     /// </summary>
     /// <param name="clientLanguage">The client language returned by the proxy.</param>
     /// <returns>The configured client-state proxy.</returns>
-    private static IClientState CreateClientState(ClientLanguage clientLanguage)
+    internal static IClientState CreateClientState(ClientLanguage clientLanguage)
     {
         var clientState = DispatchProxy.Create<IClientState, ClientStateProxy>();
         ((ClientStateProxy)(object)clientState).ClientLanguage = clientLanguage;

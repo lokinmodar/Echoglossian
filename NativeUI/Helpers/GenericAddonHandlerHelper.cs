@@ -157,13 +157,18 @@ public static class GenericAddonHandlerHelper
       TranslationService service)
       where T : class, IGenericEntity, new()
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return false;
+    }
+
     PluginRuntimeLog.Debug($"[{addonName}] [Async] Starting translation...");
     Type entityType = typeof(T);
     PluginRuntimeLog.Debug($"[{addonName}] Entity type resolved as {entityType.Name}");
 
     try
     {
-      var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
       var targetLang = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
           config.Lang);
 
@@ -174,7 +179,7 @@ public static class GenericAddonHandlerHelper
           originalAtkSnapshot,
           originalArraySnapshot,
           originalTextNodeSnapshot,
-          sourceLang,
+          sourceLanguage.ProviderCode,
           targetLang,
           service);
       if (!translatedPayloadResult.HasValue)
@@ -202,7 +207,7 @@ public static class GenericAddonHandlerHelper
 
         multi.SetOriginalSecondaryText(originalMessage);
         multi.SetOriginalText(originalSender);
-        multi.SetOriginalLang(sourceLang);
+        multi.SetOriginalLang(sourceLanguage.PersistenceCode);
 
         multi.SetTranslatedSecondaryText(messageEntry.Value);
         multi.SetTranslatedText(senderEntry.Value);
@@ -226,7 +231,7 @@ public static class GenericAddonHandlerHelper
 
         entity.SetOriginalText(originalJson);
         entity.SetTranslatedText(translatedJson);
-        entity.SetOriginalLang(sourceLang);
+        entity.SetOriginalLang(sourceLanguage.PersistenceCode);
         entity.SetTranslationLang(targetLang);
         entity.SetTranslationEngine(config.ChosenTransEngine);
       }

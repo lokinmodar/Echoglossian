@@ -175,13 +175,19 @@ public unsafe partial class Echoglossian
     /// <param name="itemId">The item row identifier.</param>
     private void PrefetchItemDetail(uint itemId)
     {
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            return;
+        }
+
         if (!TryBuildItemTooltipCanonicalPayload(itemId, out var originalPayload))
         {
             return;
         }
 
         var originalRow = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -189,8 +195,14 @@ public unsafe partial class Echoglossian
         var existingRow = this.FindItemTooltip(originalRow) ?? originalRow;
         this.InsertItemTooltip(originalRow);
 
-        this.PrefetchItemDetailName(originalPayload, existingRow);
-        this.PrefetchItemDetailDescription(originalPayload, existingRow);
+        this.PrefetchItemDetailName(
+            originalPayload,
+            existingRow,
+            sourceLanguage);
+        this.PrefetchItemDetailDescription(
+            originalPayload,
+            existingRow,
+            sourceLanguage);
     }
 
     /// <summary>
@@ -198,9 +210,11 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchItemDetailName(
         ItemTooltipCanonicalPayload originalPayload,
-        ItemTooltip existingRow)
+        ItemTooltip existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedItemName))
@@ -216,6 +230,7 @@ public unsafe partial class Echoglossian
         {
             this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
+                sourceLanguage,
                 translatedName: cachedTranslatedName);
             return;
         }
@@ -224,10 +239,11 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Name,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code),
             translatedName => this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
+                sourceLanguage,
                 translatedName: translatedName));
     }
 
@@ -236,9 +252,11 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchItemDetailDescription(
         ItemTooltipCanonicalPayload originalPayload,
-        ItemTooltip existingRow)
+        ItemTooltip existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedItemDescription))
@@ -254,6 +272,7 @@ public unsafe partial class Echoglossian
         {
             this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
+                sourceLanguage,
                 translatedDescription: cachedTranslatedDescription);
             return;
         }
@@ -262,10 +281,11 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Description,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.ProviderCode,
                 LangDict[LanguageInt].Code),
             translatedDescription => this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
+                sourceLanguage,
                 translatedDescription: translatedDescription));
     }
 
@@ -273,10 +293,12 @@ public unsafe partial class Echoglossian
     ///     Applies one resolved item-tooltip translation into canonical storage.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
     private void ApplyItemDetailTranslation(
         uint itemId,
+        SourceClientLanguage sourceLanguage,
         string? translatedName = null,
         string? translatedDescription = null)
     {
@@ -286,7 +308,7 @@ public unsafe partial class Echoglossian
         }
 
         var existingProbe = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -323,7 +345,7 @@ public unsafe partial class Echoglossian
         }
 
         var translatedRow = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
