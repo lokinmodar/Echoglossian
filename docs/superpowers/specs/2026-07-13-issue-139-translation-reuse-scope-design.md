@@ -26,9 +26,9 @@ language identity for persistence and cache compatibility. New persisted rows
 store that normalized code. Existing rows using `English`, `Deutsch`,
 `French`, or `Japanese` remain readable through normalized comparison.
 
-An empty or unrecognized stored source language is not reusable when a lookup
-does not also prove the complete source content identity. This fails closed:
-the text is captured and translated again instead of reusing an unsafe row.
+An empty or unrecognized stored source language is never reusable. This fails
+closed: the text is captured and translated again instead of reusing an unsafe
+row. An equal source hash does not override the client-language boundary.
 
 ## Engine Semantics
 
@@ -43,6 +43,21 @@ The engine policy does not weaken either source-language or target-language
 matching.
 
 ## Implementation Design
+
+### Uniform Translation Flow
+
+Every surface follows one translation flow:
+
+1. Capture original text from the live client and attach the current normalized
+   source-language code.
+2. Resolve only a stored row in the canonical reuse scope.
+3. On a cache miss, submit the source text through the shared translation
+   service and persist the result with the full scope.
+4. Render or mutate the surface using that resolved row.
+
+Addon handlers may specialize only capture, native mutation, and layout. They
+must not add literal source-to-target translations, language-specific fallback
+maps, or custom compatibility rules.
 
 ### Shared Compatibility Guard
 
@@ -73,18 +88,20 @@ language and exact source-content hash before returning a complete serialized
 payload. A complete payload from a different source language must not be
 layered over the live client payload.
 
-### Surface-Specific Language Assumptions
+### Handler-Specific Integration
 
 - `CharacterStatus` must trust a projected canonical payload by structural
   changed-content coverage, not a fixed list of English section titles.
-- The local `Character` English-to-Portuguese header fallback remains an
-  explicitly English-source fallback and is enabled only when both source is
-  English and target is `pt-BR`. Other client languages use canonical data,
-  never the English fallback.
+- `Character` title and tab labels must be captured into the canonical
+  StringArrayData/GameWindow representation and translated through the shared
+  flow. The existing English-to-Portuguese local fallback is removed rather
+  than gated to English. This makes the header behavior identical for English,
+  Japanese, German, and French clients and for every target language.
 - `ActionMenu` must not reconstruct a non-English source label as `Lv.` when
-  reversing a translated Portuguese level token. Partial reverse resolution is
-  allowed only when the source-level token can be proven from the original
-  payload; otherwise it fails closed and preserves the live source state.
+  reversing a translated Portuguese level token. Reverse resolution must use
+  the canonical original payload from the current source-language scope; if it
+  is unavailable, it fails closed and the shared flow captures/translates the
+  current client text.
 
 ## Data Compatibility
 
@@ -109,7 +126,9 @@ Add regression tests that prove:
    or source language.
 6. `CharacterStatus` accepts non-English original section labels when enough
    same-slot text changes are present, and rejects unchanged payloads.
-7. `ActionMenu` does not synthesize an English `Lv.` source label for a
+7. `Character` title and tabs are translated through a canonical row with no
+   literal English-to-Portuguese fallback.
+8. `ActionMenu` does not synthesize an English `Lv.` source label for a
    non-English game client.
 
 Run the standard build and full test suite. In-game validation covers an
