@@ -157,6 +157,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 1,
                 ActionId = 16001,
                 ActionName = "Peloton",
+                OriginalLang = "en",
                 TranslatedActionName = "Pelotão",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -183,8 +184,7 @@ public class ActionMenuWindowHandlerTests
                 .MergeResolvedTranslatedPayload(
                     originalPayload,
                     resolvedTranslatedPayload,
-                    "pt-BR",
-                    0,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
                     "7.3",
                     new Dictionary<string, string>(StringComparer.Ordinal));
 
@@ -214,6 +214,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 1,
                 TraitId = 201,
                 TraitName = "Enhanced Windmill",
+                OriginalLang = "en",
                 TranslatedTraitName = "Moinho Aprimorado",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -240,8 +241,7 @@ public class ActionMenuWindowHandlerTests
                 .MergeResolvedTranslatedPayload(
                     originalPayload,
                     resolvedTranslatedPayload,
-                    "pt-BR",
-                    0,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
                     "7.3",
                     new Dictionary<string, string>(StringComparer.Ordinal));
 
@@ -282,8 +282,7 @@ public class ActionMenuWindowHandlerTests
             .MergeResolvedTranslatedPayload(
                 originalPayload,
                 resolvedTranslatedPayload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
@@ -321,8 +320,7 @@ public class ActionMenuWindowHandlerTests
             .MergeResolvedTranslatedPayload(
                 originalPayload,
                 resolvedTranslatedPayload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
@@ -458,6 +456,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 1,
                 ActionId = 16001,
                 ActionName = "Peloton",
+                OriginalLang = "en",
                 TranslatedActionName = "Peloton",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -481,8 +480,7 @@ public class ActionMenuWindowHandlerTests
 
             var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
                 payload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
@@ -516,6 +514,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 2,
                 ActionId = 16002,
                 ActionName = "Canonical Peloton Test",
+                OriginalLang = "en",
                 TranslatedActionName = "Canonical Peloton Test",
                 TranslationLang = "pt",
                 TranslationEngine = 0,
@@ -533,8 +532,7 @@ public class ActionMenuWindowHandlerTests
 
             var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
                 payload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal));
 
@@ -559,6 +557,7 @@ public class ActionMenuWindowHandlerTests
         {
             Id = 7001,
             ReferenceId = 7001,
+            OriginalLang = "en",
             TranslationLang = "pt",
             TranslationEngine = 0,
             GameVersion = "7.3",
@@ -579,8 +578,7 @@ public class ActionMenuWindowHandlerTests
 
         var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
             payload,
-            "pt-BR",
-            0,
+            new TranslationReuseScope("en", "pt-BR", 0, true),
             "7.3",
             new Dictionary<string, string>(StringComparer.Ordinal));
 
@@ -611,8 +609,7 @@ public class ActionMenuWindowHandlerTests
 
         var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
             payload,
-            "pt-BR",
-            0,
+            new TranslationReuseScope("en", "pt-BR", 0, true),
             "7.3",
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -621,6 +618,59 @@ public class ActionMenuWindowHandlerTests
             });
 
         Assert.Equal(0, unseenCount);
+    }
+
+    /// <summary>
+    ///     Ensures canonical ActionMenu lookup never reuses an otherwise
+    ///     compatible action row from a different source language.
+    /// </summary>
+    [Fact]
+    public void CountMeaningfulUnseenTexts_DifferentSource_DoesNotReuseCanonicalRow()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 3,
+                ActionId = 16003,
+                ActionName = "Source Scoped Action",
+                OriginalLang = "en",
+                TranslatedActionName = "Acao com origem",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-source-scoped-action",
+            });
+            var payload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Source Scoped Action",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+            var matchingSourceCount =
+                ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+                    payload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    new Dictionary<string, string>(StringComparer.Ordinal));
+            var mismatchedSourceCount =
+                ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+                    payload,
+                    new TranslationReuseScope("de", "pt-BR", 0, true),
+                    "7.3",
+                    new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(0, matchingSourceCount);
+            Assert.Equal(1, mismatchedSourceCount);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
     }
 
     /// <summary>

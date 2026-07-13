@@ -253,11 +253,12 @@ public class MainCommandTextPersistenceTests
             });
 
         cache.Update(row);
+        var scope = new TranslationReuseScope("en", "pt", 0, true);
+        var regionalScope = new TranslationReuseScope("en", "pt-BR", 0, true);
 
         Assert.True(
             cache.TryFindTranslatedText(
-                "pt",
-                0,
+                scope,
                 "7.3",
                 "Actions & Traits",
                 out var translatedText));
@@ -265,8 +266,7 @@ public class MainCommandTextPersistenceTests
 
         Assert.True(
             cache.TryFindOriginalText(
-                "pt",
-                0,
+                scope,
                 "7.3",
                 "Acoes e Caracteristicas",
                 out var originalText));
@@ -274,8 +274,7 @@ public class MainCommandTextPersistenceTests
 
         Assert.True(
             cache.TryFindTranslatedText(
-                "pt-BR",
-                0,
+                regionalScope,
                 "7.3",
                 "Actions & Traits",
                 out var translatedRegionalText));
@@ -283,8 +282,7 @@ public class MainCommandTextPersistenceTests
 
         Assert.True(
             cache.TryFindOriginalText(
-                "pt-BR",
-                0,
+                regionalScope,
                 "7.3",
                 "Acoes e Caracteristicas",
                 out var originalRegionalText));

@@ -90,12 +90,16 @@ public unsafe class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
         out DbFirstGameWindowPayload translatedPayload)
     {
         translatedPayload = DbFirstGameWindowPayload.Empty;
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveTranslatedTextMap(
                 originalPayload.TextNodes,
-                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                    this.config.Lang),
-                this.config.ChosenTransEngine,
+                scope,
                 GetGameVersion(),
                 out var translatedTextNodes))
         {
@@ -116,12 +120,16 @@ public unsafe class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
         out DbFirstGameWindowPayload originalPayload)
     {
         originalPayload = DbFirstGameWindowPayload.Empty;
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveOriginalTextMap(
                 livePayload.TextNodes,
-                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                    this.config.Lang),
-                this.config.ChosenTransEngine,
+                scope,
                 GetGameVersion(),
                 out var originalTextNodes))
         {

@@ -108,6 +108,7 @@ public unsafe class CharacterStatusSubWindowHandler
         }
 
         if (this.TryResolveCanonicalCharacterStatusPayloadPair(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 livePayload,
                 out originalPayload,
                 out _))
@@ -133,6 +134,7 @@ public unsafe class CharacterStatusSubWindowHandler
         }
 
         if (this.TryResolveCanonicalCharacterStatusPayloadPair(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 originalPayload,
                 out _,
                 out translatedPayload))
@@ -313,6 +315,7 @@ public unsafe class CharacterStatusSubWindowHandler
     ///     projected successfully; otherwise <see langword="false" />.
     /// </returns>
     private bool TryResolveCanonicalCharacterStatusPayloadPair(
+        TranslationReuseScope scope,
         DbFirstGameWindowPayload referencePayload,
         out DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
@@ -320,14 +323,10 @@ public unsafe class CharacterStatusSubWindowHandler
         originalPayload = DbFirstGameWindowPayload.Empty;
         translatedPayload = DbFirstGameWindowPayload.Empty;
 
-        var targetLanguage =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.HandlerConfig.Lang);
         foreach (var row in StringArrayDataCacheManager.GetCandidates(
                      StringArrayType.Character.ToString(),
                      "addon:CharacterStatus",
-                     targetLanguage,
-                     this.HandlerConfig.ChosenTransEngine,
+                     scope,
                      GetGameVersion()).OrderByDescending(candidate => candidate.Id))
         {
             if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(

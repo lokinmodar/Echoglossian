@@ -219,73 +219,6 @@ public static class ItemTooltipCacheManager
     }
 
     /// <summary>
-    ///     Provides the legacy canonical lookup shape until callers migrate.
-    /// </summary>
-    /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The game version.</param>
-    /// <param name="sourceContentHash">The stable source-content hash.</param>
-    /// <returns>The matching row, or <see langword="null" />.</returns>
-    public static ItemTooltip? TryFindCanonicalMatch(
-        uint itemId,
-        string lang,
-        int engine,
-        string? gameVersion,
-        string sourceContentHash)
-    {
-        return TryCreateLegacyScope(lang, engine, out var scope)
-            ? TryFindCanonicalMatch(itemId, scope, gameVersion, sourceContentHash)
-            : null;
-    }
-
-    /// <summary>
-    ///     Provides the legacy historical lookup shape until callers migrate.
-    /// </summary>
-    /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="requestedGameVersion">The current game version.</param>
-    /// <param name="sourceContentHash">The stable source-content hash.</param>
-    /// <returns>The matching row, or <see langword="null" />.</returns>
-    public static ItemTooltip? TryFindHistoricalCanonicalMatch(
-        uint itemId,
-        string lang,
-        int engine,
-        string? requestedGameVersion,
-        string sourceContentHash)
-    {
-        return TryCreateLegacyScope(lang, engine, out var scope)
-            ? TryFindHistoricalCanonicalMatch(
-                itemId,
-                scope,
-                requestedGameVersion,
-                sourceContentHash)
-            : null;
-    }
-
-    /// <summary>
-    ///     Provides the legacy identity lookup shape until callers migrate.
-    /// </summary>
-    /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
-    /// <param name="classJobCategoryId">The preferred category identifier.</param>
-    /// <returns>The matching row, or <see langword="null" />.</returns>
-    public static ItemTooltip? TryFindIdentityMatch(
-        uint itemId,
-        string lang,
-        int engine,
-        string? gameVersion,
-        uint classJobCategoryId)
-    {
-        return TryCreateLegacyScope(lang, engine, out var scope)
-            ? TryFindIdentityMatch(itemId, scope, gameVersion, classJobCategoryId)
-            : null;
-    }
-
-    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()
@@ -411,31 +344,4 @@ public static class ItemTooltipCacheManager
                     row.TranslatedItemDescription));
     }
 
-    /// <summary>
-    ///     Resolves a source-aware scope for an unmigrated caller.
-    /// </summary>
-    /// <param name="targetLanguage">The requested target language.</param>
-    /// <param name="translationEngine">The requested translation engine.</param>
-    /// <param name="scope">The resolved source-aware scope.</param>
-    /// <returns>Whether the current source language was resolved.</returns>
-    private static bool TryCreateLegacyScope(
-        string targetLanguage,
-        int translationEngine,
-        out TranslationReuseScope scope)
-    {
-        if (string.IsNullOrWhiteSpace(targetLanguage) ||
-            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage))
-        {
-            scope = default;
-            return false;
-        }
-
-        scope = new TranslationReuseScope(
-            sourceLanguage.PersistenceCode,
-            targetLanguage,
-            translationEngine,
-            true);
-        return true;
-    }
 }

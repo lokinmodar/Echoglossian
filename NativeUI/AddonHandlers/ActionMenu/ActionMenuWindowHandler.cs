@@ -135,6 +135,23 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         return GetCurrentClassJobId();
     }
 
+    /// <summary>
+    ///     Creates the canonical cache scope for one captured ActionMenu
+    ///     operation.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <returns>The complete translation reuse scope.</returns>
+    private TranslationReuseScope CreateTranslationReuseScope(
+        SourceClientLanguage sourceLanguage)
+    {
+        return new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
+    }
+
     /// <inheritdoc />
     private protected override async Task<bool>
         TranslateAndPersistGameWindowPayloadAsync(
@@ -236,8 +253,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         uint? classJobId,
         string? classJobName)
     {
-        var targetLanguage = RuntimeLanguageHelper
-            .GetConfiguredTargetLanguageCode(this.config.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
             sourceLanguage,
@@ -248,8 +264,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         return MergeResolvedTranslatedPayload(
             originalPayload,
             translatedPayload,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup);
     }
@@ -296,8 +311,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     {
         originalPayload = DbFirstGameWindowPayload.Empty;
 
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var gameVersion = GetGameVersion();
         var classJobId = GetCurrentClassJobId();
         this.BuildPersistedActionMenuLookups(
@@ -310,22 +324,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         var changed = false;
         var resolvedAtkValues = this.CanonicalizeIntMap(
             livePayload.AtkValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedOriginalLookup,
             ref changed);
         var resolvedStringArrayValues = this.CanonicalizeIntMap(
             livePayload.StringArrayValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedOriginalLookup,
             ref changed);
         var resolvedTextNodes = this.CanonicalizeStringMap(
             livePayload.TextNodes,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedOriginalLookup,
             ref changed);
@@ -348,8 +359,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var gameVersion = GetGameVersion();
         var classJobId = GetCurrentClassJobId();
         this.BuildPersistedActionMenuLookups(
@@ -362,22 +372,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
         var translatedAtkValues = TranslateIntMap(
             originalPayload.AtkValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup,
             ref changed);
         var translatedStringArrayValues = TranslateIntMap(
             originalPayload.StringArrayValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup,
             ref changed);
         var translatedTextNodes = TranslateStringMap(
             originalPayload.TextNodes,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup,
             ref changed);
@@ -400,8 +407,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     canonical structured-tooltip caches.
     /// </summary>
     /// <param name="sourceValues">The original values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="changed">
     ///     Receives whether any translated value differs from the original.
@@ -409,8 +415,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The translated map.</returns>
     private static SortedDictionary<int, string> TranslateIntMap(
         SortedDictionary<int, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -421,8 +426,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var translatedText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(
@@ -444,8 +448,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     canonical structured-tooltip caches.
     /// </summary>
     /// <param name="sourceValues">The original values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="changed">
     ///     Receives whether any translated value differs from the original.
@@ -453,8 +456,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The translated map.</returns>
     private static SortedDictionary<string, string> TranslateStringMap(
         SortedDictionary<string, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -466,8 +468,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var translatedText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(
@@ -489,21 +490,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     falling back to the original text when no exact translation exists.
     /// </summary>
     /// <param name="originalText">The original visible text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <returns>The translated text, or the original text.</returns>
     private static string ResolveTranslatedText(
         string originalText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         if (TryResolveLevelAwareTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup,
                 out var levelAwareTranslatedText))
@@ -512,8 +510,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         }
 
         if (TryFindTranslatedCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalText,
                 out var translatedText))
@@ -534,8 +531,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     action-tooltip cache or previously persisted ActionMenu rows.
     /// </summary>
     /// <param name="visibleText">The currently visible text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The reverse lookup built from persisted ActionMenu rows.
@@ -543,15 +539,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The canonical original text, or the visible text.</returns>
     private static string ResolveOriginalText(
         string visibleText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         if (TryResolveLevelAwareOriginalText(
                 visibleText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup,
                 out var levelAwareOriginalText))
@@ -560,8 +554,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         }
 
         if (TryFindOriginalCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 visibleText,
                 out var originalText))
@@ -586,8 +579,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <param name="resolvedTranslatedPayload">
     ///     The resolved translated payload from cache or DB.
     /// </param>
-    /// <param name="targetLanguage">The active target language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The original-to-translated fallback lookup built from persisted
@@ -597,8 +589,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     internal static DbFirstGameWindowPayload MergeResolvedTranslatedPayload(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload resolvedTranslatedPayload,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
@@ -606,22 +597,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             MergeTranslatedIntMap(
                 originalPayload.AtkValues,
                 resolvedTranslatedPayload.AtkValues,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup),
             MergeTranslatedIntMap(
                 originalPayload.StringArrayValues,
                 resolvedTranslatedPayload.StringArrayValues,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup),
             MergeTranslatedStringMap(
                 originalPayload.TextNodes,
                 resolvedTranslatedPayload.TextNodes,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup));
     }
@@ -710,8 +698,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     covered by canonical ActionMenu sources.
     /// </summary>
     /// <param name="payload">The original-facing payload.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
@@ -719,16 +706,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The count of unresolved short texts.</returns>
     internal static int CountMeaningfulUnseenTexts(
         DbFirstGameWindowPayload payload,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         return EnumerateStableSignatureTexts(payload)
             .Where(text => !IsKnownCanonicalActionMenuText(
                 text,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup))
             .Distinct(StringComparer.Ordinal)
@@ -826,8 +811,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     token.
     /// </summary>
     /// <param name="originalText">The original visible text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <param name="translatedText">The resolved translated text.</param>
@@ -837,8 +821,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private static bool TryResolveLevelAwareTranslatedText(
         string originalText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         out string translatedText)
@@ -856,8 +839,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
         var translatedPrefix = ResolveTranslatedBaseText(
             originalPrefix,
-            targetLanguage,
-            engine,
+            scope,
             gameVersion,
             fallbackLookup);
         if (string.Equals(
@@ -871,7 +853,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         translatedText = string.Concat(
             translatedPrefix,
             NormalizeResolvedLevelSeparator(separator),
-            NormalizeTranslatedLevelToken(levelLabel, levelNumber, targetLanguage));
+            NormalizeTranslatedLevelToken(
+                levelLabel,
+                levelNumber,
+                scope.TargetLanguageCode));
         return true;
     }
 
@@ -881,8 +866,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     level token.
     /// </summary>
     /// <param name="visibleText">The visible translated text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted reverse lookup.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -892,8 +876,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private static bool TryResolveLevelAwareOriginalText(
         string visibleText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         out string originalText)
@@ -911,8 +894,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
         var resolvedOriginalPrefix = ResolveOriginalBaseText(
             visiblePrefix,
-            targetLanguage,
-            engine,
+            scope,
             gameVersion,
             fallbackLookup);
         if (string.Equals(
@@ -935,21 +917,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     decomposition.
     /// </summary>
     /// <param name="originalText">The original text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <returns>The resolved translated text, or the original text.</returns>
     private static string ResolveTranslatedBaseText(
         string originalText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         if (TryFindTranslatedCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalText,
                 out var translatedText))
@@ -973,21 +952,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     level-token decomposition.
     /// </summary>
     /// <param name="visibleText">The translated text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted reverse lookup.</param>
     /// <returns>The resolved original text, or the visible text.</returns>
     private static string ResolveOriginalBaseText(
         string visibleText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         if (TryFindOriginalCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 visibleText,
                 out var originalText))
@@ -1115,16 +1091,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </summary>
     /// <param name="originalValues">The original values.</param>
     /// <param name="resolvedTranslatedValues">The resolved translated values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <returns>The merged translated map.</returns>
     private static SortedDictionary<int, string> MergeTranslatedIntMap(
         SortedDictionary<int, string> originalValues,
         SortedDictionary<int, string> resolvedTranslatedValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
@@ -1135,8 +1109,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             resolvedTranslatedValues.TryGetValue(key, out var currentText);
             var canonicalText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             mergedValues[key] = SelectResolvedTranslatedValue(
@@ -1162,16 +1135,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </summary>
     /// <param name="originalValues">The original values.</param>
     /// <param name="resolvedTranslatedValues">The resolved translated values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <returns>The merged translated map.</returns>
     private static SortedDictionary<string, string> MergeTranslatedStringMap(
         SortedDictionary<string, string> originalValues,
         SortedDictionary<string, string> resolvedTranslatedValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
@@ -1183,8 +1154,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             resolvedTranslatedValues.TryGetValue(key, out var currentText);
             var canonicalText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             mergedValues[key] = SelectResolvedTranslatedValue(
@@ -1507,8 +1477,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         uint? classJobId,
         string? classJobName)
     {
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
             sourceLanguage,
@@ -1518,8 +1487,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             classJobName);
         return CountMeaningfulUnseenTexts(
             originalPayload,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup);
     }
@@ -1748,8 +1716,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     lookups.
     /// </summary>
     /// <param name="text">The text to inspect.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
@@ -1760,19 +1727,16 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private static bool IsKnownCanonicalActionMenuText(
         string text,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         if (TryContainsCanonicalOriginalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 text) ||
             TryFindTranslatedCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 text,
                 out _) ||
@@ -1790,13 +1754,11 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                    out _,
                    out _) &&
                (TryContainsCanonicalOriginalText(
-                    targetLanguage,
-                    engine,
+                    scope,
                     gameVersion,
                     prefix) ||
                 TryFindTranslatedCanonicalText(
-                    targetLanguage,
-                    engine,
+                    scope,
                     gameVersion,
                     prefix,
                     out _) ||
@@ -1809,8 +1771,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether one canonical original ActionMenu-facing text
     ///     already exists in shared action, trait, or reference-text storage.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to test.</param>
     /// <returns>
@@ -1818,8 +1779,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     original text; otherwise <see langword="false" />.
     /// </returns>
     private static bool TryContainsCanonicalOriginalText(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText)
     {
@@ -1829,8 +1789,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         }
 
         if (ContainsCanonicalOriginalTextCore(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalText))
         {
@@ -1843,8 +1802,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                    originalText,
                    StringComparison.Ordinal) &&
                ContainsCanonicalOriginalTextCore(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    normalizedText);
     }
@@ -1854,8 +1812,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     text exists in shared canonical storage without applying
     ///     ActionMenu-specific normalization.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to test.</param>
     /// <returns>
@@ -1863,24 +1820,20 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     original text; otherwise <see langword="false" />.
     /// </returns>
     private static bool ContainsCanonicalOriginalTextCore(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText)
     {
         return ActionTooltipCacheManager.ContainsOriginalText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    originalText) ||
                TraitCacheManager.ContainsOriginalText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    originalText) ||
                ReferenceTextCacheRegistry.ContainsOriginalText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    originalText);
     }
@@ -1889,8 +1842,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tries to resolve one translated structured-tooltip text from
     ///     canonical action or trait storage.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The resolved translated text.</param>
@@ -1898,8 +1850,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact translated text was found.
     /// </returns>
     private static bool TryFindTranslatedCanonicalText(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText,
         out string translatedText)
@@ -1907,8 +1858,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         translatedText = string.Empty;
 
         if (TryFindTranslatedCanonicalTextCore(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalText,
                 out translatedText))
@@ -1922,8 +1872,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                    originalText,
                    StringComparison.Ordinal) &&
                TryFindTranslatedCanonicalTextCore(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    normalizedText,
                    out translatedText);
@@ -1933,8 +1882,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tries one exact translated structured-tooltip lookup without any
     ///     ActionMenu-specific text normalization.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The resolved translated text.</param>
@@ -1942,8 +1890,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact translated text was found.
     /// </returns>
     private static bool TryFindTranslatedCanonicalTextCore(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText,
         out string translatedText)
@@ -1951,20 +1898,17 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         translatedText = string.Empty;
 
         return ActionTooltipCacheManager.TryFindTranslatedText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    originalText,
                    out translatedText) ||
                TraitCacheManager.TryFindTranslatedText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    originalText,
                    out translatedText) ||
                ReferenceTextCacheRegistry.TryFindTranslatedText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    originalText,
                    out translatedText);
@@ -1974,8 +1918,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tries to resolve one canonical original structured-tooltip text from
     ///     canonical action or trait storage.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="visibleText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -1983,8 +1926,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact original text was found.
     /// </returns>
     private static bool TryFindOriginalCanonicalText(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string visibleText,
         out string originalText)
@@ -1992,8 +1934,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         originalText = string.Empty;
 
         if (TryFindOriginalCanonicalTextCore(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 visibleText,
                 out originalText))
@@ -2007,8 +1948,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                    visibleText,
                    StringComparison.Ordinal) &&
                TryFindOriginalCanonicalTextCore(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    normalizedText,
                    out originalText);
@@ -2018,8 +1958,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tries one exact canonical-original structured-tooltip lookup
     ///     without any ActionMenu-specific text normalization.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="visibleText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -2027,8 +1966,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact original text was found.
     /// </returns>
     private static bool TryFindOriginalCanonicalTextCore(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string visibleText,
         out string originalText)
@@ -2036,20 +1974,17 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         originalText = string.Empty;
 
         return ActionTooltipCacheManager.TryFindOriginalText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    visibleText,
                    out originalText) ||
                TraitCacheManager.TryFindOriginalText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    visibleText,
                    out originalText) ||
                ReferenceTextCacheRegistry.TryFindOriginalText(
-                   targetLanguage,
-                   engine,
+                   scope,
                    gameVersion,
                    visibleText,
                    out originalText);
@@ -2059,8 +1994,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Canonicalizes one integer-keyed payload map back to original text.
     /// </summary>
     /// <param name="sourceValues">The currently visible values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The reverse lookup built from persisted ActionMenu rows.
@@ -2072,8 +2006,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The canonicalized original-facing map.</returns>
     private SortedDictionary<int, string> CanonicalizeIntMap(
         SortedDictionary<int, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -2084,8 +2017,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var originalText = ResolveOriginalText(
                 visibleText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(
@@ -2106,8 +2038,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Canonicalizes one text-node payload map back to original text.
     /// </summary>
     /// <param name="sourceValues">The currently visible values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The reverse lookup built from persisted ActionMenu rows.
@@ -2119,8 +2050,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The canonicalized original-facing map.</returns>
     private SortedDictionary<string, string> CanonicalizeStringMap(
         SortedDictionary<string, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -2132,8 +2062,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var originalText = ResolveOriginalText(
                 visibleText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(

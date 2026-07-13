@@ -84,7 +84,9 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
     protected bool CanCaptureSupplementalCharacterText(string visibleText)
     {
         if (string.IsNullOrWhiteSpace(visibleText) ||
+            !this.TryCreateCurrentTranslationReuseScope(out var scope) ||
             !this.TryBuildCharacterLookups(
+                scope,
                 out _,
                 out _,
                 out var knownTexts))
@@ -150,10 +152,15 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             return false;
         }
 
-        var hasCanonicalLookups = this.TryBuildCharacterLookups(
-            out var originalLookup,
-            out var translatedLookup,
-            out _);
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var hasCanonicalLookups =
+            this.TryCreateCurrentTranslationReuseScope(out var scope) &&
+            this.TryBuildCharacterLookups(
+                scope,
+                out originalLookup,
+                out translatedLookup,
+                out _);
         var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         foreach (var nodeAddress in nodeAddresses)
         {
@@ -205,6 +212,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         originalPayload = DbFirstGameWindowPayload.Empty;
 
         if (!this.TryBuildCharacterLookups(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 out var originalLookup,
                 out _,
                 out _))
@@ -228,6 +236,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         translatedPayload = DbFirstGameWindowPayload.Empty;
 
         if (!this.TryBuildCharacterLookups(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 out _,
                 out var translatedLookup,
                 out _))
@@ -264,6 +273,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
     ///     be resolved from cache; otherwise <see langword="false" />.
     /// </returns>
     private bool TryBuildCharacterLookups(
+        TranslationReuseScope scope,
         out Dictionary<string, string> originalLookup,
         out Dictionary<string, string> translatedLookup,
         out HashSet<string> knownTexts)
@@ -284,8 +294,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             var candidates = StringArrayDataCacheManager.GetCandidates(
                     type: StringArrayType.Character.ToString(),
                     contextKey: contextKey,
-                    lang: targetLanguage,
-                    engine: this.config.ChosenTransEngine,
+                    scope: scope,
                     gameVersion: GetGameVersion())
                 .OrderBy(row => row.Id)
                 .ToList();
@@ -371,6 +380,42 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         }
 
         return translatedLookup.Count > 0;
+    }
+
+    /// <summary>
+    ///     Creates the structured Character cache scope for one captured
+    ///     source language.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <returns>The complete translation reuse scope.</returns>
+    private protected TranslationReuseScope CreateTranslationReuseScope(
+        SourceClientLanguage sourceLanguage)
+    {
+        return new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
+    }
+
+    /// <summary>
+    ///     Captures the current source once at a Character text-node boundary.
+    /// </summary>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <returns>Whether the current source language was available.</returns>
+    private bool TryCreateCurrentTranslationReuseScope(
+        out TranslationReuseScope scope)
+    {
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = this.CreateTranslationReuseScope(sourceLanguage);
+        return true;
     }
 
     /// <summary>

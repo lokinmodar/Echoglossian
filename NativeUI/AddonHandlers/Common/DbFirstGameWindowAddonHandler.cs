@@ -1540,12 +1540,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.config.Lang);
         var gameVersion = GetGameVersion();
         var sourceHash = originalPayload.ComputeSourceContentHash();
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            language,
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
 
         var row = StringArrayDataCacheManager.TryFindCanonicalMatch(
             originalPayload.Type,
             originalPayload.ContextKey,
-            language,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             sourceHash);
         if (!MatchesPersistedSourceIdentity(row?.OriginalLang, sourceLanguage))
@@ -1644,12 +1648,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguageCode,
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
         foreach (var row in StringArrayDataCacheManager.GetCandidates(
                      scopeProbe.Type,
                      scopeProbe.ContextKey,
-                     targetLanguageCode,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion()))
         {
             if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(

@@ -937,10 +937,14 @@ public unsafe partial class Echoglossian
         var targetLanguage = LangDict[LanguageInt].Code;
         var gameVersion = GetGameVersion();
         var engine = this.configuration.ChosenTransEngine;
-        var row = ActionTooltipCacheManager.TryFindIdentityMatch(
-            originalPayload.ActionId,
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
             targetLanguage,
             engine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
+        var row = ActionTooltipCacheManager.TryFindIdentityMatch(
+            originalPayload.ActionId,
+            scope,
             gameVersion,
             originalPayload.ClassJobId,
             originalPayload.ClassJobCategoryId);
@@ -976,10 +980,8 @@ public unsafe partial class Echoglossian
 
         if (ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
                 referenceId,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
-                sourceLanguage.PersistenceCode,
                 out var translatedReferencePayload) &&
             TryBuildTranslatedActionTooltipPayloadFromReferencePayload(
                 translatedReferencePayload,
@@ -991,11 +993,9 @@ public unsafe partial class Echoglossian
 
         if (string.IsNullOrWhiteSpace(originalPayload.Description) &&
             ReferenceTextCacheRegistry.TryFindTranslatedText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalPayload.Name,
-                sourceLanguage.PersistenceCode,
                 out var translatedName))
         {
             translatedPayload = CreateTranslatedActionTooltipPayload(
@@ -1026,10 +1026,14 @@ public unsafe partial class Echoglossian
         var targetLanguage = LangDict[LanguageInt].Code;
         var gameVersion = GetGameVersion();
         var engine = this.configuration.ChosenTransEngine;
-        var row = TraitCacheManager.TryFindIdentityMatch(
-            originalPayload.TraitId,
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
             targetLanguage,
             engine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
+        var row = TraitCacheManager.TryFindIdentityMatch(
+            originalPayload.TraitId,
+            scope,
             gameVersion,
             originalPayload.ClassJobId,
             originalPayload.ClassJobCategoryId);
@@ -1081,12 +1085,16 @@ public unsafe partial class Echoglossian
         var targetLanguage = LangDict[LanguageInt].Code;
         var gameVersion = GetGameVersion();
         var engine = this.configuration.ChosenTransEngine;
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            engine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
         if (sourceKind == StructuredTooltipItemSourceKind.Item)
         {
             var row = ItemTooltipCacheManager.TryFindIdentityMatch(
                 originalPayload.ItemId,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalPayload.ClassJobCategoryId);
             if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
@@ -1121,10 +1129,8 @@ public unsafe partial class Echoglossian
             StructuredTooltipItemSourceKind.DeepDungeonItem) &&
             ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(
                 originalPayload.ItemId,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
-                sourceLanguage.PersistenceCode,
                 out var translatedReferencePayload) &&
             TryBuildTranslatedItemTooltipPayloadFromReferencePayload(
                 translatedReferencePayload,

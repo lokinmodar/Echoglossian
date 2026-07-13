@@ -53,8 +53,7 @@ public class MainCommandCanonicalTextResolverTests : IDisposable
         var resolved = MainCommandCanonicalTextResolver
             .TryResolveTranslatedIntMap(
                 sourceValues,
-                TestTargetLanguage,
-                TestTranslationEngine,
+                CreateScope(),
                 TestGameVersion,
                 out var translatedValues);
 
@@ -85,8 +84,7 @@ public class MainCommandCanonicalTextResolverTests : IDisposable
         var resolved = MainCommandCanonicalTextResolver
             .TryResolveOriginalIntMap(
                 sourceValues,
-                TestTargetLanguage,
-                TestTranslationEngine,
+                CreateScope(),
                 TestGameVersion,
                 out var originalValues);
 
@@ -119,8 +117,7 @@ public class MainCommandCanonicalTextResolverTests : IDisposable
         var resolved = MainCommandCanonicalTextResolver
             .TryResolveTranslatedTextMap(
                 sourceValues,
-                TestTargetLanguage,
-                TestTranslationEngine,
+                CreateScope(),
                 TestGameVersion,
                 out var translatedValues);
 
@@ -144,8 +141,7 @@ public class MainCommandCanonicalTextResolverTests : IDisposable
         var resolved = MainCommandCanonicalTextResolver
             .TryResolveTranslatedIntMap(
                 sourceValues,
-                TestTargetLanguage,
-                TestTranslationEngine,
+                CreateScope(),
                 TestGameVersion,
                 out var translatedValues);
 
@@ -203,6 +199,19 @@ public class MainCommandCanonicalTextResolverTests : IDisposable
         row.SourceContentHash = ComputeMainCommandSourceContentHash(
             originalPayload);
         return row;
+    }
+
+    /// <summary>
+    ///     Creates the source-aware canonical lookup scope used by this test.
+    /// </summary>
+    /// <returns>The test translation reuse scope.</returns>
+    private static TranslationReuseScope CreateScope()
+    {
+        return new TranslationReuseScope(
+            "en",
+            TestTargetLanguage,
+            TestTranslationEngine,
+            true);
     }
 
     /// <summary>

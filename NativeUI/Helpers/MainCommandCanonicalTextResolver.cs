@@ -18,8 +18,7 @@ public static class MainCommandCanonicalTextResolver
     ///     canonical cache data.
     /// </summary>
     /// <param name="sourceValues">The original visible values.</param>
-    /// <param name="targetLanguage">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="translatedValues">
     ///     Receives the translated values when any entry resolves.
@@ -30,8 +29,7 @@ public static class MainCommandCanonicalTextResolver
     /// </returns>
     public static bool TryResolveTranslatedIntMap(
         SortedDictionary<int, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         out SortedDictionary<int, string> translatedValues)
     {
@@ -42,8 +40,7 @@ public static class MainCommandCanonicalTextResolver
         {
             var translatedText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion);
             if (!string.Equals(
                     translatedText,
@@ -64,8 +61,7 @@ public static class MainCommandCanonicalTextResolver
     ///     payload map from visible translated values.
     /// </summary>
     /// <param name="sourceValues">The currently visible values.</param>
-    /// <param name="targetLanguage">The active target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalValues">
     ///     Receives the canonical original values when any entry resolves.
@@ -77,8 +73,7 @@ public static class MainCommandCanonicalTextResolver
     /// </returns>
     public static bool TryResolveOriginalIntMap(
         SortedDictionary<int, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         out SortedDictionary<int, string> originalValues)
     {
@@ -89,8 +84,7 @@ public static class MainCommandCanonicalTextResolver
         {
             var originalText = ResolveOriginalText(
                 visibleText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion);
             if (!string.Equals(
                     originalText,
@@ -111,8 +105,7 @@ public static class MainCommandCanonicalTextResolver
     ///     canonical cache data.
     /// </summary>
     /// <param name="sourceValues">The original visible values.</param>
-    /// <param name="targetLanguage">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="translatedValues">
     ///     Receives the translated values when any entry resolves.
@@ -123,8 +116,7 @@ public static class MainCommandCanonicalTextResolver
     /// </returns>
     public static bool TryResolveTranslatedTextMap(
         SortedDictionary<string, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         out SortedDictionary<string, string> translatedValues)
     {
@@ -136,8 +128,7 @@ public static class MainCommandCanonicalTextResolver
         {
             var translatedText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion);
             if (!string.Equals(
                     translatedText,
@@ -158,8 +149,7 @@ public static class MainCommandCanonicalTextResolver
     ///     payload map from visible translated values.
     /// </summary>
     /// <param name="sourceValues">The currently visible values.</param>
-    /// <param name="targetLanguage">The active target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalValues">
     ///     Receives the canonical original values when any entry resolves.
@@ -171,8 +161,7 @@ public static class MainCommandCanonicalTextResolver
     /// </returns>
     public static bool TryResolveOriginalTextMap(
         SortedDictionary<string, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         out SortedDictionary<string, string> originalValues)
     {
@@ -184,8 +173,7 @@ public static class MainCommandCanonicalTextResolver
         {
             var originalText = ResolveOriginalText(
                 visibleText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion);
             if (!string.Equals(
                     originalText,
@@ -206,19 +194,16 @@ public static class MainCommandCanonicalTextResolver
     ///     falling back to the original text when no exact translation exists.
     /// </summary>
     /// <param name="originalText">The original visible text.</param>
-    /// <param name="targetLanguage">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <returns>The translated text, or the original text.</returns>
     public static string ResolveTranslatedText(
         string originalText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion)
     {
         return ReferenceTextCacheRegistry.MainCommandTexts.TryFindTranslatedText(
-            targetLanguage,
-            engine,
+            scope,
             gameVersion,
             originalText,
             out var translatedText)
@@ -232,19 +217,16 @@ public static class MainCommandCanonicalTextResolver
     ///     exists.
     /// </summary>
     /// <param name="visibleText">The currently visible text.</param>
-    /// <param name="targetLanguage">The active target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <returns>The canonical original text, or the visible text.</returns>
     public static string ResolveOriginalText(
         string visibleText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion)
     {
         return ReferenceTextCacheRegistry.MainCommandTexts.TryFindOriginalText(
-            targetLanguage,
-            engine,
+            scope,
             gameVersion,
             visibleText,
             out var originalText)

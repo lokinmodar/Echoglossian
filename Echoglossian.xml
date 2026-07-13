@@ -98,73 +98,6 @@
                 canonical action-tooltip storage; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy canonical lookup shape until callers migrate to
-                the shared reuse scope.
-            </summary>
-            <param name="actionId">The action row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="sourceContentHash">The stable source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindHistoricalCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy historical lookup shape until callers migrate.
-            </summary>
-            <param name="actionId">The action row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="requestedGameVersion">The current game version.</param>
-            <param name="sourceContentHash">The stable source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.UInt32,System.UInt32)">
-            <summary>
-                Provides the legacy identity lookup shape until callers migrate.
-            </summary>
-            <param name="actionId">The action row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="classJobId">The preferred class-job identifier.</param>
-            <param name="classJobCategoryId">The preferred category identifier.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
-            <summary>
-                Provides the legacy forward text lookup shape until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalText">The original text.</param>
-            <param name="translatedText">The translated text.</param>
-            <returns>Whether a translation was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryFindOriginalText(System.String,System.Int32,System.String,System.String,System.String@)">
-            <summary>
-                Provides the legacy reverse text lookup shape until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="translatedText">The translated text.</param>
-            <param name="originalText">The original text.</param>
-            <returns>Whether an original text was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.ContainsOriginalText(System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy original-text check until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalText">The original text.</param>
-            <returns>Whether the original text exists.</returns>
-        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.Clear">
             <summary>
                 Clears the in-memory cache.
@@ -298,15 +231,6 @@
             <param name="scope">The required translation reuse scope.</param>
             <param name="version">The exact stored game version scope.</param>
             <returns>The stable scope key.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryCreateLegacyScope(System.String,System.Int32,Echoglossian.TranslationReuseScope@)">
-            <summary>
-                Resolves a source-aware scope for an unmigrated caller.
-            </summary>
-            <param name="targetLanguage">The requested target language.</param>
-            <param name="translationEngine">The requested translation engine.</param>
-            <param name="scope">The resolved source-aware scope.</param>
-            <returns>Whether the current source language was resolved.</returns>
         </member>
         <member name="T:Echoglossian.Cache.GameWindowCacheManager">
             <summary>
@@ -481,39 +405,6 @@
             </param>
             <returns>The best translated row, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.TryFindCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy canonical lookup shape until callers migrate.
-            </summary>
-            <param name="itemId">The item row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="sourceContentHash">The stable source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.TryFindHistoricalCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy historical lookup shape until callers migrate.
-            </summary>
-            <param name="itemId">The item row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="requestedGameVersion">The current game version.</param>
-            <param name="sourceContentHash">The stable source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.UInt32)">
-            <summary>
-                Provides the legacy identity lookup shape until callers migrate.
-            </summary>
-            <param name="itemId">The item row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="classJobCategoryId">The preferred category identifier.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
         <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.Clear">
             <summary>
                 Clears the in-memory cache.
@@ -559,15 +450,6 @@
                 any required translated description; otherwise
                 <see langword="false" />.
             </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.TryCreateLegacyScope(System.String,System.Int32,Echoglossian.TranslationReuseScope@)">
-            <summary>
-                Resolves a source-aware scope for an unmigrated caller.
-            </summary>
-            <param name="targetLanguage">The requested target language.</param>
-            <param name="translationEngine">The requested translation engine.</param>
-            <param name="scope">The resolved source-aware scope.</param>
-            <returns>Whether the current source language was resolved.</returns>
         </member>
         <member name="T:Echoglossian.Cache.QuestHoverTranslationCache">
             <summary>
@@ -754,13 +636,12 @@
                 Clears every specific reference-text cache.
             </summary>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedText(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one exact translated text from the specific
                 reference-text caches.
             </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalText">The original text to translate.</param>
             <param name="translatedText">The resolved translated text.</param>
@@ -769,29 +650,12 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String,System.String@)">
-            <summary>
-                Tries to resolve one exact translated text from the specific
-                reference-text caches for one original-language scope.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalText">The original text to translate.</param>
-            <param name="originalLanguage">The persisted original-language code.</param>
-            <param name="translatedText">The resolved translated text.</param>
-            <returns>
-                <see langword="true" /> when one translated text was found;
-                otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindOriginalText(System.String,System.Int32,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindOriginalText(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one exact canonical original text from the specific
                 reference-text caches.
             </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="translatedText">The translated text to reverse.</param>
             <param name="originalText">The resolved canonical original text.</param>
@@ -800,13 +664,12 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.ContainsOriginalText(System.String,System.Int32,System.String,System.String)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.ContainsOriginalText(Echoglossian.TranslationReuseScope,System.String,System.String)">
             <summary>
                 Determines whether one canonical original text already exists in
                 the specific reference-text caches.
             </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalText">The canonical original text to test.</param>
             <returns>
@@ -814,14 +677,13 @@
                 the specific reference-text caches; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(System.UInt32,System.String,System.Int32,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(System.UInt32,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated action-adjacent reference payload by
                 stable identity.
             </summary>
             <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="payload">The translated payload, if any.</param>
             <returns>
@@ -829,30 +691,13 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(System.UInt32,System.String,System.Int32,System.String,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
-            <summary>
-                Tries to resolve one translated action-adjacent reference payload by
-                stable identity and original-language scope.
-            </summary>
-            <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalLanguage">The persisted original-language code.</param>
-            <param name="payload">The translated payload, if any.</param>
-            <returns>
-                <see langword="true" /> when one translated payload was found;
-                otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(System.UInt32,System.String,System.Int32,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(System.UInt32,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated item-adjacent reference payload by
                 stable identity.
             </summary>
             <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="payload">The translated payload, if any.</param>
             <returns>
@@ -860,23 +705,7 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(System.UInt32,System.String,System.Int32,System.String,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
-            <summary>
-                Tries to resolve one translated item-adjacent reference payload by
-                stable identity and original-language scope.
-            </summary>
-            <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalLanguage">The persisted original-language code.</param>
-            <param name="payload">The translated payload, if any.</param>
-            <returns>
-                <see langword="true" /> when one translated payload was found;
-                otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedIdentityPayload``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},System.UInt32,System.String,System.Int32,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedIdentityPayload``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},System.UInt32,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated payload by exact row identity from a
                 specific reference-text cache.
@@ -884,27 +713,8 @@
             <typeparam name="TRow">The specific persisted row type.</typeparam>
             <param name="cacheStore">The cache store to query.</param>
             <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
-            <param name="payload">The translated payload, if any.</param>
-            <returns>
-                <see langword="true" /> when one translated payload was found;
-                otherwise <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedIdentityPayload``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},System.UInt32,System.String,System.Int32,System.String,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
-            <summary>
-                Tries to resolve one translated payload by exact row identity and
-                original-language scope from a specific reference-text cache.
-            </summary>
-            <typeparam name="TRow">The specific persisted row type.</typeparam>
-            <param name="cacheStore">The cache store to query.</param>
-            <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalLanguage">The persisted original-language code.</param>
             <param name="payload">The translated payload, if any.</param>
             <returns>
                 <see langword="true" /> when one translated payload was found;
@@ -996,84 +806,6 @@
                 <see langword="true" /> when the original text already exists;
                 otherwise <see langword="false" />.
             </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy canonical lookup shape until callers migrate.
-            </summary>
-            <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="sourceContentHash">The source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String)">
-            <summary>
-                Provides the legacy identity lookup shape until callers migrate.
-            </summary>
-            <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the source-explicit identity lookup shape until callers
-                migrate to the shared scope.
-            </summary>
-            <param name="referenceId">The sheet-row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="originalLanguage">The persisted source language.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
-            <summary>
-                Provides the legacy forward text lookup shape until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="originalText">The original text.</param>
-            <param name="translatedText">The translated text.</param>
-            <returns>Whether a translation was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String,System.String@)">
-            <summary>
-                Provides the source-explicit forward lookup shape until callers
-                migrate to the shared scope.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="originalText">The original text.</param>
-            <param name="originalLanguage">The persisted source language.</param>
-            <param name="translatedText">The translated text.</param>
-            <returns>Whether a translation was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryFindOriginalText(System.String,System.Int32,System.String,System.String,System.String@)">
-            <summary>
-                Provides the legacy reverse text lookup shape until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="translatedText">The translated text.</param>
-            <param name="originalText">The original text.</param>
-            <returns>Whether an original text was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.ContainsOriginalText(System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy original-text check until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="originalText">The original text.</param>
-            <returns>Whether the original text exists.</returns>
         </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.Clear">
             <summary>
@@ -1185,15 +917,6 @@
             <param name="version">The exact stored game-version scope.</param>
             <returns>The scope key.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryCreateLegacyScope(System.String,System.Int32,Echoglossian.TranslationReuseScope@)">
-            <summary>
-                Resolves a source-aware scope for an unmigrated caller.
-            </summary>
-            <param name="targetLanguage">The requested target language.</param>
-            <param name="translationEngine">The requested translation engine.</param>
-            <param name="scope">The resolved source-aware scope.</param>
-            <returns>Whether the current source language was resolved.</returns>
-        </member>
         <member name="T:Echoglossian.Cache.StringArrayDataCacheManager">
             <summary>
                 Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" />
@@ -1235,42 +958,10 @@
             <param name="gameVersion">The game version.</param>
             <returns>The matching cached rows.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.TryFindCanonicalMatch(System.String,System.String,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy canonical lookup shape until callers migrate.
-            </summary>
-            <param name="type">The logical payload type.</param>
-            <param name="contextKey">The semantic surface context.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="sourceContentHash">The stable source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.GetCandidates(System.String,System.String,System.String,System.Int32,System.String)">
-            <summary>
-                Provides the legacy candidate lookup shape until callers migrate.
-            </summary>
-            <param name="type">The logical payload type.</param>
-            <param name="contextKey">The semantic surface context.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <returns>The matching rows.</returns>
-        </member>
         <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.Clear">
             <summary>
                 Clears the in-memory cache.
             </summary>
-        </member>
-        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.TryCreateLegacyScope(System.String,System.Int32,Echoglossian.TranslationReuseScope@)">
-            <summary>
-                Resolves a source-aware scope for an unmigrated caller.
-            </summary>
-            <param name="targetLanguage">The requested target language.</param>
-            <param name="translationEngine">The requested translation engine.</param>
-            <param name="scope">The resolved source-aware scope.</param>
-            <returns>Whether the current source language was resolved.</returns>
         </member>
         <member name="T:Echoglossian.Cache.TraitCacheManager">
             <summary>
@@ -1364,72 +1055,6 @@
                 <see langword="true" /> when the original text already exists in
                 canonical trait storage; otherwise <see langword="false" />.
             </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.TraitCacheManager.TryFindCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy canonical lookup shape until callers migrate.
-            </summary>
-            <param name="traitId">The trait row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="sourceContentHash">The stable source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.TraitCacheManager.TryFindHistoricalCanonicalMatch(System.UInt32,System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy historical lookup shape until callers migrate.
-            </summary>
-            <param name="traitId">The trait row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="requestedGameVersion">The current game version.</param>
-            <param name="sourceContentHash">The stable source-content hash.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.TraitCacheManager.TryFindIdentityMatch(System.UInt32,System.String,System.Int32,System.String,System.UInt32,System.UInt32)">
-            <summary>
-                Provides the legacy identity lookup shape until callers migrate.
-            </summary>
-            <param name="traitId">The trait row identifier.</param>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="classJobId">The preferred class-job identifier.</param>
-            <param name="classJobCategoryId">The preferred category identifier.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.TraitCacheManager.TryFindTranslatedText(System.String,System.Int32,System.String,System.String,System.String@)">
-            <summary>
-                Provides the legacy forward text lookup shape until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalText">The original text.</param>
-            <param name="translatedText">The translated text.</param>
-            <returns>Whether a translation was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.TraitCacheManager.TryFindOriginalText(System.String,System.Int32,System.String,System.String,System.String@)">
-            <summary>
-                Provides the legacy reverse text lookup shape until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="translatedText">The translated text.</param>
-            <param name="originalText">The original text.</param>
-            <returns>Whether an original text was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.TraitCacheManager.ContainsOriginalText(System.String,System.Int32,System.String,System.String)">
-            <summary>
-                Provides the legacy original-text check until callers migrate.
-            </summary>
-            <param name="lang">The target language code.</param>
-            <param name="engine">The translation engine identifier.</param>
-            <param name="gameVersion">The current game version.</param>
-            <param name="originalText">The original text.</param>
-            <returns>Whether the original text exists.</returns>
         </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.Clear">
             <summary>
@@ -1562,15 +1187,6 @@
             <param name="scope">The required translation reuse scope.</param>
             <param name="version">The exact stored game version scope.</param>
             <returns>The stable scope key.</returns>
-        </member>
-        <member name="M:Echoglossian.Cache.TraitCacheManager.TryCreateLegacyScope(System.String,System.Int32,Echoglossian.TranslationReuseScope@)">
-            <summary>
-                Resolves a source-aware scope for an unmigrated caller.
-            </summary>
-            <param name="targetLanguage">The requested target language.</param>
-            <param name="translationEngine">The requested translation engine.</param>
-            <param name="scope">The resolved source-aware scope.</param>
-            <returns>Whether the current source language was resolved.</returns>
         </member>
         <member name="T:Echoglossian.Cache.TranslationFailureCacheManager">
             <summary>
@@ -2605,28 +2221,31 @@
             <param name="row">The row to persist.</param>
             <returns>A status message describing the result.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryPromoteHistoricalActionTooltip(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+        <member name="M:Echoglossian.Echoglossian.TryPromoteHistoricalActionTooltip(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope)">
             <summary>
                 Promotes one translated historical action-tooltip row to the
                 current game version when the original payload hash still matches.
             </summary>
             <param name="probe">The current-version probe row.</param>
+            <param name="scope">The persisted probe translation scope.</param>
             <returns>The promoted row, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryPromoteHistoricalTrait(Echoglossian.EFCoreSqlite.Models.Trait)">
+        <member name="M:Echoglossian.Echoglossian.TryPromoteHistoricalTrait(Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.TranslationReuseScope)">
             <summary>
                 Promotes one translated historical trait row to the current game
                 version when the original payload hash still matches.
             </summary>
             <param name="probe">The current-version probe row.</param>
+            <param name="scope">The persisted probe translation scope.</param>
             <returns>The promoted row, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryPromoteHistoricalItemTooltip(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+        <member name="M:Echoglossian.Echoglossian.TryPromoteHistoricalItemTooltip(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.TranslationReuseScope)">
             <summary>
                 Promotes one translated historical item-tooltip row to the current
                 game version when the original payload hash still matches.
             </summary>
             <param name="probe">The current-version probe row.</param>
+            <param name="scope">The persisted probe translation scope.</param>
             <returns>The promoted row, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CloneActionTooltipForGameVersion(Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.String)">
@@ -10985,6 +10604,14 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetLookupGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CreateTranslationReuseScope(Echoglossian.SourceClientLanguage)">
+            <summary>
+                Creates the canonical cache scope for one captured ActionMenu
+                operation.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <returns>The complete translation reuse scope.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
@@ -11021,60 +10648,56 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
             <summary>
                 Translates one integer-keyed payload map by exact lookup against the
                 canonical structured-tooltip caches.
             </summary>
             <param name="sourceValues">The original values.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="changed">
                 Receives whether any translated value differs from the original.
             </param>
             <returns>The translated map.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TranslateStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
             <summary>
                 Translates one text-node payload map by exact lookup against the
                 canonical structured-tooltip caches.
             </summary>
             <param name="sourceValues">The original values.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="changed">
                 Receives whether any translated value differs from the original.
             </param>
             <returns>The translated map.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Resolves one translated action-menu text from canonical tooltip storage,
                 falling back to the original text when no exact translation exists.
             </summary>
             <param name="originalText">The original visible text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <returns>The translated text, or the original text.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveOriginalText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveOriginalText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Resolves one canonical original action-menu text from either the
                 action-tooltip cache or previously persisted ActionMenu rows.
             </summary>
             <param name="visibleText">The currently visible text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">
                 The reverse lookup built from persisted ActionMenu rows.
             </param>
             <returns>The canonical original text, or the visible text.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Merges one resolved translated payload with canonical
                 action-tooltip or persisted ActionMenu translations so stale or
@@ -11084,8 +10707,7 @@
             <param name="resolvedTranslatedPayload">
                 The resolved translated payload from cache or DB.
             </param>
-            <param name="targetLanguage">The active target language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">
                 The original-to-translated fallback lookup built from persisted
@@ -11115,14 +10737,13 @@
             <param name="payload">The payload to summarize.</param>
             <returns>The stable page signature.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CountMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CountMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Counts one payload's distinct short texts that are still not
                 covered by canonical ActionMenu sources.
             </summary>
             <param name="payload">The original-facing payload.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">
                 The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
@@ -11163,15 +10784,14 @@
                 ActionMenu page surface; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareTranslatedText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareTranslatedText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
             <summary>
                 Tries to resolve one translated text by translating only the
                 visible action name when the source text ends with a trailing level
                 token.
             </summary>
             <param name="originalText">The original visible text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">The persisted fallback lookup.</param>
             <param name="translatedText">The resolved translated text.</param>
@@ -11180,15 +10800,14 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareOriginalText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryResolveLevelAwareOriginalText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String@)">
             <summary>
                 Tries to resolve one canonical original text by reversing only the
                 visible action name when the translated text ends with a trailing
                 level token.
             </summary>
             <param name="visibleText">The visible translated text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">The persisted reverse lookup.</param>
             <param name="originalText">The resolved canonical original text.</param>
@@ -11197,26 +10816,24 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedBaseText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveTranslatedBaseText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Resolves one translated text without applying any level-token
                 decomposition.
             </summary>
             <param name="originalText">The original text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">The persisted fallback lookup.</param>
             <returns>The resolved translated text, or the original text.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveOriginalBaseText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ResolveOriginalBaseText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Resolves one canonical original text without applying any
                 level-token decomposition.
             </summary>
             <param name="visibleText">The translated text.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">The persisted reverse lookup.</param>
             <returns>The resolved original text, or the visible text.</returns>
@@ -11262,28 +10879,26 @@
             <param name="separator">The captured separator.</param>
             <returns>The separator to use in one rebuilt level-aware label.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeTranslatedIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeTranslatedIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.Collections.Generic.SortedDictionary{System.Int32,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Merges one integer-keyed translated payload map with canonical
                 translations derived from repo-local sources.
             </summary>
             <param name="originalValues">The original values.</param>
             <param name="resolvedTranslatedValues">The resolved translated values.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">The persisted fallback lookup.</param>
             <returns>The merged translated map.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeTranslatedStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.MergeTranslatedStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.Collections.Generic.SortedDictionary{System.String,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Merges one text-node translated payload map with canonical
                 translations derived from repo-local sources.
             </summary>
             <param name="originalValues">The original values.</param>
             <param name="resolvedTranslatedValues">The resolved translated values.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">The persisted fallback lookup.</param>
             <returns>The merged translated map.</returns>
@@ -11492,15 +11107,14 @@
             <param name="payload">The payload to inspect.</param>
             <returns>The normalized visible short-text set.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalActionMenuText(System.String,System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalActionMenuText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Determines whether one ActionMenu text is already covered by either
                 canonical structured-tooltip storage or persisted window-chrome
                 lookups.
             </summary>
             <param name="text">The text to inspect.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">
                 The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
@@ -11510,13 +11124,12 @@
                 canonical sources; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryContainsCanonicalOriginalText(System.String,System.Int32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryContainsCanonicalOriginalText(Echoglossian.TranslationReuseScope,System.String,System.String)">
             <summary>
                 Determines whether one canonical original ActionMenu-facing text
                 already exists in shared action, trait, or reference-text storage.
             </summary>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalText">The original text to test.</param>
             <returns>
@@ -11524,14 +11137,13 @@
                 original text; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ContainsCanonicalOriginalTextCore(System.String,System.Int32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ContainsCanonicalOriginalTextCore(Echoglossian.TranslationReuseScope,System.String,System.String)">
             <summary>
                 Determines whether one exact canonical original ActionMenu-facing
                 text exists in shared canonical storage without applying
                 ActionMenu-specific normalization.
             </summary>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalText">The original text to test.</param>
             <returns>
@@ -11539,13 +11151,12 @@
                 original text; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindTranslatedCanonicalText(System.String,System.Int32,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindTranslatedCanonicalText(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one translated structured-tooltip text from
                 canonical action or trait storage.
             </summary>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalText">The original text to translate.</param>
             <param name="translatedText">The resolved translated text.</param>
@@ -11553,13 +11164,12 @@
                 <see langword="true" /> when an exact translated text was found.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindTranslatedCanonicalTextCore(System.String,System.Int32,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindTranslatedCanonicalTextCore(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
             <summary>
                 Tries one exact translated structured-tooltip lookup without any
                 ActionMenu-specific text normalization.
             </summary>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalText">The original text to translate.</param>
             <param name="translatedText">The resolved translated text.</param>
@@ -11567,13 +11177,12 @@
                 <see langword="true" /> when an exact translated text was found.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindOriginalCanonicalText(System.String,System.Int32,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindOriginalCanonicalText(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
             <summary>
                 Tries to resolve one canonical original structured-tooltip text from
                 canonical action or trait storage.
             </summary>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="visibleText">The translated text to reverse.</param>
             <param name="originalText">The resolved canonical original text.</param>
@@ -11581,13 +11190,12 @@
                 <see langword="true" /> when an exact original text was found.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindOriginalCanonicalTextCore(System.String,System.Int32,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindOriginalCanonicalTextCore(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
             <summary>
                 Tries one exact canonical-original structured-tooltip lookup
                 without any ActionMenu-specific text normalization.
             </summary>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="visibleText">The translated text to reverse.</param>
             <param name="originalText">The resolved canonical original text.</param>
@@ -11595,13 +11203,12 @@
                 <see langword="true" /> when an exact original text was found.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalizeIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalizeIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
             <summary>
                 Canonicalizes one integer-keyed payload map back to original text.
             </summary>
             <param name="sourceValues">The currently visible values.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">
                 The reverse lookup built from persisted ActionMenu rows.
@@ -11612,13 +11219,12 @@
             </param>
             <returns>The canonicalized original-facing map.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalizeStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalizeStringMap(System.Collections.Generic.SortedDictionary{System.String,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Boolean@)">
             <summary>
                 Canonicalizes one text-node payload map back to original text.
             </summary>
             <param name="sourceValues">The currently visible values.</param>
-            <param name="targetLanguage">The target translation language.</param>
-            <param name="engine">The translation engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="fallbackLookup">
                 The reverse lookup built from persisted ActionMenu rows.
@@ -12313,7 +11919,7 @@
                 update pass is required.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveCanonicalCharacterStatusPayloadPair(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.TryResolveCanonicalCharacterStatusPayloadPair(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
                 Tries to resolve one canonical original and translated payload pair
                 from the latest rich <c>addon:CharacterStatus</c> structured row.
@@ -12418,7 +12024,7 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryBuildCharacterLookups(System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.HashSet{System.String}@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryBuildCharacterLookups(Echoglossian.TranslationReuseScope,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.Dictionary{System.String,System.String}@,System.Collections.Generic.HashSet{System.String}@)">
             <summary>
                 Builds one exact original-text to translated-text lookup from the
                 canonical shared Character string-array payload already cached in
@@ -12440,6 +12046,21 @@
                 <see langword="true" /> when one canonical Character payload could
                 be resolved from cache; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CreateTranslationReuseScope(Echoglossian.SourceClientLanguage)">
+            <summary>
+                Creates the structured Character cache scope for one captured
+                source language.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <returns>The complete translation reuse scope.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.TryCreateCurrentTranslationReuseScope(Echoglossian.TranslationReuseScope@)">
+            <summary>
+                Captures the current source once at a Character text-node boundary.
+            </summary>
+            <param name="scope">The complete translation reuse scope.</param>
+            <returns>Whether the current source language was available.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.GetCharacterStructuredContextKeys">
             <summary>
@@ -20837,14 +20458,13 @@
                 sheet-backed <see cref="T:Echoglossian.EFCoreSqlite.Models.MainCommandText" /> cache.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveTranslatedIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.Int32,System.String}@)">
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveTranslatedIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.SortedDictionary{System.Int32,System.String}@)">
             <summary>
                 Tries to translate one integer-keyed MainCommand payload map from
                 canonical cache data.
             </summary>
             <param name="sourceValues">The original visible values.</param>
-            <param name="targetLanguage">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="translatedValues">
                 Receives the translated values when any entry resolves.
@@ -20854,14 +20474,13 @@
                 a different translated value; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveOriginalIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.Int32,System.String}@)">
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveOriginalIntMap(System.Collections.Generic.SortedDictionary{System.Int32,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.SortedDictionary{System.Int32,System.String}@)">
             <summary>
                 Tries to recover one canonical original integer-keyed MainCommand
                 payload map from visible translated values.
             </summary>
             <param name="sourceValues">The currently visible values.</param>
-            <param name="targetLanguage">The active target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalValues">
                 Receives the canonical original values when any entry resolves.
@@ -20872,14 +20491,13 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveTranslatedTextMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.String,System.String}@)">
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveTranslatedTextMap(System.Collections.Generic.SortedDictionary{System.String,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.SortedDictionary{System.String,System.String}@)">
             <summary>
                 Tries to translate one text-node MainCommand payload map from
                 canonical cache data.
             </summary>
             <param name="sourceValues">The original visible values.</param>
-            <param name="targetLanguage">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="translatedValues">
                 Receives the translated values when any entry resolves.
@@ -20889,14 +20507,13 @@
                 a different translated value; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveOriginalTextMap(System.Collections.Generic.SortedDictionary{System.String,System.String},System.String,System.Int32,System.String,System.Collections.Generic.SortedDictionary{System.String,System.String}@)">
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.TryResolveOriginalTextMap(System.Collections.Generic.SortedDictionary{System.String,System.String},Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.SortedDictionary{System.String,System.String}@)">
             <summary>
                 Tries to recover one canonical original text-node MainCommand
                 payload map from visible translated values.
             </summary>
             <param name="sourceValues">The currently visible values.</param>
-            <param name="targetLanguage">The active target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <param name="originalValues">
                 Receives the canonical original values when any entry resolves.
@@ -20907,26 +20524,24 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.ResolveTranslatedText(System.String,System.String,System.Int32,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.ResolveTranslatedText(System.String,Echoglossian.TranslationReuseScope,System.String)">
             <summary>
                 Resolves one translated MainCommand label from canonical cache,
                 falling back to the original text when no exact translation exists.
             </summary>
             <param name="originalText">The original visible text.</param>
-            <param name="targetLanguage">The target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <returns>The translated text, or the original text.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.ResolveOriginalText(System.String,System.String,System.Int32,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.MainCommandCanonicalTextResolver.ResolveOriginalText(System.String,Echoglossian.TranslationReuseScope,System.String)">
             <summary>
                 Resolves one canonical original MainCommand label from canonical
                 cache, falling back to the visible text when no exact reverse match
                 exists.
             </summary>
             <param name="visibleText">The currently visible text.</param>
-            <param name="targetLanguage">The active target language code.</param>
-            <param name="engine">The translation-engine identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <returns>The canonical original text, or the visible text.</returns>
         </member>

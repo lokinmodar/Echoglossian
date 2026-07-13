@@ -171,55 +171,6 @@ public static class StringArrayDataCacheManager
     }
 
     /// <summary>
-    ///     Provides the legacy canonical lookup shape until callers migrate.
-    /// </summary>
-    /// <param name="type">The logical payload type.</param>
-    /// <param name="contextKey">The semantic surface context.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The game version.</param>
-    /// <param name="sourceContentHash">The stable source-content hash.</param>
-    /// <returns>The matching row, or <see langword="null" />.</returns>
-    public static StringArrayDatas? TryFindCanonicalMatch(
-        string type,
-        string contextKey,
-        string lang,
-        int engine,
-        string? gameVersion,
-        string sourceContentHash)
-    {
-        return TryCreateLegacyScope(lang, engine, out var scope)
-            ? TryFindCanonicalMatch(
-                type,
-                contextKey,
-                scope,
-                gameVersion,
-                sourceContentHash)
-            : null;
-    }
-
-    /// <summary>
-    ///     Provides the legacy candidate lookup shape until callers migrate.
-    /// </summary>
-    /// <param name="type">The logical payload type.</param>
-    /// <param name="contextKey">The semantic surface context.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The game version.</param>
-    /// <returns>The matching rows.</returns>
-    public static IReadOnlyList<StringArrayDatas> GetCandidates(
-        string type,
-        string contextKey,
-        string lang,
-        int engine,
-        string? gameVersion)
-    {
-        return TryCreateLegacyScope(lang, engine, out var scope)
-            ? GetCandidates(type, contextKey, scope, gameVersion)
-            : [];
-    }
-
-    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()
@@ -228,33 +179,6 @@ public static class StringArrayDataCacheManager
         PluginRuntimeLog.Debug("[StringArrayDataCacheManager] Cleared StringArrayData cache.");
     }
 
-    /// <summary>
-    ///     Resolves a source-aware scope for an unmigrated caller.
-    /// </summary>
-    /// <param name="targetLanguage">The requested target language.</param>
-    /// <param name="translationEngine">The requested translation engine.</param>
-    /// <param name="scope">The resolved source-aware scope.</param>
-    /// <returns>Whether the current source language was resolved.</returns>
-    private static bool TryCreateLegacyScope(
-        string targetLanguage,
-        int translationEngine,
-        out TranslationReuseScope scope)
-    {
-        if (string.IsNullOrWhiteSpace(targetLanguage) ||
-            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage))
-        {
-            scope = default;
-            return false;
-        }
-
-        scope = new TranslationReuseScope(
-            sourceLanguage.PersistenceCode,
-            targetLanguage,
-            translationEngine,
-            true);
-        return true;
-    }
 }
 
 

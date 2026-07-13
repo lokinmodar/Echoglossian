@@ -31,16 +31,21 @@ public partial class Echoglossian
     {
         if (probe == null ||
             probe.ReferenceId == 0 ||
+            string.IsNullOrWhiteSpace(probe.OriginalLang) ||
             string.IsNullOrWhiteSpace(probe.TranslationLang) ||
             string.IsNullOrWhiteSpace(probe.SourceContentHash))
         {
             return null;
         }
 
+        var scope = new TranslationReuseScope(
+            probe.OriginalLang,
+            probe.TranslationLang,
+            probe.TranslationEngine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
         var cached = cacheStore.TryFindCanonicalMatch(
             probe.ReferenceId,
-            probe.TranslationLang,
-            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            scope,
             probe.GameVersion,
             probe.SourceContentHash);
         if (cached != null)

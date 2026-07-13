@@ -146,6 +146,27 @@ public class SourceScopedFallbackFlowTests
                 SourceContentHash = referencePayload.ComputeSourceContentHash(),
                 CanonicalPayloadAsText = referencePayload.Serialize(),
             });
+            var matchingScope = new TranslationReuseScope(
+                "en",
+                "pt",
+                0,
+                true);
+            var mismatchedScope = new TranslationReuseScope(
+                "de",
+                "pt",
+                0,
+                true);
+
+            Assert.NotNull(
+                ReferenceTextCacheRegistry.EventItemTexts.TryFindIdentityMatch(
+                    itemId,
+                    matchingScope,
+                    "test-version"));
+            Assert.Null(
+                ReferenceTextCacheRegistry.EventItemTexts.TryFindIdentityMatch(
+                    itemId,
+                    mismatchedScope,
+                    "test-version"));
 
             var runtime = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
                 typeof(PluginEntry));

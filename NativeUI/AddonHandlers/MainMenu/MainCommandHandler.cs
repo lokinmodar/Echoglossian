@@ -82,12 +82,16 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
         out DbFirstGameWindowPayload translatedPayload)
     {
         translatedPayload = DbFirstGameWindowPayload.Empty;
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveTranslatedIntMap(
                 originalPayload.AtkValues,
-                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                    this.config.Lang),
-                this.config.ChosenTransEngine,
+                scope,
                 GetGameVersion(),
                 out var translatedAtkValues))
         {
@@ -108,12 +112,16 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
         out DbFirstGameWindowPayload originalPayload)
     {
         originalPayload = DbFirstGameWindowPayload.Empty;
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.config.ChosenTransEngine,
+            this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveOriginalIntMap(
                 livePayload.AtkValues,
-                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                    this.config.Lang),
-                this.config.ChosenTransEngine,
+                scope,
                 GetGameVersion(),
                 out var originalAtkValues))
         {
