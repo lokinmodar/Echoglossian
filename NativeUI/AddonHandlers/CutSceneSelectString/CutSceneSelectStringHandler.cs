@@ -124,7 +124,18 @@ public sealed class CutSceneSelectStringHandler :
     string originalQuestion;
     List<string> originalOptions;
     int requestId;
-    var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return new VisibleDialogueRetranslationResult(
+          false,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+    }
+
+    var sourceLang = sourceLanguage.ProviderCode;
     var targetLang = LangDict[LanguageInt].Code;
 
     lock (this.stateGate)
@@ -155,6 +166,7 @@ public sealed class CutSceneSelectStringHandler :
       var (translatedQuestion, translatedOptions) = await this.TranslateDialogAsync(
               originalQuestion,
               originalOptions,
+              sourceLanguage,
               TranslationSurfaceGroup.Dialogue)
           .ConfigureAwait(false);
 
@@ -192,7 +204,7 @@ public sealed class CutSceneSelectStringHandler :
           .ToList();
       var selectString = new SelectString(
           originalQuestion,
-          sourceLang,
+          sourceLanguage.PersistenceCode,
           JsonConvert.SerializeObject(originalOptions),
           translatedQuestion,
           JsonConvert.SerializeObject(translatedOptions),
@@ -322,6 +334,12 @@ public sealed class CutSceneSelectStringHandler :
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var textNodes = CutSceneSelectStringNodeResolvers.ResolveReadableTextNodes(addon);
     if (textNodes.Count == 0)
     {
@@ -348,6 +366,7 @@ public sealed class CutSceneSelectStringHandler :
     if (this.TryGetCachedTranslation(
             originalQuestion,
             originalOptions,
+            sourceLanguage,
             out var translatedQuestion,
             out var translatedOptions,
             out var replacementQuestion,
@@ -370,6 +389,7 @@ public sealed class CutSceneSelectStringHandler :
     if (this.TryLoadStoredTranslation(
             originalQuestion,
             originalOptions,
+            sourceLanguage,
             out var storedTranslatedQuestion,
             out var storedTranslatedOptions,
             out var storedReplacementQuestion,
@@ -405,7 +425,11 @@ public sealed class CutSceneSelectStringHandler :
       this.Trace(
           $"trigger={type} queued translation request={requestId} " +
           $"source='{this.Preview(originalQuestion)}' options={originalOptions.Count}");
-      Task.Run(() => this.ResolveTranslationAsync(originalQuestion, originalOptions, requestId));
+      Task.Run(() => this.ResolveTranslationAsync(
+          originalQuestion,
+          originalOptions,
+          requestId,
+          sourceLanguage));
     }
   }
 
@@ -416,6 +440,11 @@ public sealed class CutSceneSelectStringHandler :
   private unsafe void OnUpdateVisibleAddon(AddonEvent type, AddonArgs args)
   {
     if (!this.ShouldHandleCutSceneSelectString(args, out var addon))
+    {
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
     {
       return;
     }
@@ -521,12 +550,18 @@ public sealed class CutSceneSelectStringHandler :
   /// <summary>
   ///     Resolves a CutSceneSelectString translation without blocking the game UI.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="requestId">The active request identifier.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>A task that completes after the translation attempt.</returns>
   private async Task ResolveTranslationAsync(
       string originalQuestion,
       List<string> originalOptions,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
-    var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
+    var sourceLang = sourceLanguage.ProviderCode;
     var targetLang = LangDict[LanguageInt].Code;
     string translatedQuestion;
     List<string> translatedOptions;
@@ -540,6 +575,7 @@ public sealed class CutSceneSelectStringHandler :
           await this.TranslateDialogAsync(
               originalQuestion,
               originalOptions,
+              sourceLanguage,
               TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
     }
     catch (Exception e)
@@ -593,7 +629,7 @@ public sealed class CutSceneSelectStringHandler :
 
     var selectString = new SelectString(
         originalQuestion,
-        sourceLang,
+        sourceLanguage.PersistenceCode,
         JsonConvert.SerializeObject(originalOptions),
         translatedQuestion,
         JsonConvert.SerializeObject(translatedOptions),
@@ -647,13 +683,19 @@ public sealed class CutSceneSelectStringHandler :
   ///     when possible, falling back to per-item translation if the batch
   ///     parsing fails.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The translated question and options.</returns>
   private async Task<(string TranslatedQuestion, List<string> TranslatedOptions)>
       TranslateDialogAsync(
           string originalQuestion,
           IReadOnlyList<string> originalOptions,
+          SourceClientLanguage sourceLanguage,
           TranslationSurfaceGroup surfaceGroup)
   {
-    var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
+    var sourceLang = sourceLanguage.ProviderCode;
     var targetLang = LangDict[LanguageInt].Code;
     var translatedMap = new Dictionary<int, string>();
 
@@ -691,6 +733,7 @@ public sealed class CutSceneSelectStringHandler :
       return await this.TranslateDialogIndividuallyAsync(
           originalQuestion,
           originalOptions,
+          sourceLanguage,
           surfaceGroup).ConfigureAwait(false);
     }
 
@@ -719,14 +762,21 @@ public sealed class CutSceneSelectStringHandler :
   /// <summary>
   ///     Falls back to translating each dialog element individually.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The translated question and options.</returns>
   private async Task<(string TranslatedQuestion, List<string> TranslatedOptions)>
       TranslateDialogIndividuallyAsync(
           string originalQuestion,
           IReadOnlyList<string> originalOptions,
+          SourceClientLanguage sourceLanguage,
           TranslationSurfaceGroup surfaceGroup)
   {
     var translatedQuestion = await this.TranslateOrFallbackAsync(
             originalQuestion,
+            sourceLanguage,
             surfaceGroup)
         .ConfigureAwait(false);
     var translatedOptions = new List<string>(originalOptions.Count);
@@ -736,6 +786,7 @@ public sealed class CutSceneSelectStringHandler :
       translatedOptions.Add(
           await this.TranslateOrFallbackAsync(
                   option,
+                  sourceLanguage,
                   surfaceGroup)
               .ConfigureAwait(false));
     }
@@ -861,9 +912,18 @@ public sealed class CutSceneSelectStringHandler :
   /// <summary>
   ///     Tries to use a cached translation already held in memory.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="translatedQuestion">Receives the translated question.</param>
+  /// <param name="translatedOptions">Receives the translated options.</param>
+  /// <param name="replacementQuestion">Receives the replacement question.</param>
+  /// <param name="replacementOptions">Receives the replacement options.</param>
+  /// <returns>Whether a cached translation was found.</returns>
   private bool TryGetCachedTranslation(
       string originalQuestion,
       List<string> originalOptions,
+      SourceClientLanguage sourceLanguage,
       out string translatedQuestion,
       out List<string> translatedOptions,
       out string replacementQuestion,
@@ -874,7 +934,10 @@ public sealed class CutSceneSelectStringHandler :
     replacementQuestion = string.Empty;
     replacementOptions = [];
 
-    var selectString = this.BuildLookupSelectString(originalQuestion, originalOptions);
+    var selectString = this.BuildLookupSelectString(
+        originalQuestion,
+        originalOptions,
+        sourceLanguage);
     var lookup = this.findCutSceneSelectStringMessage(selectString);
     if (lookup == null ||
         string.IsNullOrWhiteSpace(lookup.TranslatedSelectString))
@@ -913,9 +976,18 @@ public sealed class CutSceneSelectStringHandler :
   /// <summary>
   ///     Tries to load a translated CutSceneSelectString row from the database.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="translatedQuestion">Receives the translated question.</param>
+  /// <param name="translatedOptions">Receives the translated options.</param>
+  /// <param name="replacementQuestion">Receives the replacement question.</param>
+  /// <param name="replacementOptions">Receives the replacement options.</param>
+  /// <returns>Whether a stored translation was found.</returns>
   private bool TryLoadStoredTranslation(
       string originalQuestion,
       List<string> originalOptions,
+      SourceClientLanguage sourceLanguage,
       out string translatedQuestion,
       out List<string> translatedOptions,
       out string replacementQuestion,
@@ -926,7 +998,10 @@ public sealed class CutSceneSelectStringHandler :
     replacementQuestion = string.Empty;
     replacementOptions = [];
 
-    var selectString = this.BuildLookupSelectString(originalQuestion, originalOptions);
+    var selectString = this.BuildLookupSelectString(
+        originalQuestion,
+        originalOptions,
+        sourceLanguage);
     var lookup = this.findCutSceneSelectStringMessage(selectString);
     if (lookup == null ||
         string.IsNullOrWhiteSpace(lookup.TranslatedSelectString))
@@ -1043,13 +1118,18 @@ public sealed class CutSceneSelectStringHandler :
   /// <summary>
   ///     Builds a database lookup entity for the currently visible question and options.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>The select-string lookup entity.</returns>
   private SelectString BuildLookupSelectString(
       string originalQuestion,
-      List<string> originalOptions)
+      List<string> originalOptions,
+      SourceClientLanguage sourceLanguage)
   {
     return new SelectString(
         originalQuestion,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         JsonConvert.SerializeObject(originalOptions),
         string.Empty,
         string.Empty,
@@ -1063,13 +1143,18 @@ public sealed class CutSceneSelectStringHandler :
   ///     Translates a piece of text or falls back to the original text when the
   ///     translation service does not return content.
   /// </summary>
+  /// <param name="text">The source text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The translated text or the original fallback.</returns>
   private async Task<string> TranslateOrFallbackAsync(
       string text,
+      SourceClientLanguage sourceLanguage,
       TranslationSurfaceGroup surfaceGroup)
   {
     var translatedText = await this.translationService.TranslateAsync(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.ProviderCode,
         LangDict[LanguageInt].Code,
         surfaceGroup).ConfigureAwait(false);
 

@@ -99,6 +99,12 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var visibleQuests = this.CollectVisibleToDoQuests(todoList);
     var runtimeEntries = new Dictionary<string, ToDoRuntimeEntry>(
         StringComparer.Ordinal);
@@ -108,6 +114,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     {
       if (!this.TryResolveVisibleQuestEntries(
               visibleQuest,
+              sourceLanguage,
               out var resolvedEntries,
               out var blockingQuestLabel))
       {
@@ -348,6 +355,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   ///     canonical quest data and persisted quest plates.
   /// </summary>
   /// <param name="visibleQuest">The visible quest row and grouped objectives.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="runtimeEntries">The resolved runtime entries.</param>
   /// <param name="blockingQuestLabel">
   ///     The quest label to use if this visible quest blocks activation.
@@ -358,6 +366,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </returns>
   private bool TryResolveVisibleQuestEntries(
       ToDoVisibleQuest visibleQuest,
+      SourceClientLanguage sourceLanguage,
       out List<ToDoRuntimeEntry> runtimeEntries,
       out string blockingQuestLabel)
   {
@@ -395,7 +404,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         todoProgressSnapshot.QuestProgress,
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         LangDict[LanguageInt].Code,
         this.Config.ChosenTransEngine,
         DateTime.Now);

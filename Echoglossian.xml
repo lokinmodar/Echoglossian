@@ -13286,22 +13286,37 @@
                 Reads the current question/title and option list from the live addon tree.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ResolveTranslationAsync(System.String,System.Collections.Generic.List{System.String},System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.ResolveTranslationAsync(System.String,System.Collections.Generic.List{System.String},System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a CutSceneSelectString translation without blocking the game UI.
             </summary>
+            <param name="originalQuestion">The original dialog question.</param>
+            <param name="originalOptions">The original dialog options.</param>
+            <param name="requestId">The active request identifier.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <returns>A task that completes after the translation attempt.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String},Echoglossian.Translators.TranslationSurfaceGroup)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String},Echoglossian.SourceClientLanguage,Echoglossian.Translators.TranslationSurfaceGroup)">
             <summary>
                 Translates the question and all options in a single batched request
                 when possible, falling back to per-item translation if the batch
                 parsing fails.
             </summary>
+            <param name="originalQuestion">The original dialog question.</param>
+            <param name="originalOptions">The original dialog options.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="surfaceGroup">The translation surface group.</param>
+            <returns>The translated question and options.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogIndividuallyAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String},Echoglossian.Translators.TranslationSurfaceGroup)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateDialogIndividuallyAsync(System.String,System.Collections.Generic.IReadOnlyList{System.String},Echoglossian.SourceClientLanguage,Echoglossian.Translators.TranslationSurfaceGroup)">
             <summary>
                 Falls back to translating each dialog element individually.
             </summary>
+            <param name="originalQuestion">The original dialog question.</param>
+            <param name="originalOptions">The original dialog options.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="surfaceGroup">The translation surface group.</param>
+            <returns>The translated question and options.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.PublishOverlay">
             <summary>
@@ -13319,15 +13334,31 @@
                 Tries to get the current resolved translation for the currently visible source.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryGetCachedTranslation(System.String,System.Collections.Generic.List{System.String},System.String@,System.Collections.Generic.List{System.String}@,System.String@,System.Collections.Generic.List{System.String}@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryGetCachedTranslation(System.String,System.Collections.Generic.List{System.String},Echoglossian.SourceClientLanguage,System.String@,System.Collections.Generic.List{System.String}@,System.String@,System.Collections.Generic.List{System.String}@)">
             <summary>
                 Tries to use a cached translation already held in memory.
             </summary>
+            <param name="originalQuestion">The original dialog question.</param>
+            <param name="originalOptions">The original dialog options.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="translatedQuestion">Receives the translated question.</param>
+            <param name="translatedOptions">Receives the translated options.</param>
+            <param name="replacementQuestion">Receives the replacement question.</param>
+            <param name="replacementOptions">Receives the replacement options.</param>
+            <returns>Whether a cached translation was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryLoadStoredTranslation(System.String,System.Collections.Generic.List{System.String},System.String@,System.Collections.Generic.List{System.String}@,System.String@,System.Collections.Generic.List{System.String}@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryLoadStoredTranslation(System.String,System.Collections.Generic.List{System.String},Echoglossian.SourceClientLanguage,System.String@,System.Collections.Generic.List{System.String}@,System.String@,System.Collections.Generic.List{System.String}@)">
             <summary>
                 Tries to load a translated CutSceneSelectString row from the database.
             </summary>
+            <param name="originalQuestion">The original dialog question.</param>
+            <param name="originalOptions">The original dialog options.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="translatedQuestion">Receives the translated question.</param>
+            <param name="translatedOptions">Receives the translated options.</param>
+            <param name="replacementQuestion">Receives the replacement question.</param>
+            <param name="replacementOptions">Receives the replacement options.</param>
+            <returns>Whether a stored translation was found.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TryQueueTranslation(System.String,System.String,System.Collections.Generic.List{System.String},System.Int32@)">
             <summary>
@@ -13346,16 +13377,24 @@
                 Updates the in-memory resolved translation state.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.BuildLookupSelectString(System.String,System.Collections.Generic.List{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.BuildLookupSelectString(System.String,System.Collections.Generic.List{System.String},Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a database lookup entity for the currently visible question and options.
             </summary>
+            <param name="originalQuestion">The original dialog question.</param>
+            <param name="originalOptions">The original dialog options.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <returns>The select-string lookup entity.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateOrFallbackAsync(System.String,Echoglossian.Translators.TranslationSurfaceGroup)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.TranslateOrFallbackAsync(System.String,Echoglossian.SourceClientLanguage,Echoglossian.Translators.TranslationSurfaceGroup)">
             <summary>
                 Translates a piece of text or falls back to the original text when the
                 translation service does not return content.
             </summary>
+            <param name="text">The source text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="surfaceGroup">The translation surface group.</param>
+            <returns>The translated text or the original fallback.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.CutSceneSelectStringHandler.HasUsableTranslatedDialogPayload(System.String,System.Collections.Generic.IReadOnlyList{System.String},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.String,System.String)">
             <summary>
@@ -14490,6 +14529,16 @@
             <param name="text">Text to translate.</param>
             <returns>The translated text task.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ResolveCurrentSourceLanguage">
+            <summary>
+                Resolves the current client source identity for a shared quest
+                persistence or translation operation.
+            </summary>
+            <returns>The resolved source language.</returns>
+            <exception cref="T:System.InvalidOperationException">
+                Thrown when the current client source language is unknown.
+            </exception>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryGetQueuedTranslation(System.String,System.String@)">
             <summary>
                 Attempts to read a queued translation from the shared broker cache.
@@ -15113,12 +15162,13 @@
             <param name="atkValues">The live addon payload.</param>
             <returns>The visible quest slots.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveVisibleScenarioTreeEntry(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveVisibleScenarioTreeEntry(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry@,System.String@)">
             <summary>
                 Tries to resolve one visible ScenarioTree quest slot entirely from
                 canonical quest data and persisted quest plates.
             </summary>
             <param name="visibleEntry">The visible quest slot.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="runtimeEntry">The resolved runtime entry.</param>
             <param name="blockingQuestLabel">
                 The quest label to use if this visible quest blocks activation.
@@ -15415,12 +15465,13 @@
             <param name="questObjectives">The objectives collected for this quest.</param>
             <returns>The collected quest objectives.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryResolveVisibleQuestEntries(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest,System.Collections.Generic.List{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry}@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryResolveVisibleQuestEntries(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest,Echoglossian.SourceClientLanguage,System.Collections.Generic.List{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry}@,System.String@)">
             <summary>
                 Resolves the visible quest row and its objective rows entirely from
                 canonical quest data and persisted quest plates.
             </summary>
             <param name="visibleQuest">The visible quest row and grouped objectives.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="runtimeEntries">The resolved runtime entries.</param>
             <param name="blockingQuestLabel">
                 The quest label to use if this visible quest blocks activation.
@@ -17461,6 +17512,18 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryCaptureOrQueueToastSource(System.String,System.String,Echoglossian.SourceClientLanguage)">
+            <summary>
+                Resolves one toast source using an already validated source identity.
+            </summary>
+            <param name="originalText">The original toast text to resolve.</param>
+            <param name="trigger">The log trigger label associated with the call.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <returns>
+                <see langword="true" /> when the source was handled; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.OnResetState(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Clears the in-memory toast state when the addon hides or is finalized.
@@ -17486,7 +17549,7 @@
             <param name="layoutSnapshot">The captured layout snapshot.</param>
             <param name="originalText">The original text to write back.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryHandleVisibleSourceChange(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Reconciles the visible toast source against the tracked state so a
                 recycled toast slot does not keep a stale translated line or a stale
@@ -17494,26 +17557,29 @@
             </summary>
             <param name="visibleOriginalText">The currently visible toast source.</param>
             <param name="trigger">The trigger label used for capture or queueing.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>
                 <see langword="true" /> when the source changed and the new source was
                 handled immediately; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ResolveTranslationAsync(System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ResolveTranslationAsync(System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a toast translation without blocking the game UI and persists the
                 result for future cache hits.
             </summary>
             <param name="originalText">The original toast text.</param>
             <param name="requestId">The request identifier used to reject stale updates.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation attempt finishes.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.BuildLookupMessage(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.BuildLookupMessage(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a lookup entity matching the historical toast schema already used
                 by the plugin database.
             </summary>
             <param name="originalText">The original toast text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" /> for DB lookup.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.ShouldHandleToast(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
@@ -17528,20 +17594,21 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryReadCurrentSource(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryReadCurrentSource(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,Echoglossian.SourceClientLanguage,System.String@)">
             <summary>
                 Reads the logical source text from the live toast addon, mapping the
                 visible translated replacement back to the original source line when
                 needed.
             </summary>
-            <param name="addon">The visible toast addon.</param>
+            <param name="textNode">The visible toast text node.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="originalText">Receives the logical original toast text.</param>
             <returns>
                 <see langword="true" /> when readable text is available; otherwise,
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextToastHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,Echoglossian.SourceClientLanguage,System.String@)">
             <summary>
                 Confirms that a toast node's original-text pointer really belongs to
                 the currently visible toast text before the handler trusts it as the
@@ -17549,6 +17616,7 @@
             </summary>
             <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
             <param name="visibleText">The text currently visible in the node.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="originalText">Receives the confirmed original toast text.</param>
             <returns>
                 <see langword="true" /> when the pointer text can be proven to explain
@@ -18070,7 +18138,7 @@
             <param name="layoutSnapshot">The captured layout snapshot.</param>
             <param name="originalText">The original text to write back.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryHandleVisibleSourceChange(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryHandleVisibleSourceChange(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Reconciles the visible gimmick-hint source against the tracked state so
                 a recycled slot does not keep a stale translated line or a stale native
@@ -18078,30 +18146,33 @@
             </summary>
             <param name="visibleOriginalText">The currently visible source line.</param>
             <param name="trigger">The trigger label used for capture or queueing.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>
                 <see langword="true" /> when the source changed and the new source was
                 handled immediately; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryCaptureOrQueueSource(System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryCaptureOrQueueSource(System.String,System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves the visible TextGimmickHint source line against cache,
                 database, or background translation work without blocking the game UI.
             </summary>
             <param name="originalText">The current visible source line.</param>
             <param name="trigger">The trigger label associated with the call.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>
                 <see langword="true" /> when the source was handled immediately;
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ResolveTranslationAsync(System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ResolveTranslationAsync(System.String,System.Int32,Echoglossian.SourceClientLanguage)">
             <summary>
                 Resolves a gimmick-hint translation without blocking the game UI and
                 persists the result for future cache hits.
             </summary>
             <param name="originalText">The original gimmick-hint text.</param>
             <param name="requestId">The request identifier used to reject stale updates.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A task that completes when the translation attempt finishes.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryGetCachedTranslation(System.String,System.String@,System.String@)">
@@ -18117,11 +18188,12 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryLoadStoredTranslation(System.String,System.String@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryLoadStoredTranslation(System.String,Echoglossian.SourceClientLanguage,System.String@,System.String@)">
             <summary>
                 Attempts to load a stored gimmick-hint translation from the database.
             </summary>
             <param name="originalText">The source gimmick-hint text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedText">Receives the translated text.</param>
             <param name="replacementText">Receives the normalized replacement text.</param>
             <returns>
@@ -18238,12 +18310,13 @@
                 TextGimmickHint addon; otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.BuildLookupMessage(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.BuildLookupMessage(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Builds a lookup entity matching the historical TextGimmickHint schema
                 already used by the plugin database.
             </summary>
             <param name="originalText">The original gimmick-hint text.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <returns>A formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.TextGimmickHintMessage" /> for DB lookup.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
@@ -18253,20 +18326,21 @@
             <param name="textNode">The text node to inspect.</param>
             <returns>The visible node text, or an empty string when unavailable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryReadCurrentSource(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryReadCurrentSource(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,Echoglossian.SourceClientLanguage,System.String@)">
             <summary>
                 Reads the logical source text from the live gadget-hint addon, mapping
                 the visible translated replacement back to the original source line when
                 needed.
             </summary>
             <param name="textNode">The text node to inspect.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="originalText">Receives the logical original text.</param>
             <returns>
                 <see langword="true" /> when readable text is available; otherwise,
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryConfirmOriginalPointerMatchesVisible(System.String,System.String,Echoglossian.SourceClientLanguage,System.String@)">
             <summary>
                 Confirms that a gimmick-hint node's original-text pointer really
                 belongs to the currently visible text before the handler trusts it as
@@ -18274,6 +18348,7 @@
             </summary>
             <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
             <param name="visibleText">The text currently visible in the node.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
             <param name="originalText">Receives the confirmed original text.</param>
             <returns>
                 <see langword="true" /> when the pointer text can be proven to explain

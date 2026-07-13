@@ -114,6 +114,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var visibleEntries = this.CollectVisibleScenarioTreeEntries(atkValues);
     if (visibleEntries.Count == 0)
     {
@@ -133,6 +139,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     {
       if (!this.TryResolveVisibleScenarioTreeEntry(
               visibleEntry,
+              sourceLanguage,
               out var runtimeEntry,
               out var blockingQuestLabel))
       {
@@ -232,6 +239,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   ///     canonical quest data and persisted quest plates.
   /// </summary>
   /// <param name="visibleEntry">The visible quest slot.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="runtimeEntry">The resolved runtime entry.</param>
   /// <param name="blockingQuestLabel">
   ///     The quest label to use if this visible quest blocks activation.
@@ -242,6 +250,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </returns>
   private bool TryResolveVisibleScenarioTreeEntry(
       ScenarioTreeVisibleEntry visibleEntry,
+      SourceClientLanguage sourceLanguage,
       out ScenarioTreeRuntimeEntry runtimeEntry,
       out string blockingQuestLabel)
   {
@@ -263,7 +272,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         todoProgressSnapshot.QuestProgress,
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         LangDict[LanguageInt].Code,
         this.Config.ChosenTransEngine,
         DateTime.Now);

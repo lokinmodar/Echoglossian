@@ -93,10 +93,12 @@ internal abstract class QuestAddonHandlerBase
       string questMessage,
       string? questId = null)
   {
+    var sourceLanguage = this.ResolveCurrentSourceLanguage();
+
     return new QuestPlate(
         questName,
         questMessage,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
         questId,
@@ -123,10 +125,12 @@ internal abstract class QuestAddonHandlerBase
       string translatedQuestMessage,
       string? questId = null)
   {
+    var sourceLanguage = this.ResolveCurrentSourceLanguage();
+
     return new QuestPlate(
         questName,
         questMessage,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         translatedQuestName,
         translatedQuestMessage,
         questId,
@@ -144,9 +148,11 @@ internal abstract class QuestAddonHandlerBase
   /// <returns>The translated text.</returns>
   protected string Translate(string text)
   {
+    var sourceLanguage = this.ResolveCurrentSourceLanguage();
+
     return this.TranslationService.Translate(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.ProviderCode,
         LangDict[LanguageInt].Code);
   }
 
@@ -158,10 +164,32 @@ internal abstract class QuestAddonHandlerBase
   /// <returns>The translated text task.</returns>
   protected Task<string> TranslateAsync(string text)
   {
+    var sourceLanguage = this.ResolveCurrentSourceLanguage();
+
     return this.TranslationService.TranslateAsync(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.ProviderCode,
         LangDict[LanguageInt].Code);
+  }
+
+  /// <summary>
+  ///     Resolves the current client source identity for a shared quest
+  ///     persistence or translation operation.
+  /// </summary>
+  /// <returns>The resolved source language.</returns>
+  /// <exception cref="InvalidOperationException">
+  ///     Thrown when the current client source language is unknown.
+  /// </exception>
+  private SourceClientLanguage ResolveCurrentSourceLanguage()
+  {
+    if (RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return sourceLanguage;
+    }
+
+    throw new InvalidOperationException(
+        "The current client source language could not be resolved.");
   }
 
   /// <summary>
