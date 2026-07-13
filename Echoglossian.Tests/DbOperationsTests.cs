@@ -460,6 +460,126 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Ensures dialogue upserts do not overwrite an otherwise identical
+    ///     row persisted for a different source client language.
+    /// </summary>
+    [Fact]
+    public async Task DialogueUpserts_DifferentSource_PreserveSeparateRows()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.TalkMessage.Add(CreateTalkMessage("en", 14, DateTime.Now));
+                context.BattleTalkMessage.Add(
+                    CreateBattleTalkMessage("en", 14, DateTime.Now));
+                context.SaveChanges();
+            }
+
+            await PluginEntry.UpsertTalkDataAsync(
+                CreateTalkMessage("de", 14, DateTime.Now));
+            await PluginEntry.UpsertBattleTalkDataAsync(
+                CreateBattleTalkMessage("de", 14, DateTime.Now));
+
+            using var verification = new EchoglossianDbContext(configDir);
+            Assert.Equal(
+                new[] { "de", "en" },
+                verification.TalkMessage
+                    .Select(row => row.OriginalTalkMessageLang)
+                    .OrderBy(source => source)
+                    .ToArray());
+            Assert.Equal(
+                new[] { "de", "en" },
+                verification.BattleTalkMessage
+                    .Select(row => row.OriginalBattleTalkMessageLang)
+                    .OrderBy(source => source)
+                    .ToArray());
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures legacy toast and quest writes do not suppress or merge an
+    ///     otherwise identical row from a different source client language.
+    /// </summary>
+    [Fact]
+    public void ToastAndQuestWrites_DifferentSource_PreserveSeparateRows()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+
+        try
+        {
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 14,
+                TranslateAlreadyTranslatedTexts = true,
+            });
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.ToastMessage.Add(
+                    CreateToastMessage("Error", "en", 14, DateTime.Now));
+                context.ToastMessage.Add(
+                    CreateToastMessage("NonError", "en", 14, DateTime.Now));
+                context.QuestPlate.Add(CreateQuestPlate("en", 14, DateTime.Now));
+                context.SaveChanges();
+            }
+
+            plugin.LoadAllErrorToasts();
+            plugin.LoadAllOtherToasts();
+            plugin.InsertErrorToastMessageData(
+                CreateToastMessage("Error", "de", 14, DateTime.Now));
+            plugin.InsertOtherToastMessageData(
+                CreateToastMessage("NonError", "de", 14, DateTime.Now));
+            plugin.InsertQuestPlate(CreateQuestPlate("de", 14, DateTime.Now));
+
+            using var verification = new EchoglossianDbContext(configDir);
+            foreach (var toastType in new[] { "Error", "NonError" })
+            {
+                Assert.Equal(
+                    new[] { "de", "en" },
+                    verification.ToastMessage
+                        .Where(row => row.ToastType == toastType)
+                        .Select(row => row.OriginalLang)
+                        .OrderBy(source => source)
+                        .ToArray());
+            }
+
+            Assert.Equal(
+                new[] { "de", "en" },
+                verification.QuestPlate
+                    .Select(row => row.OriginalLang)
+                    .OrderBy(source => source)
+                    .ToArray());
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Runs one legacy retrieval against a deterministically staged pair of
     ///     competing persisted rows.
     /// </summary>

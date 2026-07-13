@@ -16,6 +16,37 @@ namespace Echoglossian.Tests;
 public class RuntimeLanguageHelperTests
 {
     /// <summary>
+    ///     Ensures an unknown current client language cannot create a
+    ///     persistence reuse scope or provider source identity.
+    /// </summary>
+    [Fact]
+    public void TranslationReuseScopeTryCreate_UnknownClientValue_ReturnsFalse()
+    {
+        var originalClientState = global::Echoglossian.Echoglossian.ClientStateInterface;
+
+        try
+        {
+            global::Echoglossian.Echoglossian.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState((ClientLanguage)99);
+            var config = new Config
+            {
+                Lang = 42,
+                ChosenTransEngine = 4,
+                TranslateAlreadyTranslatedTexts = true,
+            };
+
+            var created = TranslationReuseScope.TryCreate(config, out var scope);
+
+            Assert.False(created);
+            Assert.Equal(default, scope);
+        }
+        finally
+        {
+            global::Echoglossian.Echoglossian.ClientStateInterface = originalClientState;
+        }
+    }
+
+    /// <summary>
     ///     Ensures the current-client resolver fails closed for an unknown
     ///     runtime client-language value.
     /// </summary>
@@ -84,6 +115,34 @@ public class RuntimeLanguageHelperTests
         var result = RuntimeLanguageHelper.LanguagesMatch("pt", "pt-BR");
 
         Assert.True(result);
+    }
+
+    /// <summary>
+    ///     Ensures aliases accepted for legacy source rows remain within one
+    ///     canonical identity and do not bridge extended client identities.
+    /// </summary>
+    /// <param name="left">The first stored or requested language value.</param>
+    /// <param name="right">The second stored or requested language value.</param>
+    /// <param name="expectedMatch">Whether the values belong to one identity.</param>
+    [Theory]
+    [InlineData("English", "en", true)]
+    [InlineData("Deutsch", "de", true)]
+    [InlineData("Japanese", "ja", true)]
+    [InlineData("French", "fr", true)]
+    [InlineData("chs", "cht", false)]
+    [InlineData("chs", "tc", false)]
+    [InlineData("cht", "tc", false)]
+    [InlineData("zh-Hans", "chs", false)]
+    [InlineData("zh-Hans", "cht", false)]
+    [InlineData("zh-Hant", "tc", false)]
+    public void LanguagesMatch_LegacyAliases_DoNotBridgeExtendedIdentities(
+        string left,
+        string right,
+        bool expectedMatch)
+    {
+        var result = RuntimeLanguageHelper.LanguagesMatch(left, right);
+
+        Assert.Equal(expectedMatch, result);
     }
 
     /// <summary>

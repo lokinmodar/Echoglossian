@@ -38,39 +38,54 @@ public class TranslationReuseScopeTests
     }
 
     /// <summary>
-    ///     Ensures source and target mismatches are never reusable.
+    ///     Ensures changing either side of the language scope rejects a row
+    ///     accepted by the original source and target.
     /// </summary>
     [Fact]
-    public void Matches_DifferentSourceOrTarget_ReturnsFalse()
+    public void Matches_SourceOrTargetTransition_RejectsPriorRow()
     {
-        var scope = new TranslationReuseScope("ja", "iw", 4, false);
+        var originalScope = new TranslationReuseScope("en", "he", 4, false);
+        var changedSourceScope = new TranslationReuseScope("de", "he", 4, false);
+        var changedTargetScope = new TranslationReuseScope("en", "fa", 4, false);
 
-        Assert.False(scope.Matches("en", "iw", 4));
-        Assert.False(scope.Matches("ja", "fa", 4));
+        Assert.True(originalScope.Matches("en", "he", 4));
+        Assert.False(changedSourceScope.Matches("en", "he", 4));
+        Assert.False(changedTargetScope.Matches("en", "he", 4));
     }
 
     /// <summary>
     ///     Ensures distinct persisted Chinese and Traditional Chinese client
     ///     identities cannot cross-reuse translations.
     /// </summary>
-    [Fact]
-    public void Matches_DistinctExtendedSourceIdentities_ReturnsFalse()
+    /// <param name="requestedSource">The requested persisted source identity.</param>
+    /// <param name="storedSource">The stored persisted source identity.</param>
+    [Theory]
+    [InlineData("chs", "cht")]
+    [InlineData("chs", "tc")]
+    [InlineData("cht", "chs")]
+    [InlineData("cht", "tc")]
+    [InlineData("tc", "chs")]
+    [InlineData("tc", "cht")]
+    public void Matches_DistinctExtendedSourceIdentities_ReturnsFalse(
+        string requestedSource,
+        string storedSource)
     {
-        var scope = new TranslationReuseScope("chs", "iw", 4, false);
+        var scope = new TranslationReuseScope(requestedSource, "he", 4, false);
 
-        Assert.False(scope.Matches("cht", "iw", 4));
-        Assert.False(scope.Matches("tc", "iw", 4));
+        Assert.False(scope.Matches(storedSource, "he", 4));
     }
 
     /// <summary>
-    ///     Ensures retranslation only reuses rows made by the active engine.
+    ///     Ensures engine compatibility follows the retranslation policy.
     /// </summary>
     [Fact]
-    public void Matches_RetranslationEnabled_RequiresActiveEngine()
+    public void Matches_EnginePolicy_GovernsDifferentEngineReuse()
     {
-        var scope = new TranslationReuseScope("en", "iw", 4, true);
+        var strictScope = new TranslationReuseScope("en", "he", 4, true);
+        var compatibleScope = new TranslationReuseScope("en", "he", 4, false);
 
-        Assert.False(scope.Matches("en", "iw", 7));
+        Assert.False(strictScope.Matches("en", "he", 7));
+        Assert.True(compatibleScope.Matches("en", "he", 7));
     }
 
     /// <summary>
@@ -111,9 +126,10 @@ public class TranslationReuseScopeTests
     {
         var resolved = RuntimeLanguageHelper.TryResolveSourceLanguage(
             (ClientLanguage)99,
-            out _);
+            out var sourceLanguage);
 
         Assert.False(resolved);
+        Assert.Equal(default, sourceLanguage);
     }
 
     /// <summary>

@@ -967,6 +967,7 @@ public partial class Echoglossian
       var matchingRows = context.TalkMessage.Where(t =>
           t.SenderName == talkMessage.SenderName &&
           t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
+          t.OriginalTalkMessageLang == talkMessage.OriginalTalkMessageLang &&
           t.TranslationLang == talkMessage.TranslationLang &&
           t.TranslationEngine == talkMessage.TranslationEngine);
       var matchingRow = OrderTalkMessageLookupQuery(matchingRows).FirstOrDefault();
@@ -1076,6 +1077,8 @@ public partial class Echoglossian
           t.SenderName == battleTalkMessage.SenderName &&
           t.OriginalBattleTalkMessage ==
           battleTalkMessage.OriginalBattleTalkMessage &&
+          t.OriginalBattleTalkMessageLang ==
+          battleTalkMessage.OriginalBattleTalkMessageLang &&
           t.TranslationLang == battleTalkMessage.TranslationLang &&
           t.TranslationEngine == battleTalkMessage.TranslationEngine);
       var matchingRow = OrderBattleTalkMessageLookupQuery(matchingRows)
@@ -1315,6 +1318,9 @@ public partial class Echoglossian
 
         isInThere = this.ErrorToastsCache.Exists(t =>
             toastMessage.ToastType == t.ToastType &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                toastMessage.OriginalLang,
+                t.OriginalLang) &&
             toastMessage.TranslationLang == t.TranslationLang &&
             toastMessage.OriginalToastMessage ==
             t.OriginalToastMessage && toastMessage.TranslationEngine ==
@@ -1368,6 +1374,9 @@ public partial class Echoglossian
 
         isInThere = this.OtherToastsCache.Exists(t =>
             toastMessage.ToastType == t.ToastType &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                toastMessage.OriginalLang,
+                t.OriginalLang) &&
             toastMessage.TranslationLang == t.TranslationLang &&
             toastMessage.OriginalToastMessage ==
             t.OriginalToastMessage && toastMessage.TranslationEngine ==
@@ -1512,6 +1521,7 @@ public partial class Echoglossian
     {
       var questIdMatch = context.QuestPlate.FirstOrDefault(t =>
           t.QuestId == questPlate.QuestId &&
+          t.OriginalLang == questPlate.OriginalLang &&
           t.TranslationLang == questPlate.TranslationLang &&
           (!this.configuration.TranslateAlreadyTranslatedTexts ||
            t.TranslationEngine == questPlate.TranslationEngine) &&
@@ -1531,6 +1541,7 @@ public partial class Echoglossian
       var questMessageMatch = context.QuestPlate.FirstOrDefault(t =>
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
+          t.OriginalLang == questPlate.OriginalLang &&
           t.TranslationLang == questPlate.TranslationLang &&
           (!this.configuration.TranslateAlreadyTranslatedTexts ||
            t.TranslationEngine == questPlate.TranslationEngine) &&
@@ -1545,6 +1556,7 @@ public partial class Echoglossian
 
     var questNameMatch = context.QuestPlate.FirstOrDefault(t =>
         t.QuestName == questPlate.QuestName &&
+        t.OriginalLang == questPlate.OriginalLang &&
         t.TranslationLang == questPlate.TranslationLang &&
         (!this.configuration.TranslateAlreadyTranslatedTexts ||
          t.TranslationEngine == questPlate.TranslationEngine) &&
@@ -1699,6 +1711,9 @@ public partial class Echoglossian
   {
     if (cache.Exists(t =>
             t.ToastType == toastMessage.ToastType &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                t.OriginalLang,
+                toastMessage.OriginalLang) &&
             t.TranslationLang == toastMessage.TranslationLang &&
             t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
             t.TranslationEngine == toastMessage.TranslationEngine))
