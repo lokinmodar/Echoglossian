@@ -87,3 +87,56 @@ behavior should still be smoke-tested in game by switching between distinct
 client source languages during action/reference/accepted-quest prefetch,
 including raw sources 4 and 5. Unrelated shared-worktree modifications were
 excluded from this task's staged scope and commit.
+
+## Review Findings Follow-up
+
+The P1 async gap was confirmed in `TranslationService`: every string-based
+`TranslateAsync` overload reached the terminal path with no captured source
+contract. Captured-source overloads now share one async core across default,
+surface, dialogue-context, and combined routing. A delayed `chs` operation
+continues to send provider code `zh-CN` while failure lookup and persistence
+retain `chs`, even after the live resolver changes to `cht`. Unknown,
+inconsistent, or source/scope-mismatched captured contracts fail before
+resolver, broker, failure-cache, provider, or persistence activity.
+
+The P2 reflection and signature-only tests were replaced with production-path
+dispatch tests. ActionDetail, ReferenceText, and AcceptedQuest now call a
+narrow shared orchestrator that performs the production scoped-key lookup,
+shared broker queue, cache-hit completion, and immutable-scope callback. Tests
+schedule otherwise-identical `chs` and `cht` payloads, mutate live
+source/target/engine policy before completion, and assert both queued and cached
+callbacks persist their captured scopes. Invalid source entry is asserted not
+to reach broker lookup or queueing.
+
+RED command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter "FullyQualifiedName~PrefetchBrokerSourceScopeTests|FullyQualifiedName~TranslationServiceTests.TranslateAsync_CapturedChsAfterResolverChangesToCht_PreservesSourceScope|FullyQualifiedName~TranslationServiceTests.TranslateAsync_UnknownOrMismatchedCapturedSource_PerformsNoWork"
+```
+
+RED result: test compilation failed on the intentionally missing production
+prefetch dispatch delegates/result type and family dispatch methods. No
+production file had been edited at that point.
+
+Focused GREEN result for the same command: 6 passed, 0 failed.
+
+Broader affected command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~TranslationServiceTests|FullyQualifiedName~PrefetchBrokerSourceScopeTests|FullyQualifiedName~QueuedTranslationBrokerTests|FullyQualifiedName~TranslationFailureCacheManagerTests"
+```
+
+Broader affected result: 29 passed, 0 failed.
+
+Fresh validation after the review fixes:
+
+```powershell
+dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+git diff --check
+```
+
+- Build: passed with 0 errors; the existing Multilingual App Toolkit and
+  SQLitePCLRaw 2.1.11 `NU1903` warnings remain.
+- Full suite: 523 passed, 0 failed, 0 skipped.
+- Diff check: passed.

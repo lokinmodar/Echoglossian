@@ -264,33 +264,23 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var translationKey = BuildReferenceTextScopedTranslationKey(
-            $"{registration.Key}|{originalPayload.ReferenceId}|Name|{originalPayload.Name}",
-            scope);
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedName))
-        {
-            this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                scope,
-                translatedName: cachedTranslatedName);
-            return;
-        }
-
         var translationService = TranslationService;
-        this.QueueTranslation(
-            translationKey,
+        DispatchReferenceTextPrefetchTranslation(
+            $"{registration.Key}|{originalPayload.ReferenceId}|Name|{originalPayload.Name}",
+            sourceLanguage,
+            scope,
+            this.TryGetQueuedTranslation,
+            this.QueueTranslation,
             () => translationService.Translate(
                 originalPayload.Name,
                 sourceLanguage,
                 scope.TargetLanguageCode),
-            translatedName => this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                scope,
-                translatedName: translatedName));
+            (translatedName, capturedScope, _) =>
+                this.ApplyReferenceTextTranslation(
+                    registration,
+                    originalPayload.ReferenceId,
+                    capturedScope,
+                    translatedName: translatedName));
     }
 
     /// <summary>
@@ -315,33 +305,23 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var translationKey = BuildReferenceTextScopedTranslationKey(
-            $"{registration.Key}|{originalPayload.ReferenceId}|Description|{originalPayload.Description}",
-            scope);
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedDescription))
-        {
-            this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                scope,
-                translatedDescription: cachedTranslatedDescription);
-            return;
-        }
-
         var translationService = TranslationService;
-        this.QueueTranslation(
-            translationKey,
+        DispatchReferenceTextPrefetchTranslation(
+            $"{registration.Key}|{originalPayload.ReferenceId}|Description|{originalPayload.Description}",
+            sourceLanguage,
+            scope,
+            this.TryGetQueuedTranslation,
+            this.QueueTranslation,
             () => translationService.Translate(
                 originalPayload.Description,
                 sourceLanguage,
                 scope.TargetLanguageCode),
-            translatedDescription => this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                scope,
-                translatedDescription: translatedDescription));
+            (translatedDescription, capturedScope, _) =>
+                this.ApplyReferenceTextTranslation(
+                    registration,
+                    originalPayload.ReferenceId,
+                    capturedScope,
+                    translatedDescription: translatedDescription));
     }
 
     /// <summary>
@@ -414,6 +394,38 @@ public unsafe partial class Echoglossian
         TranslationReuseScope scope)
     {
         return BuildTranslationReuseScopedKey(payloadIdentity, scope);
+    }
+
+    /// <summary>
+    ///     Dispatches reference-text work through the production scoped
+    ///     prefetch orchestrator.
+    /// </summary>
+    /// <param name="payloadIdentity">The reference payload identity.</param>
+    /// <param name="sourceLanguage">The operation-captured source contract.</param>
+    /// <param name="scope">The operation-captured reuse scope.</param>
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    /// <param name="queueTranslation">The shared broker queue operation.</param>
+    /// <param name="resolver">The translation resolver.</param>
+    /// <param name="onCompleted">The persistence callback.</param>
+    /// <returns>The production dispatch result.</returns>
+    internal static PrefetchTranslationDispatchResult
+        DispatchReferenceTextPrefetchTranslation(
+            string payloadIdentity,
+            SourceClientLanguage sourceLanguage,
+            TranslationReuseScope scope,
+            TryGetPrefetchTranslationDelegate tryGetTranslation,
+            QueuePrefetchTranslationDelegate queueTranslation,
+            Func<string> resolver,
+            Action<string, TranslationReuseScope, bool> onCompleted)
+    {
+        return DispatchScopedPrefetchTranslation(
+            BuildReferenceTextScopedTranslationKey(payloadIdentity, scope),
+            sourceLanguage,
+            scope,
+            tryGetTranslation,
+            queueTranslation,
+            resolver,
+            onCompleted);
     }
 
     /// <summary>

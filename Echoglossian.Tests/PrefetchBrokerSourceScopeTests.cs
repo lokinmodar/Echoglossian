@@ -3,10 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
-
-using Echoglossian.EFCoreSqlite.Models.Journal;
 using Echoglossian.NativeUI.Helpers;
 
 using Xunit;
@@ -16,195 +12,295 @@ using PluginEntry = Echoglossian.Echoglossian;
 namespace Echoglossian.Tests;
 
 /// <summary>
-///     Covers operation-scoped broker identity and callback persistence in
-///     canonical prefetch runtimes.
+///     Covers production prefetch dispatch through shared broker completion and
+///     cache-hit paths.
 /// </summary>
 public class PrefetchBrokerSourceScopeTests
 {
     /// <summary>
-    ///     Ensures otherwise-identical action, reference, and accepted-quest
-    ///     work cannot share broker results across source scopes.
+    ///     Ensures action, reference, and accepted-quest production dispatch
+    ///     keeps broker and persistence callbacks bound to captured scopes.
     /// </summary>
-    /// <param name="keyBuilderName">The scoped key-builder method to exercise.</param>
+    /// <param name="family">The production prefetch family to exercise.</param>
     /// <returns>A task representing the asynchronous test.</returns>
     [Theory]
-    [InlineData("BuildActionDetailScopedTranslationKey")]
-    [InlineData("BuildReferenceTextScopedTranslationKey")]
-    [InlineData("BuildAcceptedQuestScopedTranslationKey")]
-    public async Task ScopedKey_SourceChanges_QueuesDistinctBrokerWork(
-        string keyBuilderName)
+    [InlineData(PrefetchFamily.ActionDetail)]
+    [InlineData(PrefetchFamily.ReferenceText)]
+    [InlineData(PrefetchFamily.AcceptedQuest)]
+    public async Task DispatchPrefetchTranslation_SourceChangesBeforeCompletion_UsesCapturedScope(
+        PrefetchFamily family)
     {
-        var englishScope = new TranslationReuseScope("en", "pt-BR", 4, true);
-        var germanScope = englishScope with { SourceLanguageCode = "de" };
-        var englishKey = BuildScopedKey(
-            keyBuilderName,
-            "identical-payload",
-            englishScope);
-        var germanKey = BuildScopedKey(
-            keyBuilderName,
-            "identical-payload",
-            germanScope);
-        var completions = new TaskCompletionSource<bool>(
+        var configuration = new Config
+        {
+            ChosenTransEngine = 4,
+            TranslateAlreadyTranslatedTexts = true,
+        };
+        var currentSource = new SourceClientLanguage("chs", "zh-CN");
+        var capturedScope = CreateScope(currentSource, configuration, "pt-BR");
+        var currentScope = capturedScope;
+        var resolverGate = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
+        var completionSource = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var persistedScopes = new List<TranslationReuseScope>();
         var completionCount = 0;
+        var queuedResolverCount = 0;
 
-        using var broker = new QueuedTranslationBroker(
-            TimeSpan.Zero,
-            TimeSpan.FromSeconds(1),
-            TimeSpan.FromSeconds(1),
-            TimeSpan.FromMilliseconds(25),
-            maxRateLimitRetries: 0);
+        using var broker = CreateBroker();
 
-        Assert.True(broker.Queue(
-            englishKey,
-            () => Task.FromResult("english-result"),
-            _ => SignalCompletion()));
-        Assert.True(broker.Queue(
-            germanKey,
-            () => Task.FromResult("german-result"),
-            _ => SignalCompletion()));
+        var firstResult = Dispatch(
+            family,
+            "identical-payload",
+            currentSource,
+            currentScope,
+            broker.TryGetCached,
+            Queue,
+            () =>
+            {
+                return "chs-result";
+            },
+            Persist);
 
-        await completions.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        currentSource = new SourceClientLanguage("cht", "zh-CN");
+        var secondCapturedScope = CreateScope(
+            currentSource,
+            configuration,
+            "pt-BR");
 
-        Assert.NotEqual(englishKey, germanKey);
-        Assert.True(broker.TryGetCached(englishKey, out var englishResult));
-        Assert.True(broker.TryGetCached(germanKey, out var germanResult));
-        Assert.Equal("english-result", englishResult);
-        Assert.Equal("german-result", germanResult);
+        var secondResult = Dispatch(
+            family,
+            "identical-payload",
+            currentSource,
+            secondCapturedScope,
+            broker.TryGetCached,
+            Queue,
+            () => "cht-result",
+            Persist);
+
+        configuration.ChosenTransEngine = 8;
+        configuration.TranslateAlreadyTranslatedTexts = false;
+        currentScope = CreateScope(currentSource, configuration, "he");
+
+        resolverGate.TrySetResult(true);
+        await completionSource.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(PrefetchTranslationDispatchResult.Queued, firstResult);
+        Assert.Equal(PrefetchTranslationDispatchResult.Queued, secondResult);
+        Assert.Equal([capturedScope, secondCapturedScope], persistedScopes);
+        Assert.DoesNotContain(currentScope, persistedScopes);
+
+        var unexpectedResolverCalls = 0;
+        TranslationReuseScope? cacheHitScope = null;
+        bool? cacheHitFlag = null;
+        var cacheResult = Dispatch(
+            family,
+            "identical-payload",
+            new SourceClientLanguage("chs", "zh-CN"),
+            capturedScope,
+            broker.TryGetCached,
+            Queue,
+            () =>
+            {
+                unexpectedResolverCalls++;
+                return "unexpected";
+            },
+            (translatedText, scope, fromCache) =>
+            {
+                Assert.Equal("chs-result", translatedText);
+                cacheHitScope = scope;
+                cacheHitFlag = fromCache;
+            });
+
+        Assert.Equal(PrefetchTranslationDispatchResult.Cached, cacheResult);
+        Assert.Equal(capturedScope, cacheHitScope);
+        Assert.True(cacheHitFlag);
+        Assert.Equal(0, unexpectedResolverCalls);
         return;
 
-        void SignalCompletion()
+        bool Queue(
+            string key,
+            Func<string> resolver,
+            Action<string>? onResolved)
         {
+            var queuePosition = Interlocked.Increment(ref queuedResolverCount);
+            Func<Task<string>> queuedResolver = queuePosition == 1
+                ? async () =>
+                {
+                    await resolverGate.Task.ConfigureAwait(false);
+                    return resolver();
+                }
+                : () => Task.FromResult(resolver());
+            return broker.Queue(key, queuedResolver, onResolved);
+        }
+
+        void Persist(
+            string translatedText,
+            TranslationReuseScope scope,
+            bool fromCache)
+        {
+            Assert.False(fromCache);
+            persistedScopes.Add(scope);
             if (Interlocked.Increment(ref completionCount) == 2)
             {
-                completions.TrySetResult(true);
+                completionSource.TrySetResult(true);
             }
         }
     }
 
     /// <summary>
-    ///     Ensures every field in the immutable reuse scope participates in
-    ///     broker identity for each prefetch family.
-    /// </summary>
-    /// <param name="keyBuilderName">The scoped key-builder method to exercise.</param>
-    [Theory]
-    [InlineData("BuildActionDetailScopedTranslationKey")]
-    [InlineData("BuildReferenceTextScopedTranslationKey")]
-    [InlineData("BuildAcceptedQuestScopedTranslationKey")]
-    public void ScopedKey_EachScopeFieldChanges_ProducesDistinctIdentity(
-        string keyBuilderName)
-    {
-        var baseline = new TranslationReuseScope("en", "pt-BR", 4, true);
-        var scopes = new[]
-        {
-            baseline,
-            baseline with { SourceLanguageCode = "de" },
-            baseline with { TargetLanguageCode = "de" },
-            baseline with { TranslationEngine = 5 },
-            baseline with { RequireMatchingEngine = false },
-        };
-
-        var keys = scopes
-            .Select(scope => BuildScopedKey(
-                keyBuilderName,
-                "identical-payload",
-                scope))
-            .ToHashSet(StringComparer.Ordinal);
-
-        Assert.Equal(scopes.Length, keys.Count);
-    }
-
-    /// <summary>
-    ///     Ensures every delayed persistence callback receives the immutable
-    ///     operation scope instead of rebuilding identity from live state.
+    ///     Ensures unknown and internally mismatched source contracts are
+    ///     rejected before any production prefetch family reaches the broker.
     /// </summary>
     [Fact]
-    public void CallbackPersistenceMethods_CarryCapturedReuseScope()
+    public void DispatchPrefetchTranslation_UnknownOrMismatchedSource_DoesNotReachBroker()
     {
-        var callbackMethodNames = new[]
+        var families = Enum.GetValues<PrefetchFamily>();
+        var invalidRequests = new[]
         {
-            "ApplyActionDetailTranslation",
-            "ApplyReferenceTextTranslation",
-            "ApplyAcceptedQuestNameTranslation",
-            "ApplyAcceptedQuestMessageTranslation",
-            "ApplyAcceptedQuestSummaryTranslation",
-            "ApplyAcceptedQuestObjectiveTranslation",
-            "ApplyAcceptedQuestSystemTranslation",
+            (Source: default(SourceClientLanguage), Scope: default(TranslationReuseScope)),
+            (
+                Source: new SourceClientLanguage("unknown", "unknown"),
+                Scope: new TranslationReuseScope("unknown", "pt-BR", 4, true)),
+            (
+                Source: new SourceClientLanguage("chs", "zh-TW"),
+                Scope: new TranslationReuseScope("chs", "pt-BR", 4, true)),
+            (
+                Source: new SourceClientLanguage("chs", "zh-CN"),
+                Scope: new TranslationReuseScope("cht", "pt-BR", 4, true)),
         };
-        var methods = typeof(PluginEntry).GetMethods(
-            BindingFlags.Instance | BindingFlags.NonPublic);
+        var brokerLookupCalls = 0;
+        var brokerQueueCalls = 0;
+        var resolverCalls = 0;
+        var callbackCalls = 0;
 
-        foreach (var callbackMethodName in callbackMethodNames)
+        foreach (var family in families)
         {
-            var callback = Assert.Single(
-                methods,
-                method => method.Name == callbackMethodName);
-            Assert.Contains(
-                callback.GetParameters(),
-                parameter => parameter.ParameterType ==
-                             typeof(TranslationReuseScope));
+            foreach (var request in invalidRequests)
+            {
+                var result = Dispatch(
+                    family,
+                    "unknown-payload",
+                    request.Source,
+                    request.Scope,
+                    TryGet,
+                    Queue,
+                    () =>
+                    {
+                        resolverCalls++;
+                        return "unexpected";
+                    },
+                    (_, _, _) => callbackCalls++);
+
+                Assert.Equal(PrefetchTranslationDispatchResult.Rejected, result);
+            }
+        }
+
+        Assert.Equal(0, brokerLookupCalls);
+        Assert.Equal(0, brokerQueueCalls);
+        Assert.Equal(0, resolverCalls);
+        Assert.Equal(0, callbackCalls);
+        return;
+
+        bool TryGet(string key, out string translatedText)
+        {
+            brokerLookupCalls++;
+            translatedText = string.Empty;
+            return false;
+        }
+
+        bool Queue(
+            string key,
+            Func<string> resolver,
+            Action<string>? onResolved)
+        {
+            brokerQueueCalls++;
+            return false;
         }
     }
 
-    /// <summary>
-    ///     Ensures accepted-quest row creation persists the operation-captured
-    ///     source, target, and engine without consulting later live config.
-    /// </summary>
-    [Fact]
-    public void CreateAcceptedQuestPrefetchPlate_UsesCapturedScope()
+    private static QueuedTranslationBroker CreateBroker()
     {
-        var method = typeof(PluginEntry).GetMethod(
-            "CreateAcceptedQuestPrefetchPlate",
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            [typeof(QuestCanonicalData), typeof(TranslationReuseScope)],
-            modifiers: null);
-        Assert.NotNull(method);
+        return new QueuedTranslationBroker(
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromMilliseconds(25),
+            maxRateLimitRetries: 0);
+    }
 
-        var snapshot = new QuestProgressSnapshot(
-            1,
-            0,
-            "A Scoped Quest",
-            "Quest/000/Test",
-            [],
-            [],
-            [],
-            "hash");
-        var canonicalData = QuestCanonicalData.Create(snapshot, "test-version");
-        var capturedScope = new TranslationReuseScope(
-            "chs",
-            "he",
-            8,
-            true);
-        var runtime = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
-            typeof(PluginEntry));
+    private static TranslationReuseScope CreateScope(
+        SourceClientLanguage sourceLanguage,
+        Config configuration,
+        string targetLanguage)
+    {
+        return new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            configuration.ChosenTransEngine,
+            configuration.TranslateAlreadyTranslatedTexts);
+    }
 
-        var result = method!.Invoke(runtime, [canonicalData, capturedScope]);
-        var questPlate = Assert.IsType<QuestPlate>(result);
-
-        Assert.Equal("chs", questPlate.OriginalLang);
-        Assert.Equal("he", questPlate.TranslationLang);
-        Assert.Equal(8, questPlate.TranslationEngine);
+    private static PrefetchTranslationDispatchResult Dispatch(
+        PrefetchFamily family,
+        string payloadIdentity,
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
+        TryGetPrefetchTranslationDelegate tryGetTranslation,
+        QueuePrefetchTranslationDelegate queueTranslation,
+        Func<string> resolver,
+        Action<string, TranslationReuseScope, bool> onCompleted)
+    {
+        return family switch
+        {
+            PrefetchFamily.ActionDetail =>
+                PluginEntry.DispatchActionDetailPrefetchTranslation(
+                    payloadIdentity,
+                    sourceLanguage,
+                    scope,
+                    tryGetTranslation,
+                    queueTranslation,
+                    resolver,
+                    onCompleted),
+            PrefetchFamily.ReferenceText =>
+                PluginEntry.DispatchReferenceTextPrefetchTranslation(
+                    payloadIdentity,
+                    sourceLanguage,
+                    scope,
+                    tryGetTranslation,
+                    queueTranslation,
+                    resolver,
+                    onCompleted),
+            PrefetchFamily.AcceptedQuest =>
+                PluginEntry.DispatchAcceptedQuestPrefetchTranslation(
+                    payloadIdentity,
+                    sourceLanguage,
+                    scope,
+                    tryGetTranslation,
+                    queueTranslation,
+                    resolver,
+                    onCompleted),
+            _ => throw new ArgumentOutOfRangeException(nameof(family), family, null),
+        };
     }
 
     /// <summary>
-    ///     Invokes one production scoped-key builder.
+    ///     Identifies one production prefetch family under test.
     /// </summary>
-    /// <param name="methodName">The key-builder method name.</param>
-    /// <param name="payloadIdentity">The existing payload identity.</param>
-    /// <param name="scope">The immutable operation scope.</param>
-    /// <returns>The scoped broker key.</returns>
-    private static string BuildScopedKey(
-        string methodName,
-        string payloadIdentity,
-        TranslationReuseScope scope)
+    public enum PrefetchFamily
     {
-        var method = typeof(PluginEntry).GetMethod(
-            methodName,
-            BindingFlags.Static | BindingFlags.NonPublic);
-        Assert.NotNull(method);
+        /// <summary>
+        ///     Action-detail prefetch.
+        /// </summary>
+        ActionDetail,
 
-        return Assert.IsType<string>(
-            method!.Invoke(null, [payloadIdentity, scope]));
+        /// <summary>
+        ///     Sheet-backed reference-text prefetch.
+        /// </summary>
+        ReferenceText,
+
+        /// <summary>
+        ///     Accepted-quest prefetch.
+        /// </summary>
+        AcceptedQuest,
     }
 }
