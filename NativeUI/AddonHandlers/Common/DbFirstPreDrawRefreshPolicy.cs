@@ -34,6 +34,9 @@ internal static class DbFirstPreDrawRefreshPolicy
     /// <param name="hasLastResolvedState">
     /// Whether one prior resolved payload pair exists for tooltip refresh.
     /// </param>
+    /// <param name="hasVisibleAddon">
+    /// Whether the addon that owns the current hover targets is still visible.
+    /// </param>
     /// <returns>
     /// <see langword="true"/> when the handler may short-circuit the current
     /// pre-draw pass; otherwise, <see langword="false"/>.
@@ -44,11 +47,13 @@ internal static class DbFirstPreDrawRefreshPolicy
         bool refreshRequested,
         bool hasRuntimeState,
         bool usesHoverTooltips,
-        bool hasLastResolvedState)
+        bool hasLastResolvedState,
+        bool hasVisibleAddon = true)
     {
         if (!sameDisplayMode ||
             shouldContinueAppliedStateRefresh ||
-            refreshRequested)
+            refreshRequested ||
+            (usesHoverTooltips && !hasVisibleAddon))
         {
             return false;
         }

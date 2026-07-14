@@ -840,7 +840,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 refreshRequested: refreshRequested,
                 hasRuntimeState: this.runtimeState != null,
                 usesHoverTooltips: usesHoverTooltips,
-                hasLastResolvedState: this.lastResolvedState != null))
+                hasLastResolvedState: this.lastResolvedState != null,
+                hasVisibleAddon: !usesHoverTooltips ||
+                    this.TryGetVisibleAddon(out _)))
         {
             if (this.runtimeState != null)
             {
@@ -954,6 +956,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         if (!this.TryGetVisibleAddon(out var addon))
         {
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             return;
         }
 

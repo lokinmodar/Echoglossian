@@ -27,7 +27,8 @@ public class DbFirstPreDrawRefreshPolicyTests
             refreshRequested: true,
             hasRuntimeState: true,
             usesHoverTooltips: false,
-            hasLastResolvedState: true);
+            hasLastResolvedState: true,
+            hasVisibleAddon: true);
 
         Assert.False(shouldShortCircuit);
     }
@@ -45,8 +46,28 @@ public class DbFirstPreDrawRefreshPolicyTests
             refreshRequested: false,
             hasRuntimeState: true,
             usesHoverTooltips: false,
-            hasLastResolvedState: true);
+            hasLastResolvedState: true,
+            hasVisibleAddon: true);
 
         Assert.True(shouldShortCircuit);
+    }
+
+    /// <summary>
+    /// Ensures a hidden addon cannot retain hover targets solely because its
+    /// previous payload is still resolved in memory.
+    /// </summary>
+    [Fact]
+    public void ShouldShortCircuit_HiddenHoverAddon_ReturnsFalse()
+    {
+        var shouldShortCircuit = DbFirstPreDrawRefreshPolicy.ShouldShortCircuit(
+            sameDisplayMode: true,
+            shouldContinueAppliedStateRefresh: false,
+            refreshRequested: false,
+            hasRuntimeState: true,
+            usesHoverTooltips: true,
+            hasLastResolvedState: true,
+            hasVisibleAddon: false);
+
+        Assert.False(shouldShortCircuit);
     }
 }
