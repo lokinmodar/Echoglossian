@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.LanguagesHandling;
+using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.AddonHandlers.Talk;
 using Echoglossian.Translators;
@@ -36,6 +37,12 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             [81] = new LanguageInfo(
                 "pt-BR",
                 "Brazilian Portuguese",
+                string.Empty,
+                string.Empty,
+                []),
+            [82] = new LanguageInfo(
+                "ja",
+                "Japanese",
                 string.Empty,
                 string.Empty,
                 []),
@@ -163,6 +170,71 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
+    ///     Ensures a Talk completion captured under one target and policy does
+    ///     not persist or publish after the same source rebuilds under another
+    ///     full operation scope.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TalkHandler_TargetAndPolicyChange_RejectsInFlightCompletion()
+    {
+        var translator = new ControlledTranslator();
+        var configuration = new Config
+        {
+            TranslateTalk = true,
+            TalkTranslationDisplayMode =
+                JournalTranslationDisplayMode.TooltipTranslation,
+            Lang = 81,
+            ChosenTransEngine = 0,
+            TranslateAlreadyTranslatedTexts = false,
+        };
+        TalkMessage? persistedMessage = null;
+        var overlayUpdates = 0;
+        var handler = CreateTalkHandler(
+            CreateTranslationService(translator),
+            () => overlayUpdates++,
+            static () => { },
+            configuration,
+            message =>
+            {
+                persistedMessage = message;
+                return Task.FromResult(string.Empty);
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Understood.",
+            english,
+            out var requestId,
+            out var sourceOperation));
+        var resolution = handler.ResolveTranslationAsync(
+            "Alphinaud",
+            "Understood.",
+            requestId,
+            english,
+            sourceOperation);
+        await translator.WaitForRequestAsync();
+
+        configuration.Lang = 82;
+        configuration.ChosenTransEngine = 8;
+        configuration.TranslateAlreadyTranslatedTexts = true;
+        handler.InvalidateStateForSource(english);
+        translator.Complete("Entendido.");
+        await resolution;
+
+        Assert.Null(persistedMessage);
+        Assert.Equal(0, overlayUpdates);
+        Assert.False(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out _,
+            out _,
+            out _));
+    }
+
+    /// <summary>
     ///     Creates a Talk handler with native-free publication delegates.
     /// </summary>
     /// <param name="translationService">The translation service.</param>
@@ -172,18 +244,21 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     private static TalkHandler CreateTalkHandler(
         TranslationService translationService,
         Action? updateOverlay = null,
-        Action? clearOverlay = null)
+        Action? clearOverlay = null,
+        Config? configuration = null,
+        Func<TalkMessage, Task<string>>? insertTalkMessageAsync = null)
     {
         return new TalkHandler(
-            new Config
+            configuration ?? new Config
             {
                 TranslateTalk = true,
                 TalkTranslationDisplayMode =
                     JournalTranslationDisplayMode.TooltipTranslation,
+                Lang = 81,
             },
             translationService,
             static _ => null,
-            static _ => Task.FromResult(string.Empty),
+            insertTalkMessageAsync ?? (static _ => Task.FromResult(string.Empty)),
             (_, _, _) => updateOverlay?.Invoke(),
             clearOverlay ?? (static () => { }),
             static text => text,

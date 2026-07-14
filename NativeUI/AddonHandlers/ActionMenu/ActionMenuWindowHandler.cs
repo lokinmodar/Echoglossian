@@ -46,8 +46,8 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private readonly PayloadStabilityTracker newPayloadStabilityTracker = new(
         minimumObservations: 2,
         minimumStableDuration: TimeSpan.FromMilliseconds(150));
-    private readonly HashSet<string> queuedStablePayloadSignatures = new(
-        StringComparer.Ordinal);
+    private readonly ActionMenuQueuedSignatureTracker
+        queuedStablePayloadSignatures = new();
 
     /// <summary>
 ///     Initializes a new instance of the
@@ -155,70 +155,89 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <inheritdoc />
     private protected override async Task<bool>
         TranslateAndPersistGameWindowPayloadAsync(
+            TranslationReuseScope scope,
+            DbFirstSourceOperation sourceOperation,
             SourceClientLanguage sourceLanguage,
             DbFirstGameWindowPayload originalPayload)
     {
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
-        var translatedPayloadResult = await GenericAddonHandlerHelper
-            .TranslatePayloadAsync(
-                originalPayload.AtkValues,
-                originalPayload.StringArrayValues,
-                originalPayload.TextNodes,
-                originalPayload.AtkValues,
-                originalPayload.StringArrayValues,
-                originalPayload.TextNodes,
-                sourceLanguage,
-                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                    this.config.Lang),
-                this.HandlerTranslationService);
-        if (!translatedPayloadResult.HasValue)
+        var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        try
         {
-            return false;
-        }
+            var translatedPayloadResult = await GenericAddonHandlerHelper
+                .TranslatePayloadAsync(
+                    originalPayload.AtkValues,
+                    originalPayload.StringArrayValues,
+                    originalPayload.TextNodes,
+                    originalPayload.AtkValues,
+                    originalPayload.StringArrayValues,
+                    originalPayload.TextNodes,
+                    sourceLanguage,
+                    scope.TargetLanguageCode,
+                    this.HandlerTranslationService);
+            if (!translatedPayloadResult.HasValue)
+            {
+                this.queuedStablePayloadSignatures.Release(
+                    scope,
+                    stablePayloadSignature);
+                return false;
+            }
 
-        var translatedPayload = this.NormalizeResolvedTranslatedPayload(
-            sourceLanguage,
-            originalPayload,
-            translatedPayloadResult.Value,
-            classJobId,
-            classJobName);
-        if (!this.ShouldAcceptResolvedTranslatedPayload(
+            var translatedPayload = this.NormalizeResolvedTranslatedPayload(
+                sourceLanguage,
                 originalPayload,
-                translatedPayload))
-        {
-            return true;
-        }
+                translatedPayloadResult.Value,
+                classJobId,
+                classJobName,
+                scope);
+            if (!this.ShouldAcceptResolvedTranslatedPayload(
+                    originalPayload,
+                    translatedPayload))
+            {
+                this.queuedStablePayloadSignatures.Release(
+                    scope,
+                    stablePayloadSignature);
+                return false;
+            }
 
-        var stablePayloadSignature = BuildStablePayloadSignature(
-            originalPayload);
-        var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
-            sourceLanguage,
-            originalPayload,
-            classJobId,
-            classJobName);
-        var (candidateCount, stableMatchCount) =
-            this.GetPersistedCandidateDiagnostics(
+            var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
                 sourceLanguage,
-                stablePayloadSignature,
-                classJobId);
-        var sufficientCoverage =
-            !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
-            this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
-        if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
-            !sufficientCoverage ||
-            stableMatchCount > 0 ||
-            unseenCount <= 0)
-        {
-            return true;
-        }
+                originalPayload,
+                classJobId,
+                classJobName,
+                scope);
+            var (candidateCount, stableMatchCount) =
+                this.GetPersistedCandidateDiagnostics(
+                    sourceLanguage,
+                    stablePayloadSignature,
+                    classJobId,
+                    scope);
+            var sufficientCoverage =
+                !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
+                this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
+            if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
+                !sufficientCoverage ||
+                stableMatchCount > 0 ||
+                unseenCount <= 0)
+            {
+                return true;
+            }
 
-        this.PersistResolvedGameWindowPayload(
-            sourceLanguage,
-            originalPayload,
-            translatedPayload,
-            classJobId);
-        return true;
+            return this.PersistResolvedGameWindowPayload(
+                scope,
+                sourceOperation,
+                originalPayload,
+                translatedPayload,
+                classJobId);
+        }
+        catch
+        {
+            this.queuedStablePayloadSignatures.Release(
+                scope,
+                stablePayloadSignature);
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -251,16 +270,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
         uint? classJobId,
-        string? classJobName)
+        string? classJobName,
+        TranslationReuseScope? operationScope = null)
     {
-        var scope = this.CreateTranslationReuseScope(sourceLanguage);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
             sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         return MergeResolvedTranslatedPayload(
             originalPayload,
             translatedPayload,
@@ -284,6 +306,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     {
         base.OnCleanupEvent(evt, args);
         this.newPayloadStabilityTracker.Reset();
+        this.queuedStablePayloadSignatures.Clear();
     }
 
     /// <inheritdoc />
@@ -1305,9 +1328,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return false;
         }
 
-        var queueAdded = this.queuedStablePayloadSignatures.Add(
+        return this.queuedStablePayloadSignatures.TryQueue(
+            this.CreateTranslationReuseScope(sourceLanguage),
             stablePayloadSignature);
-        return queueAdded;
     }
 
     /// <summary>
@@ -1432,16 +1455,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         uint? classJobId,
-        string? classJobName)
+        string? classJobName,
+        TranslationReuseScope? operationScope = null)
     {
-        var scope = this.CreateTranslationReuseScope(sourceLanguage);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
             sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         return CountMeaningfulUnseenTexts(
             originalPayload,
             scope,
@@ -1465,9 +1491,11 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         GetPersistedCandidateDiagnostics(
             SourceClientLanguage sourceLanguage,
             string stablePayloadSignature,
-            uint? classJobId)
+            uint? classJobId,
+            TranslationReuseScope? operationScope = null)
     {
-        var scope = this.CreateTranslationReuseScope(sourceLanguage);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
         var candidateCount = 0;
         var stableMatchCount = 0;
 
@@ -2051,14 +2079,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         out Dictionary<string, string> originalLookup,
         out Dictionary<string, string> translatedLookup,
         uint? classJobId = null,
-        string? classJobName = null)
+        string? classJobName = null,
+        TranslationReuseScope? operationScope = null)
     {
         originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
         translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
         var ambiguousOriginalKeys = new HashSet<string>(StringComparer.Ordinal);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
 
         this.AppendPersistedWindowLookups(
             sourceLanguage,
+            scope,
             MainCommandWindowTitle,
             translatedLookup,
             originalLookup,
@@ -2067,6 +2099,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             expectedClassJobName: null);
         this.AppendPersistedWindowLookups(
             sourceLanguage,
+            scope,
             this.AddonName,
             translatedLookup,
             originalLookup,
@@ -2088,6 +2121,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </param>
     private void AppendPersistedWindowLookups(
         SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
         string windowTitle,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
@@ -2095,7 +2129,6 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         uint? expectedClassJobId,
         string? expectedClassJobName)
     {
-        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      windowTitle,
                      scope,
@@ -2566,5 +2599,65 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             builder.ToString().Split(
                 [' ', '\r', '\n', '\t'],
                 StringSplitOptions.RemoveEmptyEntries));
+    }
+}
+
+/// <summary>
+///     Owns stable ActionMenu payload signatures for exactly one immutable
+///     translation reuse scope at a time.
+/// </summary>
+internal sealed class ActionMenuQueuedSignatureTracker
+{
+    private readonly object gate = new();
+    private readonly HashSet<string> signatures = new(StringComparer.Ordinal);
+    private TranslationReuseScope? activeScope;
+
+    /// <summary>
+    ///     Claims one stable payload signature for a captured operation scope.
+    /// </summary>
+    /// <param name="scope">The immutable scope captured before queueing.</param>
+    /// <param name="signature">The stable ActionMenu payload signature.</param>
+    /// <returns>True when this scope did not already own the signature.</returns>
+    public bool TryQueue(TranslationReuseScope scope, string signature)
+    {
+        lock (this.gate)
+        {
+            if (this.activeScope != scope)
+            {
+                this.activeScope = scope;
+                this.signatures.Clear();
+            }
+
+            return this.signatures.Add(signature);
+        }
+    }
+
+    /// <summary>
+    ///     Releases a failed signature only when it belongs to the active
+    ///     operation scope.
+    /// </summary>
+    /// <param name="scope">The scope that owned the failed request.</param>
+    /// <param name="signature">The failed payload signature.</param>
+    public void Release(TranslationReuseScope scope, string signature)
+    {
+        lock (this.gate)
+        {
+            if (this.activeScope == scope)
+            {
+                this.signatures.Remove(signature);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Clears all signatures during addon cleanup.
+    /// </summary>
+    public void Clear()
+    {
+        lock (this.gate)
+        {
+            this.activeScope = null;
+            this.signatures.Clear();
+        }
     }
 }

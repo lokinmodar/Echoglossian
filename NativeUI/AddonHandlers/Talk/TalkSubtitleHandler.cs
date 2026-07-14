@@ -127,7 +127,10 @@ public sealed class TalkSubtitleHandler :
     }
 
     this.InvalidateStateForSource(sourceLanguage);
-    var sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+    var sourceOperation = this.sourceLifecycle.Capture(
+        this.CreateDialogueReuseScope(sourceLanguage));
+    var operationScope = sourceOperation.Scope ??
+                         this.CreateDialogueReuseScope(sourceLanguage);
 
     string originalText;
     int requestId;
@@ -158,14 +161,14 @@ public sealed class TalkSubtitleHandler :
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code,
+          operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
 
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
               translatedText,
               sourceLanguage.PersistenceCode,
-              LangDict[LanguageInt].Code))
+              operationScope.TargetLanguageCode))
       {
         lock (this.stateGate)
         {
@@ -183,15 +186,27 @@ public sealed class TalkSubtitleHandler :
             VisibleStorySurfaceText.GetNoUsableTranslationMessage(surface));
       }
 
-      var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
+      var dialogueTranslationEngine = operationScope.TranslationEngine
+                                      .GetValueOrDefault();
       var translatedTalkSubtitle = new TalkSubtitleMessage(
           originalText,
           sourceLanguage.PersistenceCode,
           translatedText,
-          LangDict[LanguageInt].Code,
+          operationScope.TargetLanguageCode,
           dialogueTranslationEngine,
           DateTime.Now,
           DateTime.Now);
+      if (!this.sourceLifecycle.IsCurrent(sourceOperation))
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(
+                surface));
+      }
+
       var persistenceResult = await this.insertTalkSubtitleMessageAsync(
           translatedTalkSubtitle).ConfigureAwait(false);
       var persistenceSucceeded = !persistenceResult.StartsWith(
@@ -509,7 +524,9 @@ public sealed class TalkSubtitleHandler :
       SourceClientLanguage? sourceLanguage)
   {
     this.sourceLifecycle.TransitionTo(
-        sourceLanguage,
+        sourceLanguage.HasValue
+            ? this.CreateDialogueReuseScope(sourceLanguage.Value)
+            : null,
         () =>
         {
           var originalText = string.Empty;
@@ -610,13 +627,15 @@ public sealed class TalkSubtitleHandler :
       SourceClientLanguage sourceLanguage,
       SourcePublicationOperation sourceOperation)
   {
+    var operationScope = sourceOperation.Scope ??
+                         this.CreateDialogueReuseScope(sourceLanguage);
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code,
+          operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue) ?? string.Empty;
     }
     catch (Exception ex)
@@ -651,10 +670,15 @@ public sealed class TalkSubtitleHandler :
         originalText,
         sourceLanguage.PersistenceCode,
         translatedText,
-        LangDict[LanguageInt].Code,
-        this.GetDialogueTranslationEngineId(),
+        operationScope.TargetLanguageCode,
+        operationScope.TranslationEngine.GetValueOrDefault(),
         DateTime.Now,
         DateTime.Now);
+
+    if (!this.sourceLifecycle.IsCurrent(sourceOperation))
+    {
+      return;
+    }
 
     await this.insertTalkSubtitleMessageAsync(translatedTalkSubtitle);
 
@@ -684,7 +708,7 @@ public sealed class TalkSubtitleHandler :
               originalText,
               translatedText,
               effectiveTranslationEngineId:
-                  this.GetDialogueTranslationEngineId());
+                  operationScope.TranslationEngine.GetValueOrDefault());
           this.PublishOverlay(originalText, translatedText);
         });
   }
@@ -833,7 +857,8 @@ public sealed class TalkSubtitleHandler :
              this.TextMatches(this.lastFailedOriginalText, originalText)))
         {
           requestId = this.activeRequestId;
-          sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+          sourceOperation = this.sourceLifecycle.Capture(
+              this.CreateDialogueReuseScope(sourceLanguage));
           return false;
         }
       }
@@ -845,7 +870,8 @@ public sealed class TalkSubtitleHandler :
       this.currentReplacementText = string.Empty;
       this.translationInFlight = true;
       requestId = this.activeRequestId;
-      sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+      sourceOperation = this.sourceLifecycle.Capture(
+          this.CreateDialogueReuseScope(sourceLanguage));
       return true;
     }
   }
@@ -952,14 +978,16 @@ public sealed class TalkSubtitleHandler :
   /// </returns>
   private TalkSubtitleMessage BuildLookupMessage(
       string originalText,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope? scope = null)
   {
+    var operationScope = scope ?? this.CreateDialogueReuseScope(sourceLanguage);
     return new TalkSubtitleMessage(
         originalText,
         sourceLanguage.PersistenceCode,
         string.Empty,
-        LangDict[LanguageInt].Code,
-        this.GetDialogueTranslationEngineId(),
+        operationScope.TargetLanguageCode,
+        operationScope.TranslationEngine.GetValueOrDefault(),
         DateTime.Now,
         DateTime.Now);
   }
@@ -973,6 +1001,21 @@ public sealed class TalkSubtitleHandler :
   {
     return this.translationService.GetEffectiveTranslationEngineId(
         TranslationSurfaceGroup.Dialogue);
+  }
+
+  /// <summary>
+  ///     Captures the complete dialogue reuse scope before asynchronous work.
+  /// </summary>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>The immutable dialogue operation scope.</returns>
+  private TranslationReuseScope CreateDialogueReuseScope(
+      SourceClientLanguage sourceLanguage)
+  {
+    return new TranslationReuseScope(
+        sourceLanguage.PersistenceCode,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.config.Lang),
+        this.GetDialogueTranslationEngineId(),
+        this.config.TranslateAlreadyTranslatedTexts);
   }
 
   /// <summary>

@@ -169,7 +169,7 @@ public class NativeRuntimeSourceScopeTests
             new SourceClientLanguage("en", "en"));
         Assert.True(gate.TrySetRetry(operation, nowUtc.AddSeconds(30)));
 
-        gate.TransitionTo(null);
+        gate.TransitionTo((SourceClientLanguage?)null);
 
         Assert.False(gate.HasKnownSource);
         Assert.False(gate.IsCoolingDown(operation, nowUtc));
@@ -195,6 +195,22 @@ public class NativeRuntimeSourceScopeTests
 
         Assert.False(accepted);
         Assert.False(refreshRequested);
+    }
+
+    /// <summary>
+    ///     Ensures a refresh that observes the same complete scope keeps the
+    ///     in-flight operation valid instead of retiring it between frames.
+    /// </summary>
+    [Fact]
+    public void RetryGate_SameFullScope_PreservesOperation()
+    {
+        var gate = new DbFirstSourceRetryGate();
+        var scope = new TranslationReuseScope("en", "pt-BR", 0, false);
+        var originalOperation = gate.TransitionTo(scope);
+        var observedOperation = gate.TransitionTo(scope);
+
+        Assert.Equal(originalOperation, observedOperation);
+        Assert.True(gate.TryRunIfCurrent(observedOperation, static () => { }));
     }
 
     /// <summary>
@@ -334,6 +350,34 @@ public class NativeRuntimeSourceScopeTests
     }
 
     /// <summary>
+    ///     Ensures a DB-first translation that began under one configured
+    ///     target and engine persists those captured values after configuration
+    ///     changes while translation is in flight.
+    /// </summary>
+    [Fact]
+    public void GameWindowOperation_CapturedScope_CreatesPersistedRowWithoutRuntimeConfig()
+    {
+        var originalPayload = CreateStableActionMenuPayload();
+        var capturedScope = new TranslationReuseScope(
+            "en",
+            "pt-BR",
+            0,
+            false);
+
+        var persisted = DbFirstGameWindowAddonHandler.CreatePersistedGameWindow(
+            "ActionMenu",
+            capturedScope,
+            originalPayload,
+            originalPayload,
+            "test-version",
+            classJobId: null);
+
+        Assert.Equal("en", persisted.OriginalWindowStringsLang);
+        Assert.Equal("pt-BR", persisted.TranslationLang);
+        Assert.Equal(0, persisted.TranslationEngine);
+    }
+
+    /// <summary>
     ///     Creates a minimal DB-first payload for native-free runtime tests.
     /// </summary>
     /// <param name="text">The payload text.</param>
@@ -344,6 +388,27 @@ public class NativeRuntimeSourceScopeTests
             new SortedDictionary<int, string>
             {
                 [0] = text,
+            },
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    ///     Creates a stable ActionMenu payload that satisfies the production
+    ///     persistence gate after translation completes.
+    /// </summary>
+    /// <returns>The stable test payload.</returns>
+    private static DbFirstGameWindowPayload CreateStableActionMenuPayload()
+    {
+        return new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>
+            {
+                [12] = "Dancer",
+                [17] = "Support Desk",
+                [25] = "Official Sites",
+                [33] = "Playguide",
+                [41] = "Character Configuration",
+                [49] = "System Configuration",
             },
             new SortedDictionary<int, string>(),
             new SortedDictionary<string, string>(StringComparer.Ordinal));

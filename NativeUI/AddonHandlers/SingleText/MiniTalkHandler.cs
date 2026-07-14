@@ -622,7 +622,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       SourceClientLanguage? sourceLanguage)
   {
     this.sourceLifecycle.TransitionTo(
-        sourceLanguage,
+        sourceLanguage.HasValue
+            ? this.CreateDialogueReuseScope(sourceLanguage.Value)
+            : null,
         () =>
         {
           List<KeyValuePair<nint, BubbleState>> bubbleStates;
@@ -660,13 +662,15 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       SourceClientLanguage sourceLanguage,
       SourcePublicationOperation sourceOperation)
   {
+    var operationScope = sourceOperation.Scope ??
+                         this.CreateDialogueReuseScope(sourceLanguage);
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code,
+          operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue) ?? string.Empty;
     }
     catch (Exception ex)
@@ -708,10 +712,15 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         originalText,
         sourceLanguage.PersistenceCode,
         translatedText,
-        LangDict[LanguageInt].Code,
-        this.GetDialogueTranslationEngineId(),
+        operationScope.TargetLanguageCode,
+        operationScope.TranslationEngine.GetValueOrDefault(),
         DateTime.Now,
         DateTime.Now);
+
+    if (!this.sourceLifecycle.IsCurrent(sourceOperation))
+    {
+      return;
+    }
 
     await this.insertMiniTalkMessageAsync(translatedMiniTalk);
 
@@ -926,7 +935,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
              this.TextMatches(state.LastFailedOriginalText, originalText)))
         {
           requestId = state.ActiveRequestId;
-          sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+          sourceOperation = this.sourceLifecycle.Capture(
+              this.CreateDialogueReuseScope(sourceLanguage));
           return false;
         }
       }
@@ -938,7 +948,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       state.CurrentReplacementText = string.Empty;
       state.TranslationInFlight = true;
       requestId = state.ActiveRequestId;
-      sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+      sourceOperation = this.sourceLifecycle.Capture(
+          this.CreateDialogueReuseScope(sourceLanguage));
       return true;
     }
   }
@@ -1061,14 +1072,16 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// <returns>A formatted <see cref="MiniTalkMessage" /> suitable for DB lookup.</returns>
   private MiniTalkMessage BuildLookupMessage(
       string originalText,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope? scope = null)
   {
+    var operationScope = scope ?? this.CreateDialogueReuseScope(sourceLanguage);
     return new MiniTalkMessage(
         originalText,
         sourceLanguage.PersistenceCode,
         string.Empty,
-        LangDict[LanguageInt].Code,
-        this.GetDialogueTranslationEngineId(),
+        operationScope.TargetLanguageCode,
+        operationScope.TranslationEngine.GetValueOrDefault(),
         DateTime.Now,
         DateTime.Now);
   }
@@ -1082,6 +1095,21 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   {
     return this.translationService.GetEffectiveTranslationEngineId(
         TranslationSurfaceGroup.Dialogue);
+  }
+
+  /// <summary>
+  ///     Captures the complete dialogue reuse scope before asynchronous work.
+  /// </summary>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>The immutable dialogue operation scope.</returns>
+  private TranslationReuseScope CreateDialogueReuseScope(
+      SourceClientLanguage sourceLanguage)
+  {
+    return new TranslationReuseScope(
+        sourceLanguage.PersistenceCode,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.config.Lang),
+        this.GetDialogueTranslationEngineId(),
+        this.config.TranslateAlreadyTranslatedTexts);
   }
 
   /// <summary>

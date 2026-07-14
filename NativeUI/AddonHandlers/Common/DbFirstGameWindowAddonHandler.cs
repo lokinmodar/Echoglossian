@@ -766,7 +766,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         var operationSourceLanguage = sourceLanguage.GetValueOrDefault();
         var sourceOperation = this.retryGate.TransitionTo(
-            operationSourceLanguage);
+            this.CreateReuseScope(operationSourceLanguage));
         var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
             this.displayModeSelector(this.config),
             this.config.OverlayOnlyLanguage);
@@ -950,9 +950,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         var operationSourceLanguage = sourceLanguage.Value;
-        var sourceOperation = this.retryGate.TransitionTo(
-            operationSourceLanguage);
         var operationScope = this.CreateReuseScope(operationSourceLanguage);
+        var sourceOperation = this.retryGate.TransitionTo(operationScope);
 
         if (!this.TryGetVisibleAddon(out var addon))
         {
@@ -1006,6 +1005,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             DbFirstStructuredStringArrayProjection projection = default!;
             var exactStructuredMatch = this.TryFindStructuredPayload(
                 operationSourceLanguage,
+                operationScope,
                 originalStructuredPayload,
                 out var translatedStructuredPayload);
             var exactProjectionMatch = exactStructuredMatch &&
@@ -1065,6 +1065,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 this.QueueTranslationIfNeeded(
                     operationSourceLanguage,
+                    operationScope,
                     originalPayload,
                     structuredPayloadKey,
                     sourceOperation,
@@ -1184,9 +1185,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         supplementalTranslatedPayload))
                 {
                     this.PersistResolvedGameWindowPayload(
-                        operationSourceLanguage,
+                        operationScope,
                         originalPayload,
-                        supplementalTranslatedPayload);
+                        supplementalTranslatedPayload,
+                        this.GetPersistedGameWindowClassJobId(
+                            originalPayload,
+                            supplementalTranslatedPayload));
                 }
 
                 this.ApplyPayload(
@@ -1226,6 +1230,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
             this.QueueTranslationIfNeeded(
                 operationSourceLanguage,
+                operationScope,
                 originalPayload,
                 payloadKey,
                 sourceOperation);
@@ -1311,7 +1316,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private void InvalidateResolvedStateForSource(
         SourceClientLanguage? sourceLanguage)
     {
-        if (this.retryGate.ShouldInvalidateFor(sourceLanguage) ||
+        var scope = sourceLanguage.HasValue
+            ? this.CreateReuseScope(sourceLanguage.Value)
+            : (TranslationReuseScope?)null;
+        if (this.retryGate.ShouldInvalidateFor(scope) ||
             (this.runtimeState != null &&
              this.runtimeState.ShouldInvalidateFor(sourceLanguage)) ||
             (this.lastResolvedState != null &&
@@ -1320,7 +1328,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.ClearResolvedState();
         }
 
-        this.retryGate.TransitionTo(sourceLanguage);
+        this.retryGate.TransitionTo(scope);
     }
 
     /// <summary>
@@ -1625,18 +1633,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <returns>True when a canonical translated payload was found.</returns>
     private bool TryFindStructuredPayload(
         SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
         StringArrayStructuredPayload originalPayload,
         out StringArrayStructuredPayload translatedPayload)
     {
-        var language = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
         var gameVersion = GetGameVersion();
         var sourceHash = originalPayload.ComputeSourceContentHash();
-        var scope = new TranslationReuseScope(
-            sourceLanguage.PersistenceCode,
-            language,
-            this.config.ChosenTransEngine,
-            this.config.TranslateAlreadyTranslatedTexts);
 
         var row = StringArrayDataCacheManager.TryFindCanonicalMatch(
             originalPayload.Type,
@@ -1654,8 +1656,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             var probe = StringArrayDataPersistenceHelper.CreateCanonicalRow(
                 originalPayload.Type,
                 sourceLanguage.PersistenceCode,
-                language,
-                this.config.ChosenTransEngine,
+                scope.TargetLanguageCode,
+                scope.TranslationEngine.GetValueOrDefault(),
                 gameVersion,
                 originalPayload);
 
@@ -1826,7 +1828,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             originalPayload,
             translatedPayload);
         this.PersistResolvedGameWindowPayload(
-            sourceLanguage,
+            this.CreateReuseScope(sourceLanguage),
             originalPayload,
             translatedPayload,
             classJobId);
@@ -1837,35 +1839,100 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     canonical <see cref="GameWindow" /> row using an explicit
     ///     class/job discriminator captured by the caller.
     /// </summary>
-    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
     /// <param name="originalPayload">The original payload.</param>
     /// <param name="translatedPayload">The translated payload.</param>
     /// <param name="classJobId">
     ///     The class/job identifier to persist with the row.
     /// </param>
-    private protected void PersistResolvedGameWindowPayload(
-        SourceClientLanguage sourceLanguage,
+    internal void PersistResolvedGameWindowPayload(
+        TranslationReuseScope scope,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
         uint? classJobId)
     {
-        var row = new GameWindow(
+        if (!scope.TranslationEngine.HasValue)
+        {
+            return;
+        }
+
+        var row = CreatePersistedGameWindow(
             this.addonName,
-            originalPayload.Serialize(),
-            sourceLanguage.PersistenceCode,
-            translatedPayload.Serialize(),
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang),
-            this.config.ChosenTransEngine,
+            scope,
+            originalPayload,
+            translatedPayload,
             GetGameVersion(),
-            createdDate: null,
-            updatedDate: null,
-            classJobId: classJobId);
+            classJobId);
 
         _ = GameWindowPersistenceHelper.InsertGameWindow(
             ConfigDirectory,
             row,
             GameWindowCacheManager.Update);
+    }
+
+    /// <summary>
+    ///     Creates the canonical persisted row from an immutable operation
+    ///     scope without reading mutable runtime configuration.
+    /// </summary>
+    /// <param name="addonName">The owning addon name.</param>
+    /// <param name="scope">The immutable operation scope.</param>
+    /// <param name="originalPayload">The captured original payload.</param>
+    /// <param name="translatedPayload">The completed translated payload.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="classJobId">The captured class/job discriminator.</param>
+    /// <returns>The row ready for persistence.</returns>
+    internal static GameWindow CreatePersistedGameWindow(
+        string addonName,
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        string gameVersion,
+        uint? classJobId)
+    {
+        if (!scope.TranslationEngine.HasValue)
+        {
+            throw new ArgumentException(
+                "A GameWindow operation scope must capture a translation engine.",
+                nameof(scope));
+        }
+
+        return new GameWindow(
+            addonName,
+            originalPayload.Serialize(),
+            scope.SourceLanguageCode,
+            translatedPayload.Serialize(),
+            scope.TargetLanguageCode,
+            scope.TranslationEngine.Value,
+            gameVersion,
+            createdDate: null,
+            updatedDate: null,
+            classJobId: classJobId);
+    }
+
+    /// <summary>
+    ///     Persists a resolved payload only while the captured operation still
+    ///     owns the active complete reuse scope.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope.</param>
+    /// <param name="sourceOperation">The operation token captured before work began.</param>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="classJobId">The captured class/job discriminator.</param>
+    /// <returns>True when the operation persisted its row.</returns>
+    private protected bool PersistResolvedGameWindowPayload(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        uint? classJobId)
+    {
+        return this.retryGate.TryRunIfCurrent(
+            sourceOperation,
+            () => this.PersistResolvedGameWindowPayload(
+                scope,
+                originalPayload,
+                translatedPayload,
+                classJobId));
     }
 
     /// <summary>
@@ -1880,6 +1947,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// </returns>
     private protected virtual Task<bool>
         TranslateAndPersistGameWindowPayloadAsync(
+            TranslationReuseScope scope,
+            DbFirstSourceOperation sourceOperation,
             SourceClientLanguage sourceLanguage,
             DbFirstGameWindowPayload originalPayload)
     {
@@ -1892,8 +1961,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 originalPayload.StringArrayValues,
                 originalPayload.TextNodes,
                 sourceLanguage,
-                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                    this.config.Lang),
+                scope.TargetLanguageCode,
                 this.translationService)
             .ContinueWith(
                 task =>
@@ -1908,11 +1976,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         task.Result.Value.AtkValues,
                         task.Result.Value.StringArrayValues,
                         task.Result.Value.TextNodes);
-                    this.PersistResolvedGameWindowPayload(
-                        sourceLanguage,
+                    return this.PersistResolvedGameWindowPayload(
+                        scope,
+                        sourceOperation,
                         originalPayload,
-                        translatedPayload);
-                    return true;
+                        translatedPayload,
+                        this.GetPersistedGameWindowClassJobId(
+                            originalPayload,
+                            translatedPayload));
                 },
                 TaskScheduler.Default);
     }
@@ -2194,17 +2265,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <returns>The persisted row, or no value when translation is incomplete.</returns>
     private Task<StringArrayDatas?> TranslateAndPersistStructuredPayloadAsync(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
         SourceClientLanguage sourceLanguage,
         StringArrayStructuredPayload originalPayload)
     {
-        var targetLanguage = RuntimeLanguageHelper
-            .GetConfiguredTargetLanguageCode(this.config.Lang);
         return DbFirstStructuredStringArrayHelper
             .TranslatePayloadAsync(
                 originalPayload,
                 this.translationService,
                 sourceLanguage,
-                targetLanguage)
+                scope.TargetLanguageCode)
             .ContinueWith(
                 task =>
                 {
@@ -2221,16 +2292,23 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     var row = StringArrayDataPersistenceHelper
                         .CreateCanonicalRow(
                             originalPayload.Type,
-                            sourceLanguage.PersistenceCode,
-                            targetLanguage,
-                            this.config.ChosenTransEngine,
+                            scope.SourceLanguageCode,
+                            scope.TargetLanguageCode,
+                            scope.TranslationEngine.GetValueOrDefault(),
                             GetGameVersion(),
                             originalPayload,
                             task.Result);
-                    _ = StringArrayDataPersistenceHelper.InsertStringArrayData(
-                        ConfigDirectory,
-                        row);
-                    return row;
+                    return this.retryGate.TryRunIfCurrent(
+                        sourceOperation,
+                        () =>
+                        {
+                            _ = StringArrayDataPersistenceHelper
+                                .InsertStringArrayData(
+                                    ConfigDirectory,
+                                    row);
+                        })
+                        ? row
+                        : null;
                 },
                 TaskScheduler.Default);
     }
@@ -2244,6 +2322,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="sourceOperation">The source-owned operation token.</param>
     private void QueueTranslationIfNeeded(
         SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
         DbFirstGameWindowPayload payload,
         string payloadKey,
         DbFirstSourceOperation sourceOperation,
@@ -2258,6 +2337,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (originalStructuredPayload != null)
         {
             translationTask = this.TranslateAndPersistStructuredPayloadAsync(
+                    scope,
+                    sourceOperation,
                     sourceLanguage,
                     originalStructuredPayload)
                 .ContinueWith(
@@ -2279,6 +2360,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         else
         {
             translationTask = this.TranslateAndPersistGameWindowPayloadAsync(
+                    scope,
+                    sourceOperation,
                     sourceLanguage,
                     payload)
                 .ContinueWith(
@@ -3548,7 +3631,13 @@ internal readonly record struct DbFirstGameWindowPayload(
 /// <param name="Generation">The source transition generation.</param>
 internal readonly record struct DbFirstSourceOperation(
     string? SourceLanguageCode,
-    long Generation);
+    long Generation)
+{
+    /// <summary>
+    ///     Gets the complete reuse scope captured when this operation began.
+    /// </summary>
+    public TranslationReuseScope? Scope { get; init; }
+}
 
 /// <summary>
 ///     Owns the instance retry cooldown and rejects callbacks captured before a
@@ -3557,7 +3646,7 @@ internal readonly record struct DbFirstSourceOperation(
 internal sealed class DbFirstSourceRetryGate
 {
     private readonly object stateGate = new();
-    private string sourceLanguageCode = string.Empty;
+    private TranslationReuseScope? scope;
     private long generation;
     private DateTime nextRetryUtc = DateTime.MinValue;
 
@@ -3571,7 +3660,7 @@ internal sealed class DbFirstSourceRetryGate
         {
             lock (this.stateGate)
             {
-                return !string.IsNullOrWhiteSpace(this.sourceLanguageCode);
+                return this.scope.HasValue;
             }
         }
     }
@@ -3584,12 +3673,27 @@ internal sealed class DbFirstSourceRetryGate
     /// <returns>True when a known retry owner must be discarded.</returns>
     public bool ShouldInvalidateFor(SourceClientLanguage? sourceLanguage)
     {
+        return this.ShouldInvalidateFor(
+            sourceLanguage.HasValue
+                ? new TranslationReuseScope(
+                    sourceLanguage.Value.PersistenceCode,
+                    string.Empty,
+                    null,
+                    false)
+                : null);
+    }
+
+    /// <summary>
+    ///     Determines whether moving to the supplied full reuse scope
+    ///     invalidates the current retry owner.
+    /// </summary>
+    /// <param name="scope">The newly captured operation scope, if resolved.</param>
+    /// <returns>True when a known retry owner must be discarded.</returns>
+    public bool ShouldInvalidateFor(TranslationReuseScope? scope)
+    {
         lock (this.stateGate)
         {
-            return !string.IsNullOrWhiteSpace(this.sourceLanguageCode) &&
-                   !NativeRuntimeSourceScope.MatchesSource(
-                       this.sourceLanguageCode,
-                       sourceLanguage);
+            return this.scope.HasValue && this.scope != scope;
         }
     }
 
@@ -3602,27 +3706,45 @@ internal sealed class DbFirstSourceRetryGate
     public DbFirstSourceOperation TransitionTo(
         SourceClientLanguage? sourceLanguage)
     {
+        return this.TransitionTo(
+            sourceLanguage.HasValue
+                ? new TranslationReuseScope(
+                    sourceLanguage.Value.PersistenceCode,
+                    string.Empty,
+                    null,
+                    false)
+                : null);
+    }
+
+    /// <summary>
+    ///     Transitions the gate to one complete captured scope and clears
+    ///     cooldown state whenever any scope member changes.
+    /// </summary>
+    /// <param name="scope">The captured operation scope, if resolved.</param>
+    /// <returns>The current operation token.</returns>
+    public DbFirstSourceOperation TransitionTo(TranslationReuseScope? scope)
+    {
         lock (this.stateGate)
         {
-            if (!sourceLanguage.HasValue)
+            if (!scope.HasValue)
             {
                 this.ResetLocked();
                 return default;
             }
 
-            var sourceCode = sourceLanguage.Value.PersistenceCode;
-            if (!RuntimeLanguageHelper.LanguagesMatch(
-                    this.sourceLanguageCode,
-                    sourceCode))
+            if (this.scope != scope)
             {
-                this.sourceLanguageCode = sourceCode;
+                this.scope = scope;
                 this.nextRetryUtc = DateTime.MinValue;
                 this.generation++;
             }
 
             return new DbFirstSourceOperation(
-                this.sourceLanguageCode,
-                this.generation);
+                scope.Value.SourceLanguageCode,
+                this.generation)
+            {
+                Scope = scope,
+            };
         }
     }
 
@@ -3717,16 +3839,22 @@ internal sealed class DbFirstSourceRetryGate
 
     private bool MatchesLocked(DbFirstSourceOperation operation)
     {
-        return operation.Generation == this.generation &&
-               !string.IsNullOrWhiteSpace(operation.SourceLanguageCode) &&
-               RuntimeLanguageHelper.LanguagesMatch(
-                   operation.SourceLanguageCode,
-                   this.sourceLanguageCode);
+        if (operation.Generation != this.generation || !this.scope.HasValue)
+        {
+            return false;
+        }
+
+        return operation.Scope.HasValue
+            ? operation.Scope == this.scope
+            : !string.IsNullOrWhiteSpace(operation.SourceLanguageCode) &&
+              RuntimeLanguageHelper.LanguagesMatch(
+                  operation.SourceLanguageCode,
+                  this.scope.Value.SourceLanguageCode);
     }
 
     private void ResetLocked()
     {
-        this.sourceLanguageCode = string.Empty;
+        this.scope = null;
         this.nextRetryUtc = DateTime.MinValue;
         this.generation++;
     }
@@ -3739,7 +3867,13 @@ internal sealed class DbFirstSourceRetryGate
 /// <param name="Generation">The source generation captured by the operation.</param>
 internal readonly record struct SourcePublicationOperation(
     string SourceLanguageCode,
-    long Generation);
+    long Generation)
+{
+    /// <summary>
+    ///     Gets the complete reuse scope captured when this operation began.
+    /// </summary>
+    public TranslationReuseScope? Scope { get; init; }
+}
 
 /// <summary>
 ///     Orders source invalidation and asynchronous publication so a stale
@@ -3748,9 +3882,8 @@ internal readonly record struct SourcePublicationOperation(
 internal sealed class SourcePublicationLifecycle
 {
     private readonly object gate = new();
-    private string currentSourceLanguageCode = string.Empty;
+    private ScopeState? currentState;
     private long generation;
-    private bool initialized;
 
     /// <summary>
     ///     Transitions to the supplied source and atomically runs invalidation
@@ -3763,42 +3896,48 @@ internal sealed class SourcePublicationLifecycle
         SourceClientLanguage? sourceLanguage,
         Action invalidate)
     {
-        var sourceLanguageCode =
-            sourceLanguage?.PersistenceCode ?? string.Empty;
-        if (Volatile.Read(ref this.initialized) &&
-            string.Equals(
-                Volatile.Read(ref this.currentSourceLanguageCode),
-                sourceLanguageCode,
-                StringComparison.Ordinal))
+        return this.TransitionTo(
+            sourceLanguage.HasValue
+                ? new TranslationReuseScope(
+                    sourceLanguage.Value.PersistenceCode,
+                    string.Empty,
+                    null,
+                    false)
+                : null,
+            invalidate);
+    }
+
+    /// <summary>
+    ///     Transitions to the supplied full scope and atomically runs
+    ///     invalidation when source, target, engine, or policy changed.
+    /// </summary>
+    /// <param name="scope">The current operation scope, or no value when unresolved.</param>
+    /// <param name="invalidate">The handler-owned invalidation action.</param>
+    /// <returns>The operation token for the resulting scope generation.</returns>
+    public SourcePublicationOperation TransitionTo(
+        TranslationReuseScope? scope,
+        Action invalidate)
+    {
+        var observedState = Volatile.Read(ref this.currentState);
+        if (observedState?.Scope == scope)
         {
-            return new SourcePublicationOperation(
-                sourceLanguageCode,
-                Volatile.Read(ref this.generation));
+            return observedState.CreateOperation();
         }
 
         lock (this.gate)
         {
-            if (this.initialized &&
-                string.Equals(
-                    this.currentSourceLanguageCode,
-                    sourceLanguageCode,
-                    StringComparison.Ordinal))
+            var currentState = this.currentState;
+            if (currentState?.Scope == scope)
             {
-                return new SourcePublicationOperation(
-                    sourceLanguageCode,
-                    this.generation);
+                return currentState.CreateOperation();
             }
 
-            Volatile.Write(ref this.initialized, false);
+            Volatile.Write(ref this.currentState, null);
             invalidate();
             this.generation++;
-            Volatile.Write(
-                ref this.currentSourceLanguageCode,
-                sourceLanguageCode);
-            Volatile.Write(ref this.initialized, true);
-            return new SourcePublicationOperation(
-                sourceLanguageCode,
-                this.generation);
+            currentState = new ScopeState(scope, this.generation);
+            Volatile.Write(ref this.currentState, currentState);
+            return currentState.CreateOperation();
         }
     }
 
@@ -3813,19 +3952,27 @@ internal sealed class SourcePublicationLifecycle
     public SourcePublicationOperation Capture(
         SourceClientLanguage sourceLanguage)
     {
-        var sourceLanguageCode = sourceLanguage.PersistenceCode;
-        if (!Volatile.Read(ref this.initialized) ||
-            !string.Equals(
-                Volatile.Read(ref this.currentSourceLanguageCode),
-                sourceLanguageCode,
-                StringComparison.Ordinal))
+        return this.Capture(new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            string.Empty,
+            null,
+            false));
+    }
+
+    /// <summary>
+    ///     Captures the current operation token for one full reuse scope.
+    /// </summary>
+    /// <param name="scope">The operation scope.</param>
+    /// <returns>The current token, or default when the scope is no longer active.</returns>
+    public SourcePublicationOperation Capture(TranslationReuseScope scope)
+    {
+        var currentState = Volatile.Read(ref this.currentState);
+        if (currentState?.Scope != scope)
         {
             return default;
         }
 
-        return new SourcePublicationOperation(
-            sourceLanguageCode,
-            Volatile.Read(ref this.generation));
+        return currentState.CreateOperation();
     }
 
     /// <summary>
@@ -3841,18 +3988,67 @@ internal sealed class SourcePublicationLifecycle
     {
         lock (this.gate)
         {
-            if (!this.initialized ||
-                operation.Generation != this.generation ||
-                !string.Equals(
-                    operation.SourceLanguageCode,
-                    this.currentSourceLanguageCode,
-                    StringComparison.Ordinal))
+            if (!this.MatchesLocked(operation))
             {
                 return false;
             }
 
             publish();
             return true;
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether one captured operation remains eligible to
+    ///     persist or publish under the active full reuse scope.
+    /// </summary>
+    /// <param name="operation">The operation token to inspect.</param>
+    /// <returns>True when the token still owns the lifecycle.</returns>
+    public bool IsCurrent(SourcePublicationOperation operation)
+    {
+        lock (this.gate)
+        {
+            return this.MatchesLocked(operation);
+        }
+    }
+
+    private bool MatchesLocked(SourcePublicationOperation operation)
+    {
+        var currentState = this.currentState;
+        if (currentState == null || operation.Generation != currentState.Generation)
+        {
+            return false;
+        }
+
+        return operation.Scope.HasValue
+            ? operation.Scope == currentState.Scope
+            : string.Equals(
+                operation.SourceLanguageCode,
+                currentState.Scope?.SourceLanguageCode ?? string.Empty,
+                StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Holds one immutable lifecycle generation for lock-free capture.
+    /// </summary>
+    /// <param name="Scope">The complete active reuse scope, if resolved.</param>
+    /// <param name="Generation">The lifecycle generation.</param>
+    private sealed record ScopeState(
+        TranslationReuseScope? Scope,
+        long Generation)
+    {
+        /// <summary>
+        ///     Creates an operation token for this immutable lifecycle state.
+        /// </summary>
+        /// <returns>The operation token.</returns>
+        public SourcePublicationOperation CreateOperation()
+        {
+            return new SourcePublicationOperation(
+                this.Scope?.SourceLanguageCode ?? string.Empty,
+                this.Generation)
+            {
+                Scope = this.Scope,
+            };
         }
     }
 }

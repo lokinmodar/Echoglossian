@@ -45,6 +45,49 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures a failed queued ActionMenu payload can retry under the same
+    ///     scope and that a matching page signature in another full scope is
+    ///     not blocked by the first queue owner.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_FailureReleasesSignatureAndScopeChangeAllowsRetry()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var originalScope = new TranslationReuseScope("en", "pt-BR", 0, false);
+        var changedScope = new TranslationReuseScope("en", "ja", 7, true);
+
+        Assert.True(tracker.TryQueue(originalScope, signature));
+        Assert.False(tracker.TryQueue(originalScope, signature));
+
+        tracker.Release(originalScope, signature);
+
+        Assert.True(tracker.TryQueue(originalScope, signature));
+        Assert.True(tracker.TryQueue(changedScope, signature));
+        Assert.False(tracker.TryQueue(changedScope, signature));
+    }
+
+    /// <summary>
+    ///     Ensures a completion from an older scope cannot release the active
+    ///     scope's queued signature.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_StaleScopeCannotReleaseActiveSignature()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var originalScope = new TranslationReuseScope("en", "pt-BR", 0, false);
+        var activeScope = new TranslationReuseScope("en", "ja", 7, true);
+
+        Assert.True(tracker.TryQueue(originalScope, signature));
+        Assert.True(tracker.TryQueue(activeScope, signature));
+
+        tracker.Release(originalScope, signature);
+
+        Assert.False(tracker.TryQueue(activeScope, signature));
+    }
+
+    /// <summary>
     ///     Ensures a translated action label preserves the original line break
     ///     before the trailing level token.
     /// </summary>

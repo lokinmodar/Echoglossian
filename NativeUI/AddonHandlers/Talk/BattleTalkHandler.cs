@@ -142,7 +142,10 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     }
 
     this.InvalidateStateForSource(sourceLanguage);
-    var sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+    var sourceOperation = this.sourceLifecycle.Capture(
+        this.CreateDialogueReuseScope(sourceLanguage));
+    var operationScope = sourceOperation.Scope ??
+                         this.CreateDialogueReuseScope(sourceLanguage);
 
     if (!this.TryCaptureCurrentBattleTalkSource(
             out var originalName,
@@ -179,25 +182,24 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code,
+          operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
       var translatedName = this.ShouldTranslateBattleTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
               originalName,
               sourceLanguage,
-              LangDict[LanguageInt].Code,
+              operationScope.TargetLanguageCode,
               TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
           : string.Empty;
-      var dialogueTranslationEngine =
-          this.translationService.GetEffectiveTranslationEngineId(
-              TranslationSurfaceGroup.Dialogue);
+      var dialogueTranslationEngine = operationScope.TranslationEngine
+                                      .GetValueOrDefault();
 
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
               translatedText,
               sourceLanguage.PersistenceCode,
-              LangDict[LanguageInt].Code))
+              operationScope.TargetLanguageCode))
       {
         lock (this.stateGate)
         {
@@ -225,11 +227,22 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           sourceLanguage.PersistenceCode,
           translatedName,
           translatedText,
-          LangDict[LanguageInt].Code,
+          operationScope.TargetLanguageCode,
           dialogueTranslationEngine,
           rtlLangTranslationImageData: null,
           DateTime.Now,
           DateTime.Now);
+      if (!this.sourceLifecycle.IsCurrent(sourceOperation))
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(
+                surface));
+      }
+
       var persistenceResult = await Echoglossian.UpsertBattleTalkDataAsync(
           translatedBattleTalkData).ConfigureAwait(false);
       var persistenceSucceeded = !persistenceResult.StartsWith(
@@ -559,7 +572,9 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       SourceClientLanguage? sourceLanguage)
   {
     this.sourceLifecycle.TransitionTo(
-        sourceLanguage,
+        sourceLanguage.HasValue
+            ? this.CreateDialogueReuseScope(sourceLanguage.Value)
+            : null,
         () =>
         {
           this.RestoreTrackedNativeLayoutIfNeeded();
@@ -798,11 +813,10 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   private BattleTalkMessage BuildLookupMessage(
       string originalName,
       string originalText,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope? scope = null)
   {
-    var dialogueTranslationEngine =
-        this.translationService.GetEffectiveTranslationEngineId(
-            TranslationSurfaceGroup.Dialogue);
+    var operationScope = scope ?? this.CreateDialogueReuseScope(sourceLanguage);
     return new BattleTalkMessage(
         originalName,
         originalText,
@@ -810,8 +824,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
-        LangDict[LanguageInt].Code,
-        dialogueTranslationEngine,
+        operationScope.TargetLanguageCode,
+        operationScope.TranslationEngine.GetValueOrDefault(),
         rtlLangTranslationImageData: null,
         DateTime.Now,
         DateTime.Now);
@@ -883,16 +897,31 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// <returns>The normalized session key.</returns>
   internal string BuildDialogueSessionKey(
       string originalName,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope? scope = null)
   {
     var normalizedSpeaker = string.IsNullOrWhiteSpace(originalName)
         ? "(anonymous)"
         : originalName.Trim();
-    var dialogueTranslationEngine =
-        this.translationService.GetEffectiveTranslationEngineId(
-            TranslationSurfaceGroup.Dialogue);
+    var operationScope = scope ?? this.CreateDialogueReuseScope(sourceLanguage);
     return
-        $"{normalizedSpeaker}|source:{sourceLanguage.PersistenceCode}|engine:{dialogueTranslationEngine}|target:{LangDict[LanguageInt].Code}";
+        $"{normalizedSpeaker}|source:{operationScope.SourceLanguageCode}|engine:{operationScope.TranslationEngine}|target:{operationScope.TargetLanguageCode}";
+  }
+
+  /// <summary>
+  ///     Captures the complete dialogue reuse scope before asynchronous work.
+  /// </summary>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>The immutable dialogue operation scope.</returns>
+  private TranslationReuseScope CreateDialogueReuseScope(
+      SourceClientLanguage sourceLanguage)
+  {
+    return new TranslationReuseScope(
+        sourceLanguage.PersistenceCode,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.config.Lang),
+        this.translationService.GetEffectiveTranslationEngineId(
+            TranslationSurfaceGroup.Dialogue),
+        this.config.TranslateAlreadyTranslatedTexts);
   }
 
   /// <summary>
@@ -916,19 +945,21 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   {
     try
     {
+      var operationScope = sourceOperation.Scope ??
+                           this.CreateDialogueReuseScope(sourceLanguage);
       var lookup = this.BuildLookupMessage(
           originalName,
           originalText,
-          sourceLanguage);
+          sourceLanguage,
+          operationScope);
       var foundBattleTalkMessage = this.findBattleTalkMessage(lookup);
 
       string translatedName;
       string translatedText;
       VisibleStorySurfaceProvenanceKind provenance;
       bool usedRuntimeOnlyDialogueContext = false;
-      var dialogueTranslationEngine =
-          this.translationService.GetEffectiveTranslationEngineId(
-              TranslationSurfaceGroup.Dialogue);
+      var dialogueTranslationEngine = operationScope.TranslationEngine
+                                      .GetValueOrDefault();
 
       if (this.IsStoredTranslationUsable(
               foundBattleTalkMessage,
@@ -946,7 +977,10 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       {
         var dialogueContext = DialogueTranslationSessionStore.BuildContext(
             BattleTalkAddonName,
-            this.BuildDialogueSessionKey(originalName, sourceLanguage),
+            this.BuildDialogueSessionKey(
+                originalName,
+                sourceLanguage,
+                operationScope),
             originalName,
             originalText,
             DialogueSessionHistoryLimit,
@@ -960,7 +994,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         translatedText = await this.translationService.TranslateAsync(
             originalText,
             sourceLanguage,
-            LangDict[LanguageInt].Code,
+            operationScope.TargetLanguageCode,
             dialogueContext,
             TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
 
@@ -972,7 +1006,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             translatedName = await this.translationService.TranslateAsync(
                 originalName,
                 sourceLanguage,
-                LangDict[LanguageInt].Code,
+                operationScope.TargetLanguageCode,
                 TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
           }
           catch (Exception ex)
@@ -982,7 +1016,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           }
         }
 
-        if (!usesRuntimeOnlyDialogueContext)
+        if (!usesRuntimeOnlyDialogueContext &&
+            this.sourceLifecycle.IsCurrent(sourceOperation))
         {
           var translatedBattleTalkData = new BattleTalkMessage(
               originalName,
@@ -991,7 +1026,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
               sourceLanguage.PersistenceCode,
               translatedName,
               translatedText,
-              LangDict[LanguageInt].Code,
+              operationScope.TargetLanguageCode,
               dialogueTranslationEngine,
               rtlLangTranslationImageData: null,
               DateTime.Now,
@@ -999,6 +1034,10 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
           await this.insertBattleTalkMessageAsync(translatedBattleTalkData);
           provenance = VisibleStorySurfaceProvenanceKind.FreshLiveTranslation;
+        }
+        else if (!usesRuntimeOnlyDialogueContext)
+        {
+          return;
         }
         else
         {
@@ -1253,14 +1292,16 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       if (!sourceChanged && (this.translationInFlight || hasTranslation))
       {
         requestId = this.activeRequestId;
-        sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+        sourceOperation = this.sourceLifecycle.Capture(
+            this.CreateDialogueReuseScope(sourceLanguage));
         return false;
       }
 
       if (!sourceChanged && isKnownFailedSource)
       {
         requestId = this.activeRequestId;
-        sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+        sourceOperation = this.sourceLifecycle.Capture(
+            this.CreateDialogueReuseScope(sourceLanguage));
         return false;
       }
 
@@ -1277,7 +1318,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       this.translationInFlight = true;
       this.activeRequestId++;
       requestId = this.activeRequestId;
-      sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
+      sourceOperation = this.sourceLifecycle.Capture(
+          this.CreateDialogueReuseScope(sourceLanguage));
       return true;
     }
   }
