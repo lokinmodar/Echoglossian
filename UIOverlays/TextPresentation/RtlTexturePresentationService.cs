@@ -37,7 +37,6 @@ internal sealed class RtlTexturePresentationService : IDisposable
   private const int DefaultRetryStateCapacity = 128;
   private const int DefaultTextureCacheCapacity = 128;
   private const long DefaultSoftByteBudget = 32L * 1024L * 1024L;
-  private const long DefaultHardByteBudget = 64L * 1024L * 1024L;
   private static readonly TimeSpan FailureCooldown = TimeSpan.FromSeconds(10);
   private readonly Config configuration;
   private readonly TextTextureCache textureCache;
@@ -133,7 +132,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
         maxCapacity: Math.Max(1, textureCacheCapacity),
         inactivityTimeoutSeconds: 60,
         softByteBudget: DefaultSoftByteBudget,
-        hardByteBudget: DefaultHardByteBudget);
+        hardByteBudget: TextRasterLimits.MaximumTextureBytes);
   }
 
   /// <summary>
@@ -393,6 +392,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
     {
       PendingTextureCreation work;
       Task<IDalamudTextureWrap> creationTask;
+      CancellationToken cancellationToken;
       lock (this.lifecycleLock)
       {
         if (this.disposed ||
@@ -404,16 +404,18 @@ internal sealed class RtlTexturePresentationService : IDisposable
           return;
         }
 
-        try
-        {
-          creationTask = this.createTextureAsync(
-              work.CreationRequest,
-              generation.Cancellation.Token);
-        }
-        catch (Exception ex)
-        {
-          creationTask = Task.FromException<IDalamudTextureWrap>(ex);
-        }
+        cancellationToken = generation.Cancellation.Token;
+      }
+
+      try
+      {
+        creationTask = this.CreateTextureWithinRasterLimitsAsync(
+            work.CreationRequest,
+            cancellationToken);
+      }
+      catch (Exception ex)
+      {
+        creationTask = Task.FromException<IDalamudTextureWrap>(ex);
       }
 
       IDalamudTextureWrap? generatedTexture = null;
@@ -691,8 +693,13 @@ internal sealed class RtlTexturePresentationService : IDisposable
             0.8f,
             1.2f),
         LanguagePresentationPolicy.ShouldRightAlign(request.LanguageId),
-        viewportWidth,
-        this.configuration.HoverTooltipMaxWidth);
+        Math.Clamp(
+            viewportWidth,
+            1f,
+            TextRasterLimits.MaximumDimension),
+        Math.Min(
+            this.configuration.HoverTooltipMaxWidth,
+            TextRasterLimits.MaximumDimension));
   }
 
   /// <summary>
@@ -729,7 +736,9 @@ internal sealed class RtlTexturePresentationService : IDisposable
     TextImageRenderer? renderer = null;
     try
     {
-      return HoverTooltipLayoutPolicy.ResolveTextureMaxWidth(
+      return Math.Min(
+          TextRasterLimits.MaximumDimension,
+          HoverTooltipLayoutPolicy.ResolveTextureMaxWidth(
           resolvedConfiguration,
           inputs.ViewportWidth,
           inputs.Text,
@@ -745,7 +754,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
                 renderer,
                 inputs.Text,
                 width);
-          });
+          }));
     }
     finally
     {
@@ -767,7 +776,8 @@ internal sealed class RtlTexturePresentationService : IDisposable
   {
     var measuredSize = renderer.MeasureShapedText(
         text,
-        Math.Max(1, (int)Math.Ceiling(width)));
+        TextRasterLimits.ClampWrapWidth(
+            Math.Max(1, (int)Math.Ceiling(width))));
     return measuredSize.Height;
   }
 
@@ -814,7 +824,8 @@ internal sealed class RtlTexturePresentationService : IDisposable
       return null;
     }
 
-    return Math.Max(1, (int)Math.Ceiling(request.MaxWidth));
+    return TextRasterLimits.ClampWrapWidth(
+        Math.Max(1, (int)Math.Ceiling(request.MaxWidth)));
   }
 
   /// <summary>
@@ -1001,6 +1012,39 @@ internal sealed class RtlTexturePresentationService : IDisposable
     cancellationToken.ThrowIfCancellationRequested();
     stream.Position = 0;
     return await textureProvider.CreateFromImageAsync(stream)
+        .ConfigureAwait(false);
+  }
+
+  /// <summary>
+  /// Measures a request before invoking the configured upload operation so an
+  /// over-limit layout cannot allocate, encode, or upload a texture.
+  /// </summary>
+  /// <param name="request">The resolved rasterization inputs.</param>
+  /// <param name="cancellationToken">The lifecycle cancellation token.</param>
+  /// <returns>The uploaded texture.</returns>
+  private async Task<IDalamudTextureWrap> CreateTextureWithinRasterLimitsAsync(
+      TextureCreationRequest request,
+      CancellationToken cancellationToken)
+  {
+    await Task.Yield();
+    cancellationToken.ThrowIfCancellationRequested();
+    using TextImageRenderer renderer = new(
+        request.FontPath,
+        request.FontSize,
+        FontStyle.Regular,
+        request.LineHeightScale,
+        request.RightToLeft);
+    var measuredSize = renderer.MeasureShapedText(
+        request.Text,
+        request.MaxWidth);
+    if (!TextRasterLimits.IsWithinLimits(measuredSize))
+    {
+      throw new InvalidOperationException(
+          "Text layout exceeds the bounded raster allocation limits.");
+    }
+
+    cancellationToken.ThrowIfCancellationRequested();
+    return await this.createTextureAsync(request, cancellationToken)
         .ConfigureAwait(false);
   }
 

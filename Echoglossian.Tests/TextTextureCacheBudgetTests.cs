@@ -64,6 +64,27 @@ public class TextTextureCacheBudgetTests
         Assert.Equal((0, 0L), cache.GetDebugStats());
     }
 
+    /// <summary>
+    /// Ensures the Phase A hard cache budget rejects a 49 MiB texture while
+    /// preserving support for a texture exactly at the 48 MiB limit.
+    /// </summary>
+    [Fact]
+    public void GetOrCreate_PhaseAHardBudget_Rejects49MiBAndAllows48MiB()
+    {
+        using var cache = new TextTextureCache();
+        var oversizedTexture = new FakeTextureWrap(width: 2048, height: 6272);
+        var limitTexture = new FakeTextureWrap(width: 2048, height: 6144);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            cache.GetOrCreate("oversized", () => oversizedTexture));
+        var cachedTexture = cache.GetOrCreate("limit", () => limitTexture);
+
+        Assert.Same(limitTexture, cachedTexture);
+        Assert.Equal(1, cache.GetDebugStats().Count);
+        Assert.Equal(1, oversizedTexture.DisposeCount);
+        Assert.Equal(0, limitTexture.DisposeCount);
+    }
+
     private sealed class FakeTextureWrap : IDalamudTextureWrap
     {
         public FakeTextureWrap(int width, int height)

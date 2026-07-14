@@ -441,6 +441,58 @@ public class RtlTexturePresentationServiceTests
     }
 
     /// <summary>
+    /// Ensures a viewport-derived hover tooltip width cannot exceed the raster
+    /// dimension used by texture generation.
+    /// </summary>
+    [Fact]
+    public void ResolveAdaptiveHoverTooltipMaxWidth_ViewportExceedsRasterLimit_ClampsWidth()
+    {
+        using var service = new RtlTexturePresentationService(
+            new Config { HoverTooltipMaxWidth = 10000f },
+            (_, _) => Task.FromResult<IDalamudTextureWrap>(
+                new FakeTextureWrap(width: 1, height: 1)));
+
+        var maxWidth = service.ResolveAdaptiveHoverTooltipMaxWidth(
+            CreateRequest(2, "ar", "tooltip"),
+            viewportWidth: 10000f);
+
+        Assert.InRange(maxWidth, 1f, 2048f);
+    }
+
+    /// <summary>
+    /// Ensures an over-height raster layout is rejected before the injected
+    /// upload factory runs and enters the existing retry cooldown.
+    /// </summary>
+    [Fact]
+    public void TryRender_RasterLayoutExceedsHeightLimit_SkipsUploadAndCachesFailure()
+    {
+        var creationCount = 0;
+        using var service = new RtlTexturePresentationService(
+            new Config(),
+            (_, _) =>
+            {
+                Interlocked.Increment(ref creationCount);
+                return Task.FromResult<IDalamudTextureWrap>(
+                    new FakeTextureWrap(width: 1, height: 1));
+            },
+            maxConcurrentTextureCreations: 1);
+        var request = CreateRequest(
+            2,
+            "ar",
+            string.Join("\n", Enumerable.Repeat("line", 200)));
+
+        Assert.Null(service.TryRender(request));
+        Assert.True(SpinWait.SpinUntil(
+            () => service.GetDebugStats().PendingTextureCount == 0,
+            TimeSpan.FromSeconds(5)));
+        Assert.Null(service.TryRender(request));
+
+        Assert.Equal(0, Volatile.Read(ref creationCount));
+        Assert.Equal(1, service.GetDebugStats().RetryStateCount);
+        Assert.Equal(0, service.GetDebugStats().Count);
+    }
+
+    /// <summary>
     /// Creates a texture layout request for one language and sample text.
     /// </summary>
     /// <param name="languageId">The target language identifier.</param>

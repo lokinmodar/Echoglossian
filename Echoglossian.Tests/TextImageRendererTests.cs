@@ -98,4 +98,49 @@ public class TextImageRendererTests
         Assert.True(wideMeasurement.Height < narrowMeasurement.Height);
         Assert.True(wideMeasurement.Width > narrowMeasurement.Width);
     }
+
+    /// <summary>
+    /// Ensures an unbroken word is split within the raster dimension limit so
+    /// it can still be rendered without allocating an oversized bitmap.
+    /// </summary>
+    [Fact]
+    public void RenderShapedText_UnbrokenWordBeyondRasterLimit_RemainsRenderable()
+    {
+        using TextImageRenderer renderer =
+            new("missing-font.ttf", 24f, FontStyle.Regular, 1.0f);
+        using Bitmap bitmap = renderer.RenderShapedText(
+            new string('W', 600),
+            Color.White,
+            Color.Transparent,
+            int.MaxValue);
+
+        Assert.InRange(bitmap.Width, 1, 2048);
+        Assert.InRange(bitmap.Height, 1, 2048);
+    }
+
+    /// <summary>
+    /// Ensures a measured raster layout exceeding the approved area limit is
+    /// rejected before its bitmap is allocated.
+    /// </summary>
+    [Fact]
+    public void RenderShapedText_LayoutExceedsRasterArea_ThrowsBeforeAllocation()
+    {
+        var text = string.Join(
+            "\n",
+            Enumerable.Repeat(new string('W', 200), 67));
+        using TextImageRenderer renderer =
+            new("missing-font.ttf", 10f, FontStyle.Regular, 1.0f);
+        var measuredSize = renderer.MeasureShapedText(text, 2048);
+
+        Assert.InRange(measuredSize.Width, 1, 2048);
+        Assert.InRange(measuredSize.Height, 1, 2048);
+        Assert.True((long)measuredSize.Width * measuredSize.Height > 2_097_152);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            renderer.RenderShapedText(
+                text,
+                Color.White,
+                Color.Transparent,
+                2048));
+    }
 }

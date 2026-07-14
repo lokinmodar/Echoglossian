@@ -40,7 +40,9 @@ public sealed class TextTextureCache : IDisposable
     this.maxCapacity = maxCapacity;
     this.inactivityThreshold = TimeSpan.FromSeconds(inactivityTimeoutSeconds);
     this.softByteBudget = softByteBudget;
-    this.hardByteBudget = hardByteBudget;
+    this.hardByteBudget = Math.Min(
+        hardByteBudget,
+        TextRasterLimits.MaximumTextureBytes);
   }
 
   /// <summary>

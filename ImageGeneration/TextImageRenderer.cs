@@ -6,6 +6,55 @@
 namespace Echoglossian.ImageGeneration;
 
 /// <summary>
+/// Defines the bounded raster allocation contract for generated text textures.
+/// </summary>
+internal static class TextRasterLimits
+{
+  /// <summary>
+  /// The maximum width or height of a generated text texture.
+  /// </summary>
+  public const int MaximumDimension = 2048;
+
+  /// <summary>
+  /// The maximum pixel area of a generated text texture.
+  /// </summary>
+  public const int MaximumArea = 2_097_152;
+
+  /// <summary>
+  /// The maximum byte budget for one cached text texture.
+  /// </summary>
+  public const long MaximumTextureBytes = 48L * 1024L * 1024L;
+
+  /// <summary>
+  /// Clamps one wrapping request to the supported raster dimension.
+  /// </summary>
+  /// <param name="requestedWidth">The requested wrapping width.</param>
+  /// <returns>The bounded effective wrapping width.</returns>
+  public static int ClampWrapWidth(int? requestedWidth)
+  {
+    return Math.Clamp(
+        requestedWidth.GetValueOrDefault(MaximumDimension),
+        1,
+        MaximumDimension);
+  }
+
+  /// <summary>
+  /// Gets whether a measured layout can be rasterized within the approved
+  /// dimension and area limits.
+  /// </summary>
+  /// <param name="size">The measured raster size.</param>
+  /// <returns>Whether the size is safe to rasterize.</returns>
+  public static bool IsWithinLimits(Size size)
+  {
+    return size.Width > 0 &&
+        size.Height > 0 &&
+        size.Width <= MaximumDimension &&
+        size.Height <= MaximumDimension &&
+        (long)size.Width * size.Height <= MaximumArea;
+  }
+}
+
+/// <summary>
 /// Renders shaped text into a bitmap using a private font collection.
 /// Supports multiline wrapping and policy-selected text direction.
 /// </summary>
@@ -87,6 +136,13 @@ public sealed class TextImageRenderer : IDisposable
         format,
         text,
         maxWidth);
+    var measuredSize = new Size(layout.Width, layout.Height);
+    if (!TextRasterLimits.IsWithinLimits(measuredSize))
+    {
+      throw new InvalidOperationException(
+          "Text layout exceeds the bounded raster allocation limits.");
+    }
+
     Bitmap bitmap = new(layout.Width, layout.Height);
     using Graphics graphics = Graphics.FromImage(bitmap);
 
@@ -159,11 +215,12 @@ public sealed class TextImageRenderer : IDisposable
       string text,
       int? maxWidth)
   {
+    var effectiveMaxWidth = TextRasterLimits.ClampWrapWidth(maxWidth);
     var resolvedLines = this.ResolveWrappedLines(
         graphics,
         format,
         text,
-        maxWidth);
+        effectiveMaxWidth);
     var baseLineHeight = this.font.GetHeight(graphics);
     var lineAdvance = Math.Max(1f, baseLineHeight * this.lineHeightScale);
     var lines = new List<TextLayoutLine>(resolvedLines.Count);
@@ -206,13 +263,13 @@ public sealed class TextImageRenderer : IDisposable
   /// <param name="graphics">The measurement graphics context.</param>
   /// <param name="format">The string format used for measurement.</param>
   /// <param name="text">The text to wrap.</param>
-  /// <param name="maxWidth">The optional wrap width.</param>
+  /// <param name="maxWidth">The bounded wrap width.</param>
   /// <returns>The ordered line collection.</returns>
   private List<string> ResolveWrappedLines(
       Graphics graphics,
       StringFormat format,
       string text,
-      int? maxWidth)
+      int maxWidth)
   {
     var normalizedText = text.Replace("\r\n", "\n").Replace('\r', '\n');
     var paragraphs = normalizedText.Split('\n');
@@ -220,12 +277,6 @@ public sealed class TextImageRenderer : IDisposable
 
     foreach (var paragraph in paragraphs)
     {
-      if (!maxWidth.HasValue || maxWidth.Value <= 0)
-      {
-        lines.Add(paragraph);
-        continue;
-      }
-
       if (string.IsNullOrWhiteSpace(paragraph))
       {
         lines.Add(string.Empty);
@@ -239,24 +290,31 @@ public sealed class TextImageRenderer : IDisposable
 
       foreach (var word in words)
       {
-        var candidate = string.IsNullOrEmpty(currentLine)
-            ? word
-            : $"{currentLine} {word}";
-        var candidateWidth = graphics.MeasureString(
-            candidate,
-            this.font,
-            int.MaxValue,
-            format).Width;
-
-        if (!string.IsNullOrEmpty(currentLine) &&
-            candidateWidth > maxWidth.Value)
+        foreach (var segment in this.SplitOverwideWord(
+                     graphics,
+                     format,
+                     word,
+                     maxWidth))
         {
-          lines.Add(currentLine);
-          currentLine = word;
-          continue;
-        }
+          var candidate = string.IsNullOrEmpty(currentLine)
+              ? segment
+              : $"{currentLine} {segment}";
+          var candidateWidth = graphics.MeasureString(
+              candidate,
+              this.font,
+              int.MaxValue,
+              format).Width;
 
-        currentLine = candidate;
+          if (!string.IsNullOrEmpty(currentLine) &&
+              candidateWidth > maxWidth)
+          {
+            lines.Add(currentLine);
+            currentLine = segment;
+            continue;
+          }
+
+          currentLine = candidate;
+        }
       }
 
       lines.Add(currentLine);
@@ -265,6 +323,92 @@ public sealed class TextImageRenderer : IDisposable
     return lines.Count == 0
         ? [string.Empty]
         : lines;
+  }
+
+  /// <summary>
+  /// Splits an unbroken word at text-element boundaries when it cannot fit the
+  /// requested raster width.
+  /// </summary>
+  /// <param name="graphics">The graphics context used for measurement.</param>
+  /// <param name="format">The string format used for measurement.</param>
+  /// <param name="word">The word to split.</param>
+  /// <param name="maxWidth">The bounded maximum line width.</param>
+  /// <returns>The bounded word segments.</returns>
+  private IEnumerable<string> SplitOverwideWord(
+      Graphics graphics,
+      StringFormat format,
+      string word,
+      int maxWidth)
+  {
+    if (graphics.MeasureString(word, this.font, int.MaxValue, format).Width <=
+        maxWidth)
+    {
+      yield return word;
+      yield break;
+    }
+
+    var textElementStarts = StringInfo.ParseCombiningCharacters(word);
+    var startElementIndex = 0;
+    while (startElementIndex < textElementStarts.Length)
+    {
+      var low = startElementIndex + 1;
+      var high = textElementStarts.Length;
+      var bestEndElementIndex = startElementIndex;
+      while (low <= high)
+      {
+        var candidateEndElementIndex = low + ((high - low) / 2);
+        var candidate = this.GetTextElementSegment(
+            word,
+            textElementStarts,
+            startElementIndex,
+            candidateEndElementIndex);
+        if (graphics.MeasureString(candidate, this.font, int.MaxValue, format).Width <=
+            maxWidth)
+        {
+          bestEndElementIndex = candidateEndElementIndex;
+          low = candidateEndElementIndex + 1;
+        }
+        else
+        {
+          high = candidateEndElementIndex - 1;
+        }
+      }
+
+      if (bestEndElementIndex == startElementIndex)
+      {
+        bestEndElementIndex++;
+      }
+
+      yield return this.GetTextElementSegment(
+          word,
+          textElementStarts,
+          startElementIndex,
+          bestEndElementIndex);
+      startElementIndex = bestEndElementIndex;
+    }
+  }
+
+  /// <summary>
+  /// Gets one segment that starts and ends on text-element boundaries.
+  /// </summary>
+  /// <param name="word">The source word.</param>
+  /// <param name="textElementStarts">The text-element start offsets.</param>
+  /// <param name="startElementIndex">The inclusive start element index.</param>
+  /// <param name="endElementIndex">The exclusive end element index.</param>
+  /// <returns>The requested text-element segment.</returns>
+  private string GetTextElementSegment(
+      string word,
+      IReadOnlyList<int> textElementStarts,
+      int startElementIndex,
+      int endElementIndex)
+  {
+    var startCharacterIndex = textElementStarts[startElementIndex];
+    var endCharacterIndex = endElementIndex < textElementStarts.Count
+        ? textElementStarts[endElementIndex]
+        : word.Length;
+    return word.Substring(
+        startCharacterIndex,
+        endCharacterIndex - startCharacterIndex);
   }
 
   /// <summary>
