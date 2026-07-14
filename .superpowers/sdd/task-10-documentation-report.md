@@ -51,3 +51,11 @@
   Task 7A, 7D, and 8 reports.
 - `git diff --check` and `git diff --cached --check` completed without
   whitespace errors.
+## Review Follow-Up
+
+- Corrected the compatibility guide and persistence instruction: there is no
+  database-wide migration or inferred backfill, but a normal scoped upsert may
+  promote the compatible row it updates to canonical source metadata.
+- Clarified that `TranslationReuseScope` owns source, target, and engine policy;
+  content and version remain owner/query predicates.
+- Renamed the StringArray presentation wording to `plugin hover tooltips`.

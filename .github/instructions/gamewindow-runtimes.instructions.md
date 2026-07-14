@@ -16,8 +16,9 @@ applyTo:
 - If the base flow changes, preserve the current live-addon lifecycle and persistence semantics.
 - Capture one `SourceClientLanguage` per operation and carry it through lookup,
   provider work, persistence, and publication; fail closed if it is unresolved.
-- Build reuse with `TranslationReuseScope`, including source, target, content,
-  version, and engine-policy checks; do not widen dynamic-context reuse.
+- Build reuse with `TranslationReuseScope` for source, target, and engine
+  policy; combine it with the owner query's content and version checks. Do not
+  widen dynamic-context reuse.
 - Keep `nodeId:ordinal` allocation identical across capture, apply, stale
   recovery, and restore. Every visible node consumes an ordinal before filters.
 - Invalidate old source-owned state before publishing a new source generation.

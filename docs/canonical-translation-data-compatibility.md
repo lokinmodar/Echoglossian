@@ -25,19 +25,23 @@ than a provider code to a legacy string translation overload.
 
 ## Reuse And Persistence
 
-`TranslationReuseScope` requires matching source, target, game/version/content
-predicates, and engine policy from `TranslateAlreadyTranslatedTexts`. `chs`,
-`cht`, and `tc` never cross-reuse, even when provider aliases overlap. `zh-CN`
-is provider input, never a persisted client-source identity.
+`TranslationReuseScope` requires matching source, target, and engine policy
+from `TranslateAlreadyTranslatedTexts`. Its callers combine that predicate with
+their existing game-version and source-content checks. `chs`, `cht`, and `tc`
+never cross-reuse, even when provider aliases overlap. `zh-CN` is provider
+input, never a persisted client-source identity.
 
 No EF schema or data migration belongs to #139: existing tables retain source
-language. Do not rewrite aliases in place or deduplicate implicitly, because
-canonical and legacy rows can collide and provenance cannot be inferred safely.
-Read-time compatibility is limited to established legacy English, German,
-French, and Japanese labels and their canonical codes, under the complete
-current scope. Empty, unknown, generic-provider, and ambiguous Chinese legacy
-origins remain stored but non-reusable; a later live operation writes canonical
-provenance without rewriting prior history.
+language. Do not perform a database-wide alias rewrite or implicit
+deduplication, because canonical and legacy rows can collide and provenance
+cannot be inferred safely. Read-time compatibility is limited to established
+legacy English, German, French, and Japanese labels and their canonical codes,
+under the complete current scope. A normal scoped upsert may promote the source
+metadata of the compatible row it updates to its canonical code; that is not a
+backfill and never assigns a source to an ambiguous row. Empty, unknown,
+generic-provider, and ambiguous Chinese legacy origins remain stored but
+non-reusable until a new live-client operation creates or updates a
+source-proven row.
 
 ## Publication And Node Identity
 

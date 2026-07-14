@@ -17,5 +17,6 @@ applyTo:
 - Canonical rows include source identity and reuse through
   `TranslationReuseScope`; source, target, content/version, and engine policy
   remain required predicates.
-- Do not rewrite or deduplicate legacy aliases in place. Blank, generic,
-  unknown, and ambiguous Chinese legacy origins are retained but non-reusable.
+- Do not run a database-wide alias rewrite or implicit deduplication. A scoped
+  upsert may promote the compatible row it updates to canonical source metadata;
+  blank, generic, unknown, and ambiguous Chinese origins remain non-reusable.

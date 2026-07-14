@@ -247,12 +247,12 @@ the active `StringArrayType` surfaces listed above.
 ### Presentation Rule for `StringArrayData` Surfaces
 
 For migrated `StringArrayData` surfaces, non-native presentation should prefer
-Echoglossian tooltips per translated text:
+plugin hover tooltips per translated text:
 
 - native-only mode: translated text may be applied directly into the addon
-- ImGui mode: keep the native addon untouched and use Echoglossian tooltips for
+- ImGui mode: keep the native addon untouched and use plugin hover tooltips for
   each translated text block
-- swap mode: keep the translated text in the addon and use Echoglossian
+- swap mode: keep the translated text in the addon and use plugin hover
   tooltips to show the original text for each translated block
 
 This rule should guide future migrations so we do not reintroduce direct
