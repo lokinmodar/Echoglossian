@@ -20,6 +20,10 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         TimeSpan.FromMilliseconds(500);
 
     private readonly Config config;
+    private readonly CharacterCanonicalLookupSnapshotCache
+        characterLookupSnapshotCache = new();
+
+    private CharacterCanonicalLookups? cachedCharacterLookups;
 
     /// <summary>
     ///     Initializes a new instance of the
@@ -278,13 +282,46 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         out Dictionary<string, string> translatedLookup,
         out HashSet<string> knownTexts)
     {
-        originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-        translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-        knownTexts = new HashSet<string>(StringComparer.Ordinal);
-        var structuredRowsScanned = 0;
-        var structuredRowsResolved = 0;
-        var gameWindowRowsScanned = 0;
-        var gameWindowRowsResolved = 0;
+        var gameVersion = GetGameVersion();
+        var structuredCacheRevision = StringArrayDataCacheManager.Revision;
+        var gameWindowCacheRevision = GameWindowCacheManager.Revision;
+        if (!this.characterLookupSnapshotCache.IsCurrent(
+                scope,
+                gameVersion,
+                structuredCacheRevision,
+                gameWindowCacheRevision) ||
+            this.cachedCharacterLookups == null)
+        {
+            this.cachedCharacterLookups = this.BuildCharacterLookups(
+                scope,
+                gameVersion);
+            this.characterLookupSnapshotCache.Store(
+                scope,
+                gameVersion,
+                structuredCacheRevision,
+                gameWindowCacheRevision);
+        }
+
+        originalLookup = this.cachedCharacterLookups.OriginalLookup;
+        translatedLookup = this.cachedCharacterLookups.TranslatedLookup;
+        knownTexts = this.cachedCharacterLookups.KnownTexts;
+        return translatedLookup.Count > 0;
+    }
+
+    /// <summary>
+    ///     Rebuilds the Character canonical lookup from both live cache
+    ///     sources after their revision, scope, or game version changed.
+    /// </summary>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <returns>The resolved lookup snapshot, including an empty snapshot.</returns>
+    private CharacterCanonicalLookups BuildCharacterLookups(
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var knownTexts = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var contextKey in this.GetCharacterStructuredContextKeys())
         {
@@ -292,13 +329,12 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                     type: StringArrayType.Character.ToString(),
                     contextKey: contextKey,
                     scope: scope,
-                    gameVersion: GetGameVersion())
+                    gameVersion: gameVersion)
                 .OrderBy(row => row.Id)
                 .ToList();
 
             foreach (var row in candidates)
             {
-                structuredRowsScanned++;
                 if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
                         row,
                         out var originalStructuredPayload,
@@ -309,7 +345,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                     continue;
                 }
 
-                structuredRowsResolved++;
                 CharacterCanonicalPayloadHelper.AppendLookupEntries(
                     originalStructuredPayload.Slots.Values,
                     originalLookup,
@@ -326,9 +361,8 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
                      scope,
-                     GetGameVersion()).OrderBy(candidate => candidate.Id))
+                     gameVersion).OrderBy(candidate => candidate.Id))
         {
-            gameWindowRowsScanned++;
             if (!TryParseSerializedPayload(
                     row.OriginalWindowStrings,
                     out var rowOriginalPayload) ||
@@ -339,7 +373,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 continue;
             }
 
-            gameWindowRowsResolved++;
             CharacterCanonicalPayloadHelper.AppendLookupEntries(
                 rowOriginalPayload.AtkValues,
                 rowTranslatedPayload.AtkValues,
@@ -363,7 +396,56 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 requireDifference: true);
         }
 
-        return translatedLookup.Count > 0;
+        return new CharacterCanonicalLookups(
+            originalLookup,
+            translatedLookup,
+            knownTexts);
+    }
+
+    /// <summary>
+    ///     Holds one immutable-by-convention canonical lookup projection for
+    ///     the current Character handler scope.
+    /// </summary>
+    private sealed class CharacterCanonicalLookups
+    {
+        /// <summary>
+        ///     Initializes a new instance of the
+        ///     <see cref="CharacterCanonicalLookups" /> class.
+        /// </summary>
+        /// <param name="originalLookup">
+        ///     The mapping from visible text to canonical original text.
+        /// </param>
+        /// <param name="translatedLookup">
+        ///     The mapping from visible text to target translated text.
+        /// </param>
+        /// <param name="knownTexts">
+        ///     The set of original and translated texts known to this scope.
+        /// </param>
+        public CharacterCanonicalLookups(
+            Dictionary<string, string> originalLookup,
+            Dictionary<string, string> translatedLookup,
+            HashSet<string> knownTexts)
+        {
+            this.OriginalLookup = originalLookup;
+            this.TranslatedLookup = translatedLookup;
+            this.KnownTexts = knownTexts;
+        }
+
+        /// <summary>
+        ///     Gets the mapping from visible text to canonical original text.
+        /// </summary>
+        public Dictionary<string, string> OriginalLookup { get; }
+
+        /// <summary>
+        ///     Gets the mapping from visible text to target translated text.
+        /// </summary>
+        public Dictionary<string, string> TranslatedLookup { get; }
+
+        /// <summary>
+        ///     Gets the set of original and translated texts known to this
+        ///     scope.
+        /// </summary>
+        public HashSet<string> KnownTexts { get; }
     }
 
     /// <summary>

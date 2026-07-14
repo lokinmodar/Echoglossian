@@ -19,6 +19,7 @@ public static class GameWindowCacheManager
   private const string CharacterWindowNamePrefix = "Character";
 
   private static bool isPreloaded;
+  private static long revision;
 
   private static readonly Dictionary<string, GameWindow> ExactCache =
       new(StringComparer.Ordinal);
@@ -37,6 +38,12 @@ public static class GameWindowCacheManager
   ///     database for the current runtime session.
   /// </summary>
   public static bool IsPreloaded => isPreloaded;
+
+  /// <summary>
+  ///     Gets the monotonically increasing revision of the canonical cache.
+  ///     Runtime-local lookup snapshots must rebuild when this changes.
+  /// </summary>
+  public static long Revision => Interlocked.Read(ref revision);
 
   /// <summary>
   ///     Loads all GameWindow records from the database into memory.
@@ -59,6 +66,7 @@ public static class GameWindowCacheManager
       Cache.Clear();
       ExactCache.Clear();
       ScopeCache.Clear();
+      Interlocked.Increment(ref revision);
 
       foreach (var record in all)
       {
@@ -110,6 +118,7 @@ public static class GameWindowCacheManager
     }
 
     IndexRecord(newRecord);
+    Interlocked.Increment(ref revision);
     PluginRuntimeLog.Debug(
         "GameWindowCacheManager.Update",
         $"Cached GameWindow for addon: {newRecord.WindowAddonName} (now {GetAddonBucket(newRecord.WindowAddonName).Count} entries).");
@@ -124,6 +133,7 @@ public static class GameWindowCacheManager
     ExactCache.Clear();
     ScopeCache.Clear();
     isPreloaded = false;
+    Interlocked.Increment(ref revision);
     PluginRuntimeLog.Debug(
         "GameWindowCacheManager",
         "Cleared GameWindow cache.");

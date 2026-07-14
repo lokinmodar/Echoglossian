@@ -18,6 +18,14 @@ public static class StringArrayDataCacheManager
     private static readonly Dictionary<string, List<StringArrayDatas>> Cache =
         new(StringComparer.Ordinal);
 
+    private static long revision;
+
+    /// <summary>
+    ///     Gets the monotonically increasing revision of the canonical cache.
+    ///     Runtime-local lookup snapshots must rebuild when this changes.
+    /// </summary>
+    public static long Revision => Interlocked.Read(ref revision);
+
     /// <summary>
     ///     Loads all canonical <see cref="StringArrayDatas" /> rows into memory.
     /// </summary>
@@ -33,6 +41,7 @@ public static class StringArrayDataCacheManager
                 .ToList();
 
             Cache.Clear();
+            Interlocked.Increment(ref revision);
             foreach (var row in allRows)
             {
                 var typeKey = row.Type!;
@@ -89,6 +98,7 @@ public static class StringArrayDataCacheManager
         }
 
         rows.Add(newRecord);
+        Interlocked.Increment(ref revision);
     }
 
     /// <summary>
@@ -176,6 +186,7 @@ public static class StringArrayDataCacheManager
     public static void Clear()
     {
         Cache.Clear();
+        Interlocked.Increment(ref revision);
         PluginRuntimeLog.Debug("[StringArrayDataCacheManager] Cleared StringArrayData cache.");
     }
 

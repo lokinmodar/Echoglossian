@@ -128,6 +128,25 @@ made stricter, these windows may still:
 - flicker when the game repaints and the addon-local runtime tries to chase the
   new state
 
+### Character Lookup Snapshot Performance Rule
+
+`Character` and its dynamic subwindows may expose a large number of readable
+text nodes in one lifecycle pass. Their canonical original/translated lookup is
+therefore built once per handler-local snapshot, rather than once per node.
+
+The snapshot is valid only when all of the following remain unchanged:
+
+- the complete `TranslationReuseScope` (source client language, target
+  language, effective engine, and engine-reuse policy)
+- the requested game version
+- the revision of both `StringArrayDataCacheManager` and
+  `GameWindowCacheManager`
+
+Every cache preload, update, or clear advances its revision. The next
+Character-family resolution then rebuilds the snapshot exactly once, so a newly
+persisted translation remains visible without permanent per-frame JSON parsing
+or candidate sorting.
+
 ## 2. Active DB-First `GameWindow` Runtime
 
 These surfaces are still owned by

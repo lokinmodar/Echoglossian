@@ -249,6 +249,12 @@
                 database for the current runtime session.
             </summary>
         </member>
+        <member name="P:Echoglossian.Cache.GameWindowCacheManager.Revision">
+            <summary>
+                Gets the monotonically increasing revision of the canonical cache.
+                Runtime-local lookup snapshots must rebuild when this changes.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Cache.GameWindowCacheManager.Preload(System.String)">
             <summary>
                 Loads all GameWindow records from the database into memory.
@@ -944,6 +950,12 @@
                 Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.StringArrayDatas" />
                 rows so DB-first string-array runtimes do not need to query SQLite on
                 every lifecycle event.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.StringArrayDataCacheManager.Revision">
+            <summary>
+                Gets the monotonically increasing revision of the canonical cache.
+                Runtime-local lookup snapshots must rebuild when this changes.
             </summary>
         </member>
         <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.Preload(System.String)">
@@ -11983,6 +11995,43 @@
                 Clears all signatures during addon cleanup.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalLookupSnapshotCache">
+            <summary>
+                Tracks the identity of one handler-local Character canonical lookup
+                snapshot without coupling it to the cache row types.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalLookupSnapshotCache.IsCurrent(Echoglossian.TranslationReuseScope,System.String,System.Int64,System.Int64)">
+            <summary>
+                Determines whether the cached snapshot remains valid for the
+                current translation scope and both canonical data sources.
+            </summary>
+            <param name="scope">The complete translation reuse scope.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <param name="structuredCacheRevision">
+                The current StringArrayData cache revision.
+            </param>
+            <param name="gameWindowCacheRevision">
+                The current legacy GameWindow cache revision.
+            </param>
+            <returns>
+                <see langword="true" /> when the existing snapshot can be reused;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalLookupSnapshotCache.Store(Echoglossian.TranslationReuseScope,System.String,System.Int64,System.Int64)">
+            <summary>
+                Stores the identity of the freshly built lookup snapshot.
+            </summary>
+            <param name="scope">The complete translation reuse scope.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <param name="structuredCacheRevision">
+                The current StringArrayData cache revision.
+            </param>
+            <param name="gameWindowCacheRevision">
+                The current legacy GameWindow cache revision.
+            </param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterCanonicalPayloadHelper">
             <summary>
                 Provides exact-text canonicalization helpers for Character-family
@@ -12625,6 +12674,52 @@
                 <see langword="true" /> when one canonical Character payload could
                 be resolved from cache; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.BuildCharacterLookups(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Rebuilds the Character canonical lookup from both live cache
+                sources after their revision, scope, or game version changed.
+            </summary>
+            <param name="scope">The complete translation reuse scope.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <returns>The resolved lookup snapshot, including an empty snapshot.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CharacterCanonicalLookups">
+            <summary>
+                Holds one immutable-by-convention canonical lookup projection for
+                the current Character handler scope.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CharacterCanonicalLookups.#ctor(System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.HashSet{System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CharacterCanonicalLookups" /> class.
+            </summary>
+            <param name="originalLookup">
+                The mapping from visible text to canonical original text.
+            </param>
+            <param name="translatedLookup">
+                The mapping from visible text to target translated text.
+            </param>
+            <param name="knownTexts">
+                The set of original and translated texts known to this scope.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CharacterCanonicalLookups.OriginalLookup">
+            <summary>
+                Gets the mapping from visible text to canonical original text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CharacterCanonicalLookups.TranslatedLookup">
+            <summary>
+                Gets the mapping from visible text to target translated text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CharacterCanonicalLookups.KnownTexts">
+            <summary>
+                Gets the set of original and translated texts known to this
+                scope.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterTextNodeWindowHandlerBase.CreateTranslationReuseScope(Echoglossian.SourceClientLanguage)">
             <summary>
@@ -24447,7 +24542,9 @@
                 Whether the selected language forbids native UI mutation.
             </param>
             <param name="label">Optional label override for the combo.</param>
-            <param name="description">Optional help text shown below the combo.</param>
+            <param name="description">
+                Optional help text shown by the inline hover indicator.
+            </param>
             <param name="modeLabels">Optional display labels for the three modes.</param>
             <returns><c>true</c> when the selection changed.</returns>
         </member>
