@@ -221,3 +221,89 @@ Result: exit `0`; Git emitted line-ending conversion notices only.
   confirm neither text nor plugin-adjusted layout is restored over the repaint.
 - `Echoglossian.xml` remained an unrelated dirty worktree file and is excluded
   from this fix's staged scope.
+
+## Final-review appendix: exact restoration and atomic source publication
+
+### Status
+
+Implemented only the final Task 7A review findings. Prefetch, plugin UI, and XML
+files were not edited.
+
+### Root-cause correction
+
+- DB-first text restoration now resolves the exact recorded replacement by the
+  same stable node key and duplicate-node ordinal. It no longer restores from
+  an addon-wide translated-to-original map. TalkSubtitle likewise restores an
+  ordinal only when its live text exactly equals that ordinal's replacement.
+- Talk and BattleTalk dialogue-session identities now include the source client
+  captured by the operation, preventing context reuse across source changes for
+  an otherwise identical speaker, engine, and target.
+- Talk, BattleTalk, TalkSubtitle, and MiniTalk now capture a shared source
+  publication operation. Source invalidation and accepted publication execute
+  atomically through the narrow lifecycle seam, so stale completions cannot
+  republish diagnostics, overlay state, or native replacement state.
+- The lifecycle fast path is lock-free when the source is unchanged. No queue,
+  per-frame logging, or per-frame lock was added.
+
+### TDD evidence
+
+The valid RED run preceded production changes:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~NativeRuntimeSourceScopeTests|FullyQualifiedName~NativeDialogueHandlerLifecycleTests"
+```
+
+Result: exit `1` at compilation because the exact text-node mutation seam,
+source-aware dialogue-session key overloads, and handler lifecycle operation
+APIs did not exist.
+
+Core focused GREEN: `14` passed, `0` failed, `0` skipped.
+
+Broader focused GREEN:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~NativeRuntimeSourceScopeTests|FullyQualifiedName~NativeDialogueHandlerLifecycleTests|FullyQualifiedName~DbFirstPreDrawRefreshPolicyTests|FullyQualifiedName~DbFirstPayloadRecoveryHelperTests|FullyQualifiedName~DbFirstStructuredStringArrayHelperTests|FullyQualifiedName~ActionMenuWindowHandlerTests|FullyQualifiedName~DialogueTranslationSessionStoreTests"
+```
+
+Result: `62` passed, `0` failed, `0` skipped.
+
+The native-free regressions exercise handler source invalidation, overlay and
+active-replacement clearing, stale asynchronous completion rejection, exact
+per-node repaint preservation, and source-distinct Talk/BattleTalk session
+keys.
+
+### Files
+
+- `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`
+- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
+- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
+- `NativeUI/AddonHandlers/Talk/TalkSubtitleHandler.cs`
+- `NativeUI/AddonHandlers/SingleText/MiniTalkHandler.cs`
+- `Echoglossian.Tests/NativeRuntimeSourceScopeTests.cs`
+- `Echoglossian.Tests/NativeDialogueHandlerLifecycleTests.cs`
+- `.superpowers/sdd/task-7a-report.md`
+
+### Final validation
+
+```text
+dotnet build Echoglossian.sln -c Debug --no-restore
+```
+
+Result: succeeded with `0` errors and `2` existing warnings (Multilingual App
+Toolkit unavailable and `SQLitePCLRaw.lib.e_sqlite3 2.1.11` advisory).
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Result: `545` passed, `0` failed, `0` skipped.
+
+### Concerns and in-game verification
+
+- Native addon memory is unavailable in unit tests. Verify Talk, BattleTalk,
+  TalkSubtitle, MiniTalk, and a duplicate-node DB-first surface across source
+  transitions in native, overlay-only, and swap modes.
+- Repaint one translated node or subtitle ordinal with game-owned text before
+  invalidation and confirm only still-owned exact replacements are restored.
+- `Echoglossian.xml` remains an unrelated dirty worktree file and must stay
+  excluded from staging.

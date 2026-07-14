@@ -30,6 +30,7 @@ public sealed class TalkSubtitleHandler :
   private readonly Func<TalkSubtitleMessage, TalkSubtitleMessage?> findTalkSubtitleMessage;
   private readonly Func<TalkSubtitleMessage, Task<string>> insertTalkSubtitleMessageAsync;
   private readonly Func<string, string> normalizeReplacementText;
+  private readonly SourcePublicationLifecycle sourceLifecycle = new();
   private readonly object stateGate = new();
   private readonly TranslationService translationService;
   private readonly Action<string, string, string> updateOverlay;
@@ -126,6 +127,7 @@ public sealed class TalkSubtitleHandler :
     }
 
     this.InvalidateStateForSource(sourceLanguage);
+    var sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
 
     string originalText;
     int requestId;
@@ -200,31 +202,36 @@ public sealed class TalkSubtitleHandler :
                                      "No data to save.",
                                      StringComparison.Ordinal);
       var replacementText = this.NormalizeForReplacement(translatedText);
-      var sourceChangedBeforeApply = false;
-      lock (this.stateGate)
-      {
-        sourceChangedBeforeApply =
-            requestId != this.activeRequestId ||
-            !NativeRuntimeSourceScope.MatchesSource(
-                this.currentSourceLanguageCode,
-                sourceLanguage);
-        if (!sourceChangedBeforeApply)
-        {
-          this.translationInFlight = false;
-          this.currentTranslatedText = translatedText;
-          this.currentReplacementText = replacementText;
-        }
-      }
+      var stateUpdated = false;
+      var publicationAccepted = this.sourceLifecycle.TryPublish(
+          sourceOperation,
+          () =>
+          {
+            lock (this.stateGate)
+            {
+              if (requestId != this.activeRequestId ||
+                  !NativeRuntimeSourceScope.MatchesSource(
+                      this.currentSourceLanguageCode,
+                      sourceLanguage))
+              {
+                return;
+              }
 
-      if (!sourceChangedBeforeApply)
-      {
-        this.RecordDiagnosticsSnapshot(
-            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
-            originalText,
-            translatedText,
-            effectiveTranslationEngineId: dialogueTranslationEngine);
-        this.PublishOverlay(originalText, translatedText);
-      }
+              this.translationInFlight = false;
+              this.currentTranslatedText = translatedText;
+              this.currentReplacementText = replacementText;
+              stateUpdated = true;
+            }
+
+            this.RecordDiagnosticsSnapshot(
+                VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+                originalText,
+                translatedText,
+                effectiveTranslationEngineId: dialogueTranslationEngine);
+            this.PublishOverlay(originalText, translatedText);
+          });
+      var sourceChangedBeforeApply =
+          !publicationAccepted || !stateUpdated;
 
       if (!persistenceSucceeded)
       {
@@ -401,13 +408,15 @@ public sealed class TalkSubtitleHandler :
     if (this.TryQueueTranslation(
             originalText,
             sourceLanguage,
-            out var requestId))
+            out var requestId,
+            out var sourceOperation))
     {
       this.ClearOverlayForPendingState(originalText);
       Task.Run(() => this.ResolveTranslationAsync(
           originalText,
           requestId,
-          sourceLanguage));
+          sourceLanguage,
+          sourceOperation));
     }
   }
 
@@ -499,71 +508,68 @@ public sealed class TalkSubtitleHandler :
   private unsafe void InvalidateStateForSource(
       SourceClientLanguage? sourceLanguage)
   {
-    var originalText = string.Empty;
-    var replacementText = string.Empty;
-    var shouldInvalidate = false;
-    lock (this.stateGate)
-    {
-      shouldInvalidate =
-          !string.IsNullOrWhiteSpace(this.currentSourceLanguageCode) &&
-          !NativeRuntimeSourceScope.MatchesSource(
-              this.currentSourceLanguageCode,
-              sourceLanguage);
-      if (shouldInvalidate)
-      {
-        originalText = this.currentOriginalText;
-        replacementText = this.currentReplacementText;
-      }
-    }
-
-    if (!shouldInvalidate)
-    {
-      if (!sourceLanguage.HasValue)
-      {
-        this.clearOverlay();
-      }
-
-      return;
-    }
-
-    var addonPtr = GameGuiInterface.GetAddonByName(TalkSubtitleAddonName);
-    if (addonPtr.Address != IntPtr.Zero)
-    {
-      var addon = (AtkUnitBase*)addonPtr.Address;
-      if (addon != null && addon->IsVisible)
-      {
-        foreach (var nodeId in new[]
-                 {
-                   TextNodeId,
-                   AltTextNodeId,
-                   AltTextNodeId2,
-                 })
+    this.sourceLifecycle.TransitionTo(
+        sourceLanguage,
+        () =>
         {
-          var textNode = addon->GetTextNodeById((uint)nodeId);
-          if (textNode != null &&
-              this.TextMatches(this.ReadNodeText(textNode), replacementText))
+          var originalText = string.Empty;
+          var replacementText = string.Empty;
+          lock (this.stateGate)
           {
-            textNode->SetText(originalText);
+            if (!string.IsNullOrWhiteSpace(
+                    this.currentSourceLanguageCode))
+            {
+              originalText = this.currentOriginalText;
+              replacementText = this.currentReplacementText;
+            }
           }
-        }
-      }
-    }
 
-    lock (this.stateGate)
-    {
-      this.activeRequestId++;
-      this.currentSourceLanguageCode = string.Empty;
-      this.currentOriginalText = string.Empty;
-      this.currentTranslatedText = string.Empty;
-      this.currentReplacementText = string.Empty;
-      this.translationInFlight = false;
-      this.lastFailedOriginalText = string.Empty;
-      this.lastFailedSourceLanguageCode = string.Empty;
-    }
+          if (!string.IsNullOrWhiteSpace(replacementText))
+          {
+            var addonPtr = GameGuiInterface.GetAddonByName(
+                TalkSubtitleAddonName);
+            if (addonPtr.Address != IntPtr.Zero)
+            {
+              var addon = (AtkUnitBase*)addonPtr.Address;
+              if (addon != null && addon->IsVisible)
+              {
+                foreach (var nodeId in new[]
+                         {
+                           TextNodeId,
+                           AltTextNodeId,
+                           AltTextNodeId2,
+                         })
+                {
+                  var textNode = addon->GetTextNodeById((uint)nodeId);
+                  if (textNode != null)
+                  {
+                    NativeMutationOwnership.TryRestore(
+                        this.ReadNodeText(textNode),
+                        replacementText,
+                        originalText,
+                        restoredText => textNode->SetText(restoredText));
+                  }
+                }
+              }
+            }
+          }
 
-    VisibleStorySurfaceDiagnosticsStore.Clear(
-        VisibleStorySurfaceKind.TalkSubtitle);
-    this.clearOverlay();
+          lock (this.stateGate)
+          {
+            this.activeRequestId++;
+            this.currentSourceLanguageCode = string.Empty;
+            this.currentOriginalText = string.Empty;
+            this.currentTranslatedText = string.Empty;
+            this.currentReplacementText = string.Empty;
+            this.translationInFlight = false;
+            this.lastFailedOriginalText = string.Empty;
+            this.lastFailedSourceLanguageCode = string.Empty;
+          }
+
+          VisibleStorySurfaceDiagnosticsStore.Clear(
+              VisibleStorySurfaceKind.TalkSubtitle);
+          this.clearOverlay();
+        });
   }
 
   /// <summary>
@@ -596,11 +602,13 @@ public sealed class TalkSubtitleHandler :
   /// <param name="originalText">The original TalkSubtitle text.</param>
   /// <param name="requestId">The request identifier used to reject stale updates.</param>
   /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="sourceOperation">The source generation captured when queued.</param>
   /// <returns>A task that completes when the translation attempt finishes.</returns>
   private async Task ResolveTranslationAsync(
       string originalText,
       int requestId,
-      SourceClientLanguage sourceLanguage)
+      SourceClientLanguage sourceLanguage,
+      SourcePublicationOperation sourceOperation)
   {
     string translatedText;
     try
@@ -650,29 +658,35 @@ public sealed class TalkSubtitleHandler :
 
     await this.insertTalkSubtitleMessageAsync(translatedTalkSubtitle);
 
-    lock (this.stateGate)
-    {
-      if (requestId != this.activeRequestId ||
-          !NativeRuntimeSourceScope.MatchesSource(
-              this.currentSourceLanguageCode,
-              sourceLanguage))
-      {
-        return;
-      }
+    this.sourceLifecycle.TryPublish(
+        sourceOperation,
+        () =>
+        {
+          lock (this.stateGate)
+          {
+            if (requestId != this.activeRequestId ||
+                !NativeRuntimeSourceScope.MatchesSource(
+                    this.currentSourceLanguageCode,
+                    sourceLanguage))
+            {
+              return;
+            }
 
-      this.currentTranslatedText = translatedText;
-      this.currentReplacementText = replacementText;
-      this.translationInFlight = false;
-      this.lastFailedOriginalText = string.Empty;
-      this.lastFailedSourceLanguageCode = string.Empty;
-    }
+            this.currentTranslatedText = translatedText;
+            this.currentReplacementText = replacementText;
+            this.translationInFlight = false;
+            this.lastFailedOriginalText = string.Empty;
+            this.lastFailedSourceLanguageCode = string.Empty;
+          }
 
-    this.RecordDiagnosticsSnapshot(
-        VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
-        originalText,
-        translatedText,
-        effectiveTranslationEngineId: this.GetDialogueTranslationEngineId());
-    this.PublishOverlay(originalText, translatedText);
+          this.RecordDiagnosticsSnapshot(
+              VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+              originalText,
+              translatedText,
+              effectiveTranslationEngineId:
+                  this.GetDialogueTranslationEngineId());
+          this.PublishOverlay(originalText, translatedText);
+        });
   }
 
   /// <summary>
@@ -791,6 +805,9 @@ public sealed class TalkSubtitleHandler :
   /// </summary>
   /// <param name="originalText">The source TalkSubtitle text.</param>
   /// <param name="requestId">Receives the active request identifier.</param>
+  /// <param name="sourceOperation">
+  ///     Receives the source generation captured by the request.
+  /// </param>
   /// <returns>
   ///     <see langword="true" /> when a new translation task should be queued;
   ///     otherwise, <see langword="false" />.
@@ -798,7 +815,8 @@ public sealed class TalkSubtitleHandler :
   private bool TryQueueTranslation(
       string originalText,
       SourceClientLanguage sourceLanguage,
-      out int requestId)
+      out int requestId,
+      out SourcePublicationOperation sourceOperation)
   {
     lock (this.stateGate)
     {
@@ -815,6 +833,7 @@ public sealed class TalkSubtitleHandler :
              this.TextMatches(this.lastFailedOriginalText, originalText)))
         {
           requestId = this.activeRequestId;
+          sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
           return false;
         }
       }
@@ -826,6 +845,7 @@ public sealed class TalkSubtitleHandler :
       this.currentReplacementText = string.Empty;
       this.translationInFlight = true;
       requestId = this.activeRequestId;
+      sourceOperation = this.sourceLifecycle.Capture(sourceLanguage);
       return true;
     }
   }

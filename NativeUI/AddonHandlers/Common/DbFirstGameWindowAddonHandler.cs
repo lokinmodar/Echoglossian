@@ -2696,14 +2696,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         DbFirstGameWindowPayload originalPayload)
     {
-        var translatedToOriginal = BuildTooltipTextMap(
+        var runtimeState = new DbFirstGameWindowRuntimeState(
+            string.Empty,
+            string.Empty,
             originalPayload,
-            translatedPayload,
-            useTranslatedKeys: true);
-        if (translatedToOriginal.Count == 0)
-        {
-            return;
-        }
+            translatedPayload);
+        var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
         {
@@ -2714,18 +2712,15 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            var currentText = this.ReadTextNode(textNode);
-            if (!translatedToOriginal.TryGetValue(
-                    currentText,
-                    out var originalText))
-            {
-                continue;
-            }
+            var nodeId = textNode->AtkResNode.NodeId;
+            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
+            ordinalsByNodeId[nodeId] = ordinal + 1;
 
-            NativeMutationOwnership.TryRestore(
+            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            var currentText = this.ReadTextNode(textNode);
+            runtimeState.TryRestoreTextNode(
+                textNodeKey,
                 currentText,
-                currentText,
-                originalText,
                 restoredText => ((AtkTextNode*)nodeAddress)->SetText(
                     restoredText));
         }
@@ -3727,6 +3722,130 @@ internal sealed class DbFirstSourceRetryGate
 }
 
 /// <summary>
+///     Identifies one publication operation owned by a source generation.
+/// </summary>
+/// <param name="SourceLanguageCode">The canonical source persistence identity.</param>
+/// <param name="Generation">The source generation captured by the operation.</param>
+internal readonly record struct SourcePublicationOperation(
+    string SourceLanguageCode,
+    long Generation);
+
+/// <summary>
+///     Orders source invalidation and asynchronous publication so a stale
+///     operation cannot publish after its source generation is retired.
+/// </summary>
+internal sealed class SourcePublicationLifecycle
+{
+    private readonly object gate = new();
+    private string currentSourceLanguageCode = string.Empty;
+    private long generation;
+    private bool initialized;
+
+    /// <summary>
+    ///     Transitions to the supplied source and atomically runs invalidation
+    ///     when the canonical source identity changed.
+    /// </summary>
+    /// <param name="sourceLanguage">The current source, or no value when unresolved.</param>
+    /// <param name="invalidate">The handler-owned invalidation action.</param>
+    /// <returns>The operation token for the resulting source generation.</returns>
+    public SourcePublicationOperation TransitionTo(
+        SourceClientLanguage? sourceLanguage,
+        Action invalidate)
+    {
+        var sourceLanguageCode =
+            sourceLanguage?.PersistenceCode ?? string.Empty;
+        if (Volatile.Read(ref this.initialized) &&
+            string.Equals(
+                Volatile.Read(ref this.currentSourceLanguageCode),
+                sourceLanguageCode,
+                StringComparison.Ordinal))
+        {
+            return new SourcePublicationOperation(
+                sourceLanguageCode,
+                Volatile.Read(ref this.generation));
+        }
+
+        lock (this.gate)
+        {
+            if (this.initialized &&
+                string.Equals(
+                    this.currentSourceLanguageCode,
+                    sourceLanguageCode,
+                    StringComparison.Ordinal))
+            {
+                return new SourcePublicationOperation(
+                    sourceLanguageCode,
+                    this.generation);
+            }
+
+            this.generation++;
+            Volatile.Write(
+                ref this.currentSourceLanguageCode,
+                sourceLanguageCode);
+            Volatile.Write(ref this.initialized, true);
+            invalidate();
+            return new SourcePublicationOperation(
+                sourceLanguageCode,
+                this.generation);
+        }
+    }
+
+    /// <summary>
+    ///     Captures the current operation token for a resolved source.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation source.</param>
+    /// <returns>
+    ///     The current token, or the default token when the source is not the
+    ///     active generation.
+    /// </returns>
+    public SourcePublicationOperation Capture(
+        SourceClientLanguage sourceLanguage)
+    {
+        var sourceLanguageCode = sourceLanguage.PersistenceCode;
+        if (!Volatile.Read(ref this.initialized) ||
+            !string.Equals(
+                Volatile.Read(ref this.currentSourceLanguageCode),
+                sourceLanguageCode,
+                StringComparison.Ordinal))
+        {
+            return default;
+        }
+
+        return new SourcePublicationOperation(
+            sourceLanguageCode,
+            Volatile.Read(ref this.generation));
+    }
+
+    /// <summary>
+    ///     Publishes one operation only while its source generation remains
+    ///     current, holding the lifecycle gate through the publication action.
+    /// </summary>
+    /// <param name="operation">The operation-captured source token.</param>
+    /// <param name="publish">The handler-owned publication action.</param>
+    /// <returns>True when the publication ran.</returns>
+    public bool TryPublish(
+        SourcePublicationOperation operation,
+        Action publish)
+    {
+        lock (this.gate)
+        {
+            if (!this.initialized ||
+                operation.Generation != this.generation ||
+                !string.Equals(
+                    operation.SourceLanguageCode,
+                    this.currentSourceLanguageCode,
+                    StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            publish();
+            return true;
+        }
+    }
+}
+
+/// <summary>
 ///     Restores one plugin-owned native field only while the live field still
 ///     contains the exact replacement written by the plugin.
 /// </summary>
@@ -3796,6 +3915,32 @@ internal sealed record DbFirstGameWindowRuntimeState(
     public bool ShouldInvalidateFor(SourceClientLanguage? sourceLanguage)
     {
         return !this.MatchesSource(sourceLanguage);
+    }
+
+    /// <summary>
+    ///     Restores one text node only when the same stable key still contains
+    ///     the exact replacement recorded for that key.
+    /// </summary>
+    /// <param name="textNodeKey">The stable node id and ordinal key.</param>
+    /// <param name="currentText">The current game-visible text.</param>
+    /// <param name="restore">The native restore mutation.</param>
+    /// <returns>True when the exact owned replacement was restored.</returns>
+    public bool TryRestoreTextNode(
+        string textNodeKey,
+        string currentText,
+        Action<string> restore)
+    {
+        return this.OriginalPayload.TextNodes.TryGetValue(
+                   textNodeKey,
+                   out var originalText) &&
+               this.TranslatedPayload.TextNodes.TryGetValue(
+                   textNodeKey,
+                   out var replacementText) &&
+               NativeMutationOwnership.TryRestore(
+                   currentText,
+                   replacementText,
+                   originalText,
+                   restore);
     }
 }
 

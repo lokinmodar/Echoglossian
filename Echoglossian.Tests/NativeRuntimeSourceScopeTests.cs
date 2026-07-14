@@ -242,6 +242,35 @@ public class NativeRuntimeSourceScopeTests
     }
 
     /// <summary>
+    ///     Ensures DB-first restoration uses the replacement recorded for the
+    ///     same stable node key rather than another node's equal translation.
+    /// </summary>
+    [Fact]
+    public void RuntimeState_TextNodeGameRepaint_PreservesDifferentStableNode()
+    {
+        var originalPayload = CreateTextNodePayload(
+            ("2:0", "Original first"),
+            ("2:1", "Original second"));
+        var translatedPayload = CreateTextNodePayload(
+            ("2:0", "Shared translation"),
+            ("2:1", "Second translation"));
+        var state = new DbFirstGameWindowRuntimeState(
+            "en",
+            "payload-key",
+            originalPayload,
+            translatedPayload);
+        var restoredText = string.Empty;
+
+        var restored = state.TryRestoreTextNode(
+            "2:1",
+            "Shared translation",
+            text => restoredText = text);
+
+        Assert.False(restored);
+        Assert.Equal(string.Empty, restoredText);
+    }
+
+    /// <summary>
     ///     Creates a minimal DB-first payload for native-free runtime tests.
     /// </summary>
     /// <param name="text">The payload text.</param>
@@ -255,5 +284,21 @@ public class NativeRuntimeSourceScopeTests
             },
             new SortedDictionary<int, string>(),
             new SortedDictionary<string, string>(StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    ///     Creates a text-node-only payload using stable node keys.
+    /// </summary>
+    /// <param name="values">The stable keys and text values.</param>
+    /// <returns>The requested payload.</returns>
+    private static DbFirstGameWindowPayload CreateTextNodePayload(
+        params (string Key, string Text)[] values)
+    {
+        return new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(
+                values.ToDictionary(value => value.Key, value => value.Text),
+                StringComparer.Ordinal));
     }
 }
