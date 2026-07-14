@@ -194,3 +194,68 @@ git diff --check
 - Build: passed with 0 errors; the existing Multilingual App Toolkit and
   SQLitePCLRaw 2.1.11 `NU1903` warnings remain.
 - Full suite: 534 passed, 0 failed, 0 skipped.
+
+## Final P2 Operation-Scope Follow-up
+
+The final P2 root cause was narrower than the prior production-boundary
+coverage. The outer ActionDetail, ReferenceText, and accepted-quest operations
+captured one immutable `SourceClientLanguage` and `TranslationReuseScope`, but
+their name subflows accepted a live configuration and rebuilt target, engine,
+and engine-policy scope. Canonical rows and sibling description/quest work used
+the outer scope while name broker keys and callbacks could use the recaptured
+policy.
+
+Each production outer operation now owns canonical persistence and name
+dispatch through one narrow operation entry. That entry receives the exact
+captured source and scope, uses them for the canonical row, name broker key,
+translation resolver, and completion callback, and returns the canonical row
+to the existing sibling work units. The mutable configuration/source resolver
+name seam was removed. Existing shared broker, row creators, lookups, and
+persistence delegates remain unchanged.
+
+The replacement regression enters each real outer operation boundary. Its
+canonical persistence callback mutates live source, target, engine, and engine
+policy before name work is dispatched. Both queued and cache-hit cases assert
+that one canonical row and one translated-name row reach production
+persistence with the original `chs` / `pt-BR` / engine 4 scope and that the
+name broker key retains the original matching-engine policy. Unknown source
+still stops before canonical persistence or broker access.
+
+RED command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter "FullyQualifiedName~PrefetchBrokerSourceScopeTests"
+```
+
+RED result: test compilation failed only on the intentionally missing
+`RunActionDetailPrefetchOperationEntry`,
+`RunReferenceTextPrefetchOperationEntry`, and
+`RunAcceptedQuestPrefetchOperationEntry` production methods (`CS0117`).
+
+Focused GREEN command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~PrefetchBrokerSourceScopeTests"
+```
+
+Focused GREEN result: 9 passed, 0 failed.
+
+Broader Task 7B command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~TranslationServiceTests|FullyQualifiedName~PrefetchBrokerSourceScopeTests|FullyQualifiedName~QueuedTranslationBrokerTests|FullyQualifiedName~TranslationFailureCacheManagerTests"
+```
+
+Broader Task 7B result: 34 passed, 0 failed.
+
+Final validation:
+
+```powershell
+dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+git diff --check
+```
+
+- Build: passed with 0 errors; existing repository warnings remain.
+- Full suite: 536 passed, 0 failed, 0 skipped.
+- `Echoglossian.xml` remained outside Task 7B ownership and was not staged.

@@ -260,50 +260,12 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var originalRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            scope.SourceLanguageCode,
-            scope.TargetLanguageCode,
-            scope.TranslationEngine!.Value,
-            GetGameVersion(),
-            originalPayload);
-        var existingRow = this.FindActionTooltip(originalRow) ?? originalRow;
-        this.InsertActionTooltip(originalRow);
-
-        this.PrefetchActionDetailName(
-            originalPayload,
-            existingRow,
-            sourceLanguage);
-        this.PrefetchActionDetailDescription(
-            originalPayload,
-            existingRow,
-            sourceLanguage,
-            scope);
-    }
-
-    /// <summary>
-    ///     Prefetches the translated action name when it is not yet persisted.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    private void PrefetchActionDetailName(
-        ActionTooltipCanonicalPayload originalPayload,
-        ActionTooltip existingRow,
-        SourceClientLanguage sourceLanguage)
-    {
-        if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedActionName))
-        {
-            return;
-        }
-
         var translationService = TranslationService;
-        RunActionDetailNamePrefetchEntry(
-            $"ActionDetailPrefetch|{originalPayload.ActionId}|Name|{originalPayload.Name}",
+        RunActionDetailPrefetchOperationEntry(
             originalPayload,
             GetGameVersion(),
-            () => sourceLanguage,
-            this.configuration,
+            sourceLanguage,
+            scope,
             this.TryGetQueuedTranslation,
             this.QueueTranslation,
             (sourceText, capturedSource, targetLanguage) =>
@@ -312,7 +274,13 @@ public unsafe partial class Echoglossian
                     capturedSource,
                     targetLanguage),
             this.FindActionTooltip,
-            row => this.InsertActionTooltip(row));
+            row => this.InsertActionTooltip(row),
+            out var existingRow);
+        this.PrefetchActionDetailDescription(
+            originalPayload,
+            existingRow,
+            sourceLanguage,
+            scope);
     }
 
     /// <summary>
@@ -572,41 +540,64 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
-    ///     Runs the production ActionDetail name-prefetch entry through broker
-    ///     completion and canonical row persistence.
+    ///     Runs one production ActionDetail operation from canonical persistence
+    ///     through name broker completion.
     /// </summary>
-    /// <param name="payloadIdentity">The action-name payload identity.</param>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="gameVersion">The captured game version.</param>
-    /// <param name="sourceLanguageResolver">Resolves the live source language.</param>
-    /// <param name="configuration">The live translation configuration.</param>
+    /// <param name="sourceLanguage">The operation-captured source contract.</param>
+    /// <param name="scope">The operation-captured reuse scope.</param>
     /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
     /// <param name="queueTranslation">The shared broker queue operation.</param>
     /// <param name="translate">The production translation operation.</param>
     /// <param name="findRow">The production action-row lookup.</param>
     /// <param name="persistRow">The production action-row persistence operation.</param>
+    /// <param name="existingRow">The canonical row used by sibling work units.</param>
     /// <returns>The production dispatch result.</returns>
     internal static PrefetchTranslationDispatchResult
-        RunActionDetailNamePrefetchEntry(
-            string payloadIdentity,
+        RunActionDetailPrefetchOperationEntry(
             ActionTooltipCanonicalPayload originalPayload,
             string? gameVersion,
-            Func<SourceClientLanguage?> sourceLanguageResolver,
-            Config configuration,
+            SourceClientLanguage sourceLanguage,
+            TranslationReuseScope scope,
             TryGetPrefetchTranslationDelegate tryGetTranslation,
             QueuePrefetchTranslationDelegate queueTranslation,
             ResolvePrefetchTranslationDelegate translate,
             Func<ActionTooltip, ActionTooltip?> findRow,
-            Action<ActionTooltip> persistRow)
+            Action<ActionTooltip> persistRow,
+            out ActionTooltip existingRow)
     {
-        return RunCapturedPrefetchEntry(
-            payloadIdentity,
-            originalPayload.Name,
-            sourceLanguageResolver,
-            configuration,
+        if (!IsValidCapturedPrefetchScope(sourceLanguage, scope))
+        {
+            existingRow = null!;
+            return PrefetchTranslationDispatchResult.Rejected;
+        }
+
+        var originalRow = ActionTooltipPersistenceHelper.CreateCanonicalRow(
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
+            gameVersion,
+            originalPayload);
+        existingRow = findRow(originalRow) ?? originalRow;
+        persistRow(originalRow);
+
+        if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
+            !string.IsNullOrWhiteSpace(existingRow.TranslatedActionName))
+        {
+            return PrefetchTranslationDispatchResult.Rejected;
+        }
+
+        return DispatchActionDetailPrefetchTranslation(
+            $"ActionDetailPrefetch|{originalPayload.ActionId}|Name|{originalPayload.Name}",
+            sourceLanguage,
+            scope,
             tryGetTranslation,
             queueTranslation,
-            translate,
+            () => translate(
+                originalPayload.Name,
+                sourceLanguage,
+                scope.TargetLanguageCode),
             (translatedName, capturedScope, _) =>
             {
                 var translatedRow = CreateActionDetailTranslationRow(
@@ -637,57 +628,6 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
-    ///     Captures live source/configuration once and routes a production
-    ///     prefetch entry through the existing scoped broker.
-    /// </summary>
-    /// <param name="payloadIdentity">The existing payload identity.</param>
-    /// <param name="sourceText">The source text to translate.</param>
-    /// <param name="sourceLanguageResolver">Resolves the live source language.</param>
-    /// <param name="configuration">The live translation configuration.</param>
-    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
-    /// <param name="queueTranslation">The shared broker queue operation.</param>
-    /// <param name="translate">The production translation operation.</param>
-    /// <param name="onCompleted">The production persistence callback.</param>
-    /// <returns>The production dispatch result.</returns>
-    private static PrefetchTranslationDispatchResult RunCapturedPrefetchEntry(
-        string payloadIdentity,
-        string sourceText,
-        Func<SourceClientLanguage?> sourceLanguageResolver,
-        Config configuration,
-        TryGetPrefetchTranslationDelegate tryGetTranslation,
-        QueuePrefetchTranslationDelegate queueTranslation,
-        ResolvePrefetchTranslationDelegate translate,
-        Action<string, TranslationReuseScope, bool> onCompleted)
-    {
-        var sourceLanguage = sourceLanguageResolver();
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            configuration.Lang);
-        if (!sourceLanguage.HasValue ||
-            string.IsNullOrWhiteSpace(targetLanguage))
-        {
-            return PrefetchTranslationDispatchResult.Rejected;
-        }
-
-        var capturedSourceLanguage = sourceLanguage.Value;
-        var scope = new TranslationReuseScope(
-            capturedSourceLanguage.PersistenceCode,
-            targetLanguage,
-            configuration.ChosenTransEngine,
-            configuration.TranslateAlreadyTranslatedTexts);
-        return DispatchScopedPrefetchTranslation(
-            BuildTranslationReuseScopedKey(payloadIdentity, scope),
-            capturedSourceLanguage,
-            scope,
-            tryGetTranslation,
-            queueTranslation,
-            () => translate(
-                sourceText,
-                capturedSourceLanguage,
-                scope.TargetLanguageCode),
-            onCompleted);
-    }
-
-    /// <summary>
     ///     Routes one captured prefetch operation through cache lookup, broker
     ///     queueing, and completion without rebuilding mutable runtime scope.
     /// </summary>
@@ -709,12 +649,7 @@ public unsafe partial class Echoglossian
             Func<string> resolver,
             Action<string, TranslationReuseScope, bool> onCompleted)
     {
-        if (!TranslationService.IsKnownCapturedSourceLanguage(sourceLanguage) ||
-            !RuntimeLanguageHelper.LanguagesMatch(
-                sourceLanguage.PersistenceCode,
-                scope.SourceLanguageCode) ||
-            string.IsNullOrWhiteSpace(scope.TargetLanguageCode) ||
-            !scope.TranslationEngine.HasValue)
+        if (!IsValidCapturedPrefetchScope(sourceLanguage, scope))
         {
             return PrefetchTranslationDispatchResult.Rejected;
         }
@@ -731,6 +666,24 @@ public unsafe partial class Echoglossian
             translatedText => onCompleted(translatedText, scope, false))
             ? PrefetchTranslationDispatchResult.Queued
             : PrefetchTranslationDispatchResult.AlreadyPending;
+    }
+
+    /// <summary>
+    ///     Validates one immutable prefetch source and reuse-scope pair.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source contract.</param>
+    /// <param name="scope">The operation-captured reuse scope.</param>
+    /// <returns><see langword="true" /> when the pair is complete and consistent.</returns>
+    private static bool IsValidCapturedPrefetchScope(
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope)
+    {
+        return TranslationService.IsKnownCapturedSourceLanguage(sourceLanguage) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   sourceLanguage.PersistenceCode,
+                   scope.SourceLanguageCode) &&
+               !string.IsNullOrWhiteSpace(scope.TargetLanguageCode) &&
+               scope.TranslationEngine.HasValue;
     }
 
     /// <summary>
