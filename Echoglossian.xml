@@ -20619,7 +20619,7 @@
             <param name="originalPayload">The original canonical payload.</param>
             <returns>The projected original payload maps.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslatePayloadAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslatePayloadAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String)">
             <summary>
                 Translates one canonical payload while preserving slot semantics and
                 structure.
@@ -20630,7 +20630,7 @@
             <param name="targetLanguage">The target language.</param>
             <returns>The translated canonical payload.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslateAndPersistAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,System.String,System.String,System.Nullable{System.Int32},System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslateAndPersistAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String,System.Nullable{System.Int32},System.String,System.String)">
             <summary>
                 Translates one canonical payload and persists it to the
                 <c>stringarraydatas</c> table.
@@ -20842,7 +20842,7 @@
                 Helper for performing async translation logic outside unsafe context.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslatePayloadAsync(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.String,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslatePayloadAsync(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String,Echoglossian.Translators.TranslationService)">
             <summary>
             Performs async translation for one DB-first payload without persisting it.
             </summary>
@@ -20876,7 +20876,7 @@
             <param name="service">The translation service instance.</param>
             <returns> </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslateMissingEntriesIndividuallyAsync(Echoglossian.Translators.TranslationService,System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslateMissingEntriesIndividuallyAsync(Echoglossian.Translators.TranslationService,System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String)">
             <summary>
                 Translates any entries that were missing from the batched response one
                 by one so sparse parser failures do not discard an otherwise valid
