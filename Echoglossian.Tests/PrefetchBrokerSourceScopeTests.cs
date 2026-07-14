@@ -71,42 +71,91 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     {
         var configuration = CreateConfiguration();
         var liveSource = new SourceClientLanguage("chs", "zh-CN");
-        var capturedSource = liveSource;
-        var capturedScope = CreateCapturedScope(configuration, capturedSource);
         var resolverGate = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
-        var persistenceCompletion = new TaskCompletionSource<object[]>(
+        var chsPersistenceCompletion = new TaskCompletionSource<object[]>(
             TaskCreationOptions.RunContinuationsAsynchronously);
-        var persistedRows = new ConcurrentQueue<object>();
-        string? capturedBrokerKey = null;
+        var chtPersistenceCompletion = new TaskCompletionSource<object[]>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var chsPersistedRows = new ConcurrentQueue<object>();
+        var chtPersistedRows = new ConcurrentQueue<object>();
+        string? chsBrokerKey = null;
+        string? chtBrokerKey = null;
 
         using var broker = CreateBroker();
 
-        var result = RunOperation(
+        var chsResult = RunOperation(
             family,
-            capturedSource,
-            capturedScope,
+            () => liveSource,
+            configuration,
             broker.TryGetCached,
-            Queue,
-            Persist);
+            QueueChs,
+            PersistChs,
+            out var chsCapturedSource,
+            out var chsCapturedScope);
+
+        Assert.Equal(PrefetchTranslationDispatchResult.Queued, chsResult);
+
+        liveSource = new SourceClientLanguage("cht", "zh-CN");
+        MutateConfiguration(configuration);
+
+        var chtResult = RunOperation(
+            family,
+            () => liveSource,
+            configuration,
+            broker.TryGetCached,
+            QueueCht,
+            PersistCht,
+            out var chtCapturedSource,
+            out var chtCapturedScope);
 
         resolverGate.TrySetResult(true);
 
-        var rows = await persistenceCompletion.Task.WaitAsync(
+        var chsRows = await chsPersistenceCompletion.Task.WaitAsync(
+            TimeSpan.FromSeconds(2));
+        var chtRows = await chtPersistenceCompletion.Task.WaitAsync(
             TimeSpan.FromSeconds(2));
 
-        Assert.Equal(PrefetchTranslationDispatchResult.Queued, result);
-        Assert.EndsWith(ExpectedBrokerScope, capturedBrokerKey);
-        AssertCanonicalAndNameRows(rows);
+        Assert.Equal(PrefetchTranslationDispatchResult.Queued, chtResult);
+        Assert.Equal(new SourceClientLanguage("chs", "zh-CN"), chsCapturedSource);
+        Assert.Equal(
+            new TranslationReuseScope("chs", "pt-BR", 4, true),
+            chsCapturedScope);
+        Assert.Equal(new SourceClientLanguage("cht", "zh-CN"), chtCapturedSource);
+        Assert.Equal(
+            new TranslationReuseScope("cht", "iw", 8, false),
+            chtCapturedScope);
+        Assert.EndsWith(ExpectedBrokerScope, chsBrokerKey);
+        Assert.EndsWith("|Scope|cht|iw|8|False", chtBrokerKey);
+        Assert.NotEqual(chsBrokerKey, chtBrokerKey);
+        AssertCanonicalAndNameRows(chsRows, chsCapturedScope);
+        AssertCanonicalAndNameRows(chtRows, chtCapturedScope);
         AssertLiveScopeMutated(configuration, liveSource);
         return;
 
-        bool Queue(
+        bool QueueChs(
             string key,
             Func<string> resolver,
             Action<string>? onResolved)
         {
-            capturedBrokerKey = key;
+            chsBrokerKey = key;
+            return QueueBroker(key, resolver, onResolved);
+        }
+
+        bool QueueCht(
+            string key,
+            Func<string> resolver,
+            Action<string>? onResolved)
+        {
+            chtBrokerKey = key;
+            return QueueBroker(key, resolver, onResolved);
+        }
+
+        bool QueueBroker(
+            string key,
+            Func<string> resolver,
+            Action<string>? onResolved)
+        {
             return broker.Queue(
                 key,
                 async () =>
@@ -117,17 +166,24 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                 onResolved);
         }
 
-        void Persist(object row)
+        void PersistChs(object row)
         {
-            persistedRows.Enqueue(row);
-            if (persistedRows.Count == 1)
+            chsPersistedRows.Enqueue(row);
+            if (chsPersistedRows.Count == 2)
             {
-                liveSource = new SourceClientLanguage("cht", "zh-CN");
-                MutateConfiguration(configuration);
-                return;
+                chsPersistenceCompletion.TrySetResult(
+                    chsPersistedRows.ToArray());
             }
+        }
 
-            persistenceCompletion.TrySetResult(persistedRows.ToArray());
+        void PersistCht(object row)
+        {
+            chtPersistedRows.Enqueue(row);
+            if (chtPersistedRows.Count == 2)
+            {
+                chtPersistenceCompletion.TrySetResult(
+                    chtPersistedRows.ToArray());
+            }
         }
     }
 
@@ -145,8 +201,6 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     {
         var configuration = CreateConfiguration();
         var liveSource = new SourceClientLanguage("chs", "zh-CN");
-        var capturedSource = liveSource;
-        var capturedScope = CreateCapturedScope(configuration, capturedSource);
         string? capturedBrokerKey = null;
         var persistedRows = new List<object>();
         var brokerQueueCalls = 0;
@@ -154,8 +208,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
 
         var result = RunOperation(
             family,
-            capturedSource,
-            capturedScope,
+            () => liveSource,
+            configuration,
             TryGet,
             (_, _, _) =>
             {
@@ -163,11 +217,17 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                 return false;
             },
             Persist,
+            out var capturedSource,
+            out var capturedScope,
             () => translatorCalls++);
 
         Assert.Equal(PrefetchTranslationDispatchResult.Cached, result);
+        Assert.Equal(new SourceClientLanguage("chs", "zh-CN"), capturedSource);
+        Assert.Equal(
+            new TranslationReuseScope("chs", "pt-BR", 4, true),
+            capturedScope);
         Assert.EndsWith(ExpectedBrokerScope, capturedBrokerKey);
-        AssertCanonicalAndNameRows(persistedRows);
+        AssertCanonicalAndNameRows(persistedRows, capturedScope);
         AssertLiveScopeMutated(configuration, liveSource);
         Assert.Equal(0, brokerQueueCalls);
         Assert.Equal(0, translatorCalls);
@@ -176,6 +236,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         bool TryGet(string key, out string translatedText)
         {
             capturedBrokerKey = key;
+            liveSource = new SourceClientLanguage("cht", "zh-CN");
+            MutateConfiguration(configuration);
             translatedText = "cached translation";
             return true;
         }
@@ -183,11 +245,6 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         void Persist(object row)
         {
             persistedRows.Add(row);
-            if (persistedRows.Count == 1)
-            {
-                liveSource = new SourceClientLanguage("cht", "zh-CN");
-                MutateConfiguration(configuration);
-            }
         }
     }
 
@@ -203,6 +260,7 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     public void PrefetchEntry_UnknownSource_DoesNotReachBroker(
         PrefetchFamily family)
     {
+        var configuration = CreateConfiguration();
         var brokerLookupCalls = 0;
         var brokerQueueCalls = 0;
         var translatorCalls = 0;
@@ -210,8 +268,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
 
         var result = RunOperation(
             family,
-            new SourceClientLanguage("unknown", "unknown"),
-            new TranslationReuseScope("unknown", "pt-BR", 4, true),
+            () => new SourceClientLanguage("unknown", "unknown"),
+            configuration,
             TryGet,
             (_, _, _) =>
             {
@@ -219,6 +277,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                 return false;
             },
             _ => persistenceCalls++,
+            out _,
+            out _,
             () => translatorCalls++);
 
         Assert.Equal(PrefetchTranslationDispatchResult.Rejected, result);
@@ -238,11 +298,13 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
 
     private static PrefetchTranslationDispatchResult RunOperation(
         PrefetchFamily family,
-        SourceClientLanguage sourceLanguage,
-        TranslationReuseScope scope,
+        Func<SourceClientLanguage?> sourceLanguageResolver,
+        Config configuration,
         TryGetPrefetchTranslationDelegate tryGetTranslation,
         QueuePrefetchTranslationDelegate queueTranslation,
         Action<object> persistRow,
+        out SourceClientLanguage capturedSourceLanguage,
+        out TranslationReuseScope capturedScope,
         Action? onTranslate = null)
     {
         return family switch
@@ -255,13 +317,15 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                         Name = "Original action",
                     },
                     "test-version",
-                    sourceLanguage,
-                    scope,
+                    sourceLanguageResolver,
+                    configuration,
                     tryGetTranslation,
                     queueTranslation,
                     Translate,
                     _ => null,
                     row => persistRow(row),
+                    out capturedSourceLanguage,
+                    out capturedScope,
                     out _),
             PrefetchFamily.ReferenceText =>
                 PluginEntry.RunReferenceTextPrefetchOperationEntry(
@@ -272,8 +336,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                         Name = "Original command",
                     },
                     "test-version",
-                    sourceLanguage,
-                    scope,
+                    sourceLanguageResolver,
+                    configuration,
                     tryGetTranslation,
                     queueTranslation,
                     Translate,
@@ -294,12 +358,14 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                                 translatedPayload),
                     _ => null,
                     row => persistRow(row),
+                    out capturedSourceLanguage,
+                    out capturedScope,
                     out _),
             PrefetchFamily.AcceptedQuest =>
                 PluginEntry.RunAcceptedQuestPrefetchOperationEntry(
                     CreateQuestCanonicalData(),
-                    sourceLanguage,
-                    scope,
+                    sourceLanguageResolver,
+                    configuration,
                     tryGetTranslation,
                     queueTranslation,
                     Translate,
@@ -307,6 +373,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                     _ => null,
                     row => persistRow(row),
                     (row, _) => persistRow(row),
+                    out capturedSourceLanguage,
+                    out capturedScope,
                     out _),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(family),
@@ -316,11 +384,9 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
 
         string Translate(
             string sourceText,
-            SourceClientLanguage capturedSourceLanguage,
+            SourceClientLanguage sourceLanguage,
             string targetLanguage)
         {
-            Assert.Equal(sourceLanguage, capturedSourceLanguage);
-            Assert.Equal(scope.TargetLanguageCode, targetLanguage);
             onTranslate?.Invoke();
             return "translated text";
         }
@@ -341,23 +407,6 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         configuration.Lang = 42;
         configuration.ChosenTransEngine = 8;
         configuration.TranslateAlreadyTranslatedTexts = false;
-    }
-
-    /// <summary>
-    ///     Captures the initial test operation scope before live state changes.
-    /// </summary>
-    /// <param name="configuration">The initial live configuration.</param>
-    /// <param name="sourceLanguage">The initial live source language.</param>
-    /// <returns>The immutable operation scope.</returns>
-    private static TranslationReuseScope CreateCapturedScope(
-        Config configuration,
-        SourceClientLanguage sourceLanguage)
-    {
-        return new TranslationReuseScope(
-            sourceLanguage.PersistenceCode,
-            "pt-BR",
-            configuration.ChosenTransEngine,
-            configuration.TranslateAlreadyTranslatedTexts);
     }
 
     /// <summary>
@@ -399,34 +448,34 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         return QuestCanonicalData.Create(snapshot, "test-version");
     }
 
-    private static void AssertCapturedRowScope(object persistedRow)
+    private static void AssertCapturedRowScope(
+        object persistedRow,
+        TranslationReuseScope expectedScope)
     {
-        var actualScope = persistedRow switch
+        var (sourceLanguage, targetLanguage, translationEngine) =
+            persistedRow switch
         {
-            ActionTooltip row => new TranslationReuseScope(
+            ActionTooltip row => (
                 row.OriginalLang ?? string.Empty,
                 row.TranslationLang ?? string.Empty,
-                row.TranslationEngine,
-                true),
-            ReferenceTextRowBase row => new TranslationReuseScope(
+                row.TranslationEngine),
+            ReferenceTextRowBase row => (
                 row.OriginalLang ?? string.Empty,
                 row.TranslationLang ?? string.Empty,
-                row.TranslationEngine,
-                true),
-            QuestPlate row => new TranslationReuseScope(
+                row.TranslationEngine),
+            QuestPlate row => (
                 row.OriginalLang ?? string.Empty,
                 row.TranslationLang ?? string.Empty,
-                row.TranslationEngine,
-                true),
+                row.TranslationEngine),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(persistedRow),
                 persistedRow,
                 null),
         };
 
-        Assert.Equal(
-            new TranslationReuseScope("chs", "pt-BR", 4, true),
-            actualScope);
+        Assert.Equal(expectedScope.SourceLanguageCode, sourceLanguage);
+        Assert.Equal(expectedScope.TargetLanguageCode, targetLanguage);
+        Assert.Equal(expectedScope.TranslationEngine, translationEngine);
     }
 
     /// <summary>
@@ -434,10 +483,13 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     /// </summary>
     /// <param name="persistedRows">The rows sent to production persistence.</param>
     private static void AssertCanonicalAndNameRows(
-        IReadOnlyCollection<object> persistedRows)
+        IReadOnlyCollection<object> persistedRows,
+        TranslationReuseScope expectedScope)
     {
         Assert.Equal(2, persistedRows.Count);
-        Assert.All(persistedRows, AssertCapturedRowScope);
+        Assert.All(
+            persistedRows,
+            row => AssertCapturedRowScope(row, expectedScope));
         Assert.Contains(persistedRows, row =>
             string.IsNullOrWhiteSpace(GetTranslatedName(row)));
         Assert.Contains(persistedRows, row =>

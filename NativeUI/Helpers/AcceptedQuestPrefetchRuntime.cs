@@ -45,7 +45,7 @@ public partial class Echoglossian
     }
 
     if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-            out var sourceLanguage))
+            out _))
     {
       return;
     }
@@ -87,7 +87,7 @@ public partial class Echoglossian
     {
       var questId =
           this.acceptedQuestPrefetchQueue[this.acceptedQuestPrefetchQueueIndex++];
-      this.PrefetchAcceptedQuest(questId, sourceLanguage);
+      this.PrefetchAcceptedQuest(questId);
       processedQuestCount++;
     }
 
@@ -195,18 +195,8 @@ public partial class Echoglossian
   ///     missing translations through the shared paced broker.
   /// </summary>
   /// <param name="questId">The accepted quest identifier.</param>
-  /// <param name="scope">The immutable operation reuse scope.</param>
-  private void PrefetchAcceptedQuest(
-      uint questId,
-      SourceClientLanguage sourceLanguage)
+  private void PrefetchAcceptedQuest(uint questId)
   {
-    if (!this.TryCreateCapturedTranslationScope(
-            sourceLanguage,
-            out var scope))
-    {
-      return;
-    }
-
     this.LogAcceptedQuestPrefetchEvent(
         "quest-start",
         questId,
@@ -230,8 +220,8 @@ public partial class Echoglossian
     var translationService = TranslationService;
     var nameDispatchResult = RunAcceptedQuestPrefetchOperationEntry(
         questCanonicalData,
-        sourceLanguage,
-        scope,
+        ResolveCurrentPrefetchSourceLanguage,
+        this.configuration,
         this.TryGetQueuedTranslation,
         this.QueueTranslation,
         (sourceText, capturedSource, targetLanguage) =>
@@ -258,7 +248,13 @@ public partial class Echoglossian
               translatedText: questPlate.TranslatedQuestName);
           this.UpdateQuestPlate(questPlate);
         },
+        out var sourceLanguage,
+        out var scope,
         out var existingQuestPlate);
+    if (existingQuestPlate == null)
+    {
+      return;
+    }
 
     this.LogAcceptedQuestPrefetchEvent(
         "resolved",
@@ -854,8 +850,66 @@ public partial class Echoglossian
   }
 
   /// <summary>
-  ///     Runs one production accepted-quest operation from canonical
-  ///     persistence through name broker completion.
+  ///     Captures live scope and runs one production accepted-quest operation
+  ///     from canonical persistence through name broker completion.
+  /// </summary>
+  /// <param name="questCanonicalData">The canonical quest payload.</param>
+  /// <param name="sourceLanguageResolver">Resolves the live client source.</param>
+  /// <param name="configuration">The live translation configuration.</param>
+  /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+  /// <param name="queueTranslation">The shared broker queue operation.</param>
+  /// <param name="translate">The production translation operation.</param>
+  /// <param name="findRow">The production quest-row lookup.</param>
+  /// <param name="findRowByName">The production quest-row name lookup.</param>
+  /// <param name="persistCanonicalRow">The canonical-row persistence operation.</param>
+  /// <param name="persistNameRow">The translated-name persistence operation.</param>
+  /// <param name="sourceLanguage">The captured source contract.</param>
+  /// <param name="scope">The captured reuse scope.</param>
+  /// <param name="existingRow">The canonical row used by sibling work units.</param>
+  /// <returns>The production dispatch result.</returns>
+  internal static PrefetchTranslationDispatchResult
+      RunAcceptedQuestPrefetchOperationEntry(
+          QuestCanonicalData questCanonicalData,
+          Func<SourceClientLanguage?> sourceLanguageResolver,
+          Config configuration,
+          TryGetPrefetchTranslationDelegate tryGetTranslation,
+          QueuePrefetchTranslationDelegate queueTranslation,
+          ResolvePrefetchTranslationDelegate translate,
+          Func<QuestPlate, QuestPlate?> findRow,
+          Func<QuestPlate, QuestPlate?> findRowByName,
+          Action<QuestPlate> persistCanonicalRow,
+          Action<QuestPlate, bool> persistNameRow,
+          out SourceClientLanguage sourceLanguage,
+          out TranslationReuseScope scope,
+          out QuestPlate existingRow)
+  {
+    if (!TryCapturePrefetchOperationScope(
+            sourceLanguageResolver,
+            configuration,
+            out sourceLanguage,
+            out scope))
+    {
+      existingRow = null!;
+      return PrefetchTranslationDispatchResult.Rejected;
+    }
+
+    return RunAcceptedQuestPrefetchOperationEntry(
+        questCanonicalData,
+        sourceLanguage,
+        scope,
+        tryGetTranslation,
+        queueTranslation,
+        translate,
+        findRow,
+        findRowByName,
+        persistCanonicalRow,
+        persistNameRow,
+        out existingRow);
+  }
+
+  /// <summary>
+  ///     Runs one captured accepted-quest operation from canonical persistence
+  ///     through name broker completion.
   /// </summary>
   /// <param name="questCanonicalData">The canonical quest payload.</param>
   /// <param name="sourceLanguage">The operation-captured source contract.</param>
@@ -869,7 +923,7 @@ public partial class Echoglossian
   /// <param name="persistNameRow">The translated-name persistence operation.</param>
   /// <param name="existingRow">The canonical row used by sibling work units.</param>
   /// <returns>The production dispatch result.</returns>
-  internal static PrefetchTranslationDispatchResult
+  private static PrefetchTranslationDispatchResult
       RunAcceptedQuestPrefetchOperationEntry(
           QuestCanonicalData questCanonicalData,
           SourceClientLanguage sourceLanguage,

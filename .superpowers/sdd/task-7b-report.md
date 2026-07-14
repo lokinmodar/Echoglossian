@@ -259,3 +259,65 @@ git diff --check
 - Build: passed with 0 errors; existing repository warnings remain.
 - Full suite: 536 passed, 0 failed, 0 skipped.
 - `Echoglossian.xml` remained outside Task 7B ownership and was not staged.
+
+## Captured Prefetch Entry Proof Closure
+
+The remaining proof gap was in the test entry boundary. The prior test still
+constructed `SourceClientLanguage` and `TranslationReuseScope` itself and
+passed them into the captured operation body. It therefore could not prove
+that production callers resolved and snapshotted live source, target, engine,
+and engine policy before canonical persistence and broker dispatch.
+
+ActionDetail, ReferenceText, and accepted-quest now expose one live operation
+entry that accepts the current-source resolver and active `Config`. The entry
+captures the immutable source/scope, then delegates to the unchanged captured
+operation body for canonical-row persistence, name cache lookup/queueing, and
+translated-row persistence. Each actual production prefetch caller uses this
+entry and consumes its captured source/scope for sibling description or quest
+work. Existing row creators, broker delegates, and insert/update delegates are
+unchanged.
+
+The replacement queued test invokes only this live entry, queues an identical
+`chs` operation, mutates the live resolver to `cht` and changes target, engine,
+and engine policy before completion, then schedules the identical operation
+again. It proves the two broker identities differ and that both canonical and
+translated-name rows from the first operation remain `chs` / `pt-BR` / engine
+4 while the captured policy and broker key remain strict. Cache-hit coverage
+mutates live state during lookup after entry capture, and unknown-source
+coverage proves no canonical persistence, broker lookup, queueing, or
+translation occurs. No test-created scope is passed into an operation entry.
+
+RED command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~PrefetchBrokerSourceScopeTests"
+```
+
+RED result: test compilation failed only because the wished-for live overloads
+of `RunActionDetailPrefetchOperationEntry`,
+`RunReferenceTextPrefetchOperationEntry`, and
+`RunAcceptedQuestPrefetchOperationEntry` did not exist (`CS1501`).
+
+Focused GREEN result for the same command: 9 passed, 0 failed.
+
+Broader Task 7B command:
+
+```powershell
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~TranslationServiceTests|FullyQualifiedName~PrefetchBrokerSourceScopeTests|FullyQualifiedName~QueuedTranslationBrokerTests|FullyQualifiedName~TranslationFailureCacheManagerTests"
+```
+
+Broader Task 7B result: 34 passed, 0 failed.
+
+Fresh validation:
+
+```powershell
+dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+git diff --check
+```
+
+- Build: passed with 0 errors; the existing Multilingual App Toolkit and
+  SQLitePCLRaw 2.1.11 `NU1903` warnings remain.
+- Full suite: 536 passed, 0 failed, 0 skipped.
+- `git diff --check`: passed; unrelated dirty task files and
+  `Echoglossian.xml` remain outside this commit.
