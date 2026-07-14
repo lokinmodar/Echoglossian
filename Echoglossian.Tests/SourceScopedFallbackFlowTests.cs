@@ -225,13 +225,14 @@ public class SourceScopedFallbackFlowTests
             var arguments = new object?[]
             {
                 new SourceClientLanguage("en", "en"),
+                new TranslationReuseScope("en", "pt-BR", 0, false),
                 originalPayload,
                 null,
             };
 
             var found = Assert.IsType<bool>(method.Invoke(handler, arguments));
             var resolvedPayload = Assert.IsType<StringArrayStructuredPayload>(
-                arguments[2]);
+                arguments[3]);
 
             Assert.True(found);
             Assert.Equal("Perfil", resolvedPayload.Slots[0].TranslatedText);
@@ -510,10 +511,10 @@ public class SourceScopedFallbackFlowTests
 
         var arguments = method.GetParameters()[0].ParameterType ==
                         typeof(SourceClientLanguage)
-            ? new object?[] { sourceLanguage, null, null, null, null }
+            ? new object?[] { sourceLanguage, null, null, null, null, null }
             : [null, null, null, null];
         method.Invoke(handler, arguments);
-        var outputOffset = arguments.Length == 5 ? 1 : 0;
+        var outputOffset = arguments.Length == 6 ? 1 : 0;
         return (
             Assert.IsType<Dictionary<string, string>>(arguments[outputOffset]),
             Assert.IsType<Dictionary<string, string>>(arguments[outputOffset + 1]));
@@ -623,6 +624,7 @@ public class SourceScopedFallbackFlowTests
                 originalPayload,
                 null,
                 null,
+                null,
             }
             : [originalPayload, originalPayload, null, null];
 
@@ -649,7 +651,7 @@ public class SourceScopedFallbackFlowTests
 
         var arguments = method.GetParameters()[0].ParameterType ==
                         typeof(SourceClientLanguage)
-            ? new object?[] { sourceLanguage, string.Empty, null }
+            ? new object?[] { sourceLanguage, string.Empty, null, null }
             : [string.Empty, null];
         var result = method.Invoke(handler, arguments);
         Assert.NotNull(result);
