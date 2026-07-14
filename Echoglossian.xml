@@ -13353,15 +13353,6 @@
                 restored to its original text; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.BuildTextNodeKey(System.UInt32,System.Int32)">
-            <summary>
-                Builds one stable text-node key from a node id and duplicate
-                ordinal in tree order.
-            </summary>
-            <param name="nodeId">The text node id.</param>
-            <param name="ordinal">The zero-based ordinal for this node id.</param>
-            <returns>The stable text-node key.</returns>
-        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.BuildTooltipTextMap(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Boolean)">
             <summary>
                 Builds a text map used by hover-tooltip registration.
@@ -13439,6 +13430,20 @@
                 <see langword="true" /> when the candidate matches the runtime
                 language pair and carries a meaningful translated state.
             </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstTextNodeKeyAllocator">
+            <summary>
+                Allocates stable text-node keys for each effectively visible node in
+                tree order, regardless of later capture filtering.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(System.Collections.Generic.Dictionary{System.UInt32,System.Int32},System.UInt32)">
+            <summary>
+                Consumes the next duplicate ordinal for one visible text node.
+            </summary>
+            <param name="ordinalsByNodeId">The node-id ordinal state for this traversal.</param>
+            <param name="nodeId">The visible text-node id.</param>
+            <returns>The stable text-node key.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload">
             <summary>
