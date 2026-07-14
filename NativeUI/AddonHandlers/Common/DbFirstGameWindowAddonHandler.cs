@@ -1891,7 +1891,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 originalPayload.AtkValues,
                 originalPayload.StringArrayValues,
                 originalPayload.TextNodes,
-                sourceLanguage.ProviderCode,
+                sourceLanguage,
                 RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                     this.config.Lang),
                 this.translationService)
@@ -2203,7 +2203,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             .TranslatePayloadAsync(
                 originalPayload,
                 this.translationService,
-                sourceLanguage.ProviderCode,
+                sourceLanguage,
                 targetLanguage)
             .ContinueWith(
                 task =>

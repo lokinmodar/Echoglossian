@@ -168,7 +168,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 originalPayload.AtkValues,
                 originalPayload.StringArrayValues,
                 originalPayload.TextNodes,
-                sourceLanguage.ProviderCode,
+                sourceLanguage,
                 RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                     this.config.Lang),
                 this.HandlerTranslationService);

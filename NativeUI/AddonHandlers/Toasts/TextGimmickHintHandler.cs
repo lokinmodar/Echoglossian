@@ -157,7 +157,7 @@ internal sealed class TextGimmickHintHandler :
     {
       var translatedText = await this.translationService.TranslateAsync(
               originalText,
-              sourceLang,
+              sourceLanguage,
               targetLang,
               TranslationSurfaceGroup.Dialogue)
           .ConfigureAwait(false) ?? string.Empty;
@@ -658,7 +658,7 @@ internal sealed class TextGimmickHintHandler :
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLang,
+          sourceLanguage,
           targetLang,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
     }

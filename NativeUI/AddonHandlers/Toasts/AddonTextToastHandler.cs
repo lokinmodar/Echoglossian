@@ -560,7 +560,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch (Exception ex)

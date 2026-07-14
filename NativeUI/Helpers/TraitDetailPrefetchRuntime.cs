@@ -167,7 +167,7 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Name,
-                sourceLanguage.ProviderCode,
+                sourceLanguage,
                 LangDict[LanguageInt].Code),
             translatedName => this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,
@@ -211,7 +211,7 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Description,
-                sourceLanguage.ProviderCode,
+                sourceLanguage,
                 LangDict[LanguageInt].Code),
             translatedDescription => this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,

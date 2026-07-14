@@ -157,7 +157,7 @@ public sealed class TalkSubtitleHandler :
     {
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
 
@@ -615,7 +615,7 @@ public sealed class TalkSubtitleHandler :
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue) ?? string.Empty;
     }

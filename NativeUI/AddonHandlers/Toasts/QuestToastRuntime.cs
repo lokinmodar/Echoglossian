@@ -187,7 +187,7 @@ internal sealed class QuestToastRuntime
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch (Exception ex)

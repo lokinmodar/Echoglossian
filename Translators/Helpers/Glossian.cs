@@ -44,7 +44,7 @@ namespace Echoglossian
       string text,
       SourceClientLanguage sourceLanguage)
     {
-      return TranslationService.Translate(text, sourceLanguage.ProviderCode, LangDict[LanguageInt].Code);
+      return TranslationService.Translate(text, sourceLanguage, LangDict[LanguageInt].Code);
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ namespace Echoglossian
       string text,
       SourceClientLanguage sourceLanguage)
     {
-      return TranslationService.TranslateAsync(text, sourceLanguage.ProviderCode, LangDict[LanguageInt].Code);
+      return TranslationService.TranslateAsync(text, sourceLanguage, LangDict[LanguageInt].Code);
     }
   }
 }

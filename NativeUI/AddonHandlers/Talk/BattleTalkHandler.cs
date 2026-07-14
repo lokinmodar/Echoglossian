@@ -178,14 +178,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     {
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
       var translatedName = this.ShouldTranslateBattleTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
               originalName,
-              sourceLanguage.ProviderCode,
+              sourceLanguage,
               LangDict[LanguageInt].Code,
               TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
           : string.Empty;
@@ -959,7 +959,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
-            sourceLanguage.ProviderCode,
+            sourceLanguage,
             LangDict[LanguageInt].Code,
             dialogueContext,
             TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
@@ -971,7 +971,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           {
             translatedName = await this.translationService.TranslateAsync(
                 originalName,
-                sourceLanguage.ProviderCode,
+                sourceLanguage,
                 LangDict[LanguageInt].Code,
                 TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
           }

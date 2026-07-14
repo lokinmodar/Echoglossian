@@ -665,7 +665,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue) ?? string.Empty;
     }

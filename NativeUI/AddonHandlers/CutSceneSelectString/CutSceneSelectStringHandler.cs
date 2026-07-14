@@ -713,7 +713,7 @@ public sealed class CutSceneSelectStringHandler :
     {
       var translatedChunk = await this.translationService.TranslateAsync(
           chunk,
-          sourceLang,
+          sourceLanguage,
           targetLang,
           surfaceGroup).ConfigureAwait(false);
 
@@ -1154,7 +1154,7 @@ public sealed class CutSceneSelectStringHandler :
   {
     var translatedText = await this.translationService.TranslateAsync(
         text,
-        sourceLanguage.ProviderCode,
+        sourceLanguage,
         LangDict[LanguageInt].Code,
         surfaceGroup).ConfigureAwait(false);
 

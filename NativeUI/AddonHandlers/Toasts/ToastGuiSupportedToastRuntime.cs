@@ -353,7 +353,7 @@ internal sealed class ToastGuiSupportedToastRuntime
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch
@@ -408,7 +408,7 @@ internal sealed class ToastGuiSupportedToastRuntime
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch

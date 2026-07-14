@@ -167,14 +167,14 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     {
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           LangDict[LanguageInt].Code,
           TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
       var translatedName = this.ShouldTranslateTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
               originalName,
-              sourceLanguage.ProviderCode,
+              sourceLanguage,
               LangDict[LanguageInt].Code,
               TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
           : string.Empty;
@@ -1182,7 +1182,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
         translatedText = await this.translationService.TranslateAsync(
             originalText,
-            sourceLanguage.ProviderCode,
+            sourceLanguage,
             LangDict[LanguageInt].Code,
             dialogueContext,
             TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
@@ -1190,7 +1190,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         translatedName = this.ShouldTranslateTalkNpcNames() && !originalName.IsNullOrEmpty()
             ? await this.translationService.TranslateAsync(
                 originalName,
-                sourceLanguage.ProviderCode,
+                sourceLanguage,
                 LangDict[LanguageInt].Code,
                 TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
             : string.Empty;

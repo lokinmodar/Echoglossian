@@ -153,7 +153,7 @@ internal abstract class QuestAddonHandlerBase
   {
     return this.TranslationService.Translate(
         text,
-        sourceLanguage.ProviderCode,
+        sourceLanguage,
         LangDict[LanguageInt].Code);
   }
 
@@ -170,7 +170,7 @@ internal abstract class QuestAddonHandlerBase
   {
     return this.TranslationService.TranslateAsync(
         text,
-        sourceLanguage.ProviderCode,
+        sourceLanguage,
         LangDict[LanguageInt].Code);
   }
 

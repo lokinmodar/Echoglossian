@@ -228,7 +228,7 @@ public static class DbFirstStructuredStringArrayHelper
     public static async Task<StringArrayStructuredPayload> TranslatePayloadAsync(
         StringArrayStructuredPayload originalPayload,
         TranslationService translationService,
-        string sourceLanguage,
+        SourceClientLanguage sourceLanguage,
         string targetLanguage)
     {
         ArgumentNullException.ThrowIfNull(originalPayload);
@@ -238,7 +238,7 @@ public static class DbFirstStructuredStringArrayHelper
             .ResolveTranslatedPayload(
                 StringArrayDataPersistenceHelper.CreateCanonicalRow(
                     originalPayload.Type,
-                    sourceLanguage,
+                    sourceLanguage.PersistenceCode,
                     targetLanguage,
                     null,
                     null,
@@ -363,7 +363,7 @@ public static class DbFirstStructuredStringArrayHelper
     public static async Task<StringArrayDatas?> TranslateAndPersistAsync(
         StringArrayStructuredPayload originalPayload,
         TranslationService translationService,
-        string sourceLanguage,
+        SourceClientLanguage sourceLanguage,
         string targetLanguage,
         int? translationEngine,
         string? gameVersion,
@@ -385,7 +385,7 @@ public static class DbFirstStructuredStringArrayHelper
 
         var row = StringArrayDataPersistenceHelper.CreateCanonicalRow(
             originalPayload.Type,
-            sourceLanguage,
+            sourceLanguage.PersistenceCode,
             targetLanguage,
             translationEngine,
             gameVersion,
@@ -444,7 +444,7 @@ public static class DbFirstStructuredStringArrayHelper
         TranslationService translationService,
         string chunk,
         IDictionary<string, string> translatedMap,
-        string sourceLanguage,
+        SourceClientLanguage sourceLanguage,
         string targetLanguage)
     {
         if (string.IsNullOrWhiteSpace(chunk))

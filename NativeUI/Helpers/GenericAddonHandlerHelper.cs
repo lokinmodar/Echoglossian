@@ -38,7 +38,7 @@ public static class GenericAddonHandlerHelper
       IReadOnlyDictionary<int, string> originalAtkSnapshot,
       IReadOnlyDictionary<int, string> originalArraySnapshot,
       IReadOnlyDictionary<string, string> originalTextNodeSnapshot,
-      string sourceLanguage,
+      SourceClientLanguage sourceLanguage,
       string targetLanguage,
       TranslationService service)
   {
@@ -179,7 +179,7 @@ public static class GenericAddonHandlerHelper
           originalAtkSnapshot,
           originalArraySnapshot,
           originalTextNodeSnapshot,
-          sourceLanguage.ProviderCode,
+          sourceLanguage,
           targetLang,
           service);
       if (!translatedPayloadResult.HasValue)
@@ -273,11 +273,11 @@ public static class GenericAddonHandlerHelper
       TranslationService service,
       string chunk,
       Dictionary<string, string> result,
-      string sourceLang,
+      SourceClientLanguage sourceLanguage,
       string targetLang)
   {
     PluginRuntimeLog.Debug($"Translating chunk of length {chunk.Length} characters.");
-    var translated = await service.TranslateAsync(chunk, sourceLang, targetLang);
+    var translated = await service.TranslateAsync(chunk, sourceLanguage, targetLang);
     if (string.IsNullOrWhiteSpace(translated))
     {
       return;
@@ -356,7 +356,7 @@ public static class GenericAddonHandlerHelper
       IReadOnlyDictionary<int, string> originalAtkSnapshot,
       IReadOnlyDictionary<int, string> originalArraySnapshot,
       IReadOnlyDictionary<string, string> originalTextNodeSnapshot,
-      string sourceLanguage,
+      SourceClientLanguage sourceLanguage,
       string targetLanguage)
   {
     foreach (var (index, originalText) in originalAtkSnapshot)
