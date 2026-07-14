@@ -54,6 +54,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   private NativeTextNodeLayoutSnapshot? nativeLayoutSnapshot;
   private string nativeLayoutOriginalName = string.Empty;
   private string nativeLayoutOriginalText = string.Empty;
+  private string nativeLayoutReplacementName = string.Empty;
+  private string nativeLayoutReplacementText = string.Empty;
   private bool translationInFlight;
 
   /// <summary>
@@ -614,6 +616,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     this.nativeLayoutSnapshot = null;
     this.nativeLayoutOriginalName = string.Empty;
     this.nativeLayoutOriginalText = string.Empty;
+    this.nativeLayoutReplacementName = string.Empty;
+    this.nativeLayoutReplacementText = string.Empty;
     this.translationInFlight = false;
   }
 
@@ -636,6 +640,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
     string layoutOriginalName = string.Empty;
     string layoutOriginalText = string.Empty;
+    string layoutReplacementName = string.Empty;
+    string layoutReplacementText = string.Empty;
 
     lock (this.stateGate)
     {
@@ -654,15 +660,21 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       layoutSnapshot = this.nativeLayoutSnapshot;
       layoutOriginalName = this.nativeLayoutOriginalName;
       layoutOriginalText = this.nativeLayoutOriginalText;
+      layoutReplacementName = this.nativeLayoutReplacementName;
+      layoutReplacementText = this.nativeLayoutReplacementText;
       this.nativeLayoutSnapshot = null;
       this.nativeLayoutOriginalName = string.Empty;
       this.nativeLayoutOriginalText = string.Empty;
+      this.nativeLayoutReplacementName = string.Empty;
+      this.nativeLayoutReplacementText = string.Empty;
     }
 
     this.TryRestoreNativeLayout(
         layoutSnapshot,
         layoutOriginalName,
-        layoutOriginalText);
+        layoutOriginalText,
+        layoutReplacementName,
+        layoutReplacementText);
   }
 
   /// <summary>
@@ -680,6 +692,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     NativeTextNodeLayoutSnapshot? layoutSnapshot = null;
     string layoutOriginalName = string.Empty;
     string layoutOriginalText = string.Empty;
+    string layoutReplacementName = string.Empty;
+    string layoutReplacementText = string.Empty;
 
     lock (this.stateGate)
     {
@@ -693,15 +707,21 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       layoutSnapshot = this.nativeLayoutSnapshot;
       layoutOriginalName = this.nativeLayoutOriginalName;
       layoutOriginalText = this.nativeLayoutOriginalText;
+      layoutReplacementName = this.nativeLayoutReplacementName;
+      layoutReplacementText = this.nativeLayoutReplacementText;
       this.nativeLayoutSnapshot = null;
       this.nativeLayoutOriginalName = string.Empty;
       this.nativeLayoutOriginalText = string.Empty;
+      this.nativeLayoutReplacementName = string.Empty;
+      this.nativeLayoutReplacementText = string.Empty;
     }
 
     this.TryRestoreNativeLayout(
         layoutSnapshot,
         layoutOriginalName,
         layoutOriginalText,
+        layoutReplacementName,
+        layoutReplacementText,
         restoreText: false);
   }
 
@@ -712,10 +732,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// <param name="layoutSnapshot">The captured layout snapshot.</param>
   /// <param name="originalName">The original sender name to write back.</param>
   /// <param name="originalText">The original text to write back.</param>
+  /// <param name="replacementName">The exact applied sender-name replacement.</param>
+  /// <param name="replacementText">The exact applied text replacement.</param>
   private unsafe void TryRestoreNativeLayout(
       NativeTextNodeLayoutSnapshot? layoutSnapshot,
       string originalName,
       string originalText,
+      string replacementName,
+      string replacementText,
       bool restoreText = true)
   {
     if (layoutSnapshot == null)
@@ -734,15 +758,37 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             nameNode != null &&
             !string.IsNullOrWhiteSpace(originalName))
         {
-          nameNode->SetText(originalName);
+          var nameNodeAddress = (nint)nameNode;
+          var liveName = MemoryHelper.ReadSeStringAsString(
+              out _,
+              (nint)nameNode->NodeText.StringPtr.Value);
+          NativeMutationOwnership.TryRestore(
+              liveName,
+              replacementName,
+              originalName,
+              restoredName => ((AtkTextNode*)nameNodeAddress)->SetText(
+                  restoredName));
         }
       }
     }
 
-    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
-        layoutSnapshot,
+    var textNode = (AtkTextNode*)layoutSnapshot.TextNodeAddress;
+    if (textNode == null)
+    {
+      return;
+    }
+
+    var liveText = MemoryHelper.ReadSeStringAsString(
+        out _,
+        (nint)textNode->NodeText.StringPtr.Value);
+    NativeMutationOwnership.TryRestore(
+        liveText,
+        replacementText,
         originalText,
-        restoreText);
+        restoredText => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+            layoutSnapshot,
+            restoredText,
+            restoreText));
   }
 
   /// <summary>
@@ -1812,6 +1858,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       this.nativeLayoutSnapshot = layoutSnapshot;
       this.nativeLayoutOriginalName = originalName;
       this.nativeLayoutOriginalText = originalText;
+      this.nativeLayoutReplacementName = replacementName;
+      this.nativeLayoutReplacementText = replacementText;
     }
   }
 }

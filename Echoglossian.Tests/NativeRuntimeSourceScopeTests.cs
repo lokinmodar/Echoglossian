@@ -133,6 +133,115 @@ public class NativeRuntimeSourceScopeTests
     }
 
     /// <summary>
+    ///     Ensures a cooldown captured for one source cannot suppress work for
+    ///     another source when no resolved runtime state exists.
+    /// </summary>
+    [Fact]
+    public void RetryGate_NoRuntimeSourceChange_DropsPriorSourceCooldown()
+    {
+        var nowUtc = DateTime.UtcNow;
+        var gate = new DbFirstSourceRetryGate();
+        var englishOperation = gate.TransitionTo(
+            new SourceClientLanguage("en", "en"));
+
+        Assert.True(gate.TrySetRetry(
+            englishOperation,
+            nowUtc.AddSeconds(30)));
+        Assert.True(gate.IsCoolingDown(englishOperation, nowUtc));
+
+        var germanOperation = gate.TransitionTo(
+            new SourceClientLanguage("de", "de"));
+
+        Assert.False(gate.IsCoolingDown(germanOperation, nowUtc));
+        Assert.NotEqual(englishOperation, germanOperation);
+    }
+
+    /// <summary>
+    ///     Ensures an unknown source clears the active retry owner and rejects
+    ///     work captured before source resolution failed.
+    /// </summary>
+    [Fact]
+    public void RetryGate_UnknownSource_ClearsOwnedState()
+    {
+        var nowUtc = DateTime.UtcNow;
+        var gate = new DbFirstSourceRetryGate();
+        var operation = gate.TransitionTo(
+            new SourceClientLanguage("en", "en"));
+        Assert.True(gate.TrySetRetry(operation, nowUtc.AddSeconds(30)));
+
+        gate.TransitionTo(null);
+
+        Assert.False(gate.HasKnownSource);
+        Assert.False(gate.IsCoolingDown(operation, nowUtc));
+        Assert.False(gate.TryRunIfCurrent(operation, static () => { }));
+    }
+
+    /// <summary>
+    ///     Ensures an async completion captured before a source transition
+    ///     cannot mutate the new source's refresh state.
+    /// </summary>
+    [Fact]
+    public void RetryGate_StaleAsyncCompletion_IsRejected()
+    {
+        var gate = new DbFirstSourceRetryGate();
+        var staleOperation = gate.TransitionTo(
+            new SourceClientLanguage("en", "en"));
+        gate.TransitionTo(new SourceClientLanguage("de", "de"));
+        var refreshRequested = false;
+
+        var accepted = gate.TryRunIfCurrent(
+            staleOperation,
+            () => refreshRequested = true);
+
+        Assert.False(accepted);
+        Assert.False(refreshRequested);
+    }
+
+    /// <summary>
+    ///     Ensures restoration does not overwrite a game repaint that replaced
+    ///     the exact text previously written by the plugin.
+    /// </summary>
+    [Fact]
+    public void NativeMutation_GameRepaintBeforeRestore_IsPreserved()
+    {
+        var liveText = "New game-owned source";
+        var writeCount = 0;
+
+        var restored = NativeMutationOwnership.TryRestore(
+            liveText,
+            "Plugin replacement",
+            "Old game source",
+            restoredText =>
+            {
+                writeCount++;
+                liveText = restoredText;
+            });
+
+        Assert.False(restored);
+        Assert.Equal(0, writeCount);
+        Assert.Equal("New game-owned source", liveText);
+    }
+
+    /// <summary>
+    ///     Ensures an empty replacement cannot claim ownership of an untouched
+    ///     empty native field.
+    /// </summary>
+    [Fact]
+    public void NativeMutation_EmptyReplacement_DoesNotRestore()
+    {
+        var writeCount = 0;
+
+        var restored = NativeMutationOwnership.TryRestore(
+            string.Empty,
+            string.Empty,
+            "Old game source",
+            _ => writeCount++);
+
+        Assert.False(restored);
+        Assert.Equal(0, writeCount);
+    }
+
+    /// <summary>
     ///     Creates a minimal DB-first payload for native-free runtime tests.
     /// </summary>
     /// <param name="text">The payload text.</param>

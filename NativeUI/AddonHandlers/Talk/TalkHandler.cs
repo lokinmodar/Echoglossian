@@ -707,22 +707,42 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
 
       var originalName = this.currentOriginalName;
       var originalText = this.currentOriginalText;
+      var replacementName = this.currentReplacementName;
+      var replacementText = this.currentReplacementText;
+      var restoredAny = false;
 
-      if (nameNode != null && this.ReadNodeText(nameNode) != originalName)
+      if (nameNode != null)
       {
-        nameNode->SetText(originalName);
+        var nameNodeAddress = (nint)nameNode;
+        restoredAny |= NativeMutationOwnership.TryRestore(
+            this.ReadNodeText(nameNode),
+            replacementName,
+            originalName,
+            restoredText => ((AtkTextNode*)nameNodeAddress)->SetText(
+                restoredText));
       }
 
-      if (textNode != null && this.ReadNodeText(textNode) != originalText)
+      if (textNode != null)
       {
-        textNode->SetWidth((ushort)Math.Max(0f, this.originalTalkTextWidth));
-        textNode->TextFlags = this.originalTalkTextFlags;
-        textNode->FontSize = this.originalTalkFontSize;
-        textNode->SetText(originalText);
+        var textNodeAddress = (nint)textNode;
+        restoredAny |= NativeMutationOwnership.TryRestore(
+            this.ReadNodeText(textNode),
+            replacementText,
+            originalText,
+            restoredText =>
+            {
+              var liveTextNode = (AtkTextNode*)textNodeAddress;
+              liveTextNode->SetWidth((ushort)Math.Max(
+                  0f,
+                  this.originalTalkTextWidth));
+              liveTextNode->TextFlags = this.originalTalkTextFlags;
+              liveTextNode->FontSize = this.originalTalkFontSize;
+              liveTextNode->SetText(restoredText);
+            });
       }
 
       this.nativeTalkTextNodeStateDirty = false;
-      return true;
+      return restoredAny;
     }
   }
 

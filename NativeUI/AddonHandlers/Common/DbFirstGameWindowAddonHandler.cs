@@ -61,7 +61,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private DateTime deferredCleanupUtc = DateTime.MinValue;
     private DateTime appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
 
-    private DateTime nextRetryUtc = DateTime.MinValue;
+    private readonly DbFirstSourceRetryGate retryGate = new();
     private int refreshRequested;
 
     /// <summary>
@@ -765,6 +765,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         var operationSourceLanguage = sourceLanguage.GetValueOrDefault();
+        var sourceOperation = this.retryGate.TransitionTo(
+            operationSourceLanguage);
         var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
             this.displayModeSelector(this.config),
             this.config.OverlayOnlyLanguage);
@@ -826,7 +828,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     translatedPayload,
                     this.lastResolvedState.PayloadKey,
                     displayMode);
-                this.nextRetryUtc = DateTime.MinValue;
+                this.retryGate.TryClearRetry(sourceOperation);
                 return;
             }
         }
@@ -854,7 +856,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         if (!refreshRequested &&
             this.runtimeState == null &&
-            DateTime.UtcNow < this.nextRetryUtc)
+            this.retryGate.IsCoolingDown(
+                sourceOperation,
+                DateTime.UtcNow))
         {
             return;
         }
@@ -944,6 +948,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         var operationSourceLanguage = sourceLanguage.Value;
+        var sourceOperation = this.retryGate.TransitionTo(
+            operationSourceLanguage);
         var operationScope = this.CreateReuseScope(operationSourceLanguage);
 
         if (!this.TryGetVisibleAddon(out var addon))
@@ -1028,7 +1034,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         structuredPayloadKey,
                         displayMode);
                     ClearFailedPayloadRetry(structuredPayloadKey);
-                    this.nextRetryUtc = DateTime.MinValue;
+                    this.retryGate.TryClearRetry(sourceOperation);
                     return;
                 }
 
@@ -1036,7 +1042,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 {
                     this.hoverTooltipManager.RemoveByPrefix(
                         this.hoverTooltipKeyPrefix);
-                    this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                    this.retryGate.TrySetRetry(
+                        sourceOperation,
+                        DateTime.UtcNow + RetryInterval);
                     return;
                 }
 
@@ -1046,7 +1054,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 {
                     this.hoverTooltipManager.RemoveByPrefix(
                         this.hoverTooltipKeyPrefix);
-                    this.nextRetryUtc = failedRetryUtc;
+                    this.retryGate.TrySetRetry(
+                        sourceOperation,
+                        failedRetryUtc);
                     return;
                 }
 
@@ -1054,9 +1064,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     operationSourceLanguage,
                     originalPayload,
                     structuredPayloadKey,
+                    sourceOperation,
                     originalStructuredPayload);
                 this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-                this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                this.retryGate.TrySetRetry(
+                    sourceOperation,
+                    DateTime.UtcNow + RetryInterval);
                 return;
             }
 
@@ -1071,7 +1084,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 structuredPayloadKey,
                 displayMode);
             ClearFailedPayloadRetry(structuredPayloadKey);
-            this.nextRetryUtc = DateTime.MinValue;
+            this.retryGate.TryClearRetry(sourceOperation);
             return;
         }
 
@@ -1137,7 +1150,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     compatiblePayloadKey,
                     displayMode);
                 ClearFailedPayloadRetry(compatiblePayloadKey);
-                this.nextRetryUtc = DateTime.MinValue;
+                this.retryGate.TryClearRetry(sourceOperation);
                 return;
             }
 
@@ -1181,7 +1194,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     payloadKey,
                     displayMode);
                 ClearFailedPayloadRetry(payloadKey);
-                this.nextRetryUtc = DateTime.MinValue;
+                this.retryGate.TryClearRetry(sourceOperation);
                 return;
             }
 
@@ -1192,7 +1205,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             {
                 this.hoverTooltipManager.RemoveByPrefix(
                     this.hoverTooltipKeyPrefix);
-                this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                this.retryGate.TrySetRetry(
+                    sourceOperation,
+                    DateTime.UtcNow + RetryInterval);
                 return;
             }
 
@@ -1200,16 +1215,21 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             {
                 this.hoverTooltipManager.RemoveByPrefix(
                     this.hoverTooltipKeyPrefix);
-                this.nextRetryUtc = failedRetryUtc;
+                this.retryGate.TrySetRetry(
+                    sourceOperation,
+                    failedRetryUtc);
                 return;
             }
 
             this.QueueTranslationIfNeeded(
                 operationSourceLanguage,
                 originalPayload,
-                payloadKey);
+                payloadKey,
+                sourceOperation);
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-            this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+            this.retryGate.TrySetRetry(
+                sourceOperation,
+                DateTime.UtcNow + RetryInterval);
             return;
         }
 
@@ -1221,7 +1241,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             payloadKey,
             displayMode);
         ClearFailedPayloadRetry(payloadKey);
-        this.nextRetryUtc = DateTime.MinValue;
+        this.retryGate.TryClearRetry(sourceOperation);
     }
 
     /// <summary>
@@ -1270,7 +1290,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         this.runtimeState = null;
         this.lastResolvedState = null;
         this.lastAppliedDisplayMode = null;
-        this.nextRetryUtc = DateTime.MinValue;
+        this.retryGate.Reset();
         this.deferredCleanupPending = false;
         this.deferredCleanupEvent = default;
         this.deferredCleanupUtc = DateTime.MinValue;
@@ -1288,13 +1308,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private void InvalidateResolvedStateForSource(
         SourceClientLanguage? sourceLanguage)
     {
-        if ((this.runtimeState != null &&
+        if (this.retryGate.ShouldInvalidateFor(sourceLanguage) ||
+            (this.runtimeState != null &&
              this.runtimeState.ShouldInvalidateFor(sourceLanguage)) ||
             (this.lastResolvedState != null &&
              this.lastResolvedState.ShouldInvalidateFor(sourceLanguage)))
         {
             this.ClearResolvedState();
         }
+
+        this.retryGate.TransitionTo(sourceLanguage);
     }
 
     /// <summary>
@@ -2214,10 +2237,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="payload">The original payload.</param>
     /// <param name="payloadKey">The stable payload key.</param>
+    /// <param name="sourceOperation">The source-owned operation token.</param>
     private void QueueTranslationIfNeeded(
         SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload payload,
         string payloadKey,
+        DbFirstSourceOperation sourceOperation,
         StringArrayStructuredPayload? originalStructuredPayload = null)
     {
         if (!InFlightPayloads.TryAdd(payloadKey, 0))
@@ -2239,7 +2264,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         {
                             StringArrayDataCacheManager.Update(task.Result);
                             ClearFailedPayloadRetry(payloadKey);
-                            this.RequestRefresh();
+                            this.RequestRefresh(sourceOperation);
                             return;
                         }
 
@@ -2259,7 +2284,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                             task.Result)
                         {
                             ClearFailedPayloadRetry(payloadKey);
-                            this.RequestRefresh();
+                            this.RequestRefresh(sourceOperation);
                             return;
                         }
 
@@ -2277,11 +2302,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// Requests one fresh pre-draw re-resolution pass after background
     /// translation or persistence work completes.
     /// </summary>
-    private void RequestRefresh()
+    /// <param name="sourceOperation">
+    ///     The source operation captured before background work started.
+    /// </param>
+    private void RequestRefresh(DbFirstSourceOperation sourceOperation)
     {
-        Interlocked.Exchange(ref this.refreshRequested, 1);
-        this.nextRetryUtc = DateTime.MinValue;
-        this.ArmAppliedStatePreDrawRefreshWindow();
+        this.retryGate.TryRunIfCurrent(
+            sourceOperation,
+            () =>
+            {
+                Interlocked.Exchange(ref this.refreshRequested, 1);
+                this.ArmAppliedStatePreDrawRefreshWindow();
+            });
     }
 
     /// <summary>
@@ -2555,7 +2587,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             foreach (var (index, originalText) in originalPayload.AtkValues)
             {
-                if ((uint)index >= addon->AtkValuesCount)
+                if ((uint)index >= addon->AtkValuesCount ||
+                    !translatedPayload.AtkValues.TryGetValue(
+                        index,
+                        out var replacementText))
                 {
                     continue;
                 }
@@ -2569,21 +2604,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     continue;
                 }
 
-                currentValue.SetManagedString(originalText);
+                var currentText = this.ReadAtkValueText(in currentValue);
+                var addonAddress = (nint)addon;
+                NativeMutationOwnership.TryRestore(
+                    currentText,
+                    replacementText,
+                    originalText,
+                    restoredText =>
+                        ((AtkUnitBase*)addonAddress)->AtkValues[index]
+                            .SetManagedString(restoredText));
             }
         }
 
         if (this.useTextNodes && originalPayload.TextNodes.Count > 0)
         {
-            if (!this.TryApplyCustomTextNodePayload(
-                    addon,
-                    translatedPayload,
-                    originalPayload))
-            {
-                this.ApplyTranslatedTextNodes(
-                    addon,
-                    originalPayload.TextNodes);
-            }
+            this.RestoreTranslatedTextNodesIfOwned(
+                addon,
+                translatedPayload,
+                originalPayload);
         }
 
         if (this.stringArrayDataType is { } arrayType)
@@ -2598,26 +2636,44 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 foreach (var (index, originalText) in originalPayload
                              .StringArrayValues)
                 {
-                    if ((uint)index >= stringArrayData->Size)
+                    if ((uint)index >= stringArrayData->Size ||
+                        !translatedPayload.StringArrayValues.TryGetValue(
+                            index,
+                            out var replacementText))
                     {
                         continue;
                     }
 
-                    if (this.ShouldRequestStringArrayUpdates())
-                    {
-                        stringArrayData->SetValueAndUpdate(
-                            index,
-                            originalText,
-                            readBeforeWrite: false,
-                            managed: true);
-                    }
-                    else
-                    {
-                        stringArrayData->SetValue(
-                            index,
-                            originalText,
-                            suppressUpdates: true);
-                    }
+                    var currentText = stringArrayData->StringArray[index]
+                        .AsReadOnlySeStringSpan()
+                        .ExtractText();
+                    var stringArrayAddress = (nint)stringArrayData;
+                    var shouldRequestUpdates =
+                        this.ShouldRequestStringArrayUpdates();
+                    NativeMutationOwnership.TryRestore(
+                        currentText,
+                        replacementText,
+                        originalText,
+                        restoredText =>
+                        {
+                            var liveStringArrayData =
+                                (StringArrayData*)stringArrayAddress;
+                            if (shouldRequestUpdates)
+                            {
+                                liveStringArrayData->SetValueAndUpdate(
+                                    index,
+                                    restoredText,
+                                    readBeforeWrite: false,
+                                    managed: true);
+                            }
+                            else
+                            {
+                                liveStringArrayData->SetValue(
+                                    index,
+                                    restoredText,
+                                    suppressUpdates: true);
+                            }
+                        });
                 }
             }
         }
@@ -2626,6 +2682,53 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             addon,
             translatedPayload,
             originalPayload);
+    }
+
+    /// <summary>
+    ///     Restores visible text nodes only while their current text remains an
+    ///     exact replacement from the applied translated payload.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="translatedPayload">The plugin-applied payload.</param>
+    /// <param name="originalPayload">The original payload to restore.</param>
+    private void RestoreTranslatedTextNodesIfOwned(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload translatedPayload,
+        DbFirstGameWindowPayload originalPayload)
+    {
+        var translatedToOriginal = BuildTooltipTextMap(
+            originalPayload,
+            translatedPayload,
+            useTranslatedKeys: true);
+        if (translatedToOriginal.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
+            {
+                continue;
+            }
+
+            var currentText = this.ReadTextNode(textNode);
+            if (!translatedToOriginal.TryGetValue(
+                    currentText,
+                    out var originalText))
+            {
+                continue;
+            }
+
+            NativeMutationOwnership.TryRestore(
+                currentText,
+                currentText,
+                originalText,
+                restoredText => ((AtkTextNode*)nodeAddress)->SetText(
+                    restoredText));
+        }
     }
 
     /// <summary>
@@ -3428,6 +3531,234 @@ internal readonly record struct DbFirstGameWindowPayload(
         }
 
         return projected;
+    }
+}
+
+/// <summary>
+///     Identifies one DB-first operation against the source generation that
+///     owned it.
+/// </summary>
+/// <param name="SourceLanguageCode">The canonical source persistence identity.</param>
+/// <param name="Generation">The source transition generation.</param>
+internal readonly record struct DbFirstSourceOperation(
+    string? SourceLanguageCode,
+    long Generation);
+
+/// <summary>
+///     Owns the instance retry cooldown and rejects callbacks captured before a
+///     source transition.
+/// </summary>
+internal sealed class DbFirstSourceRetryGate
+{
+    private readonly object stateGate = new();
+    private string sourceLanguageCode = string.Empty;
+    private long generation;
+    private DateTime nextRetryUtc = DateTime.MinValue;
+
+    /// <summary>
+    ///     Gets a value indicating whether this gate currently belongs to a
+    ///     resolved source.
+    /// </summary>
+    public bool HasKnownSource
+    {
+        get
+        {
+            lock (this.stateGate)
+            {
+                return !string.IsNullOrWhiteSpace(this.sourceLanguageCode);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether moving to the supplied source invalidates the
+    ///     current retry owner.
+    /// </summary>
+    /// <param name="sourceLanguage">The newly captured source, if resolved.</param>
+    /// <returns>True when a known retry owner must be discarded.</returns>
+    public bool ShouldInvalidateFor(SourceClientLanguage? sourceLanguage)
+    {
+        lock (this.stateGate)
+        {
+            return !string.IsNullOrWhiteSpace(this.sourceLanguageCode) &&
+                   !NativeRuntimeSourceScope.MatchesSource(
+                       this.sourceLanguageCode,
+                       sourceLanguage);
+        }
+    }
+
+    /// <summary>
+    ///     Transitions the gate to one captured source and clears cooldown state
+    ///     whenever ownership changes.
+    /// </summary>
+    /// <param name="sourceLanguage">The captured source, if resolved.</param>
+    /// <returns>The current source operation token.</returns>
+    public DbFirstSourceOperation TransitionTo(
+        SourceClientLanguage? sourceLanguage)
+    {
+        lock (this.stateGate)
+        {
+            if (!sourceLanguage.HasValue)
+            {
+                this.ResetLocked();
+                return default;
+            }
+
+            var sourceCode = sourceLanguage.Value.PersistenceCode;
+            if (!RuntimeLanguageHelper.LanguagesMatch(
+                    this.sourceLanguageCode,
+                    sourceCode))
+            {
+                this.sourceLanguageCode = sourceCode;
+                this.nextRetryUtc = DateTime.MinValue;
+                this.generation++;
+            }
+
+            return new DbFirstSourceOperation(
+                this.sourceLanguageCode,
+                this.generation);
+        }
+    }
+
+    /// <summary>
+    ///     Stores one retry deadline only while the supplied operation still
+    ///     owns this gate.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <param name="retryUtc">The next eligible retry time.</param>
+    /// <returns>True when the operation still owned the gate.</returns>
+    public bool TrySetRetry(
+        DbFirstSourceOperation operation,
+        DateTime retryUtc)
+    {
+        lock (this.stateGate)
+        {
+            if (!this.MatchesLocked(operation))
+            {
+                return false;
+            }
+
+            this.nextRetryUtc = retryUtc;
+            return true;
+        }
+    }
+
+    /// <summary>
+    ///     Clears one retry deadline only while the supplied operation still
+    ///     owns this gate.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <returns>True when the operation still owned the gate.</returns>
+    public bool TryClearRetry(DbFirstSourceOperation operation)
+    {
+        return this.TrySetRetry(operation, DateTime.MinValue);
+    }
+
+    /// <summary>
+    ///     Determines whether one current source operation is cooling down.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <param name="nowUtc">The current UTC time.</param>
+    /// <returns>True when the matching operation is still cooling down.</returns>
+    public bool IsCoolingDown(
+        DbFirstSourceOperation operation,
+        DateTime nowUtc)
+    {
+        lock (this.stateGate)
+        {
+            return this.MatchesLocked(operation) &&
+                   nowUtc < this.nextRetryUtc;
+        }
+    }
+
+    /// <summary>
+    ///     Runs a completion mutation and clears its cooldown only when the
+    ///     captured source generation is still current.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <param name="mutation">The completion mutation to run.</param>
+    /// <returns>True when the completion was accepted.</returns>
+    public bool TryRunIfCurrent(
+        DbFirstSourceOperation operation,
+        Action mutation)
+    {
+        ArgumentNullException.ThrowIfNull(mutation);
+
+        lock (this.stateGate)
+        {
+            if (!this.MatchesLocked(operation))
+            {
+                return false;
+            }
+
+            this.nextRetryUtc = DateTime.MinValue;
+            mutation();
+            return true;
+        }
+    }
+
+    /// <summary>
+    ///     Clears the current source owner and invalidates every captured
+    ///     operation token.
+    /// </summary>
+    public void Reset()
+    {
+        lock (this.stateGate)
+        {
+            this.ResetLocked();
+        }
+    }
+
+    private bool MatchesLocked(DbFirstSourceOperation operation)
+    {
+        return operation.Generation == this.generation &&
+               !string.IsNullOrWhiteSpace(operation.SourceLanguageCode) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   operation.SourceLanguageCode,
+                   this.sourceLanguageCode);
+    }
+
+    private void ResetLocked()
+    {
+        this.sourceLanguageCode = string.Empty;
+        this.nextRetryUtc = DateTime.MinValue;
+        this.generation++;
+    }
+}
+
+/// <summary>
+///     Restores one plugin-owned native field only while the live field still
+///     contains the exact replacement written by the plugin.
+/// </summary>
+internal static class NativeMutationOwnership
+{
+    /// <summary>
+    ///     Performs one guarded restore mutation.
+    /// </summary>
+    /// <param name="liveText">The current live field text.</param>
+    /// <param name="replacementText">The exact plugin-applied replacement.</param>
+    /// <param name="originalText">The original game-owned text.</param>
+    /// <param name="restore">The native restore mutation.</param>
+    /// <returns>True when the plugin still owned the field and restored it.</returns>
+    public static bool TryRestore(
+        string? liveText,
+        string? replacementText,
+        string originalText,
+        Action<string> restore)
+    {
+        ArgumentNullException.ThrowIfNull(restore);
+
+        if (string.IsNullOrWhiteSpace(replacementText) ||
+            !string.Equals(
+                liveText,
+                replacementText,
+                StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        restore(originalText);
+        return true;
     }
 }
 

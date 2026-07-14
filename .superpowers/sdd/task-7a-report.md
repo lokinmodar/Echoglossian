@@ -129,3 +129,95 @@ Result: exit `0`; Git emitted line-ending conversion notices only.
   each other's live state despite sharing a provider code elsewhere.
 - The worktree contained concurrent changes from other tasks. They were left
   untouched and are not part of the Task 7A commit.
+
+## Review-fix appendix: source-owned retry and native mutation ownership
+
+### Status
+
+Implemented only the Task 7A review findings. Prefetch, overlay/plugin UI, and
+XML files were not edited for this fix.
+
+### Root-cause correction
+
+- The instance retry timestamp had no source or generation owner. A failed
+  source could therefore suppress a later source before any runtime result
+  existed, and an old async completion could clear a newer source's cooldown.
+- DB-first restoration wrote complete original payloads without checking each
+  live field. Talk compared against the original rather than the replacement,
+  while BattleTalk and MiniTalk layout snapshots did not retain the exact
+  replacement needed to prove ownership.
+
+The DB-first retry gate now owns a canonical source generation. Source changes
+and unknown-source transitions clear the instance cooldown even without
+runtime/last-resolved state. Background completions mutate refresh state only
+when their captured source generation is still current.
+
+DB-first ATK values, text nodes, and StringArrayData fields now restore only
+when the live field exactly equals the non-empty translated replacement.
+Talk applies the same field-level gate. BattleTalk and MiniTalk snapshots retain
+their exact replacement text and abandon both text and layout restoration after
+a game repaint.
+
+### TDD evidence
+
+RED was run before production changes:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter FullyQualifiedName~NativeRuntimeSourceScopeTests
+```
+
+Result: exit `1` with `CS0246` for the missing source-owned retry gate and
+`CS0103` for the missing mutation seam. A second RED run proved empty
+replacements incorrectly claimed ownership: `1` failed, `9` passed.
+
+Focused GREEN:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~NativeRuntimeSourceScopeTests|FullyQualifiedName~DbFirstPreDrawRefreshPolicyTests|FullyQualifiedName~DbFirstPayloadRecoveryHelperTests|FullyQualifiedName~DbFirstStructuredStringArrayHelperTests|FullyQualifiedName~ActionMenuWindowHandlerTests"
+```
+
+Result: `53` passed, `0` failed, `0` skipped.
+
+The native-free lifecycle/mutation regressions cover no-runtime source changes
+with active cooldown, unknown-source owner clearing, stale async completion
+rejection, game repaint preservation, and empty/unowned field rejection.
+
+### Files
+
+- `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`
+- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`
+- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`
+- `NativeUI/AddonHandlers/SingleText/MiniTalkHandler.cs`
+- `Echoglossian.Tests/NativeRuntimeSourceScopeTests.cs`
+- `.superpowers/sdd/task-7a-report.md`
+
+### Final validation
+
+```text
+dotnet build Echoglossian.sln -c Debug --no-restore
+```
+
+Result: succeeded with `0` errors and `2` existing warnings (Multilingual App
+Toolkit unavailable and `SQLitePCLRaw.lib.e_sqlite3 2.1.11` advisory).
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Result: `541` passed, `0` failed, `0` skipped.
+
+```text
+git diff --check
+```
+
+Result: exit `0`; Git emitted line-ending conversion notices only.
+
+### Concerns and in-game verification
+
+- Native addon memory is unavailable in unit tests. Verify DB-first ATK,
+  text-node, and StringArrayData surfaces plus Talk, BattleTalk, and MiniTalk
+  across source transitions in native and swap modes.
+- Repaint each addon with a new game-owned source before invalidation and
+  confirm neither text nor plugin-adjusted layout is restored over the repaint.
+- `Echoglossian.xml` remained an unrelated dirty worktree file and is excluded
+  from this fix's staged scope.

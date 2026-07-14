@@ -84,6 +84,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
     public string NativeLayoutOriginalText { get; set; } = string.Empty;
 
+    public string NativeLayoutReplacementText { get; set; } = string.Empty;
+
     public string CurrentOriginalText { get; set; } = string.Empty;
 
     public string CurrentSourceLanguageCode { get; set; } = string.Empty;
@@ -244,7 +246,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     {
       this.TryRestoreNativeLayout(
           hiddenBubbleState.Value.NativeLayoutSnapshot,
-          hiddenBubbleState.Value.NativeLayoutOriginalText);
+          hiddenBubbleState.Value.NativeLayoutOriginalText,
+          hiddenBubbleState.Value.NativeLayoutReplacementText);
       this.clearOverlay(hiddenBubbleState.Key, false);
     }
   }
@@ -264,6 +267,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   {
     NativeTextNodeLayoutSnapshot? snapshot = null;
     string originalText = string.Empty;
+    string replacementText = string.Empty;
     var restoreText = string.IsNullOrWhiteSpace(nextOriginalText);
 
     lock (this.stateGate)
@@ -282,11 +286,17 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
       snapshot = state.NativeLayoutSnapshot;
       originalText = state.NativeLayoutOriginalText;
+      replacementText = state.NativeLayoutReplacementText;
       state.NativeLayoutSnapshot = null;
       state.NativeLayoutOriginalText = string.Empty;
+      state.NativeLayoutReplacementText = string.Empty;
     }
 
-    this.TryRestoreNativeLayout(snapshot, originalText, restoreText);
+    this.TryRestoreNativeLayout(
+        snapshot,
+        originalText,
+        replacementText,
+        restoreText);
   }
 
   /// <summary>
@@ -302,6 +312,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       string originalText)
   {
     NativeTextNodeLayoutSnapshot? snapshot = null;
+    string replacementText = string.Empty;
 
     lock (this.stateGate)
     {
@@ -313,13 +324,16 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       }
 
       snapshot = state.NativeLayoutSnapshot;
+      replacementText = state.NativeLayoutReplacementText;
       state.NativeLayoutSnapshot = null;
       state.NativeLayoutOriginalText = string.Empty;
+      state.NativeLayoutReplacementText = string.Empty;
     }
 
     this.TryRestoreNativeLayout(
         snapshot,
         originalText,
+        replacementText,
         restoreText: false);
   }
 
@@ -329,9 +343,11 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="snapshot">The captured layout snapshot.</param>
   /// <param name="originalText">The original text to write back.</param>
-  private void TryRestoreNativeLayout(
+  /// <param name="replacementText">The exact plugin-applied replacement.</param>
+  private unsafe void TryRestoreNativeLayout(
       NativeTextNodeLayoutSnapshot? snapshot,
       string originalText,
+      string replacementText,
       bool restoreText = true)
   {
     if (snapshot == null)
@@ -339,11 +355,21 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return;
     }
 
-    NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
-        snapshot,
+    var textNode = (AtkTextNode*)snapshot.TextNodeAddress;
+    if (textNode == null)
+    {
+      return;
+    }
+
+    NativeMutationOwnership.TryRestore(
+        this.ReadTextNode(textNode),
+        replacementText,
         originalText,
-        restoreText,
-        restorePositions: false);
+        restoredText => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+            snapshot,
+            restoredText,
+            restoreText,
+            restorePositions: false));
   }
 
   /// <summary>
@@ -546,6 +572,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           {
             state.NativeLayoutSnapshot = layoutSnapshot;
             state.NativeLayoutOriginalText = resolvedOriginalText;
+            state.NativeLayoutReplacementText = replacementText;
           }
         }
       }
@@ -576,7 +603,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     {
       this.TryRestoreNativeLayout(
           bubbleState.Value.NativeLayoutSnapshot,
-          bubbleState.Value.NativeLayoutOriginalText);
+          bubbleState.Value.NativeLayoutOriginalText,
+          bubbleState.Value.NativeLayoutReplacementText);
       this.clearOverlay(bubbleState.Key, true);
     }
   }
@@ -625,7 +653,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     {
       this.TryRestoreNativeLayout(
           bubbleState.Value.NativeLayoutSnapshot,
-          bubbleState.Value.NativeLayoutOriginalText);
+          bubbleState.Value.NativeLayoutOriginalText,
+          bubbleState.Value.NativeLayoutReplacementText);
       this.clearOverlay(bubbleState.Key, true);
     }
   }
