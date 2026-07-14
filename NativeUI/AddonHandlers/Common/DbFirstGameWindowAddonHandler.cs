@@ -1470,6 +1470,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
+            var nodeId = textNode->AtkResNode.NodeId;
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
             var visibleText = this.ReadTextNode(textNode);
             if (!ShouldCaptureText(visibleText))
             {
@@ -1481,10 +1485,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            var nodeId = textNode->AtkResNode.NodeId;
-            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
-            ordinalsByNodeId[nodeId] = ordinal + 1;
-            capturedNodes[BuildTextNodeKey(nodeId, ordinal)] = visibleText;
+            capturedNodes[textNodeKey] = visibleText;
         }
 
         return this.NormalizeCapturedTextNodes(capturedNodes);
@@ -2716,10 +2717,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
             var nodeId = textNode->AtkResNode.NodeId;
-            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
-            ordinalsByNodeId[nodeId] = ordinal + 1;
-
-            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
             var currentText = this.ReadTextNode(textNode);
             runtimeState.TryRestoreTextNode(
                 textNodeKey,
@@ -2928,10 +2928,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
             var nodeId = textNode->AtkResNode.NodeId;
-            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
-            ordinalsByNodeId[nodeId] = ordinal + 1;
-
-            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
             if (!translatedTextNodes.TryGetValue(textNodeKey, out var translatedText) ||
                 !ShouldCaptureText(translatedText))
             {
@@ -2990,10 +2989,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
             var nodeId = textNode->AtkResNode.NodeId;
-            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
-            ordinalsByNodeId[nodeId] = ordinal + 1;
-
-            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
             if (!livePayload.TextNodes.TryGetValue(
                     textNodeKey,
                     out var currentText) ||
@@ -3021,18 +3019,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         return restoredAny;
-    }
-
-    /// <summary>
-    ///     Builds one stable text-node key from a node id and duplicate
-    ///     ordinal in tree order.
-    /// </summary>
-    /// <param name="nodeId">The text node id.</param>
-    /// <param name="ordinal">The zero-based ordinal for this node id.</param>
-    /// <returns>The stable text-node key.</returns>
-    private static string BuildTextNodeKey(uint nodeId, int ordinal)
-    {
-        return $"{nodeId}:{ordinal}";
     }
 
     /// <summary>
@@ -3307,6 +3293,28 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         return true;
+    }
+}
+
+/// <summary>
+///     Allocates stable text-node keys for each effectively visible node in
+///     tree order, regardless of later capture filtering.
+/// </summary>
+internal static class DbFirstTextNodeKeyAllocator
+{
+    /// <summary>
+    ///     Consumes the next duplicate ordinal for one visible text node.
+    /// </summary>
+    /// <param name="ordinalsByNodeId">The node-id ordinal state for this traversal.</param>
+    /// <param name="nodeId">The visible text-node id.</param>
+    /// <returns>The stable text-node key.</returns>
+    public static string ConsumeVisibleNode(
+        Dictionary<uint, int> ordinalsByNodeId,
+        uint nodeId)
+    {
+        ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
+        ordinalsByNodeId[nodeId] = ordinal + 1;
+        return $"{nodeId}:{ordinal}";
     }
 }
 
@@ -3781,12 +3789,13 @@ internal sealed class SourcePublicationLifecycle
                     this.generation);
             }
 
+            Volatile.Write(ref this.initialized, false);
+            invalidate();
             this.generation++;
             Volatile.Write(
                 ref this.currentSourceLanguageCode,
                 sourceLanguageCode);
             Volatile.Write(ref this.initialized, true);
-            invalidate();
             return new SourcePublicationOperation(
                 sourceLanguageCode,
                 this.generation);

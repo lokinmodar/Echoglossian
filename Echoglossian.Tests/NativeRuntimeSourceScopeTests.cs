@@ -271,6 +271,69 @@ public class NativeRuntimeSourceScopeTests
     }
 
     /// <summary>
+    ///     Ensures an effectively visible node skipped from capture still
+    ///     consumes its duplicate ordinal before the next matching node.
+    /// </summary>
+    [Fact]
+    public void TextNodeOrdinals_FilteredVisibleNode_ConsumesDuplicateOrdinal()
+    {
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+
+        var filteredNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+            ordinalsByNodeId,
+            7);
+        var capturedNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+            ordinalsByNodeId,
+            7);
+
+        Assert.Equal("7:0", filteredNodeKey);
+        Assert.Equal("7:1", capturedNodeKey);
+    }
+
+    /// <summary>
+    ///     Ensures a source transition does not publish its new source while
+    ///     handler-owned invalidation is still running.
+    /// </summary>
+    [Fact]
+    public async Task SourcePublicationLifecycle_BlockedInvalidation_HidesNewSource()
+    {
+        using var invalidationEntered = new ManualResetEventSlim();
+        using var releaseInvalidation = new ManualResetEventSlim();
+        var lifecycle = new SourcePublicationLifecycle();
+        var englishSource = new SourceClientLanguage("en", "en");
+        var germanSource = new SourceClientLanguage("de", "de");
+        var englishOperation = lifecycle.TransitionTo(englishSource, static () => { });
+        var transitionTask = Task.Run(
+            () => lifecycle.TransitionTo(
+                germanSource,
+                () =>
+                {
+                    invalidationEntered.Set();
+                    releaseInvalidation.Wait();
+                }));
+
+        try
+        {
+            Assert.True(await Task.Run(
+                () => invalidationEntered.Wait(TimeSpan.FromSeconds(5))));
+            Assert.Equal(default, lifecycle.Capture(germanSource));
+        }
+        finally
+        {
+            releaseInvalidation.Set();
+        }
+
+        var germanOperation = await transitionTask;
+        var published = false;
+
+        Assert.Equal(germanOperation, lifecycle.Capture(germanSource));
+        Assert.False(lifecycle.TryPublish(
+            englishOperation,
+            () => published = true));
+        Assert.False(published);
+    }
+
+    /// <summary>
     ///     Creates a minimal DB-first payload for native-free runtime tests.
     /// </summary>
     /// <param name="text">The payload text.</param>

@@ -307,3 +307,91 @@ Result: `545` passed, `0` failed, `0` skipped.
   invalidation and confirm only still-owned exact replacements are restored.
 - `Echoglossian.xml` remains an unrelated dirty worktree file and must stay
   excluded from staging.
+
+## Task 7A Final: Stable DB-first Node Ownership and Atomic Source Transition
+
+### Status
+
+Completed only the three files assigned by `task-7a-final-brief.md`. The
+shared DB-first handler now allocates duplicate ordinals for every effectively
+visible text node before capture filtering, and source identity publication is
+deferred until handler invalidation completes.
+
+### Root-cause correction
+
+- Capture previously incremented a duplicate ordinal only after both generic
+  and addon-specific text capture filters accepted a visible node. Apply,
+  stale recovery, and owned restore already incremented for every effectively
+  visible node, so a filtered duplicate could shift every later stable key.
+- `SourcePublicationLifecycle.TransitionTo` incremented its generation and
+  wrote the new source before executing invalidation. Its lock-free `Capture`
+  path could therefore create a new-source operation while old source-owned
+  runtime state was still being invalidated.
+
+`DbFirstTextNodeKeyAllocator.ConsumeVisibleNode` is now the shared production
+allocator used by capture, apply, stale-node recovery, and owned restore.
+Capture invokes it immediately after the effective-visibility check and before
+any capture filter. A transition now makes publication unavailable, completes
+invalidation while holding the lifecycle gate, then publishes the next
+generation and source. The completed same-source fast path remains lock-free.
+
+### TDD evidence
+
+The two focused tests were added before production changes:
+
+```text
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter 'FullyQualifiedName~NativeRuntimeSourceScopeTests' --no-restore
+```
+
+RED result: exit `1` with `CS0103` because the production
+`DbFirstTextNodeKeyAllocator` seam did not exist. The same RED test change
+also declares the blocked-invalidation source-publication regression.
+
+Focused GREEN reran the same command after the minimal production change:
+
+```text
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter 'FullyQualifiedName~NativeRuntimeSourceScopeTests' --no-restore
+```
+
+Result: `13` passed, `0` failed, `0` skipped. The new regressions prove that a
+capture-filtered visible duplicate consumes its ordinal and that a concurrent
+capture receives no new-source operation until blocked invalidation is
+released; they also verify a retired operation cannot publish afterward.
+
+### Files changed
+
+- `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`
+- `Echoglossian.Tests/NativeRuntimeSourceScopeTests.cs`
+- `.superpowers/sdd/task-7a-report.md`
+
+### Validation
+
+```text
+dotnet build Echoglossian.sln -c Debug --no-restore
+```
+
+Result: succeeded with `0` errors and `2` existing warnings (Multilingual App
+Toolkit unavailable and `SQLitePCLRaw.lib.e_sqlite3 2.1.11` advisory).
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Result: `548` passed, `0` failed, `0` skipped.
+
+```text
+git diff --check
+```
+
+Result: exit `0`; Git emitted line-ending conversion notices only.
+
+### Concerns and in-game verification
+
+- Native addon memory is unavailable in unit tests. Verify a duplicate-node
+  DB-first surface where an effectively visible duplicate is intentionally
+  filtered from capture; subsequent duplicate nodes must retain stable keys in
+  native, overlay-only, and swap modes.
+- Confirm a source transition clears source-owned native, overlay, and hover
+  state before any new-source async capture or publication can begin.
+- `Echoglossian.xml` was modified concurrently and remains excluded from this
+  task's staging scope.
