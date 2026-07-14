@@ -12490,6 +12490,9 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.OnDeferredCleanupScheduled(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Character.CharacterStatusSubWindowHandler.ShouldReuseCompatiblePayloads">
             <inheritdoc />
         </member>
@@ -13296,6 +13299,14 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.OnPluginUnload">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.OnDeferredCleanupScheduled(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles any addon-specific work that should run immediately when
+                cleanup is deferred instead of fully clearing runtime state.
+            </summary>
+            <param name="evt">The lifecycle event being deferred.</param>
+            <param name="args">The lifecycle event args.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,Echoglossian.JournalTranslationDisplayMode)">
             <summary>
                 Registers one translated hover target using explicit bounds.
@@ -13306,6 +13317,17 @@
             <param name="originalText">The original text.</param>
             <param name="translatedText">The translated text.</param>
             <param name="displayMode">The active display mode.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ClearRegisteredHoverTooltips">
+            <summary>
+                Removes every hover tooltip currently registered by this handler.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RequestPreDrawRefresh">
+            <summary>
+                Requests one fresh pre-draw resolve pass for this handler on the
+                next eligible lifecycle update.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RefreshOrQueue(System.Nullable{Echoglossian.SourceClientLanguage})">
             <summary>
@@ -13760,6 +13782,15 @@
             <param name="useTranslatedKeys">
                 When set, translated text becomes the key.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeTooltipLookupText(System.String)">
+            <summary>
+                Normalizes hover-tooltip lookup text so payload values captured from
+                ATK values and text nodes can still match when they differ only by
+                line-ending representation.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized lookup text.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryParseTranslatedPayload(System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>

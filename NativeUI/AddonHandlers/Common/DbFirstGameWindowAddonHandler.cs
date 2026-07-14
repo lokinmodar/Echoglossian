@@ -921,6 +921,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.deferredCleanupPending = true;
             this.deferredCleanupEvent = evt;
             this.deferredCleanupUtc = DateTime.UtcNow;
+            this.OnDeferredCleanupScheduled(evt, args);
             return;
         }
 
@@ -931,6 +932,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     public virtual void OnPluginUnload()
     {
         this.ClearResolvedState();
+    }
+
+    /// <summary>
+    ///     Handles any addon-specific work that should run immediately when
+    ///     cleanup is deferred instead of fully clearing runtime state.
+    /// </summary>
+    /// <param name="evt">The lifecycle event being deferred.</param>
+    /// <param name="args">The lifecycle event args.</param>
+    protected virtual void OnDeferredCleanupScheduled(
+        AddonEvent evt,
+        AddonArgs args)
+    {
     }
 
     /// <summary>
@@ -965,6 +978,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             string.Empty,
             tooltipBody,
             true);
+    }
+
+    /// <summary>
+    ///     Removes every hover tooltip currently registered by this handler.
+    /// </summary>
+    private protected void ClearRegisteredHoverTooltips()
+    {
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+    }
+
+    /// <summary>
+    ///     Requests one fresh pre-draw resolve pass for this handler on the
+    ///     next eligible lifecycle update.
+    /// </summary>
+    private protected void RequestPreDrawRefresh()
+    {
+        Interlocked.Exchange(ref this.refreshRequested, 1);
+        this.ArmAppliedStatePreDrawRefreshWindow();
     }
 
     /// <summary>
@@ -2894,7 +2925,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         JournalTranslationDisplayMode displayMode)
     {
-        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+        this.ClearRegisteredHoverTooltips();
 
         if (this.TryRegisterCustomHoverTooltips(
                 addon,
@@ -2938,14 +2969,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
+            var normalizedVisibleText = NormalizeTooltipLookupText(visibleText);
+
             string? tooltipBody;
             if (showOriginalTooltips)
             {
-                translatedToOriginal.TryGetValue(visibleText, out tooltipBody);
+                translatedToOriginal.TryGetValue(
+                    normalizedVisibleText,
+                    out tooltipBody);
             }
             else
             {
-                originalToTranslated.TryGetValue(visibleText, out tooltipBody);
+                originalToTranslated.TryGetValue(
+                    normalizedVisibleText,
+                    out tooltipBody);
             }
 
             if (string.IsNullOrWhiteSpace(tooltipBody))
@@ -3233,7 +3270,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            var key = useTranslatedKeys ? translatedText : originalText;
+            var key = NormalizeTooltipLookupText(
+                useTranslatedKeys ? translatedText : originalText);
             var value = useTranslatedKeys ? originalText : translatedText;
             map.TryAdd(key, value);
         }
@@ -3263,10 +3301,26 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            var lookupKey = useTranslatedKeys ? translatedText : originalText;
+            var lookupKey = NormalizeTooltipLookupText(
+                useTranslatedKeys ? translatedText : originalText);
             var value = useTranslatedKeys ? originalText : translatedText;
             map.TryAdd(lookupKey, value);
         }
+    }
+
+    /// <summary>
+    ///     Normalizes hover-tooltip lookup text so payload values captured from
+    ///     ATK values and text nodes can still match when they differ only by
+    ///     line-ending representation.
+    /// </summary>
+    /// <param name="text">The text to normalize.</param>
+    /// <returns>The normalized lookup text.</returns>
+    private static string NormalizeTooltipLookupText(string text)
+    {
+        return string.IsNullOrEmpty(text)
+            ? string.Empty
+            : text.Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Replace('\r', '\n');
     }
 
     /// <summary>

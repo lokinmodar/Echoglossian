@@ -8,6 +8,7 @@ using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Tests.TestDoubles;
+using System.Reflection;
 
 using Xunit;
 
@@ -853,6 +854,83 @@ public class ActionMenuWindowHandlerTests
                 translatedPayload);
 
         Assert.True(accepted);
+    }
+
+    /// <summary>
+    ///     Ensures generic hover-tooltip lookup still resolves when the saved
+    ///     payload captured line feeds but the live text node exposes carriage
+    ///     returns for the same ActionMenu entry.
+    /// </summary>
+    [Fact]
+    public void BuildTooltipTextMap_NormalizesLineEndingsForHoverLookup()
+    {
+        var originalPayload = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>
+            {
+                [25] = "Second Wind\nLv. 8",
+            },
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
+        var translatedPayload = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>
+            {
+                [25] = "Segundo fôlego\nNv. 8",
+            },
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+        var lookup = BuildTooltipTextMap(
+            originalPayload,
+            translatedPayload,
+            useTranslatedKeys: false);
+        var normalizedVisibleText = NormalizeTooltipLookupText(
+            "Second Wind\rLv. 8");
+
+        Assert.True(lookup.TryGetValue(
+            normalizedVisibleText,
+            out var tooltipBody));
+        Assert.Equal("Segundo fôlego\nNv. 8", tooltipBody);
+    }
+
+    /// <summary>
+    ///     Invokes the shared hover-tooltip lookup builder through reflection.
+    /// </summary>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="useTranslatedKeys">
+    ///     Whether translated texts should become the lookup keys.
+    /// </param>
+    /// <returns>The built lookup map.</returns>
+    private static Dictionary<string, string> BuildTooltipTextMap(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        bool useTranslatedKeys)
+    {
+        var method = typeof(DbFirstGameWindowAddonHandler).GetMethod(
+            "BuildTooltipTextMap",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var result = method!.Invoke(
+            null,
+            [originalPayload, translatedPayload, useTranslatedKeys]);
+        return Assert.IsType<Dictionary<string, string>>(result);
+    }
+
+    /// <summary>
+    ///     Invokes the shared tooltip-text normalizer through reflection.
+    /// </summary>
+    /// <param name="text">The text to normalize.</param>
+    /// <returns>The normalized lookup text.</returns>
+    private static string NormalizeTooltipLookupText(string text)
+    {
+        var method = typeof(DbFirstGameWindowAddonHandler).GetMethod(
+            "NormalizeTooltipLookupText",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var result = method!.Invoke(null, [text]);
+        return Assert.IsType<string>(result);
     }
 }
 

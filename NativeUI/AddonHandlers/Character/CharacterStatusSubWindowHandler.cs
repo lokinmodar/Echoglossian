@@ -54,6 +54,15 @@ public unsafe class CharacterStatusSubWindowHandler
     }
 
     /// <inheritdoc />
+    protected override void OnDeferredCleanupScheduled(
+        AddonEvent evt,
+        AddonArgs args)
+    {
+        this.ClearRegisteredHoverTooltips();
+        this.RequestPreDrawRefresh();
+    }
+
+    /// <inheritdoc />
     protected override bool ShouldReuseCompatiblePayloads()
     {
         return false;
