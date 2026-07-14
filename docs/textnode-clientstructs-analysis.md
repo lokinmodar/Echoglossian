@@ -351,5 +351,6 @@ That is the smallest change with the best expected return.
 The shared DB-first runtime identifies effectively visible duplicate text nodes
 as `nodeId:ordinal`. Capture, apply, stale recovery, and restore use the same
 allocation; a filtered visible node still consumes an ordinal. Source changes
-invalidate the old publication state before a new source generation is exposed,
-and restore writes only exact plugin-owned replacements.
+and target, engine, or policy changes invalidate the old publication state
+before a new scope generation is exposed. Restore writes only exact
+plugin-owned replacements.

@@ -183,4 +183,7 @@ persist as `ja`, `en`, `de`, `fr`, `chs`, `cht`, `ko`, and `tc`; provider codes
 are `ja`, `en`, `de`, `fr`, `zh-CN`, `zh-CN`, `ko`, and `zh-TW`.
 `TranslationReuseScope` uses the persistence identity, target, and selected
 engine policy. `chs`, `cht`, and `tc` remain distinct persisted identities even
-where provider codes overlap. The in-game matrix remains not run.
+where provider codes overlap. GameWindow and dialogue asynchronous operations
+capture the full scope before provider work and gate persistence/publication on
+that same scope remaining current; a regular same-scope `PreDraw` does not
+retire an in-flight request. The in-game matrix remains not run.

@@ -35,6 +35,14 @@ for each run.
    the current source, target, and engine policy are reused.
 8. After every source or target change, verify visible surfaces restore their
    default unmodified text until a matching translation becomes available.
+9. Start a deliberately slow translation, change target language or engine
+   before it completes, and verify the old completion neither persists nor
+   publishes into the new scope. Repeat with
+   `TranslateAlreadyTranslatedTexts` enabled and disabled.
+10. Exercise a long RTL hover body at an extreme tooltip width or text scale.
+    Verify it is wrapped or rejected before texture upload, retains the prior
+    valid texture when one exists, enters the bounded retry cooldown, and does
+    not cause repeated work or frame loss.
 
 ## Result Record
 
@@ -48,6 +56,8 @@ for each run.
 | Raw 4 to 5 and raw 5 to 7 isolation | Not run | |
 | Return to original source | Not run | |
 | Default text restoration after source/target changes | Not run | |
+| In-flight target/engine transition rejection | Not run | |
+| RTL raster limit and cooldown behavior | Not run | |
 
 ## As-Built Status (2026-07-13)
 
@@ -63,4 +73,5 @@ Additional required manual checks, also not run:
 | RTL overlay right alignment | Not run | |
 | Texture line-height density setting | Not run | |
 | Long hover tooltip adaptive sizing | Not run | |
+| RTL oversized texture rejection before upload | Not run | |
 | Dense GameWindow performance | Not run | |

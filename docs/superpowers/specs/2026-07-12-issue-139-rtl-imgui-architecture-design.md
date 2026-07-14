@@ -318,4 +318,7 @@ Textures are transient presentation artifacts, never persisted translations.
 Generation is bounded and asynchronous; cache hits are cheap and misses return
 pending presentation rather than generating a texture every frame. This design
 does not add general RTL behavior to native FFXIV widgets or arbitrary ImGui
-controls.
+controls. The implementation rejects layouts beyond `2048 px` in either
+dimension or `2,097,152 px` in area before allocation or upload, caps a cached
+texture at `48 MiB`, and reuses the validated layout for default rasterization
+instead of measuring it twice.

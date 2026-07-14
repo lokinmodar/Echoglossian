@@ -33,13 +33,16 @@ live addon runtime. They are complementary, not competing owners.
 
 ## #139 Runtime Rules
 
-- Capture one `SourceClientLanguage` for each live operation and retain it
-  through lookup, translation, persistence, and publication.
-- Use `TranslationReuseScope` for reuse; dynamic MainCommand contexts must not
-  use broad compatible-superset payload reuse.
+- Capture one complete `TranslationReuseScope` for each live operation: source
+  client identity, target, effective engine, and engine-reuse policy. Retain it
+  through lookup, translation, persistence, and publication; do not reread
+  mutable target or engine configuration after the request begins.
+- A source, target, engine, or policy change retires prior asynchronous work;
+  a same-scope `PreDraw` must preserve the in-flight operation. Dynamic
+  MainCommand contexts must not use broad compatible-superset payload reuse.
 - Preserve visible text-node `nodeId:ordinal` traversal across capture, apply,
   stale recovery, and restore. Every visible node consumes its ordinal before
   capture filters run.
-- On source transition, invalidate old native/hover/publication state before
-  publishing the new source generation. Overlay-only mode must not mutate
-  native state.
+- On any source, target, engine, or policy transition, invalidate old
+  native/hover/publication state before publishing the new scope generation.
+  Overlay-only mode must not mutate native state.

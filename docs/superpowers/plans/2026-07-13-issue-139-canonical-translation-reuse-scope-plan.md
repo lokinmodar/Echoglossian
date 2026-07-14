@@ -653,5 +653,8 @@ The planned contracts are implemented. Live work captures one
 its `PersistenceCode`, while `TranslationService` receives the contract and
 selects `ProviderCode` internally. Reuse requires the full source, target,
 game/version/content, and configured engine-policy predicates. Unknown source
-fails closed. The manual matrix in
+fails closed. Asynchronous GameWindow and dialogue work captures that complete
+operation scope before translation and accepts persistence or publication only
+while it remains current; `PreDraw` preserves an unchanged complete scope.
+The manual matrix in
 `docs/issue-139-canonical-language-validation.md` remains not run.

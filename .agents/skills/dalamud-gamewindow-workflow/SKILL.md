@@ -33,12 +33,17 @@ Use these repo sources first:
 5. For \_MainCommand and AddonContextMenuTitle, keep refresh handling and hover registration tied to the live ATK payload and current visible addon state.
 6. Do not treat MainCommandText or other sheet-backed rows as the live runtime owner.
 7. Avoid reusable superset payloads when the same visible slots mean different contexts.
-8. Capture one `SourceClientLanguage` per operation and use
-   `TranslationReuseScope` for lookup, queue, persistence, and publication.
-9. Keep duplicate visible-node `nodeId:ordinal` allocation consistent across
+8. Capture one complete `TranslationReuseScope` per operation and use it for
+   lookup, queue, persistence, and publication. It owns source, target,
+   effective engine, and engine-reuse policy; content and version remain
+   owner-query filters.
+9. Never reread mutable target or engine configuration after asynchronous work
+   begins. A changed scope retires old completion work, while a same-scope
+   `PreDraw` must preserve the in-flight operation.
+10. Keep duplicate visible-node `nodeId:ordinal` allocation consistent across
    capture, apply, stale recovery, and restore; filtered visible nodes consume
    an ordinal.
-10. Invalidate old source-owned state before publishing a new source generation.
+11. Invalidate old scope-owned state before publishing a new generation.
 
 ## Completion checks
 

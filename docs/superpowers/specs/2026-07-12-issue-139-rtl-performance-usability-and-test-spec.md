@@ -289,7 +289,13 @@ preferred.
 
 Automated coverage establishes bounded texture/adaptive-width state, one
 scheduled creation per pending key, direction-aware layout keys, and
-non-blocking cache misses. It does not establish the in-game observations in
-this document. RTL alignment, line-height density, long-hover sizing, and dense
-GameWindow performance remain manual checks in
+non-blocking cache misses. The implementation enforces the `2048 px` dimension,
+`2,097,152 px` area, and `48 MiB` single-entry limits before target bitmap
+allocation, PNG encoding, upload, or cache insertion. A normal texture miss
+creates one validated layout and reuses it for rasterization; an oversized
+layout enters the existing per-key cooldown without retrying every frame.
+
+This does not establish the in-game observations in this document. RTL
+alignment, line-height density, long-hover sizing, and dense GameWindow
+performance remain manual checks in
 `docs/issue-139-canonical-language-validation.md`.

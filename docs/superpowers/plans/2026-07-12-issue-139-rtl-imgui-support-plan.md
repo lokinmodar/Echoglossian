@@ -348,4 +348,7 @@ tooltip presentation, with direction-aware cache keys, right alignment for RTL
 languages, adaptive hover sizing, and `TexturePresentationLineHeightScale` for
 multiline density. It is not universal native-widget bidi support. Phase B
 remains an R&D and upstream track: static shaped text first, then ImGui helpers;
-editable widgets remain separate investigation.
+editable widgets remain separate investigation. The shipped path clamps texture
+dimensions to `2048 px`, rejects layouts above `2,097,152 px`, caps one cache
+entry at `48 MiB`, and validates one reusable layout before the default upload
+path allocates or encodes a bitmap.

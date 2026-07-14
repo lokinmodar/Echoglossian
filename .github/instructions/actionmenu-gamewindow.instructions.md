@@ -12,8 +12,13 @@ applyTo: "NativeUI/AddonHandlers/ActionMenu/**/*.cs"
 - Keep capture and hover/native apply tied to the current page, not to a broad global scan.
 - Do not migrate this runtime onto StringArrayData.
 - Prefer the smallest page-specific fix when one menu section is unstable.
-- Capture one `SourceClientLanguage` per ActionMenu operation and use
-  `TranslationReuseScope` for lookup and queued work.
+- Capture one complete `TranslationReuseScope` per ActionMenu operation for
+  lookup, queue ownership, post-translation normalization, diagnostics, and
+  persistence. Do not derive target or engine from mutable configuration after
+  queueing.
+- Stable payload signatures belong to that full scope. Release a signature when
+  its request fails or its translated payload is rejected; a changed scope owns
+  a new signature set.
 - Preserve duplicate-node `nodeId:ordinal` traversal in every capture/apply/
   restore path; do not broaden reuse across dynamic menu contexts.
-- Invalidate old source publication before exposing a new source generation.
+- Invalidate old scope-owned publication before exposing a new generation.

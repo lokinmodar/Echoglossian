@@ -43,12 +43,20 @@ generic-provider, and ambiguous Chinese legacy origins remain stored but
 non-reusable until a new live-client operation creates or updates a
 source-proven row.
 
-## Publication And Node Identity
+## Async Publication And Node Identity
 
 Capture, publication, apply, stale recovery, and restore use visible text-node
 `nodeId:ordinal` allocation. A filtered visible node consumes its ordinal.
-Source transitions invalidate old state before publishing a new generation, so
-stale async work cannot apply into a new source generation. Overlay-only flows
+Every asynchronous operation captures one immutable `TranslationReuseScope`
+before translation starts: persisted source identity, target language, effective
+engine, and engine-reuse policy. The completion must use those captured values
+for provider work, DB lookup, persistence, cache update, and publication; it
+must not reread mutable target or engine configuration after `await`.
+
+Any member of that scope changing retires the previous generation before native
+or hover state can publish. The shared GameWindow `PreDraw` path keeps the same
+complete scope rather than temporarily reducing ownership to source-only, so a
+normal frame does not retire its own in-flight request. Overlay-only flows
 remain presentation-only and do not mutate native state.
 
 ## Evidence And Remaining Checks

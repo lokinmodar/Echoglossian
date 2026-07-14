@@ -14,11 +14,15 @@ applyTo:
 - Do not redirect GameWindow surfaces through StringArrayData.
 - Keep hover-tooltip registration and native writes tied to the current display mode.
 - If the base flow changes, preserve the current live-addon lifecycle and persistence semantics.
-- Capture one `SourceClientLanguage` per operation and carry it through lookup,
-  provider work, persistence, and publication; fail closed if it is unresolved.
-- Build reuse with `TranslationReuseScope` for source, target, and engine
-  policy; combine it with the owner query's content and version checks. Do not
-  widen dynamic-context reuse.
+- Capture one complete `TranslationReuseScope` per operation and carry it
+  through lookup, provider work, persistence, and publication; fail closed if
+  source resolution fails. It owns source, target, effective engine, and reuse
+  policy, while content and version remain owner-query filters.
+- Do not reread mutable target or engine configuration after asynchronous work
+  begins. Any scope member changing must retire the prior operation before it
+  persists or publishes; a same-scope `PreDraw` must not reduce the token to
+  source-only or retire in-flight work.
+- Do not widen dynamic-context reuse.
 - Keep `nodeId:ordinal` allocation identical across capture, apply, stale
   recovery, and restore. Every visible node consumes an ordinal before filters.
-- Invalidate old source-owned state before publishing a new source generation.
+- Invalidate old scope-owned state before publishing a new generation.

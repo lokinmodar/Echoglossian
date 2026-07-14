@@ -245,6 +245,7 @@ These references are useful when validating the pipeline:
 Capture a single `SourceClientLanguage` at the operation boundary. Persist and
 scope rows by `PersistenceCode`; pass the contract to `TranslationService`, not
 its provider code to a legacy string overload. Reuse must include source,
-target, content/version predicates, and engine policy. On a source transition,
-retire the old publication generation before exposing the next one so stale
-async work cannot apply a structured payload to a new source.
+target, content/version predicates, and engine policy. Async work captures the
+complete source/target/engine/policy scope before it begins. Any member changing
+retires the old publication generation before exposing the next one, so stale
+work cannot apply a structured payload to a new scope.

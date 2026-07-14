@@ -30,6 +30,21 @@ ActionMenu addon lifecycle
 2. reference-text cache registry, including `MainCommandText`
 3. persisted `GameWindow` payload matching
 
+## Operation Scope And Queue Ownership
+
+The shared DB-first runtime captures one `TranslationReuseScope` before an
+`ActionMenu` payload enters asynchronous translation. It includes source-client
+identity, target language, effective engine, and engine-reuse policy. The
+captured scope, rather than mutable configuration, governs the translated
+payload normalization, canonical fallback lookup, stable-signature diagnostics,
+and `GameWindow` persistence after the request begins.
+
+Stable page signatures are owned by that full scope. A failed or rejected
+translation releases its signature, while a target, engine, policy, or source
+change starts a new signature set. This prevents a transient failure from
+blocking retries and prevents one page's completion from populating another
+translation scope.
+
 ## Why `MainCommandText` helps here
 
 `ActionMenu` contains pages whose visible labels are command-like rather than

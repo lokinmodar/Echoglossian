@@ -97,6 +97,21 @@ Mode rules are the same across the family:
 - swap mode keeps translated native text and publishes the original through the
   overlay
 
+## Dialogue Async Scope
+
+`Talk`, `_BattleTalk`, `TalkSubtitle`, and `_MiniTalk` use the shared
+`SourcePublicationLifecycle` to own asynchronous completions. Before queueing
+or manually retranslating a line, each handler captures one
+`TranslationReuseScope`: source-client persistence identity, target language,
+effective dialogue engine, and the engine-reuse policy.
+
+The captured scope is the only source for provider target, lookup row, session
+key, persistence row, and overlay/native publication after the request starts.
+Changing any scope member retires the old generation and clears the
+handler-owned state before the next scope can publish. A late completion may
+finish its provider call, but it cannot write a row or replace visible text
+after its captured scope is no longer current.
+
 ## Dialogue-family overview
 
 ```mermaid
