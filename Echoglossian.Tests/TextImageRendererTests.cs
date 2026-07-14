@@ -143,4 +143,23 @@ public class TextImageRendererTests
                 Color.Transparent,
                 2048));
     }
+
+    /// <summary>
+    /// Ensures a validated text layout can be reused for rasterization without
+    /// rebuilding its measurements before the target bitmap is allocated.
+    /// </summary>
+    [Fact]
+    public void RenderTextLayout_PrecomputedLayout_RendersMeasuredText()
+    {
+        using TextImageRenderer renderer =
+            new("missing-font.ttf", 24f, FontStyle.Regular, 1.0f);
+        var layout = renderer.CreateTextLayout("precomputed layout", 480);
+        using Bitmap bitmap = renderer.RenderTextLayout(
+            layout,
+            Color.White,
+            Color.Transparent);
+
+        Assert.InRange(bitmap.Width, 1, 2048);
+        Assert.InRange(bitmap.Height, 1, 2048);
+    }
 }

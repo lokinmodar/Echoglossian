@@ -41,6 +41,8 @@ internal sealed class RtlTexturePresentationService : IDisposable
   private readonly Config configuration;
   private readonly TextTextureCache textureCache;
   private readonly Func<
+      TextImageRenderer,
+      TextImageRenderer.TextRasterLayout,
       TextureCreationRequest,
       CancellationToken,
       Task<IDalamudTextureWrap>> createTextureAsync;
@@ -73,8 +75,10 @@ internal sealed class RtlTexturePresentationService : IDisposable
       ITextureProvider textureProvider)
     : this(
         configuration,
-        (request, cancellationToken) => CreateTextureAsync(
+        (renderer, layout, request, cancellationToken) => CreateTextureAsync(
             textureProvider,
+            renderer,
+            layout,
             request,
             cancellationToken))
   {
@@ -106,6 +110,59 @@ internal sealed class RtlTexturePresentationService : IDisposable
   internal RtlTexturePresentationService(
       Config configuration,
       Func<
+          TextureCreationRequest,
+          CancellationToken,
+          Task<IDalamudTextureWrap>> createTextureAsync,
+      int adaptiveWidthCacheCapacity = DefaultAdaptiveWidthCacheCapacity,
+      int textureCacheCapacity = DefaultTextureCacheCapacity,
+      int pendingTextureCapacity = DefaultPendingTextureCapacity,
+      int maxConcurrentTextureCreations =
+          DefaultMaxConcurrentTextureCreations,
+      int retryStateCapacity = DefaultRetryStateCapacity,
+      Func<DateTime>? getUtcNow = null)
+    : this(
+        configuration,
+        (_, _, request, cancellationToken) => createTextureAsync(
+            request,
+            cancellationToken),
+        adaptiveWidthCacheCapacity,
+        textureCacheCapacity,
+        pendingTextureCapacity,
+        maxConcurrentTextureCreations,
+        retryStateCapacity,
+        getUtcNow)
+  {
+  }
+
+  /// <summary>
+  /// Initializes a texture presentation service with a layout-aware creation
+  /// operation.
+  /// </summary>
+  /// <param name="configuration">The live plugin configuration.</param>
+  /// <param name="createTextureAsync">
+  /// The asynchronous texture creation operation using a measured layout.
+  /// </param>
+  /// <param name="adaptiveWidthCacheCapacity">
+  /// The maximum number of adaptive-width measurements to retain.
+  /// </param>
+  /// <param name="textureCacheCapacity">
+  /// The maximum number of completed textures to retain.
+  /// </param>
+  /// <param name="pendingTextureCapacity">
+  /// The maximum number of queued and running texture requests.
+  /// </param>
+  /// <param name="maxConcurrentTextureCreations">
+  /// The maximum number of texture workers for one lifecycle generation.
+  /// </param>
+  /// <param name="retryStateCapacity">
+  /// The maximum number of failed-key cooldown entries to retain.
+  /// </param>
+  /// <param name="getUtcNow">The clock used for retry cooldowns.</param>
+  private RtlTexturePresentationService(
+      Config configuration,
+      Func<
+          TextImageRenderer,
+          TextImageRenderer.TextRasterLayout,
           TextureCreationRequest,
           CancellationToken,
           Task<IDalamudTextureWrap>> createTextureAsync,
@@ -985,27 +1042,23 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// Rasterizes, encodes, and uploads one text texture.
   /// </summary>
   /// <param name="textureProvider">The Dalamud texture provider.</param>
+  /// <param name="renderer">The renderer that created the measured layout.</param>
+  /// <param name="layout">The validated text layout to rasterize.</param>
   /// <param name="request">The resolved rasterization inputs.</param>
   /// <param name="cancellationToken">The lifecycle cancellation token.</param>
   /// <returns>The uploaded texture.</returns>
   private static async Task<IDalamudTextureWrap> CreateTextureAsync(
       ITextureProvider textureProvider,
+      TextImageRenderer renderer,
+      TextImageRenderer.TextRasterLayout layout,
       TextureCreationRequest request,
       CancellationToken cancellationToken)
   {
-    await Task.Yield();
     cancellationToken.ThrowIfCancellationRequested();
-    using TextImageRenderer renderer = new(
-        request.FontPath,
-        request.FontSize,
-        FontStyle.Regular,
-        request.LineHeightScale,
-        request.RightToLeft);
-    using Bitmap bitmap = renderer.RenderShapedText(
-        request.Text,
+    using Bitmap bitmap = renderer.RenderTextLayout(
+        layout,
         request.TextColor,
-        request.BackgroundColor,
-        request.MaxWidth);
+        request.BackgroundColor);
     cancellationToken.ThrowIfCancellationRequested();
     using MemoryStream stream = new();
     bitmap.Save(stream, ImageFormat.Png);
@@ -1034,9 +1087,10 @@ internal sealed class RtlTexturePresentationService : IDisposable
         FontStyle.Regular,
         request.LineHeightScale,
         request.RightToLeft);
-    var measuredSize = renderer.MeasureShapedText(
+    var layout = renderer.CreateTextLayout(
         request.Text,
         request.MaxWidth);
+    var measuredSize = new Size(layout.Width, layout.Height);
     if (!TextRasterLimits.IsWithinLimits(measuredSize))
     {
       throw new InvalidOperationException(
@@ -1044,7 +1098,11 @@ internal sealed class RtlTexturePresentationService : IDisposable
     }
 
     cancellationToken.ThrowIfCancellationRequested();
-    return await this.createTextureAsync(request, cancellationToken)
+    return await this.createTextureAsync(
+            renderer,
+            layout,
+            request,
+            cancellationToken)
         .ConfigureAwait(false);
   }
 

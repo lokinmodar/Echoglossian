@@ -127,15 +127,22 @@ public sealed class TextImageRenderer : IDisposable
   /// <returns>A bitmap containing the shaped RTL text.</returns>
   public Bitmap RenderShapedText(string text, Color textColor, Color backgroundColor, int? maxWidth = null)
   {
-    using Bitmap dummy = new(1, 1);
-    using Graphics measuringGraphics = Graphics.FromImage(dummy);
-    measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-    using StringFormat format = CreateStringFormat(this.rightToLeft);
-    var layout = this.BuildTextLayout(
-        measuringGraphics,
-        format,
-        text,
-        maxWidth);
+    var layout = this.CreateTextLayout(text, maxWidth);
+    return this.RenderTextLayout(layout, textColor, backgroundColor);
+  }
+
+  /// <summary>
+  /// Renders a previously measured text layout without repeating layout work.
+  /// </summary>
+  /// <param name="layout">The measured text layout to rasterize.</param>
+  /// <param name="textColor">The color of the text.</param>
+  /// <param name="backgroundColor">The background color.</param>
+  /// <returns>A bitmap containing the shaped text.</returns>
+  internal Bitmap RenderTextLayout(
+      TextRasterLayout layout,
+      Color textColor,
+      Color backgroundColor)
+  {
     var measuredSize = new Size(layout.Width, layout.Height);
     if (!TextRasterLimits.IsWithinLimits(measuredSize))
     {
@@ -145,6 +152,7 @@ public sealed class TextImageRenderer : IDisposable
 
     Bitmap bitmap = new(layout.Width, layout.Height);
     using Graphics graphics = Graphics.FromImage(bitmap);
+    using StringFormat format = CreateStringFormat(this.rightToLeft);
 
     graphics.Clear(backgroundColor);
     graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
@@ -176,6 +184,18 @@ public sealed class TextImageRenderer : IDisposable
   /// <returns>The measured bitmap size.</returns>
   public Size MeasureShapedText(string text, int? maxWidth = null)
   {
+    var layout = this.CreateTextLayout(text, maxWidth);
+    return new Size(layout.Width, layout.Height);
+  }
+
+  /// <summary>
+  /// Creates the bounded text layout shared by measurement and rasterization.
+  /// </summary>
+  /// <param name="text">The shaped text to layout.</param>
+  /// <param name="maxWidth">Optional max width in pixels used for wrapping.</param>
+  /// <returns>The measured text layout.</returns>
+  internal TextRasterLayout CreateTextLayout(string text, int? maxWidth = null)
+  {
     using Bitmap dummy = new(1, 1);
     using Graphics measuringGraphics = Graphics.FromImage(dummy);
     measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
@@ -185,7 +205,7 @@ public sealed class TextImageRenderer : IDisposable
         format,
         text,
         maxWidth);
-    return new Size(layout.Width, layout.Height);
+    return layout;
   }
 
   /// <summary>
@@ -209,7 +229,7 @@ public sealed class TextImageRenderer : IDisposable
   /// <param name="text">The text to layout.</param>
   /// <param name="maxWidth">The optional wrap width.</param>
   /// <returns>The resolved text layout.</returns>
-  private TextLayout BuildTextLayout(
+  private TextRasterLayout BuildTextLayout(
       Graphics graphics,
       StringFormat format,
       string text,
@@ -223,7 +243,7 @@ public sealed class TextImageRenderer : IDisposable
         effectiveMaxWidth);
     var baseLineHeight = this.font.GetHeight(graphics);
     var lineAdvance = Math.Max(1f, baseLineHeight * this.lineHeightScale);
-    var lines = new List<TextLayoutLine>(resolvedLines.Count);
+    var lines = new List<TextRasterLayoutLine>(resolvedLines.Count);
     var maxMeasuredWidth = 1f;
     var currentTop = 0f;
 
@@ -239,7 +259,7 @@ public sealed class TextImageRenderer : IDisposable
       var measuredWidth = Math.Max(1f, measuredSize.Width);
       var measuredHeight = Math.Max(baseLineHeight, measuredSize.Height);
       lines.Add(
-          new TextLayoutLine(
+          new TextRasterLayoutLine(
               resolvedLine,
               currentTop,
               measuredHeight));
@@ -251,7 +271,7 @@ public sealed class TextImageRenderer : IDisposable
         ? (int)Math.Ceiling(baseLineHeight)
         : (int)Math.Ceiling(lines[^1].Top + lines[^1].Height);
     var totalWidth = Math.Max(1, (int)Math.Ceiling(maxMeasuredWidth));
-    return new TextLayout(
+    return new TextRasterLayout(
         totalWidth,
         Math.Max(1, totalHeight),
         lines);
@@ -437,12 +457,25 @@ public sealed class TextImageRenderer : IDisposable
     };
   }
 
-  private sealed record TextLayout(
+  /// <summary>
+  /// Represents a measured text layout that can be rasterized without
+  /// remeasuring its wrapped lines.
+  /// </summary>
+  /// <param name="Width">The measured layout width.</param>
+  /// <param name="Height">The measured layout height.</param>
+  /// <param name="Lines">The ordered measured layout lines.</param>
+  internal sealed record TextRasterLayout(
       int Width,
       int Height,
-      IReadOnlyList<TextLayoutLine> Lines);
+      IReadOnlyList<TextRasterLayoutLine> Lines);
 
-  private sealed record TextLayoutLine(
+  /// <summary>
+  /// Represents one measured line in a text raster layout.
+  /// </summary>
+  /// <param name="Text">The line text.</param>
+  /// <param name="Top">The line's top coordinate.</param>
+  /// <param name="Height">The measured line height.</param>
+  internal sealed record TextRasterLayoutLine(
       string Text,
       float Top,
       float Height);
