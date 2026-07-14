@@ -239,3 +239,12 @@ These references are useful when validating the pipeline:
 - If a quest advances, update the canonical quest snapshot instead of creating per-step fragments.
 - If an item or action tooltip contains payloads, keep payload order stable across translation and persistence.
 - When in doubt, use the UI to identify the current element and Lumina or native runtime state to define the real text source.
+
+## #139 Identity And Generation Rules
+
+Capture a single `SourceClientLanguage` at the operation boundary. Persist and
+scope rows by `PersistenceCode`; pass the contract to `TranslationService`, not
+its provider code to a legacy string overload. Reuse must include source,
+target, content/version predicates, and engine policy. On a source transition,
+retire the old publication generation before exposing the next one so stale
+async work cannot apply a structured payload to a new source.

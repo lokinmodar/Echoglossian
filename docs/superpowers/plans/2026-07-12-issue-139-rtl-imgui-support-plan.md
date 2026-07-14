@@ -340,3 +340,12 @@ Start only after `Phase A` behavior is measured with real plugin usage.
   `DalamudComplexTextBackend` adapter so the plugin can adopt upstream work
   later without another surface rewrite.
 
+## As-Built Status (2026-07-13)
+
+Phase A is implemented as bounded, texture-backed presentation selected by
+`LanguagePresentationPolicy`. It supports plugin-owned overlays and hover
+tooltip presentation, with direction-aware cache keys, right alignment for RTL
+languages, adaptive hover sizing, and `TexturePresentationLineHeightScale` for
+multiline density. It is not universal native-widget bidi support. Phase B
+remains an R&D and upstream track: static shaped text first, then ImGui helpers;
+editable widgets remain separate investigation.

@@ -175,3 +175,12 @@ does not reappear on Character, ActionMenu, native GameWindow, ActionDetail,
 ItemDetail, and dialogue surfaces. Where regional clients are available, run
 the same matrix for client values `4`, `5`, `6`, and `7` and verify that
 Chinese source identities do not cross-reuse.
+
+## As-Built Status (2026-07-13)
+
+`SourceClientLanguage` is the live source contract. Raw values `0` through `7`
+persist as `ja`, `en`, `de`, `fr`, `chs`, `cht`, `ko`, and `tc`; provider codes
+are `ja`, `en`, `de`, `fr`, `zh-CN`, `zh-CN`, `ko`, and `zh-TW`.
+`TranslationReuseScope` uses the persistence identity, target, and selected
+engine policy. `chs`, `cht`, and `tc` remain distinct persisted identities even
+where provider codes overlap. The in-game matrix remains not run.

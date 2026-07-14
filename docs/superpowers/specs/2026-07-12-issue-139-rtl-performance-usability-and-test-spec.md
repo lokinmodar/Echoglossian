@@ -285,3 +285,11 @@ preferred.
 - generation is tied to content changes, not frame frequency
 - the usability requirements above are met on the in-game validation matrix
 
+## As-Built Status (2026-07-13)
+
+Automated coverage establishes bounded texture/adaptive-width state, one
+scheduled creation per pending key, direction-aware layout keys, and
+non-blocking cache misses. It does not establish the in-game observations in
+this document. RTL alignment, line-height density, long-hover sizing, and dense
+GameWindow performance remain manual checks in
+`docs/issue-139-canonical-language-validation.md`.

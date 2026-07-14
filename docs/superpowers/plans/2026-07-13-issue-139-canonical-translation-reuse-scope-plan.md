@@ -645,3 +645,13 @@ Plan saved to docs/superpowers/plans/2026-07-13-issue-139-canonical-translation-
 
 1. **Subagent-Driven (recommended)** - dispatch a fresh subagent per task, review between tasks.
 2. **Inline Execution** - execute the tasks in this session using superpowers:executing-plans, with checkpoints.
+
+## As-Built Status (2026-07-13)
+
+The planned contracts are implemented. Live work captures one
+`SourceClientLanguage` from raw `IClientState.ClientLanguage`; persistence uses
+its `PersistenceCode`, while `TranslationService` receives the contract and
+selects `ProviderCode` internally. Reuse requires the full source, target,
+game/version/content, and configured engine-policy predicates. Unknown source
+fails closed. The manual matrix in
+`docs/issue-139-canonical-language-validation.md` remains not run.

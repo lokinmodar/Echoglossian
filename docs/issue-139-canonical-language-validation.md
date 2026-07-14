@@ -48,3 +48,19 @@ for each run.
 | Raw 4 to 5 and raw 5 to 7 isolation | Not run | |
 | Return to original source | Not run | |
 | Default text restoration after source/target changes | Not run | |
+
+## As-Built Status (2026-07-13)
+
+Automated task reports cover canonical source resolution, source-scoped reuse,
+captured async operations, source-generation invalidation, and texture
+presentation lifecycle behavior. They do not constitute in-game acceptance.
+Keep every matrix row above `Not run` until direct evidence is recorded.
+
+Additional required manual checks, also not run:
+
+| Check | Result | Evidence / Notes |
+| --- | --- | --- |
+| RTL overlay right alignment | Not run | |
+| Texture line-height density setting | Not run | |
+| Long hover tooltip adaptive sizing | Not run | |
+| Dense GameWindow performance | Not run | |

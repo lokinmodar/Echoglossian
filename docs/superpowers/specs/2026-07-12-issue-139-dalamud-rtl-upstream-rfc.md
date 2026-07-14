@@ -183,3 +183,9 @@ presentation interface that can later consume the upstream service.
 5. How much of the service can remain independent from Dear ImGui internals in
    the first pass?
 
+## As-Built Status (2026-07-13)
+
+Echoglossian now has a local texture-backed Phase A presentation path for
+plugin-owned overlays and hover tooltips. The upstream request remains a
+future-facing investigation for static shaped text and ImGui helpers; it makes
+no editable-widget or universal native RTL promise.

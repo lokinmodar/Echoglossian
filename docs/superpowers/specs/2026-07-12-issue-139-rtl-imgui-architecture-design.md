@@ -311,3 +311,11 @@ accompanies this document.
 - remaining limitations are specifically about fidelity or maintainability, not
   about basic user-visible correctness
 
+## As-Built Status (2026-07-13)
+
+Phase A uses `RtlTexturePresentationService` behind the presentation resolver.
+Textures are transient presentation artifacts, never persisted translations.
+Generation is bounded and asynchronous; cache hits are cheap and misses return
+pending presentation rather than generating a texture every frame. This design
+does not add general RTL behavior to native FFXIV widgets or arbitrary ImGui
+controls.
