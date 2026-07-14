@@ -28,7 +28,7 @@ public sealed class TalkSubtitleHandler :
   private readonly Config config;
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>> eventHandlers = new();
   private readonly Func<TalkSubtitleMessage, TalkSubtitleMessage?> findTalkSubtitleMessage;
-  private readonly Func<TalkSubtitleMessage, Task<string>> insertTalkSubtitleMessageAsync;
+  private readonly Func<TalkSubtitleMessage, CancellationToken, Task<string>> insertTalkSubtitleMessageAsync;
   private readonly Func<string, string> normalizeReplacementText;
   private readonly SourcePublicationLifecycle sourceLifecycle = new();
   private readonly object stateGate = new();
@@ -69,6 +69,36 @@ public sealed class TalkSubtitleHandler :
       TranslationService translationService,
       Func<TalkSubtitleMessage, TalkSubtitleMessage?> findTalkSubtitleMessage,
       Func<TalkSubtitleMessage, Task<string>> insertTalkSubtitleMessageAsync,
+      Action<string, string, string> updateOverlay,
+      Action clearOverlay,
+      Func<string, string> normalizeReplacementText)
+    : this(
+        config,
+        translationService,
+        findTalkSubtitleMessage,
+        (message, _) => insertTalkSubtitleMessageAsync(message),
+        updateOverlay,
+        clearOverlay,
+        normalizeReplacementText)
+  {
+  }
+
+  /// <summary>
+  ///     Initializes a TalkSubtitle handler with cancellation-aware dialogue
+  ///     persistence owned by the captured operation scope.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <param name="translationService">The shared translation service.</param>
+  /// <param name="findTalkSubtitleMessage">The canonical TalkSubtitle lookup.</param>
+  /// <param name="insertTalkSubtitleMessageAsync">The cancellation-aware persistence delegate.</param>
+  /// <param name="updateOverlay">The overlay publication callback.</param>
+  /// <param name="clearOverlay">The overlay clear callback.</param>
+  /// <param name="normalizeReplacementText">The native replacement normalizer.</param>
+  internal TalkSubtitleHandler(
+      Config config,
+      TranslationService translationService,
+      Func<TalkSubtitleMessage, TalkSubtitleMessage?> findTalkSubtitleMessage,
+      Func<TalkSubtitleMessage, CancellationToken, Task<string>> insertTalkSubtitleMessageAsync,
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
       Func<string, string> normalizeReplacementText)
@@ -131,6 +161,10 @@ public sealed class TalkSubtitleHandler :
         this.CreateDialogueReuseScope(sourceLanguage));
     var operationScope = sourceOperation.Scope ??
                          this.CreateDialogueReuseScope(sourceLanguage);
+    var translatorResolution = this.translationService
+        .CaptureTranslatorResolution(
+            operationScope.TranslationEngine.GetValueOrDefault(),
+            TranslationSurfaceGroup.Dialogue);
 
     string originalText;
     int requestId;
@@ -162,7 +196,8 @@ public sealed class TalkSubtitleHandler :
           originalText,
           sourceLanguage,
           operationScope.TargetLanguageCode,
-          TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
+          TranslationSurfaceGroup.Dialogue,
+          translatorResolution).ConfigureAwait(false) ?? string.Empty;
 
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
@@ -208,7 +243,8 @@ public sealed class TalkSubtitleHandler :
       }
 
       var persistenceResult = await this.insertTalkSubtitleMessageAsync(
-          translatedTalkSubtitle).ConfigureAwait(false);
+          translatedTalkSubtitle,
+          sourceOperation.CancellationToken).ConfigureAwait(false);
       var persistenceSucceeded = !persistenceResult.StartsWith(
           "ErrorSavingData:",
           StringComparison.Ordinal) &&
@@ -629,6 +665,10 @@ public sealed class TalkSubtitleHandler :
   {
     var operationScope = sourceOperation.Scope ??
                          this.CreateDialogueReuseScope(sourceLanguage);
+    var translatorResolution = this.translationService
+        .CaptureTranslatorResolution(
+            operationScope.TranslationEngine.GetValueOrDefault(),
+            TranslationSurfaceGroup.Dialogue);
     string translatedText;
     try
     {
@@ -636,7 +676,8 @@ public sealed class TalkSubtitleHandler :
           originalText,
           sourceLanguage,
           operationScope.TargetLanguageCode,
-          TranslationSurfaceGroup.Dialogue) ?? string.Empty;
+          TranslationSurfaceGroup.Dialogue,
+          translatorResolution) ?? string.Empty;
     }
     catch (Exception ex)
     {
@@ -680,7 +721,9 @@ public sealed class TalkSubtitleHandler :
       return;
     }
 
-    await this.insertTalkSubtitleMessageAsync(translatedTalkSubtitle);
+    await this.insertTalkSubtitleMessageAsync(
+        translatedTalkSubtitle,
+        sourceOperation.CancellationToken);
 
     this.sourceLifecycle.TryPublish(
         sourceOperation,

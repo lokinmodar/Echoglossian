@@ -40,10 +40,17 @@ Use these repo sources first:
 9. Never reread mutable target or engine configuration after asynchronous work
    begins. A changed scope retires old completion work, while a same-scope
    `PreDraw` must preserve the in-flight operation.
-10. Keep duplicate visible-node `nodeId:ordinal` allocation consistent across
+10. Capture the effective translator instance before the first await when an
+   operation makes more than one provider call. Every chunk must reuse that
+   captured resolution rather than reroute through mutable configuration.
+11. For ActionMenu stable signatures, include the lifecycle generation in queue
+   ownership. A stale generation must not release a newer same-scope request.
+   Evaluate a failed-payload cooldown before claiming the signature so an
+   ineligible refresh cannot suppress the later retry.
+12. Keep duplicate visible-node `nodeId:ordinal` allocation consistent across
    capture, apply, stale recovery, and restore; filtered visible nodes consume
    an ordinal.
-11. Invalidate old scope-owned state before publishing a new generation.
+13. Invalidate old scope-owned state before publishing a new generation.
 
 ## Completion checks
 

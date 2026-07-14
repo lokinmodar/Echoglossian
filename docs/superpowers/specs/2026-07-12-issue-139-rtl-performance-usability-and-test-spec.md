@@ -87,8 +87,10 @@ for the RGBA texture payload, plus small managed-object overhead.
 - max texture width: `2048 px`
 - max texture height: `2048 px`
 - max single-entry area: `2,097,152 px`
+- max source characters measured for one layout: `32,768`
 - oversized requests must be wrapped, clipped, paged, or rejected explicitly;
-  they must not allocate an unbounded texture
+  they must not allocate an unbounded texture or construct an unbounded line
+  list before rejection
 
 ### Eviction policy
 
@@ -294,6 +296,9 @@ non-blocking cache misses. The implementation enforces the `2048 px` dimension,
 allocation, PNG encoding, upload, or cache insertion. A normal texture miss
 creates one validated layout and reuses it for rasterization; an oversized
 layout enters the existing per-key cooldown without retrying every frame.
+The layout builder additionally stops as soon as its next measured line exceeds
+the dimension or area contract, so pathological newline-heavy text cannot build
+an arbitrarily large managed line collection before the request is rejected.
 
 This does not establish the in-game observations in this document. RTL
 alignment, line-height density, long-hover sizing, and dense GameWindow

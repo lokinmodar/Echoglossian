@@ -86,7 +86,7 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
             sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang),
-            this.config.ChosenTransEngine,
+            this.GetOperationTranslationEngineId(),
             this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveTranslatedIntMap(
@@ -116,7 +116,7 @@ public unsafe class MainCommandHandler : DbFirstGameWindowAddonHandler
             sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang),
-            this.config.ChosenTransEngine,
+            this.GetOperationTranslationEngineId(),
             this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveOriginalIntMap(

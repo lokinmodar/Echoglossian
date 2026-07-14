@@ -67,7 +67,10 @@ override the client-language boundary.
   engine to retranslate content produced by another engine.
 
 The engine policy does not weaken either source-language or target-language
-matching.
+matching. "Active engine" means the effective engine resolved for the current
+surface. A lookup entity carries that captured engine into
+`TranslationReuseScope`; it must not rebuild strict reuse from
+`Config.ChosenTransEngine` when routing selected a surface override.
 
 ## Implementation Design
 
@@ -79,7 +82,9 @@ Every surface follows one translation flow:
    source code, then capture original text with that pair.
 2. Resolve only a stored row in the canonical reuse scope.
 3. On a cache miss, submit the source text through the shared translation
-   service and persist the result with the full scope.
+   service and persist the result with the full scope. Capture the effective
+   engine and translator instance before the first await; all chunks and
+   dialogue subrequests use that captured resolution.
 4. Render or mutate the surface using that resolved row.
 
 Addon handlers may specialize only capture, native mutation, and layout. They
@@ -158,15 +163,22 @@ Add regression tests that prove:
    same-slot text changes are present, and rejects unchanged payloads.
 7. `Character` title and tabs are translated through a canonical row with no
    literal English-to-Portuguese fallback.
-8. `ActionMenu` does not synthesize an English `Lv.` source label for a
+8. Retiring a scope cancels any persistence that has not committed. Dialogue
+   writes must pass the operation token through to the database commit and must
+   not publish after cancellation.
+9. `ActionMenu` does not synthesize an English `Lv.` source label for a
    non-English game client.
-9. Raw client values `4`, `5`, `6`, and `7` resolve respectively to stored
+10. Raw client values `4`, `5`, `6`, and `7` resolve respectively to stored
    identities `chs`, `cht`, `ko`, and `tc`, and provider codes `zh-CN`,
    `zh-CN`, `ko`, and `zh-TW`.
-10. Two rows with source identities `chs` and `cht` cannot be reused across
+11. Two rows with source identities `chs` and `cht` cannot be reused across
     each other even though both provider calls use `zh-CN`.
-11. An unknown raw client value has no translation scope and cannot trigger a
+12. An unknown raw client value has no translation scope and cannot trigger a
     provider call, cache reuse, persistence, or native mutation.
+13. A strict-reuse lookup selects the effective surface engine carried by its
+    request, including a dialogue override, rather than the global default.
+14. An `ActionMenu` cooldown refresh does not reserve a stable signature and
+    the first post-cooldown refresh can queue the same payload again.
 
 Run the standard build and full test suite. In-game validation covers an
 English-to-RTL session followed by switching the FFXIV client language and
@@ -181,9 +193,10 @@ Chinese source identities do not cross-reuse.
 `SourceClientLanguage` is the live source contract. Raw values `0` through `7`
 persist as `ja`, `en`, `de`, `fr`, `chs`, `cht`, `ko`, and `tc`; provider codes
 are `ja`, `en`, `de`, `fr`, `zh-CN`, `zh-CN`, `ko`, and `zh-TW`.
-`TranslationReuseScope` uses the persistence identity, target, and selected
-engine policy. `chs`, `cht`, and `tc` remain distinct persisted identities even
-where provider codes overlap. GameWindow and dialogue asynchronous operations
+`TranslationReuseScope` uses the persistence identity, target, and effective
+surface-engine policy carried by each lookup request. `chs`, `cht`, and `tc`
+remain distinct persisted identities even where provider codes overlap.
+GameWindow and dialogue asynchronous operations
 capture the full scope before provider work and gate persistence/publication on
 that same scope remaining current; a regular same-scope `PreDraw` does not
 retire an in-flight request. The in-game matrix remains not run.

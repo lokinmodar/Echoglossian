@@ -40,7 +40,8 @@ public static class GenericAddonHandlerHelper
       IReadOnlyDictionary<string, string> originalTextNodeSnapshot,
       SourceClientLanguage sourceLanguage,
       string targetLanguage,
-      TranslationService service)
+      TranslationService service,
+      TranslationService.TranslatorResolution? translatorResolution = null)
   {
     var allPairs = new List<string>();
     allPairs.AddRange(atkValues.Select(kvp => $"a{kvp.Key}|{kvp.Value}"));
@@ -54,7 +55,13 @@ public static class GenericAddonHandlerHelper
     {
       if (builder.Length + pair.Length + 1 > MaxChunkLength)
       {
-        await TranslateAndMergeAsync(service, builder.ToString(), translatedMap, sourceLanguage, targetLanguage);
+        await TranslateAndMergeAsync(
+            service,
+            builder.ToString(),
+            translatedMap,
+            sourceLanguage,
+            targetLanguage,
+            translatorResolution);
         builder.Clear();
       }
 
@@ -68,7 +75,13 @@ public static class GenericAddonHandlerHelper
 
     if (builder.Length > 0)
     {
-      await TranslateAndMergeAsync(service, builder.ToString(), translatedMap, sourceLanguage, targetLanguage);
+      await TranslateAndMergeAsync(
+          service,
+          builder.ToString(),
+          translatedMap,
+          sourceLanguage,
+          targetLanguage,
+          translatorResolution);
     }
 
     var updatedAtk = new Dictionary<int, string>();
@@ -109,7 +122,8 @@ public static class GenericAddonHandlerHelper
           originalArraySnapshot,
           originalTextNodeSnapshot,
           sourceLanguage,
-          targetLanguage);
+          targetLanguage,
+          translatorResolution);
     }
 
     if (!HasCompleteTranslationCoverage(
@@ -274,10 +288,18 @@ public static class GenericAddonHandlerHelper
       string chunk,
       Dictionary<string, string> result,
       SourceClientLanguage sourceLanguage,
-      string targetLang)
+      string targetLang,
+      TranslationService.TranslatorResolution? translatorResolution)
   {
     PluginRuntimeLog.Debug($"Translating chunk of length {chunk.Length} characters.");
-    var translated = await service.TranslateAsync(chunk, sourceLanguage, targetLang);
+    var translated = translatorResolution.HasValue
+        ? await service.TranslateAsync(
+            chunk,
+            sourceLanguage,
+            targetLang,
+            TranslationSurfaceGroup.Default,
+            translatorResolution.Value)
+        : await service.TranslateAsync(chunk, sourceLanguage, targetLang);
     if (string.IsNullOrWhiteSpace(translated))
     {
       return;
@@ -357,7 +379,8 @@ public static class GenericAddonHandlerHelper
       IReadOnlyDictionary<int, string> originalArraySnapshot,
       IReadOnlyDictionary<string, string> originalTextNodeSnapshot,
       SourceClientLanguage sourceLanguage,
-      string targetLanguage)
+      string targetLanguage,
+      TranslationService.TranslatorResolution? translatorResolution)
   {
     foreach (var (index, originalText) in originalAtkSnapshot)
     {
@@ -366,10 +389,17 @@ public static class GenericAddonHandlerHelper
         continue;
       }
 
-      var translatedText = await service.TranslateAsync(
-          originalText,
-          sourceLanguage,
-          targetLanguage);
+      var translatedText = translatorResolution.HasValue
+          ? await service.TranslateAsync(
+              originalText,
+              sourceLanguage,
+              targetLanguage,
+              TranslationSurfaceGroup.Default,
+              translatorResolution.Value)
+          : await service.TranslateAsync(
+              originalText,
+              sourceLanguage,
+              targetLanguage);
       if (string.IsNullOrWhiteSpace(translatedText))
       {
         continue;
@@ -385,10 +415,17 @@ public static class GenericAddonHandlerHelper
         continue;
       }
 
-      var translatedText = await service.TranslateAsync(
-          originalText,
-          sourceLanguage,
-          targetLanguage);
+      var translatedText = translatorResolution.HasValue
+          ? await service.TranslateAsync(
+              originalText,
+              sourceLanguage,
+              targetLanguage,
+              TranslationSurfaceGroup.Default,
+              translatorResolution.Value)
+          : await service.TranslateAsync(
+              originalText,
+              sourceLanguage,
+              targetLanguage);
       if (string.IsNullOrWhiteSpace(translatedText))
       {
         continue;
@@ -404,10 +441,17 @@ public static class GenericAddonHandlerHelper
         continue;
       }
 
-      var translatedText = await service.TranslateAsync(
-          originalText,
-          sourceLanguage,
-          targetLanguage);
+      var translatedText = translatorResolution.HasValue
+          ? await service.TranslateAsync(
+              originalText,
+              sourceLanguage,
+              targetLanguage,
+              TranslationSurfaceGroup.Default,
+              translatorResolution.Value)
+          : await service.TranslateAsync(
+              originalText,
+              sourceLanguage,
+              targetLanguage);
       if (string.IsNullOrWhiteSpace(translatedText))
       {
         continue;

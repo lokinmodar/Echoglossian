@@ -235,6 +235,62 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
+    ///     Ensures source retirement cancels an in-progress dialogue write so
+    ///     a result cannot commit after its captured scope has changed.
+    /// </summary>
+    [Fact]
+    public async Task TalkHandler_RetiredScope_CancelsPendingPersistence()
+    {
+        var translator = new ControlledTranslator();
+        var persistenceStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancellationObserved = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var handler = CreateTalkHandler(
+            CreateTranslationService(translator),
+            insertTalkMessageWithCancellationAsync: async (_, cancellationToken) =>
+            {
+                persistenceStarted.TrySetResult(true);
+                try
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                    when (cancellationToken.IsCancellationRequested)
+                {
+                    cancellationObserved.TrySetResult(true);
+                    throw;
+                }
+
+                return string.Empty;
+            });
+        var english = new SourceClientLanguage("en", "en");
+        var german = new SourceClientLanguage("de", "de");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Understood.",
+            english,
+            out var requestId,
+            out var sourceOperation));
+        var resolution = handler.ResolveTranslationAsync(
+            "Alphinaud",
+            "Understood.",
+            requestId,
+            english,
+            sourceOperation);
+        await translator.WaitForRequestAsync();
+        translator.Complete("Entendido.");
+        await persistenceStarted.Task;
+
+        handler.InvalidateStateForSource(german);
+        await resolution;
+
+        Assert.True(await cancellationObserved.Task);
+    }
+
+    /// <summary>
     ///     Creates a Talk handler with native-free publication delegates.
     /// </summary>
     /// <param name="translationService">The translation service.</param>
@@ -246,8 +302,29 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         Action? updateOverlay = null,
         Action? clearOverlay = null,
         Config? configuration = null,
-        Func<TalkMessage, Task<string>>? insertTalkMessageAsync = null)
+        Func<TalkMessage, Task<string>>? insertTalkMessageAsync = null,
+        Func<TalkMessage, CancellationToken, Task<string>>?
+            insertTalkMessageWithCancellationAsync = null)
     {
+        if (insertTalkMessageWithCancellationAsync != null)
+        {
+            return new TalkHandler(
+                configuration ?? new Config
+                {
+                    TranslateTalk = true,
+                    TalkTranslationDisplayMode =
+                        JournalTranslationDisplayMode.TooltipTranslation,
+                    Lang = 81,
+                },
+                translationService,
+                static _ => null,
+                insertTalkMessageWithCancellationAsync,
+                (_, _, _) => updateOverlay?.Invoke(),
+                clearOverlay ?? (static () => { }),
+                static text => text,
+                restoreNativeMutation: static () => { });
+        }
+
         return new TalkHandler(
             configuration ?? new Config
             {

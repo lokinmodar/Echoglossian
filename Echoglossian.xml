@@ -2457,14 +2457,14 @@
             <param name="selectString">Formatted SelectString to be found in the database.</param>
             <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage)">
+        <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken)">
             <summary>
             Inserts a TalkMessage record into the database.
             </summary>
             <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
             <returns></returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.UpsertTalkDataAsync(Echoglossian.EFCoreSqlite.Models.TalkMessage)">
+        <member name="M:Echoglossian.Echoglossian.UpsertTalkDataAsync(Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken)">
             <summary>
                 Inserts or refreshes a TalkMessage record for the same source line and
                 engine, preserving other historical rows while making the refreshed row
@@ -2480,7 +2480,7 @@
             <param name="battleTalkMessage">Formatted BattleTalkMessage to be inserted into the database</param>
             <returns></returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.UpsertBattleTalkDataAsync(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage)">
+        <member name="M:Echoglossian.Echoglossian.UpsertBattleTalkDataAsync(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,System.Threading.CancellationToken)">
             <summary>
                 Inserts or refreshes a BattleTalkMessage record for the same source
                 line and engine, preserving other historical rows while making the
@@ -2513,7 +2513,25 @@
             <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be inserted into the database</param>
             <returns></returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.InsertMiniTalkData(Echoglossian.EFCoreSqlite.Models.MiniTalkMessage)">
+        <member name="M:Echoglossian.Echoglossian.InsertBattleTalkDataAsync(Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,System.Threading.CancellationToken)">
+            <summary>
+            Inserts a BattleTalkMessage record asynchronously and observes operation
+            cancellation before the database commit.
+            </summary>
+            <param name="battleTalkMessage">Formatted BattleTalkMessage to insert.</param>
+            <param name="cancellationToken">The owning operation cancellation token.</param>
+            <returns>A status string describing the persistence outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertTalkSubtitleDataAsync(Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage,System.Threading.CancellationToken)">
+            <summary>
+            Inserts a TalkSubtitleMessage record asynchronously and observes operation
+            cancellation before the database commit.
+            </summary>
+            <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to insert.</param>
+            <param name="cancellationToken">The owning operation cancellation token.</param>
+            <returns>A status string describing the persistence outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertMiniTalkData(Echoglossian.EFCoreSqlite.Models.MiniTalkMessage,System.Threading.CancellationToken)">
             <summary>
             Inserts a MiniTalkMessage record into the database.
             </summary>
@@ -10587,10 +10605,26 @@
                 Whether reuse requires the selected translation engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.TranslationReuseScope.TryCreate(Echoglossian.Config,Echoglossian.TranslationReuseScope@)">
+        <member name="M:Echoglossian.TranslationReuseScope.TryCreate(Echoglossian.Config,System.Nullable{System.Int32},Echoglossian.TranslationReuseScope@)">
             <summary>
                 Creates the current translation reuse scope from runtime language
                 and configuration state.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationEngine">
+                The effective engine carried by the translation operation, when
+                already resolved for its surface.
+            </param>
+            <param name="scope">The resolved reuse scope when available.</param>
+            <returns>
+                <see langword="true" /> when a complete source and target scope
+                can be resolved; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.TranslationReuseScope.TryCreate(Echoglossian.Config,Echoglossian.TranslationReuseScope@)">
+            <summary>
+                Creates the current translation reuse scope from runtime language
+                and the default configured engine.
             </summary>
             <param name="config">The active plugin configuration.</param>
             <param name="scope">The resolved reuse scope when available.</param>
@@ -10657,6 +10691,13 @@
         <member name="F:Echoglossian.ImageGeneration.TextRasterLimits.MaximumTextureBytes">
             <summary>
             The maximum byte budget for one cached text texture.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.ImageGeneration.TextRasterLimits.MaximumLayoutCharacters">
+            <summary>
+            The maximum source character count accepted for one measured layout.
+            This bounds paragraph splitting and text-element analysis before raster
+            limits can reject an oversized texture.
             </summary>
         </member>
         <member name="M:Echoglossian.ImageGeneration.TextRasterLimits.ClampWrapWidth(System.Nullable{System.Int32})">
@@ -10757,7 +10798,7 @@
             <param name="maxWidth">The optional wrap width.</param>
             <returns>The resolved text layout.</returns>
         </member>
-        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.ResolveWrappedLines(System.Drawing.Graphics,System.Drawing.StringFormat,System.String,System.Int32)">
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.ResolveWrappedLines(System.Drawing.Graphics,System.Drawing.StringFormat,System.String,System.Int32,System.Int32)">
             <summary>
             Resolves wrapped text lines for manual multiline layout.
             </summary>
@@ -10766,6 +10807,24 @@
             <param name="text">The text to wrap.</param>
             <param name="maxWidth">The bounded wrap width.</param>
             <returns>The ordered line collection.</returns>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.AddResolvedLine(System.Collections.Generic.List{System.String},System.String,System.Int32)">
+            <summary>
+                Adds one wrapped line while enforcing the maximum height-compatible
+                layout count before the complete source is materialized in memory.
+            </summary>
+            <param name="lines">The accumulated resolved lines.</param>
+            <param name="line">The resolved line to add.</param>
+            <param name="maximumLineCount">The height-compatible line count limit.</param>
+        </member>
+        <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.CalculateMaximumLineCount(System.Single,System.Single)">
+            <summary>
+                Calculates the number of lines that can fit within the raster height
+                limit without constructing a texture layout that cannot be drawn.
+            </summary>
+            <param name="baseLineHeight">The measured line glyph height.</param>
+            <param name="lineAdvance">The configured distance between line origins.</param>
+            <returns>The maximum number of drawable lines.</returns>
         </member>
         <member name="M:Echoglossian.ImageGeneration.TextImageRenderer.SplitOverwideWord(System.Drawing.Graphics,System.Drawing.StringFormat,System.String,System.Int32)">
             <summary>
@@ -11074,6 +11133,9 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Boolean)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetPersistedGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
@@ -11885,20 +11947,35 @@
                 translation reuse scope at a time.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuQueuedSignatureTracker.TryQueue(Echoglossian.TranslationReuseScope,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuQueuedSignatureTracker.TryQueue(Echoglossian.TranslationReuseScope,System.Int64,System.String)">
             <summary>
                 Claims one stable payload signature for a captured operation scope.
             </summary>
             <param name="scope">The immutable scope captured before queueing.</param>
+            <param name="generation">The lifecycle generation captured before queueing.</param>
             <param name="signature">The stable ActionMenu payload signature.</param>
             <returns>True when this scope did not already own the signature.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuQueuedSignatureTracker.Release(Echoglossian.TranslationReuseScope,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuQueuedSignatureTracker.TryQueue(Echoglossian.TranslationReuseScope,System.Int64,System.String,System.Boolean)">
+            <summary>
+                Claims one stable payload signature only when translation retry is
+                currently eligible for its captured operation scope.
+            </summary>
+            <param name="scope">The immutable operation reuse scope.</param>
+            <param name="generation">The lifecycle generation captured before queueing.</param>
+            <param name="signature">The stable ActionMenu payload signature.</param>
+            <param name="retryCoolingDown">
+                Whether the payload must wait before its next translation attempt.
+            </param>
+            <returns>True when this scope claimed the signature for queueing.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuQueuedSignatureTracker.Release(Echoglossian.TranslationReuseScope,System.Int64,System.String)">
             <summary>
                 Releases a failed signature only when it belongs to the active
-                operation scope.
+                operation scope and lifecycle generation.
             </summary>
             <param name="scope">The scope that owned the failed request.</param>
+            <param name="generation">The generation that owned the failed request.</param>
             <param name="signature">The failed payload signature.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuQueuedSignatureTracker.Clear">
@@ -12677,6 +12754,14 @@
                 hooks can reuse the canonical pipeline without recreating services.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.GetOperationTranslationEngineId">
+            <summary>
+                Resolves the effective engine identifier used by a captured
+                GameWindow operation. The configuration fallback is only for
+                native-free lookup test seams that intentionally omit the service.
+            </summary>
+            <returns>The effective default-surface translation engine identifier.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.Config,System.Boolean},System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType},System.Func{Echoglossian.Config,Echoglossian.JournalTranslationDisplayMode})">
             <summary>
                 Initializes a new instance of the
@@ -12892,6 +12977,23 @@
             </summary>
             <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The original-facing payload.</param>
+            <returns>
+                <see langword="true" /> when background translation may be queued;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Boolean)">
+            <summary>
+                Determines whether one newly observed payload should be queued for
+                its complete operation scope and lifecycle generation.
+            </summary>
+            <param name="scope">The immutable operation reuse scope.</param>
+            <param name="sourceOperation">The source operation captured for the queue.</param>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalPayload">The original-facing payload.</param>
+            <param name="retryCoolingDown">
+                Whether this payload is still waiting for a failed-translation retry.
+            </param>
             <returns>
                 <see langword="true" /> when background translation may be queued;
                 otherwise <see langword="false" />.
@@ -13870,6 +13972,12 @@
                 Gets the complete reuse scope captured when this operation began.
             </summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.SourcePublicationOperation.CancellationToken">
+            <summary>
+                Gets the cancellation token retired when the owning full reuse scope
+                changes.
+            </summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.SourcePublicationLifecycle">
             <summary>
                 Orders source invalidation and asynchronous publication so a stale
@@ -13947,6 +14055,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.SourcePublicationLifecycle.ScopeState.Generation">
             <summary>The lifecycle generation.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.SourcePublicationLifecycle.ScopeState.Cancel">
+            <summary>
+                Cancels persistence that has not committed for this retired
+                lifecycle state.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.SourcePublicationLifecycle.ScopeState.CreateOperation">
             <summary>
@@ -16712,6 +16826,21 @@
                 Delegate used to normalize translated text before native replacement.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.MiniTalkMessage,Echoglossian.EFCoreSqlite.Models.MiniTalkMessage},System.Func{Echoglossian.EFCoreSqlite.Models.MiniTalkMessage,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}},Echoglossian.NativeUI.AddonHandlers.SingleText.UpdateMiniTalkBubbleOverlayDelegate,Echoglossian.NativeUI.AddonHandlers.SingleText.ClearMiniTalkBubbleOverlayDelegate,Echoglossian.NativeUI.AddonHandlers.SingleText.SyncMiniTalkBubbleOverlayBoundsDelegate,Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a MiniTalk handler with cancellation-aware dialogue
+                persistence owned by the captured operation scope.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findMiniTalkMessage">The canonical MiniTalk lookup.</param>
+            <param name="insertMiniTalkMessageAsync">The cancellation-aware persistence delegate.</param>
+            <param name="updateOverlay">The overlay publication callback.</param>
+            <param name="clearOverlay">The overlay clear callback.</param>
+            <param name="updateOverlayBounds">The overlay-bounds synchronization callback.</param>
+            <param name="resolveMiniTalkBubbleTextNodes">The native bubble resolver.</param>
+            <param name="normalizeReplacementText">The native replacement normalizer.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.GetEventHandlers">
             <summary>
                 Returns the event handlers required to drive the MiniTalk addon flow.
@@ -17145,6 +17274,19 @@
             <param name="normalizeReplacementText">
                 Delegate used to normalize translated text before native replacement.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,Echoglossian.EFCoreSqlite.Models.BattleTalkMessage},System.Func{Echoglossian.EFCoreSqlite.Models.BattleTalkMessage,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a BattleTalk handler with cancellation-aware dialogue
+                persistence owned by the captured operation scope.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findBattleTalkMessage">The canonical BattleTalk lookup.</param>
+            <param name="insertBattleTalkMessageAsync">The cancellation-aware persistence delegate.</param>
+            <param name="updateOverlay">The overlay publication callback.</param>
+            <param name="clearOverlay">The overlay clear callback.</param>
+            <param name="normalizeReplacementText">The native replacement normalizer.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.BattleTalkHandler.GetEventHandlers">
             <summary>
@@ -17668,6 +17810,20 @@
                 Optional native-free override for restoring tracked Talk mutation.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TalkMessage,Echoglossian.EFCoreSqlite.Models.TalkMessage},System.Func{Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String},System.Action)">
+            <summary>
+                Initializes a Talk handler with cancellation-aware dialogue
+                persistence owned by the captured operation scope.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findTalkMessage">The canonical Talk lookup.</param>
+            <param name="insertTalkMessageAsync">The cancellation-aware persistence delegate.</param>
+            <param name="updateOverlay">The overlay publication callback.</param>
+            <param name="clearOverlay">The overlay clear callback.</param>
+            <param name="normalizeReplacementText">The native replacement normalizer.</param>
+            <param name="restoreNativeMutation">The optional native restoration override.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkHandler.GetEventHandlers">
             <summary>
                 Returns the event handlers required to drive the Talk addon flow.
@@ -18009,6 +18165,19 @@
             <param name="normalizeReplacementText">
                 Delegate used to normalize translated text before native replacement.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage,Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage},System.Func{Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a TalkSubtitle handler with cancellation-aware dialogue
+                persistence owned by the captured operation scope.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findTalkSubtitleMessage">The canonical TalkSubtitle lookup.</param>
+            <param name="insertTalkSubtitleMessageAsync">The cancellation-aware persistence delegate.</param>
+            <param name="updateOverlay">The overlay publication callback.</param>
+            <param name="clearOverlay">The overlay clear callback.</param>
+            <param name="normalizeReplacementText">The native replacement normalizer.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Talk.TalkSubtitleHandler.GetEventHandlers">
             <summary>
@@ -20900,7 +21069,7 @@
             <param name="originalPayload">The original canonical payload.</param>
             <returns>The projected original payload maps.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslatePayloadAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslatePayloadAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution})">
             <summary>
                 Translates one canonical payload while preserving slot semantics and
                 structure.
@@ -21123,7 +21292,7 @@
                 Helper for performing async translation logic outside unsafe context.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslatePayloadAsync(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String,Echoglossian.Translators.TranslationService)">
+        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslatePayloadAsync(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String,Echoglossian.Translators.TranslationService,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution})">
             <summary>
             Performs async translation for one DB-first payload without persisting it.
             </summary>
@@ -21157,7 +21326,7 @@
             <param name="service">The translation service instance.</param>
             <returns> </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslateMissingEntriesIndividuallyAsync(Echoglossian.Translators.TranslationService,System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.GenericAddonHandlerHelper.TranslateMissingEntriesIndividuallyAsync(Echoglossian.Translators.TranslationService,System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution})">
             <summary>
                 Translates any entries that were missing from the batched response one
                 by one so sparse parser failures do not discard an otherwise valid
@@ -29063,6 +29232,20 @@
             <param name="callerFilePath">The caller file path.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,Echoglossian.SourceClientLanguage,System.String,Echoglossian.Translators.TranslationSurfaceGroup,Echoglossian.Translators.TranslationService.TranslatorResolution)">
+            <summary>
+                Translates text using a translator resolution captured before the
+                owning asynchronous operation began.
+            </summary>
+            <param name="text">Text to translate.</param>
+            <param name="sourceLanguage">The captured source-language contract.</param>
+            <param name="targetLanguage">Target translation language.</param>
+            <param name="surfaceGroup">The coarse translation surface group.</param>
+            <param name="translatorResolution">
+            The engine and translator instance captured for the operation.
+            </param>
+            <returns>A task containing the translated or sanitized source text.</returns>
+        </member>
         <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},System.String,System.String,System.String)">
             <summary>
                 Translates the given text from the source language to the target language
@@ -29092,6 +29275,21 @@
             <param name="originContext">Optional explicit origin context.</param>
             <param name="callerMemberName">The caller member name.</param>
             <param name="callerFilePath">The caller file path.</param>
+            <returns>A task containing the translated or sanitized source text.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,Echoglossian.Translators.TranslationService.TranslatorResolution)">
+            <summary>
+                Translates dialogue text using a translator resolution captured before
+                the owning asynchronous operation began.
+            </summary>
+            <param name="text">Text to translate.</param>
+            <param name="sourceLanguage">The captured source-language contract.</param>
+            <param name="targetLanguage">Target translation language.</param>
+            <param name="dialogueContext">Optional runtime-only dialogue context.</param>
+            <param name="surfaceGroup">The coarse translation surface group.</param>
+            <param name="translatorResolution">
+            The engine and translator instance captured for the operation.
+            </param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,System.String,System.String,System.String)">
@@ -29128,7 +29326,7 @@
             <param name="callerFilePath">The caller file path.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsyncCore(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,System.Nullable{Echoglossian.SourceClientLanguage},System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsyncCore(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,System.Nullable{Echoglossian.SourceClientLanguage},System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution})">
             <summary>
                 Executes one asynchronous translation with an optional captured source
                 contract.
@@ -29172,6 +29370,30 @@
                 context and at least one prior turn is available; otherwise,
                 <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.WillUseDialogueContext(System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationService.TranslatorResolution)">
+            <summary>
+                Determines whether a captured translator resolution will use the
+                supplied runtime-only dialogue context.
+            </summary>
+            <param name="dialogueContext">The optional dialogue context.</param>
+            <param name="translatorResolution">
+            The translator resolution captured for the operation.
+            </param>
+            <returns>
+                <see langword="true" /> when the captured translator supports
+                dialogue context and at least one prior turn is available; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.CaptureTranslatorResolution(System.Int32,Echoglossian.Translators.TranslationSurfaceGroup)">
+            <summary>
+                Captures the exact engine and translator instance for an operation
+                that already owns a canonical engine identifier.
+            </summary>
+            <param name="translationEngineId">The engine identifier captured by the operation.</param>
+            <param name="surfaceGroup">The operation's translation surface group.</param>
+            <returns>The immutable translator resolution for the operation.</returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.GetEffectiveTranslationEngineId(Echoglossian.Translators.TranslationSurfaceGroup)">
             <summary>

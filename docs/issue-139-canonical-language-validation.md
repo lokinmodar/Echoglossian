@@ -35,14 +35,19 @@ for each run.
    the current source, target, and engine policy are reused.
 8. After every source or target change, verify visible surfaces restore their
    default unmodified text until a matching translation becomes available.
-9. Start a deliberately slow translation, change target language or engine
-   before it completes, and verify the old completion neither persists nor
-   publishes into the new scope. Repeat with
+9. Start a deliberately slow translation, change source client, target language,
+   engine, or policy before it completes, and verify the old completion neither
+   persists nor publishes into the new scope. For dialogue, verify the pending
+   persistence is canceled before its database commit. Repeat with
    `TranslateAlreadyTranslatedTexts` enabled and disabled.
 10. Exercise a long RTL hover body at an extreme tooltip width or text scale.
-    Verify it is wrapped or rejected before texture upload, retains the prior
-    valid texture when one exists, enters the bounded retry cooldown, and does
-    not cause repeated work or frame loss.
+    Verify it is wrapped or rejected during bounded layout construction (before
+    bitmap/upload), retains the prior valid texture when one exists, enters the
+    bounded retry cooldown, and does not cause repeated work or frame loss.
+11. Enable a dialogue-engine override that differs from the global engine with
+    `TranslateAlreadyTranslatedTexts` enabled. Translate a `Talk`,
+    `_BattleTalk`, `TalkSubtitle`, or `_MiniTalk` line twice and verify the
+    second request reuses the row stored by the effective dialogue engine.
 
 ## Result Record
 
@@ -58,6 +63,7 @@ for each run.
 | Default text restoration after source/target changes | Not run | |
 | In-flight target/engine transition rejection | Not run | |
 | RTL raster limit and cooldown behavior | Not run | |
+| Dialogue effective-engine reuse | Not run | |
 
 ## As-Built Status (2026-07-13)
 
@@ -75,3 +81,5 @@ Additional required manual checks, also not run:
 | Long hover tooltip adaptive sizing | Not run | |
 | RTL oversized texture rejection before upload | Not run | |
 | Dense GameWindow performance | Not run | |
+| Dialog persistence canceled on scope retirement | Not run | |
+| Engine switch during chunked/dialogue operation remains pinned | Not run | |

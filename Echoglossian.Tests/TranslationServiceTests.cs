@@ -610,6 +610,47 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures a captured translator resolution continues to use the
+    ///     original instance when subsequent requests would resolve a
+    ///     different configured engine.
+    /// </summary>
+    [Fact]
+    public async Task TranslateAsync_CapturedTranslatorResolution_PinsEngineInstance()
+    {
+        var firstTranslator = new RecordingTranslator
+        {
+            AsyncResult = "first-engine",
+        };
+        var secondTranslator = new RecordingTranslator
+        {
+            AsyncResult = "second-engine",
+        };
+        var currentTranslator = firstTranslator;
+        var service = new TranslationService(
+            text => text,
+            firstTranslator,
+            translationEngine: (int)Echoglossian.TransEngines.Google,
+            translatorResolver: _ => new TranslationService.TranslatorResolution(
+                (int)Echoglossian.TransEngines.ChatGPT,
+                currentTranslator));
+        var capturedResolution = service.CaptureTranslatorResolution(
+            (int)Echoglossian.TransEngines.ChatGPT,
+            TranslationSurfaceGroup.Dialogue);
+        currentTranslator = secondTranslator;
+
+        var result = await service.TranslateAsync(
+            "hello",
+            new SourceClientLanguage("en", "en"),
+            "pt-BR",
+            TranslationSurfaceGroup.Dialogue,
+            capturedResolution);
+
+        Assert.Equal("first-engine", result);
+        Assert.Equal(1, firstTranslator.AsyncCalls);
+        Assert.Equal(0, secondTranslator.AsyncCalls);
+    }
+
+    /// <summary>
     ///     Ensures dialogue-context routing checks the translator selected for
     ///     the specific surface group instead of only the global default path.
     /// </summary>

@@ -25,7 +25,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
   private readonly Config config;
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>> eventHandlers = new();
   private readonly Func<TalkMessage, TalkMessage?> findTalkMessage;
-  private readonly Func<TalkMessage, Task<string>> insertTalkMessageAsync;
+  private readonly Func<TalkMessage, CancellationToken, Task<string>> insertTalkMessageAsync;
   private readonly Func<string, string> normalizeReplacementText;
   private readonly Action restoreNativeMutation;
   private readonly SourcePublicationLifecycle sourceLifecycle = new();
@@ -77,6 +77,39 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       TranslationService translationService,
       Func<TalkMessage, TalkMessage?> findTalkMessage,
       Func<TalkMessage, Task<string>> insertTalkMessageAsync,
+      Action<string, string, string> updateOverlay,
+      Action clearOverlay,
+      Func<string, string> normalizeReplacementText,
+      Action? restoreNativeMutation = null)
+    : this(
+        config,
+        translationService,
+        findTalkMessage,
+        (message, _) => insertTalkMessageAsync(message),
+        updateOverlay,
+        clearOverlay,
+        normalizeReplacementText,
+        restoreNativeMutation)
+  {
+  }
+
+  /// <summary>
+  ///     Initializes a Talk handler with cancellation-aware dialogue
+  ///     persistence owned by the captured operation scope.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <param name="translationService">The shared translation service.</param>
+  /// <param name="findTalkMessage">The canonical Talk lookup.</param>
+  /// <param name="insertTalkMessageAsync">The cancellation-aware persistence delegate.</param>
+  /// <param name="updateOverlay">The overlay publication callback.</param>
+  /// <param name="clearOverlay">The overlay clear callback.</param>
+  /// <param name="normalizeReplacementText">The native replacement normalizer.</param>
+  /// <param name="restoreNativeMutation">The optional native restoration override.</param>
+  internal TalkHandler(
+      Config config,
+      TranslationService translationService,
+      Func<TalkMessage, TalkMessage?> findTalkMessage,
+      Func<TalkMessage, CancellationToken, Task<string>> insertTalkMessageAsync,
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
       Func<string, string> normalizeReplacementText,
@@ -140,6 +173,10 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         this.CreateDialogueReuseScope(sourceLanguage));
     var operationScope = sourceOperation.Scope ??
                          this.CreateDialogueReuseScope(sourceLanguage);
+    var translatorResolution = this.translationService
+        .CaptureTranslatorResolution(
+            operationScope.TranslationEngine.GetValueOrDefault(),
+            TranslationSurfaceGroup.Dialogue);
 
     if (!this.TryCaptureCurrentTalkSource(out var originalName, out var originalText))
     {
@@ -172,14 +209,16 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
           originalText,
           sourceLanguage,
           operationScope.TargetLanguageCode,
-          TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
+          TranslationSurfaceGroup.Dialogue,
+          translatorResolution).ConfigureAwait(false);
       var translatedName = this.ShouldTranslateTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
               originalName,
               sourceLanguage,
               operationScope.TargetLanguageCode,
-              TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
+              TranslationSurfaceGroup.Dialogue,
+              translatorResolution).ConfigureAwait(false)
           : string.Empty;
       var dialogueTranslationEngine = operationScope.TranslationEngine
                                       .GetValueOrDefault();
@@ -230,7 +269,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
       }
 
       var persistenceResult = await Echoglossian.UpsertTalkDataAsync(
-          translatedTalkData).ConfigureAwait(false);
+          translatedTalkData,
+          sourceOperation.CancellationToken).ConfigureAwait(false);
       var persistenceSucceeded = !persistenceResult.StartsWith(
           "ErrorSavingData:",
           StringComparison.Ordinal) &&
@@ -1158,6 +1198,10 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
     {
       var operationScope = sourceOperation.Scope ??
                            this.CreateDialogueReuseScope(sourceLanguage);
+      var translatorResolution = this.translationService
+          .CaptureTranslatorResolution(
+              operationScope.TranslationEngine.GetValueOrDefault(),
+              TranslationSurfaceGroup.Dialogue);
       var lookup = this.BuildLookupMessage(
           originalName,
           originalText,
@@ -1195,7 +1239,7 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
         var usesRuntimeOnlyDialogueContext =
             this.translationService.WillUseDialogueContext(
                 dialogueContext,
-                TranslationSurfaceGroup.Dialogue);
+                translatorResolution);
         usedRuntimeOnlyDialogueContext = usesRuntimeOnlyDialogueContext;
 
         translatedText = await this.translationService.TranslateAsync(
@@ -1203,14 +1247,16 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
             sourceLanguage,
             operationScope.TargetLanguageCode,
             dialogueContext,
-            TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
+            TranslationSurfaceGroup.Dialogue,
+            translatorResolution).ConfigureAwait(false);
 
         translatedName = this.ShouldTranslateTalkNpcNames() && !originalName.IsNullOrEmpty()
             ? await this.translationService.TranslateAsync(
                 originalName,
                 sourceLanguage,
                 operationScope.TargetLanguageCode,
-                TranslationSurfaceGroup.Dialogue).ConfigureAwait(false)
+                TranslationSurfaceGroup.Dialogue,
+                translatorResolution).ConfigureAwait(false)
             : string.Empty;
 
         var existingTranslatedTalkMessage = this.findTalkMessage(lookup);
@@ -1240,7 +1286,9 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
               DateTime.Now,
               DateTime.Now);
 
-          await this.insertTalkMessageAsync(translatedTalkData);
+          await this.insertTalkMessageAsync(
+              translatedTalkData,
+              sourceOperation.CancellationToken);
           provenance = VisibleStorySurfaceProvenanceKind.FreshLiveTranslation;
         }
         else if (!usesRuntimeOnlyDialogueContext)

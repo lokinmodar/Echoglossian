@@ -225,11 +225,12 @@ public static class DbFirstStructuredStringArrayHelper
     /// <param name="sourceLanguage">The source language.</param>
     /// <param name="targetLanguage">The target language.</param>
     /// <returns>The translated canonical payload.</returns>
-    public static async Task<StringArrayStructuredPayload> TranslatePayloadAsync(
+    internal static async Task<StringArrayStructuredPayload> TranslatePayloadAsync(
         StringArrayStructuredPayload originalPayload,
         TranslationService translationService,
         SourceClientLanguage sourceLanguage,
-        string targetLanguage)
+        string targetLanguage,
+        TranslationService.TranslatorResolution? translatorResolution = null)
     {
         ArgumentNullException.ThrowIfNull(originalPayload);
         ArgumentNullException.ThrowIfNull(translationService);
@@ -275,7 +276,8 @@ public static class DbFirstStructuredStringArrayHelper
                     builder.ToString(),
                     translatedMap,
                     sourceLanguage,
-                    targetLanguage);
+                    targetLanguage,
+                    translatorResolution);
                 builder.Clear();
             }
 
@@ -299,7 +301,8 @@ public static class DbFirstStructuredStringArrayHelper
                     builder.ToString(),
                     translatedMap,
                     sourceLanguage,
-                    targetLanguage);
+                    targetLanguage,
+                    translatorResolution);
                 builder.Clear();
             }
 
@@ -318,7 +321,8 @@ public static class DbFirstStructuredStringArrayHelper
                 builder.ToString(),
                 translatedMap,
                 sourceLanguage,
-                targetLanguage);
+                targetLanguage,
+                translatorResolution);
         }
 
         foreach (var pair in slotTexts)
@@ -445,17 +449,25 @@ public static class DbFirstStructuredStringArrayHelper
         string chunk,
         IDictionary<string, string> translatedMap,
         SourceClientLanguage sourceLanguage,
-        string targetLanguage)
+        string targetLanguage,
+        TranslationService.TranslatorResolution? translatorResolution)
     {
         if (string.IsNullOrWhiteSpace(chunk))
         {
             return;
         }
 
-        var translatedChunk = await translationService.TranslateAsync(
-            chunk,
-            sourceLanguage,
-            targetLanguage);
+        var translatedChunk = translatorResolution.HasValue
+            ? await translationService.TranslateAsync(
+                chunk,
+                sourceLanguage,
+                targetLanguage,
+                TranslationSurfaceGroup.Default,
+                translatorResolution.Value)
+            : await translationService.TranslateAsync(
+                chunk,
+                sourceLanguage,
+                targetLanguage);
         if (string.IsNullOrWhiteSpace(translatedChunk))
         {
             return;

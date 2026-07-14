@@ -119,8 +119,8 @@ public class TextImageRendererTests
     }
 
     /// <summary>
-    /// Ensures a measured raster layout exceeding the approved area limit is
-    /// rejected before its bitmap is allocated.
+    /// Ensures a raster layout exceeding the approved area limit is rejected
+    /// while it is measured, before all lines and a bitmap are allocated.
     /// </summary>
     [Fact]
     public void RenderShapedText_LayoutExceedsRasterArea_ThrowsBeforeAllocation()
@@ -130,18 +130,25 @@ public class TextImageRendererTests
             Enumerable.Repeat(new string('W', 200), 67));
         using TextImageRenderer renderer =
             new("missing-font.ttf", 10f, FontStyle.Regular, 1.0f);
-        var measuredSize = renderer.MeasureShapedText(text, 2048);
+        Assert.Throws<InvalidOperationException>(() =>
+            renderer.MeasureShapedText(text, 2048));
+    }
 
-        Assert.InRange(measuredSize.Width, 1, 2048);
-        Assert.InRange(measuredSize.Height, 1, 2048);
-        Assert.True((long)measuredSize.Width * measuredSize.Height > 2_097_152);
+    /// <summary>
+    ///     Ensures pathological line counts stop layout construction as soon
+    ///     as they can no longer fit in the bounded raster height.
+    /// </summary>
+    [Fact]
+    public void CreateTextLayout_TooManyLines_StopsBeforeCompleteLayout()
+    {
+        var text = string.Join(
+            "\n",
+            Enumerable.Repeat("line", 2_500));
+        using TextImageRenderer renderer =
+            new("missing-font.ttf", 10f, FontStyle.Regular, 1.0f);
 
         Assert.Throws<InvalidOperationException>(() =>
-            renderer.RenderShapedText(
-                text,
-                Color.White,
-                Color.Transparent,
-                2048));
+            renderer.CreateTextLayout(text, 480));
     }
 
     /// <summary>

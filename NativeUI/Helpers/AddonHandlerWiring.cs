@@ -112,7 +112,8 @@ public partial class Echoglossian
                   this.configuration,
                   TranslationService,
                   this.FindAndReturnTalkMessage,
-                  InsertTalkData,
+                  (talkMessage, cancellationToken) =>
+                      InsertTalkData(talkMessage, cancellationToken),
                   (translatedName, translatedText, originalName) =>
                       this.UpdateOverlayContent(
                           this.talkOverlay,
@@ -133,8 +134,10 @@ public partial class Echoglossian
                   this.configuration,
                   TranslationService,
                   this.FindAndReturnBattleTalkMessage,
-                  battleTalkMessage => Task.FromResult(
-                      InsertBattleTalkData(battleTalkMessage)),
+                  (battleTalkMessage, cancellationToken) =>
+                      InsertBattleTalkDataAsync(
+                          battleTalkMessage,
+                          cancellationToken),
                   (translatedName, translatedText, originalName) =>
                       this.UpdateOverlayContent(
                           this.battleTalkOverlay,
@@ -157,8 +160,10 @@ public partial class Echoglossian
                   this.configuration,
                   TranslationService,
                   this.FindAndReturnTalkSubtitleMessage,
-                  talkSubtitleMessage => Task.Run(
-                      () => InsertTalkSubtitleData(talkSubtitleMessage)),
+                  (talkSubtitleMessage, cancellationToken) =>
+                      InsertTalkSubtitleDataAsync(
+                          talkSubtitleMessage,
+                          cancellationToken),
                   (translatedName, translatedText, originalName) =>
                       this.UpdateOverlayContent(
                           this.talkSubtitleOverlay,
@@ -181,8 +186,8 @@ public partial class Echoglossian
                   this.configuration,
                   TranslationService,
                   this.FindAndReturnMiniTalkMessage,
-                  miniTalkMessage => Task.Run(
-                      () => InsertMiniTalkData(miniTalkMessage)),
+                  (miniTalkMessage, cancellationToken) =>
+                      InsertMiniTalkData(miniTalkMessage, cancellationToken),
                   (bubbleKey, translatedName, translatedText, originalName) =>
                       this.UpdateMiniTalkBubbleOverlayContent(
                           bubbleKey,

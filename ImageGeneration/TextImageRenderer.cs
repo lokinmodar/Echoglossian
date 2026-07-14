@@ -26,6 +26,13 @@ internal static class TextRasterLimits
   public const long MaximumTextureBytes = 48L * 1024L * 1024L;
 
   /// <summary>
+  /// The maximum source character count accepted for one measured layout.
+  /// This bounds paragraph splitting and text-element analysis before raster
+  /// limits can reject an oversized texture.
+  /// </summary>
+  public const int MaximumLayoutCharacters = 32_768;
+
+  /// <summary>
   /// Clamps one wrapping request to the supported raster dimension.
   /// </summary>
   /// <param name="requestedWidth">The requested wrapping width.</param>
@@ -196,6 +203,12 @@ public sealed class TextImageRenderer : IDisposable
   /// <returns>The measured text layout.</returns>
   internal TextRasterLayout CreateTextLayout(string text, int? maxWidth = null)
   {
+    if (text.Length > TextRasterLimits.MaximumLayoutCharacters)
+    {
+      throw new InvalidOperationException(
+          "Text exceeds the bounded layout character limit.");
+    }
+
     using Bitmap dummy = new(1, 1);
     using Graphics measuringGraphics = Graphics.FromImage(dummy);
     measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
@@ -236,13 +249,17 @@ public sealed class TextImageRenderer : IDisposable
       int? maxWidth)
   {
     var effectiveMaxWidth = TextRasterLimits.ClampWrapWidth(maxWidth);
+    var baseLineHeight = this.font.GetHeight(graphics);
+    var lineAdvance = Math.Max(1f, baseLineHeight * this.lineHeightScale);
+    var maximumLineCount = CalculateMaximumLineCount(
+        baseLineHeight,
+        lineAdvance);
     var resolvedLines = this.ResolveWrappedLines(
         graphics,
         format,
         text,
-        effectiveMaxWidth);
-    var baseLineHeight = this.font.GetHeight(graphics);
-    var lineAdvance = Math.Max(1f, baseLineHeight * this.lineHeightScale);
+        effectiveMaxWidth,
+        maximumLineCount);
     var lines = new List<TextRasterLayoutLine>(resolvedLines.Count);
     var maxMeasuredWidth = 1f;
     var currentTop = 0f;
@@ -258,6 +275,18 @@ public sealed class TextImageRenderer : IDisposable
               format);
       var measuredWidth = Math.Max(1f, measuredSize.Width);
       var measuredHeight = Math.Max(baseLineHeight, measuredSize.Height);
+      var nextWidth = Math.Max(
+          1,
+          (int)Math.Ceiling(Math.Max(maxMeasuredWidth, measuredWidth)));
+      var nextHeight = Math.Max(
+          1,
+          (int)Math.Ceiling(currentTop + measuredHeight));
+      if (!TextRasterLimits.IsWithinLimits(new Size(nextWidth, nextHeight)))
+      {
+        throw new InvalidOperationException(
+            "Text layout exceeds the bounded raster allocation limits.");
+      }
+
       lines.Add(
           new TextRasterLayoutLine(
               resolvedLine,
@@ -289,7 +318,8 @@ public sealed class TextImageRenderer : IDisposable
       Graphics graphics,
       StringFormat format,
       string text,
-      int maxWidth)
+      int maxWidth,
+      int maximumLineCount)
   {
     var normalizedText = text.Replace("\r\n", "\n").Replace('\r', '\n');
     var paragraphs = normalizedText.Split('\n');
@@ -299,7 +329,7 @@ public sealed class TextImageRenderer : IDisposable
     {
       if (string.IsNullOrWhiteSpace(paragraph))
       {
-        lines.Add(string.Empty);
+        AddResolvedLine(lines, string.Empty, maximumLineCount);
         continue;
       }
 
@@ -328,7 +358,7 @@ public sealed class TextImageRenderer : IDisposable
           if (!string.IsNullOrEmpty(currentLine) &&
               candidateWidth > maxWidth)
           {
-            lines.Add(currentLine);
+            AddResolvedLine(lines, currentLine, maximumLineCount);
             currentLine = segment;
             continue;
           }
@@ -337,12 +367,56 @@ public sealed class TextImageRenderer : IDisposable
         }
       }
 
-      lines.Add(currentLine);
+      AddResolvedLine(lines, currentLine, maximumLineCount);
     }
 
     return lines.Count == 0
         ? [string.Empty]
         : lines;
+  }
+
+  /// <summary>
+  ///     Adds one wrapped line while enforcing the maximum height-compatible
+  ///     layout count before the complete source is materialized in memory.
+  /// </summary>
+  /// <param name="lines">The accumulated resolved lines.</param>
+  /// <param name="line">The resolved line to add.</param>
+  /// <param name="maximumLineCount">The height-compatible line count limit.</param>
+  private static void AddResolvedLine(
+      List<string> lines,
+      string line,
+      int maximumLineCount)
+  {
+    if (lines.Count >= maximumLineCount)
+    {
+      throw new InvalidOperationException(
+          "Text layout exceeds the bounded raster allocation limits.");
+    }
+
+    lines.Add(line);
+  }
+
+  /// <summary>
+  ///     Calculates the number of lines that can fit within the raster height
+  ///     limit without constructing a texture layout that cannot be drawn.
+  /// </summary>
+  /// <param name="baseLineHeight">The measured line glyph height.</param>
+  /// <param name="lineAdvance">The configured distance between line origins.</param>
+  /// <returns>The maximum number of drawable lines.</returns>
+  private static int CalculateMaximumLineCount(
+      float baseLineHeight,
+      float lineAdvance)
+  {
+    if (baseLineHeight > TextRasterLimits.MaximumDimension)
+    {
+      return 0;
+    }
+
+    return Math.Max(
+        1,
+        1 + (int)Math.Floor(
+            (TextRasterLimits.MaximumDimension - baseLineHeight) /
+            lineAdvance));
   }
 
   /// <summary>

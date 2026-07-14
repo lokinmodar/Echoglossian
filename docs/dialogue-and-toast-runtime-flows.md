@@ -107,10 +107,20 @@ effective dialogue engine, and the engine-reuse policy.
 
 The captured scope is the only source for provider target, lookup row, session
 key, persistence row, and overlay/native publication after the request starts.
-Changing any scope member retires the old generation and clears the
-handler-owned state before the next scope can publish. A late completion may
-finish its provider call, but it cannot write a row or replace visible text
-after its captured scope is no longer current.
+The handler also captures the exact `TranslatorResolution` (engine id plus
+translator instance) before its first await, so a later routing/configuration
+change cannot split one dialogue operation across engines.
+
+Dialogue and toast lookup entities carry that effective engine into
+`TranslationReuseScope` when the DB is queried. With engine-matching reuse
+enabled, a dialogue override therefore finds rows persisted by that override
+rather than rebuilding the lookup from the global default engine.
+
+Changing any scope member retires the old generation, cancels its persistence
+token, and clears handler-owned state before the next scope can publish. The
+dialogue persistence delegates pass that token into the EF commit. A late
+completion may finish its provider call, but it cannot commit a new row or
+replace visible text after its captured scope is no longer current.
 
 ## Dialogue-family overview
 

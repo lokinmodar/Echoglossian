@@ -121,6 +121,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              talkMessage.TranslationEngine,
               out var scope))
       {
         return null;
@@ -174,6 +175,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              toastMessage.TranslationEngine,
               out var scope))
       {
         this.FoundToastMessage = null;
@@ -235,6 +237,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              toastMessage.TranslationEngine,
               out var scope))
       {
         return null;
@@ -294,6 +297,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              toastMessage.TranslationEngine,
               out var scope))
       {
         this.FoundToastMessage = null;
@@ -355,6 +359,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              battleTalkMessage.TranslationEngine,
               out var scope))
       {
         return null;
@@ -429,6 +434,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              questPlate.TranslationEngine,
               out var scope))
       {
         return null;
@@ -566,6 +572,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              questPlate.TranslationEngine,
               out var scope))
       {
         return null;
@@ -655,6 +662,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              talkSubtitleMessage.TranslationEngine,
               out var scope))
       {
         return null;
@@ -706,6 +714,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              miniTalkMessage.TranslationEngine,
               out var scope))
       {
         return null;
@@ -758,6 +767,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              textGimmickHintMessage.TranslationEngine,
               out var scope))
       {
         return null;
@@ -803,6 +813,7 @@ public partial class Echoglossian
     {
       if (!TranslationReuseScope.TryCreate(
               this.configuration,
+              selectString.TranslationEngine,
               out var scope))
       {
         return null;
@@ -844,7 +855,9 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
   /// <returns></returns>
-  public static async Task<string> InsertTalkData(TalkMessage talkMessage)
+  public static async Task<string> InsertTalkData(
+      TalkMessage talkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -873,9 +886,13 @@ public partial class Echoglossian
 
       context.TalkMessage.Add(talkMessage);
 
-      await context.SaveChangesAsync();
+      await context.SaveChangesAsync(cancellationToken);
 
       return "Data inserted to TalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {
@@ -891,7 +908,9 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted or updated in the database.</param>
   /// <returns>A status string describing the persistence outcome.</returns>
-  public static async Task<string> UpsertTalkDataAsync(TalkMessage talkMessage)
+  public static async Task<string> UpsertTalkDataAsync(
+      TalkMessage talkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -935,15 +954,19 @@ public partial class Echoglossian
             talkMessage.RTLLangTranslationImageData;
         matchingRow.UpdatedDate = now;
         context.TalkMessage.Update(matchingRow);
-        await context.SaveChangesAsync().ConfigureAwait(false);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return "Data updated in TalkMessages table.";
       }
 
       talkMessage.CreatedDate ??= now;
       talkMessage.UpdatedDate ??= now;
       context.TalkMessage.Add(talkMessage);
-      await context.SaveChangesAsync().ConfigureAwait(false);
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
       return "Data inserted to TalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {
@@ -1003,7 +1026,8 @@ public partial class Echoglossian
   /// <param name="battleTalkMessage">Formatted BattleTalkMessage to be inserted or updated in the database.</param>
   /// <returns>A status string describing the persistence outcome.</returns>
   public static async Task<string> UpsertBattleTalkDataAsync(
-      BattleTalkMessage battleTalkMessage)
+      BattleTalkMessage battleTalkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -1050,15 +1074,19 @@ public partial class Echoglossian
             battleTalkMessage.RTLLangTranslationImageData;
         matchingRow.UpdatedDate = now;
         context.BattleTalkMessage.Update(matchingRow);
-        await context.SaveChangesAsync().ConfigureAwait(false);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return "Data updated in BattleTalkMessages table.";
       }
 
       battleTalkMessage.CreatedDate ??= now;
       battleTalkMessage.UpdatedDate ??= now;
       context.BattleTalkMessage.Add(battleTalkMessage);
-      await context.SaveChangesAsync().ConfigureAwait(false);
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
       return "Data inserted to BattleTalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {
@@ -1141,12 +1169,102 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Inserts a BattleTalkMessage record asynchronously and observes operation
+  /// cancellation before the database commit.
+  /// </summary>
+  /// <param name="battleTalkMessage">Formatted BattleTalkMessage to insert.</param>
+  /// <param name="cancellationToken">The owning operation cancellation token.</param>
+  /// <returns>A status string describing the persistence outcome.</returns>
+  public static async Task<string> InsertBattleTalkDataAsync(
+      BattleTalkMessage battleTalkMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(battleTalkMessage.TranslatedBattleTalkMessage) ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              battleTalkMessage.OriginalBattleTalkMessage,
+              battleTalkMessage.TranslatedBattleTalkMessage,
+              battleTalkMessage.OriginalBattleTalkMessageLang,
+              battleTalkMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
+      context.BattleTalkMessage.Attach(battleTalkMessage);
+      if (ShouldCopyTranslationToClipboard())
+      {
+        ImGui.SetClipboardText(battleTalkMessage.ToString());
+      }
+
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+      return "Data inserted to BattleTalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  /// Inserts a TalkSubtitleMessage record asynchronously and observes operation
+  /// cancellation before the database commit.
+  /// </summary>
+  /// <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to insert.</param>
+  /// <param name="cancellationToken">The owning operation cancellation token.</param>
+  /// <returns>A status string describing the persistence outcome.</returns>
+  public static async Task<string> InsertTalkSubtitleDataAsync(
+      TalkSubtitleMessage talkSubtitleMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(
+              talkSubtitleMessage.TranslatedTalkSubtitleMessage) ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              talkSubtitleMessage.OriginalTalkSubtitleMessage,
+              talkSubtitleMessage.TranslatedTalkSubtitleMessage,
+              talkSubtitleMessage.OriginalTalkSubtitleMessageLang,
+              talkSubtitleMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
+      context.TalkSubtitleMessage.Attach(talkSubtitleMessage);
+      if (ShouldCopyTranslationToClipboard())
+      {
+        ImGui.SetClipboardText(talkSubtitleMessage.ToString());
+      }
+
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+      return "Data inserted to TalkSubtitleMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
   /// Inserts a MiniTalkMessage record into the database.
   /// </summary>
   /// <param name="miniTalkMessage">Formatted MiniTalkMessage to be inserted into the database</param>
   /// <returns></returns>
   public static async Task<string> InsertMiniTalkData(
-      MiniTalkMessage miniTalkMessage)
+      MiniTalkMessage miniTalkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -1173,9 +1291,13 @@ public partial class Echoglossian
         ImGui.SetClipboardText(miniTalkMessage.ToString());
       }
 
-      await context.SaveChangesAsync();
+      await context.SaveChangesAsync(cancellationToken);
 
       return "Data inserted to MiniTalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {

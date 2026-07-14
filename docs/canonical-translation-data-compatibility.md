@@ -26,10 +26,14 @@ than a provider code to a legacy string translation overload.
 ## Reuse And Persistence
 
 `TranslationReuseScope` requires matching source, target, and engine policy
-from `TranslateAlreadyTranslatedTexts`. Its callers combine that predicate with
-their existing game-version and source-content checks. `chs`, `cht`, and `tc`
-never cross-reuse, even when provider aliases overlap. `zh-CN` is provider
-input, never a persisted client-source identity.
+from `TranslateAlreadyTranslatedTexts`. The engine member is the effective
+engine captured by the request's surface, not necessarily the global default.
+Every DB lookup creates the scope from the lookup entity's captured engine;
+configuration is only the fallback for legacy callers that have no resolved
+operation engine. Its callers combine that predicate with their existing
+game-version and source-content checks. `chs`, `cht`, and `tc` never
+cross-reuse, even when provider aliases overlap. `zh-CN` is provider input,
+never a persisted client-source identity.
 
 No EF schema or data migration belongs to #139: existing tables retain source
 language. Do not perform a database-wide alias rewrite or implicit
@@ -52,6 +56,13 @@ before translation starts: persisted source identity, target language, effective
 engine, and engine-reuse policy. The completion must use those captured values
 for provider work, DB lookup, persistence, cache update, and publication; it
 must not reread mutable target or engine configuration after `await`.
+
+Before the first await, provider-backed work also captures a
+`TranslatorResolution`: the exact engine id and translator instance. Chunked
+payloads, dialogue body text, and optional speaker-name text reuse that same
+resolution for the whole operation. Scope retirement cancels the operation's
+persistence token; dialogue database writes pass it to their commit operation
+and still validate the generation before publication.
 
 Any member of that scope changing retires the previous generation before native
 or hover state can publish. The shared GameWindow `PreDraw` path keeps the same

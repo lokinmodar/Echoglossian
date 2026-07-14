@@ -94,7 +94,7 @@ public unsafe class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
             sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang),
-            this.config.ChosenTransEngine,
+            this.GetOperationTranslationEngineId(),
             this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveTranslatedTextMap(
@@ -124,7 +124,7 @@ public unsafe class AddonContextMenuTitleHandler : DbFirstGameWindowAddonHandler
             sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang),
-            this.config.ChosenTransEngine,
+            this.GetOperationTranslationEngineId(),
             this.config.TranslateAlreadyTranslatedTexts);
 
         if (!MainCommandCanonicalTextResolver.TryResolveOriginalTextMap(

@@ -350,6 +350,26 @@ public class NativeRuntimeSourceScopeTests
     }
 
     /// <summary>
+    ///     Ensures asynchronous persistence receives a token that is canceled
+    ///     as soon as its full lifecycle scope is retired.
+    /// </summary>
+    [Fact]
+    public void SourcePublicationLifecycle_ScopeTransition_CancelsRetiredOperation()
+    {
+        var lifecycle = new SourcePublicationLifecycle();
+        var english = new SourceClientLanguage("en", "en");
+        var german = new SourceClientLanguage("de", "de");
+
+        var retiredOperation = lifecycle.TransitionTo(english, static () => { });
+        var activeOperation = lifecycle.TransitionTo(german, static () => { });
+
+        Assert.True(retiredOperation.CancellationToken.IsCancellationRequested);
+        Assert.False(activeOperation.CancellationToken.IsCancellationRequested);
+        Assert.False(lifecycle.IsCurrent(retiredOperation));
+        Assert.True(lifecycle.IsCurrent(activeOperation));
+    }
+
+    /// <summary>
     ///     Ensures a DB-first translation that began under one configured
     ///     target and engine persists those captured values after configuration
     ///     changes while translation is in flight.

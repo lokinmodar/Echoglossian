@@ -121,6 +121,28 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    private protected override bool ShouldQueueNewGameWindowTranslation(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        bool retryCoolingDown)
+    {
+        if (!this.ShouldAllowNewPayloadTranslation(
+                sourceLanguage,
+                originalPayload))
+        {
+            return false;
+        }
+
+        return this.queuedStablePayloadSignatures.TryQueue(
+            scope,
+            sourceOperation.Generation,
+            BuildStablePayloadSignature(originalPayload),
+            retryCoolingDown);
+    }
+
+    /// <inheritdoc />
     private protected override uint? GetPersistedGameWindowClassJobId(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
@@ -148,7 +170,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang),
-            this.config.ChosenTransEngine,
+            this.GetOperationTranslationEngineId(),
             this.config.TranslateAlreadyTranslatedTexts);
     }
 
@@ -163,6 +185,15 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
         var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        if (!scope.TranslationEngine.HasValue)
+        {
+            return false;
+        }
+
+        var translatorResolution = this.HandlerTranslationService
+            .CaptureTranslatorResolution(
+                scope.TranslationEngine.Value,
+                TranslationSurfaceGroup.Default);
         try
         {
             var translatedPayloadResult = await GenericAddonHandlerHelper
@@ -175,11 +206,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                     originalPayload.TextNodes,
                     sourceLanguage,
                     scope.TargetLanguageCode,
-                    this.HandlerTranslationService);
+                    this.HandlerTranslationService,
+                    translatorResolution);
             if (!translatedPayloadResult.HasValue)
             {
                 this.queuedStablePayloadSignatures.Release(
                     scope,
+                    sourceOperation.Generation,
                     stablePayloadSignature);
                 return false;
             }
@@ -197,6 +230,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             {
                 this.queuedStablePayloadSignatures.Release(
                     scope,
+                    sourceOperation.Generation,
                     stablePayloadSignature);
                 return false;
             }
@@ -224,17 +258,27 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 return true;
             }
 
-            return this.PersistResolvedGameWindowPayload(
+            var persisted = this.PersistResolvedGameWindowPayload(
                 scope,
                 sourceOperation,
                 originalPayload,
                 translatedPayload,
                 classJobId);
+            if (!persisted)
+            {
+                this.queuedStablePayloadSignatures.Release(
+                    scope,
+                    sourceOperation.Generation,
+                    stablePayloadSignature);
+            }
+
+            return persisted;
         }
         catch
         {
             this.queuedStablePayloadSignatures.Release(
                 scope,
+                sourceOperation.Generation,
                 stablePayloadSignature);
             throw;
         }
@@ -1328,9 +1372,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return false;
         }
 
-        return this.queuedStablePayloadSignatures.TryQueue(
-            this.CreateTranslationReuseScope(sourceLanguage),
-            stablePayloadSignature);
+        return true;
     }
 
     /// <summary>
@@ -2610,21 +2652,55 @@ internal sealed class ActionMenuQueuedSignatureTracker
 {
     private readonly object gate = new();
     private readonly HashSet<string> signatures = new(StringComparer.Ordinal);
-    private TranslationReuseScope? activeScope;
+    private QueueOwner? activeOwner;
 
     /// <summary>
     ///     Claims one stable payload signature for a captured operation scope.
     /// </summary>
     /// <param name="scope">The immutable scope captured before queueing.</param>
+    /// <param name="generation">The lifecycle generation captured before queueing.</param>
     /// <param name="signature">The stable ActionMenu payload signature.</param>
     /// <returns>True when this scope did not already own the signature.</returns>
-    public bool TryQueue(TranslationReuseScope scope, string signature)
+    public bool TryQueue(
+        TranslationReuseScope scope,
+        long generation,
+        string signature)
     {
+        return this.TryQueue(
+            scope,
+            generation,
+            signature,
+            retryCoolingDown: false);
+    }
+
+    /// <summary>
+    ///     Claims one stable payload signature only when translation retry is
+    ///     currently eligible for its captured operation scope.
+    /// </summary>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <param name="generation">The lifecycle generation captured before queueing.</param>
+    /// <param name="signature">The stable ActionMenu payload signature.</param>
+    /// <param name="retryCoolingDown">
+    ///     Whether the payload must wait before its next translation attempt.
+    /// </param>
+    /// <returns>True when this scope claimed the signature for queueing.</returns>
+    public bool TryQueue(
+        TranslationReuseScope scope,
+        long generation,
+        string signature,
+        bool retryCoolingDown)
+    {
+        if (retryCoolingDown)
+        {
+            return false;
+        }
+
         lock (this.gate)
         {
-            if (this.activeScope != scope)
+            var owner = new QueueOwner(scope, generation);
+            if (this.activeOwner != owner)
             {
-                this.activeScope = scope;
+                this.activeOwner = owner;
                 this.signatures.Clear();
             }
 
@@ -2634,15 +2710,19 @@ internal sealed class ActionMenuQueuedSignatureTracker
 
     /// <summary>
     ///     Releases a failed signature only when it belongs to the active
-    ///     operation scope.
+    ///     operation scope and lifecycle generation.
     /// </summary>
     /// <param name="scope">The scope that owned the failed request.</param>
+    /// <param name="generation">The generation that owned the failed request.</param>
     /// <param name="signature">The failed payload signature.</param>
-    public void Release(TranslationReuseScope scope, string signature)
+    public void Release(
+        TranslationReuseScope scope,
+        long generation,
+        string signature)
     {
         lock (this.gate)
         {
-            if (this.activeScope == scope)
+            if (this.activeOwner == new QueueOwner(scope, generation))
             {
                 this.signatures.Remove(signature);
             }
@@ -2656,8 +2736,12 @@ internal sealed class ActionMenuQueuedSignatureTracker
     {
         lock (this.gate)
         {
-            this.activeScope = null;
+            this.activeOwner = null;
             this.signatures.Clear();
         }
     }
+
+    private readonly record struct QueueOwner(
+        TranslationReuseScope Scope,
+        long Generation);
 }

@@ -16,9 +16,11 @@ applyTo: "NativeUI/AddonHandlers/ActionMenu/**/*.cs"
   lookup, queue ownership, post-translation normalization, diagnostics, and
   persistence. Do not derive target or engine from mutable configuration after
   queueing.
-- Stable payload signatures belong to that full scope. Release a signature when
-  its request fails or its translated payload is rejected; a changed scope owns
-  a new signature set.
+- Stable payload signatures belong to the full scope plus lifecycle generation.
+  Release a signature when its request fails, is rejected, or loses persistence
+  ownership, but never let an older generation release a newer same-scope
+  request. Evaluate failed-payload cooldown before claiming a signature; a
+  changed scope owns a new signature set.
 - Preserve duplicate-node `nodeId:ordinal` traversal in every capture/apply/
   restore path; do not broaden reuse across dynamic menu contexts.
 - Invalidate old scope-owned publication before exposing a new generation.

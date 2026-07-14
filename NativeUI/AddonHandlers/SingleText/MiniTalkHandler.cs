@@ -63,7 +63,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   private readonly Config config;
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>> eventHandlers = new();
   private readonly Func<MiniTalkMessage, MiniTalkMessage?> findMiniTalkMessage;
-  private readonly Func<MiniTalkMessage, Task<string>> insertMiniTalkMessageAsync;
+  private readonly Func<MiniTalkMessage, CancellationToken, Task<string>> insertMiniTalkMessageAsync;
   private readonly Func<string, string> normalizeReplacementText;
   private readonly SourcePublicationLifecycle sourceLifecycle = new();
   private readonly object stateGate = new();
@@ -127,6 +127,42 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       TranslationService translationService,
       Func<MiniTalkMessage, MiniTalkMessage?> findMiniTalkMessage,
       Func<MiniTalkMessage, Task<string>> insertMiniTalkMessageAsync,
+      UpdateMiniTalkBubbleOverlayDelegate updateOverlay,
+      ClearMiniTalkBubbleOverlayDelegate clearOverlay,
+      SyncMiniTalkBubbleOverlayBoundsDelegate updateOverlayBounds,
+      ResolveMiniTalkBubbleNodesDelegate resolveMiniTalkBubbleTextNodes,
+      Func<string, string> normalizeReplacementText)
+    : this(
+        config,
+        translationService,
+        findMiniTalkMessage,
+        (message, _) => insertMiniTalkMessageAsync(message),
+        updateOverlay,
+        clearOverlay,
+        updateOverlayBounds,
+        resolveMiniTalkBubbleTextNodes,
+        normalizeReplacementText)
+  {
+  }
+
+  /// <summary>
+  ///     Initializes a MiniTalk handler with cancellation-aware dialogue
+  ///     persistence owned by the captured operation scope.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <param name="translationService">The shared translation service.</param>
+  /// <param name="findMiniTalkMessage">The canonical MiniTalk lookup.</param>
+  /// <param name="insertMiniTalkMessageAsync">The cancellation-aware persistence delegate.</param>
+  /// <param name="updateOverlay">The overlay publication callback.</param>
+  /// <param name="clearOverlay">The overlay clear callback.</param>
+  /// <param name="updateOverlayBounds">The overlay-bounds synchronization callback.</param>
+  /// <param name="resolveMiniTalkBubbleTextNodes">The native bubble resolver.</param>
+  /// <param name="normalizeReplacementText">The native replacement normalizer.</param>
+  internal unsafe MiniTalkHandler(
+      Config config,
+      TranslationService translationService,
+      Func<MiniTalkMessage, MiniTalkMessage?> findMiniTalkMessage,
+      Func<MiniTalkMessage, CancellationToken, Task<string>> insertMiniTalkMessageAsync,
       UpdateMiniTalkBubbleOverlayDelegate updateOverlay,
       ClearMiniTalkBubbleOverlayDelegate clearOverlay,
       SyncMiniTalkBubbleOverlayBoundsDelegate updateOverlayBounds,
@@ -664,6 +700,10 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   {
     var operationScope = sourceOperation.Scope ??
                          this.CreateDialogueReuseScope(sourceLanguage);
+    var translatorResolution = this.translationService
+        .CaptureTranslatorResolution(
+            operationScope.TranslationEngine.GetValueOrDefault(),
+            TranslationSurfaceGroup.Dialogue);
     string translatedText;
     try
     {
@@ -671,7 +711,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           originalText,
           sourceLanguage,
           operationScope.TargetLanguageCode,
-          TranslationSurfaceGroup.Dialogue) ?? string.Empty;
+          TranslationSurfaceGroup.Dialogue,
+          translatorResolution) ?? string.Empty;
     }
     catch (Exception ex)
     {
@@ -722,7 +763,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return;
     }
 
-    await this.insertMiniTalkMessageAsync(translatedMiniTalk);
+    await this.insertMiniTalkMessageAsync(
+        translatedMiniTalk,
+        sourceOperation.CancellationToken);
 
     this.sourceLifecycle.TryPublish(
         sourceOperation,

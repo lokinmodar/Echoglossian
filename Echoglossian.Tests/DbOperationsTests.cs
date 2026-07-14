@@ -238,8 +238,9 @@ public class DbOperationsTests
     }
 
     /// <summary>
-    ///     Ensures every legacy lookup uses the configured engine policy before
-    ///     selecting a preferred semantic match during explicit retranslation.
+    ///     Ensures every legacy lookup uses the effective engine carried by the
+    ///     request before selecting a semantic match during explicit
+    ///     retranslation.
     /// </summary>
     /// <param name="retrieval">The legacy retrieval path under test.</param>
     [Theory]
@@ -254,19 +255,19 @@ public class DbOperationsTests
     [InlineData("MiniTalk")]
     [InlineData("TextGimmickHint")]
     [InlineData("SelectString")]
-    public void LegacyRetrieval_RetranslationEnabled_UsesConfiguredEngine(
+    public void LegacyRetrieval_RetranslationEnabled_UsesRequestedEffectiveEngine(
         string retrieval)
     {
         var result = RunLegacyRetrieval(
             retrieval,
             translateAlreadyTranslatedTexts: true,
             preferredSourceLanguage: "ja",
-            preferredEngine: 7,
+            preferredEngine: 4,
             eligibleSourceLanguage: "ja",
-            eligibleEngine: 4);
+            eligibleEngine: 7);
 
         Assert.Equal("ja", result.SourceLanguage);
-        Assert.Equal(4, result.TranslationEngine);
+        Assert.Equal(7, result.TranslationEngine);
     }
 
     /// <summary>

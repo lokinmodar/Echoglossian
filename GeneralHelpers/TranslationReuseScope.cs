@@ -26,12 +26,19 @@ public readonly record struct TranslationReuseScope(
     ///     and configuration state.
     /// </summary>
     /// <param name="config">The active plugin configuration.</param>
+    /// <param name="translationEngine">
+    ///     The effective engine carried by the translation operation, when
+    ///     already resolved for its surface.
+    /// </param>
     /// <param name="scope">The resolved reuse scope when available.</param>
     /// <returns>
     ///     <see langword="true" /> when a complete source and target scope
     ///     can be resolved; otherwise <see langword="false" />.
     /// </returns>
-    public static bool TryCreate(Config config, out TranslationReuseScope scope)
+    public static bool TryCreate(
+        Config config,
+        int? translationEngine,
+        out TranslationReuseScope scope)
     {
         if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
                 out var sourceLanguage))
@@ -51,9 +58,24 @@ public readonly record struct TranslationReuseScope(
         scope = new TranslationReuseScope(
             sourceLanguage.PersistenceCode,
             targetLanguage,
-            config.ChosenTransEngine,
+            translationEngine ?? config.ChosenTransEngine,
             config.TranslateAlreadyTranslatedTexts);
         return true;
+    }
+
+    /// <summary>
+    ///     Creates the current translation reuse scope from runtime language
+    ///     and the default configured engine.
+    /// </summary>
+    /// <param name="config">The active plugin configuration.</param>
+    /// <param name="scope">The resolved reuse scope when available.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a complete source and target scope
+    ///     can be resolved; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryCreate(Config config, out TranslationReuseScope scope)
+    {
+        return TryCreate(config, translationEngine: null, out scope);
     }
 
     /// <summary>

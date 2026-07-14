@@ -57,14 +57,14 @@ public class ActionMenuWindowHandlerTests
         var originalScope = new TranslationReuseScope("en", "pt-BR", 0, false);
         var changedScope = new TranslationReuseScope("en", "ja", 7, true);
 
-        Assert.True(tracker.TryQueue(originalScope, signature));
-        Assert.False(tracker.TryQueue(originalScope, signature));
+        Assert.True(tracker.TryQueue(originalScope, generation: 1, signature));
+        Assert.False(tracker.TryQueue(originalScope, generation: 1, signature));
 
-        tracker.Release(originalScope, signature);
+        tracker.Release(originalScope, generation: 1, signature);
 
-        Assert.True(tracker.TryQueue(originalScope, signature));
-        Assert.True(tracker.TryQueue(changedScope, signature));
-        Assert.False(tracker.TryQueue(changedScope, signature));
+        Assert.True(tracker.TryQueue(originalScope, generation: 1, signature));
+        Assert.True(tracker.TryQueue(changedScope, generation: 2, signature));
+        Assert.False(tracker.TryQueue(changedScope, generation: 2, signature));
     }
 
     /// <summary>
@@ -79,12 +79,56 @@ public class ActionMenuWindowHandlerTests
         var originalScope = new TranslationReuseScope("en", "pt-BR", 0, false);
         var activeScope = new TranslationReuseScope("en", "ja", 7, true);
 
-        Assert.True(tracker.TryQueue(originalScope, signature));
-        Assert.True(tracker.TryQueue(activeScope, signature));
+        Assert.True(tracker.TryQueue(originalScope, generation: 1, signature));
+        Assert.True(tracker.TryQueue(activeScope, generation: 2, signature));
 
-        tracker.Release(originalScope, signature);
+        tracker.Release(originalScope, generation: 1, signature);
 
-        Assert.False(tracker.TryQueue(activeScope, signature));
+        Assert.False(tracker.TryQueue(activeScope, generation: 2, signature));
+    }
+
+    /// <summary>
+    ///     Ensures an older A completion cannot release a new A request after
+    ///     the active lifecycle has progressed through A to B and back to A.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_ScopeCycleKeepsNewGenerationClaimed()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var scopeA = new TranslationReuseScope("en", "pt-BR", 0, false);
+        var scopeB = new TranslationReuseScope("en", "ja", 7, true);
+
+        Assert.True(tracker.TryQueue(scopeA, generation: 1, signature));
+        Assert.True(tracker.TryQueue(scopeB, generation: 2, signature));
+        Assert.True(tracker.TryQueue(scopeA, generation: 3, signature));
+
+        tracker.Release(scopeA, generation: 1, signature);
+
+        Assert.False(tracker.TryQueue(scopeA, generation: 3, signature));
+    }
+
+    /// <summary>
+    ///     Ensures a failure cooldown is evaluated before an ActionMenu
+    ///     signature can be claimed, so the next eligible refresh can retry.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_CooldownDoesNotClaimSignature()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var scope = new TranslationReuseScope("en", "pt-BR", 0, false);
+
+        Assert.False(tracker.TryQueue(
+            scope,
+            generation: 1,
+            signature,
+            retryCoolingDown: true));
+        Assert.True(tracker.TryQueue(
+            scope,
+            generation: 1,
+            signature,
+            retryCoolingDown: false));
     }
 
     /// <summary>

@@ -4,6 +4,7 @@
 // </copyright>
 
 using Dalamud.Game;
+using Echoglossian.LanguagesHandling;
 
 using Xunit;
 
@@ -15,6 +16,51 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class RuntimeLanguageHelperTests
 {
+    /// <summary>
+    ///     Ensures a lookup carrying an effective surface engine does not
+    ///     rebuild its reuse scope from the global default engine.
+    /// </summary>
+    [Fact]
+    public void TranslationReuseScopeTryCreate_ExplicitEngineOverridesConfig()
+    {
+        var originalClientState = global::Echoglossian.Echoglossian.ClientStateInterface;
+        var originalLanguages = global::Echoglossian.Echoglossian.LangDict;
+
+        try
+        {
+            global::Echoglossian.Echoglossian.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            global::Echoglossian.Echoglossian.LangDict = new Dictionary<int, LanguageInfo>
+            {
+                [28] = new LanguageInfo(
+                    "pt-BR",
+                    "Portuguese",
+                    string.Empty,
+                    string.Empty,
+                    []),
+            };
+            var config = new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 4,
+                TranslateAlreadyTranslatedTexts = true,
+            };
+
+            var created = TranslationReuseScope.TryCreate(
+                config,
+                translationEngine: 7,
+                out var scope);
+
+            Assert.True(created);
+            Assert.Equal(7, scope.TranslationEngine);
+        }
+        finally
+        {
+            global::Echoglossian.Echoglossian.LangDict = originalLanguages;
+            global::Echoglossian.Echoglossian.ClientStateInterface = originalClientState;
+        }
+    }
+
     /// <summary>
     ///     Ensures an unknown current client language cannot create a
     ///     persistence reuse scope or provider source identity.

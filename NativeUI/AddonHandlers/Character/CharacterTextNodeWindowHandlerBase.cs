@@ -379,7 +379,7 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang),
-            this.config.ChosenTransEngine,
+            this.GetOperationTranslationEngineId(),
             this.config.TranslateAlreadyTranslatedTexts);
     }
 
