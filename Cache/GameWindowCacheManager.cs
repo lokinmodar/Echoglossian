@@ -15,7 +15,6 @@ namespace Echoglossian.Cache;
 /// </summary>
 public static class GameWindowCacheManager
 {
-  private const string ActionMenuWindowName = "ActionMenu";
   private const string CharacterWindowNamePrefix = "Character";
 
   private static bool isPreloaded;
@@ -257,11 +256,6 @@ public static class GameWindowCacheManager
 
     if (string.IsNullOrWhiteSpace(version))
     {
-      if (IsActionMenu(addonName))
-      {
-        return GetPreferredActionMenuCandidates(exactRows, legacyRows);
-      }
-
       if (IsCharacterWindow(addonName))
       {
         return GetPreferredCharacterCandidates(exactRows, legacyRows);
@@ -288,14 +282,6 @@ public static class GameWindowCacheManager
 
     if (exactRows == null || exactRows.Count == 0)
     {
-      if (IsActionMenu(addonName))
-      {
-        return GetPreferredActionMenuCandidates(
-            versionAgnosticRows,
-            legacyRows,
-            legacyVersionAgnosticRows);
-      }
-
       if (IsCharacterWindow(addonName))
       {
         return GetPreferredCharacterCandidates(
@@ -309,14 +295,6 @@ public static class GameWindowCacheManager
 
     if (versionAgnosticRows == null || versionAgnosticRows.Count == 0)
     {
-      if (IsActionMenu(addonName))
-      {
-        return GetPreferredActionMenuCandidates(
-            exactRows,
-            legacyRows,
-            legacyVersionAgnosticRows);
-      }
-
       if (IsCharacterWindow(addonName))
       {
         return GetPreferredCharacterCandidates(
@@ -326,15 +304,6 @@ public static class GameWindowCacheManager
       }
 
       return MergeCandidateLists(exactRows, legacyRows, legacyVersionAgnosticRows);
-    }
-
-    if (IsActionMenu(addonName))
-    {
-      return GetPreferredActionMenuCandidates(
-          exactRows,
-          versionAgnosticRows,
-          legacyRows,
-          legacyVersionAgnosticRows);
     }
 
     if (IsCharacterWindow(addonName))
@@ -463,22 +432,6 @@ public static class GameWindowCacheManager
   private static GameWindow? TryFindExistingCacheRow(GameWindow newRecord)
   {
     var addonBucket = GetAddonBucket(newRecord.WindowAddonName!);
-    if (IsActionMenu(newRecord.WindowAddonName))
-    {
-      return addonBucket.FirstOrDefault(g =>
-          RuntimeLanguageHelper.LanguagesMatch(
-              g.OriginalWindowStringsLang,
-              newRecord.OriginalWindowStringsLang) &&
-          RuntimeLanguageHelper.LanguagesMatch(
-              g.TranslationLang,
-              newRecord.TranslationLang) &&
-          g.ClassJobId == newRecord.ClassJobId &&
-          g.TranslationEngine == newRecord.TranslationEngine &&
-          GameVersionLookupHelper.MatchesStoredVersion(
-              g.GameVersion,
-              newRecord.GameVersion));
-    }
-
     return addonBucket.FirstOrDefault(g =>
         RuntimeLanguageHelper.LanguagesMatch(
             g.OriginalWindowStringsLang,
@@ -638,23 +591,6 @@ public static class GameWindowCacheManager
   }
 
   /// <summary>
-  ///     Determines whether the specified addon name belongs to
-  ///     <c>ActionMenu</c>.
-  /// </summary>
-  /// <param name="addonName">The addon name to test.</param>
-  /// <returns>
-  ///     <see langword="true"/> when the addon is <c>ActionMenu</c>;
-  ///     otherwise <see langword="false"/>.
-  /// </returns>
-  private static bool IsActionMenu(string? addonName)
-  {
-    return string.Equals(
-        addonName,
-        ActionMenuWindowName,
-        StringComparison.Ordinal);
-  }
-
-  /// <summary>
   ///     Determines whether the specified addon name belongs to one of the
   ///     Character-family windows whose DB-first lookup should ignore partial
   ///     historical rows.
@@ -670,33 +606,6 @@ public static class GameWindowCacheManager
            addonName.StartsWith(
                CharacterWindowNamePrefix,
                StringComparison.Ordinal);
-  }
-
-  /// <summary>
-  ///     Chooses the preferred ActionMenu candidate set and collapses it to
-  ///     the newest row so recovery and gate checks do not scan historical
-  ///     duplicates from the same lookup scope.
-  /// </summary>
-  /// <param name="candidateSets">The candidate sets in preference order.</param>
-  /// <returns>The preferred collapsed candidate list.</returns>
-  private static IReadOnlyList<GameWindow> GetPreferredActionMenuCandidates(
-      params List<GameWindow>?[] candidateSets)
-  {
-    foreach (var candidateSet in candidateSets)
-    {
-      if (candidateSet == null || candidateSet.Count == 0)
-      {
-        continue;
-      }
-
-      var preferred = candidateSet
-          .OrderByDescending(static row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
-          .ThenByDescending(static row => row.Id)
-          .First();
-      return [preferred];
-    }
-
-    return [];
   }
 
   /// <summary>

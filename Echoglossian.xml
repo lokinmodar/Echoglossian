@@ -331,17 +331,6 @@
             <param name="newRecord">The new record.</param>
             <returns>The cached row to replace, or <see langword="null"/>.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.IsActionMenu(System.String)">
-            <summary>
-                Determines whether the specified addon name belongs to
-                <c>ActionMenu</c>.
-            </summary>
-            <param name="addonName">The addon name to test.</param>
-            <returns>
-                <see langword="true"/> when the addon is <c>ActionMenu</c>;
-                otherwise <see langword="false"/>.
-            </returns>
-        </member>
         <member name="M:Echoglossian.Cache.GameWindowCacheManager.IsCharacterWindow(System.String)">
             <summary>
                 Determines whether the specified addon name belongs to one of the
@@ -353,15 +342,6 @@
                 <see langword="true"/> when the addon belongs to the Character
                 family; otherwise <see langword="false"/>.
             </returns>
-        </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetPreferredActionMenuCandidates(System.Collections.Generic.List{Echoglossian.EFCoreSqlite.Models.GameWindow}[])">
-            <summary>
-                Chooses the preferred ActionMenu candidate set and collapses it to
-                the newest row so recovery and gate checks do not scan historical
-                duplicates from the same lookup scope.
-            </summary>
-            <param name="candidateSets">The candidate sets in preference order.</param>
-            <returns>The preferred collapsed candidate list.</returns>
         </member>
         <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetPreferredCharacterCandidates(System.Collections.Generic.List{Echoglossian.EFCoreSqlite.Models.GameWindow}[])">
             <summary>
@@ -6518,17 +6498,6 @@
             <param name="gameWindow">The candidate row.</param>
             <returns>The matching row, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.IsActionMenuScopedUpsert(Echoglossian.EFCoreSqlite.Models.GameWindow)">
-            <summary>
-                Determines whether one <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> should use the
-                ActionMenu scoped upsert semantics.
-            </summary>
-            <param name="gameWindow">The candidate row.</param>
-            <returns>
-                <see langword="true" /> when the row belongs to
-                <c>ActionMenu</c>; otherwise <see langword="false" />.
-            </returns>
-        </member>
         <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingExactPayloadRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
                 Tries to find one exact persisted payload row using the default
@@ -6537,15 +6506,6 @@
             <param name="context">The database context.</param>
             <param name="gameWindow">The candidate row.</param>
             <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingActionMenuScopeRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
-            <summary>
-                Tries to find one existing ActionMenu row for the same effective
-                lookup scope, regardless of the current payload shape.
-            </summary>
-            <param name="context">The database context.</param>
-            <param name="gameWindow">The candidate ActionMenu row.</param>
-            <returns>The matching scoped row, or <see langword="null" />.</returns>
         </member>
         <member name="T:Echoglossian.ItemTooltipPersistenceHelper">
             <summary>

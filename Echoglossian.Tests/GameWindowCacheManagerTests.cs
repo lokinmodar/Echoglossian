@@ -11,17 +11,17 @@ using Xunit;
 namespace Echoglossian.Tests;
 
 /// <summary>
-///     Covers ActionMenu-specific cache compaction semantics for
-///     <see cref="GameWindowCacheManager" />.
+///     Covers cache behavior for <see cref="GameWindowCacheManager" />.
 /// </summary>
 public class GameWindowCacheManagerTests
 {
     /// <summary>
-    ///     Ensures ActionMenu cache updates collapse multiple payload variants
-    ///     from the same scope to one preferred candidate.
+    ///     Ensures ActionMenu cache updates preserve multiple distinct payload
+    ///     variants from the same lookup scope so live page changes do not
+    ///     overwrite one another.
     /// </summary>
     [Fact]
-    public void GetCandidates_ActionMenuReturnsSingleScopedCandidate()
+    public void GetCandidates_ActionMenuReturnsAllDistinctScopedCandidates()
     {
         GameWindowCacheManager.Clear();
 
@@ -37,7 +37,10 @@ public class GameWindowCacheManagerTests
                 gameVersion: "7.3",
                 createdDate: DateTime.UtcNow.AddSeconds(-1),
                 updatedDate: DateTime.UtcNow.AddSeconds(-1),
-                classJobId: 38));
+                classJobId: 38)
+            {
+                Id = 1,
+            });
             GameWindowCacheManager.Update(new GameWindow(
                 windowAddonName: "ActionMenu",
                 originalWindowStrings: "{\"atkValues\":{\"17\":\"Cascade\"}}",
@@ -48,7 +51,10 @@ public class GameWindowCacheManagerTests
                 gameVersion: "7.3",
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow,
-                classJobId: 38));
+                classJobId: 38)
+            {
+                Id = 2,
+            });
 
             var candidates = GameWindowCacheManager.GetCandidates(
                 "ActionMenu",
@@ -56,10 +62,15 @@ public class GameWindowCacheManagerTests
                 "7.3",
                 classJobId: 38);
 
-            var row = Assert.Single(candidates);
-            Assert.Equal(
-                "{\"atkValues\":{\"17\":\"Cascade\"}}",
-                row.OriginalWindowStrings);
+            Assert.Equal(2, candidates.Count);
+            Assert.Contains(
+                candidates,
+                row => row.OriginalWindowStrings ==
+                       "{\"atkValues\":{\"17\":\"Peloton\"}}");
+            Assert.Contains(
+                candidates,
+                row => row.OriginalWindowStrings ==
+                       "{\"atkValues\":{\"17\":\"Cascade\"}}");
         }
         finally
         {
@@ -203,8 +214,9 @@ public class GameWindowCacheManagerTests
     }
 
     /// <summary>
-    ///     Ensures ActionMenu replacement compacts only rows from the same
-    ///     normalized source scope.
+    ///     Ensures ActionMenu retains distinct rows per normalized source
+    ///     scope without collapsing different payload variants from that same
+    ///     source.
     /// </summary>
     [Fact]
     public void Update_ActionMenuRetainsDistinctSourceRows()
@@ -214,34 +226,48 @@ public class GameWindowCacheManagerTests
         try
         {
             GameWindowCacheManager.Update(CreateActionMenuRow(
+                1,
                 "en",
                 "Peloton",
                 "Pelotao",
                 DateTime.UtcNow.AddSeconds(-2)));
             GameWindowCacheManager.Update(CreateActionMenuRow(
+                2,
                 "de",
                 "Peloton",
                 "Peloton DE",
                 DateTime.UtcNow.AddSeconds(-1)));
             GameWindowCacheManager.Update(CreateActionMenuRow(
+                3,
                 "English",
                 "Cascade",
                 "Cascata",
                 DateTime.UtcNow));
 
-            var english = Assert.Single(GameWindowCacheManager.GetCandidates(
-                "ActionMenu",
-                new TranslationReuseScope("en", "pt-BR", 0, true),
-                "7.3",
-                classJobId: 38));
             var german = Assert.Single(GameWindowCacheManager.GetCandidates(
                 "ActionMenu",
                 new TranslationReuseScope("German", "pt-BR", 0, true),
                 "7.3",
                 classJobId: 38));
+            var english = GameWindowCacheManager.GetCandidates(
+                "ActionMenu",
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                classJobId: 38);
 
-            Assert.Contains("Cascade", english.OriginalWindowStrings);
-            Assert.Contains("Peloton", german.OriginalWindowStrings);
+            Assert.Equal(2, english.Count);
+            Assert.Contains(
+                english,
+                row => row.OriginalWindowStringsLang == "en" &&
+                       row.OriginalWindowStrings!.Contains(
+                           "Peloton",
+                           StringComparison.Ordinal));
+            Assert.Contains(
+                english,
+                row => row.OriginalWindowStringsLang == "English" &&
+                       row.OriginalWindowStrings!.Contains(
+                           "Cascade",
+                           StringComparison.Ordinal));
             Assert.Equal("de", german.OriginalWindowStringsLang);
         }
         finally
@@ -253,12 +279,14 @@ public class GameWindowCacheManagerTests
     /// <summary>
     ///     Creates one ActionMenu row for source-scoped cache tests.
     /// </summary>
+    /// <param name="id">The cache row identifier.</param>
     /// <param name="sourceLanguage">The original payload language.</param>
     /// <param name="originalText">The original visible text.</param>
     /// <param name="translatedText">The translated visible text.</param>
     /// <param name="updatedAt">The row update timestamp.</param>
     /// <returns>The cache row.</returns>
     private static GameWindow CreateActionMenuRow(
+        int id,
         string sourceLanguage,
         string originalText,
         string translatedText,
@@ -274,6 +302,9 @@ public class GameWindowCacheManagerTests
             gameVersion: "7.3",
             createdDate: updatedAt,
             updatedDate: updatedAt,
-            classJobId: 38);
+            classJobId: 38)
+        {
+            Id = id,
+        };
     }
 }

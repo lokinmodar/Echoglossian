@@ -389,11 +389,11 @@ public class GameWindowPersistenceTests
     }
 
     /// <summary>
-    ///     Ensures ActionMenu now updates a single scoped row even when the
-    ///     visible payload changes across categories inside the same window.
+    ///     Ensures ActionMenu preserves distinct payload rows inside the same
+    ///     scope when the visible page content changes.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_ActionMenuCollapsesDistinctPayloads_IntoScopedRow()
+    public void InsertGameWindow_ActionMenuPreservesDistinctPayloads_WithinScope()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -439,15 +439,22 @@ public class GameWindowPersistenceTests
                     window.TranslationLang == "pt-BR" &&
                     window.TranslationEngine == 0 &&
                     window.GameVersion == "7.3")
+                .OrderBy(window => window.OriginalWindowStrings)
                 .ToList();
 
-            var row = Assert.Single(rows);
+            Assert.Equal(2, rows.Count);
             Assert.Equal(
                 "{\"atkValues\":{\"17\":\"Cascade\"}}",
-                row.OriginalWindowStrings);
+                rows[0].OriginalWindowStrings);
             Assert.Equal(
                 "{\"atkValues\":{\"17\":\"Cascata\"}}",
-                row.TranslatedWindowStrings);
+                rows[0].TranslatedWindowStrings);
+            Assert.Equal(
+                "{\"atkValues\":{\"17\":\"Peloton\"}}",
+                rows[1].OriginalWindowStrings);
+            Assert.Equal(
+                "{\"atkValues\":{\"17\":\"Pelotão\"}}",
+                rows[1].TranslatedWindowStrings);
         }
         finally
         {
@@ -457,7 +464,7 @@ public class GameWindowPersistenceTests
 
     /// <summary>
     ///     Ensures normal and ActionMenu upserts remain source-separated while
-    ///     ActionMenu still collapses payload variants from the same source.
+    ///     ActionMenu also preserves distinct payload variants per source.
     /// </summary>
     [Fact]
     public void InsertGameWindow_PreservesDistinctSourceScopes()
@@ -517,13 +524,29 @@ public class GameWindowPersistenceTests
 
             Assert.Equal(2, profileRows.Count);
             Assert.Equal(["de", "en"], profileRows.Select(row => row.OriginalWindowStringsLang));
-            Assert.Equal(2, actionRows.Count);
+            Assert.Equal(3, actionRows.Count);
+            Assert.Equal(
+                2,
+                actionRows.Count(
+                    row => RuntimeLanguageHelper.LanguagesMatch(
+                        row.OriginalWindowStringsLang,
+                        "en")));
             Assert.Contains(
                 actionRows,
                 row => RuntimeLanguageHelper.LanguagesMatch(
                     row.OriginalWindowStringsLang,
                     "en") &&
-                    row.OriginalWindowStrings!.Contains("Cascade", StringComparison.Ordinal));
+                    row.OriginalWindowStrings!.Contains(
+                        "Peloton",
+                        StringComparison.Ordinal));
+            Assert.Contains(
+                actionRows,
+                row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalWindowStringsLang,
+                    "en") &&
+                    row.OriginalWindowStrings!.Contains(
+                        "Cascade",
+                        StringComparison.Ordinal));
             Assert.Contains(
                 actionRows,
                 row => RuntimeLanguageHelper.LanguagesMatch(
