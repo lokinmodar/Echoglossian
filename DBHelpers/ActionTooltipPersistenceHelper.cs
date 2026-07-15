@@ -95,7 +95,6 @@ public static class ActionTooltipPersistenceHelper
             var existing = context.ActionTooltip
                 .Where(row =>
                     row.ActionId == actionTooltip.ActionId &&
-                    row.TranslationLang == actionTooltip.TranslationLang &&
                     row.TranslationEngine == actionTooltip.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
@@ -103,9 +102,15 @@ public static class ActionTooltipPersistenceHelper
                        row.GameVersion == actionTooltip.GameVersion))) &&
                     row.SourceContentHash == actionTooltip.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                .Where(row => RuntimeLanguageHelper.LanguagesMatch(
                     row.OriginalLang,
-                    actionTooltip.OriginalLang));
+                    actionTooltip.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        row.TranslationLang,
+                        actionTooltip.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, actionTooltip);
@@ -193,10 +198,13 @@ public static class ActionTooltipPersistenceHelper
                        row.GameVersion == probe.GameVersion))) &&
                     row.SourceContentHash == probe.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => scope.Matches(
+                .Where(row => scope.Matches(
                     row.OriginalLang,
                     row.TranslationLang,
-                    row.TranslationEngine));
+                    row.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -266,6 +274,33 @@ public static class ActionTooltipPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated action fields are populated so alias
+    ///     reuse prefers an existing completed row over an incomplete row.
+    /// </summary>
+    /// <param name="row">The action row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(ActionTooltip row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedActionName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedActionDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

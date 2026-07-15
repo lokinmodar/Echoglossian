@@ -66,25 +66,17 @@ public static class ItemTooltipCacheManager
             Cache[newRecord.ItemId] = rows;
         }
 
-        var existing = rows.FirstOrDefault(row =>
-            row.ItemId == newRecord.ItemId &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                row.OriginalLang,
-                newRecord.OriginalLang) &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                row.TranslationLang,
-                newRecord.TranslationLang) &&
-            row.TranslationEngine == newRecord.TranslationEngine &&
-            GameVersionLookupHelper.MatchesStoredVersion(
-                row.GameVersion,
-                newRecord.GameVersion) &&
-            row.SourceContentHash == newRecord.SourceContentHash);
-        if (existing != null)
-        {
-            rows.Remove(existing);
-        }
+        var matchingRows = rows
+            .Where(row => HasSameCacheIdentity(row, newRecord))
+            .ToList();
+        var preferredRecord = matchingRows
+            .Append(newRecord)
+            .OrderByDescending(GetTranslationCompletenessScore)
+            .ThenByDescending(static row => row.UpdatedDate)
+            .First();
 
-        rows.Add(newRecord);
+        rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
+        rows.Add(preferredRecord);
     }
 
     /// <summary>
@@ -227,6 +219,61 @@ public static class ItemTooltipCacheManager
         PluginRuntimeLog.Debug(
             "ItemTooltipCacheManager",
             "Cleared item-tooltip cache.");
+    }
+
+    /// <summary>
+    ///     Determines whether two item rows represent the same effective cache
+    ///     identity after source and target language normalization.
+    /// </summary>
+    /// <param name="left">The cached row.</param>
+    /// <param name="right">The incoming row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when both rows share one cache identity;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool HasSameCacheIdentity(
+        ItemTooltip left,
+        ItemTooltip right)
+    {
+        return left.ItemId == right.ItemId &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.OriginalLang,
+                   right.OriginalLang) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.TranslationLang,
+                   right.TranslationLang) &&
+               left.TranslationEngine == right.TranslationEngine &&
+               GameVersionLookupHelper.MatchesStoredVersion(
+                   left.GameVersion,
+                   right.GameVersion) &&
+               left.SourceContentHash == right.SourceContentHash;
+    }
+
+    /// <summary>
+    ///     Computes how many translated item fields are populated so an
+    ///     incomplete alias row cannot displace a completed canonical row.
+    /// </summary>
+    /// <param name="row">The item row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(ItemTooltip row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

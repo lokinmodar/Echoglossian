@@ -90,7 +90,6 @@ public static class ReferenceTextPersistenceHelper
             var existing = set
                 .Where(existing =>
                     existing.ReferenceId == row.ReferenceId &&
-                    existing.TranslationLang == row.TranslationLang &&
                     existing.TranslationEngine == row.TranslationEngine &&
                     ((!hasRequestedGameVersion && existing.GameVersion == null) ||
                      (hasRequestedGameVersion &&
@@ -98,9 +97,15 @@ public static class ReferenceTextPersistenceHelper
                        existing.GameVersion == row.GameVersion))) &&
                     existing.SourceContentHash == row.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(existing => RuntimeLanguageHelper.LanguagesMatch(
+                .Where(existing => RuntimeLanguageHelper.LanguagesMatch(
                     existing.OriginalLang,
-                    row.OriginalLang));
+                    row.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        existing.TranslationLang,
+                        row.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(existing => existing.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, row);
@@ -200,10 +205,13 @@ public static class ReferenceTextPersistenceHelper
                        existing.GameVersion == probe.GameVersion))) &&
                     existing.SourceContentHash == probe.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(existing => scope.Matches(
+                .Where(existing => scope.Matches(
                     existing.OriginalLang,
                     existing.TranslationLang,
-                    existing.TranslationEngine));
+                    existing.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(existing => existing.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -263,6 +271,30 @@ public static class ReferenceTextPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated reference fields are populated so
+    ///     alias reuse prefers a completed row over an incomplete row.
+    /// </summary>
+    /// <typeparam name="TRow">The concrete reference-text row type.</typeparam>
+    /// <param name="row">The reference-text row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore<TRow>(TRow row)
+        where TRow : ReferenceTextRowBase
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedDescription))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

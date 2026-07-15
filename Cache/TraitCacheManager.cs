@@ -83,25 +83,17 @@ public static class TraitCacheManager
             Cache[newRecord.TraitId] = rows;
         }
 
-        var existing = rows.FirstOrDefault(row =>
-            row.TraitId == newRecord.TraitId &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                row.OriginalLang,
-                newRecord.OriginalLang) &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                row.TranslationLang,
-                newRecord.TranslationLang) &&
-            row.TranslationEngine == newRecord.TranslationEngine &&
-            GameVersionLookupHelper.MatchesStoredVersion(
-                row.GameVersion,
-                newRecord.GameVersion) &&
-            row.SourceContentHash == newRecord.SourceContentHash);
-        if (existing != null)
-        {
-            rows.Remove(existing);
-        }
+        var matchingRows = rows
+            .Where(row => HasSameCacheIdentity(row, newRecord))
+            .ToList();
+        var preferredRecord = matchingRows
+            .Append(newRecord)
+            .OrderByDescending(GetTranslationCompletenessScore)
+            .ThenByDescending(static row => row.UpdatedDate)
+            .First();
 
-        rows.Add(newRecord);
+        rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
+        rows.Add(preferredRecord);
         TextLookupCache.Clear();
         ReverseTextLookupCache.Clear();
         OriginalTextLookupCache.Clear();
@@ -741,6 +733,59 @@ public static class TraitCacheManager
         {
             lookup.Add(originalText);
         }
+    }
+
+    /// <summary>
+    ///     Determines whether two trait rows represent the same effective
+    ///     cache identity after source and target language normalization.
+    /// </summary>
+    /// <param name="left">The cached row.</param>
+    /// <param name="right">The incoming row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when both rows share one cache identity;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool HasSameCacheIdentity(Trait left, Trait right)
+    {
+        return left.TraitId == right.TraitId &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.OriginalLang,
+                   right.OriginalLang) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.TranslationLang,
+                   right.TranslationLang) &&
+               left.TranslationEngine == right.TranslationEngine &&
+               GameVersionLookupHelper.MatchesStoredVersion(
+                   left.GameVersion,
+                   right.GameVersion) &&
+               left.SourceContentHash == right.SourceContentHash;
+    }
+
+    /// <summary>
+    ///     Computes how many translated trait fields are populated so an
+    ///     incomplete alias row cannot displace a completed canonical row.
+    /// </summary>
+    /// <param name="row">The trait row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(Trait row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTraitName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTraitDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

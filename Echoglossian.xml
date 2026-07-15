@@ -256,6 +256,26 @@
             <param name="lookup">The original-text lookup to update.</param>
             <param name="originalText">The original text to add.</param>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.HasSameCacheIdentity(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Determines whether two action rows represent the same effective
+                cache identity after source and target language normalization.
+            </summary>
+            <param name="left">The cached row.</param>
+            <param name="right">The incoming row.</param>
+            <returns>
+                <see langword="true" /> when both rows share one cache identity;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Computes how many translated action fields are populated so an
+                incomplete alias row cannot displace a completed canonical row.
+            </summary>
+            <param name="row">The action row to score.</param>
+            <returns>The number of populated translated fields.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.String,System.UInt32,System.UInt32)">
             <summary>
                 Computes one ordering score for tolerant identity-based action
@@ -575,6 +595,26 @@
             <summary>
                 Clears the in-memory cache.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.HasSameCacheIdentity(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Determines whether two item rows represent the same effective cache
+                identity after source and target language normalization.
+            </summary>
+            <param name="left">The cached row.</param>
+            <param name="right">The incoming row.</param>
+            <returns>
+                <see langword="true" /> when both rows share one cache identity;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Computes how many translated item fields are populated so an
+                incomplete alias row cannot displace a completed canonical row.
+            </summary>
+            <param name="row">The item row to score.</param>
+            <returns>The number of populated translated fields.</returns>
         </member>
         <member name="M:Echoglossian.Cache.ItemTooltipCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.ItemTooltip,System.String,System.UInt32)">
             <summary>
@@ -1107,6 +1147,26 @@
             <param name="lookup">The original-text lookup to update.</param>
             <param name="originalText">The original text to add.</param>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.HasSameCacheIdentity(`0,`0)">
+            <summary>
+                Determines whether two reference-text rows represent the same
+                effective cache identity after language normalization.
+            </summary>
+            <param name="left">The cached row.</param>
+            <param name="right">The incoming row.</param>
+            <returns>
+                <see langword="true" /> when both rows share one cache identity;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.GetTranslationCompletenessScore(`0)">
+            <summary>
+                Computes how many translated reference fields are populated so an
+                incomplete alias row cannot displace a completed canonical row.
+            </summary>
+            <param name="row">The reference-text row to score.</param>
+            <returns>The number of populated translated fields.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.ComputeIdentityMatchScore(`0,System.String)">
             <summary>
                 Computes one ordering score for tolerant identity-based reference
@@ -1401,6 +1461,26 @@
             </summary>
             <param name="lookup">The original-text lookup to update.</param>
             <param name="originalText">The original text to add.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.HasSameCacheIdentity(Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.EFCoreSqlite.Models.Trait)">
+            <summary>
+                Determines whether two trait rows represent the same effective
+                cache identity after source and target language normalization.
+            </summary>
+            <param name="left">The cached row.</param>
+            <param name="right">The incoming row.</param>
+            <returns>
+                <see langword="true" /> when both rows share one cache identity;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.Trait)">
+            <summary>
+                Computes how many translated trait fields are populated so an
+                incomplete alias row cannot displace a completed canonical row.
+            </summary>
+            <param name="row">The trait row to score.</param>
+            <returns>The number of populated translated fields.</returns>
         </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.Trait,System.String,System.UInt32,System.UInt32)">
             <summary>
@@ -6713,6 +6793,14 @@
             <param name="fallback">The existing value.</param>
             <returns>The chosen string.</returns>
         </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Computes how many translated action fields are populated so alias
+                reuse prefers an existing completed row over an incomplete row.
+            </summary>
+            <param name="row">The action row to score.</param>
+            <returns>The number of populated translated fields.</returns>
+        </member>
         <member name="M:Echoglossian.ActionTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
             <summary>
                 Normalizes canonical action payload identity before persistence so
@@ -6823,6 +6911,14 @@
             <param name="fallback">The existing value.</param>
             <returns>The chosen string.</returns>
         </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Computes how many translated item fields are populated so alias
+                reuse prefers an existing completed row over an incomplete row.
+            </summary>
+            <param name="row">The item row to score.</param>
+            <returns>The number of populated translated fields.</returns>
+        </member>
         <member name="M:Echoglossian.ItemTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
             <summary>
                 Normalizes canonical item payload identity before persistence so
@@ -6909,6 +7005,15 @@
             <param name="preferred">The candidate incoming value.</param>
             <param name="fallback">The existing value.</param>
             <returns>The chosen string.</returns>
+        </member>
+        <member name="M:Echoglossian.ReferenceTextPersistenceHelper.GetTranslationCompletenessScore``1(``0)">
+            <summary>
+                Computes how many translated reference fields are populated so
+                alias reuse prefers a completed row over an incomplete row.
+            </summary>
+            <typeparam name="TRow">The concrete reference-text row type.</typeparam>
+            <param name="row">The reference-text row to score.</param>
+            <returns>The number of populated translated fields.</returns>
         </member>
         <member name="M:Echoglossian.ReferenceTextPersistenceHelper.NormalizeOptionalText(System.String)">
             <summary>
@@ -7089,6 +7194,14 @@
             <param name="preferred">The candidate incoming value.</param>
             <param name="fallback">The existing value.</param>
             <returns>The chosen string.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.Trait)">
+            <summary>
+                Computes how many translated trait fields are populated so alias
+                reuse prefers an existing completed row over an incomplete row.
+            </summary>
+            <param name="row">The trait row to score.</param>
+            <returns>The number of populated translated fields.</returns>
         </member>
         <member name="M:Echoglossian.TraitPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
             <summary>

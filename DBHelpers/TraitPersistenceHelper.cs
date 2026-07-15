@@ -93,7 +93,6 @@ public static class TraitPersistenceHelper
             var existing = context.Traits
                 .Where(row =>
                     row.TraitId == trait.TraitId &&
-                    row.TranslationLang == trait.TranslationLang &&
                     row.TranslationEngine == trait.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
@@ -101,9 +100,15 @@ public static class TraitPersistenceHelper
                        row.GameVersion == trait.GameVersion))) &&
                     row.SourceContentHash == trait.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                .Where(row => RuntimeLanguageHelper.LanguagesMatch(
                     row.OriginalLang,
-                    trait.OriginalLang));
+                    trait.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        row.TranslationLang,
+                        trait.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, trait);
@@ -191,10 +196,13 @@ public static class TraitPersistenceHelper
                        row.GameVersion == probe.GameVersion))) &&
                     row.SourceContentHash == probe.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => scope.Matches(
+                .Where(row => scope.Matches(
                     row.OriginalLang,
                     row.TranslationLang,
-                    row.TranslationEngine));
+                    row.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -261,6 +269,33 @@ public static class TraitPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated trait fields are populated so alias
+    ///     reuse prefers an existing completed row over an incomplete row.
+    /// </summary>
+    /// <param name="row">The trait row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(Trait row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTraitName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTraitDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

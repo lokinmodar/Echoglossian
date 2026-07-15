@@ -27,6 +27,131 @@ namespace Echoglossian.Tests;
 public class MainCommandTextPersistenceTests
 {
     /// <summary>
+    ///     Ensures an untranslated regional target alias cannot replace a
+    ///     complete reference-text translation already cached for the same
+    ///     effective target language.
+    /// </summary>
+    [Fact]
+    public void ReferenceTextCache_UpdateIncompleteTargetAlias_PreservesCompleteTranslation()
+    {
+        ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+
+        try
+        {
+            var originalPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var translatedPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+                TranslatedName = "Acoes e Caracteristicas",
+                TranslatedDescription =
+                    "Abre a janela de acoes e caracteristicas.",
+            };
+
+            ReferenceTextCacheRegistry.MainCommandTexts.Update(
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload));
+            ReferenceTextCacheRegistry.MainCommandTexts.Update(
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            var found = ReferenceTextCacheRegistry.MainCommandTexts
+                .TryFindTranslatedText(
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    "Actions & Traits",
+                    out var translatedText);
+
+            Assert.True(found);
+            Assert.Equal("Acoes e Caracteristicas", translatedText);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures normalized target aliases update one canonical reference
+    ///     row without erasing its completed translation.
+    /// </summary>
+    [Fact]
+    public void InsertMainCommandText_ReusesCompatibleTargetAlias()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var translatedPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+                TranslatedName = "Acoes e Caracteristicas",
+                TranslatedDescription =
+                    "Abre a janela de acoes e caracteristicas.",
+            };
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload),
+                static context => context.MainCommandTexts);
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload),
+                static context => context.MainCommandTexts);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.MainCommandTexts);
+            Assert.Equal("Acoes e Caracteristicas", row.TranslatedName);
+            Assert.Equal(
+                "Abre a janela de acoes e caracteristicas.",
+                row.TranslatedDescription);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures negative sheet sentinels do not overflow persisted
     ///     <c>MainCommand.SortID</c> metadata.
     /// </summary>

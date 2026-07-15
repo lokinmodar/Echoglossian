@@ -95,7 +95,6 @@ public static class ItemTooltipPersistenceHelper
             var existing = context.ItemTooltip
                 .Where(row =>
                     row.ItemId == itemTooltip.ItemId &&
-                    row.TranslationLang == itemTooltip.TranslationLang &&
                     row.TranslationEngine == itemTooltip.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
@@ -103,9 +102,15 @@ public static class ItemTooltipPersistenceHelper
                        row.GameVersion == itemTooltip.GameVersion))) &&
                     row.SourceContentHash == itemTooltip.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => RuntimeLanguageHelper.LanguagesMatch(
+                .Where(row => RuntimeLanguageHelper.LanguagesMatch(
                     row.OriginalLang,
-                    itemTooltip.OriginalLang));
+                    itemTooltip.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        row.TranslationLang,
+                        itemTooltip.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, itemTooltip);
@@ -193,10 +198,13 @@ public static class ItemTooltipPersistenceHelper
                        row.GameVersion == probe.GameVersion))) &&
                     row.SourceContentHash == probe.SourceContentHash)
                 .AsEnumerable()
-                .FirstOrDefault(row => scope.Matches(
+                .Where(row => scope.Matches(
                     row.OriginalLang,
                     row.TranslationLang,
-                    row.TranslationEngine));
+                    row.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -266,6 +274,33 @@ public static class ItemTooltipPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated item fields are populated so alias
+    ///     reuse prefers an existing completed row over an incomplete row.
+    /// </summary>
+    /// <param name="row">The item row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(ItemTooltip row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

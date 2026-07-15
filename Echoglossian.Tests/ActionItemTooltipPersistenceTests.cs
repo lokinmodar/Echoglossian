@@ -25,6 +25,384 @@ namespace Echoglossian.Tests;
 public class ActionItemTooltipPersistenceTests
 {
     /// <summary>
+    ///     Ensures an untranslated regional target alias cannot replace a
+    ///     complete canonical action translation already cached for the same
+    ///     effective target language.
+    /// </summary>
+    [Fact]
+    public void ActionTooltipCache_UpdateIncompleteTargetAlias_PreservesCompleteTranslation()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            var originalPayload = new ActionTooltipCanonicalPayload
+            {
+                ActionId = 15989,
+                IconId = 1,
+                Name = "Cascade",
+                Description = "Delivers an attack.",
+            };
+            var translatedPayload = new ActionTooltipCanonicalPayload
+            {
+                ActionId = 15989,
+                IconId = 1,
+                Name = "Cascade",
+                Description = "Delivers an attack.",
+                TranslatedName = "Cascata",
+                TranslatedDescription = "Executa um ataque.",
+            };
+
+            ActionTooltipCacheManager.Update(
+                ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload));
+            ActionTooltipCacheManager.Update(
+                ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            var found = ActionTooltipCacheManager.TryFindTranslatedText(
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                "Cascade",
+                out var translatedText);
+
+            Assert.True(found);
+            Assert.Equal("Cascata", translatedText);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures normalized target aliases update one canonical action row
+    ///     without erasing its completed translation.
+    /// </summary>
+    [Fact]
+    public void InsertActionTooltip_ReusesCompatibleTargetAlias()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalPayload = new ActionTooltipCanonicalPayload
+            {
+                ActionId = 15989,
+                IconId = 1,
+                Name = "Cascade",
+                Description = "Delivers an attack.",
+            };
+            var translatedPayload = new ActionTooltipCanonicalPayload
+            {
+                ActionId = 15989,
+                IconId = 1,
+                Name = "Cascade",
+                Description = "Delivers an attack.",
+                TranslatedName = "Cascata",
+                TranslatedDescription = "Executa um ataque.",
+            };
+
+            ActionTooltipPersistenceHelper.InsertActionTooltip(
+                configDir,
+                ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload));
+            ActionTooltipPersistenceHelper.InsertActionTooltip(
+                configDir,
+                ActionTooltipPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.ActionTooltip);
+            Assert.Equal("Cascata", row.TranslatedActionName);
+            Assert.Equal(
+                "Executa um ataque.",
+                row.TranslatedActionDescription);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures an untranslated regional target alias cannot replace a
+    ///     complete canonical item translation already cached for the same
+    ///     effective target language.
+    /// </summary>
+    [Fact]
+    public void ItemTooltipCache_UpdateIncompleteTargetAlias_PreservesCompleteTranslation()
+    {
+        ItemTooltipCacheManager.Clear();
+
+        try
+        {
+            var originalPayload = new ItemTooltipCanonicalPayload
+            {
+                ItemId = 4868,
+                IconId = 1,
+                Name = "Gysahl Greens",
+                Description = "A leafy vegetable.",
+            };
+            var translatedPayload = new ItemTooltipCanonicalPayload
+            {
+                ItemId = 4868,
+                IconId = 1,
+                Name = "Gysahl Greens",
+                Description = "A leafy vegetable.",
+                TranslatedName = "Verduras de Gysahl",
+                TranslatedDescription = "Um vegetal folhoso.",
+            };
+            var completeRow = ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                "en",
+                "pt",
+                0,
+                "7.3",
+                originalPayload,
+                translatedPayload);
+
+            ItemTooltipCacheManager.Update(completeRow);
+            ItemTooltipCacheManager.Update(
+                ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            var row = ItemTooltipCacheManager.TryFindCanonicalMatch(
+                originalPayload.ItemId,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                completeRow.SourceContentHash!);
+
+            Assert.NotNull(row);
+            Assert.Equal("Verduras de Gysahl", row.TranslatedItemName);
+            Assert.Equal("Um vegetal folhoso.", row.TranslatedItemDescription);
+        }
+        finally
+        {
+            ItemTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures normalized target aliases update one canonical item row
+    ///     without erasing its completed translation.
+    /// </summary>
+    [Fact]
+    public void InsertItemTooltip_ReusesCompatibleTargetAlias()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalPayload = new ItemTooltipCanonicalPayload
+            {
+                ItemId = 4868,
+                IconId = 1,
+                Name = "Gysahl Greens",
+                Description = "A leafy vegetable.",
+            };
+            var translatedPayload = new ItemTooltipCanonicalPayload
+            {
+                ItemId = 4868,
+                IconId = 1,
+                Name = "Gysahl Greens",
+                Description = "A leafy vegetable.",
+                TranslatedName = "Verduras de Gysahl",
+                TranslatedDescription = "Um vegetal folhoso.",
+            };
+
+            ItemTooltipPersistenceHelper.InsertItemTooltip(
+                configDir,
+                ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload));
+            ItemTooltipPersistenceHelper.InsertItemTooltip(
+                configDir,
+                ItemTooltipPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.ItemTooltip);
+            Assert.Equal("Verduras de Gysahl", row.TranslatedItemName);
+            Assert.Equal("Um vegetal folhoso.", row.TranslatedItemDescription);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures an untranslated regional target alias cannot replace a
+    ///     complete canonical trait translation already cached for the same
+    ///     effective target language.
+    /// </summary>
+    [Fact]
+    public void TraitCache_UpdateIncompleteTargetAlias_PreservesCompleteTranslation()
+    {
+        TraitCacheManager.Clear();
+
+        try
+        {
+            var originalPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Upgrades Windmill.",
+            };
+            var translatedPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Upgrades Windmill.",
+                TranslatedName = "Moinho Aprimorado",
+                TranslatedDescription = "Aprimora o Moinho.",
+            };
+            var completeRow = TraitPersistenceHelper.CreateCanonicalRow(
+                "en",
+                "pt",
+                0,
+                "7.3",
+                originalPayload,
+                translatedPayload);
+
+            TraitCacheManager.Update(completeRow);
+            TraitCacheManager.Update(
+                TraitPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            var row = TraitCacheManager.TryFindCanonicalMatch(
+                originalPayload.TraitId,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                completeRow.SourceContentHash!);
+
+            Assert.NotNull(row);
+            Assert.Equal("Moinho Aprimorado", row.TranslatedTraitName);
+            Assert.Equal("Aprimora o Moinho.", row.TranslatedTraitDescription);
+        }
+        finally
+        {
+            TraitCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures normalized target aliases update one canonical trait row
+    ///     without erasing its completed translation.
+    /// </summary>
+    [Fact]
+    public void InsertTrait_ReusesCompatibleTargetAlias()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Upgrades Windmill.",
+            };
+            var translatedPayload = new TraitCanonicalPayload
+            {
+                TraitId = 201,
+                IconId = 1,
+                ClassJobId = 38,
+                ClassJobCategoryId = 111,
+                Name = "Enhanced Windmill",
+                Description = "Upgrades Windmill.",
+                TranslatedName = "Moinho Aprimorado",
+                TranslatedDescription = "Aprimora o Moinho.",
+            };
+
+            TraitPersistenceHelper.InsertTrait(
+                configDir,
+                TraitPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload));
+            TraitPersistenceHelper.InsertTrait(
+                configDir,
+                TraitPersistenceHelper.CreateCanonicalRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.Traits);
+            Assert.Equal("Moinho Aprimorado", row.TranslatedTraitName);
+            Assert.Equal("Aprimora o Moinho.", row.TranslatedTraitDescription);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures distinct action variants for the same action id are preserved
     ///     when their source payload hash differs.
     /// </summary>
