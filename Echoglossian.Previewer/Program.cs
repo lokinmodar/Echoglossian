@@ -30,6 +30,11 @@ internal static class Program
                 RunBindingSmoke();
             }
 
+            if (commandLine.HostSmoke)
+            {
+                RunHostSmoke();
+            }
+
             return 0;
         }
         catch (ArgumentException exception)
@@ -55,5 +60,23 @@ internal static class Program
         {
             ImGui.DestroyContext(context);
         }
+    }
+
+    /// <summary>
+    ///     Creates a standalone host and presents one ImGui frame.
+    /// </summary>
+    private static void RunHostSmoke()
+    {
+        using PreviewHost host = new(
+            new PreviewHostOptions
+            {
+                Width = 640,
+                Height = 360,
+                Title = "Echoglossian Preview Host Smoke",
+                StartHidden = true,
+            });
+
+        host.RunFrame(
+            static () => ImGui.TextUnformatted("Echoglossian preview host"));
     }
 }
