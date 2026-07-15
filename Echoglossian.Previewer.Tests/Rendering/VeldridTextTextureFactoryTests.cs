@@ -5,11 +5,16 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Numerics;
 
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
 
+using Echoglossian.PluginUI.Runtime;
+using Echoglossian.Previewer.Hosting;
 using Echoglossian.Previewer.Rendering;
+using Echoglossian.UIOverlays.TextPresentation;
+using Echoglossian.UIOverlays.TranslationOverlay;
 
 using Xunit;
 
@@ -108,17 +113,125 @@ public sealed class VeldridTextTextureFactoryTests
     }
 
     /// <summary>
+    /// Ensures preview overlay composition supplies TranslationOverlayRenderer
+    /// with an RTL service backed by the Veldrid texture factory path.
+    /// </summary>
+    [Fact]
+    public void PreviewOverlayRendererFactory_Create_RtlRequestUsesVeldridTextureFactory()
+    {
+        var uploadCount = 0;
+        VeldridTextTextureUpload? capturedUpload = null;
+        var rendererFactory = new PreviewOverlayRendererFactory(
+            () => new VeldridTextTextureFactory(
+                upload =>
+                {
+                    Interlocked.Increment(ref uploadCount);
+                    capturedUpload = upload;
+                    return new FakeTextureWrap(upload.Width, upload.Height);
+                }));
+        using var composition = rendererFactory.Create(
+            new Config(),
+            new FakeUiFontRuntime());
+        var request = new TextLayoutRequest(
+            "\u0645\u0631\u062d\u0628\u0627",
+            2,
+            "ar",
+            480f,
+            1f,
+            ShouldUseGeneralFont: false,
+            Vector4.One,
+            Vector4.Zero,
+            TranslationOverlaySurfaceId.Talk,
+            CenterAligned: false);
+
+        var renderedBlock = WaitForRenderedBlock(
+            composition.RtlTexturePresentationService,
+            request);
+        renderedBlock.Texture!.Dispose();
+
+        Assert.Equal(1, Volatile.Read(ref uploadCount));
+        var upload = Assert.IsType<VeldridTextTextureUpload>(capturedUpload);
+        Assert.True(upload.Width > 0);
+        Assert.True(upload.Height > 0);
+    }
+
+    /// <summary>
+    /// Pumps draw-thread publication until the composed service returns a
+    /// texture-backed render block.
+    /// </summary>
+    /// <param name="service">The preview-backed presentation service.</param>
+    /// <param name="request">The text layout request.</param>
+    /// <returns>The completed render block.</returns>
+    private static RenderedTextBlock WaitForRenderedBlock(
+        RtlTexturePresentationService service,
+        TextLayoutRequest request)
+    {
+        RenderedTextBlock? renderedBlock = null;
+        Assert.True(SpinWait.SpinUntil(
+            () => (renderedBlock = service.TryRender(request)) != null,
+            TimeSpan.FromSeconds(5)));
+        return renderedBlock!;
+    }
+
+    /// <summary>
     /// Provides a minimal texture wrapper for upload cancellation tests.
     /// </summary>
     private sealed class FakeTextureWrap : IDalamudTextureWrap
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeTextureWrap"/> class.
+        /// </summary>
+        public FakeTextureWrap()
+            : this(1, 1)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeTextureWrap"/> class.
+        /// </summary>
+        /// <param name="width">The fake texture width.</param>
+        /// <param name="height">The fake texture height.</param>
+        public FakeTextureWrap(int width, int height)
+        {
+            this.Width = width;
+            this.Height = height;
+        }
+
         public ImTextureID Handle => default;
 
-        public int Width => 1;
+        public int Width { get; }
 
-        public int Height => 1;
+        public int Height { get; }
 
         /// <inheritdoc />
+        public void Dispose()
+        {
+        }
+    }
+
+    /// <summary>
+    /// Provides a no-op font runtime for tests that do not enter ImGui draw.
+    /// </summary>
+    private sealed class FakeUiFontRuntime : IUiFontRuntime
+    {
+        /// <inheritdoc/>
+        public IDisposable Push(UiFontKind fontKind)
+        {
+            return EmptyScope.Instance;
+        }
+    }
+
+    /// <summary>
+    /// Represents a no-op disposable scope.
+    /// </summary>
+    private sealed class EmptyScope : IDisposable
+    {
+        /// <summary>
+        /// Gets the shared empty scope instance.
+        /// </summary>
+        public static EmptyScope Instance { get; } = new();
+
+        /// <inheritdoc/>
         public void Dispose()
         {
         }
