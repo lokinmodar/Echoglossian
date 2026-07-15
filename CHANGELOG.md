@@ -7,11 +7,39 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0712.1140`
+## Submitted Release `v4.2601.0715.1114`
 
-This package has been prepared for submission to the official Dalamud feed and
+This package delivers the first production-ready RTL presentation path and a
+broader stabilization of translated game-window, reference-text, and tooltip
+workflows.
+
+Highlights:
+
+- added the Phase A texture-backed RTL presentation path with bidirectional
+  shaping, right alignment, adaptive hover sizing, configurable line height,
+  and bounded CPU/GPU memory caches
+- made client source language, target language, and translation engine part of
+  the canonical reuse identity, including normalized provider language codes
+  and extended Chinese, Korean, and Traditional Chinese client identities
+- stabilized `MainCommand`, `AddonContextMenuTitle`, `ActionMenu`, and the
+  `Character` family with canonical sheet-backed data, incremental translation
+  application, corrected tooltip ownership, and removal of per-frame database
+  work that caused severe frame-rate drops
+- improved plugin hover rendering for dense action, item, quest, and game-window
+  text while keeping tooltip-only `JournalDetail` presentation read-only with
+  respect to native addon nodes
+- added regression and performance coverage plus implementation specifications
+  for later native RTL work in both Echoglossian and Dalamud
+
+## Published Release `v4.2601.0712.1140`
+
+This package was published to the official Dalamud feed and
 extends the story-surface debugger and persistence tooling shipped in the
 current `v4` line.
+
+Published in `DalamudPluginsD17` via
+[PR #9009](https://github.com/goatcorp/DalamudPluginsD17/pull/9009) on
+2026-07-12.
 
 Highlights:
 
@@ -115,6 +143,7 @@ repository workflow.
 | 2026-05-12 | [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626) `v4.2600.1105.x` | setup, engine selection, cache-concurrency, and version-reuse stabilization |
 | 2026-06-01 | [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) `v4.2601.0531.0115` | native dialogue/toast reflow stabilization, ToastGui route, and cross-surface isolation fixes |
 | 2026-07-11 | [PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) `v4.2601.0710.1250` | LLM structured dialogue/runtime release: custom OpenAI-compatible providers, live model refresh, debugger diagnostics, and prompt/history hardening |
+| 2026-07-12 | [PR #9009](https://github.com/goatcorp/DalamudPluginsD17/pull/9009) `v4.2601.0712.1140` | story-surface retranslation, debugger provenance, and reusable DB inspection tooling |
 
 ## Pre-Official History
 
