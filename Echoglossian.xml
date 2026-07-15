@@ -11249,6 +11249,17 @@
             <param name="payload">The payload to summarize.</param>
             <returns>The stable page signature.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildCanonicalStablePayloadSignature(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Builds one canonical-aware stable ActionMenu page signature that
+                excludes short labels already covered by shared canonical action,
+                trait, or reference-text storage.
+            </summary>
+            <param name="payload">The payload to summarize.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The canonical-aware stable page signature.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CountMeaningfulUnseenTexts(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Counts one payload's distinct short texts that are still not
@@ -11616,6 +11627,20 @@
             <returns>
                 <see langword="true" /> when the text is already covered by
                 canonical sources; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalOnlyActionMenuText(System.String,Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Determines whether one ActionMenu text is already covered by shared
+                canonical action, trait, or reference-text storage without relying
+                on persisted ActionMenu fallback rows.
+            </summary>
+            <param name="text">The text to inspect.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>
+                <see langword="true" /> when canonical storage already covers the
+                text; otherwise <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryContainsCanonicalOriginalText(Echoglossian.TranslationReuseScope,System.String,System.String)">

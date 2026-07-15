@@ -39,7 +39,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static readonly TimeSpan AppliedStateRefreshWindow =
         TimeSpan.FromMilliseconds(250);
     private static readonly Regex TrailingLevelTokenPattern = new(
-        @"^(?:(?<prefix>.+?)(?<separator>\r?\n|[ \t]+)(?<level>(?:\p{Lu}\p{Ll}{0,11}\.?|\p{Lu}{1,5}\.|\p{Ll}{1,12}\.?|\p{Lo}{1,12}\.?)[ \t]*\d+)|(?<prefix>.+)(?<separator>)(?<level>\p{Lu}\p{Ll}{0,11}\.[ \t]*\d+))$",
+        @"^(?:(?<prefix>.+?)(?<separator>\r\n|\r|\n|[ \t]+)(?<level>(?:\p{Lu}\p{Ll}{0,11}\.?|\p{Lu}{1,5}\.|\p{Ll}{1,12}\.?|\p{Lo}{1,12}\.?)[ \t]*\d+)|(?<prefix>.+)(?<separator>)(?<level>\p{Lu}\p{Ll}{0,11}\.[ \t]*\d+))$",
         RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
     private readonly Config config;
@@ -138,7 +138,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         return this.queuedStablePayloadSignatures.TryQueue(
             scope,
             sourceOperation.Generation,
-            BuildStablePayloadSignature(originalPayload),
+            BuildCanonicalStablePayloadSignature(
+                originalPayload,
+                scope,
+                GetGameVersion()),
             retryCoolingDown);
     }
 
@@ -184,7 +187,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     {
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
-        var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        var stablePayloadSignature = BuildCanonicalStablePayloadSignature(
+            originalPayload,
+            scope,
+            GetGameVersion());
         if (!scope.TranslationEngine.HasValue)
         {
             return false;
@@ -767,6 +773,42 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Builds one canonical-aware stable ActionMenu page signature that
+    ///     excludes short labels already covered by shared canonical action,
+    ///     trait, or reference-text storage.
+    /// </summary>
+    /// <param name="payload">The payload to summarize.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>The canonical-aware stable page signature.</returns>
+    internal static string BuildCanonicalStablePayloadSignature(
+        DbFirstGameWindowPayload payload,
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        var texts = EnumerateStableSignatureTexts(payload)
+            .Where(text => !IsKnownCanonicalOnlyActionMenuText(
+                text,
+                scope,
+                gameVersion))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static text => text, StringComparer.Ordinal)
+            .ToList();
+        if (TryGetPayloadClassJobName(payload, out var classJobName))
+        {
+            texts.Add($"job:{classJobName}");
+        }
+
+        texts = texts
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static text => text, StringComparer.Ordinal)
+            .ToList();
+        return texts.Count == 0
+            ? string.Empty
+            : string.Join("\u001F", texts);
+    }
+
+    /// <summary>
     ///     Counts one payload's distinct short texts that are still not
     ///     covered by canonical ActionMenu sources.
     /// </summary>
@@ -1295,19 +1337,25 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
+        var stablePayloadSignature = BuildCanonicalStablePayloadSignature(
+            originalPayload,
+            scope,
+            GetGameVersion());
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
         var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
             sourceLanguage,
             originalPayload,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         var (candidateCount, stableMatchCount) =
             this.GetPersistedCandidateDiagnostics(
                 sourceLanguage,
                 stablePayloadSignature,
-                classJobId);
+                classJobId,
+                scope);
         var sufficientCoverage =
             !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
             this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
@@ -1339,19 +1387,25 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
+        var stablePayloadSignature = BuildCanonicalStablePayloadSignature(
+            originalPayload,
+            scope,
+            GetGameVersion());
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
         var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
             sourceLanguage,
             originalPayload,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         var (candidateCount, stableMatchCount) =
             this.GetPersistedCandidateDiagnostics(
                 sourceLanguage,
                 stablePayloadSignature,
-                classJobId);
+                classJobId,
+                scope);
         var sufficientCoverage =
             !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
             this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
@@ -1564,7 +1618,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             }
 
             if (string.Equals(
-                    BuildStablePayloadSignature(rowOriginalPayload),
+                    BuildCanonicalStablePayloadSignature(
+                        rowOriginalPayload,
+                        scope,
+                        GetGameVersion()),
                     stablePayloadSignature,
                     StringComparison.Ordinal))
             {
@@ -1790,6 +1847,53 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 TryContainsFallbackLookupKey(
                     fallbackLookup,
                     prefix));
+    }
+
+    /// <summary>
+    ///     Determines whether one ActionMenu text is already covered by shared
+    ///     canonical action, trait, or reference-text storage without relying
+    ///     on persisted ActionMenu fallback rows.
+    /// </summary>
+    /// <param name="text">The text to inspect.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>
+    ///     <see langword="true" /> when canonical storage already covers the
+    ///     text; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool IsKnownCanonicalOnlyActionMenuText(
+        string text,
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        if (TryContainsCanonicalOriginalText(
+                scope,
+                gameVersion,
+                text) ||
+            TryFindTranslatedCanonicalText(
+                scope,
+                gameVersion,
+                text,
+                out _))
+        {
+            return true;
+        }
+
+        return TryParseTrailingLevelToken(
+                   NormalizeCanonicalLookupText(text),
+                   out var prefix,
+                   out _,
+                   out _,
+                   out _) &&
+               (TryContainsCanonicalOriginalText(
+                    scope,
+                    gameVersion,
+                    prefix) ||
+                TryFindTranslatedCanonicalText(
+                    scope,
+                    gameVersion,
+                    prefix,
+                    out _));
     }
 
     /// <summary>

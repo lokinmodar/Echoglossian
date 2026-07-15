@@ -344,6 +344,64 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures one CR-only ActionMenu level label still reuses the
+    ///     canonical action cache when one persisted or provider-resolved row
+    ///     collapsed the separator.
+    /// </summary>
+    [Fact]
+    public void MergeResolvedTranslatedPayload_UsesCarriageReturnOnlyLevelAwareActionLookup()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 4,
+                ActionId = 16004,
+                ActionName = "Leg Graze",
+                OriginalLang = "en",
+                TranslatedActionName = "Arranhao na perna",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-leg-graze",
+            });
+
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
+            var resolvedTranslatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
+
+            var mergedPayload = ActionMenuWindowHandler
+                .MergeResolvedTranslatedPayload(
+                    originalPayload,
+                    resolvedTranslatedPayload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(
+                "Arranhao na perna\rLv. 6",
+                mergedPayload.TextNodes["7:0"]);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures one persisted fallback lookup can repair one malformed
     ///     ActionMenu level label even when the source separator was already
     ///     collapsed.
@@ -528,6 +586,95 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures the canonical-aware ActionMenu stability signature ignores
+    ///     level-tagged action labels that are already covered by structured
+    ///     action caches so page novelty is driven by real window chrome and
+    ///     unresolved command labels.
+    /// </summary>
+    [Fact]
+    public void BuildCanonicalStablePayloadSignature_IgnoresCanonicalLevelAwareActionLabels()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 5,
+                ActionId = 16005,
+                ActionName = "Leg Graze",
+                OriginalLang = "en",
+                TranslatedActionName = "Arranhao na perna",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-leg-graze-stable-signature",
+            });
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 6,
+                ActionId = 16006,
+                ActionName = "Peloton",
+                OriginalLang = "en",
+                TranslatedActionName = "Peloton",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-peloton-stable-signature",
+            });
+
+            var payloadA = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [12] = "Dancer",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["2:0"] = "Extras",
+                    ["2:1"] = "Actions",
+                    ["3:0"] = "Actions & Traits",
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
+            var payloadB = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [12] = "Dancer",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["2:0"] = "Extras",
+                    ["2:1"] = "Actions",
+                    ["3:0"] = "Actions & Traits",
+                    ["7:0"] = "Peloton\rLv. 20",
+                });
+
+            var scope = new TranslationReuseScope("en", "pt-BR", 0, true);
+            var signatureA = ActionMenuWindowHandler
+                .BuildCanonicalStablePayloadSignature(
+                    payloadA,
+                    scope,
+                    "7.3");
+            var signatureB = ActionMenuWindowHandler
+                .BuildCanonicalStablePayloadSignature(
+                    payloadB,
+                    scope,
+                    "7.3");
+
+            Assert.Equal(signatureA, signatureB);
+            Assert.DoesNotContain("Leg Graze", signatureA, StringComparison.Ordinal);
+            Assert.DoesNotContain("Peloton", signatureA, StringComparison.Ordinal);
+            Assert.Contains("Actions & Traits", signatureA, StringComparison.Ordinal);
+            Assert.Contains("job:Dancer", signatureA, StringComparison.Ordinal);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures the unseen-text counter excludes short texts already
     ///     covered by either canonical action names or persisted window-chrome
     ///     fallbacks.
@@ -617,6 +764,53 @@ public class ActionMenuWindowHandlerTests
                 },
                 new SortedDictionary<int, string>(),
                 new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+            var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+                payload,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(0, unseenCount);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the unseen-text counter treats CR-only level-tagged
+    ///     ActionMenu labels as canonical when the base action name already
+    ///     exists in cache.
+    /// </summary>
+    [Fact]
+    public void CountMeaningfulUnseenTexts_TreatsCarriageReturnOnlyLevelAwareCanonicalNamesAsKnown()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 7,
+                ActionId = 16007,
+                ActionName = "Leg Graze",
+                OriginalLang = "en",
+                TranslatedActionName = "Arranhao na perna",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-leg-graze-cr-only",
+            });
+
+            var payload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
 
             var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
                 payload,
