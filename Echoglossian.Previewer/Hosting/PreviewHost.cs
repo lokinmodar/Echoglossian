@@ -106,6 +106,19 @@ internal sealed unsafe class PreviewHost : IDisposable
         this.graphicsDevice.WaitForIdle();
     }
 
+    /// <summary>
+    ///     Creates a text texture factory bound to this host's Veldrid device
+    ///     and ImGui texture registry.
+    /// </summary>
+    /// <returns>The host-bound text texture factory.</returns>
+    internal VeldridTextTextureFactory CreateTextTextureFactory()
+    {
+        this.ThrowIfDisposed();
+        return new VeldridTextTextureFactory(
+            this.graphicsDevice,
+            this.textureRegistry);
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

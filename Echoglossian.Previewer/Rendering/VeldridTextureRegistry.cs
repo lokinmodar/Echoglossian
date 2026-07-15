@@ -10,7 +10,7 @@ namespace Echoglossian.Previewer.Rendering;
 /// <summary>
 ///     Maps stable ImGui texture identifiers to Veldrid texture views.
 /// </summary>
-internal sealed class VeldridTextureRegistry
+internal sealed class VeldridTextureRegistry : IPreviewTextureRegistry
 {
     private readonly object syncRoot = new();
     private readonly Dictionary<nint, TextureView> textureViews = [];

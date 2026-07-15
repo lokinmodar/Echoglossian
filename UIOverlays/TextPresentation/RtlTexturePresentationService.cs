@@ -158,7 +158,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// The maximum number of failed-key cooldown entries to retain.
   /// </param>
   /// <param name="getUtcNow">The clock used for retry cooldowns.</param>
-  private RtlTexturePresentationService(
+  internal RtlTexturePresentationService(
       Config configuration,
       Func<
           TextImageRenderer,
