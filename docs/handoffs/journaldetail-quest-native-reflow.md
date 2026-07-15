@@ -1,179 +1,262 @@
-# JournalDetail And Quest Native Reflow Handoff
+# JournalDetail Native Translation Reflow Handoff
 
-Snapshot date: 2026-07-07
+Snapshot date: 2026-07-15
 
-## Scope
+## Objective
 
-This handoff is for the unstable quest-surface work around:
+Complete vertical text reflow only when translated text is written into the
+native `JournalDetail` UI.
 
-- `#181` text-node flag corruption and native reflow side effects
-- `JournalDetail` native body reflow
-- `Journal` / `JournalDetail` display-mode correctness
-- quest tooltip versus native mutation behavior
+The target behavior is:
 
-This work is intentionally isolated from `v4-series`.
+- translated native text wraps without overlap or clipping
+- later body blocks move by the cumulative growth of earlier blocks
+- the internal body or scroll extent grows enough to contain the final block
+- original geometry is restored when the handler leaves a native-writing mode
+- no work is repeated every frame once the current layout is already applied
 
-## Branch and PR state
+This is not a general quest-handler refactor and not an overlay-sizing task.
 
-- branch: `issue-181-journaldetail-reflow`
-- latest local branch commit:
+## Branch And PR State
+
+- working branch: `issue-181-journaldetail-reflow`
+- local branch head: `e9722ff5230cc9a2e42ab7e9d322e5a0874ac4d4`
+- remote branch and draft PR head:
+  `0476fa2e784dcbef84dd18d0cf5f81d861c919c9`
+- local-only commits that must be preserved:
+  - `14c0d63` `fix(journal): reset list-node cache on node reuse`
   - `e9722ff` `fix(journaldetail): restore mode-safe native apply flow`
-- open PR:
-  - [#193](https://github.com/lokinmodar/Echoglossian/pull/193)
-  - title: `fix(#181): continue journal detail native reflow investigation`
-  - state: open draft
-- divergence versus `v4-series` at snapshot time:
-  - `v4-series` unique commits: `2`
-  - `issue-181-journaldetail-reflow` unique commits: `9`
+- draft PR:
+  [#193](https://github.com/lokinmodar/Echoglossian/pull/193)
+- PR base: `v4-series`
+- state at this snapshot: open, draft, and conflicting
+- divergence before this handoff update:
+  - `v4-series`: 163 unique commits
+  - local reflow branch: 9 unique commits
 
-Interpretation:
+The new worktree must start from the local branch, not only
+`origin/issue-181-journaldetail-reflow`, or the two local-only commits will be
+lost.
 
-- this branch is ahead with its own experimental work
-- it is also behind `v4-series`
-- sync it before resuming meaningful implementation
+## Scope Boundary
 
-## Why this branch exists
+In scope:
 
-`JournalDetail` native reflow is behavior-sensitive enough that it should not
-be worked directly on `v4-series`.
+- `JournalDetail` body layout in modes that write translated text to native
+  nodes
+- original geometry snapshot and owned restoration
+- translated text measurement
+- ordered body-block flow
+- cumulative vertical delta calculation
+- internal body, canvas, or scroll-container growth
+- narrow tests for reflow calculations and native mutation ownership
+- probe-driven in-game validation of `JournalDetail`
 
-The branch exists to preserve:
+Out of scope:
 
-- native body-flow experiments
-- richer original-layout snapshots
-- probe-driven container and wrapper analysis
-- mode-restoration work that is not yet safe enough for release
+- `Journal` list behavior, except preserving already-committed behavior during
+  the merge
+- `Talk`, `BattleTalk`, `MiniTalk`, `ToDoList`, or other quest surfaces
+- hover tooltip content, hit areas, or texture-backed rendering
+- overlay sizing, RTL texture layout, or ImGui work
+- quest lookup, canonical data, translation cache, persistence, or engine work
+- broad addon traversal or handler architecture refactors
 
-## Branch-only files currently defining this front
+Tooltip-only behavior is a regression constraint, not an implementation target.
+
+## Why The Front Is Still Open
+
+The original read-only corruption reported by issue #181 is already addressed
+in current `v4-series`: handlers track native mutation ownership and do not
+restore or rewrite native nodes in read-only or tooltip-only paths.
+
+The residual work is different and narrower: when a verbose translation is
+intentionally applied to native `JournalDetail` nodes, the body still needs a
+real flow layout instead of independent `SetText(...)` and node resizing calls.
+
+Do not reintroduce the solved read-only bug while completing the native reflow.
+
+## Current `v4-series` Baseline To Preserve
+
+Current `v4-series` includes later `JournalDetail` work that is not present in
+the old draft branch:
+
+- `1ec9780` introduced the newer RTL and native-runtime baseline
+- `563dd87` scoped quest source identity per operation
+- `bda68c0` restored Character hovers and preserved `JournalDetail` formatting
+- current handler lifecycle uses explicit mode helpers and
+  `ownsJournalDetailNativeMutation`
+- restoration occurs only when the handler owns a prior native mutation
+- tooltip-only paths keep native text and flags untouched
+- current quest source-scope and lifecycle tests must continue to pass
+
+Treat the current `v4-series` `JournalDetailHandler` as the lifecycle baseline.
+Do not resolve the merge by accepting the stale handler wholesale.
+
+## Branch Work Worth Recovering
+
+The branch contains experimental material that should be reviewed and ported
+selectively:
+
+- `NativeUI/Helpers/NativeTextFlowReflowHelper.cs`
+- richer original text and geometry snapshots
+- body-block ordering and section resolution experiments
+- internal container growth experiments
+- enhanced addon probe output
+- the local mode-safe native apply correction in `e9722ff`
+
+The helper is experimental, not an accepted abstraction. Keep it only if it can
+be reduced to the narrow `JournalDetail` need and covered by deterministic
+tests. Do not generalize it to other addons during this front.
+
+## Required Branch Update
+
+Use a merge, not a rebase or force-push, because the branch already has an open
+shared PR and prior merge history.
+
+1. Start from local `issue-181-journaldetail-reflow` at `e9722ff`.
+2. Fetch `origin`.
+3. Merge `origin/v4-series` into the issue branch.
+4. Resolve `JournalDetailHandler.cs` using current `v4-series` lifecycle and
+   source-scoping behavior as the baseline, then port only the native reflow
+   behavior that is still required.
+5. Resolve `Echoglossian.xml` from the current `v4-series` side first; regenerate
+   it through the validated build after resolving source files.
+6. Preserve the already-committed `JournalHandler` node-reuse guard without
+   expanding its scope.
+7. Build, test, commit the merge resolution, and push the issue branch to update
+   PR #193.
+
+A merge-tree simulation predicts content conflicts in:
 
 - `NativeUI/AddonHandlers/Quest/JournalDetailHandler.cs`
-- `NativeUI/AddonHandlers/Quest/JournalHandler.cs`
-- `NativeUI/Helpers/NativeTextFlowReflowHelper.cs`
-- `NativeUI/Helpers/AddonStructureProbe.cs`
-- `docs/journal-journaldetail-surface-fix-iteration-log.md`
-- `docs/commands/egloaddonprobe.md`
+- `Echoglossian.xml`
 
-## What is already known and should not be re-learned
+`JournalHandler.cs` auto-merges in the simulation but still requires review.
 
-### Mode contract is strict
+## Reflow Model
 
-The three Journal-family modes must stay separated:
+Capture one layout scope for the visible `JournalDetail` body. For every mutable
+block, preserve:
 
-- `NativeUiTranslation`
-  - translated native UI
-  - no hover tooltip
-- `TooltipTranslation`
-  - original native UI
-  - translated tooltip only when the translated payload is ready
-- `NativeUiTranslationWithOriginalTooltips`
-  - translated native UI
-  - original tooltip only when the translated/native payload is ready
+- node identity and expected parent
+- original text
+- original X and Y
+- original width and height
+- original text flags and font size
+- original container heights required for restoration
 
-If the selected mode does not mutate native UI, do not touch native nodes.
+Apply native translated layout in this order:
 
-### JournalDetail is the most sensitive quest surface
+1. Restore the block to its original geometry before measuring a new payload.
+2. Apply the translated text with the required multiline and wrapping flags.
+3. Measure the resulting text-node height.
+4. Compute `deltaHeight = translatedHeight - originalHeight`.
+5. Move every later block in the same body flow by the cumulative prior delta.
+6. Grow only the internal body, canvas, or scroll extent needed to contain the
+   final block plus original bottom padding.
+7. Mark the scope as applied so identical repaint events short-circuit.
 
-The repo already treats `JournalDetail` as the highest-risk quest surface.
-Dense translated bodies need container-aware flow reflow, not just text-node
-resizing.
+Do not grow the outer viewport, root addon geometry, or unrelated controls.
 
-### Reflow target selection matters
+## Lifecycle Contract
 
-For `JournalDetail`, a healthy native layout generally keeps outer viewport
-containers fixed and grows only the internal scroll/body flow. If the outer
-body viewport or root clipped nodes start growing, the wrong container is being
-reflowed.
+`NativeUiTranslation`:
 
-### Original-state capture must be scope-safe
+- apply translated native text and reflow
+- do not add hover behavior as part of this work
 
-Mode switches and repeated repaints need a stable per-scope original snapshot
-that includes:
+`NativeUiTranslationWithOriginalTooltips`:
 
-- original texts
-- text flags and font sizes
-- ordered body-flow blocks
-- container heights
-- summary and supplemental summary nodes
+- apply the same translated native reflow
+- preserve existing original-tooltip behavior unchanged
 
-### The quest pipeline should remain canonical-first
+`TooltipTranslation`:
 
-Quest handlers should identify quest and live progress, then consume canonical
-or DB-backed quest payloads. UI text is fallback material, not canonical truth,
-when structured quest data is already available.
+- do not mutate text, flags, node geometry, or containers
+- do not run a restore unless this handler owns a previous native mutation
 
-## Canonical docs to read before editing
+On addon reuse, scope change, mode change, hide, or finalize:
 
-Start with these, in this order:
+- restore text and geometry only when the handler owns a native mutation
+- clear the applied-layout key and per-scope geometry snapshot at the correct
+  lifecycle boundary
+- never restore stale geometry into a newly reused addon scope
 
-1. [docs/quest-addon-translation-runtime-flow.md](../quest-addon-translation-runtime-flow.md)
-2. [docs/journal-quest-data-model-and-flow.md](../journal-quest-data-model-and-flow.md)
-3. [docs/quest-addon-detailed-flow-and-remediation-plan.md](../quest-addon-detailed-flow-and-remediation-plan.md)
-4. [docs/github-issue-backlog.md](../github-issue-backlog.md)
-5. [docs/commands/egloaddonprobe.md](../commands/egloaddonprobe.md)
+## Performance Constraints
 
-Then read branch-only material directly from the branch:
+- no full node-tree traversal every frame after the layout is resolved
+- no database access or translation request from the reflow helper
+- no repeated text measurement for an unchanged translated payload and scope
+- no unbounded snapshot growth across quest changes
+- no hot-path debug logging after investigation
+- use the existing addon probe rather than permanent diagnostic output
 
-- `docs/journal-journaldetail-surface-fix-iteration-log.md`
+The reflow cache key must distinguish at least addon scope and applied text or
+payload identity. A changed quest or translated body must invalidate the prior
+layout even if node addresses are reused.
 
-## What the branch currently changes
+## Tests To Preserve And Extend
 
-At a high level, this branch adds:
+Preserve the current coverage in:
 
-- a shared `NativeTextFlowReflowHelper`
-- richer `JournalDetail` original snapshot capture
-- per-scope mode-safe native apply and restore behavior
-- stronger addon-probe output for layout inspection
+- `Echoglossian.Tests/QuestAddonHandlerLifecycleTests.cs`
+- `Echoglossian.Tests/QuestOperationSourceScopeTests.cs`
+- `Echoglossian.Tests/NativeRuntimeSourceScopeTests.cs`
+- `Echoglossian.Tests/QuestAddonOriginalTextHelperTests.cs`
 
-The point is not “make text bigger”. The point is:
+Add deterministic tests for logic that does not require a live addon:
 
-- restore correctly
-- grow only the correct flow containers
-- avoid leaking mutated geometry across mode switches and repaints
+- cumulative block offsets for zero, positive, and mixed deltas
+- container growth from the final block and original bottom padding
+- idempotence for the same scope and payload
+- invalidation when the scope or translated payload changes
+- restoration action only when native mutation ownership is true
+- tooltip-only mode never selecting native apply or geometry mutation
 
-## Known unresolved concerns
+Required repository validation:
 
-- the branch is stale relative to `v4-series`
-- `JournalDetail` native mode still needs in-game validation for long body
-  translations and summary-heavy quests
-- tooltip/original pairing must remain correct in swap mode
-- any fix must avoid reintroducing the older bug where read-only or tooltip
-  modes touched native text/flags they never mutated
+```powershell
+dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
 
-## Recommended resume steps
+Commit `Echoglossian.xml` when regenerated by the validated source change.
 
-1. Switch to `issue-181-journaldetail-reflow`.
-2. Sync it with `v4-series` before new edits.
-3. Read the docs listed above plus PR `#193`.
-4. Run targeted probing on `Journal` and `JournalDetail`.
-5. Validate all three display modes in-game before broadening scope.
-6. Keep the iteration log updated on every meaningful pass.
+## In-Game Acceptance
 
-## Probe and validation guidance
+Use:
 
-Useful commands:
+```text
+/egloaddonprobe JournalDetail
+/egloaddonprobe stop
+```
 
-- `/egloaddonprobe JournalDetail`
-- `/egloaddonprobe Journal`
-- `/egloaddonprobe _ToDoList 0`
+Validate with a long, verbose translated quest body:
 
-Required validation after code changes:
+- no text overlap between objective, summary, description, and footer blocks
+- no original text leaking under translated text
+- no clipping at the internal viewport or scroll extent
+- later sections move by the correct cumulative amount
+- changing quests does not reuse stale text or geometry
+- closing and reopening restores a clean baseline
+- switching from native to tooltip-only restores original geometry once
+- tooltip-only mode does not modify native text, flags, or layout
+- native plus original tooltips keeps its existing tooltip pairing
+- stable frame rate while the window remains open and while scrolling
 
-- `dotnet build Echoglossian.sln -c Debug --no-restore`
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+## Completion Rule
 
-In-game checks:
+The front is complete only when:
 
-- `JournalDetail` native mode with long quest body
-- `TooltipTranslation` restores the original native UI and shows translated
-  tooltip only when ready
-- `NativeUiTranslationWithOriginalTooltips` shows translated native UI and the
-  correct original tooltip
-- opening, closing, and mode switching do not leave mutated layout behind
+- the issue branch is merged with current `v4-series` and pushed
+- the PR contains only the narrow native `JournalDetail` reflow plus required
+  regression guards
+- repository build and tests pass
+- all in-game acceptance checks above pass
+- the draft PR description is updated with current architecture and evidence
+- the PR can be marked ready without carrying unrelated handler or generated
+  file regressions
 
-## Merge rule
-
-Do not merge `#193` into `v4-series` until:
-
-- layout is stable in-game
-- tooltip behavior is stable in-game
-- no native text is touched outside the modes that truly mutate it
+If a different native addon later needs reflow, open a focused issue and branch
+from current `v4-series`; do not broaden PR #193.
