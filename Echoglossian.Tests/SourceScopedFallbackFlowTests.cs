@@ -398,6 +398,93 @@ public class SourceScopedFallbackFlowTests
     }
 
     /// <summary>
+    ///     Ensures legacy full-payload ActionMenu rows still contribute only
+    ///     residual window chrome once canonical action storage already owns
+    ///     the action label pair.
+    /// </summary>
+    [Fact]
+    public void ActionMenuPersistedFallback_CanonicalActionLabelsStayOutOfLookupButWindowChromeRemains()
+    {
+        using var runtimeScope = new TestRuntimeScope();
+        ActionTooltipCacheManager.Clear();
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 9,
+                ActionId = 16009,
+                ActionName = "Sprint",
+                OriginalLang = "en",
+                TranslatedActionName = "Corrida",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "test-version",
+                SourceContentHash = "hash-sprint-legacy-persisted-fallback",
+            });
+
+            var handler = new ActionMenuWindowHandler(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                },
+                null!,
+                null!);
+            var persistedOriginalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Sprint",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["3:100"] = "Support Desk",
+                });
+            var persistedTranslatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Corrida",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["3:100"] = "Central de Suporte",
+                });
+
+            GameWindowCacheManager.Update(new GameWindow(
+                windowAddonName: "ActionMenu",
+                originalWindowStrings: persistedOriginalPayload.Serialize(),
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: persistedTranslatedPayload.Serialize(),
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "test-version",
+                createdDate: DateTime.UtcNow,
+                updatedDate: DateTime.UtcNow));
+
+            var lookups = GetActionMenuLookups(
+                handler,
+                new SourceClientLanguage("en", "en"));
+
+            Assert.False(lookups.TranslatedLookup.ContainsKey("Sprint"));
+            Assert.False(lookups.OriginalLookup.ContainsKey("Corrida"));
+            Assert.Equal(
+                "Central de Suporte",
+                lookups.TranslatedLookup["Support Desk"]);
+            Assert.Equal(
+                "Support Desk",
+                lookups.OriginalLookup["Central de Suporte"]);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures the EventItem fallback flow does not publish a translated
     ///     payload from a different operation-captured source language.
     /// </summary>

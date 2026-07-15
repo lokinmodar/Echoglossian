@@ -479,6 +479,73 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures ActionMenu persistence keeps only residual window chrome
+    ///     when canonical action storage already owns one action label pair.
+    /// </summary>
+    [Fact]
+    public void FilterPersistedPayloadPair_RemovesCanonicalActionLabelsAndKeepsResidualChrome()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 8,
+                ActionId = 16008,
+                ActionName = "Sprint",
+                OriginalLang = "en",
+                TranslatedActionName = "Corrida",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-sprint-filtered-persisted-payload",
+            });
+
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Sprint",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["3:100"] = "Support Desk",
+                });
+            var translatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Corrida",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["3:100"] = "Central de Suporte",
+                });
+
+            var filteredPayload = ActionMenuWindowHandler
+                .FilterPersistedPayloadPair(
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    originalPayload,
+                    translatedPayload);
+
+            Assert.Empty(filteredPayload.OriginalPayload.AtkValues);
+            Assert.Empty(filteredPayload.TranslatedPayload.AtkValues);
+            Assert.Equal(
+                "Support Desk",
+                filteredPayload.OriginalPayload.TextNodes["3:100"]);
+            Assert.Equal(
+                "Central de Suporte",
+                filteredPayload.TranslatedPayload.TextNodes["3:100"]);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures the stable ActionMenu page signature ignores volatile
     ///     metadata and long descriptive text while keeping short page labels.
     /// </summary>

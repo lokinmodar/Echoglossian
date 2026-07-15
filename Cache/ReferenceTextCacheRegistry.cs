@@ -16,6 +16,31 @@ namespace Echoglossian.Cache;
 public static class ReferenceTextCacheRegistry
 {
     /// <summary>
+    ///     Gets the combined reference-text cache revision used by aggregated
+    ///     runtime lookup snapshots.
+    /// </summary>
+    public static int Revision
+    {
+        get
+        {
+            var hash = new HashCode();
+            hash.Add(GeneralActionTexts.Revision);
+            hash.Add(BuddyActionTexts.Revision);
+            hash.Add(CompanyActionTexts.Revision);
+            hash.Add(CraftActionTexts.Revision);
+            hash.Add(PetActionTexts.Revision);
+            hash.Add(EventActionTexts.Revision);
+            hash.Add(BgcArmyActionTexts.Revision);
+            hash.Add(AozActionTexts.Revision);
+            hash.Add(PvPActionTexts.Revision);
+            hash.Add(MountActionTexts.Revision);
+            hash.Add(MainCommandTexts.Revision);
+            hash.Add(EurekaMagiaActionTexts.Revision);
+            return hash.ToHashCode();
+        }
+    }
+
+    /// <summary>
     ///     Gets the specific GeneralAction cache.
     /// </summary>
     public static ReferenceTextCacheStore<GeneralActionText> GeneralActionTexts { get; } =
@@ -168,6 +193,56 @@ public static class ReferenceTextCacheRegistry
         MainCommandTexts.Clear();
         EurekaMagiaActionTexts.Clear();
         DeepDungeonItemTexts.Clear();
+    }
+
+    /// <summary>
+    ///     Gets one aggregated canonical lookup snapshot across every
+    ///     action-adjacent reference-text store used by ActionMenu.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>The aggregated lookup snapshot.</returns>
+    internal static CanonicalTextLookupSnapshot GetTextLookupSnapshot(
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        return CanonicalTextLookupSnapshot.Combine(
+            GeneralActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            BuddyActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            CompanyActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            CraftActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            PetActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            EventActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            BgcArmyActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            AozActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            PvPActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            MountActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            MainCommandTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion),
+            EurekaMagiaActionTexts.GetTextLookupSnapshot(
+                scope,
+                gameVersion));
     }
 
     /// <summary>

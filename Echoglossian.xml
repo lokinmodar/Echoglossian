@@ -4,9 +4,49 @@
         <name>Echoglossian</name>
     </assembly>
     <members>
+        <member name="T:Echoglossian.Cache.ActionMenuCanonicalTextCache">
+            <summary>
+                Aggregates all action-adjacent canonical text stores into one
+                ActionMenu-friendly exact lookup snapshot per reuse scope and version.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionMenuCanonicalTextCache.GetSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one aggregated canonical ActionMenu lookup snapshot for the
+                requested reuse scope and game version.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The aggregated canonical lookup snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionMenuCanonicalTextCache.BuildSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Builds one aggregated canonical lookup snapshot.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The aggregated lookup snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionMenuCanonicalTextCache.BuildCacheKey(Echoglossian.TranslationReuseScope,System.String,System.Int64,System.Int64,System.Int32)">
+            <summary>
+                Builds one stable aggregated-cache key from the requested scope and
+                the current canonical-cache revisions.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="actionRevision">The action-tooltip cache revision.</param>
+            <param name="traitRevision">The trait cache revision.</param>
+            <param name="referenceRevision">The reference-text cache revision.</param>
+            <returns>The stable cache key payload.</returns>
+        </member>
         <member name="T:Echoglossian.Cache.ActionTooltipCacheManager">
             <summary>
                 Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> rows.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.ActionTooltipCacheManager.Revision">
+            <summary>
+                Gets the monotonically increasing cache revision.
             </summary>
         </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.Preload(System.String)">
@@ -98,6 +138,15 @@
                 canonical action-tooltip storage; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.GetTextLookupSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one scope-aware exact-text lookup snapshot for canonical
+                ActionMenu reuse.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The canonical lookup snapshot.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.Clear">
             <summary>
                 Clears the in-memory cache.
@@ -143,6 +192,23 @@
                 requested scope; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.GetExactTextLookupSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one exact-version canonical lookup snapshot.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game-version scope.</param>
+            <returns>The exact-version lookup snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.BuildOriginalTextLookup(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Builds one exact original-text lookup for a single action-tooltip
+                cache scope.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game-version scope.</param>
+            <returns>The original-text lookup set.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.BuildTextLookup(Echoglossian.TranslationReuseScope,System.String)">
             <summary>
                 Builds one translated-text lookup for a single action-tooltip cache
@@ -181,6 +247,14 @@
             </param>
             <param name="originalText">The canonical original text.</param>
             <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.TryAddOriginalText(System.Collections.Generic.ISet{System.String},System.String)">
+            <summary>
+                Adds one canonical original text to the scope-local lookup when the
+                value is populated.
+            </summary>
+            <param name="lookup">The original-text lookup to update.</param>
+            <param name="originalText">The original text to add.</param>
         </member>
         <member name="M:Echoglossian.Cache.ActionTooltipCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.String,System.UInt32,System.UInt32)">
             <summary>
@@ -231,6 +305,90 @@
             <param name="scope">The required translation reuse scope.</param>
             <param name="version">The exact stored game version scope.</param>
             <returns>The stable scope key.</returns>
+        </member>
+        <member name="T:Echoglossian.Cache.CanonicalTextLookupSnapshot">
+            <summary>
+                Holds one immutable exact-text lookup snapshot for canonical
+                action-adjacent content.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.CanonicalTextLookupSnapshot.Empty">
+            <summary>
+                Gets the empty canonical lookup snapshot.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.CanonicalTextLookupSnapshot.#ctor(System.Collections.Generic.HashSet{System.String},System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Cache.CanonicalTextLookupSnapshot" /> class.
+            </summary>
+            <param name="originalTexts">
+                The original canonical texts available in this snapshot.
+            </param>
+            <param name="forwardLookup">
+                The original-to-translated exact-text lookup.
+            </param>
+            <param name="reverseLookup">
+                The translated-to-original exact-text lookup.
+            </param>
+        </member>
+        <member name="P:Echoglossian.Cache.CanonicalTextLookupSnapshot.ForwardLookup">
+            <summary>
+                Gets the exact original-to-translated lookup.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.CanonicalTextLookupSnapshot.OriginalTexts">
+            <summary>
+                Gets the exact canonical original-text set.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.CanonicalTextLookupSnapshot.ReverseLookup">
+            <summary>
+                Gets the exact translated-to-original lookup.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.CanonicalTextLookupSnapshot.Combine(Echoglossian.Cache.CanonicalTextLookupSnapshot[])">
+            <summary>
+                Combines multiple canonical lookup snapshots while preserving
+                lookup precedence and reverse-lookup ambiguity safety.
+            </summary>
+            <param name="snapshots">The snapshots to merge in precedence order.</param>
+            <returns>The combined snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.CanonicalTextLookupSnapshot.ContainsOriginalText(System.String)">
+            <summary>
+                Determines whether one exact canonical original text exists in this
+                snapshot.
+            </summary>
+            <param name="originalText">The original text to test.</param>
+            <returns>
+                <see langword="true" /> when the original text exists; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.CanonicalTextLookupSnapshot.TryFindOriginalText(System.String,System.String@)">
+            <summary>
+                Tries to resolve one exact canonical original text from translated
+                text in this snapshot.
+            </summary>
+            <param name="translatedText">The translated text to reverse.</param>
+            <param name="originalText">The resolved original text.</param>
+            <returns>
+                <see langword="true" /> when one exact canonical original text was
+                found; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.CanonicalTextLookupSnapshot.TryFindTranslatedText(System.String,System.String@)">
+            <summary>
+                Tries to resolve one exact translated text from original text in
+                this snapshot.
+            </summary>
+            <param name="originalText">The original text to translate.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns>
+                <see langword="true" /> when one exact translated text was found;
+                otherwise <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.Cache.GameWindowCacheManager">
             <summary>
@@ -563,6 +721,12 @@
                 <c>ActionMenu</c>.
             </summary>
         </member>
+        <member name="P:Echoglossian.Cache.ReferenceTextCacheRegistry.Revision">
+            <summary>
+                Gets the combined reference-text cache revision used by aggregated
+                runtime lookup snapshots.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Cache.ReferenceTextCacheRegistry.GeneralActionTexts">
             <summary>
                 Gets the specific GeneralAction cache.
@@ -643,6 +807,15 @@
             <summary>
                 Clears every specific reference-text cache.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.GetTextLookupSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one aggregated canonical lookup snapshot across every
+                action-adjacent reference-text store used by ActionMenu.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The aggregated lookup snapshot.</returns>
         </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedText(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
             <summary>
@@ -742,6 +915,11 @@
             </summary>
             <param name="cacheName">The diagnostic cache name.</param>
         </member>
+        <member name="P:Echoglossian.Cache.ReferenceTextCacheStore`1.Revision">
+            <summary>
+                Gets the monotonically increasing cache revision.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.Preload(System.String,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{`0}})">
             <summary>
                 Loads all canonical reference-text rows into memory.
@@ -815,6 +993,15 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.GetTextLookupSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one scope-aware exact-text lookup snapshot for canonical
+                ActionMenu reuse.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The canonical lookup snapshot.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.Clear">
             <summary>
                 Clears the in-memory cache.
@@ -859,6 +1046,22 @@
                 requested scope; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.GetExactTextLookupSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one exact-version canonical lookup snapshot.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game-version scope.</param>
+            <returns>The exact-version lookup snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.BuildOriginalTextLookup(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Builds one original-text lookup for one cached scope.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game-version scope.</param>
+            <returns>The lookup set.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.BuildForwardLookup(Echoglossian.TranslationReuseScope,System.String)">
             <summary>
                 Builds one forward original-to-translated lookup for one cached
@@ -895,6 +1098,14 @@
             <param name="ambiguousKeys">The translated texts already known to be ambiguous.</param>
             <param name="originalText">The original text.</param>
             <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.TryAddOriginalText(System.Collections.Generic.ISet{System.String},System.String)">
+            <summary>
+                Adds one canonical original text to the scope-local lookup when the
+                value is populated.
+            </summary>
+            <param name="lookup">The original-text lookup to update.</param>
+            <param name="originalText">The original text to add.</param>
         </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheStore`1.ComputeIdentityMatchScore(`0,System.String)">
             <summary>
@@ -980,6 +1191,11 @@
         <member name="T:Echoglossian.Cache.TraitCacheManager">
             <summary>
                 Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.Trait" /> rows.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.TraitCacheManager.Revision">
+            <summary>
+                Gets the monotonically increasing cache revision.
             </summary>
         </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.Preload(System.String)">
@@ -1070,6 +1286,15 @@
                 canonical trait storage; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.GetTextLookupSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one scope-aware exact-text lookup snapshot for canonical
+                ActionMenu reuse.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <returns>The canonical lookup snapshot.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.Clear">
             <summary>
                 Clears the in-memory cache.
@@ -1115,6 +1340,23 @@
                 requested scope; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.GetExactTextLookupSnapshot(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets one exact-version canonical lookup snapshot.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game-version scope.</param>
+            <returns>The exact-version lookup snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.BuildOriginalTextLookup(Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Builds one exact original-text lookup for a single trait cache
+                scope.
+            </summary>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game-version scope.</param>
+            <returns>The original-text lookup set.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.BuildTextLookup(Echoglossian.TranslationReuseScope,System.String)">
             <summary>
                 Builds one translated-text lookup for a single trait cache scope.
@@ -1151,6 +1393,14 @@
             </param>
             <param name="originalText">The canonical original text.</param>
             <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.TraitCacheManager.TryAddOriginalText(System.Collections.Generic.ISet{System.String},System.String)">
+            <summary>
+                Adds one canonical original text to the scope-local lookup when the
+                value is populated.
+            </summary>
+            <param name="lookup">The original-text lookup to update.</param>
+            <param name="originalText">The original text to add.</param>
         </member>
         <member name="M:Echoglossian.Cache.TraitCacheManager.ComputeIdentityMatchScore(Echoglossian.EFCoreSqlite.Models.Trait,System.String,System.UInt32,System.UInt32)">
             <summary>
@@ -11116,6 +11366,9 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetLookupGameWindowClassJobId(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.PreparePersistedGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CreateTranslationReuseScope(Echoglossian.SourceClientLanguage)">
             <summary>
                 Creates the canonical cache scope for one captured ActionMenu
@@ -11266,8 +11519,7 @@
                 covered by canonical ActionMenu sources.
             </summary>
             <param name="payload">The original-facing payload.</param>
-            <param name="scope">The required translation reuse scope.</param>
-            <param name="gameVersion">The current game version.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
             <param name="fallbackLookup">
                 The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
             </param>
@@ -11314,8 +11566,7 @@
                 token.
             </summary>
             <param name="originalText">The original visible text.</param>
-            <param name="scope">The required translation reuse scope.</param>
-            <param name="gameVersion">The current game version.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
             <param name="fallbackLookup">The persisted fallback lookup.</param>
             <param name="translatedText">The resolved translated text.</param>
             <returns>
@@ -11612,7 +11863,7 @@
             <param name="payload">The payload to inspect.</param>
             <returns>The normalized visible short-text set.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalActionMenuText(System.String,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalActionMenuText(System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Determines whether one ActionMenu text is already covered by either
                 canonical structured-tooltip storage or persisted window-chrome
@@ -11629,7 +11880,7 @@
                 canonical sources; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalOnlyActionMenuText(System.String,Echoglossian.TranslationReuseScope,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.IsKnownCanonicalOnlyActionMenuText(System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot)">
             <summary>
                 Determines whether one ActionMenu text is already covered by shared
                 canonical action, trait, or reference-text storage without relying
@@ -11656,18 +11907,28 @@
                 original text; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ContainsCanonicalOriginalTextCore(Echoglossian.TranslationReuseScope,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalLookupContainsOriginalText(Echoglossian.Cache.CanonicalTextLookupSnapshot,System.String)">
             <summary>
-                Determines whether one exact canonical original ActionMenu-facing
-                text exists in shared canonical storage without applying
-                ActionMenu-specific normalization.
+                Gets whether one canonical lookup snapshot already contains the
+                supplied original-facing text after ActionMenu normalization.
             </summary>
-            <param name="scope">The required translation reuse scope.</param>
-            <param name="gameVersion">The current game version.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
             <param name="originalText">The original text to test.</param>
             <returns>
-                <see langword="true" /> when canonical storage already contains the
-                original text; otherwise <see langword="false" />.
+                <see langword="true" /> when the text already exists in canonical
+                storage; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalLookupContainsTranslatedText(Echoglossian.Cache.CanonicalTextLookupSnapshot,System.String)">
+            <summary>
+                Gets whether one canonical lookup snapshot already resolves the
+                supplied translated-facing text after ActionMenu normalization.
+            </summary>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <param name="translatedText">The translated text to test.</param>
+            <returns>
+                <see langword="true" /> when the translated text is already
+                reversible from canonical storage; otherwise <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindTranslatedCanonicalText(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
@@ -11683,13 +11944,12 @@
                 <see langword="true" /> when an exact translated text was found.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindTranslatedCanonicalTextCore(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindTranslatedCanonicalText(Echoglossian.Cache.CanonicalTextLookupSnapshot,System.String,System.String@)">
             <summary>
-                Tries one exact translated structured-tooltip lookup without any
-                ActionMenu-specific text normalization.
+                Tries to resolve one exact translated structured-tooltip text from
+                one aggregated canonical lookup snapshot.
             </summary>
-            <param name="scope">The required translation reuse scope.</param>
-            <param name="gameVersion">The current game version.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
             <param name="originalText">The original text to translate.</param>
             <param name="translatedText">The resolved translated text.</param>
             <returns>
@@ -11709,13 +11969,12 @@
                 <see langword="true" /> when an exact original text was found.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindOriginalCanonicalTextCore(Echoglossian.TranslationReuseScope,System.String,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindOriginalCanonicalText(Echoglossian.Cache.CanonicalTextLookupSnapshot,System.String,System.String@)">
             <summary>
-                Tries one exact canonical-original structured-tooltip lookup
-                without any ActionMenu-specific text normalization.
+                Tries to resolve one exact canonical original structured-tooltip
+                text from one aggregated canonical lookup snapshot.
             </summary>
-            <param name="scope">The required translation reuse scope.</param>
-            <param name="gameVersion">The current game version.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
             <param name="visibleText">The translated text to reverse.</param>
             <param name="originalText">The resolved canonical original text.</param>
             <returns>
@@ -11768,7 +12027,44 @@
                 Receives the original-to-translated forward lookup.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendPersistedWindowLookups(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.Nullable{System.UInt32},System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.GetPersistedActionMenuLookupSnapshot(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.Nullable{System.UInt32},System.String)">
+            <summary>
+                Gets one cached persisted ActionMenu fallback snapshot for the
+                current scope, class/job, and canonical-cache revisions.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="scope">The complete translation reuse scope.</param>
+            <param name="classJobId">The current class/job identifier.</param>
+            <param name="classJobName">The current class/job name.</param>
+            <returns>The cached persisted fallback snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildPersistedActionMenuLookupSnapshot(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,System.Nullable{System.UInt32},System.String)">
+            <summary>
+                Builds one persisted ActionMenu fallback snapshot from the current
+                GameWindow cache while excluding labels already resolved by
+                canonical action, trait, or reference-text storage.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="scope">The complete translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="classJobId">The current class/job identifier.</param>
+            <param name="classJobName">The current class/job name.</param>
+            <returns>The built persisted fallback snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.BuildPersistedLookupSnapshotCacheKey(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,System.Nullable{System.UInt32},System.String)">
+            <summary>
+                Builds one stable persisted-lookup snapshot cache key from the
+                operation-captured source, reuse scope, class/job, and the current
+                GameWindow and canonical-cache revisions.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="scope">The complete translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="classJobId">The current class/job identifier.</param>
+            <param name="classJobName">The current class/job name.</param>
+            <returns>The stable cache key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendPersistedWindowLookups(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String},System.Nullable{System.UInt32},System.String)">
             <summary>
                 Appends one persisted window's forward and reverse text pairs into
                 the ActionMenu fallback lookups.
@@ -11837,7 +12133,7 @@
                 job; otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},Echoglossian.TranslationReuseScope,System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
             <summary>
                 Appends one numeric payload map pair into the forward and reverse
                 ActionMenu lookup maps.
@@ -11850,7 +12146,7 @@
                 Tracks translated texts that map to multiple originals.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.AppendLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.TranslationReuseScope,System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
             <summary>
                 Appends one text-node payload map pair into the forward and reverse
                 ActionMenu lookup maps.
@@ -11863,7 +12159,7 @@
                 Tracks translated texts that map to multiple originals.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupEntry(System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupEntry(System.String,System.String,Echoglossian.TranslationReuseScope,System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
             <summary>
                 Adds one original/translated text pair to the forward and reverse
                 ActionMenu lookup maps.
@@ -11876,7 +12172,7 @@
                 Tracks translated texts that map to multiple originals.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupPair(System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupPair(System.String,System.String,Echoglossian.TranslationReuseScope,System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
             <summary>
                 Adds one original/translated text pair to the forward and reverse
                 ActionMenu lookup maps together with normalized aliases that strip
@@ -11890,7 +12186,7 @@
                 Tracks translated texts that map to multiple originals.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupPairCore(System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryAddLookupPairCore(System.String,System.String,Echoglossian.TranslationReuseScope,System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.String})">
             <summary>
                 Adds one original/translated text pair to the forward and reverse
                 ActionMenu lookup maps using the supplied text verbatim.
@@ -11902,6 +12198,58 @@
             <param name="ambiguousOriginalKeys">
                 Tracks translated texts that map to multiple originals.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldSkipPersistedForwardLookupEntry(System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot)">
+            <summary>
+                Gets whether one persisted forward lookup entry is redundant because
+                canonical action, trait, or reference-text storage already resolves
+                the same original-facing text.
+            </summary>
+            <param name="originalText">The original text to test.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <returns>
+                <see langword="true" /> when persisted forward fallback is not
+                needed; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldSkipPersistedReverseLookupEntry(System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot)">
+            <summary>
+                Gets whether one persisted reverse lookup entry is redundant because
+                canonical action, trait, or reference-text storage already resolves
+                the same translated-facing text.
+            </summary>
+            <param name="translatedText">The translated text to test.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <returns>
+                <see langword="true" /> when persisted reverse fallback is not
+                needed; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalLookupCanTranslateText(Echoglossian.Cache.CanonicalTextLookupSnapshot,System.String)">
+            <summary>
+                Gets whether the canonical lookup snapshot can translate one
+                ActionMenu text exactly, after normalization, or by level-aware
+                prefix reuse.
+            </summary>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <param name="originalText">The original text to translate.</param>
+            <returns>
+                <see langword="true" /> when canonical storage already translates
+                the text; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.CanonicalLookupCanResolveOriginalText(Echoglossian.Cache.CanonicalTextLookupSnapshot,System.String)">
+            <summary>
+                Gets whether the canonical lookup snapshot can reverse one
+                ActionMenu text exactly, after normalization, or by level-aware
+                prefix reuse.
+            </summary>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <param name="translatedText">The translated text to reverse.</param>
+            <returns>
+                <see langword="true" /> when canonical storage already reverses the
+                text; otherwise <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.TryFindFallbackLookupValue(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.String@)">
             <summary>
@@ -11937,6 +12285,88 @@
             </summary>
             <param name="text">The text to normalize.</param>
             <returns>The normalized lookup text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.FilterPersistedPayloadPair(Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Filters one persisted ActionMenu payload pair down to the residual
+                texts still needed by <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> fallback after
+                canonical action, trait, and reference-text coverage is applied.
+            </summary>
+            <param name="scope">The immutable persistence scope.</param>
+            <param name="gameVersion">The captured game version.</param>
+            <param name="originalPayload">The original payload to persist.</param>
+            <param name="translatedPayload">The translated payload to persist.</param>
+            <returns>The filtered residual payload pair.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.FilterPersistedLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IDictionary{System.Int32,System.String},System.Collections.Generic.IDictionary{System.Int32,System.String})">
+            <summary>
+                Filters one numeric payload map pair to only the residual entries
+                still needed by persisted ActionMenu fallback.
+            </summary>
+            <param name="originalValues">The original payload values.</param>
+            <param name="translatedValues">The translated payload values.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <param name="filteredOriginalValues">Receives retained original values.</param>
+            <param name="filteredTranslatedValues">
+                Receives retained translated values.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.FilterPersistedLookupEntries(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Echoglossian.Cache.CanonicalTextLookupSnapshot,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.IDictionary{System.String,System.String})">
+            <summary>
+                Filters one text-node payload map pair to only the residual entries
+                still needed by persisted ActionMenu fallback.
+            </summary>
+            <param name="originalValues">The original payload values.</param>
+            <param name="translatedValues">The translated payload values.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <param name="filteredOriginalValues">Receives retained original values.</param>
+            <param name="filteredTranslatedValues">
+                Receives retained translated values.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler.ShouldRetainPersistedLookupEntry(System.String,System.String,Echoglossian.Cache.CanonicalTextLookupSnapshot)">
+            <summary>
+                Determines whether one persisted ActionMenu text pair must remain
+                in the residual <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> payload because canonical
+                storage still cannot fully replace both forward and reverse lookup
+                behavior for that pair.
+            </summary>
+            <param name="originalText">The original-facing text.</param>
+            <param name="translatedText">The translated-facing text.</param>
+            <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+            <returns>
+                <see langword="true" /> when the pair should remain persisted;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.ActionMenu.PersistedActionMenuLookupSnapshot">
+            <summary>
+                Holds one cached persisted ActionMenu fallback snapshot whose contents
+                are already filtered to only the residual window-chrome texts not
+                covered by canonical action, trait, or reference-text storage.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.ActionMenu.PersistedActionMenuLookupSnapshot.#ctor(System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.ActionMenu.PersistedActionMenuLookupSnapshot" /> class.
+            </summary>
+            <param name="originalLookup">
+                The translated-to-original reverse lookup.
+            </param>
+            <param name="translatedLookup">
+                The original-to-translated forward lookup.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.ActionMenu.PersistedActionMenuLookupSnapshot.OriginalLookup">
+            <summary>
+                Gets the translated-to-original reverse lookup.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.ActionMenu.PersistedActionMenuLookupSnapshot.TranslatedLookup">
+            <summary>
+                Gets the original-to-translated forward lookup.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuQueuedSignatureTracker">
             <summary>
@@ -13106,6 +13536,20 @@
                 The class/job identifier that should scope persisted lookup for the
                 payload, or <see langword="null" /> when the addon does not
                 require job-aware lookup.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PreparePersistedGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Prepares one resolved original/translated payload pair before it is
+                persisted as a canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row.
+            </summary>
+            <param name="scope">The immutable operation scope used for persistence.</param>
+            <param name="originalPayload">The original payload captured from the addon.</param>
+            <param name="translatedPayload">
+                The translated payload completed for the same operation.
+            </param>
+            <returns>
+                The payload pair that should be serialized into persistence.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange">

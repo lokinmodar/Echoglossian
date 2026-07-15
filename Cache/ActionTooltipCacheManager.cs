@@ -14,10 +14,18 @@ namespace Echoglossian.Cache;
 public static class ActionTooltipCacheManager
 {
     private static readonly Dictionary<uint, List<ActionTooltip>> Cache = [];
+    private static readonly Dictionary<string, HashSet<string>>
+        OriginalTextLookupCache = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, Dictionary<string, string>>
         TextLookupCache = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, Dictionary<string, string>>
         ReverseTextLookupCache = new(StringComparer.Ordinal);
+    private static long revision;
+
+    /// <summary>
+    ///     Gets the monotonically increasing cache revision.
+    /// </summary>
+    public static long Revision => Interlocked.Read(ref revision);
 
     /// <summary>
     ///     Loads all canonical action-tooltip rows into memory.
@@ -47,6 +55,8 @@ public static class ActionTooltipCacheManager
 
             TextLookupCache.Clear();
             ReverseTextLookupCache.Clear();
+            OriginalTextLookupCache.Clear();
+            Interlocked.Increment(ref revision);
         }
         catch (Exception ex)
         {
@@ -94,6 +104,8 @@ public static class ActionTooltipCacheManager
         rows.Add(newRecord);
         TextLookupCache.Clear();
         ReverseTextLookupCache.Clear();
+        OriginalTextLookupCache.Clear();
+        Interlocked.Increment(ref revision);
     }
 
     /// <summary>
@@ -363,13 +375,38 @@ public static class ActionTooltipCacheManager
     }
 
     /// <summary>
+    ///     Gets one scope-aware exact-text lookup snapshot for canonical
+    ///     ActionMenu reuse.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>The canonical lookup snapshot.</returns>
+    internal static CanonicalTextLookupSnapshot GetTextLookupSnapshot(
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        var preferredSnapshot = GetExactTextLookupSnapshot(
+            scope,
+            gameVersion);
+        return string.IsNullOrWhiteSpace(gameVersion)
+            ? preferredSnapshot
+            : CanonicalTextLookupSnapshot.Combine(
+                preferredSnapshot,
+                GetExactTextLookupSnapshot(
+                    scope,
+                    version: null));
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public static void Clear()
     {
         Cache.Clear();
+        OriginalTextLookupCache.Clear();
         TextLookupCache.Clear();
         ReverseTextLookupCache.Clear();
+        Interlocked.Increment(ref revision);
         PluginRuntimeLog.Debug(
             "ActionTooltipCacheManager",
             "Cleared action-tooltip cache.");
@@ -454,29 +491,84 @@ public static class ActionTooltipCacheManager
         string? version,
         string originalText)
     {
-        return Cache.Values.SelectMany(static rows => rows)
-            .Where(row =>
-                scope.Matches(
+        var scopeKey = BuildTextLookupScopeKey(scope, version);
+        if (!OriginalTextLookupCache.TryGetValue(scopeKey, out var lookup))
+        {
+            lookup = BuildOriginalTextLookup(scope, version);
+            OriginalTextLookupCache[scopeKey] = lookup;
+        }
+
+        return lookup.Contains(originalText);
+    }
+
+    /// <summary>
+    ///     Gets one exact-version canonical lookup snapshot.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <returns>The exact-version lookup snapshot.</returns>
+    private static CanonicalTextLookupSnapshot GetExactTextLookupSnapshot(
+        TranslationReuseScope scope,
+        string? version)
+    {
+        var scopeKey = BuildTextLookupScopeKey(scope, version);
+        if (!TextLookupCache.TryGetValue(scopeKey, out var forwardLookup))
+        {
+            forwardLookup = BuildTextLookup(scope, version);
+            TextLookupCache[scopeKey] = forwardLookup;
+        }
+
+        if (!ReverseTextLookupCache.TryGetValue(scopeKey, out var reverseLookup))
+        {
+            reverseLookup = BuildReverseTextLookup(scope, version);
+            ReverseTextLookupCache[scopeKey] = reverseLookup;
+        }
+
+        if (!OriginalTextLookupCache.TryGetValue(scopeKey, out var originalLookup))
+        {
+            originalLookup = BuildOriginalTextLookup(scope, version);
+            OriginalTextLookupCache[scopeKey] = originalLookup;
+        }
+
+        return new CanonicalTextLookupSnapshot(
+            originalLookup,
+            forwardLookup,
+            reverseLookup);
+    }
+
+    /// <summary>
+    ///     Builds one exact original-text lookup for a single action-tooltip
+    ///     cache scope.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <returns>The original-text lookup set.</returns>
+    private static HashSet<string> BuildOriginalTextLookup(
+        TranslationReuseScope scope,
+        string? version)
+    {
+        var lookup = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var row in Cache.Values.SelectMany(static rows => rows))
+        {
+            if (!scope.Matches(
                     row.OriginalLang,
                     row.TranslationLang,
-                    row.TranslationEngine) &&
-                string.Equals(
+                    row.TranslationEngine) ||
+                !string.Equals(
                     row.GameVersion,
                     version,
                     StringComparison.Ordinal))
-            .Any(row =>
-                string.Equals(
-                    row.ActionName,
-                    originalText,
-                    StringComparison.Ordinal) ||
-                string.Equals(
-                    row.ActionDescription,
-                    originalText,
-                    StringComparison.Ordinal) ||
-                string.Equals(
-                    row.OriginalTooltipText,
-                    originalText,
-                    StringComparison.Ordinal));
+            {
+                continue;
+            }
+
+            TryAddOriginalText(lookup, row.ActionName);
+            TryAddOriginalText(lookup, row.ActionDescription);
+            TryAddOriginalText(lookup, row.OriginalTooltipText);
+        }
+
+        return lookup;
     }
 
     /// <summary>
@@ -638,6 +730,22 @@ public static class ActionTooltipCacheManager
         }
 
         lookup[translatedText] = originalText;
+    }
+
+    /// <summary>
+    ///     Adds one canonical original text to the scope-local lookup when the
+    ///     value is populated.
+    /// </summary>
+    /// <param name="lookup">The original-text lookup to update.</param>
+    /// <param name="originalText">The original text to add.</param>
+    private static void TryAddOriginalText(
+        ISet<string> lookup,
+        string? originalText)
+    {
+        if (!string.IsNullOrWhiteSpace(originalText))
+        {
+            lookup.Add(originalText);
+        }
     }
 
     /// <summary>

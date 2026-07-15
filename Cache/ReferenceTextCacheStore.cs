@@ -19,8 +19,11 @@ public sealed class ReferenceTextCacheStore<TRow>
     private readonly string cacheName;
     private readonly Dictionary<string, Dictionary<string, string>>
         forwardTextLookupCache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, HashSet<string>>
+        originalTextLookupCache = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Dictionary<string, string>>
         reverseTextLookupCache = new(StringComparer.Ordinal);
+    private long revision;
 
     /// <summary>
     ///     Initializes a new instance of the
@@ -31,6 +34,11 @@ public sealed class ReferenceTextCacheStore<TRow>
     {
         this.cacheName = cacheName;
     }
+
+    /// <summary>
+    ///     Gets the monotonically increasing cache revision.
+    /// </summary>
+    public long Revision => Interlocked.Read(ref this.revision);
 
     /// <summary>
     ///     Loads all canonical reference-text rows into memory.
@@ -62,7 +70,9 @@ public sealed class ReferenceTextCacheStore<TRow>
             }
 
             this.forwardTextLookupCache.Clear();
+            this.originalTextLookupCache.Clear();
             this.reverseTextLookupCache.Clear();
+            Interlocked.Increment(ref this.revision);
         }
         catch (Exception ex)
         {
@@ -109,7 +119,9 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         rows.Add(newRecord);
         this.forwardTextLookupCache.Clear();
+        this.originalTextLookupCache.Clear();
         this.reverseTextLookupCache.Clear();
+        Interlocked.Increment(ref this.revision);
     }
 
     /// <summary>
@@ -322,13 +334,38 @@ public sealed class ReferenceTextCacheStore<TRow>
     }
 
     /// <summary>
+    ///     Gets one scope-aware exact-text lookup snapshot for canonical
+    ///     ActionMenu reuse.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>The canonical lookup snapshot.</returns>
+    internal CanonicalTextLookupSnapshot GetTextLookupSnapshot(
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        var preferredSnapshot = this.GetExactTextLookupSnapshot(
+            scope,
+            gameVersion);
+        return string.IsNullOrWhiteSpace(gameVersion)
+            ? preferredSnapshot
+            : CanonicalTextLookupSnapshot.Combine(
+                preferredSnapshot,
+                this.GetExactTextLookupSnapshot(
+                    scope,
+                    version: null));
+    }
+
+    /// <summary>
     ///     Clears the in-memory cache.
     /// </summary>
     public void Clear()
     {
         this.cache.Clear();
         this.forwardTextLookupCache.Clear();
+        this.originalTextLookupCache.Clear();
         this.reverseTextLookupCache.Clear();
+        Interlocked.Increment(ref this.revision);
         PluginRuntimeLog.Debug(
             this.cacheName,
             "Cleared reference-text cache.");
@@ -362,7 +399,13 @@ public sealed class ReferenceTextCacheStore<TRow>
             this.forwardTextLookupCache[scopeKey] = lookup;
         }
 
-        return lookup.TryGetValue(originalText, out translatedText);
+        if (lookup.TryGetValue(originalText, out var resolvedTranslatedText))
+        {
+            translatedText = resolvedTranslatedText;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -391,7 +434,13 @@ public sealed class ReferenceTextCacheStore<TRow>
             this.reverseTextLookupCache[scopeKey] = lookup;
         }
 
-        return lookup.TryGetValue(translatedText, out originalText);
+        if (lookup.TryGetValue(translatedText, out var resolvedOriginalText))
+        {
+            originalText = resolvedOriginalText;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -410,25 +459,83 @@ public sealed class ReferenceTextCacheStore<TRow>
         string? version,
         string originalText)
     {
-        return this.cache.Values.SelectMany(static rows => rows)
-            .Where(row =>
-                scope.Matches(
+        var scopeKey = BuildScopeKey(scope, version);
+        if (!this.originalTextLookupCache.TryGetValue(scopeKey, out var lookup))
+        {
+            lookup = this.BuildOriginalTextLookup(scope, version);
+            this.originalTextLookupCache[scopeKey] = lookup;
+        }
+
+        return lookup.Contains(originalText);
+    }
+
+    /// <summary>
+    ///     Gets one exact-version canonical lookup snapshot.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <returns>The exact-version lookup snapshot.</returns>
+    private CanonicalTextLookupSnapshot GetExactTextLookupSnapshot(
+        TranslationReuseScope scope,
+        string? version)
+    {
+        var scopeKey = BuildScopeKey(scope, version);
+        if (!this.forwardTextLookupCache.TryGetValue(scopeKey, out var forwardLookup))
+        {
+            forwardLookup = this.BuildForwardLookup(
+                scope,
+                version);
+            this.forwardTextLookupCache[scopeKey] = forwardLookup;
+        }
+
+        if (!this.reverseTextLookupCache.TryGetValue(scopeKey, out var reverseLookup))
+        {
+            reverseLookup = this.BuildReverseLookup(scope, version);
+            this.reverseTextLookupCache[scopeKey] = reverseLookup;
+        }
+
+        if (!this.originalTextLookupCache.TryGetValue(scopeKey, out var originalLookup))
+        {
+            originalLookup = this.BuildOriginalTextLookup(scope, version);
+            this.originalTextLookupCache[scopeKey] = originalLookup;
+        }
+
+        return new CanonicalTextLookupSnapshot(
+            originalLookup,
+            forwardLookup,
+            reverseLookup);
+    }
+
+    /// <summary>
+    ///     Builds one original-text lookup for one cached scope.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <returns>The lookup set.</returns>
+    private HashSet<string> BuildOriginalTextLookup(
+        TranslationReuseScope scope,
+        string? version)
+    {
+        var lookup = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var row in this.cache.Values.SelectMany(static rows => rows))
+        {
+            if (!scope.Matches(
                     row.OriginalLang,
                     row.TranslationLang,
-                    row.TranslationEngine) &&
-                string.Equals(
+                    row.TranslationEngine) ||
+                !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
-                    version,
-                    StringComparison.Ordinal))
-            .Any(row =>
-                string.Equals(
-                    row.OriginalName,
-                    originalText,
-                    StringComparison.Ordinal) ||
-                string.Equals(
-                    row.OriginalDescription,
-                    originalText,
-                    StringComparison.Ordinal));
+                    version))
+            {
+                continue;
+            }
+
+            TryAddOriginalText(lookup, row.OriginalName);
+            TryAddOriginalText(lookup, row.OriginalDescription);
+        }
+
+        return lookup;
     }
 
     /// <summary>
@@ -568,6 +675,22 @@ public sealed class ReferenceTextCacheStore<TRow>
         if (!ambiguousKeys.Contains(translatedText))
         {
             lookup[translatedText] = originalText;
+        }
+    }
+
+    /// <summary>
+    ///     Adds one canonical original text to the scope-local lookup when the
+    ///     value is populated.
+    /// </summary>
+    /// <param name="lookup">The original-text lookup to update.</param>
+    /// <param name="originalText">The original text to add.</param>
+    private static void TryAddOriginalText(
+        ISet<string> lookup,
+        string? originalText)
+    {
+        if (!string.IsNullOrWhiteSpace(originalText))
+        {
+            lookup.Add(originalText);
         }
     }
 

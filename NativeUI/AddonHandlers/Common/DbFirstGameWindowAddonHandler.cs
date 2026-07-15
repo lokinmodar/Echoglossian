@@ -531,6 +531,29 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Prepares one resolved original/translated payload pair before it is
+    ///     persisted as a canonical <see cref="GameWindow" /> row.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
+    /// <param name="originalPayload">The original payload captured from the addon.</param>
+    /// <param name="translatedPayload">
+    ///     The translated payload completed for the same operation.
+    /// </param>
+    /// <returns>
+    ///     The payload pair that should be serialized into persistence.
+    /// </returns>
+    private protected virtual (
+        DbFirstGameWindowPayload OriginalPayload,
+        DbFirstGameWindowPayload TranslatedPayload)
+        PreparePersistedGameWindowPayload(
+            TranslationReuseScope scope,
+            DbFirstGameWindowPayload originalPayload,
+            DbFirstGameWindowPayload translatedPayload)
+    {
+        return (originalPayload, translatedPayload);
+    }
+
+    /// <summary>
     ///     Determines whether this handler should selectively restore stale
     ///     translated text-node values from the previously applied runtime
     ///     state before capturing a new payload for the same live addon.
@@ -1936,12 +1959,25 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
+        var preparedPayload = this.PreparePersistedGameWindowPayload(
+            scope,
+            originalPayload,
+            translatedPayload);
+        if (preparedPayload.OriginalPayload.IsEmpty ||
+            preparedPayload.TranslatedPayload.IsEmpty ||
+            preparedPayload.OriginalPayload.StructurallyEquals(
+                preparedPayload.TranslatedPayload))
+        {
+            return;
+        }
+
+        var gameVersion = GetGameVersion() ?? string.Empty;
         var row = CreatePersistedGameWindow(
             this.addonName,
             scope,
-            originalPayload,
-            translatedPayload,
-            GetGameVersion(),
+            preparedPayload.OriginalPayload,
+            preparedPayload.TranslatedPayload,
+            gameVersion,
             classJobId);
 
         _ = GameWindowPersistenceHelper.InsertGameWindow(
