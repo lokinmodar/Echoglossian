@@ -79,22 +79,19 @@ can provide equivalent ImGui runtime inputs.
 
 ### Branch Execution Gate
 
-This design is being documented on branch
-`issue-174-dialogue-retranslation-semantics`, which already contains active UI
-and debugger work.
+The deferred execution gate was completed on 2026-07-15.
 
-Implementation must **not** start directly from the assumptions in this spec
-without first re-reviewing the post-merge state.
+- the prior UI work and this design are merged into `v4-series`
+- the implementation branch `issue-215-imgui-previewer` starts from
+  `origin/v4-series` commit `af6e1f70fae0a0c747e1956860237f327b940cfa`
+- the current overlay, font, RTL texture, configuration, metrics, and DB editor
+  paths were re-audited before implementation planning
+- this spec and the implementation plan were revised from that post-merge
+  state
 
-Required execution gate:
-
-1. merge the current issue branch into `v4-series` first
-2. re-audit the latest UI-related files and active branch state
-3. update this spec and the eventual implementation plan if the underlying UI
-   architecture changed
-4. only then start implementation work
-
-This is intentionally a design-first, deferred-execution document.
+Implementation can proceed on the dedicated issue branch. Any later phase
+must still re-audit the surface it extracts because configuration, metrics,
+and DB editor work will land after the overlay foundation.
 
 ### Build / Deploy Isolation
 
@@ -111,6 +108,33 @@ Required isolation rules:
   plugin artifact
 - the previewer should be kept out of the main solution file, mirroring the
   repo's current loose coupling for `Echoglossian.Tests`
+- the main plugin project must explicitly remove previewer source and resources
+  from its recursive SDK item discovery
+
+### Binding And Backend Compatibility
+
+Dalamud's source tree contains `imgui/StandaloneImGuiTestbed`, which proves
+that `Dalamud.Bindings.ImGui` can run in a normal Windows process. The binding
+loads `cimgui.dll` from the calling assembly's output directory, so the
+previewer must copy the current Dalamud development binding, its runtime
+dependency, and `cimgui.dll` into its own output without changing the plugin
+artifact.
+
+The testbed is an architectural reference, not code to copy. Dalamud is AGPL,
+while this repository has a different license. The host renderer should instead
+adapt the MIT-licensed Veldrid ImGui backend and retain its notice. Preview-only
+Veldrid package dependencies must remain isolated to the preview project.
+
+### Current Rendering Modes
+
+The post-merge overlay renderer has two text presentation paths:
+
+- `PlainImGui`, which uses the active ImGui font atlas
+- `RtlTexture`, which rasterizes text through `TextImageRenderer` and presents
+  the result as an ImGui texture
+
+The previewer must exercise both paths. A preview that silently replaces RTL
+texture rendering with plain text is not considered faithful.
 
 ## Options Considered
 
@@ -180,6 +204,10 @@ The previewer should therefore be a developer-only desktop application that:
 - calls shared ImGui renderer code
 - exports screenshots
 
+The desktop host uses `Dalamud.Bindings.ImGui` with Veldrid, SDL2, and a
+Veldrid texture registry. This keeps the ImGui API identical to the plugin
+while changing only the platform and graphics backend.
+
 ## Proposed Design
 
 ### 1. Add a dev-only preview project
@@ -220,7 +248,7 @@ The current UI code mixes draw logic with access to plugin-owned or static
 runtime state. The previewer needs narrow abstractions so it can substitute its
 own runtime safely.
 
-Expected runtime boundaries:
+Expected runtime boundaries across all phases:
 
 - `IUiFontRuntime`
 - `IUiTextureRuntime`
@@ -230,6 +258,11 @@ Expected runtime boundaries:
 
 These interfaces should stay small and UI-oriented. They are not meant to
 generalize the whole plugin runtime.
+
+The first phase should introduce only the boundaries required by overlays,
+starting with `IUiFontRuntime` and the existing RTL texture creation seam.
+Other interfaces are added only when configuration, metrics, or DB editor
+extraction demonstrates a concrete need.
 
 Examples of what they cover:
 
@@ -298,6 +331,31 @@ Recommended implementation order:
 This order favors the surfaces that benefit most from fast visual iteration and
 that already have concentrated layout logic.
 
+### 8. Deliver the approved scope in phases
+
+The approved objective remains previewing every Echoglossian-owned ImGui
+surface, but it should not be delivered as one release-blocking refactor.
+
+Phase A establishes the reusable foundation:
+
+- standalone Windows host using the real Dalamud ImGui binding
+- shared translation overlay renderer
+- all currently registered translation overlay surface scenarios
+- real user configuration loading without modifying the source file
+- matching font files and font sizes
+- `PlainImGui` and `RtlTexture` presentation
+- full-frame, selected-surface, and batch PNG screenshots
+
+Phase B adds the plugin configuration window after extracting its static font,
+asset, save, notification, and external-action dependencies.
+
+Phase C adds the translator metrics/debugger and DB editor with deterministic
+sample data and a temporary or read-only database. It must never modify the
+user's live plugin database.
+
+Each phase builds on the same host and screenshot infrastructure. Issue #215
+remains the umbrella tracker until all approved ImGui surfaces are covered.
+
 ## Risks
 
 ### Runtime Coupling Risk
@@ -324,13 +382,13 @@ Mitigation:
 
 ### Spec Drift Risk
 
-Because this work is intentionally deferred until after the current branch
-merges, the underlying UI code may change before implementation starts.
+The initial post-merge audit is complete, but later UI phases may start after
+additional changes to their target surfaces.
 
 Mitigation:
 
-- require the execution gate described above
-- revise this spec and the later plan before coding starts
+- re-audit each target surface before its phase starts
+- revise phase plans when the real runtime boundary has changed
 
 ## Validation Expectations
 
@@ -345,12 +403,13 @@ When implementation eventually starts, validation should include:
 - at least one in-plugin visual comparison is performed for the same config and
   overlay scenario
 
-## Deliverables For The Deferred Implementation
+## Deliverables
 
-- design-approved preview architecture
+- revised, post-merge preview architecture
 - dev-only `Echoglossian.Previewer` project
-- shared renderer extraction for the targeted ImGui surfaces
-- preview runtime adapters
-- overlay scenario presets
-- screenshot export support
-- updated docs that describe how to run and re-review the previewer workflow
+- shared renderer extraction for each targeted ImGui surface
+- preview runtime adapters introduced only at demonstrated seams
+- overlay scenario presets and deterministic later-phase sample data
+- full-frame, selected-surface, and batch screenshot export
+- updated docs that describe how to run, validate, and re-review the previewer
+  workflow
