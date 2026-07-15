@@ -464,7 +464,7 @@
             <param name="originalJson">The serialized original content to match.</param>
             <returns>A matching <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow"/> if found; otherwise, <see langword="null"/>.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetCandidates(System.String,Echoglossian.TranslationReuseScope,System.String,System.Nullable{System.UInt32})">
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.GetCandidates(System.String,Echoglossian.TranslationReuseScope,System.String,System.Nullable{System.UInt32},System.Boolean)">
             <summary>
                 Returns cached candidates for one addon lookup scope so runtimes can
                 recover original payloads from already-translated live UI.
@@ -474,6 +474,11 @@
             <param name="version">The game version string to match.</param>
             <param name="classJobId">
                 The optional class/job identifier to match for job-sensitive windows.
+            </param>
+            <param name="includeHistoricalVersions">
+                When set, returns source-compatible rows from every stored game
+                version so callers can reuse translations only after independently
+                matching unchanged canonical source text.
             </param>
             <returns>The matching cached rows.</returns>
         </member>
@@ -1232,7 +1237,7 @@
             <param name="sourceContentHash">The stable source payload hash.</param>
             <returns>The matching cached row, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.GetCandidates(System.String,System.String,Echoglossian.TranslationReuseScope,System.String)">
+        <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.GetCandidates(System.String,System.String,Echoglossian.TranslationReuseScope,System.String,System.Boolean)">
             <summary>
                 Returns cached candidates for one canonical lookup scope so runtimes
                 can recover original payloads from already-translated live UI.
@@ -1241,6 +1246,11 @@
             <param name="contextKey">The semantic surface context.</param>
             <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The game version.</param>
+            <param name="includeHistoricalVersions">
+                When set, returns source-compatible rows from every stored game
+                version so callers can reuse translations only after independently
+                matching unchanged canonical source text.
+            </param>
             <returns>The matching cached rows.</returns>
         </member>
         <member name="M:Echoglossian.Cache.StringArrayDataCacheManager.Clear">
@@ -15559,6 +15569,19 @@
                 being written into the native UI.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ResolveNativeMutationAction(System.Boolean,System.Boolean)">
+            <summary>
+                Resolves the only native mutation action allowed for the current
+                JournalDetail display mode and mutation ownership state.
+            </summary>
+            <param name="writesNativeTranslation">
+                Whether the current mode writes translated text into the addon.
+            </param>
+            <param name="ownsNativeMutation">
+                Whether this handler previously wrote the visible native state.
+            </param>
+            <returns>The native mutation action allowed for this refresh.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.GetCurrentQuestSequenceText(Echoglossian.QuestProgressSnapshot)">
             <summary>
                 Gets the quest sequence row text for the current quest phase so the
@@ -15927,6 +15950,26 @@
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeFontSize">
             <summary>
                 The original primary summary node font size.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeMutationAction">
+            <summary>
+                Describes the native JournalDetail mutation allowed for one refresh.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeMutationAction.None">
+            <summary>
+                Leaves every native node, flag, and dimension untouched.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeMutationAction.ApplyTranslation">
+            <summary>
+                Applies translated text through the native replacement path.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeMutationAction.RestoreOriginal">
+            <summary>
+                Restores state previously mutated by this handler.
             </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler">

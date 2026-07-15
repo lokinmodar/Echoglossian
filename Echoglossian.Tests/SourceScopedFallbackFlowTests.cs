@@ -149,6 +149,165 @@ public class SourceScopedFallbackFlowTests
     }
 
     /// <summary>
+    ///     Ensures unchanged root Character labels can reuse canonical
+    ///     structured translations captured on an earlier game version.
+    /// </summary>
+    [Fact]
+    public void CharacterStructuredFallback_ReusesHistoricalExactText()
+    {
+        using var runtimeScope = new TestRuntimeScope();
+        StringArrayDataCacheManager.Clear();
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            var originalStructuredPayload = new StringArrayStructuredPayload
+            {
+                Type = "Character",
+                ContextKey = "addon:Character",
+            };
+            originalStructuredPayload.TextNodes["node:1:0"] =
+                new StringArrayStructuredSlot
+                {
+                    SemanticKey = "node:1:0",
+                    OriginalText = "Profile",
+                };
+            var translatedStructuredPayload = new StringArrayStructuredPayload
+            {
+                Type = "Character",
+                ContextKey = "addon:Character",
+            };
+            translatedStructuredPayload.TextNodes["node:1:0"] =
+                new StringArrayStructuredSlot
+                {
+                    SemanticKey = "node:1:0",
+                    OriginalText = "Profile",
+                    TranslatedText = "Perfil",
+                };
+            StringArrayDataCacheManager.Update(new StringArrayDatas(
+                type: "Character",
+                size: 1,
+                rawData: null,
+                formattedRawData: null,
+                originalLang: "en",
+                originalStrings: null,
+                translationLang: "pt-BR",
+                translatedStrings: null,
+                translatedStringsWithPayloads: null,
+                translationEngine: 0,
+                gameVersion: "historical-version",
+                createdAt: DateTime.UtcNow.AddDays(-1),
+                updatedAt: DateTime.UtcNow.AddDays(-1))
+            {
+                Id = 1,
+                ContextKey = "addon:Character",
+                SchemaVersion = 1,
+                SourceContentHash =
+                    originalStructuredPayload.ComputeSourceContentHash(),
+                OriginalStructuredPayload = originalStructuredPayload.Serialize(),
+                TranslatedStructuredPayload =
+                    translatedStructuredPayload.Serialize(),
+            });
+            var handler = new CharacterWindowHandler(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                },
+                null!,
+                null!);
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["node:1:0"] = "Profile",
+                });
+
+            var found = TryResolveCharacterTranslatedPayload(
+                handler,
+                new SourceClientLanguage("en", "en"),
+                originalPayload,
+                out var translatedPayload);
+
+            Assert.True(found);
+            Assert.Equal("Perfil", translatedPayload.TextNodes["node:1:0"]);
+        }
+        finally
+        {
+            StringArrayDataCacheManager.Clear();
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures unchanged CharacterProfile labels can reuse exact text pairs
+    ///     captured on an earlier game version.
+    /// </summary>
+    [Fact]
+    public void CharacterProfileFallback_ReusesHistoricalExactText()
+    {
+        using var runtimeScope = new TestRuntimeScope();
+        StringArrayDataCacheManager.Clear();
+        GameWindowCacheManager.Clear();
+
+        try
+        {
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["node:1:0"] = "Free Company",
+                });
+            var translatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["node:1:0"] = "Companhia Livre",
+                });
+            GameWindowCacheManager.Update(new GameWindow(
+                windowAddonName: "CharacterProfile",
+                originalWindowStrings: originalPayload.Serialize(),
+                originalWindowStringsLang: "en",
+                translatedWindowStrings: translatedPayload.Serialize(),
+                translationLang: "pt-BR",
+                translationEngine: 0,
+                gameVersion: "historical-version",
+                createdDate: DateTime.UtcNow.AddDays(-1),
+                updatedDate: DateTime.UtcNow.AddDays(-1))
+            {
+                Id = 1,
+            });
+            var handler = new CharacterProfileSubWindowHandler(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                },
+                null!,
+                null!);
+
+            var found = TryResolveCharacterTranslatedPayload(
+                handler,
+                new SourceClientLanguage("en", "en"),
+                originalPayload,
+                out var resolvedPayload);
+
+            Assert.True(found);
+            Assert.Equal(
+                "Companhia Livre",
+                resolvedPayload.TextNodes["node:1:0"]);
+        }
+        finally
+        {
+            StringArrayDataCacheManager.Clear();
+            GameWindowCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures the live structured-payload DB fallback passes its configured
     ///     engine reuse policy through to persistence.
     /// </summary>
@@ -616,7 +775,7 @@ public class SourceScopedFallbackFlowTests
     /// <param name="translatedPayload">The resolved translated payload.</param>
     /// <returns>True when a source-scoped canonical row resolves the payload.</returns>
     private static bool TryResolveCharacterTranslatedPayload(
-        CharacterWindowHandler handler,
+        CharacterTextNodeWindowHandlerBase handler,
         SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)

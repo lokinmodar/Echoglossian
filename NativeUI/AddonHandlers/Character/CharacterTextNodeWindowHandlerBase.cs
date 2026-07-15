@@ -329,7 +329,8 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                     type: StringArrayType.Character.ToString(),
                     contextKey: contextKey,
                     scope: scope,
-                    gameVersion: gameVersion)
+                    gameVersion: gameVersion,
+                    includeHistoricalVersions: true)
                 .OrderBy(row => row.Id)
                 .ToList();
 
@@ -346,12 +347,12 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 }
 
                 CharacterCanonicalPayloadHelper.AppendLookupEntries(
-                    originalStructuredPayload.Slots.Values,
+                    translatedStructuredPayload.Slots.Values,
                     originalLookup,
                     translatedLookup,
                     knownTexts);
                 CharacterCanonicalPayloadHelper.AppendLookupEntries(
-                    originalStructuredPayload.TextNodes.Values,
+                    translatedStructuredPayload.TextNodes.Values,
                     originalLookup,
                     translatedLookup,
                     knownTexts);
@@ -361,7 +362,9 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
                      scope,
-                     gameVersion).OrderBy(candidate => candidate.Id))
+                     gameVersion,
+                     includeHistoricalVersions: true)
+                 .OrderBy(candidate => candidate.Id))
         {
             if (!TryParseSerializedPayload(
                     row.OriginalWindowStrings,

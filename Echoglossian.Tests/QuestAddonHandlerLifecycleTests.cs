@@ -78,6 +78,39 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures tooltip-only JournalDetail rendering remains read-only unless
+    ///     it must restore native text previously written by this handler.
+    /// </summary>
+    /// <param name="writesNativeTranslation">
+    ///     Whether the active display mode writes native translations.
+    /// </param>
+    /// <param name="ownsNativeMutation">
+    ///     Whether this handler previously wrote the visible native state.
+    /// </param>
+    /// <param name="expectedAction">The required native mutation action.</param>
+    [Theory]
+    [InlineData(
+        true,
+        false,
+        nameof(JournalDetailNativeMutationAction.ApplyTranslation))]
+    [InlineData(
+        false,
+        true,
+        nameof(JournalDetailNativeMutationAction.RestoreOriginal))]
+    [InlineData(false, false, nameof(JournalDetailNativeMutationAction.None))]
+    public void ResolveNativeMutationAction_PreservesTooltipOnlyNativeState(
+        bool writesNativeTranslation,
+        bool ownsNativeMutation,
+        string expectedAction)
+    {
+        Assert.Equal(
+            Enum.Parse<JournalDetailNativeMutationAction>(expectedAction),
+            JournalDetailHandler.ResolveNativeMutationAction(
+                writesNativeTranslation,
+                ownsNativeMutation));
+    }
+
+    /// <summary>
     /// Creates the minimal dependency bundle required to construct quest
     /// handlers for lifecycle tests.
     /// </summary>

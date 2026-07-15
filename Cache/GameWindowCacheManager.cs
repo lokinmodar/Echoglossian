@@ -224,18 +224,42 @@ public static class GameWindowCacheManager
   /// <param name="classJobId">
   ///     The optional class/job identifier to match for job-sensitive windows.
   /// </param>
+  /// <param name="includeHistoricalVersions">
+  ///     When set, returns source-compatible rows from every stored game
+  ///     version so callers can reuse translations only after independently
+  ///     matching unchanged canonical source text.
+  /// </param>
   /// <returns>The matching cached rows.</returns>
   public static IReadOnlyList<GameWindow> GetCandidates(
       string addonName,
       TranslationReuseScope scope,
       string? version,
-      uint? classJobId = null)
+      uint? classJobId = null,
+      bool includeHistoricalVersions = false)
   {
     if (string.IsNullOrWhiteSpace(addonName) ||
         string.IsNullOrWhiteSpace(scope.SourceLanguageCode) ||
         string.IsNullOrWhiteSpace(scope.TargetLanguageCode))
     {
       return [];
+    }
+
+    if (includeHistoricalVersions)
+    {
+      if (!Cache.TryGetValue(addonName, out var addonRows))
+      {
+        return [];
+      }
+
+      return addonRows
+          .Where(row =>
+              scope.Matches(
+                  row.OriginalWindowStringsLang,
+                  row.TranslationLang,
+                  row.TranslationEngine) &&
+              (row.ClassJobId == classJobId ||
+               (classJobId.HasValue && row.ClassJobId == null)))
+          .ToList();
     }
 
     var exactRows = GetScopedRows(

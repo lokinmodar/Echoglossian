@@ -149,12 +149,18 @@ public static class StringArrayDataCacheManager
     /// <param name="contextKey">The semantic surface context.</param>
     /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
+    /// <param name="includeHistoricalVersions">
+    ///     When set, returns source-compatible rows from every stored game
+    ///     version so callers can reuse translations only after independently
+    ///     matching unchanged canonical source text.
+    /// </param>
     /// <returns>The matching cached rows.</returns>
     public static IReadOnlyList<StringArrayDatas> GetCandidates(
         string type,
         string contextKey,
         TranslationReuseScope scope,
-        string? gameVersion)
+        string? gameVersion,
+        bool includeHistoricalVersions = false)
     {
         if (string.IsNullOrWhiteSpace(type) ||
             string.IsNullOrWhiteSpace(contextKey))
@@ -174,9 +180,10 @@ public static class StringArrayDataCacheManager
                     row.OriginalLang,
                     row.TranslationLang,
                     row.TranslationEngine) &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion))
+                (includeHistoricalVersions ||
+                 GameVersionLookupHelper.MatchesStoredVersion(
+                     row.GameVersion,
+                     gameVersion)))
             .ToList();
     }
 

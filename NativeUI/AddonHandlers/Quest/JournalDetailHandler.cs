@@ -31,6 +31,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
   private bool hasPendingJournalDetailTranslations;
 
+  private bool ownsJournalDetailNativeMutation;
+
   private JournalTranslationDisplayMode? lastAppliedDisplayMode;
 
   private DateTime nextJournalDetailRetryUtc = DateTime.MinValue;
@@ -101,6 +103,31 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.JournalDetailTranslationDisplayMode,
           this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+
+  /// <summary>
+  ///     Resolves the only native mutation action allowed for the current
+  ///     JournalDetail display mode and mutation ownership state.
+  /// </summary>
+  /// <param name="writesNativeTranslation">
+  ///     Whether the current mode writes translated text into the addon.
+  /// </param>
+  /// <param name="ownsNativeMutation">
+  ///     Whether this handler previously wrote the visible native state.
+  /// </param>
+  /// <returns>The native mutation action allowed for this refresh.</returns>
+  internal static JournalDetailNativeMutationAction ResolveNativeMutationAction(
+      bool writesNativeTranslation,
+      bool ownsNativeMutation)
+  {
+    if (writesNativeTranslation)
+    {
+      return JournalDetailNativeMutationAction.ApplyTranslation;
+    }
+
+    return ownsNativeMutation
+        ? JournalDetailNativeMutationAction.RestoreOriginal
+        : JournalDetailNativeMutationAction.None;
+  }
 
   /// <summary>
   ///     Gets the quest sequence row text for the current quest phase so the
@@ -1008,6 +1035,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     if (this.JournalDetailWritesNativeTranslation)
     {
+      this.ownsJournalDetailNativeMutation = true;
       questNameNode->SetText(translatedQuestName);
       descriptionNode->SetText(translatedQuestDescription);
       objectiveNode->SetText(translatedQuestObjective);
@@ -1063,45 +1091,6 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             additionalSummaryNode->SetText(string.Empty);
           }
         }
-      }
-    }
-    else
-    {
-      questNameNode->SetText(originalQuestName);
-      descriptionNode->SetText(originalQuestMessage);
-      objectiveNode->SetText(originalObjectiveText);
-      if (summaryNode != null)
-      {
-        if (originalSnapshot.SummaryNodeWidth != 0)
-        {
-          summaryNode->SetWidth(originalSnapshot.SummaryNodeWidth);
-        }
-
-        if (originalSnapshot.SummaryNodeFontSize != 0)
-        {
-          summaryNode->FontSize = originalSnapshot.SummaryNodeFontSize;
-        }
-
-        summaryNode->TextFlags = originalSnapshot.SummaryNodeTextFlags;
-        summaryNode->SetText(originalSummaryText ?? string.Empty);
-        summaryNode->ResizeNodeForCurrentText();
-
-        if (summaryContainerNode != null && originalSnapshot.SummaryContainerHeight != 0)
-        {
-          summaryContainerNode->SetHeight(originalSnapshot.SummaryContainerHeight);
-        }
-      }
-
-      for (var i = 0; i < additionalSummaryNodeAddresses.Count; i++)
-      {
-        var additionalSummaryNode =
-            (AtkTextNode*)additionalSummaryNodeAddresses[i];
-        var originalAdditionalSummaryText = i < originalAdditionalSummaryTexts.Count
-            ? originalAdditionalSummaryTexts[i]
-            : string.Empty;
-        additionalSummaryNode->SetText(
-            originalAdditionalSummaryText ?? string.Empty);
-        additionalSummaryNode->ResizeNodeForCurrentText();
       }
     }
 
@@ -1294,6 +1283,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     var operationSourceLanguage = sourceLanguage.Value;
 
+    var nativeMutationAction = ResolveNativeMutationAction(
+        this.JournalDetailWritesNativeTranslation,
+        this.ownsJournalDetailNativeMutation);
+    if (nativeMutationAction ==
+        JournalDetailNativeMutationAction.RestoreOriginal)
+    {
+      this.RestoreJournalDetailOriginals(journalDetail);
+    }
+
     if (!this.JournalDetailUsesHoverTooltips)
     {
       this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
@@ -1459,13 +1457,9 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
       if (this.JournalDetailWritesNativeTranslation)
       {
+        this.ownsJournalDetailNativeMutation = true;
         questNameNode->SetText(translatedQuestName);
         descriptionNode->SetText(translatedQuestMessage);
-      }
-      else
-      {
-        questNameNode->SetText(originalQuestName);
-        descriptionNode->SetText(originalQuestMessage);
       }
 
       this.RememberJournalDetailCachedText(
@@ -1846,12 +1840,19 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="journalDetail">The live JournalDetail addon.</param>
   private unsafe void RestoreJournalDetailOriginals(AtkUnitBase* journalDetail)
   {
+    if (!this.ownsJournalDetailNativeMutation)
+    {
+      this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+      return;
+    }
+
     if (journalDetail == null ||
         string.IsNullOrWhiteSpace(this.currentJournalDetailScopeKey) ||
         !this.TryGetJournalDetailOriginalSnapshot(
             this.currentJournalDetailScopeKey,
             out var originalSnapshot))
     {
+      this.ownsJournalDetailNativeMutation = false;
       this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
       return;
     }
@@ -1951,6 +1952,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
     }
 
+    this.ownsJournalDetailNativeMutation = false;
     this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
   }
 
@@ -1964,6 +1966,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     this.journalDetailOriginalCache.Clear();
     this.currentJournalDetailScopeKey = string.Empty;
     this.hasPendingJournalDetailTranslations = false;
+    this.ownsJournalDetailNativeMutation = false;
     this.lastAppliedDisplayMode = null;
     this.nextJournalDetailRetryUtc = DateTime.MinValue;
     this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
@@ -2005,4 +2008,25 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       ushort SummaryContainerHeight,
       TextFlags SummaryNodeTextFlags,
       byte SummaryNodeFontSize);
+}
+
+/// <summary>
+///     Describes the native JournalDetail mutation allowed for one refresh.
+/// </summary>
+internal enum JournalDetailNativeMutationAction
+{
+  /// <summary>
+  ///     Leaves every native node, flag, and dimension untouched.
+  /// </summary>
+  None,
+
+  /// <summary>
+  ///     Applies translated text through the native replacement path.
+  /// </summary>
+  ApplyTranslation,
+
+  /// <summary>
+  ///     Restores state previously mutated by this handler.
+  /// </summary>
+  RestoreOriginal,
 }
