@@ -72,15 +72,17 @@ tag targets the expected commit before continuing.
 In `C:\Dante\_dalamud\DalamudPluginsD17`:
 
 1. Fetch `origin` and `upstream`.
-2. Fast-forward local `main` from `upstream/main` and push it to the fork.
-3. Create `update-echoglossian-<version>` from the synchronized `main`.
-4. Update only `stable\Echoglossian\manifest.toml` with the exact version,
-   `$releaseCommit`, and a compact TOML-safe changelog.
+2. Rebase local `main` onto `upstream/main`. A previously merged fork commit
+   may be skipped as already applied; do not reapply it.
+3. Push the synchronized `main` to the fork. Use `--force-with-lease` only when
+   the rebase intentionally replaced the fork's equivalent history.
+4. Update only `stable\Echoglossian\manifest.toml` on `main` with the exact
+   version, `$releaseCommit`, and a compact TOML-safe changelog.
 5. Verify that the release commit is reachable from the Echoglossian remote
    before committing the manifest.
-6. Commit and push the dedicated branch.
-7. Open a pull request against `goatcorp/DalamudPluginsD17:main` using the
-   maintainer fork branch as its head.
+6. Commit and push the manifest change to `lokinmodar:main`.
+7. Open the official pull request from `lokinmodar:main` to
+   `goatcorp/DalamudPluginsD17:main`.
 
 The official pull request must include the disclosure defined in
 `docs/official-plugin-repo-ai-usage-disclosure.md`. Runtime-generated text
@@ -101,5 +103,6 @@ submitted. After it merges:
 - Stop if build or tests fail for a product-code reason.
 - Retry a known transient Release-build file lock once, then investigate.
 - Stop if the local and remote release hashes differ.
-- Do not reuse an old manifest branch or mix unrelated plugin updates into it.
+- Do not use a separate manifest branch; confirm the official pull request head
+  is `lokinmodar:main` and contains no unrelated plugin updates.
 - Do not claim publication while the official pull request remains open.
