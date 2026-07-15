@@ -35,8 +35,8 @@ public static class PreviewFontCatalog
             UiFontFileNames.ResolvePath(resolvedRoot, UiFontFileNames.BaseFontFileName),
         };
 
-        generalFontPaths.AddRange(UiFontFileNames.ComplementaryFontFileNames.Select(
-            fileName => UiFontFileNames.ResolvePath(resolvedRoot, fileName)));
+        generalFontPaths.AddRange(
+            UiFontFileNames.ResolveComplementaryPaths(resolvedRoot));
 
         var specialFontPath = UiFontFileNames.ResolvePath(
             resolvedRoot,

@@ -24761,6 +24761,13 @@
             Gets the complementary Japanese variable-font file names.
             </summary>
         </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.UiFontFileNames.ResolveComplementaryPaths(System.String)">
+            <summary>
+            Resolves the complementary Japanese variable-font paths in merge order.
+            </summary>
+            <param name="rootDirectory">The root containing the <c>Font</c> directory.</param>
+            <returns>The resolved complementary font paths.</returns>
+        </member>
         <member name="M:Echoglossian.PluginUI.Helpers.UiFontFileNames.ResolvePath(System.String,System.String)">
             <summary>
             Resolves one font file below a plugin or previewer root directory.

@@ -257,16 +257,13 @@ public partial class Echoglossian : IDalamudPlugin
             "NotoSerifTibetan-Regular.ttf",
         ];
 
-    ComplementaryFont3FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-3.ttf";
-    ComplementaryFont4FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-4.ttf";
-    ComplementaryFont5FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-5.ttf";
-    ComplementaryFont6FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-6.ttf";
-    ComplementaryFont7FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-7.ttf";
+    var complementaryFontPaths = UiFontFileNames.ResolveComplementaryPaths(
+        PluginInterface.AssemblyLocation.DirectoryName!);
+    ComplementaryFont3FilePath = complementaryFontPaths[0];
+    ComplementaryFont4FilePath = complementaryFontPaths[1];
+    ComplementaryFont5FilePath = complementaryFontPaths[2];
+    ComplementaryFont6FilePath = complementaryFontPaths[3];
+    ComplementaryFont7FilePath = complementaryFontPaths[4];
 
     this.configuration.PluginVersion =
         ResolvePluginVersion() ?? this.configuration.PluginVersion;

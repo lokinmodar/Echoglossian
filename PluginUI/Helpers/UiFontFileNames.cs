@@ -43,6 +43,18 @@ public static class UiFontFileNames
     ];
 
     /// <summary>
+    /// Resolves the complementary Japanese variable-font paths in merge order.
+    /// </summary>
+    /// <param name="rootDirectory">The root containing the <c>Font</c> directory.</param>
+    /// <returns>The resolved complementary font paths.</returns>
+    public static IReadOnlyList<string> ResolveComplementaryPaths(string rootDirectory)
+    {
+        return ComplementaryFontFileNames
+            .Select(fileName => ResolvePath(rootDirectory, fileName))
+            .ToArray();
+    }
+
+    /// <summary>
     /// Resolves one font file below a plugin or previewer root directory.
     /// </summary>
     /// <param name="rootDirectory">The root containing the <c>Font</c> directory.</param>
@@ -53,6 +65,29 @@ public static class UiFontFileNames
         ArgumentException.ThrowIfNullOrWhiteSpace(rootDirectory);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
 
-        return Path.Combine(rootDirectory, "Font", fileName);
+        if (Path.IsPathRooted(fileName) ||
+            fileName.Contains(Path.DirectorySeparatorChar) ||
+            fileName.Contains(Path.AltDirectorySeparatorChar) ||
+            fileName.Contains("..", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "Font file names must be a single file name below the Font directory.",
+                nameof(fileName));
+        }
+
+        var fontDirectory = Path.GetFullPath(Path.Combine(rootDirectory, "Font"));
+        var resolvedPath = Path.GetFullPath(Path.Combine(fontDirectory, fileName));
+        var fontDirectoryPrefix = fontDirectory + Path.DirectorySeparatorChar;
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        if (!resolvedPath.StartsWith(fontDirectoryPrefix, comparison))
+        {
+            throw new ArgumentException(
+                "Font file names must resolve below the Font directory.",
+                nameof(fileName));
+        }
+
+        return resolvedPath;
     }
 }

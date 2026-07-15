@@ -5,6 +5,7 @@
 
 using Echoglossian.LanguagesHandling;
 using Echoglossian.Previewer.Fonts;
+using Echoglossian.PluginUI.Helpers;
 
 using Xunit;
 
@@ -15,6 +16,21 @@ namespace Echoglossian.Previewer.Tests.Fonts;
 /// </summary>
 public sealed class PreviewFontCatalogTests
 {
+    /// <summary>
+    /// Ensures font resolution cannot escape the configured font directory.
+    /// </summary>
+    /// <param name="fileName">The unsafe font file name.</param>
+    [Theory]
+    [InlineData("..\\outside.ttf")]
+    [InlineData("nested\\font.ttf")]
+    [InlineData("nested/font.ttf")]
+    [InlineData("C:\\outside.ttf")]
+    public void ResolvePath_RejectsUnsafeFontFileNames(string fileName)
+    {
+        Assert.Throws<ArgumentException>(
+            () => UiFontFileNames.ResolvePath("font-root", fileName));
+    }
+
     /// <summary>
     /// Ensures the configured language font and shared font stack resolve to source files.
     /// </summary>
