@@ -6,6 +6,7 @@
 using Echoglossian.Cache;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.PluginUI.Runtime;
 
 namespace Echoglossian;
 
@@ -125,6 +126,8 @@ public partial class Echoglossian : IDalamudPlugin
   private QueuedTranslationBroker queuedTranslationBroker;
   private readonly HoverTooltipManager hoverTooltipManager;
   private readonly RtlTexturePresentationService rtlTexturePresentationService;
+  private readonly TranslationOverlayRenderer translationOverlayRenderer;
+  private readonly DalamudUiFontRuntime uiFontRuntime;
 
   private readonly IDalamudTextureWrap pixImage;
   private readonly IDalamudTextureWrap cryptoImage;
@@ -346,6 +349,11 @@ public partial class Echoglossian : IDalamudPlugin
     this.rtlTexturePresentationService = new RtlTexturePresentationService(
         this.configuration,
         TextureProvider);
+    this.uiFontRuntime = new DalamudUiFontRuntime(UINewFontHandler);
+    this.translationOverlayRenderer = new TranslationOverlayRenderer(
+        this.configuration,
+        this.uiFontRuntime,
+        this.rtlTexturePresentationService);
 
     this.RebuildTranslationServiceSafely();
 
@@ -551,6 +559,8 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterToastGuiSupportedToastRuntime();
       this.UnregisterToastGuiCaptureRuntime();
       this.queuedTranslationBroker.Dispose();
+      this.translationOverlayRenderer.Dispose();
+      this.uiFontRuntime.Dispose();
       this.rtlTexturePresentationService.Dispose();
 
       PluginInterface.UiBuilder.OpenMainUi -= this.ConfigWindow;
