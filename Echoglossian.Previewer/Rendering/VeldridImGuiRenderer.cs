@@ -44,7 +44,7 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
     private DeviceBuffer indexBuffer;
     private uint vertexBufferSize = InitialVertexBufferSize;
     private uint indexBufferSize = InitialIndexBufferSize;
-    private DateTime lastFrame = DateTime.UtcNow;
+    private readonly HashSet<Key> pressedKeys = [];
     private int disposed;
 
     /// <summary>
@@ -143,7 +143,7 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
         this.SetPerFrameImGuiData(
             width,
             height,
-            deltaSeconds > 0 ? deltaSeconds : this.GetDeltaSeconds());
+            Math.Max(deltaSeconds, 1 / 1000f));
 
         this.UpdateInput(snapshot, focused);
         ImGui.NewFrame();
@@ -152,11 +152,9 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
     /// <summary>
     ///     Renders the current ImGui frame.
     /// </summary>
-    /// <param name="graphicsDevice">The graphics device.</param>
     /// <param name="commandList">The command list receiving draw commands.</param>
-    internal void Render(GraphicsDevice graphicsDevice, CommandList commandList)
+    internal void Render(CommandList commandList)
     {
-        ArgumentNullException.ThrowIfNull(graphicsDevice);
         ArgumentNullException.ThrowIfNull(commandList);
         this.ThrowIfDisposed();
 
@@ -472,22 +470,31 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
         io.AddMousePosEvent(mousePosition.X, mousePosition.Y);
         io.AddMouseWheelEvent(snapshot.WheelDelta, 0);
 
-        for (var button = 0; button < 5; button++)
-        {
-            io.AddMouseButtonEvent(button, snapshot.IsMouseDown((MouseButton)button));
-        }
+        io.AddMouseButtonEvent(0, snapshot.IsMouseDown(MouseButton.Left));
+        io.AddMouseButtonEvent(1, snapshot.IsMouseDown(MouseButton.Right));
+        io.AddMouseButtonEvent(2, snapshot.IsMouseDown(MouseButton.Middle));
+        io.AddMouseButtonEvent(3, snapshot.IsMouseDown(MouseButton.Button1));
+        io.AddMouseButtonEvent(4, snapshot.IsMouseDown(MouseButton.Button2));
 
         foreach (var character in snapshot.KeyCharPresses)
         {
             io.AddInputCharacter(character);
         }
 
-        HashSet<Key> pressedKeys = [];
+        if (!focused)
+        {
+            this.pressedKeys.Clear();
+        }
+
         foreach (KeyEvent keyEvent in snapshot.KeyEvents)
         {
             if (keyEvent.Down)
             {
-                pressedKeys.Add(keyEvent.Key);
+                this.pressedKeys.Add(keyEvent.Key);
+            }
+            else
+            {
+                this.pressedKeys.Remove(keyEvent.Key);
             }
 
             ImGuiKey key = MapKey(keyEvent.Key);
@@ -497,14 +504,26 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
             }
         }
 
-        io.AddKeyEvent(ImGuiKey.ModCtrl, pressedKeys.Contains(Key.ControlLeft) ||
-            pressedKeys.Contains(Key.ControlRight));
-        io.AddKeyEvent(ImGuiKey.ModShift, pressedKeys.Contains(Key.ShiftLeft) ||
-            pressedKeys.Contains(Key.ShiftRight));
-        io.AddKeyEvent(ImGuiKey.ModAlt, pressedKeys.Contains(Key.AltLeft) ||
-            pressedKeys.Contains(Key.AltRight));
-        io.AddKeyEvent(ImGuiKey.ModSuper, pressedKeys.Contains(Key.WinLeft) ||
-            pressedKeys.Contains(Key.WinRight));
+        io.AddKeyEvent(ImGuiKey.ModCtrl, this.IsAnyKeyPressed(
+            Key.ControlLeft,
+            Key.LControl,
+            Key.ControlRight,
+            Key.RControl));
+        io.AddKeyEvent(ImGuiKey.ModShift, this.IsAnyKeyPressed(
+            Key.ShiftLeft,
+            Key.LShift,
+            Key.ShiftRight,
+            Key.RShift));
+        io.AddKeyEvent(ImGuiKey.ModAlt, this.IsAnyKeyPressed(
+            Key.AltLeft,
+            Key.LAlt,
+            Key.AltRight,
+            Key.RAlt));
+        io.AddKeyEvent(ImGuiKey.ModSuper, this.IsAnyKeyPressed(
+            Key.WinLeft,
+            Key.LWin,
+            Key.WinRight,
+            Key.RWin));
     }
 
     private static ImGuiKey MapKey(Key key)
@@ -521,15 +540,101 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
             Key.Home => ImGuiKey.Home,
             Key.End => ImGuiKey.End,
             Key.Delete => ImGuiKey.Delete,
+            Key.Insert => ImGuiKey.Insert,
             Key.BackSpace => ImGuiKey.Backspace,
             Key.Enter => ImGuiKey.Enter,
+            Key.KeypadEnter => ImGuiKey.KeypadEnter,
             Key.Escape => ImGuiKey.Escape,
+            Key.Space => ImGuiKey.Space,
+            Key.ControlLeft => ImGuiKey.LeftCtrl,
+            Key.ControlRight => ImGuiKey.RightCtrl,
+            Key.ShiftLeft => ImGuiKey.LeftShift,
+            Key.ShiftRight => ImGuiKey.RightShift,
+            Key.AltLeft => ImGuiKey.LeftAlt,
+            Key.AltRight => ImGuiKey.RightAlt,
+            Key.WinLeft => ImGuiKey.LeftSuper,
+            Key.WinRight => ImGuiKey.RightSuper,
+            Key.Menu => ImGuiKey.Menu,
+            Key.CapsLock => ImGuiKey.CapsLock,
+            Key.ScrollLock => ImGuiKey.ScrollLock,
+            Key.NumLock => ImGuiKey.NumLock,
+            Key.PrintScreen => ImGuiKey.PrintScreen,
+            Key.Pause => ImGuiKey.Pause,
+            Key.Number0 => ImGuiKey.Key0,
+            Key.Number1 => ImGuiKey.Key1,
+            Key.Number2 => ImGuiKey.Key2,
+            Key.Number3 => ImGuiKey.Key3,
+            Key.Number4 => ImGuiKey.Key4,
+            Key.Number5 => ImGuiKey.Key5,
+            Key.Number6 => ImGuiKey.Key6,
+            Key.Number7 => ImGuiKey.Key7,
+            Key.Number8 => ImGuiKey.Key8,
+            Key.Number9 => ImGuiKey.Key9,
             Key.A => ImGuiKey.A,
+            Key.B => ImGuiKey.B,
             Key.C => ImGuiKey.C,
+            Key.D => ImGuiKey.D,
+            Key.E => ImGuiKey.E,
+            Key.F => ImGuiKey.F,
+            Key.G => ImGuiKey.G,
+            Key.H => ImGuiKey.H,
+            Key.I => ImGuiKey.I,
+            Key.J => ImGuiKey.J,
+            Key.K => ImGuiKey.K,
+            Key.L => ImGuiKey.L,
+            Key.M => ImGuiKey.M,
+            Key.N => ImGuiKey.N,
+            Key.O => ImGuiKey.O,
+            Key.P => ImGuiKey.P,
+            Key.Q => ImGuiKey.Q,
+            Key.R => ImGuiKey.R,
+            Key.S => ImGuiKey.S,
+            Key.T => ImGuiKey.T,
+            Key.U => ImGuiKey.U,
             Key.V => ImGuiKey.V,
+            Key.W => ImGuiKey.W,
             Key.X => ImGuiKey.X,
             Key.Y => ImGuiKey.Y,
             Key.Z => ImGuiKey.Z,
+            Key.F1 => ImGuiKey.F1,
+            Key.F2 => ImGuiKey.F2,
+            Key.F3 => ImGuiKey.F3,
+            Key.F4 => ImGuiKey.F4,
+            Key.F5 => ImGuiKey.F5,
+            Key.F6 => ImGuiKey.F6,
+            Key.F7 => ImGuiKey.F7,
+            Key.F8 => ImGuiKey.F8,
+            Key.F9 => ImGuiKey.F9,
+            Key.F10 => ImGuiKey.F10,
+            Key.F11 => ImGuiKey.F11,
+            Key.F12 => ImGuiKey.F12,
+            Key.Keypad0 => ImGuiKey.Keypad0,
+            Key.Keypad1 => ImGuiKey.Keypad1,
+            Key.Keypad2 => ImGuiKey.Keypad2,
+            Key.Keypad3 => ImGuiKey.Keypad3,
+            Key.Keypad4 => ImGuiKey.Keypad4,
+            Key.Keypad5 => ImGuiKey.Keypad5,
+            Key.Keypad6 => ImGuiKey.Keypad6,
+            Key.Keypad7 => ImGuiKey.Keypad7,
+            Key.Keypad8 => ImGuiKey.Keypad8,
+            Key.Keypad9 => ImGuiKey.Keypad9,
+            Key.KeypadDivide => ImGuiKey.KeypadDivide,
+            Key.KeypadMultiply => ImGuiKey.KeypadMultiply,
+            Key.KeypadSubtract => ImGuiKey.KeypadSubtract,
+            Key.KeypadAdd => ImGuiKey.KeypadAdd,
+            Key.KeypadDecimal => ImGuiKey.KeypadDecimal,
+            Key.Tilde => ImGuiKey.GraveAccent,
+            Key.Minus => ImGuiKey.Minus,
+            Key.Plus => ImGuiKey.Equal,
+            Key.BracketLeft => ImGuiKey.LeftBracket,
+            Key.BracketRight => ImGuiKey.RightBracket,
+            Key.Semicolon => ImGuiKey.Semicolon,
+            Key.Quote => ImGuiKey.Apostrophe,
+            Key.Comma => ImGuiKey.Comma,
+            Key.Period => ImGuiKey.Period,
+            Key.Slash => ImGuiKey.Slash,
+            Key.BackSlash => ImGuiKey.Backslash,
+            Key.NonUSBackSlash => ImGuiKey.Backslash,
             _ => ImGuiKey.None,
         };
     }
@@ -562,14 +667,6 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
         this.graphicsDevice.UpdateBuffer(this.projectionBuffer, 0, ref matrix);
     }
 
-    private float GetDeltaSeconds()
-    {
-        var now = DateTime.UtcNow;
-        var delta = Math.Max((float)(now - this.lastFrame).TotalSeconds, 1 / 60f);
-        this.lastFrame = now;
-        return delta;
-    }
-
     private void OnTextureUnregistered(nint textureId)
     {
         if (this.textureResourceSets.Remove(textureId, out ResourceSet? resourceSet))
@@ -584,5 +681,18 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
         {
             throw new ObjectDisposedException(nameof(VeldridImGuiRenderer));
         }
+    }
+
+    private bool IsAnyKeyPressed(params Key[] keys)
+    {
+        foreach (Key key in keys)
+        {
+            if (this.pressedKeys.Contains(key))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

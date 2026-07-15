@@ -24,6 +24,7 @@ internal sealed unsafe class PreviewHost : IDisposable
     private readonly VeldridTextureRegistry textureRegistry;
     private readonly VeldridImGuiRenderer imGuiRenderer;
     private readonly ImGuiContextPtr context;
+    private DateTime lastFrame = DateTime.UtcNow;
     private int disposed;
 
     /// <summary>
@@ -86,7 +87,7 @@ internal sealed unsafe class PreviewHost : IDisposable
 
         var snapshot = this.window.PumpEvents();
         this.imGuiRenderer.Update(
-            1 / 60f,
+            this.GetDeltaSeconds(),
             snapshot,
             this.window.Width,
             this.window.Height,
@@ -97,7 +98,7 @@ internal sealed unsafe class PreviewHost : IDisposable
         this.commandList.Begin();
         this.commandList.SetFramebuffer(this.graphicsDevice.MainSwapchain.Framebuffer);
         this.commandList.ClearColorTarget(0, RgbaFloat.Black);
-        this.imGuiRenderer.Render(this.graphicsDevice, this.commandList);
+        this.imGuiRenderer.Render(this.commandList);
         this.commandList.End();
 
         this.graphicsDevice.SubmitCommands(this.commandList);
@@ -126,5 +127,13 @@ internal sealed unsafe class PreviewHost : IDisposable
         {
             throw new ObjectDisposedException(nameof(PreviewHost));
         }
+    }
+
+    private float GetDeltaSeconds()
+    {
+        var now = DateTime.UtcNow;
+        var delta = Math.Max((float)(now - this.lastFrame).TotalSeconds, 1 / 1000f);
+        this.lastFrame = now;
+        return delta;
     }
 }
