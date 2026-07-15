@@ -99,6 +99,12 @@ public unsafe partial class Echoglossian
     /// <param name="currentClassJobId">The current class-job identifier.</param>
     private void PrefetchTraitDetail(uint traitId, byte currentClassJobId)
     {
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            return;
+        }
+
         if (!TryBuildTraitCanonicalPayload(
                 traitId,
                 currentClassJobId,
@@ -108,7 +114,7 @@ public unsafe partial class Echoglossian
         }
 
         var originalRow = TraitPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -116,8 +122,14 @@ public unsafe partial class Echoglossian
         var existingRow = this.FindTrait(originalRow) ?? originalRow;
         this.InsertTrait(originalRow);
 
-        this.PrefetchTraitDetailName(originalPayload, existingRow);
-        this.PrefetchTraitDetailDescription(originalPayload, existingRow);
+        this.PrefetchTraitDetailName(
+            originalPayload,
+            existingRow,
+            sourceLanguage);
+        this.PrefetchTraitDetailDescription(
+            originalPayload,
+            existingRow,
+            sourceLanguage);
     }
 
     /// <summary>
@@ -125,9 +137,11 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchTraitDetailName(
         TraitCanonicalPayload originalPayload,
-        Trait existingRow)
+        Trait existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedTraitName))
@@ -144,6 +158,7 @@ public unsafe partial class Echoglossian
             this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedName: cachedTranslatedName);
             return;
         }
@@ -152,11 +167,12 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Name,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage,
                 LangDict[LanguageInt].Code),
             translatedName => this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedName: translatedName));
     }
 
@@ -165,9 +181,11 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     private void PrefetchTraitDetailDescription(
         TraitCanonicalPayload originalPayload,
-        Trait existingRow)
+        Trait existingRow,
+        SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedTraitDescription))
@@ -184,6 +202,7 @@ public unsafe partial class Echoglossian
             this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedDescription: cachedTranslatedDescription);
             return;
         }
@@ -192,11 +211,12 @@ public unsafe partial class Echoglossian
             translationKey,
             () => TranslationService.Translate(
                 originalPayload.Description,
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage,
                 LangDict[LanguageInt].Code),
             translatedDescription => this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,
                 originalPayload.ClassJobId,
+                sourceLanguage,
                 translatedDescription: translatedDescription));
     }
 
@@ -205,11 +225,13 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="traitId">The trait row identifier.</param>
     /// <param name="currentClassJobId">The current class-job identifier.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
     private void ApplyTraitDetailTranslation(
         uint traitId,
         uint currentClassJobId,
+        SourceClientLanguage sourceLanguage,
         string? translatedName = null,
         string? translatedDescription = null)
     {
@@ -222,7 +244,7 @@ public unsafe partial class Echoglossian
         }
 
         var existingProbe = TraitPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),
@@ -258,7 +280,7 @@ public unsafe partial class Echoglossian
         }
 
         var translatedRow = TraitPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             LangDict[LanguageInt].Code,
             this.configuration.ChosenTransEngine,
             GetGameVersion(),

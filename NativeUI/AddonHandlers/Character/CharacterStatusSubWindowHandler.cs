@@ -16,16 +16,7 @@ namespace Echoglossian.NativeUI.AddonHandlers.Character;
 public unsafe class CharacterStatusSubWindowHandler
     : CharacterTextNodeWindowHandlerBase
 {
-    private static readonly HashSet<string> ExpectedTranslatedSectionTitles =
-    [
-        "Atributos",
-        "Propriedades Ofensivas",
-        "Propriedades Defensivas",
-        "Propriedades Físicas",
-        "Propriedades Mentais",
-        "Equipamento",
-        "Função",
-    ];
+    private const int MinimumChangedSectionSlots = 3;
 
     private bool frameworkUpdateRegistered;
     private DateTime nextRequestedUpdateUtc = DateTime.MinValue;
@@ -63,6 +54,15 @@ public unsafe class CharacterStatusSubWindowHandler
     }
 
     /// <inheritdoc />
+    protected override void OnDeferredCleanupScheduled(
+        AddonEvent evt,
+        AddonArgs args)
+    {
+        this.ClearRegisteredHoverTooltips();
+        this.RequestPreDrawRefresh();
+    }
+
+    /// <inheritdoc />
     protected override bool ShouldReuseCompatiblePayloads()
     {
         return false;
@@ -95,10 +95,12 @@ public unsafe class CharacterStatusSubWindowHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
         if (base.TryResolveSupplementalOriginalPayload(
+                sourceLanguage,
                 livePayload,
                 out originalPayload))
         {
@@ -106,6 +108,7 @@ public unsafe class CharacterStatusSubWindowHandler
         }
 
         if (this.TryResolveCanonicalCharacterStatusPayloadPair(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 livePayload,
                 out originalPayload,
                 out _))
@@ -118,10 +121,12 @@ public unsafe class CharacterStatusSubWindowHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
         if (base.TryResolveSupplementalTranslatedPayload(
+                sourceLanguage,
                 originalPayload,
                 out translatedPayload))
         {
@@ -129,6 +134,7 @@ public unsafe class CharacterStatusSubWindowHandler
         }
 
         if (this.TryResolveCanonicalCharacterStatusPayloadPair(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 originalPayload,
                 out _,
                 out translatedPayload))
@@ -150,7 +156,7 @@ public unsafe class CharacterStatusSubWindowHandler
             livePayload);
         translatedPayload = runtimeState.TranslatedPayload.ProjectToShape(
             livePayload);
-        if (!this.HasExpectedCharacterStatusCoverage(
+        if (!HasMeaningfulTranslatedSectionCoverage(
                 originalPayload,
                 translatedPayload))
         {
@@ -309,6 +315,7 @@ public unsafe class CharacterStatusSubWindowHandler
     ///     projected successfully; otherwise <see langword="false" />.
     /// </returns>
     private bool TryResolveCanonicalCharacterStatusPayloadPair(
+        TranslationReuseScope scope,
         DbFirstGameWindowPayload referencePayload,
         out DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
@@ -316,14 +323,10 @@ public unsafe class CharacterStatusSubWindowHandler
         originalPayload = DbFirstGameWindowPayload.Empty;
         translatedPayload = DbFirstGameWindowPayload.Empty;
 
-        var targetLanguage =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.HandlerConfig.Lang);
         foreach (var row in StringArrayDataCacheManager.GetCandidates(
                      StringArrayType.Character.ToString(),
                      "addon:CharacterStatus",
-                     targetLanguage,
-                     this.HandlerConfig.ChosenTransEngine,
+                     scope,
                      GetGameVersion()).OrderByDescending(candidate => candidate.Id))
         {
             if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
@@ -353,7 +356,7 @@ public unsafe class CharacterStatusSubWindowHandler
                     translatedProjection.StringArrayValues,
                     translatedProjection.TextNodes)
                 .ProjectToShape(referencePayload);
-            if (!this.HasExpectedCharacterStatusCoverage(
+            if (!HasMeaningfulTranslatedSectionCoverage(
                     projectedOriginalPayload,
                     projectedTranslatedPayload))
             {
@@ -376,25 +379,60 @@ public unsafe class CharacterStatusSubWindowHandler
     /// <param name="translatedPayload">The projected translated payload.</param>
     /// <returns>
     ///     <see langword="true" /> when the translated payload contains enough
-    ///     expected section titles and differs meaningfully from the original
+    ///     changed corresponding slots and differs meaningfully from the original
     ///     payload; otherwise <see langword="false" />.
     /// </returns>
-    private bool HasExpectedCharacterStatusCoverage(
+    internal static bool HasMeaningfulTranslatedSectionCoverage(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
-        var translatedTexts = translatedPayload.AtkValues.Values
-            .Concat(translatedPayload.StringArrayValues.Values)
-            .Concat(translatedPayload.TextNodes.Values)
-            .Where(text => !string.IsNullOrWhiteSpace(text))
-            .ToHashSet(StringComparer.Ordinal);
-        var matchedSectionTitles = ExpectedTranslatedSectionTitles.Count(
-            translatedTexts.Contains);
-        if (matchedSectionTitles < 3)
+        if (originalPayload.StructurallyEquals(translatedPayload))
         {
             return false;
         }
 
-        return !originalPayload.StructurallyEquals(translatedPayload);
+        var changedSlots = CountChangedCorrespondingTexts(
+                               originalPayload.AtkValues,
+                               translatedPayload.AtkValues) +
+                           CountChangedCorrespondingTexts(
+                               originalPayload.StringArrayValues,
+                               translatedPayload.StringArrayValues) +
+                           CountChangedCorrespondingTexts(
+                               originalPayload.TextNodes,
+                               translatedPayload.TextNodes);
+        return changedSlots >= MinimumChangedSectionSlots;
+    }
+
+    /// <summary>
+    ///     Counts corresponding non-empty payload slots whose translated text
+    ///     differs meaningfully from the original text.
+    /// </summary>
+    /// <typeparam name="TKey">The payload slot key type.</typeparam>
+    /// <param name="originalValues">The original-facing payload slots.</param>
+    /// <param name="translatedValues">The translated payload slots.</param>
+    /// <returns>The number of meaningfully changed corresponding slots.</returns>
+    private static int CountChangedCorrespondingTexts<TKey>(
+        IReadOnlyDictionary<TKey, string> originalValues,
+        IReadOnlyDictionary<TKey, string> translatedValues)
+        where TKey : notnull
+    {
+        var changedSlots = 0;
+        foreach (var (key, originalText) in originalValues)
+        {
+            if (string.IsNullOrWhiteSpace(originalText) ||
+                !translatedValues.TryGetValue(key, out var translatedText) ||
+                string.IsNullOrWhiteSpace(translatedText) ||
+                string.Equals(
+                    originalText.Trim(),
+                    translatedText.Trim(),
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            changedSlots++;
+        }
+
+        return changedSlots;
     }
 }

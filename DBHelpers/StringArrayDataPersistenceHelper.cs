@@ -96,7 +96,9 @@ public static class StringArrayDataPersistenceHelper
                 return "Invalid data.";
             }
 
-            var existing = BuildLookupQuery(context, stringArrayData)
+            var existing = BuildLookupQuery(
+                    context.StringArrayDatas,
+                    stringArrayData)
                 .FirstOrDefault();
             if (existing != null)
             {
@@ -134,6 +136,52 @@ public static class StringArrayDataPersistenceHelper
         string configDirectory,
         StringArrayDatas probe)
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        if (!HasCanonicalScope(probe))
+        {
+            using var context = new EchoglossianDbContext(configDirectory);
+            try
+            {
+                return IsValidForPersistence(probe)
+                    ? BuildLookupQuery(
+                            context.StringArrayDatas.AsNoTracking(),
+                            probe)
+                        .FirstOrDefault()
+                    : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        return FindStringArrayData(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true));
+    }
+
+    /// <summary>
+    ///     Finds a <see cref="StringArrayDatas" /> row using an explicit
+    ///     translation reuse scope.
+    /// </summary>
+    /// <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
+    /// <param name="probe">The probe payload that defines content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The matching row, or <see langword="null" /> when not found.</returns>
+    public static StringArrayDatas? FindStringArrayData(
+        string configDirectory,
+        StringArrayDatas probe,
+        TranslationReuseScope scope)
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -143,14 +191,55 @@ public static class StringArrayDataPersistenceHelper
                 return null;
             }
 
-            return BuildLookupQuery(context, probe)
-                .AsNoTracking()
+            return BuildReuseLookupQuery(
+                    context.StringArrayDatas.AsNoTracking(),
+                    probe,
+                    scope)
                 .FirstOrDefault();
         }
         catch
         {
             return null;
         }
+    }
+
+    /// <summary>
+    ///     Builds a policy-aware lookup query for one row.
+    /// </summary>
+    /// <param name="rows">The source query.</param>
+    /// <param name="row">The row that defines content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The policy-compatible lookup query.</returns>
+    private static IEnumerable<StringArrayDatas> BuildReuseLookupQuery(
+        IQueryable<StringArrayDatas> rows,
+        StringArrayDatas row,
+        TranslationReuseScope scope)
+    {
+        var hasRequestedGameVersion =
+            GameVersionLookupHelper.HasRequestedVersion(row.GameVersion);
+        var matchingRows = HasCanonicalScope(row)
+            ? rows.Where(existing =>
+                existing.Type == row.Type &&
+                existing.ContextKey == row.ContextKey &&
+                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (existing.GameVersion == null ||
+                   existing.GameVersion == row.GameVersion))) &&
+                existing.SourceContentHash == row.SourceContentHash)
+            : rows.Where(existing =>
+                existing.Type == row.Type &&
+                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (existing.GameVersion == null ||
+                   existing.GameVersion == row.GameVersion))) &&
+                existing.FormattedRawData == row.FormattedRawData);
+
+        return matchingRows
+            .AsEnumerable()
+            .Where(existing => scope.Matches(
+                existing.OriginalLang,
+                existing.TranslationLang,
+                existing.TranslationEngine));
     }
 
     /// <summary>
@@ -168,18 +257,19 @@ public static class StringArrayDataPersistenceHelper
             return false;
         }
 
-        return HasCanonicalScope(row) ||
-               !string.IsNullOrWhiteSpace(row.FormattedRawData);
+        return HasCanonicalScope(row)
+            ? !string.IsNullOrWhiteSpace(row.OriginalLang)
+            : !string.IsNullOrWhiteSpace(row.FormattedRawData);
     }
 
     /// <summary>
     ///     Builds the lookup query for one row.
     /// </summary>
-    /// <param name="context">The active DB context.</param>
+    /// <param name="rows">The source query.</param>
     /// <param name="row">The row that defines the lookup scope.</param>
     /// <returns>The lookup query.</returns>
-    private static IQueryable<StringArrayDatas> BuildLookupQuery(
-        EchoglossianDbContext context,
+    private static IEnumerable<StringArrayDatas> BuildLookupQuery(
+        IQueryable<StringArrayDatas> rows,
         StringArrayDatas row)
     {
         var hasRequestedGameVersion =
@@ -187,27 +277,60 @@ public static class StringArrayDataPersistenceHelper
 
         if (HasCanonicalScope(row))
         {
-            return context.StringArrayDatas.Where(existing =>
+            return rows
+                .Where(existing =>
+                    existing.Type == row.Type &&
+                    existing.ContextKey == row.ContextKey &&
+                    existing.TranslationLang == row.TranslationLang &&
+                    existing.TranslationEngine == row.TranslationEngine &&
+                    ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (existing.GameVersion == null ||
+                       existing.GameVersion == row.GameVersion))) &&
+                    existing.SourceContentHash == row.SourceContentHash)
+                .AsEnumerable()
+                .Where(existing => RuntimeLanguageHelper.LanguagesMatch(
+                    existing.OriginalLang,
+                    row.OriginalLang));
+        }
+
+        return rows
+            .Where(existing =>
                 existing.Type == row.Type &&
-                existing.ContextKey == row.ContextKey &&
                 existing.TranslationLang == row.TranslationLang &&
                 existing.TranslationEngine == row.TranslationEngine &&
                 ((!hasRequestedGameVersion && existing.GameVersion == null) ||
                  (hasRequestedGameVersion &&
                   (existing.GameVersion == null ||
                    existing.GameVersion == row.GameVersion))) &&
-                existing.SourceContentHash == row.SourceContentHash);
+                existing.FormattedRawData == row.FormattedRawData)
+            .AsEnumerable()
+            .Where(existing => LegacySourceLanguagesMatch(
+                existing.OriginalLang,
+                row.OriginalLang));
+    }
+
+    /// <summary>
+    ///     Compares legacy source identities while preserving matching
+    ///     source-less legacy rows.
+    /// </summary>
+    /// <param name="storedSource">The stored legacy source identity.</param>
+    /// <param name="requestedSource">The incoming legacy source identity.</param>
+    /// <returns>Whether the legacy source identities match.</returns>
+    private static bool LegacySourceLanguagesMatch(
+        string? storedSource,
+        string? requestedSource)
+    {
+        if (string.IsNullOrWhiteSpace(storedSource) ||
+            string.IsNullOrWhiteSpace(requestedSource))
+        {
+            return string.IsNullOrWhiteSpace(storedSource) &&
+                   string.IsNullOrWhiteSpace(requestedSource);
         }
 
-        return context.StringArrayDatas.Where(existing =>
-            existing.Type == row.Type &&
-            existing.TranslationLang == row.TranslationLang &&
-            existing.TranslationEngine == row.TranslationEngine &&
-            ((!hasRequestedGameVersion && existing.GameVersion == null) ||
-             (hasRequestedGameVersion &&
-              (existing.GameVersion == null ||
-               existing.GameVersion == row.GameVersion))) &&
-            existing.FormattedRawData == row.FormattedRawData);
+        return RuntimeLanguageHelper.LanguagesMatch(
+            storedSource,
+            requestedSource);
     }
 
     /// <summary>

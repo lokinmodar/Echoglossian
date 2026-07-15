@@ -33,7 +33,8 @@ internal static class TranslationActivationGuard
       Config config,
       LanguageInfo selectedLanguage)
   {
-    if (config.UnsupportedLanguage)
+    if (config.UnsupportedLanguage &&
+        LanguagePresentationPolicy.IsUnsupportedLanguage(config.Lang))
     {
       return BlockReason.UnsupportedLanguage;
     }

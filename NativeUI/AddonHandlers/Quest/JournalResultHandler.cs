@@ -107,6 +107,12 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         return;
       }
 
+      if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+              out var sourceLanguage))
+      {
+        return;
+      }
+
       if (QuestUiTranslationCache.TryGetAppliedSnapshot(
               questNameText,
               out var cachedSnapshot))
@@ -128,7 +134,10 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         return;
       }
 
-      var questPlate = this.CreateQuestPlate(questNameText, string.Empty);
+      var questPlate = this.CreateQuestPlate(
+          sourceLanguage,
+          questNameText,
+          string.Empty);
       var foundQuestPlate = this.FindQuestPlateByName(questPlate);
       var cacheKey = $"JournalResult|{questNameText}";
       if (foundQuestPlate != null)
@@ -211,10 +220,11 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 
       this.QueueTranslation(
           cacheKey,
-          () => this.Translate(questNameText),
+          () => this.Translate(questNameText, sourceLanguage),
           translatedNameText =>
           {
             var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+                sourceLanguage,
                 questNameText,
                 string.Empty,
                 translatedNameText,

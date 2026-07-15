@@ -124,6 +124,7 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly IDalamudTextureWrap logo;
   private QueuedTranslationBroker queuedTranslationBroker;
   private readonly HoverTooltipManager hoverTooltipManager;
+  private readonly RtlTexturePresentationService rtlTexturePresentationService;
 
   private readonly IDalamudTextureWrap pixImage;
   private readonly IDalamudTextureWrap cryptoImage;
@@ -283,6 +284,17 @@ public partial class Echoglossian : IDalamudPlugin
     this.EnsureConfigDefaultsPersistedForMissingKeys();
 
     SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
+    var languagePolicyChanged =
+        this.configuration.UnsupportedLanguage !=
+        LanguagePresentationPolicy.IsUnsupportedLanguage(this.configuration.Lang) ||
+        this.configuration.OverlayOnlyLanguage !=
+        LanguagePresentationPolicy.RequiresOverlayOnly(this.configuration.Lang);
+    LanguagePresentationPolicy.ApplyLanguageFlags(this.configuration);
+    if (languagePolicyChanged)
+    {
+      PluginInterface.SavePluginConfig(this.configuration);
+    }
+
     AssetsManager.RefreshPluginAssetsState(SelectedLanguage);
     this.configuration.PluginAssetsDownloaded = AssetsManager.PluginAssetsDownloaded;
 
@@ -331,6 +343,9 @@ public partial class Echoglossian : IDalamudPlugin
     MountFontPaths();
 
     UINewFontHandler = new UINewFontHandler(this.configuration);
+    this.rtlTexturePresentationService = new RtlTexturePresentationService(
+        this.configuration,
+        TextureProvider);
 
     this.RebuildTranslationServiceSafely();
 
@@ -340,7 +355,8 @@ public partial class Echoglossian : IDalamudPlugin
         message => PluginRuntimeLog.Error(message));
     this.hoverTooltipManager = new HoverTooltipManager(
         this.configuration,
-        UINewFontHandler);
+        UINewFontHandler,
+        this.rtlTexturePresentationService);
     this.RegisterStructuredTooltipLifecycleHandlers();
 
     this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
@@ -509,6 +525,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     AddonLifecycle.UnLogAddon("CutSceneSelectString");
       this.hoverTooltipManager.Clear();
+      this.rtlTexturePresentationService.Clear();
       QuestUiTranslationCache.Clear();
       QuestHoverTranslationCache.Clear();
       StringArrayDataCacheManager.Clear();
@@ -534,6 +551,7 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterToastGuiSupportedToastRuntime();
       this.UnregisterToastGuiCaptureRuntime();
       this.queuedTranslationBroker.Dispose();
+      this.rtlTexturePresentationService.Dispose();
 
       PluginInterface.UiBuilder.OpenMainUi -= this.ConfigWindow;
       PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;

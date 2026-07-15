@@ -73,7 +73,9 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Updates the visible quest names from the shared translation cache.
   /// </summary>
-  private unsafe void UpdateRecommendList()
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
+  private unsafe void UpdateRecommendList(
+      SourceClientLanguage sourceLanguage)
   {
     var atkStage = AtkStage.Instance();
     var recommendList =
@@ -182,6 +184,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
         }
 
         var questPlate = this.CreateQuestPlate(
+            sourceLanguage,
             questNameText,
             string.Empty);
         var foundQuestPlate = this.FindQuestPlateByName(questPlate);
@@ -269,10 +272,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
 
         this.QueueTranslation(
             cacheKey,
-            () => this.Translate(questNameText),
+            () => this.Translate(questNameText, sourceLanguage),
             translatedNameText =>
             {
               var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+                  sourceLanguage,
                   questNameText,
                   string.Empty,
                   translatedNameText,
@@ -292,7 +296,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       }
 
       // Then we replace the text in the nodes
-      this.UpdateRecommendList();
+      this.UpdateRecommendList(sourceLanguage);
     }
     catch (Exception e)
     {
@@ -322,7 +326,13 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       return;
     }
 
-    this.TranslateRecommendListHandler();
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
+    this.TranslateRecommendListHandler(sourceLanguage);
   }
 
   /// <summary>
@@ -342,8 +352,15 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     // delay added to be sure the nodes are loaded when the player changes zones
-    Task.Delay(200).ContinueWith(t => this.TranslateRecommendListHandler());
+    Task.Delay(200).ContinueWith(
+        t => this.TranslateRecommendListHandler(sourceLanguage));
   }
 
   /// <summary>
@@ -359,7 +376,13 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       return;
     }
 
-    this.RefreshRecommendListHoverTooltips();
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
+    this.RefreshRecommendListHoverTooltips(sourceLanguage);
   }
 
   /// <summary>
@@ -380,7 +403,9 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   ///     Re-registers visible RecommendList hover targets using only cached or
   ///     already-persisted translations.
   /// </summary>
-  private unsafe void RefreshRecommendListHoverTooltips()
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
+  private unsafe void RefreshRecommendListHoverTooltips(
+      SourceClientLanguage sourceLanguage)
   {
     var atkStage = AtkStage.Instance();
     var recommendList =
@@ -452,7 +477,10 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       }
       else
       {
-        var questPlate = this.CreateQuestPlate(questNameText, string.Empty);
+        var questPlate = this.CreateQuestPlate(
+            sourceLanguage,
+            questNameText,
+            string.Empty);
         var foundQuestPlate = this.FindQuestPlateByName(questPlate);
         if (foundQuestPlate != null)
         {
@@ -508,7 +536,9 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Runs the two-pass RecommendList translation flow.
   /// </summary>
-  private unsafe void TranslateRecommendListHandler()
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
+  private unsafe void TranslateRecommendListHandler(
+      SourceClientLanguage sourceLanguage)
   {
     var atkStage = AtkStage.Instance();
     var recommendList =
@@ -617,6 +647,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
         }
 
         var questPlate = this.CreateQuestPlate(
+            sourceLanguage,
             questNameText,
             string.Empty);
         var foundQuestPlate = this.FindQuestPlateByName(questPlate);
@@ -701,10 +732,11 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
 
         this.QueueTranslation(
             cacheKey,
-            () => this.Translate(questNameText),
+            () => this.Translate(questNameText, sourceLanguage),
             translatedNameText =>
             {
               var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+                  sourceLanguage,
                   questNameText,
                   string.Empty,
                   translatedNameText,
@@ -725,7 +757,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       }
 
       // Then we replace the text in the nodes
-      this.UpdateRecommendList();
+      this.UpdateRecommendList(sourceLanguage);
     }
     catch (Exception e)
     {

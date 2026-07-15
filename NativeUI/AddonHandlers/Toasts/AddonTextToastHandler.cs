@@ -180,8 +180,17 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var textNode = this.resolveToastTextNode(addon);
-    if (!this.TryReadCurrentSource(textNode, out var originalText))
+    if (!this.TryReadCurrentSource(
+            textNode,
+            sourceLanguage,
+            out var originalText))
     {
       return;
     }
@@ -191,7 +200,10 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     //     $"[{this.addonName}] trigger={type} captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeToastText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
-    this.TryCaptureOrQueueToastSource(originalText, type.ToString());
+    this.TryCaptureOrQueueToastSource(
+        originalText,
+        type.ToString(),
+        sourceLanguage);
   }
 
   /// <summary>
@@ -207,8 +219,17 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var textNode = this.resolveToastTextNode(addon);
-    if (!this.TryReadCurrentSource(textNode, out var visibleOriginalText))
+    if (!this.TryReadCurrentSource(
+            textNode,
+            sourceLanguage,
+            out var visibleOriginalText))
     {
       return;
     }
@@ -221,7 +242,8 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
 
     if (this.TryHandleVisibleSourceChange(
             visibleOriginalText,
-            $"{type}-visible-reconcile"))
+            $"{type}-visible-reconcile",
+            sourceLanguage))
     {
       return;
     }
@@ -233,7 +255,8 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     {
       if (this.TryCaptureOrQueueToastSource(
               visibleOriginalText,
-              $"{type}-visible-fallback"))
+              $"{type}-visible-fallback",
+              sourceLanguage))
       {
         return;
       }
@@ -307,6 +330,33 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       string originalText,
       string trigger)
   {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return false;
+    }
+
+    return this.TryCaptureOrQueueToastSource(
+        originalText,
+        trigger,
+        sourceLanguage);
+  }
+
+  /// <summary>
+  ///     Resolves one toast source using an already validated source identity.
+  /// </summary>
+  /// <param name="originalText">The original toast text to resolve.</param>
+  /// <param name="trigger">The log trigger label associated with the call.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the source was handled; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool TryCaptureOrQueueToastSource(
+      string originalText,
+      string trigger,
+      SourceClientLanguage sourceLanguage)
+  {
     if (this.TryGetCachedTranslation(
             originalText,
             out var translatedText,
@@ -318,7 +368,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       return true;
     }
 
-    var lookupToast = this.BuildLookupMessage(originalText);
+    var lookupToast = this.BuildLookupMessage(originalText, sourceLanguage);
     var storedToast = this.findToastMessage(lookupToast);
     if (this.IsStoredTranslationUsable(storedToast, originalText))
     {
@@ -340,7 +390,10 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       // PluginRuntimeLog.Debug(
       //     $"[{this.addonName}] trigger={trigger} cache-miss -> queued translation request #{requestId}");
       this.PublishOverlay(originalText, string.Empty, trigger);
-      Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
+      Task.Run(() => this.ResolveTranslationAsync(
+          originalText,
+          requestId,
+          sourceLanguage));
       return true;
     }
 
@@ -456,13 +509,15 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="visibleOriginalText">The currently visible toast source.</param>
   /// <param name="trigger">The trigger label used for capture or queueing.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>
   ///     <see langword="true" /> when the source changed and the new source was
   ///     handled immediately; otherwise, <see langword="false" />.
   /// </returns>
   protected bool TryHandleVisibleSourceChange(
       string visibleOriginalText,
-      string trigger)
+      string trigger,
+      SourceClientLanguage sourceLanguage)
   {
     var shouldReconcile = false;
 
@@ -483,7 +538,8 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     this.RestoreTrackedNativeLayoutIfNeeded(visibleOriginalText);
     return this.TryCaptureOrQueueToastSource(
         visibleOriginalText,
-        trigger);
+        trigger,
+        sourceLanguage);
   }
 
   /// <summary>
@@ -492,17 +548,19 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="originalText">The original toast text.</param>
   /// <param name="requestId">The request identifier used to reject stale updates.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation attempt finishes.</returns>
   protected async Task ResolveTranslationAsync(
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage,
           LangDict[LanguageInt].Code) ?? string.Empty;
     }
     catch (Exception ex)
@@ -535,7 +593,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     var translatedToast = new ToastMessage(
         this.toastType,
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         translatedText,
         LangDict[LanguageInt].Code,
         this.config.ChosenTransEngine,
@@ -567,13 +625,16 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   ///     by the plugin database.
   /// </summary>
   /// <param name="originalText">The original toast text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A formatted <see cref="ToastMessage" /> for DB lookup.</returns>
-  protected ToastMessage BuildLookupMessage(string originalText)
+  protected ToastMessage BuildLookupMessage(
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return new ToastMessage(
         this.toastType,
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         LangDict[LanguageInt].Code,
         this.config.ChosenTransEngine,
@@ -610,7 +671,8 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   ///     visible translated replacement back to the original source line when
   ///     needed.
   /// </summary>
-  /// <param name="addon">The visible toast addon.</param>
+  /// <param name="textNode">The visible toast text node.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="originalText">Receives the logical original toast text.</param>
   /// <returns>
   ///     <see langword="true" /> when readable text is available; otherwise,
@@ -618,6 +680,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   /// </returns>
   protected unsafe bool TryReadCurrentSource(
       AtkTextNode* textNode,
+      SourceClientLanguage sourceLanguage,
       out string originalText)
   {
     originalText = string.Empty;
@@ -650,6 +713,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
         this.TryConfirmOriginalPointerMatchesVisible(
             originalPointerText,
             visibleText,
+            sourceLanguage,
             out var confirmedOriginalText))
     {
       originalText = confirmedOriginalText;
@@ -667,6 +731,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
   /// <param name="visibleText">The text currently visible in the node.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="originalText">Receives the confirmed original toast text.</param>
   /// <returns>
   ///     <see langword="true" /> when the pointer text can be proven to explain
@@ -676,6 +741,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
   protected bool TryConfirmOriginalPointerMatchesVisible(
       string originalPointerText,
       string visibleText,
+      SourceClientLanguage sourceLanguage,
       out string originalText)
   {
     lock (this.stateGate)
@@ -689,7 +755,7 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
     }
 
     var lookupToast = this.findToastMessage(
-        this.BuildLookupMessage(originalPointerText));
+        this.BuildLookupMessage(originalPointerText, sourceLanguage));
     if (this.IsStoredTranslationUsable(lookupToast, originalPointerText))
     {
       var replacementText = this.NormalizeForReplacement(

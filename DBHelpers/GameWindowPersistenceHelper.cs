@@ -13,8 +13,6 @@ namespace Echoglossian;
 /// </summary>
 public static class GameWindowPersistenceHelper
 {
-    private const string ActionMenuWindowName = "ActionMenu";
-
     /// <summary>
     ///     Inserts or updates a <see cref="GameWindow" /> row using the DB-first
     ///     lookup semantics for addon, optional class/job scope, language,
@@ -35,7 +33,9 @@ public static class GameWindowPersistenceHelper
 
         try
         {
-            if (gameWindow is null || string.IsNullOrWhiteSpace(gameWindow.WindowAddonName))
+            if (gameWindow is null ||
+                string.IsNullOrWhiteSpace(gameWindow.WindowAddonName) ||
+                string.IsNullOrWhiteSpace(gameWindow.OriginalWindowStringsLang))
             {
                 return "Invalid data.";
             }
@@ -44,12 +44,8 @@ public static class GameWindowPersistenceHelper
 
             if (existing != null)
             {
-                if (IsActionMenuScopedUpsert(gameWindow))
-                {
-                    existing.OriginalWindowStrings = gameWindow.OriginalWindowStrings;
-                }
-
                 existing.OriginalWindowStringsLang = gameWindow.OriginalWindowStringsLang;
+                existing.OriginalWindowStrings = gameWindow.OriginalWindowStrings;
                 existing.TranslatedWindowStrings = gameWindow.TranslatedWindowStrings;
                 existing.UpdatedDate = DateTime.UtcNow;
 
@@ -86,26 +82,7 @@ public static class GameWindowPersistenceHelper
         EchoglossianDbContext context,
         GameWindow gameWindow)
     {
-        return IsActionMenuScopedUpsert(gameWindow)
-            ? TryFindExistingActionMenuScopeRow(context, gameWindow)
-            : TryFindExistingExactPayloadRow(context, gameWindow);
-    }
-
-    /// <summary>
-    ///     Determines whether one <see cref="GameWindow" /> should use the
-    ///     ActionMenu scoped upsert semantics.
-    /// </summary>
-    /// <param name="gameWindow">The candidate row.</param>
-    /// <returns>
-    ///     <see langword="true" /> when the row belongs to
-    ///     <c>ActionMenu</c>; otherwise <see langword="false" />.
-    /// </returns>
-    private static bool IsActionMenuScopedUpsert(GameWindow gameWindow)
-    {
-        return string.Equals(
-            gameWindow.WindowAddonName,
-            ActionMenuWindowName,
-            StringComparison.Ordinal);
+        return TryFindExistingExactPayloadRow(context, gameWindow);
     }
 
     /// <summary>
@@ -124,6 +101,9 @@ public static class GameWindowPersistenceHelper
             .FirstOrDefault(g =>
                 g.WindowAddonName == gameWindow.WindowAddonName &&
                 RuntimeLanguageHelper.LanguagesMatch(
+                    g.OriginalWindowStringsLang,
+                    gameWindow.OriginalWindowStringsLang) &&
+                RuntimeLanguageHelper.LanguagesMatch(
                     g.TranslationLang,
                     gameWindow.TranslationLang) &&
                 g.ClassJobId == gameWindow.ClassJobId &&
@@ -132,37 +112,6 @@ public static class GameWindowPersistenceHelper
                     g.GameVersion,
                     gameWindow.GameVersion) &&
                 g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
-    }
-
-    /// <summary>
-    ///     Tries to find one existing ActionMenu row for the same effective
-    ///     lookup scope, regardless of the current payload shape.
-    /// </summary>
-    /// <param name="context">The database context.</param>
-    /// <param name="gameWindow">The candidate ActionMenu row.</param>
-    /// <returns>The matching scoped row, or <see langword="null" />.</returns>
-    private static GameWindow? TryFindExistingActionMenuScopeRow(
-        EchoglossianDbContext context,
-        GameWindow gameWindow)
-    {
-        return context.GameWindow
-            .AsEnumerable()
-            .Where(g =>
-                string.Equals(
-                    g.WindowAddonName,
-                    ActionMenuWindowName,
-                    StringComparison.Ordinal) &&
-                RuntimeLanguageHelper.LanguagesMatch(
-                    g.TranslationLang,
-                    gameWindow.TranslationLang) &&
-                g.ClassJobId == gameWindow.ClassJobId &&
-                g.TranslationEngine == gameWindow.TranslationEngine &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    g.GameVersion,
-                    gameWindow.GameVersion))
-            .OrderByDescending(static g => g.UpdatedDate ?? g.CreatedDate ?? DateTime.MinValue)
-            .ThenByDescending(static g => g.Id)
-            .FirstOrDefault();
     }
 
 }

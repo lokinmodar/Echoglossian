@@ -92,15 +92,25 @@ public static class ActionTooltipPersistenceHelper
                 GameVersionLookupHelper.HasRequestedVersion(
                     actionTooltip.GameVersion);
 
-            var existing = context.ActionTooltip.FirstOrDefault(row =>
-                row.ActionId == actionTooltip.ActionId &&
-                row.TranslationLang == actionTooltip.TranslationLang &&
-                row.TranslationEngine == actionTooltip.TranslationEngine &&
-                ((!hasRequestedGameVersion && row.GameVersion == null) ||
-                 (hasRequestedGameVersion &&
-                  (row.GameVersion == null ||
-                   row.GameVersion == actionTooltip.GameVersion))) &&
-                row.SourceContentHash == actionTooltip.SourceContentHash);
+            var existing = context.ActionTooltip
+                .Where(row =>
+                    row.ActionId == actionTooltip.ActionId &&
+                    row.TranslationEngine == actionTooltip.TranslationEngine &&
+                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (row.GameVersion == null ||
+                       row.GameVersion == actionTooltip.GameVersion))) &&
+                    row.SourceContentHash == actionTooltip.SourceContentHash)
+                .AsEnumerable()
+                .Where(row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    actionTooltip.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        row.TranslationLang,
+                        actionTooltip.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, actionTooltip);
@@ -138,6 +148,34 @@ public static class ActionTooltipPersistenceHelper
         string configDirectory,
         ActionTooltip probe)
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        return FindActionTooltip(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true));
+    }
+
+    /// <summary>
+    ///     Finds one canonical action-tooltip row using an explicit translation
+    ///     reuse scope.
+    /// </summary>
+    /// <param name="configDirectory">The plugin config directory containing SQLite.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ActionTooltip? FindActionTooltip(
+        string configDirectory,
+        ActionTooltip probe,
+        TranslationReuseScope scope)
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -152,15 +190,21 @@ public static class ActionTooltipPersistenceHelper
 
             return context.ActionTooltip
                 .AsNoTracking()
-                .FirstOrDefault(row =>
+                .Where(row =>
                     row.ActionId == probe.ActionId &&
-                    row.TranslationLang == probe.TranslationLang &&
-                    row.TranslationEngine == probe.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
                       (row.GameVersion == null ||
                        row.GameVersion == probe.GameVersion))) &&
-                    row.SourceContentHash == probe.SourceContentHash);
+                    row.SourceContentHash == probe.SourceContentHash)
+                .AsEnumerable()
+                .Where(row => scope.Matches(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    row.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -177,6 +221,7 @@ public static class ActionTooltipPersistenceHelper
     {
         return row != null &&
                row.ActionId > 0 &&
+               !string.IsNullOrWhiteSpace(row.OriginalLang) &&
                !string.IsNullOrWhiteSpace(row.TranslationLang) &&
                !string.IsNullOrWhiteSpace(row.SourceContentHash);
     }
@@ -229,6 +274,33 @@ public static class ActionTooltipPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated action fields are populated so alias
+    ///     reuse prefers an existing completed row over an incomplete row.
+    /// </summary>
+    /// <param name="row">The action row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(ActionTooltip row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedActionName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedActionDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

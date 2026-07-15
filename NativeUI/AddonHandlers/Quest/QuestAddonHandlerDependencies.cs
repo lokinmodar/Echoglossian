@@ -33,11 +33,13 @@ internal delegate bool QueueTranslationDelegate(
 /// </summary>
 /// <param name="key">Stable translation key.</param>
 /// <param name="sourceTexts">The source texts that will be translated.</param>
+/// <param name="sourceLanguage">The captured source client language.</param>
 /// <param name="onResolved">Optional callback invoked with the translated batch.</param>
 /// <returns>True when the request was queued.</returns>
 internal delegate bool QueueTranslationBatchDelegate(
     string key,
     IReadOnlyCollection<string> sourceTexts,
+    SourceClientLanguage sourceLanguage,
     Action<string[]>? onResolved = null);
 
 /// <summary>

@@ -73,6 +73,8 @@ public partial class Echoglossian
   /// </summary>
   private void BuildUi()
   {
+    this.rtlTexturePresentationService.BeginDrawFrame();
+
     if (this.config)
     {
       this.EchoglossianConfigUi();

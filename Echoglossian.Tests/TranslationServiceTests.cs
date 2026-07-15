@@ -17,6 +17,235 @@ namespace Echoglossian.Tests;
 public class TranslationServiceTests
 {
     /// <summary>
+    ///     Ensures distinct simplified and traditional Chinese client sources
+    ///     retain separate failure identities while sharing the provider code.
+    /// </summary>
+    [Fact]
+    public void Translate_ChineseClientSources_SeparateFailureIdentity()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = string.Empty,
+        };
+        var knownFailureSources = new HashSet<string>(StringComparer.Ordinal);
+        var lookupSources = new List<string>();
+        var recordedSources = new List<string>();
+        var service = new TranslationService(
+            text => text,
+            translator,
+            translationEngine: 8,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+            {
+                lookupSources.Add(source);
+                return knownFailureSources.Contains(source);
+            },
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedSources.Add(source);
+                knownFailureSources.Add(source);
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                recordedSources.Add(source);
+                knownFailureSources.Add(source);
+            });
+
+        var chsResult = service.Translate(
+            "same text",
+            new SourceClientLanguage("chs", "zh-CN"),
+            "pt-BR");
+        var chtResult = service.Translate(
+            "same text",
+            new SourceClientLanguage("cht", "zh-CN"),
+            "pt-BR");
+
+        Assert.Equal("same text", chsResult);
+        Assert.Equal("same text", chtResult);
+        Assert.Equal(2, translator.SyncCalls);
+        Assert.Equal(["zh-CN", "zh-CN"], translator.SyncSourceLanguages);
+        Assert.Equal(["chs", "cht"], lookupSources);
+        Assert.Equal(["chs", "cht"], recordedSources);
+    }
+
+    /// <summary>
+    ///     Ensures an unresolved source contract fails before failure-cache,
+    ///     provider, or persistence activity.
+    /// </summary>
+    [Fact]
+    public void Translate_UnknownCapturedSource_PerformsNoWork()
+    {
+        var translator = new RecordingTranslator
+        {
+            SyncResult = "should-not-be-used",
+        };
+        var failureLookupCalls = 0;
+        var failureRecordCalls = 0;
+        var transientFailureRecordCalls = 0;
+        var service = new TranslationService(
+            text => text,
+            translator,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+            {
+                failureLookupCalls++;
+                return false;
+            },
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                failureRecordCalls++;
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                transientFailureRecordCalls++;
+            });
+
+        var result = service.Translate(
+            "unknown source text",
+            default(SourceClientLanguage),
+            "pt-BR");
+
+        Assert.Equal("unknown source text", result);
+        Assert.Equal(0, translator.SyncCalls);
+        Assert.Equal(0, failureLookupCalls);
+        Assert.Equal(0, failureRecordCalls);
+        Assert.Equal(0, transientFailureRecordCalls);
+    }
+
+    /// <summary>
+    ///     Ensures delayed async dialogue work retains its captured simplified
+    ///     Chinese persistence identity after the live resolver changes.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TranslateAsync_CapturedChsAfterResolverChangesToCht_PreservesSourceScope()
+    {
+        var translator = new ContextAwareRecordingTranslator
+        {
+            AsyncResult = string.Empty,
+        };
+        var defaultTranslator = new RecordingTranslator
+        {
+            AsyncResult = "wrong-surface",
+        };
+        var capturedSource = new SourceClientLanguage("chs", "zh-CN");
+        var liveSource = capturedSource;
+        var lookupSources = new List<string>();
+        var lookupEngines = new List<int>();
+        var recordedSources = new List<string>();
+        var recordedEngines = new List<int>();
+        var service = new TranslationService(
+            text => text,
+            defaultTranslator,
+            translationEngine: 4,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+            {
+                lookupSources.Add(source);
+                lookupEngines.Add(engine);
+                return false;
+            },
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                recordedSources.Add(source);
+                recordedEngines.Add(engine);
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                recordedSources.Add(source);
+                recordedEngines.Add(engine);
+            },
+            translatorResolver: surface => surface == TranslationSurfaceGroup.Dialogue
+                ? new TranslationService.TranslatorResolution(8, translator)
+                : new TranslationService.TranslatorResolution(4, defaultTranslator),
+            sourceLanguageResolver: _ => liveSource);
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "captured-chs",
+            "Krile",
+            [
+                new DialogueTranslationTurn(
+                    "Krile",
+                    "Pray return.",
+                    new DateTime(2026, 07, 13, 12, 0, 0, DateTimeKind.Utc)),
+            ]);
+
+        liveSource = new SourceClientLanguage("cht", "zh-CN");
+        var result = await service.TranslateAsync(
+            "same text",
+            capturedSource,
+            "pt-BR",
+            dialogueContext,
+            TranslationSurfaceGroup.Dialogue);
+
+        Assert.Equal("same text", result);
+        Assert.Equal(["chs"], lookupSources);
+        Assert.Equal([8], lookupEngines);
+        Assert.Equal(["chs"], recordedSources);
+        Assert.Equal([8], recordedEngines);
+        Assert.Equal(["zh-CN"], translator.ContextAwareSourceLanguages);
+        Assert.Equal(1, translator.ContextAwareAsyncCalls);
+        Assert.Equal(0, translator.AsyncCalls);
+        Assert.Equal(0, defaultTranslator.AsyncCalls);
+    }
+
+    /// <summary>
+    ///     Ensures unknown or internally mismatched captured async sources fail
+    ///     before resolver, failure-cache, provider, or persistence activity.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TranslateAsync_UnknownOrMismatchedCapturedSource_PerformsNoWork()
+    {
+        var translator = new RecordingTranslator
+        {
+            AsyncResult = "should-not-be-used",
+        };
+        var sourceResolverCalls = 0;
+        var failureLookupCalls = 0;
+        var failureRecordCalls = 0;
+        var service = new TranslationService(
+            text => text,
+            translator,
+            isKnownFailedTranslation: (text, source, target, engine) =>
+            {
+                failureLookupCalls++;
+                return false;
+            },
+            recordFailedTranslation: (text, source, target, engine, reason, origin) =>
+            {
+                failureRecordCalls++;
+            },
+            recordTransientFailedTranslation: (text, source, target, engine, reason, ttl) =>
+            {
+                failureRecordCalls++;
+            },
+            sourceLanguageResolver: _ =>
+            {
+                sourceResolverCalls++;
+                return new SourceClientLanguage("cht", "zh-CN");
+            });
+        var invalidSources = new[]
+        {
+            default(SourceClientLanguage),
+            new SourceClientLanguage("unknown", "unknown"),
+            new SourceClientLanguage("chs", "zh-TW"),
+        };
+
+        foreach (var invalidSource in invalidSources)
+        {
+            var result = await service.TranslateAsync(
+                "unknown source text",
+                invalidSource,
+                "pt-BR");
+
+            Assert.Equal("unknown source text", result);
+        }
+
+        Assert.Equal(0, sourceResolverCalls);
+        Assert.Equal(0, failureLookupCalls);
+        Assert.Equal(0, failureRecordCalls);
+        Assert.Equal(0, translator.AsyncCalls);
+    }
+
+    /// <summary>
     ///     Ensures the service sanitizes text before passing it to the translator.
     /// </summary>
     [Fact]
@@ -381,6 +610,47 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures a captured translator resolution continues to use the
+    ///     original instance when subsequent requests would resolve a
+    ///     different configured engine.
+    /// </summary>
+    [Fact]
+    public async Task TranslateAsync_CapturedTranslatorResolution_PinsEngineInstance()
+    {
+        var firstTranslator = new RecordingTranslator
+        {
+            AsyncResult = "first-engine",
+        };
+        var secondTranslator = new RecordingTranslator
+        {
+            AsyncResult = "second-engine",
+        };
+        var currentTranslator = firstTranslator;
+        var service = new TranslationService(
+            text => text,
+            firstTranslator,
+            translationEngine: (int)Echoglossian.TransEngines.Google,
+            translatorResolver: _ => new TranslationService.TranslatorResolution(
+                (int)Echoglossian.TransEngines.ChatGPT,
+                currentTranslator));
+        var capturedResolution = service.CaptureTranslatorResolution(
+            (int)Echoglossian.TransEngines.ChatGPT,
+            TranslationSurfaceGroup.Dialogue);
+        currentTranslator = secondTranslator;
+
+        var result = await service.TranslateAsync(
+            "hello",
+            new SourceClientLanguage("en", "en"),
+            "pt-BR",
+            TranslationSurfaceGroup.Dialogue,
+            capturedResolution);
+
+        Assert.Equal("first-engine", result);
+        Assert.Equal(1, firstTranslator.AsyncCalls);
+        Assert.Equal(0, secondTranslator.AsyncCalls);
+    }
+
+    /// <summary>
     ///     Ensures dialogue-context routing checks the translator selected for
     ///     the specific surface group instead of only the global default path.
     /// </summary>
@@ -550,6 +820,9 @@ public class TranslationServiceTests
     /// </summary>
     private class RecordingTranslator : ITranslator
     {
+        private readonly List<string> asyncSourceLanguages = [];
+        private readonly List<string> syncSourceLanguages = [];
+
         /// <summary>
         ///     Gets or sets the synchronous result.
         /// </summary>
@@ -580,11 +853,24 @@ public class TranslationServiceTests
         /// </summary>
         public string? LastAsyncText { get; private set; }
 
+        /// <summary>
+        ///     Gets the provider source languages supplied to synchronous calls.
+        /// </summary>
+        public IReadOnlyList<string> SyncSourceLanguages =>
+            this.syncSourceLanguages;
+
+        /// <summary>
+        ///     Gets the provider source languages supplied to asynchronous calls.
+        /// </summary>
+        public IReadOnlyList<string> AsyncSourceLanguages =>
+            this.asyncSourceLanguages;
+
         /// <inheritdoc/>
         public string? Translate(string text, string sourceLanguage, string targetLanguage)
         {
             this.SyncCalls++;
             this.LastSyncText = text;
+            this.syncSourceLanguages.Add(sourceLanguage);
             return this.SyncResult;
         }
 
@@ -593,6 +879,7 @@ public class TranslationServiceTests
         {
             this.AsyncCalls++;
             this.LastAsyncText = text;
+            this.asyncSourceLanguages.Add(sourceLanguage);
             return Task.FromResult(this.AsyncResult);
         }
     }
@@ -603,6 +890,8 @@ public class TranslationServiceTests
     /// </summary>
     private sealed class ContextAwareRecordingTranslator : RecordingTranslator, IDialogueContextAwareTranslator
     {
+        private readonly List<string> contextAwareSourceLanguages = [];
+
         /// <summary>
         ///     Gets the number of context-aware async calls.
         /// </summary>
@@ -613,6 +902,12 @@ public class TranslationServiceTests
         /// </summary>
         public DialogueTranslationContext? LastDialogueContext { get; private set; }
 
+        /// <summary>
+        ///     Gets the provider source languages supplied to context-aware calls.
+        /// </summary>
+        public IReadOnlyList<string> ContextAwareSourceLanguages =>
+            this.contextAwareSourceLanguages;
+
         /// <inheritdoc/>
         public Task<string?> TranslateAsync(
             string text,
@@ -622,6 +917,7 @@ public class TranslationServiceTests
         {
             this.ContextAwareAsyncCalls++;
             this.LastDialogueContext = dialogueContext;
+            this.contextAwareSourceLanguages.Add(sourceLanguage);
             return Task.FromResult(this.AsyncResult);
         }
     }

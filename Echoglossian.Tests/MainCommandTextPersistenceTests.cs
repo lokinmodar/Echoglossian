@@ -3,14 +3,19 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+
+using PluginEntry = Echoglossian.Echoglossian;
 
 namespace Echoglossian.Tests;
 
@@ -21,6 +26,131 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class MainCommandTextPersistenceTests
 {
+    /// <summary>
+    ///     Ensures an untranslated regional target alias cannot replace a
+    ///     complete reference-text translation already cached for the same
+    ///     effective target language.
+    /// </summary>
+    [Fact]
+    public void ReferenceTextCache_UpdateIncompleteTargetAlias_PreservesCompleteTranslation()
+    {
+        ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+
+        try
+        {
+            var originalPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var translatedPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+                TranslatedName = "Acoes e Caracteristicas",
+                TranslatedDescription =
+                    "Abre a janela de acoes e caracteristicas.",
+            };
+
+            ReferenceTextCacheRegistry.MainCommandTexts.Update(
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload));
+            ReferenceTextCacheRegistry.MainCommandTexts.Update(
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload));
+
+            var found = ReferenceTextCacheRegistry.MainCommandTexts
+                .TryFindTranslatedText(
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    "Actions & Traits",
+                    out var translatedText);
+
+            Assert.True(found);
+            Assert.Equal("Acoes e Caracteristicas", translatedText);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures normalized target aliases update one canonical reference
+    ///     row without erasing its completed translation.
+    /// </summary>
+    [Fact]
+    public void InsertMainCommandText_ReusesCompatibleTargetAlias()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var originalPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var translatedPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+                TranslatedName = "Acoes e Caracteristicas",
+                TranslatedDescription =
+                    "Abre a janela de acoes e caracteristicas.",
+            };
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt",
+                    0,
+                    "7.3",
+                    originalPayload,
+                    translatedPayload),
+                static context => context.MainCommandTexts);
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                CreateCanonicalMainCommandTextRow(
+                    "en",
+                    "pt-BR",
+                    0,
+                    "7.3",
+                    originalPayload),
+                static context => context.MainCommandTexts);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            var row = Assert.Single(validationContext.MainCommandTexts);
+            Assert.Equal("Acoes e Caracteristicas", row.TranslatedName);
+            Assert.Equal(
+                "Abre a janela de acoes e caracteristicas.",
+                row.TranslatedDescription);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
     /// <summary>
     ///     Ensures negative sheet sentinels do not overflow persisted
     ///     <c>MainCommand.SortID</c> metadata.
@@ -213,6 +343,196 @@ public class MainCommandTextPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures identical MainCommand canonical identity cannot update or
+    ///     read across distinct source languages.
+    /// </summary>
+    [Fact]
+    public void MainCommandTextPersistence_PreservesDistinctSourceLanguages()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var payload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                IconId = 1234,
+                CategoryId = 7,
+                MainCommandCategoryId = 3,
+                Unknown0 = 9,
+                SortId = 40,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var english = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 0, "7.3", payload);
+            var german = CreateCanonicalMainCommandTextRow(
+                "de", "pt", 0, "7.3", payload);
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                english,
+                static context => context.MainCommandTexts);
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                german,
+                static context => context.MainCommandTexts);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.MainCommandTexts.Count());
+
+            var englishMatch = ReferenceTextPersistenceHelper.FindReferenceText(
+                configDir,
+                english,
+                static context => context.MainCommandTexts);
+            var germanMatch = ReferenceTextPersistenceHelper.FindReferenceText(
+                configDir,
+                german,
+                static context => context.MainCommandTexts);
+            Assert.Equal("en", englishMatch?.OriginalLang);
+            Assert.Equal("de", germanMatch?.OriginalLang);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures reference-text fallback reads honor the requested engine
+    ///     reuse policy while writes retain exact-engine history.
+    /// </summary>
+    [Fact]
+    public void MainCommandTextPersistence_AppliesEngineReusePolicy()
+    {
+        var configDir = CreateTempConfigDir();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var payload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var stored = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 7, "7.3", payload);
+            var probe = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 0, "7.3", payload);
+            var compatibleScope = new TranslationReuseScope("en", "pt", 0, false);
+            var strictScope = new TranslationReuseScope("en", "pt", 0, true);
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                stored,
+                static context => context.MainCommandTexts);
+
+            Assert.Equal(
+                7,
+                ReferenceTextPersistenceHelper.FindReferenceText(
+                    configDir,
+                    probe,
+                    compatibleScope,
+                    static context => context.MainCommandTexts)?.TranslationEngine);
+            Assert.Null(ReferenceTextPersistenceHelper.FindReferenceText(
+                configDir,
+                probe,
+                strictScope,
+                static context => context.MainCommandTexts));
+
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                probe,
+                static context => context.MainCommandTexts);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.MainCommandTexts.Count());
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the live reference-text fallback passes its configured
+    ///     engine reuse policy through to persistence.
+    /// </summary>
+    [Fact]
+    public void LiveReferenceTextFallback_CompatiblePolicyReusesDifferentEngineRow()
+    {
+        var configDir = CreateTempConfigDir();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var payload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 12,
+                Name = "Actions & Traits",
+                Description = "Open the actions and traits window.",
+            };
+            var stored = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 7, "7.3", payload);
+            var probe = CreateCanonicalMainCommandTextRow(
+                "en", "pt", 0, "7.3", payload);
+            ReferenceTextPersistenceHelper.InsertReferenceText(
+                configDir,
+                stored,
+                static context => context.MainCommandTexts);
+
+            var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
+                typeof(PluginEntry));
+            var configurationField = typeof(PluginEntry).GetField(
+                "configuration",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(configurationField);
+            configurationField.SetValue(plugin, new Config
+            {
+                TranslateAlreadyTranslatedTexts = false,
+            });
+            var findMethod = typeof(PluginEntry).GetMethods(
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(method =>
+                    method.Name == "FindReferenceText" &&
+                    method.IsGenericMethodDefinition &&
+                    method.GetParameters().Length == 3)
+                .MakeGenericMethod(typeof(MainCommandText));
+            Func<EchoglossianDbContext, DbSet<MainCommandText>> setSelector =
+                static context => context.MainCommandTexts;
+
+            var row = Assert.IsType<MainCommandText>(findMethod.Invoke(
+                plugin,
+                [probe, ReferenceTextCacheRegistry.MainCommandTexts, setSelector]));
+
+            Assert.Equal(7, row.TranslationEngine);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.MainCommandTexts.Clear();
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures the specific MainCommand cache resolves exact translated and
     ///     canonical original text lookups.
     /// </summary>
@@ -253,11 +573,12 @@ public class MainCommandTextPersistenceTests
             });
 
         cache.Update(row);
+        var scope = new TranslationReuseScope("en", "pt", 0, true);
+        var regionalScope = new TranslationReuseScope("en", "pt-BR", 0, true);
 
         Assert.True(
             cache.TryFindTranslatedText(
-                "pt",
-                0,
+                scope,
                 "7.3",
                 "Actions & Traits",
                 out var translatedText));
@@ -265,8 +586,7 @@ public class MainCommandTextPersistenceTests
 
         Assert.True(
             cache.TryFindOriginalText(
-                "pt",
-                0,
+                scope,
                 "7.3",
                 "Acoes e Caracteristicas",
                 out var originalText));
@@ -274,8 +594,7 @@ public class MainCommandTextPersistenceTests
 
         Assert.True(
             cache.TryFindTranslatedText(
-                "pt-BR",
-                0,
+                regionalScope,
                 "7.3",
                 "Actions & Traits",
                 out var translatedRegionalText));
@@ -283,8 +602,7 @@ public class MainCommandTextPersistenceTests
 
         Assert.True(
             cache.TryFindOriginalText(
-                "pt-BR",
-                0,
+                regionalScope,
                 "7.3",
                 "Acoes e Caracteristicas",
                 out var originalRegionalText));

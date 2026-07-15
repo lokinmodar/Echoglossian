@@ -90,15 +90,25 @@ public static class TraitPersistenceHelper
             var hasRequestedGameVersion =
                 GameVersionLookupHelper.HasRequestedVersion(trait.GameVersion);
 
-            var existing = context.Traits.FirstOrDefault(row =>
-                row.TraitId == trait.TraitId &&
-                row.TranslationLang == trait.TranslationLang &&
-                row.TranslationEngine == trait.TranslationEngine &&
-                ((!hasRequestedGameVersion && row.GameVersion == null) ||
-                 (hasRequestedGameVersion &&
-                  (row.GameVersion == null ||
-                   row.GameVersion == trait.GameVersion))) &&
-                row.SourceContentHash == trait.SourceContentHash);
+            var existing = context.Traits
+                .Where(row =>
+                    row.TraitId == trait.TraitId &&
+                    row.TranslationEngine == trait.TranslationEngine &&
+                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (row.GameVersion == null ||
+                       row.GameVersion == trait.GameVersion))) &&
+                    row.SourceContentHash == trait.SourceContentHash)
+                .AsEnumerable()
+                .Where(row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    trait.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        row.TranslationLang,
+                        trait.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, trait);
@@ -136,6 +146,34 @@ public static class TraitPersistenceHelper
         string configDirectory,
         Trait probe)
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        return FindTrait(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true));
+    }
+
+    /// <summary>
+    ///     Finds one canonical trait row using an explicit translation reuse
+    ///     scope.
+    /// </summary>
+    /// <param name="configDirectory">The plugin config directory containing SQLite.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static Trait? FindTrait(
+        string configDirectory,
+        Trait probe,
+        TranslationReuseScope scope)
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -150,15 +188,21 @@ public static class TraitPersistenceHelper
 
             return context.Traits
                 .AsNoTracking()
-                .FirstOrDefault(row =>
+                .Where(row =>
                     row.TraitId == probe.TraitId &&
-                    row.TranslationLang == probe.TranslationLang &&
-                    row.TranslationEngine == probe.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
                       (row.GameVersion == null ||
                        row.GameVersion == probe.GameVersion))) &&
-                    row.SourceContentHash == probe.SourceContentHash);
+                    row.SourceContentHash == probe.SourceContentHash)
+                .AsEnumerable()
+                .Where(row => scope.Matches(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    row.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -175,6 +219,7 @@ public static class TraitPersistenceHelper
     {
         return row != null &&
                row.TraitId > 0 &&
+               !string.IsNullOrWhiteSpace(row.OriginalLang) &&
                !string.IsNullOrWhiteSpace(row.TranslationLang) &&
                !string.IsNullOrWhiteSpace(row.SourceContentHash);
     }
@@ -224,6 +269,33 @@ public static class TraitPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated trait fields are populated so alias
+    ///     reuse prefers an existing completed row over an incomplete row.
+    /// </summary>
+    /// <param name="row">The trait row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(Trait row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTraitName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTraitDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

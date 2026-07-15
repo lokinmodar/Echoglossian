@@ -34,6 +34,7 @@ public class CanonicalTooltipIdentityLookupTests
                 ActionId = 16005,
                 ActionName = "Saber Dance",
                 ActionDescription = "Deals damage.",
+                OriginalLang = "en",
                 TranslatedActionName = "Saber Dance - Other",
                 TranslatedActionDescription = "Causa dano.",
                 TranslationLang = "pt",
@@ -49,6 +50,7 @@ public class CanonicalTooltipIdentityLookupTests
                 ActionId = 16005,
                 ActionName = "Saber Dance",
                 ActionDescription = "Deals damage.",
+                OriginalLang = "en",
                 TranslatedActionName = "Dança de Sabre",
                 TranslatedActionDescription = "Causa dano.",
                 TranslationLang = "pt",
@@ -61,8 +63,7 @@ public class CanonicalTooltipIdentityLookupTests
 
             var found = ActionTooltipCacheManager.TryFindIdentityMatch(
                 16005,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "2026.03.17.0000.0000",
                 38,
                 86);
@@ -94,6 +95,7 @@ public class CanonicalTooltipIdentityLookupTests
                 ItemName = "Super-Potion",
                 ItemDescription =
                     "This concentrated concoction instantly restores a significant amount of HP.",
+                OriginalLang = "en",
                 TranslatedItemName = "Super-Poção",
                 TranslatedItemDescription =
                     "Essa mistura concentrada restaura instantaneamente uma quantidade significativa de HP.",
@@ -106,8 +108,7 @@ public class CanonicalTooltipIdentityLookupTests
 
             var found = ItemTooltipCacheManager.TryFindIdentityMatch(
                 23167,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "2026.03.17.0000.0000",
                 0);
 
@@ -138,6 +139,7 @@ public class CanonicalTooltipIdentityLookupTests
                 TraitId = 642,
                 TraitName = "Enhanced Second Wind",
                 TraitDescription = "Increases the healing potency of Second Wind to 800.",
+                OriginalLang = "en",
                 TranslatedTraitName = "Vento Revigorado Aprimorado",
                 TranslatedTraitDescription =
                     "Aumenta a potência de cura do Second Wind para 800.",
@@ -154,6 +156,7 @@ public class CanonicalTooltipIdentityLookupTests
                 TraitId = 642,
                 TraitName = "Enhanced Second Wind",
                 TraitDescription = "Increases the healing potency of Second Wind to 800.",
+                OriginalLang = "en",
                 TranslatedTraitName = "Uma segunda onda de energia aprimorada",
                 TranslatedTraitDescription =
                     "Aumenta o poder de cura do Segundo Fôlego para 800.",
@@ -167,8 +170,7 @@ public class CanonicalTooltipIdentityLookupTests
 
             var found = TraitCacheManager.TryFindIdentityMatch(
                 642,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "2026.03.17.0000.0000",
                 38,
                 35);
@@ -221,13 +223,20 @@ public class CanonicalTooltipIdentityLookupTests
 
             var found = ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
                 44,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "2026.04.27.0000.0000",
                 out var resolvedPayload);
 
+            var mismatchedSourceFound =
+                ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
+                    44,
+                    new TranslationReuseScope("de", "pt-BR", 0, true),
+                    "2026.04.27.0000.0000",
+                    out _);
+
             Assert.True(found);
             Assert.Equal("Acao da Missao", resolvedPayload.TranslatedName);
+            Assert.False(mismatchedSourceFound);
         }
         finally
         {
@@ -274,13 +283,20 @@ public class CanonicalTooltipIdentityLookupTests
 
             var found = ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(
                 2000001,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "2026.04.27.0000.0000",
                 out var resolvedPayload);
 
+            var mismatchedSourceFound =
+                ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(
+                    2000001,
+                    new TranslationReuseScope("de", "pt-BR", 0, true),
+                    "2026.04.27.0000.0000",
+                    out _);
+
             Assert.True(found);
             Assert.Equal("Bussola Eterea", resolvedPayload.TranslatedName);
+            Assert.False(mismatchedSourceFound);
         }
         finally
         {
@@ -330,8 +346,7 @@ public class CanonicalTooltipIdentityLookupTests
 
             var found = ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(
                 5,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "2026.04.27.0000.0000",
                 out var resolvedPayload);
 

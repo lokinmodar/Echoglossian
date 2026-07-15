@@ -16,16 +16,33 @@ public sealed class TextTextureCache : IDisposable
   private readonly object syncLock = new();
   private readonly int maxCapacity;
   private readonly TimeSpan inactivityThreshold;
+  private readonly long softByteBudget;
+  private readonly long hardByteBudget;
+  private long estimatedMemoryBytes;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="TextTextureCache"/> class.
   /// </summary>
   /// <param name="maxCapacity">Maximum number of textures allowed.</param>
   /// <param name="inactivityTimeoutSeconds">Seconds after which inactive entries are evicted.</param>
-  public TextTextureCache(int maxCapacity = 128, int inactivityTimeoutSeconds = 60)
+  /// <param name="softByteBudget">
+  /// Soft in-memory budget that triggers eviction of older entries.
+  /// </param>
+  /// <param name="hardByteBudget">
+  /// Hard in-memory budget for any single cached texture.
+  /// </param>
+  public TextTextureCache(
+      int maxCapacity = 128,
+      int inactivityTimeoutSeconds = 60,
+      long softByteBudget = long.MaxValue,
+      long hardByteBudget = long.MaxValue)
   {
     this.maxCapacity = maxCapacity;
     this.inactivityThreshold = TimeSpan.FromSeconds(inactivityTimeoutSeconds);
+    this.softByteBudget = softByteBudget;
+    this.hardByteBudget = Math.Min(
+        hardByteBudget,
+        TextRasterLimits.MaximumTextureBytes);
   }
 
   /// <summary>
@@ -52,14 +69,29 @@ public sealed class TextTextureCache : IDisposable
 
       IDalamudTextureWrap texture = generator();
       var newEntry = new CachedTextureEntry(texture);
+      var newEntryBytes = newEntry.EstimateMemoryBytes();
+
+      if (newEntryBytes > this.hardByteBudget)
+      {
+        texture.Dispose();
+        throw new InvalidOperationException(
+            $"Texture entry '{key}' exceeds the hard cache budget.");
+      }
 
       if (this.cache.Count >= this.maxCapacity)
       {
         this.EvictLeastRecentlyUsed();
       }
 
+      while (this.cache.Count > 0 &&
+             this.estimatedMemoryBytes + newEntryBytes > this.softByteBudget)
+      {
+        this.EvictLeastRecentlyUsed();
+      }
+
       this.cache[key] = newEntry;
       this.accessOrder.AddLast(key);
+      this.estimatedMemoryBytes += newEntryBytes;
 
       return texture;
     }
@@ -77,6 +109,7 @@ public sealed class TextTextureCache : IDisposable
 
     if (this.cache.TryRemove(oldestKey.Value, out var entry))
     {
+      this.estimatedMemoryBytes -= entry.EstimateMemoryBytes();
       entry.Texture.Dispose();
     }
 
@@ -98,6 +131,7 @@ public sealed class TextTextureCache : IDisposable
     {
       if (this.cache.TryRemove(key, out var entry))
       {
+        this.estimatedMemoryBytes -= entry.EstimateMemoryBytes();
         entry.Texture.Dispose();
       }
 
@@ -119,6 +153,7 @@ public sealed class TextTextureCache : IDisposable
 
       this.cache.Clear();
       this.accessOrder.Clear();
+      this.estimatedMemoryBytes = 0L;
     }
   }
 
@@ -137,9 +172,7 @@ public sealed class TextTextureCache : IDisposable
   {
     lock (this.syncLock)
     {
-      int count = this.cache.Count;
-      long bytes = this.cache.Values.Sum(e => e.EstimateMemoryBytes());
-      return (count, bytes);
+      return (this.cache.Count, this.estimatedMemoryBytes);
     }
   }
 }

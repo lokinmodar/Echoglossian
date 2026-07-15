@@ -32,6 +32,59 @@ public class LanguageEngineSupportTests
     }
 
     /// <summary>
+    ///     Ensures Google and GTranslate are no longer added through a blanket fallback
+    ///     for languages absent from the current official list.
+    /// </summary>
+    [Fact]
+    public void ApplySupportTo_DoesNotAddGoogleToAragoneseWithoutOfficialSupport()
+    {
+        Dictionary<int, LanguageInfo> languages = new()
+        {
+            [0] = new LanguageInfo("an", "Aragonese", "NotoSans-Medium.ttf", string.Empty, new List<int>()),
+        };
+
+        LanguageEngineSupport.ApplySupportTo(languages);
+
+        Assert.DoesNotContain((int)Echoglossian.TransEngines.Google, languages[0].SupportedEngines!);
+        Assert.DoesNotContain((int)Echoglossian.TransEngines.GTranslate, languages[0].SupportedEngines!);
+        Assert.Contains((int)Echoglossian.TransEngines.Claude, languages[0].SupportedEngines!);
+    }
+
+    /// <summary>
+    ///     Ensures Google and GTranslate reflect the currently documented Breton support.
+    /// </summary>
+    [Fact]
+    public void ApplySupportTo_AddsGoogleAndGTranslateToBreton()
+    {
+        Dictionary<int, LanguageInfo> languages = new()
+        {
+            [0] = new LanguageInfo("br", "Breton", "NotoSans-Medium.ttf", string.Empty, new List<int>()),
+        };
+
+        LanguageEngineSupport.ApplySupportTo(languages);
+
+        Assert.Contains((int)Echoglossian.TransEngines.Google, languages[0].SupportedEngines!);
+        Assert.Contains((int)Echoglossian.TransEngines.GTranslate, languages[0].SupportedEngines!);
+    }
+
+    /// <summary>
+    ///     Ensures Google now reflects the currently documented Uyghur support.
+    /// </summary>
+    [Fact]
+    public void ApplySupportTo_AddsGoogleToUyghur()
+    {
+        Dictionary<int, LanguageInfo> languages = new()
+        {
+            [0] = new LanguageInfo("ug", "Uyghur", "NotoSansArabic-Medium.ttf", string.Empty, new List<int>()),
+        };
+
+        LanguageEngineSupport.ApplySupportTo(languages);
+
+        Assert.Contains((int)Echoglossian.TransEngines.Google, languages[0].SupportedEngines!);
+        Assert.Contains((int)Echoglossian.TransEngines.GTranslate, languages[0].SupportedEngines!);
+    }
+
+    /// <summary>
     ///     Ensures DeepL now exposes newer official target languages such as Afrikaans.
     /// </summary>
     [Fact]
@@ -64,6 +117,22 @@ public class LanguageEngineSupportTests
     }
 
     /// <summary>
+    ///     Ensures Microsoft now exposes the live public endpoint support for Spanish (Mexico).
+    /// </summary>
+    [Fact]
+    public void ApplySupportTo_AddsMicrosoftToSpanishMexico()
+    {
+        Dictionary<int, LanguageInfo> languages = new()
+        {
+            [0] = new LanguageInfo("es-MX", "Spanish (Mexico)", "NotoSans-Medium.ttf", string.Empty, new List<int>()),
+        };
+
+        LanguageEngineSupport.ApplySupportTo(languages);
+
+        Assert.Contains((int)Echoglossian.TransEngines.Microsoft, languages[0].SupportedEngines!);
+    }
+
+    /// <summary>
     ///     Ensures Amazon language tables now reflect newer official target languages such as Welsh.
     /// </summary>
     [Fact]
@@ -88,6 +157,22 @@ public class LanguageEngineSupportTests
         Dictionary<int, LanguageInfo> languages = new()
         {
             [0] = new LanguageInfo("he", "Hebrew", "NotoSans-Medium.ttf", string.Empty, new List<int>()),
+        };
+
+        LanguageEngineSupport.ApplySupportTo(languages);
+
+        Assert.Contains((int)Echoglossian.TransEngines.LibreTranslate, languages[0].SupportedEngines!);
+    }
+
+    /// <summary>
+    ///     Ensures LibreTranslate now reflects the current upstream Swahili support.
+    /// </summary>
+    [Fact]
+    public void ApplySupportTo_AddsLibreTranslateToSwahili()
+    {
+        Dictionary<int, LanguageInfo> languages = new()
+        {
+            [0] = new LanguageInfo("sw", "Swahili", "NotoSans-Medium.ttf", string.Empty, new List<int>()),
         };
 
         LanguageEngineSupport.ApplySupportTo(languages);

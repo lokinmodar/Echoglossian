@@ -119,17 +119,26 @@ public partial class Echoglossian
 
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              talkMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       var existingTalkMessage = context.TalkMessage.AsNoTracking().Where(t =>
           t.SenderName == talkMessage.SenderName &&
           t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
           t.TranslationLang == talkMessage.TranslationLang);
-      if (ShouldFilterStoredTranslationsByEngine())
-      {
-        existingTalkMessage = existingTalkMessage.Where(t =>
-            t.TranslationEngine == talkMessage.TranslationEngine);
-      }
+      var candidates = existingTalkMessage.AsEnumerable().Where(t =>
+          scope.Matches(
+              t.OriginalTalkMessageLang,
+              t.TranslationLang,
+              t.TranslationEngine));
 
-      var localFoundTalkMessage = OrderTalkMessageLookupQuery(existingTalkMessage)
+      var localFoundTalkMessage = OrderTalkMessageLookupQuery(
+              candidates.AsQueryable())
           .FirstOrDefault();
       if (localFoundTalkMessage == null ||
           localFoundTalkMessage.OriginalTalkMessage !=
@@ -164,6 +173,15 @@ public partial class Echoglossian
   {
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              toastMessage.TranslationEngine,
+              out var scope))
+      {
+        this.FoundToastMessage = null;
+        return false;
+      }
+
       var cache = this.OtherToastsCache;
       if (cache == null || cache.Count == 0)
       {
@@ -179,13 +197,11 @@ public partial class Echoglossian
       var existingToastMessage = cache.Where(t =>
           t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
           t.TranslationLang == toastMessage.TranslationLang &&
-          t.ToastType == toastMessage.ToastType);
-
-      if (this.configuration.TranslateAlreadyTranslatedTexts)
-      {
-        existingToastMessage = existingToastMessage.Where(t =>
-            t.TranslationEngine == toastMessage.TranslationEngine);
-      }
+          t.ToastType == toastMessage.ToastType).Where(t =>
+          scope.Matches(
+              t.OriginalLang,
+              t.TranslationLang,
+              t.TranslationEngine));
 
       var localFoundToastMessage = existingToastMessage.FirstOrDefault();
 
@@ -219,6 +235,14 @@ public partial class Echoglossian
   {
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              toastMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       var useErrorCache = string.Equals(
           toastMessage.ToastType,
           "Error",
@@ -247,13 +271,11 @@ public partial class Echoglossian
           t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
           t.TranslationLang == toastMessage.TranslationLang &&
           t.ToastType == toastMessage.ToastType &&
-          !string.IsNullOrWhiteSpace(t.TranslatedToastMessage));
-
-      if (this.configuration.TranslateAlreadyTranslatedTexts)
-      {
-        existingToastMessage = existingToastMessage.Where(t =>
-            t.TranslationEngine == toastMessage.TranslationEngine);
-      }
+          !string.IsNullOrWhiteSpace(t.TranslatedToastMessage)).Where(t =>
+          scope.Matches(
+              t.OriginalLang,
+              t.TranslationLang,
+              t.TranslationEngine));
 
       return existingToastMessage.FirstOrDefault();
     }
@@ -273,6 +295,15 @@ public partial class Echoglossian
   {
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              toastMessage.TranslationEngine,
+              out var scope))
+      {
+        this.FoundToastMessage = null;
+        return false;
+      }
+
       var cache = this.ErrorToastsCache;
       if (cache == null || cache.Count == 0)
       {
@@ -288,13 +319,11 @@ public partial class Echoglossian
       var existingToastMessage = cache.Where(t =>
           t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
           t.TranslationLang == toastMessage.TranslationLang &&
-          t.ToastType == toastMessage.ToastType);
-
-      if (this.configuration.TranslateAlreadyTranslatedTexts)
-      {
-        existingToastMessage = existingToastMessage.Where(t =>
-            t.TranslationEngine == toastMessage.TranslationEngine);
-      }
+          t.ToastType == toastMessage.ToastType).Where(t =>
+          scope.Matches(
+              t.OriginalLang,
+              t.TranslationLang,
+              t.TranslationEngine));
 
       var localFoundToastMessage = existingToastMessage.FirstOrDefault();
 
@@ -328,6 +357,14 @@ public partial class Echoglossian
 
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              battleTalkMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       var existingBattleTalkMessage = context.BattleTalkMessage.AsNoTracking().Where(t =>
           t.SenderName == battleTalkMessage.SenderName &&
           t.OriginalBattleTalkMessage ==
@@ -335,15 +372,14 @@ public partial class Echoglossian
           t.TranslationLang == battleTalkMessage.TranslationLang &&
           t.TranslatedBattleTalkMessage != null &&
           t.TranslatedBattleTalkMessage != string.Empty);
-
-      if (ShouldFilterStoredTranslationsByEngine())
-      {
-        existingBattleTalkMessage = existingBattleTalkMessage.Where(t =>
-            t.TranslationEngine == battleTalkMessage.TranslationEngine);
-      }
+      var candidates = existingBattleTalkMessage.AsEnumerable().Where(t =>
+          scope.Matches(
+              t.OriginalBattleTalkMessageLang,
+              t.TranslationLang,
+              t.TranslationEngine));
 
       var localFoundBattleTalkMessage =
-          OrderBattleTalkMessageLookupQuery(existingBattleTalkMessage)
+          OrderBattleTalkMessageLookupQuery(candidates.AsQueryable())
               .FirstOrDefault();
       if (localFoundBattleTalkMessage == null ||
           localFoundBattleTalkMessage.OriginalBattleTalkMessage !=
@@ -396,10 +432,16 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              questPlate.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
-      var filterByEngine = this.configuration?.TranslateAlreadyTranslatedTexts ==
-                           true;
 
       QuestPlate? localFoundQuestPlate = null;
       var matchedByQuestId = false;
@@ -409,11 +451,13 @@ public partial class Echoglossian
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang &&
-            (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine));
+            t.TranslationLang == questPlate.TranslationLang);
 
-        localFoundQuestPlate = questIdMatch.FirstOrDefault();
+        localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
+            scope.Matches(
+                t.OriginalLang,
+                t.TranslationLang,
+                t.TranslationEngine));
         matchedByQuestId = localFoundQuestPlate != null;
 
         if (localFoundQuestPlate == null)
@@ -429,11 +473,13 @@ public partial class Echoglossian
         var questMessageMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
             t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
-            t.TranslationLang == questPlate.TranslationLang &&
-            (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine));
+            t.TranslationLang == questPlate.TranslationLang);
 
-        localFoundQuestPlate = questMessageMatch.FirstOrDefault();
+        localFoundQuestPlate = questMessageMatch.AsEnumerable().FirstOrDefault(t =>
+            scope.Matches(
+                t.OriginalLang,
+                t.TranslationLang,
+                t.TranslationEngine));
       }
 
       if (localFoundQuestPlate == null &&
@@ -442,11 +488,13 @@ public partial class Echoglossian
       {
         var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
-            t.TranslationLang == questPlate.TranslationLang &&
-            (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine));
+            t.TranslationLang == questPlate.TranslationLang);
 
-        localFoundQuestPlate = questNameMatch.FirstOrDefault();
+        localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
+            scope.Matches(
+                t.OriginalLang,
+                t.TranslationLang,
+                t.TranslationEngine));
       }
 
       if (localFoundQuestPlate == null ||
@@ -522,10 +570,16 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              questPlate.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
-      var filterByEngine = this.configuration?.TranslateAlreadyTranslatedTexts ==
-                           true;
 
       // Prefer QuestId lookup (stable primary key) when available so that two
       // quests sharing a display name are never confused. Fall back to name-only
@@ -537,11 +591,13 @@ public partial class Echoglossian
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang &&
-            (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine));
+            t.TranslationLang == questPlate.TranslationLang);
 
-        localFoundQuestPlate = questIdMatch.FirstOrDefault();
+        localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
+            scope.Matches(
+                t.OriginalLang,
+                t.TranslationLang,
+                t.TranslationEngine));
         matchedByQuestId = localFoundQuestPlate != null;
 
         if (localFoundQuestPlate == null)
@@ -556,11 +612,13 @@ public partial class Echoglossian
       {
         var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
-            t.TranslationLang == questPlate.TranslationLang &&
-            (!filterByEngine ||
-             t.TranslationEngine == questPlate.TranslationEngine));
+            t.TranslationLang == questPlate.TranslationLang);
 
-        localFoundQuestPlate = questNameMatch.FirstOrDefault();
+        localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
+            scope.Matches(
+                t.OriginalLang,
+                t.TranslationLang,
+                t.TranslationEngine));
       }
 
       if (localFoundQuestPlate == null ||
@@ -602,22 +660,26 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              talkSubtitleMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       var existingTalkSubtitleMessage =
           context.TalkSubtitleMessage.AsNoTracking().Where(t =>
               t.OriginalTalkSubtitleMessage == talkSubtitleMessage
                   .OriginalTalkSubtitleMessage && t.TranslationLang ==
               talkSubtitleMessage.TranslationLang);
 
-      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-      {
-        existingTalkSubtitleMessage =
-            existingTalkSubtitleMessage.Where(t =>
-                t.TranslationEngine ==
-                talkSubtitleMessage.TranslationEngine);
-      }
-
       var localFoundTalkSubtitleMessage =
-          existingTalkSubtitleMessage.FirstOrDefault();
+          existingTalkSubtitleMessage.AsEnumerable().FirstOrDefault(t =>
+              scope.Matches(
+                  t.OriginalTalkSubtitleMessageLang,
+                  t.TranslationLang,
+                  t.TranslationEngine));
       if (localFoundTalkSubtitleMessage == null ||
           localFoundTalkSubtitleMessage.OriginalTalkSubtitleMessage !=
               talkSubtitleMessage.OriginalTalkSubtitleMessage ||
@@ -650,22 +712,26 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              miniTalkMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       var existingMiniTalkMessage =
           context.MiniTalkMessage.AsNoTracking().Where(t =>
               t.OriginalMiniTalkMessage == miniTalkMessage
                   .OriginalMiniTalkMessage && t.TranslationLang ==
               miniTalkMessage.TranslationLang);
 
-      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-      {
-        existingMiniTalkMessage =
-            existingMiniTalkMessage.Where(t =>
-                t.TranslationEngine ==
-                miniTalkMessage.TranslationEngine);
-      }
-
       var localFoundMiniTalkMessage =
-          existingMiniTalkMessage.FirstOrDefault();
+          existingMiniTalkMessage.AsEnumerable().FirstOrDefault(t =>
+              scope.Matches(
+                  t.OriginalMiniTalkMessageLang,
+                  t.TranslationLang,
+                  t.TranslationEngine));
       if (localFoundMiniTalkMessage == null ||
           localFoundMiniTalkMessage.OriginalMiniTalkMessage !=
               miniTalkMessage.OriginalMiniTalkMessage ||
@@ -699,21 +765,25 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              textGimmickHintMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       var existingTextGimmickHintMessage =
           context.TextGimmickHintMessage.AsNoTracking().Where(t =>
               t.OriginalText == textGimmickHintMessage.OriginalText &&
               t.TranslationLang == textGimmickHintMessage.TranslationLang);
 
-      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-      {
-        existingTextGimmickHintMessage =
-            existingTextGimmickHintMessage.Where(t =>
-                t.TranslationEngine ==
-                textGimmickHintMessage.TranslationEngine);
-      }
-
       var localFoundTextGimmickHintMessage =
-          existingTextGimmickHintMessage.FirstOrDefault();
+          existingTextGimmickHintMessage.AsEnumerable().FirstOrDefault(t =>
+              scope.Matches(
+                  t.OriginalLang,
+                  t.TranslationLang,
+                  t.TranslationEngine));
       if (localFoundTextGimmickHintMessage == null ||
           localFoundTextGimmickHintMessage.OriginalText !=
           textGimmickHintMessage.OriginalText)
@@ -741,20 +811,26 @@ public partial class Echoglossian
     using var context = new EchoglossianDbContext(ConfigDirectory);
     try
     {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              selectString.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
       var existingSelectString =
           context.SelectString.AsNoTracking().Where(t =>
               t.OriginalSelectString == selectString.OriginalSelectString &&
               t.OriginalOptionsAsText == selectString.OriginalOptionsAsText &&
               t.TranslationLang == selectString.TranslationLang);
 
-      if (this.configuration?.TranslateAlreadyTranslatedTexts == true)
-      {
-        existingSelectString = existingSelectString.Where(t =>
-            t.TranslationEngine == selectString.TranslationEngine);
-      }
-
       var localFoundSelectString =
-          existingSelectString.FirstOrDefault();
+          existingSelectString.AsEnumerable().FirstOrDefault(t =>
+              scope.Matches(
+                  t.OriginalSelectStringLang,
+                  t.TranslationLang,
+                  t.TranslationEngine));
       if (localFoundSelectString == null ||
           localFoundSelectString.OriginalSelectString !=
           selectString.OriginalSelectString ||
@@ -775,46 +851,13 @@ public partial class Echoglossian
   }
 
   /// <summary>
-  /// Finds and returns a GameWindow from the database.
-  /// </summary>
-  /// <param name="gameWindow">Formatted GameWindow to be found in the database</param>
-  /// <returns></returns>
-  public static GameWindow? FindAndReturnGameWindow(GameWindow gameWindow)
-  {
-    using var context = new EchoglossianDbContext(
-        PluginInterface.GetPluginConfigDirectory() +
-        Path.DirectorySeparatorChar);
-    try
-    {
-      var existingGameWindow = context.GameWindow.AsNoTracking().Where(t =>
-          t.WindowAddonName == gameWindow.WindowAddonName &&
-          t.TranslationLang == gameWindow.TranslationLang);
-      var localFoundGameWindow = existingGameWindow.FirstOrDefault();
-      if (localFoundGameWindow == null)
-      {
-        return null;
-      }
-      if (localFoundGameWindow?.WindowAddonName !=
-          gameWindow.WindowAddonName)
-      {
-        return null;
-      }
-
-      return localFoundGameWindow;
-    }
-    catch (Exception e)
-    {
-      PluginRuntimeLog.Debug($"FindAndReturnGameWindow exception {e}");
-      return null;
-    }
-  }
-
-  /// <summary>
   /// Inserts a TalkMessage record into the database.
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
   /// <returns></returns>
-  public static async Task<string> InsertTalkData(TalkMessage talkMessage)
+  public static async Task<string> InsertTalkData(
+      TalkMessage talkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -843,9 +886,13 @@ public partial class Echoglossian
 
       context.TalkMessage.Add(talkMessage);
 
-      await context.SaveChangesAsync();
+      await context.SaveChangesAsync(cancellationToken);
 
       return "Data inserted to TalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {
@@ -861,7 +908,9 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted or updated in the database.</param>
   /// <returns>A status string describing the persistence outcome.</returns>
-  public static async Task<string> UpsertTalkDataAsync(TalkMessage talkMessage)
+  public static async Task<string> UpsertTalkDataAsync(
+      TalkMessage talkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -891,7 +940,11 @@ public partial class Echoglossian
           t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
           t.TranslationLang == talkMessage.TranslationLang &&
           t.TranslationEngine == talkMessage.TranslationEngine);
-      var matchingRow = OrderTalkMessageLookupQuery(matchingRows).FirstOrDefault();
+      var matchingRow = OrderTalkMessageLookupQuery(matchingRows)
+          .AsEnumerable()
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
+              t.OriginalTalkMessageLang,
+              talkMessage.OriginalTalkMessageLang));
       var now = DateTime.Now;
       if (matchingRow != null)
       {
@@ -901,15 +954,19 @@ public partial class Echoglossian
             talkMessage.RTLLangTranslationImageData;
         matchingRow.UpdatedDate = now;
         context.TalkMessage.Update(matchingRow);
-        await context.SaveChangesAsync().ConfigureAwait(false);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return "Data updated in TalkMessages table.";
       }
 
       talkMessage.CreatedDate ??= now;
       talkMessage.UpdatedDate ??= now;
       context.TalkMessage.Add(talkMessage);
-      await context.SaveChangesAsync().ConfigureAwait(false);
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
       return "Data inserted to TalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {
@@ -969,7 +1026,8 @@ public partial class Echoglossian
   /// <param name="battleTalkMessage">Formatted BattleTalkMessage to be inserted or updated in the database.</param>
   /// <returns>A status string describing the persistence outcome.</returns>
   public static async Task<string> UpsertBattleTalkDataAsync(
-      BattleTalkMessage battleTalkMessage)
+      BattleTalkMessage battleTalkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -1001,7 +1059,10 @@ public partial class Echoglossian
           t.TranslationLang == battleTalkMessage.TranslationLang &&
           t.TranslationEngine == battleTalkMessage.TranslationEngine);
       var matchingRow = OrderBattleTalkMessageLookupQuery(matchingRows)
-          .FirstOrDefault();
+          .AsEnumerable()
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
+              t.OriginalBattleTalkMessageLang,
+              battleTalkMessage.OriginalBattleTalkMessageLang));
       var now = DateTime.Now;
       if (matchingRow != null)
       {
@@ -1013,15 +1074,19 @@ public partial class Echoglossian
             battleTalkMessage.RTLLangTranslationImageData;
         matchingRow.UpdatedDate = now;
         context.BattleTalkMessage.Update(matchingRow);
-        await context.SaveChangesAsync().ConfigureAwait(false);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return "Data updated in BattleTalkMessages table.";
       }
 
       battleTalkMessage.CreatedDate ??= now;
       battleTalkMessage.UpdatedDate ??= now;
       context.BattleTalkMessage.Add(battleTalkMessage);
-      await context.SaveChangesAsync().ConfigureAwait(false);
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
       return "Data inserted to BattleTalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {
@@ -1104,12 +1169,102 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Inserts a BattleTalkMessage record asynchronously and observes operation
+  /// cancellation before the database commit.
+  /// </summary>
+  /// <param name="battleTalkMessage">Formatted BattleTalkMessage to insert.</param>
+  /// <param name="cancellationToken">The owning operation cancellation token.</param>
+  /// <returns>A status string describing the persistence outcome.</returns>
+  public static async Task<string> InsertBattleTalkDataAsync(
+      BattleTalkMessage battleTalkMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(battleTalkMessage.TranslatedBattleTalkMessage) ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              battleTalkMessage.OriginalBattleTalkMessage,
+              battleTalkMessage.TranslatedBattleTalkMessage,
+              battleTalkMessage.OriginalBattleTalkMessageLang,
+              battleTalkMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
+      context.BattleTalkMessage.Attach(battleTalkMessage);
+      if (ShouldCopyTranslationToClipboard())
+      {
+        ImGui.SetClipboardText(battleTalkMessage.ToString());
+      }
+
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+      return "Data inserted to BattleTalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  /// Inserts a TalkSubtitleMessage record asynchronously and observes operation
+  /// cancellation before the database commit.
+  /// </summary>
+  /// <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to insert.</param>
+  /// <param name="cancellationToken">The owning operation cancellation token.</param>
+  /// <returns>A status string describing the persistence outcome.</returns>
+  public static async Task<string> InsertTalkSubtitleDataAsync(
+      TalkSubtitleMessage talkSubtitleMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(
+              talkSubtitleMessage.TranslatedTalkSubtitleMessage) ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              talkSubtitleMessage.OriginalTalkSubtitleMessage,
+              talkSubtitleMessage.TranslatedTalkSubtitleMessage,
+              talkSubtitleMessage.OriginalTalkSubtitleMessageLang,
+              talkSubtitleMessage.TranslationLang))
+      {
+        return "No data to save.";
+      }
+
+      context.TalkSubtitleMessage.Attach(talkSubtitleMessage);
+      if (ShouldCopyTranslationToClipboard())
+      {
+        ImGui.SetClipboardText(talkSubtitleMessage.ToString());
+      }
+
+      await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+      return "Data inserted to TalkSubtitleMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
   /// Inserts a MiniTalkMessage record into the database.
   /// </summary>
   /// <param name="miniTalkMessage">Formatted MiniTalkMessage to be inserted into the database</param>
   /// <returns></returns>
   public static async Task<string> InsertMiniTalkData(
-      MiniTalkMessage miniTalkMessage)
+      MiniTalkMessage miniTalkMessage,
+      CancellationToken cancellationToken = default)
   {
     using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -1136,9 +1291,13 @@ public partial class Echoglossian
         ImGui.SetClipboardText(miniTalkMessage.ToString());
       }
 
-      await context.SaveChangesAsync();
+      await context.SaveChangesAsync(cancellationToken);
 
       return "Data inserted to MiniTalkMessages table.";
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception e)
     {
@@ -1237,6 +1396,9 @@ public partial class Echoglossian
 
         isInThere = this.ErrorToastsCache.Exists(t =>
             toastMessage.ToastType == t.ToastType &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                toastMessage.OriginalLang,
+                t.OriginalLang) &&
             toastMessage.TranslationLang == t.TranslationLang &&
             toastMessage.OriginalToastMessage ==
             t.OriginalToastMessage && toastMessage.TranslationEngine ==
@@ -1290,6 +1452,9 @@ public partial class Echoglossian
 
         isInThere = this.OtherToastsCache.Exists(t =>
             toastMessage.ToastType == t.ToastType &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                toastMessage.OriginalLang,
+                t.OriginalLang) &&
             toastMessage.TranslationLang == t.TranslationLang &&
             toastMessage.OriginalToastMessage ==
             t.OriginalToastMessage && toastMessage.TranslationEngine ==
@@ -1432,12 +1597,16 @@ public partial class Echoglossian
 
     if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
     {
-      var questIdMatch = context.QuestPlate.FirstOrDefault(t =>
+      var questIdMatches = context.QuestPlate.Where(t =>
           t.QuestId == questPlate.QuestId &&
           t.TranslationLang == questPlate.TranslationLang &&
-          (!this.configuration.TranslateAlreadyTranslatedTexts ||
-           t.TranslationEngine == questPlate.TranslationEngine) &&
+          t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+      var questIdMatch = questIdMatches
+          .AsEnumerable()
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
+              t.OriginalLang,
+              questPlate.OriginalLang));
 
       if (questIdMatch != null)
       {
@@ -1450,13 +1619,17 @@ public partial class Echoglossian
 
     if (!string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
     {
-      var questMessageMatch = context.QuestPlate.FirstOrDefault(t =>
+      var questMessageMatches = context.QuestPlate.Where(t =>
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
           t.TranslationLang == questPlate.TranslationLang &&
-          (!this.configuration.TranslateAlreadyTranslatedTexts ||
-           t.TranslationEngine == questPlate.TranslationEngine) &&
+          t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+      var questMessageMatch = questMessageMatches
+          .AsEnumerable()
+          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
+              t.OriginalLang,
+              questPlate.OriginalLang));
 
       if (questMessageMatch != null)
       {
@@ -1465,12 +1638,16 @@ public partial class Echoglossian
       }
     }
 
-    var questNameMatch = context.QuestPlate.FirstOrDefault(t =>
+    var questNameMatches = context.QuestPlate.Where(t =>
         t.QuestName == questPlate.QuestName &&
         t.TranslationLang == questPlate.TranslationLang &&
-        (!this.configuration.TranslateAlreadyTranslatedTexts ||
-         t.TranslationEngine == questPlate.TranslationEngine) &&
+        t.TranslationEngine == questPlate.TranslationEngine &&
         (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
+    var questNameMatch = questNameMatches
+        .AsEnumerable()
+        .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
+            t.OriginalLang,
+            questPlate.OriginalLang));
 
     if (questNameMatch != null)
     {
@@ -1478,6 +1655,50 @@ public partial class Echoglossian
     }
 
     return questNameMatch;
+  }
+
+  /// <summary>
+  ///     Compares write-side source identities while recognizing only the four
+  ///     historical display names persisted by supported game languages.
+  /// </summary>
+  /// <param name="left">The persisted source identity.</param>
+  /// <param name="right">The incoming source identity.</param>
+  /// <returns>True when both values identify the same write-side source.</returns>
+  private static bool LegacyWriteSourceLanguagesMatch(
+      string? left,
+      string? right)
+  {
+    var normalizedLeft = NormalizeLegacyWriteSourceLanguage(left);
+    var normalizedRight = NormalizeLegacyWriteSourceLanguage(right);
+
+    return !string.IsNullOrWhiteSpace(normalizedLeft) &&
+           string.Equals(
+               normalizedLeft,
+               normalizedRight,
+               StringComparison.OrdinalIgnoreCase);
+  }
+
+  /// <summary>
+  ///     Normalizes only approved legacy display names for write identity.
+  /// </summary>
+  /// <param name="language">The source identity to normalize.</param>
+  /// <returns>The approved canonical identity or the trimmed input.</returns>
+  private static string NormalizeLegacyWriteSourceLanguage(string? language)
+  {
+    if (string.IsNullOrWhiteSpace(language))
+    {
+      return string.Empty;
+    }
+
+    var trimmed = language.Trim();
+    return trimmed.ToLowerInvariant() switch
+    {
+      "english" or "en" => "en",
+      "deutsch" or "de" => "de",
+      "french" or "fr" => "fr",
+      "japanese" or "ja" => "ja",
+      _ => trimmed,
+    };
   }
 
   /// <summary>
@@ -1621,6 +1842,9 @@ public partial class Echoglossian
   {
     if (cache.Exists(t =>
             t.ToastType == toastMessage.ToastType &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                t.OriginalLang,
+                toastMessage.OriginalLang) &&
             t.TranslationLang == toastMessage.TranslationLang &&
             t.OriginalToastMessage == toastMessage.OriginalToastMessage &&
             t.TranslationEngine == toastMessage.TranslationEngine))

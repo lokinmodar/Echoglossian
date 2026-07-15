@@ -55,7 +55,7 @@ In the same validation window:
 ## 1. Active DB-First Canonical `StringArrayDatas` Runtime
 
 These surfaces are currently owned by
-[DbFirstGameWindowAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs).
+`NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`.
 
 ### Active surfaces
 
@@ -72,7 +72,7 @@ These surfaces are currently owned by
 ### Registration point
 
 These are registered in
-[AddonHandlerWiring.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/AddonHandlerWiring.cs)
+`NativeUI/Helpers/AddonHandlerWiring.cs`
 when the corresponding config toggles are enabled.
 
 ### Persistence backend
@@ -128,10 +128,29 @@ made stricter, these windows may still:
 - flicker when the game repaints and the addon-local runtime tries to chase the
   new state
 
+### Character Lookup Snapshot Performance Rule
+
+`Character` and its dynamic subwindows may expose a large number of readable
+text nodes in one lifecycle pass. Their canonical original/translated lookup is
+therefore built once per handler-local snapshot, rather than once per node.
+
+The snapshot is valid only when all of the following remain unchanged:
+
+- the complete `TranslationReuseScope` (source client language, target
+  language, effective engine, and engine-reuse policy)
+- the requested game version
+- the revision of both `StringArrayDataCacheManager` and
+  `GameWindowCacheManager`
+
+Every cache preload, update, or clear advances its revision. The next
+Character-family resolution then rebuilds the snapshot exactly once, so a newly
+persisted translation remains visible without permanent per-frame JSON parsing
+or candidate sorting.
+
 ## 2. Active DB-First `GameWindow` Runtime
 
 These surfaces are still owned by
-[DbFirstGameWindowAddonHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs),
+`NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`,
 but they do not use the canonical `StringArrayDatas` runtime path.
 
 ### Active surfaces
@@ -219,11 +238,11 @@ the active `StringArrayType` surfaces listed above.
 
 ### Current pieces
 
-- [StringArrayDataPersistenceHelper.cs](/C:/Dante/_dalamud/Echoglossian/DBHelpers/StringArrayDataPersistenceHelper.cs)
-- [StringArrayStructuredPayload.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayload.cs)
-- [StringArrayStructuredPayloadResolver.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayloadResolver.cs)
-- [IStringArrayStructuredSchema.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/IStringArrayStructuredSchema.cs)
-- [StringArrayStructuredPayloadBuilder.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/StringArrayStructuredPayloadBuilder.cs)
+- `DBHelpers/StringArrayDataPersistenceHelper.cs`
+- `NativeUI/Helpers/StringArrayStructuredPayload.cs`
+- `NativeUI/Helpers/StringArrayStructuredPayloadResolver.cs`
+- `NativeUI/Helpers/IStringArrayStructuredSchema.cs`
+- `NativeUI/Helpers/StringArrayStructuredPayloadBuilder.cs`
 
 ### What it can do today
 
@@ -247,12 +266,12 @@ the active `StringArrayType` surfaces listed above.
 ### Presentation Rule for `StringArrayData` Surfaces
 
 For migrated `StringArrayData` surfaces, non-native presentation should prefer
-Echoglossian tooltips per translated text:
+plugin hover tooltips per translated text:
 
 - native-only mode: translated text may be applied directly into the addon
-- ImGui mode: keep the native addon untouched and use Echoglossian tooltips for
+- ImGui mode: keep the native addon untouched and use plugin hover tooltips for
   each translated text block
-- swap mode: keep the translated text in the addon and use Echoglossian
+- swap mode: keep the translated text in the addon and use plugin hover
   tooltips to show the original text for each translated block
 
 This rule should guide future migrations so we do not reintroduce direct
@@ -263,9 +282,9 @@ array-write contention just to support overlay-like presentation.
 ### `RecommendList`
 
 `RecommendList` still exists in the repo as
-[RecommendListHandler.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/AddonHandlers/Quest/RecommendListHandler.cs),
+`NativeUI/AddonHandlers/Quest/RecommendListHandler.cs`,
 but it is intentionally not registered in
-[AddonHandlerWiring.cs](/C:/Dante/_dalamud/Echoglossian/NativeUI/Helpers/AddonHandlerWiring.cs)
+`NativeUI/Helpers/AddonHandlerWiring.cs`
 right now.
 
 So:
@@ -334,3 +353,11 @@ If the goal is to keep expanding `stringarraydatas` as the owner of future
 The current repo state suggests the next suitable targets are surfaces that
 still rely on legacy/global `StringArrayData` behavior rather than the already
 migrated windows.
+
+## #139 Source Contract
+
+Canonical structured rows carry the captured source persistence identity.
+Structured helpers receive `SourceClientLanguage`; translation selects the
+provider code internally. A blank, unknown, generic-provider, or ambiguous
+Chinese legacy source remains stored history but is not reusable. Overlay-only
+flows publish presentation only and do not mutate native `StringArrayData`.

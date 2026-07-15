@@ -61,7 +61,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private DateTime deferredCleanupUtc = DateTime.MinValue;
     private DateTime appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
 
-    private DateTime nextRetryUtc = DateTime.MinValue;
+    private readonly DbFirstSourceRetryGate retryGate = new();
+    private int refreshRequested;
 
     /// <summary>
     ///     Clears the shared DB-first in-memory session caches so one fresh
@@ -74,6 +75,25 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         FailedPayloadRetryUtc.Clear();
         ParsedPayloadCache.Clear();
         PluginRuntimeLog.Debug("[DbFirstGameWindowAddonHandler] Cleared DB-first session caches.");
+    }
+
+    /// <summary>
+    ///     Determines whether one persisted source identity belongs to the
+    ///     source language captured for the current operation.
+    /// </summary>
+    /// <param name="persistedSourceLanguage">The row's stored source identity.</param>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the persisted identity matches the
+    ///     current operation; otherwise <see langword="false" />.
+    /// </returns>
+    internal static bool MatchesPersistedSourceIdentity(
+        string? persistedSourceLanguage,
+        SourceClientLanguage sourceLanguage)
+    {
+        return RuntimeLanguageHelper.LanguagesMatch(
+            persistedSourceLanguage,
+            sourceLanguage.PersistenceCode);
     }
 
     /// <summary>
@@ -93,6 +113,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// </summary>
     private protected TranslationService HandlerTranslationService =>
         this.translationService;
+
+    /// <summary>
+    ///     Resolves the effective engine identifier used by a captured
+    ///     GameWindow operation. The configuration fallback is only for
+    ///     native-free lookup test seams that intentionally omit the service.
+    /// </summary>
+    /// <returns>The effective default-surface translation engine identifier.</returns>
+    private protected int GetOperationTranslationEngineId()
+    {
+        return this.translationService == null
+            ? this.config.ChosenTransEngine
+            : this.translationService.GetEffectiveTranslationEngineId(
+                TranslationSurfaceGroup.Default);
+    }
 
     /// <summary>
     ///     Initializes a new instance of the
@@ -225,6 +259,36 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether one visible <c>AtkValue</c> string should
+    ///     participate in the canonical payload for this addon.
+    /// </summary>
+    /// <param name="index">The live ATK value index.</param>
+    /// <param name="value">The live ATK value.</param>
+    /// <param name="visibleText">The currently visible text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the ATK value is stable enough to
+    ///     capture and later reapply; otherwise <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldCaptureAtkValue(
+        int index,
+        in AtkValue value,
+        string visibleText)
+    {
+        return true;
+    }
+
+    /// <summary>
+    ///     Resolves the text-node addresses that participate in capture,
+    ///     apply, restore, and hover registration for this addon.
+    /// </summary>
+    /// <param name="addon">The live addon instance.</param>
+    /// <returns>The text-node addresses in stable tree order.</returns>
+    protected virtual List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
+    {
+        return AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon);
+    }
+
+    /// <summary>
     ///     Normalizes the captured text-node payload before it participates in
     ///     persistence, matching, and native apply.
     /// </summary>
@@ -305,9 +369,31 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether one newly resolved payload pair should be
+    ///     persisted for the operation-captured source identity.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="translatedPayload">The resolved translated payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the payload is ready for persistence;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldPersistNewGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return this.ShouldPersistNewGameWindowPayload(
+            originalPayload,
+            translatedPayload);
+    }
+
+    /// <summary>
     ///     Normalizes one resolved translated payload before it is applied to
     ///     the live addon surface.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">
     ///     The original-facing payload currently visible in the addon.
     /// </param>
@@ -319,6 +405,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     The translated payload that should be applied for this addon.
     /// </returns>
     private protected virtual DbFirstGameWindowPayload NormalizeResolvedTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
@@ -365,6 +452,50 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether one newly observed payload should be queued for
+    ///     the operation-captured source identity.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when background translation may be queued;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldQueueNewGameWindowTranslation(
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload)
+    {
+        return this.ShouldQueueNewGameWindowTranslation(originalPayload);
+    }
+
+    /// <summary>
+    ///     Determines whether one newly observed payload should be queued for
+    ///     its complete operation scope and lifecycle generation.
+    /// </summary>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <param name="sourceOperation">The source operation captured for the queue.</param>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="retryCoolingDown">
+    ///     Whether this payload is still waiting for a failed-translation retry.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when background translation may be queued;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool ShouldQueueNewGameWindowTranslation(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        bool retryCoolingDown)
+    {
+        return this.ShouldQueueNewGameWindowTranslation(
+            sourceLanguage,
+            originalPayload);
+    }
+
+    /// <summary>
     ///     Resolves the persisted class/job discriminator for one canonical
     ///     <see cref="GameWindow" /> row when the addon content varies by the
     ///     active class or job.
@@ -397,6 +528,29 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload payload)
     {
         return null;
+    }
+
+    /// <summary>
+    ///     Prepares one resolved original/translated payload pair before it is
+    ///     persisted as a canonical <see cref="GameWindow" /> row.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
+    /// <param name="originalPayload">The original payload captured from the addon.</param>
+    /// <param name="translatedPayload">
+    ///     The translated payload completed for the same operation.
+    /// </param>
+    /// <returns>
+    ///     The payload pair that should be serialized into persistence.
+    /// </returns>
+    private protected virtual (
+        DbFirstGameWindowPayload OriginalPayload,
+        DbFirstGameWindowPayload TranslatedPayload)
+        PreparePersistedGameWindowPayload(
+            TranslationReuseScope scope,
+            DbFirstGameWindowPayload originalPayload,
+            DbFirstGameWindowPayload translatedPayload)
+    {
+        return (originalPayload, translatedPayload);
     }
 
     /// <summary>
@@ -490,6 +644,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     canonical source other than persisted <see cref="GameWindow" />
     ///     rows.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The visible original-facing payload.</param>
     /// <param name="translatedPayload">
     ///     Receives the translated payload when resolution succeeds.
@@ -499,6 +654,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     otherwise <see langword="false" />.
     /// </returns>
     private protected virtual bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
@@ -511,6 +667,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     specific source other than persisted rows when the live UI is
     ///     already showing translated text.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="livePayload">The currently visible live payload.</param>
     /// <param name="originalPayload">
     ///     Receives the recovered original payload.
@@ -520,6 +677,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     resolved; otherwise <see langword="false" />.
     /// </returns>
     private protected virtual bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
@@ -616,9 +774,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="args">The event args.</param>
     protected virtual void OnLifecycleEvent(AddonEvent evt, AddonArgs args)
     {
+        SourceClientLanguage? sourceLanguage = null;
+        if (this.enabledSelector(this.config))
+        {
+            if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                    out var resolvedSourceLanguage))
+            {
+                this.InvalidateResolvedStateForSource(null);
+                return;
+            }
+
+            sourceLanguage = resolvedSourceLanguage;
+        }
+
+        this.InvalidateResolvedStateForSource(sourceLanguage);
+
         this.TryFinalizeDeferredCleanup();
         this.ArmAppliedStatePreDrawRefreshWindow();
-        this.RefreshOrQueue();
+        this.RefreshOrQueue(sourceLanguage);
     }
 
     /// <summary>
@@ -628,9 +801,25 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <param name="args">The event args.</param>
     protected virtual void OnPreDrawEvent(AddonEvent evt, AddonArgs args)
     {
+        var isEnabled = this.enabledSelector(this.config);
+        SourceClientLanguage? sourceLanguage = null;
+        if (isEnabled)
+        {
+            if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                    out var resolvedSourceLanguage))
+            {
+                this.InvalidateResolvedStateForSource(null);
+                return;
+            }
+
+            sourceLanguage = resolvedSourceLanguage;
+        }
+
+        this.InvalidateResolvedStateForSource(sourceLanguage);
+
         this.TryFinalizeDeferredCleanup();
 
-        if (!this.enabledSelector(this.config))
+        if (!isEnabled)
         {
             this.RestoreOriginalPayloadIfNeeded();
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
@@ -639,6 +828,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
+        var operationSourceLanguage = sourceLanguage.GetValueOrDefault();
+        var sourceOperation = this.retryGate.TransitionTo(
+            this.CreateReuseScope(operationSourceLanguage));
         var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
             this.displayModeSelector(this.config),
             this.config.OverlayOnlyLanguage);
@@ -646,6 +838,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
         var shouldContinueAppliedStateRefresh =
             this.ShouldContinueAppliedStateRefreshOnPreDraw();
+        var refreshRequested = Interlocked.Exchange(
+            ref this.refreshRequested,
+            0) != 0;
 
         if (this.lastResolvedState != null &&
             this.lastAppliedDisplayMode != null &&
@@ -692,17 +887,26 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 this.ApplyPayload(
                     visibleAddon,
+                    operationSourceLanguage,
                     originalPayload,
                     translatedPayload,
                     this.lastResolvedState.PayloadKey,
                     displayMode);
-                this.nextRetryUtc = DateTime.MinValue;
+                this.retryGate.TryClearRetry(sourceOperation);
                 return;
             }
         }
 
-        if (this.lastAppliedDisplayMode == displayMode &&
-            !shouldContinueAppliedStateRefresh)
+        if (DbFirstPreDrawRefreshPolicy.ShouldShortCircuit(
+                sameDisplayMode: this.lastAppliedDisplayMode == displayMode,
+                shouldContinueAppliedStateRefresh:
+                shouldContinueAppliedStateRefresh,
+                refreshRequested: refreshRequested,
+                hasRuntimeState: this.runtimeState != null,
+                usesHoverTooltips: usesHoverTooltips,
+                hasLastResolvedState: this.lastResolvedState != null,
+                hasVisibleAddon: !usesHoverTooltips ||
+                    this.TryGetVisibleAddon(out _)))
         {
             if (this.runtimeState != null)
             {
@@ -714,22 +918,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
                 return;
             }
-
-            if (usesHoverTooltips &&
-                this.lastResolvedState != null)
-            {
-                this.hoverTooltipManager.TouchByPrefix(
-                    this.hoverTooltipKeyPrefix);
-                return;
-            }
         }
 
-        if (this.runtimeState == null && DateTime.UtcNow < this.nextRetryUtc)
+        if (!refreshRequested &&
+            this.runtimeState == null &&
+            this.retryGate.IsCoolingDown(
+                sourceOperation,
+                DateTime.UtcNow))
         {
             return;
         }
 
-        this.RefreshOrQueue();
+        this.RefreshOrQueue(operationSourceLanguage);
     }
 
     /// <summary>
@@ -744,6 +944,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.deferredCleanupPending = true;
             this.deferredCleanupEvent = evt;
             this.deferredCleanupUtc = DateTime.UtcNow;
+            this.OnDeferredCleanupScheduled(evt, args);
             return;
         }
 
@@ -754,6 +955,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     public virtual void OnPluginUnload()
     {
         this.ClearResolvedState();
+    }
+
+    /// <summary>
+    ///     Handles any addon-specific work that should run immediately when
+    ///     cleanup is deferred instead of fully clearing runtime state.
+    /// </summary>
+    /// <param name="evt">The lifecycle event being deferred.</param>
+    /// <param name="args">The lifecycle event args.</param>
+    protected virtual void OnDeferredCleanupScheduled(
+        AddonEvent evt,
+        AddonArgs args)
+    {
     }
 
     /// <summary>
@@ -791,9 +1004,31 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Removes every hover tooltip currently registered by this handler.
+    /// </summary>
+    private protected void ClearRegisteredHoverTooltips()
+    {
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+    }
+
+    /// <summary>
+    ///     Requests one fresh pre-draw resolve pass for this handler on the
+    ///     next eligible lifecycle update.
+    /// </summary>
+    private protected void RequestPreDrawRefresh()
+    {
+        Interlocked.Exchange(ref this.refreshRequested, 1);
+        this.ArmAppliedStatePreDrawRefreshWindow();
+    }
+
+    /// <summary>
     ///     Performs the DB-first refresh path for the addon.
     /// </summary>
-    private void RefreshOrQueue()
+    /// <param name="sourceLanguage">
+    ///     The operation-captured source identity, or no value for disabled
+    ///     cleanup.
+    /// </param>
+    private void RefreshOrQueue(SourceClientLanguage? sourceLanguage)
     {
         if (!this.enabledSelector(this.config))
         {
@@ -804,8 +1039,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
+        if (!sourceLanguage.HasValue)
+        {
+            return;
+        }
+
+        var operationSourceLanguage = sourceLanguage.Value;
+        var operationScope = this.CreateReuseScope(operationSourceLanguage);
+        var sourceOperation = this.retryGate.TransitionTo(operationScope);
+
         if (!this.TryGetVisibleAddon(out var addon))
         {
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             return;
         }
 
@@ -840,16 +1085,22 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        var originalPayload = this.ResolveOriginalPayload(livePayload);
+        var originalPayload = this.ResolveOriginalPayload(
+            livePayload,
+            operationSourceLanguage);
         if (this.stringArrayDataType is { })
         {
             var originalStructuredPayload =
                 this.BuildStructuredPayload(originalPayload);
             var structuredPayloadKey =
-                this.BuildPayloadKey(originalStructuredPayload);
+                this.BuildPayloadKey(
+                    operationScope,
+                    originalStructuredPayload);
 
             DbFirstStructuredStringArrayProjection projection = default!;
             var exactStructuredMatch = this.TryFindStructuredPayload(
+                operationSourceLanguage,
+                operationScope,
                 originalStructuredPayload,
                 out var translatedStructuredPayload);
             var exactProjectionMatch = exactStructuredMatch &&
@@ -864,6 +1115,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             {
                 var supplementalResolved =
                     this.TryResolveSupplementalTranslatedPayload(
+                        operationSourceLanguage,
                         originalPayload,
                         out var supplementalTranslatedPayload);
 
@@ -874,12 +1126,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                             originalPayload);
                     this.ApplyPayload(
                         addon,
+                        operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload,
                         structuredPayloadKey,
                         displayMode);
                     ClearFailedPayloadRetry(structuredPayloadKey);
-                    this.nextRetryUtc = DateTime.MinValue;
+                    this.retryGate.TryClearRetry(sourceOperation);
                     return;
                 }
 
@@ -887,7 +1140,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 {
                     this.hoverTooltipManager.RemoveByPrefix(
                         this.hoverTooltipKeyPrefix);
-                    this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                    this.retryGate.TrySetRetry(
+                        sourceOperation,
+                        DateTime.UtcNow + RetryInterval);
                     return;
                 }
 
@@ -897,21 +1152,29 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 {
                     this.hoverTooltipManager.RemoveByPrefix(
                         this.hoverTooltipKeyPrefix);
-                    this.nextRetryUtc = failedRetryUtc;
+                    this.retryGate.TrySetRetry(
+                        sourceOperation,
+                        failedRetryUtc);
                     return;
                 }
 
                 this.QueueTranslationIfNeeded(
+                    operationSourceLanguage,
+                    operationScope,
                     originalPayload,
                     structuredPayloadKey,
+                    sourceOperation,
                     originalStructuredPayload);
                 this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-                this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                this.retryGate.TrySetRetry(
+                    sourceOperation,
+                    DateTime.UtcNow + RetryInterval);
                 return;
             }
 
             this.ApplyPayload(
                 addon,
+                operationSourceLanguage,
                 originalPayload,
                 new DbFirstGameWindowPayload(
                     projection.AtkValues,
@@ -920,16 +1183,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 structuredPayloadKey,
                 displayMode);
             ClearFailedPayloadRetry(structuredPayloadKey);
-            this.nextRetryUtc = DateTime.MinValue;
+            this.retryGate.TryClearRetry(sourceOperation);
             return;
         }
 
         var originalJson = originalPayload.Serialize();
-        var payloadKey = this.BuildPayloadKey(originalJson);
+        var payloadKey = this.BuildPayloadKey(operationScope, originalJson);
 
         var translatedPayload = DbFirstGameWindowPayload.Empty;
         var hasExactTranslatedPayload =
             this.TryFindGameWindow(
+                operationSourceLanguage,
                 originalPayload,
                 originalJson,
                 out var gameWindow) &&
@@ -940,6 +1204,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (hasExactTranslatedPayload)
         {
             translatedPayload = this.NormalizeResolvedTranslatedPayload(
+                operationSourceLanguage,
                 originalPayload,
                 translatedPayload);
             hasExactTranslatedPayload =
@@ -952,6 +1217,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             if (this.ShouldReuseCompatiblePayloads() &&
                 this.TryResolveCompatibleGameWindowPayload(
+                    operationSourceLanguage,
                     originalPayload,
                     out var compatibleOriginalPayload,
                     out var compatibleTranslatedPayload))
@@ -962,6 +1228,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     compatibleTranslatedPayload.ProjectToShape(originalPayload);
                 compatibleTranslatedPayload =
                     this.NormalizeResolvedTranslatedPayload(
+                        operationSourceLanguage,
                         compatibleOriginalPayload,
                         compatibleTranslatedPayload);
                 if (!this.ShouldAcceptResolvedTranslatedPayload(
@@ -972,20 +1239,23 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 }
 
                 var compatiblePayloadKey = this.BuildPayloadKey(
+                    operationScope,
                     compatibleOriginalPayload.Serialize());
                 this.ApplyPayload(
                     addon,
+                    operationSourceLanguage,
                     compatibleOriginalPayload,
                     compatibleTranslatedPayload,
                     compatiblePayloadKey,
                     displayMode);
                 ClearFailedPayloadRetry(compatiblePayloadKey);
-                this.nextRetryUtc = DateTime.MinValue;
+                this.retryGate.TryClearRetry(sourceOperation);
                 return;
             }
 
         TrySupplementalTranslatedPayload:
             if (this.TryResolveSupplementalTranslatedPayload(
+                    operationSourceLanguage,
                     originalPayload,
                     out var supplementalTranslatedPayload))
             {
@@ -994,6 +1264,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         originalPayload);
                 supplementalTranslatedPayload =
                     this.NormalizeResolvedTranslatedPayload(
+                        operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload);
                 if (!this.ShouldAcceptResolvedTranslatedPayload(
@@ -1004,56 +1275,84 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 }
 
                 if (this.ShouldPersistNewGameWindowPayload(
+                        operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload))
                 {
                     this.PersistResolvedGameWindowPayload(
+                        operationScope,
                         originalPayload,
-                        supplementalTranslatedPayload);
+                        supplementalTranslatedPayload,
+                        this.GetPersistedGameWindowClassJobId(
+                            originalPayload,
+                            supplementalTranslatedPayload));
                 }
 
                 this.ApplyPayload(
                     addon,
+                    operationSourceLanguage,
                     originalPayload,
                     supplementalTranslatedPayload,
                     payloadKey,
                     displayMode);
                 ClearFailedPayloadRetry(payloadKey);
-                this.nextRetryUtc = DateTime.MinValue;
+                this.retryGate.TryClearRetry(sourceOperation);
                 return;
             }
 
         QueueNewTranslation:
-            if (!this.ShouldQueueNewGameWindowTranslation(originalPayload))
+            var retryCoolingDown = TryGetFailedPayloadRetryUtc(
+                payloadKey,
+                out var failedRetryUtc);
+            if (!this.ShouldQueueNewGameWindowTranslation(
+                    operationScope,
+                    sourceOperation,
+                    operationSourceLanguage,
+                    originalPayload,
+                    retryCoolingDown))
             {
                 this.hoverTooltipManager.RemoveByPrefix(
                     this.hoverTooltipKeyPrefix);
-                this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+                this.retryGate.TrySetRetry(
+                    sourceOperation,
+                    retryCoolingDown
+                        ? failedRetryUtc
+                        : DateTime.UtcNow + RetryInterval);
                 return;
             }
 
-            if (TryGetFailedPayloadRetryUtc(payloadKey, out var failedRetryUtc))
+            if (retryCoolingDown)
             {
                 this.hoverTooltipManager.RemoveByPrefix(
                     this.hoverTooltipKeyPrefix);
-                this.nextRetryUtc = failedRetryUtc;
+                this.retryGate.TrySetRetry(
+                    sourceOperation,
+                    failedRetryUtc);
                 return;
             }
 
-            this.QueueTranslationIfNeeded(originalPayload, payloadKey);
+            this.QueueTranslationIfNeeded(
+                operationSourceLanguage,
+                operationScope,
+                originalPayload,
+                payloadKey,
+                sourceOperation);
             this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
-            this.nextRetryUtc = DateTime.UtcNow + RetryInterval;
+            this.retryGate.TrySetRetry(
+                sourceOperation,
+                DateTime.UtcNow + RetryInterval);
             return;
         }
 
         this.ApplyPayload(
             addon,
+            operationSourceLanguage,
             originalPayload,
             translatedPayload,
             payloadKey,
             displayMode);
         ClearFailedPayloadRetry(payloadKey);
-        this.nextRetryUtc = DateTime.MinValue;
+        this.retryGate.TryClearRetry(sourceOperation);
     }
 
     /// <summary>
@@ -1102,11 +1401,37 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         this.runtimeState = null;
         this.lastResolvedState = null;
         this.lastAppliedDisplayMode = null;
-        this.nextRetryUtc = DateTime.MinValue;
+        this.retryGate.Reset();
         this.deferredCleanupPending = false;
         this.deferredCleanupEvent = default;
         this.deferredCleanupUtc = DateTime.MinValue;
         this.appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    ///     Clears resolved state from another client source before any runtime
+    ///     short-circuit, native reapply, or hover reuse can observe it.
+    /// </summary>
+    /// <param name="sourceLanguage">
+    ///     The operation-captured source identity, or no value when the source
+    ///     cannot be resolved.
+    /// </param>
+    private void InvalidateResolvedStateForSource(
+        SourceClientLanguage? sourceLanguage)
+    {
+        var scope = sourceLanguage.HasValue
+            ? this.CreateReuseScope(sourceLanguage.Value)
+            : (TranslationReuseScope?)null;
+        if (this.retryGate.ShouldInvalidateFor(scope) ||
+            (this.runtimeState != null &&
+             this.runtimeState.ShouldInvalidateFor(sourceLanguage)) ||
+            (this.lastResolvedState != null &&
+             this.lastResolvedState.ShouldInvalidateFor(sourceLanguage)))
+        {
+            this.ClearResolvedState();
+        }
+
+        this.retryGate.TransitionTo(scope);
     }
 
     /// <summary>
@@ -1188,6 +1513,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     continue;
                 }
 
+                if (!this.ShouldCaptureAtkValue(index, in value, text))
+                {
+                    continue;
+                }
+
                 atkValues[index] = text;
             }
         }
@@ -1239,8 +1569,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     {
         var capturedNodes = new SortedDictionary<string, string>(
             StringComparer.Ordinal);
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in nodeAddresses)
@@ -1252,6 +1581,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
+            var nodeId = textNode->AtkResNode.NodeId;
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
             var visibleText = this.ReadTextNode(textNode);
             if (!ShouldCaptureText(visibleText))
             {
@@ -1263,10 +1596,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            var nodeId = textNode->AtkResNode.NodeId;
-            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
-            ordinalsByNodeId[nodeId] = ordinal + 1;
-            capturedNodes[BuildTextNodeKey(nodeId, ordinal)] = visibleText;
+            capturedNodes[textNodeKey] = visibleText;
         }
 
         return this.NormalizeCapturedTextNodes(capturedNodes);
@@ -1276,15 +1606,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Resolves the original payload to use for DB lookup.
     /// </summary>
     /// <param name="livePayload">The currently visible payload.</param>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <returns>The original payload for DB lookup and restore.</returns>
     private DbFirstGameWindowPayload ResolveOriginalPayload(
-        DbFirstGameWindowPayload livePayload)
+        DbFirstGameWindowPayload livePayload,
+        SourceClientLanguage sourceLanguage)
     {
         this.lastOriginalRecoveryWasUnstableTranslatedState = false;
 
         if (this.runtimeState == null)
         {
             if (this.TryRecoverOriginalPayloadFromPersistedRows(
+                    sourceLanguage,
                     livePayload,
                     out var recoveredPayload))
             {
@@ -1292,6 +1625,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
             return this.TryResolveSupplementalOriginalPayload(
+                sourceLanguage,
                 livePayload,
                 out var supplementalOriginalPayload)
                 ? supplementalOriginalPayload
@@ -1310,6 +1644,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
 
         this.runtimeState = null;
         if (this.TryRecoverOriginalPayloadFromPersistedRows(
+                sourceLanguage,
                 livePayload,
                 out var persistedRecoveredPayload))
         {
@@ -1317,6 +1652,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         return this.TryResolveSupplementalOriginalPayload(
+            sourceLanguage,
             livePayload,
             out var finalSupplementalOriginalPayload)
             ? finalSupplementalOriginalPayload
@@ -1326,27 +1662,51 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <summary>
     ///     Builds a stable in-flight key for one payload.
     /// </summary>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
     /// <param name="originalJson">The serialized original payload.</param>
     /// <returns>The stable payload key.</returns>
-    private string BuildPayloadKey(string originalJson)
+    private string BuildPayloadKey(
+        TranslationReuseScope scope,
+        string originalJson)
     {
-        var targetLanguageCode =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang);
-        return $"{this.addonName}|{targetLanguageCode}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalJson}";
+        return DbFirstGameWindowWorkKey.Build(
+            this.addonName,
+            scope,
+            GetGameVersion(),
+            originalJson);
     }
 
     /// <summary>
     ///     Builds a stable in-flight key for one canonical structured payload.
     /// </summary>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <returns>The stable payload key.</returns>
-    private string BuildPayloadKey(StringArrayStructuredPayload originalPayload)
+    private string BuildPayloadKey(
+        TranslationReuseScope scope,
+        StringArrayStructuredPayload originalPayload)
     {
-        var targetLanguageCode =
+        return DbFirstGameWindowWorkKey.Build(
+            this.addonName,
+            scope,
+            GetGameVersion(),
+            originalPayload.ComputeSourceContentHash());
+    }
+
+    /// <summary>
+    ///     Creates the complete reuse scope for one operation-captured source.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <returns>The immutable reuse scope for the current operation.</returns>
+    private TranslationReuseScope CreateReuseScope(
+        SourceClientLanguage sourceLanguage)
+    {
+        return new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang);
-        return $"{this.addonName}|{targetLanguageCode}|{this.config.ChosenTransEngine}|{GetGameVersion()}|{originalPayload.ComputeSourceContentHash()}";
+                this.config.Lang),
+            this.GetOperationTranslationEngineId(),
+            this.config.TranslateAlreadyTranslatedTexts);
     }
 
     /// <summary>
@@ -1370,41 +1730,54 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Tries to find a matching canonical <c>StringArrayDatas</c> row in
     ///     cache or DB and resolve its translated payload.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="translatedPayload">The resolved translated payload.</param>
     /// <returns>True when a canonical translated payload was found.</returns>
     private bool TryFindStructuredPayload(
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
         StringArrayStructuredPayload originalPayload,
         out StringArrayStructuredPayload translatedPayload)
     {
-        var language = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
         var gameVersion = GetGameVersion();
         var sourceHash = originalPayload.ComputeSourceContentHash();
 
         var row = StringArrayDataCacheManager.TryFindCanonicalMatch(
             originalPayload.Type,
             originalPayload.ContextKey,
-            language,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             sourceHash);
+        if (!MatchesPersistedSourceIdentity(row?.OriginalLang, sourceLanguage))
+        {
+            row = null;
+        }
+
         if (row == null)
         {
             var probe = StringArrayDataPersistenceHelper.CreateCanonicalRow(
                 originalPayload.Type,
-                ClientStateInterface.ClientLanguage.Humanize(),
-                language,
-                this.config.ChosenTransEngine,
+                sourceLanguage.PersistenceCode,
+                scope.TargetLanguageCode,
+                scope.TranslationEngine.GetValueOrDefault(),
                 gameVersion,
                 originalPayload);
 
             row = StringArrayDataPersistenceHelper.FindStringArrayData(
                 ConfigDirectory,
-                probe);
-            if (row != null)
+                probe,
+                scope);
+            if (row != null &&
+                MatchesPersistedSourceIdentity(
+                    row.OriginalLang,
+                    sourceLanguage))
             {
                 StringArrayDataCacheManager.Update(row);
+            }
+            else
+            {
+                row = null;
             }
         }
 
@@ -1427,6 +1800,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Tries to recover the canonical original payload from persisted rows
     ///     when the live UI is already showing translated or mixed text.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="livePayload">The currently visible live payload.</param>
     /// <param name="originalPayload">The recovered original payload.</param>
     /// <returns>
@@ -1434,17 +1808,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     the live payload.
     /// </returns>
     private bool TryRecoverOriginalPayloadFromPersistedRows(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
         if (this.stringArrayDataType is { })
         {
             return this.TryRecoverStructuredOriginalPayload(
+                sourceLanguage,
                 livePayload,
                 out originalPayload);
         }
 
         return this.TryRecoverGameWindowOriginalPayload(
+            sourceLanguage,
             livePayload,
             out originalPayload);
     }
@@ -1453,6 +1830,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Tries to recover one canonical original payload from persisted
     ///     <c>StringArrayDatas</c> rows.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="livePayload">The currently visible live payload.</param>
     /// <param name="originalPayload">The recovered original payload.</param>
     /// <returns>
@@ -1460,21 +1838,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     the live payload.
     /// </returns>
     private bool TryRecoverStructuredOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
         var scopeProbe = this.BuildStructuredPayload(livePayload);
-        var sourceLanguageCode =
-            RuntimeLanguageHelper.GetCurrentGameLanguageCode();
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguageCode,
+            this.GetOperationTranslationEngineId(),
+            this.config.TranslateAlreadyTranslatedTexts);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
         foreach (var row in StringArrayDataCacheManager.GetCandidates(
                      scopeProbe.Type,
                      scopeProbe.ContextKey,
-                     targetLanguageCode,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion()))
         {
             if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
@@ -1507,7 +1888,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     row.TranslationLang,
                     originalCandidatePayload,
                     translatedCandidatePayload,
-                    sourceLanguageCode,
+                    sourceLanguage.PersistenceCode,
                     targetLanguageCode))
             {
                 continue;
@@ -1538,9 +1919,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Persists one resolved original/translated payload pair as a
     ///     canonical <see cref="GameWindow" /> row and refreshes cache state.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original payload.</param>
     /// <param name="translatedPayload">The translated payload.</param>
     private protected void PersistResolvedGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
@@ -1548,6 +1931,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             originalPayload,
             translatedPayload);
         this.PersistResolvedGameWindowPayload(
+            this.CreateReuseScope(sourceLanguage),
             originalPayload,
             translatedPayload,
             classJobId);
@@ -1558,28 +1942,43 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     canonical <see cref="GameWindow" /> row using an explicit
     ///     class/job discriminator captured by the caller.
     /// </summary>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
     /// <param name="originalPayload">The original payload.</param>
     /// <param name="translatedPayload">The translated payload.</param>
     /// <param name="classJobId">
     ///     The class/job identifier to persist with the row.
     /// </param>
-    private protected void PersistResolvedGameWindowPayload(
+    internal void PersistResolvedGameWindowPayload(
+        TranslationReuseScope scope,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
         uint? classJobId)
     {
-        var row = new GameWindow(
+        if (!scope.TranslationEngine.HasValue)
+        {
+            return;
+        }
+
+        var preparedPayload = this.PreparePersistedGameWindowPayload(
+            scope,
+            originalPayload,
+            translatedPayload);
+        if (preparedPayload.OriginalPayload.IsEmpty ||
+            preparedPayload.TranslatedPayload.IsEmpty ||
+            preparedPayload.OriginalPayload.StructurallyEquals(
+                preparedPayload.TranslatedPayload))
+        {
+            return;
+        }
+
+        var gameVersion = GetGameVersion() ?? string.Empty;
+        var row = CreatePersistedGameWindow(
             this.addonName,
-            originalPayload.Serialize(),
-            ClientStateInterface.ClientLanguage.Humanize(),
-            translatedPayload.Serialize(),
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang),
-            this.config.ChosenTransEngine,
-            GetGameVersion(),
-            createdDate: null,
-            updatedDate: null,
-            classJobId: classJobId);
+            scope,
+            preparedPayload.OriginalPayload,
+            preparedPayload.TranslatedPayload,
+            gameVersion,
+            classJobId);
 
         _ = GameWindowPersistenceHelper.InsertGameWindow(
             ConfigDirectory,
@@ -1588,37 +1987,138 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Creates the canonical persisted row from an immutable operation
+    ///     scope without reading mutable runtime configuration.
+    /// </summary>
+    /// <param name="addonName">The owning addon name.</param>
+    /// <param name="scope">The immutable operation scope.</param>
+    /// <param name="originalPayload">The captured original payload.</param>
+    /// <param name="translatedPayload">The completed translated payload.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="classJobId">The captured class/job discriminator.</param>
+    /// <returns>The row ready for persistence.</returns>
+    internal static GameWindow CreatePersistedGameWindow(
+        string addonName,
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        string gameVersion,
+        uint? classJobId)
+    {
+        if (!scope.TranslationEngine.HasValue)
+        {
+            throw new ArgumentException(
+                "A GameWindow operation scope must capture a translation engine.",
+                nameof(scope));
+        }
+
+        return new GameWindow(
+            addonName,
+            originalPayload.Serialize(),
+            scope.SourceLanguageCode,
+            translatedPayload.Serialize(),
+            scope.TargetLanguageCode,
+            scope.TranslationEngine.Value,
+            gameVersion,
+            createdDate: null,
+            updatedDate: null,
+            classJobId: classJobId);
+    }
+
+    /// <summary>
+    ///     Persists a resolved payload only while the captured operation still
+    ///     owns the active complete reuse scope.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope.</param>
+    /// <param name="sourceOperation">The operation token captured before work began.</param>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="classJobId">The captured class/job discriminator.</param>
+    /// <returns>True when the operation persisted its row.</returns>
+    private protected bool PersistResolvedGameWindowPayload(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        uint? classJobId)
+    {
+        return this.retryGate.TryRunIfCurrent(
+            sourceOperation,
+            () => this.PersistResolvedGameWindowPayload(
+                scope,
+                originalPayload,
+                translatedPayload,
+                classJobId));
+    }
+
+    /// <summary>
     ///     Translates and persists one non-structured
     ///     <see cref="GameWindow" /> payload.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original payload to translate.</param>
     /// <returns>
     ///     A task whose result is <see langword="true" /> when translation
     ///     completed successfully; otherwise <see langword="false" />.
     /// </returns>
-    private protected virtual Task<bool> TranslateAndPersistGameWindowPayloadAsync(
-        DbFirstGameWindowPayload originalPayload)
+    private protected virtual Task<bool>
+        TranslateAndPersistGameWindowPayloadAsync(
+            TranslationReuseScope scope,
+            DbFirstSourceOperation sourceOperation,
+            SourceClientLanguage sourceLanguage,
+            DbFirstGameWindowPayload originalPayload)
     {
-        return GenericAddonHandlerHelper.PerformTranslationAndSaveAsync<GameWindow>(
-            this.addonName,
-            new Dictionary<int, string>(originalPayload.AtkValues),
-            new Dictionary<int, string>(originalPayload.StringArrayValues),
-            new Dictionary<string, string>(
+        if (!scope.TranslationEngine.HasValue)
+        {
+            return Task.FromResult(false);
+        }
+
+        var translatorResolution = this.translationService
+            .CaptureTranslatorResolution(
+                scope.TranslationEngine.Value,
+                TranslationSurfaceGroup.Default);
+        return GenericAddonHandlerHelper
+            .TranslatePayloadAsync(
+                originalPayload.AtkValues,
+                originalPayload.StringArrayValues,
                 originalPayload.TextNodes,
-                StringComparer.Ordinal),
-            new Dictionary<int, string>(originalPayload.AtkValues),
-            new Dictionary<int, string>(originalPayload.StringArrayValues),
-            new Dictionary<string, string>(
+                originalPayload.AtkValues,
+                originalPayload.StringArrayValues,
                 originalPayload.TextNodes,
-                StringComparer.Ordinal),
-            this.config,
-            this.translationService);
+                sourceLanguage,
+                scope.TargetLanguageCode,
+                this.translationService,
+                translatorResolution)
+            .ContinueWith(
+                task =>
+                {
+                    if (task.Status != TaskStatus.RanToCompletion ||
+                        !task.Result.HasValue)
+                    {
+                        return false;
+                    }
+
+                    var translatedPayload = new DbFirstGameWindowPayload(
+                        task.Result.Value.AtkValues,
+                        task.Result.Value.StringArrayValues,
+                        task.Result.Value.TextNodes);
+                    return this.PersistResolvedGameWindowPayload(
+                        scope,
+                        sourceOperation,
+                        originalPayload,
+                        translatedPayload,
+                        this.GetPersistedGameWindowClassJobId(
+                            originalPayload,
+                            translatedPayload));
+                },
+                TaskScheduler.Default);
     }
 
     /// <summary>
     ///     Tries to recover one canonical original payload from persisted
     ///     <see cref="GameWindow" /> rows.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="livePayload">The currently visible live payload.</param>
     /// <param name="originalPayload">The recovered original payload.</param>
     /// <returns>
@@ -1626,20 +2126,23 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     the live payload.
     /// </returns>
     private bool TryRecoverGameWindowOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
-        var sourceLanguageCode =
-            RuntimeLanguageHelper.GetCurrentGameLanguageCode();
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguageCode,
+            this.GetOperationTranslationEngineId(),
+            this.config.TranslateAlreadyTranslatedTexts);
         var classJobId = this.GetLookupGameWindowClassJobId(livePayload);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.addonName,
-                     targetLanguageCode,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion(),
                      classJobId))
         {
@@ -1658,7 +2161,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     row.TranslationLang,
                     rowOriginalPayload,
                     rowTranslatedPayload,
-                    sourceLanguageCode,
+                    sourceLanguage.PersistenceCode,
                     targetLanguageCode))
             {
                 continue;
@@ -1688,30 +2191,40 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     /// <summary>
     ///     Tries to find a matching <see cref="GameWindow" /> in cache or DB.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalJson">The serialized original payload.</param>
     /// <param name="gameWindow">The resolved row, if any.</param>
     /// <returns>True when a row was found.</returns>
     private bool TryFindGameWindow(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         string originalJson,
         out GameWindow? gameWindow)
     {
         var language = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
             this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            language,
+            this.GetOperationTranslationEngineId(),
+            this.config.TranslateAlreadyTranslatedTexts);
         var gameVersion = GetGameVersion();
         var classJobId = this.GetLookupGameWindowClassJobId(originalPayload);
 
         gameWindow = GameWindowCacheManager.TryFindMatch(
             this.addonName,
-            language,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             originalJson,
             classJobId);
-        if (gameWindow != null)
+        if (MatchesPersistedSourceIdentity(
+                gameWindow?.OriginalWindowStringsLang,
+                sourceLanguage))
         {
             return true;
         }
+
+        gameWindow = null;
 
         if (GameWindowCacheManager.IsPreloaded)
         {
@@ -1721,15 +2234,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (classJobId.HasValue)
         {
             gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
-                window.WindowAddonName == this.addonName &&
-                RuntimeLanguageHelper.LanguagesMatch(
-                    window.TranslationLang,
-                    language) &&
-                window.TranslationEngine == this.config.ChosenTransEngine &&
-                (window.GameVersion == null ||
-                 window.GameVersion == gameVersion) &&
-                window.ClassJobId == classJobId &&
-                window.OriginalWindowStrings == originalJson);
+                DbFirstGameWindowFallbackPolicy.Matches(
+                    window,
+                    this.addonName,
+                    scope,
+                    gameVersion,
+                    classJobId,
+                    originalJson));
             if (gameWindow != null)
             {
                 GameWindowCacheManager.Update(gameWindow);
@@ -1738,14 +2249,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         gameWindow = Echoglossian.FindEntity<GameWindow>(window =>
-            window.WindowAddonName == this.addonName &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                window.TranslationLang,
-                language) &&
-            window.TranslationEngine == this.config.ChosenTransEngine &&
-            (window.GameVersion == null || window.GameVersion == gameVersion) &&
-            window.ClassJobId == null &&
-            window.OriginalWindowStrings == originalJson);
+            DbFirstGameWindowFallbackPolicy.Matches(
+                window,
+                this.addonName,
+                scope,
+                gameVersion,
+                classJobId: null,
+                originalJson));
         if (gameWindow != null)
         {
             GameWindowCacheManager.Update(gameWindow);
@@ -1759,6 +2269,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Tries to resolve one exact persisted <see cref="GameWindow" />
     ///     payload pair for the provided original payload.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">
     ///     The original-facing payload currently visible in the addon flow.
     /// </param>
@@ -1771,13 +2282,14 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     and parsed successfully; otherwise <see langword="false" />.
     /// </returns>
     private protected bool TryResolveExactPersistedGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
         translatedPayload = DbFirstGameWindowPayload.Empty;
-
         var originalJson = originalPayload.Serialize();
         return this.TryFindGameWindow(
+                   sourceLanguage,
                    originalPayload,
                    originalJson,
                    out var gameWindow) &&
@@ -1791,6 +2303,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Tries to resolve one compatible persisted <see cref="GameWindow" />
     ///     candidate when an exact original-payload match is not available.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">
     ///     The currently visible original-facing payload.
     /// </param>
@@ -1805,6 +2318,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     found.
     /// </returns>
     private bool TryResolveCompatibleGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload resolvedOriginalPayload,
         out DbFirstGameWindowPayload resolvedTranslatedPayload)
@@ -1812,18 +2326,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         resolvedOriginalPayload = DbFirstGameWindowPayload.Empty;
         resolvedTranslatedPayload = DbFirstGameWindowPayload.Empty;
 
-        var sourceLanguageCode =
-            RuntimeLanguageHelper.GetCurrentGameLanguageCode();
         var targetLanguageCode =
             RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
                 this.config.Lang);
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguageCode,
+            this.GetOperationTranslationEngineId(),
+            this.config.TranslateAlreadyTranslatedTexts);
         var classJobId = this.GetLookupGameWindowClassJobId(originalPayload);
         var candidates = new List<DbFirstPayloadRecoveryCandidate>();
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.addonName,
-                     targetLanguageCode,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion(),
                      classJobId))
         {
@@ -1842,7 +2358,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     row.TranslationLang,
                     rowOriginalPayload,
                     rowTranslatedPayload,
-                    sourceLanguageCode,
+                    sourceLanguage.PersistenceCode,
                     targetLanguageCode))
             {
                 continue;
@@ -1868,13 +2384,84 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Translates and persists one structured payload while keeping the
+    ///     provider and persistence source identities separate.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <returns>The persisted row, or no value when translation is incomplete.</returns>
+    private Task<StringArrayDatas?> TranslateAndPersistStructuredPayloadAsync(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        SourceClientLanguage sourceLanguage,
+        StringArrayStructuredPayload originalPayload)
+    {
+        if (!scope.TranslationEngine.HasValue)
+        {
+            return Task.FromResult<StringArrayDatas?>(null);
+        }
+
+        var translatorResolution = this.translationService
+            .CaptureTranslatorResolution(
+                scope.TranslationEngine.Value,
+                TranslationSurfaceGroup.Default);
+        return DbFirstStructuredStringArrayHelper
+            .TranslatePayloadAsync(
+                originalPayload,
+                this.translationService,
+                sourceLanguage,
+                scope.TargetLanguageCode,
+                translatorResolution)
+            .ContinueWith(
+                task =>
+                {
+                    if (task.Status != TaskStatus.RanToCompletion ||
+                        !DbFirstStructuredStringArrayHelper
+                            .TryProjectTranslatedPayload(
+                                originalPayload,
+                                task.Result,
+                                out _))
+                    {
+                        return null;
+                    }
+
+                    var row = StringArrayDataPersistenceHelper
+                        .CreateCanonicalRow(
+                            originalPayload.Type,
+                            scope.SourceLanguageCode,
+                            scope.TargetLanguageCode,
+                            scope.TranslationEngine.GetValueOrDefault(),
+                            GetGameVersion(),
+                            originalPayload,
+                            task.Result);
+                    return this.retryGate.TryRunIfCurrent(
+                        sourceOperation,
+                        () =>
+                        {
+                            _ = StringArrayDataPersistenceHelper
+                                .InsertStringArrayData(
+                                    ConfigDirectory,
+                                    row);
+                        })
+                        ? row
+                        : null;
+                },
+                TaskScheduler.Default);
+    }
+
+    /// <summary>
     ///     Queues background translation and DB save when needed.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="payload">The original payload.</param>
     /// <param name="payloadKey">The stable payload key.</param>
+    /// <param name="sourceOperation">The source-owned operation token.</param>
     private void QueueTranslationIfNeeded(
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
         DbFirstGameWindowPayload payload,
         string payloadKey,
+        DbFirstSourceOperation sourceOperation,
         StringArrayStructuredPayload? originalStructuredPayload = null)
     {
         if (!InFlightPayloads.TryAdd(payloadKey, 0))
@@ -1885,16 +2472,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         Task translationTask;
         if (originalStructuredPayload != null)
         {
-            translationTask = DbFirstStructuredStringArrayHelper
-                .TranslateAndPersistAsync(
-                    originalStructuredPayload,
-                    this.translationService,
-                    ClientStateInterface.ClientLanguage.Humanize(),
-                    RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                        this.config.Lang),
-                    this.config.ChosenTransEngine,
-                    GetGameVersion(),
-                    ConfigDirectory)
+            translationTask = this.TranslateAndPersistStructuredPayloadAsync(
+                    scope,
+                    sourceOperation,
+                    sourceLanguage,
+                    originalStructuredPayload)
                 .ContinueWith(
                     task =>
                     {
@@ -1903,6 +2485,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                         {
                             StringArrayDataCacheManager.Update(task.Result);
                             ClearFailedPayloadRetry(payloadKey);
+                            this.RequestRefresh(sourceOperation);
                             return;
                         }
 
@@ -1913,6 +2496,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         else
         {
             translationTask = this.TranslateAndPersistGameWindowPayloadAsync(
+                    scope,
+                    sourceOperation,
+                    sourceLanguage,
                     payload)
                 .ContinueWith(
                     task =>
@@ -1921,6 +2507,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                             task.Result)
                         {
                             ClearFailedPayloadRetry(payloadKey);
+                            this.RequestRefresh(sourceOperation);
                             return;
                         }
 
@@ -1932,6 +2519,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         _ = translationTask.ContinueWith(
             completedTask => InFlightPayloads.TryRemove(payloadKey, out _),
             TaskScheduler.Default);
+    }
+
+    /// <summary>
+    /// Requests one fresh pre-draw re-resolution pass after background
+    /// translation or persistence work completes.
+    /// </summary>
+    /// <param name="sourceOperation">
+    ///     The source operation captured before background work started.
+    /// </param>
+    private void RequestRefresh(DbFirstSourceOperation sourceOperation)
+    {
+        this.retryGate.TryRunIfCurrent(
+            sourceOperation,
+            () =>
+            {
+                Interlocked.Exchange(ref this.refreshRequested, 1);
+                this.ArmAppliedStatePreDrawRefreshWindow();
+            });
     }
 
     /// <summary>
@@ -1988,11 +2593,13 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     Applies a translated payload to the live addon.
     /// </summary>
     /// <param name="addon">The live addon.</param>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original payload.</param>
     /// <param name="translatedPayload">The translated payload.</param>
     /// <param name="payloadKey">The stable payload key.</param>
     private void ApplyPayload(
         AtkUnitBase* addon,
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
         string payloadKey,
@@ -2113,6 +2720,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         this.lastResolvedState = new DbFirstGameWindowRuntimeState(
+            sourceLanguage.PersistenceCode,
             payloadKey,
             originalPayload,
             translatedPayloadToApply);
@@ -2120,6 +2728,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         if (TranslationDisplayModeHelper.WritesNativeTranslation(displayMode))
         {
             this.runtimeState = new DbFirstGameWindowRuntimeState(
+                sourceLanguage.PersistenceCode,
                 payloadKey,
                 originalPayload,
                 translatedPayloadToApply);
@@ -2201,7 +2810,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         {
             foreach (var (index, originalText) in originalPayload.AtkValues)
             {
-                if ((uint)index >= addon->AtkValuesCount)
+                if ((uint)index >= addon->AtkValuesCount ||
+                    !translatedPayload.AtkValues.TryGetValue(
+                        index,
+                        out var replacementText))
                 {
                     continue;
                 }
@@ -2215,21 +2827,24 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     continue;
                 }
 
-                currentValue.SetManagedString(originalText);
+                var currentText = this.ReadAtkValueText(in currentValue);
+                var addonAddress = (nint)addon;
+                NativeMutationOwnership.TryRestore(
+                    currentText,
+                    replacementText,
+                    originalText,
+                    restoredText =>
+                        ((AtkUnitBase*)addonAddress)->AtkValues[index]
+                            .SetManagedString(restoredText));
             }
         }
 
         if (this.useTextNodes && originalPayload.TextNodes.Count > 0)
         {
-            if (!this.TryApplyCustomTextNodePayload(
-                    addon,
-                    translatedPayload,
-                    originalPayload))
-            {
-                this.ApplyTranslatedTextNodes(
-                    addon,
-                    originalPayload.TextNodes);
-            }
+            this.RestoreTranslatedTextNodesIfOwned(
+                addon,
+                translatedPayload,
+                originalPayload);
         }
 
         if (this.stringArrayDataType is { } arrayType)
@@ -2244,26 +2859,44 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 foreach (var (index, originalText) in originalPayload
                              .StringArrayValues)
                 {
-                    if ((uint)index >= stringArrayData->Size)
+                    if ((uint)index >= stringArrayData->Size ||
+                        !translatedPayload.StringArrayValues.TryGetValue(
+                            index,
+                            out var replacementText))
                     {
                         continue;
                     }
 
-                    if (this.ShouldRequestStringArrayUpdates())
-                    {
-                        stringArrayData->SetValueAndUpdate(
-                            index,
-                            originalText,
-                            readBeforeWrite: false,
-                            managed: true);
-                    }
-                    else
-                    {
-                        stringArrayData->SetValue(
-                            index,
-                            originalText,
-                            suppressUpdates: true);
-                    }
+                    var currentText = stringArrayData->StringArray[index]
+                        .AsReadOnlySeStringSpan()
+                        .ExtractText();
+                    var stringArrayAddress = (nint)stringArrayData;
+                    var shouldRequestUpdates =
+                        this.ShouldRequestStringArrayUpdates();
+                    NativeMutationOwnership.TryRestore(
+                        currentText,
+                        replacementText,
+                        originalText,
+                        restoredText =>
+                        {
+                            var liveStringArrayData =
+                                (StringArrayData*)stringArrayAddress;
+                            if (shouldRequestUpdates)
+                            {
+                                liveStringArrayData->SetValueAndUpdate(
+                                    index,
+                                    restoredText,
+                                    readBeforeWrite: false,
+                                    managed: true);
+                            }
+                            else
+                            {
+                                liveStringArrayData->SetValue(
+                                    index,
+                                    restoredText,
+                                    suppressUpdates: true);
+                            }
+                        });
                 }
             }
         }
@@ -2272,6 +2905,47 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             addon,
             translatedPayload,
             originalPayload);
+    }
+
+    /// <summary>
+    ///     Restores visible text nodes only while their current text remains an
+    ///     exact replacement from the applied translated payload.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    /// <param name="translatedPayload">The plugin-applied payload.</param>
+    /// <param name="originalPayload">The original payload to restore.</param>
+    private void RestoreTranslatedTextNodesIfOwned(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload translatedPayload,
+        DbFirstGameWindowPayload originalPayload)
+    {
+        var runtimeState = new DbFirstGameWindowRuntimeState(
+            string.Empty,
+            string.Empty,
+            originalPayload,
+            translatedPayload);
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+
+        foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
+            {
+                continue;
+            }
+
+            var nodeId = textNode->AtkResNode.NodeId;
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
+            var currentText = this.ReadTextNode(textNode);
+            runtimeState.TryRestoreTextNode(
+                textNodeKey,
+                currentText,
+                restoredText => ((AtkTextNode*)nodeAddress)->SetText(
+                    restoredText));
+        }
     }
 
     /// <summary>
@@ -2287,7 +2961,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         JournalTranslationDisplayMode displayMode)
     {
-        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+        this.ClearRegisteredHoverTooltips();
 
         if (this.TryRegisterCustomHoverTooltips(
                 addon,
@@ -2298,7 +2972,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return;
         }
 
-        var textNodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon);
+        var textNodeAddresses = this.ResolveTextNodeAddresses(addon);
         if (textNodeAddresses.Count == 0)
         {
             return;
@@ -2331,14 +3005,20 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
+            var normalizedVisibleText = NormalizeTooltipLookupText(visibleText);
+
             string? tooltipBody;
             if (showOriginalTooltips)
             {
-                translatedToOriginal.TryGetValue(visibleText, out tooltipBody);
+                translatedToOriginal.TryGetValue(
+                    normalizedVisibleText,
+                    out tooltipBody);
             }
             else
             {
-                originalToTranslated.TryGetValue(visibleText, out tooltipBody);
+                originalToTranslated.TryGetValue(
+                    normalizedVisibleText,
+                    out tooltipBody);
             }
 
             if (string.IsNullOrWhiteSpace(tooltipBody))
@@ -2460,8 +3140,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         AtkUnitBase* addon,
         IReadOnlyDictionary<string, string> translatedTextNodes)
     {
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in nodeAddresses)
@@ -2474,10 +3153,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
             var nodeId = textNode->AtkResNode.NodeId;
-            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
-            ordinalsByNodeId[nodeId] = ordinal + 1;
-
-            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
             if (!translatedTextNodes.TryGetValue(textNodeKey, out var translatedText) ||
                 !ShouldCaptureText(translatedText))
             {
@@ -2517,8 +3195,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             return false;
         }
 
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         if (nodeAddresses.Count == 0)
         {
             return false;
@@ -2537,10 +3214,9 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
 
             var nodeId = textNode->AtkResNode.NodeId;
-            ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
-            ordinalsByNodeId[nodeId] = ordinal + 1;
-
-            var textNodeKey = BuildTextNodeKey(nodeId, ordinal);
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                nodeId);
             if (!livePayload.TextNodes.TryGetValue(
                     textNodeKey,
                     out var currentText) ||
@@ -2568,18 +3244,6 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         return restoredAny;
-    }
-
-    /// <summary>
-    ///     Builds one stable text-node key from a node id and duplicate
-    ///     ordinal in tree order.
-    /// </summary>
-    /// <param name="nodeId">The text node id.</param>
-    /// <param name="ordinal">The zero-based ordinal for this node id.</param>
-    /// <returns>The stable text-node key.</returns>
-    private static string BuildTextNodeKey(uint nodeId, int ordinal)
-    {
-        return $"{nodeId}:{ordinal}";
     }
 
     /// <summary>
@@ -2642,7 +3306,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            var key = useTranslatedKeys ? translatedText : originalText;
+            var key = NormalizeTooltipLookupText(
+                useTranslatedKeys ? translatedText : originalText);
             var value = useTranslatedKeys ? originalText : translatedText;
             map.TryAdd(key, value);
         }
@@ -2672,10 +3337,26 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 continue;
             }
 
-            var lookupKey = useTranslatedKeys ? translatedText : originalText;
+            var lookupKey = NormalizeTooltipLookupText(
+                useTranslatedKeys ? translatedText : originalText);
             var value = useTranslatedKeys ? originalText : translatedText;
             map.TryAdd(lookupKey, value);
         }
+    }
+
+    /// <summary>
+    ///     Normalizes hover-tooltip lookup text so payload values captured from
+    ///     ATK values and text nodes can still match when they differ only by
+    ///     line-ending representation.
+    /// </summary>
+    /// <param name="text">The text to normalize.</param>
+    /// <returns>The normalized lookup text.</returns>
+    private static string NormalizeTooltipLookupText(string text)
+    {
+        return string.IsNullOrEmpty(text)
+            ? string.Empty
+            : text.Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Replace('\r', '\n');
     }
 
     /// <summary>
@@ -2854,6 +3535,28 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
         }
 
         return true;
+    }
+}
+
+/// <summary>
+///     Allocates stable text-node keys for each effectively visible node in
+///     tree order, regardless of later capture filtering.
+/// </summary>
+internal static class DbFirstTextNodeKeyAllocator
+{
+    /// <summary>
+    ///     Consumes the next duplicate ordinal for one visible text node.
+    /// </summary>
+    /// <param name="ordinalsByNodeId">The node-id ordinal state for this traversal.</param>
+    /// <param name="nodeId">The visible text-node id.</param>
+    /// <returns>The stable text-node key.</returns>
+    public static string ConsumeVisibleNode(
+        Dictionary<uint, int> ordinalsByNodeId,
+        uint nodeId)
+    {
+        ordinalsByNodeId.TryGetValue(nodeId, out var ordinal);
+        ordinalsByNodeId[nodeId] = ordinal + 1;
+        return $"{nodeId}:{ordinal}";
     }
 }
 
@@ -3080,14 +3783,674 @@ internal readonly record struct DbFirstGameWindowPayload(
 }
 
 /// <summary>
+///     Identifies one DB-first operation against the source generation that
+///     owned it.
+/// </summary>
+/// <param name="SourceLanguageCode">The canonical source persistence identity.</param>
+/// <param name="Generation">The source transition generation.</param>
+internal readonly record struct DbFirstSourceOperation(
+    string? SourceLanguageCode,
+    long Generation)
+{
+    /// <summary>
+    ///     Gets the complete reuse scope captured when this operation began.
+    /// </summary>
+    public TranslationReuseScope? Scope { get; init; }
+}
+
+/// <summary>
+///     Owns the instance retry cooldown and rejects callbacks captured before a
+///     source transition.
+/// </summary>
+internal sealed class DbFirstSourceRetryGate
+{
+    private readonly object stateGate = new();
+    private TranslationReuseScope? scope;
+    private long generation;
+    private DateTime nextRetryUtc = DateTime.MinValue;
+
+    /// <summary>
+    ///     Gets a value indicating whether this gate currently belongs to a
+    ///     resolved source.
+    /// </summary>
+    public bool HasKnownSource
+    {
+        get
+        {
+            lock (this.stateGate)
+            {
+                return this.scope.HasValue;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether moving to the supplied source invalidates the
+    ///     current retry owner.
+    /// </summary>
+    /// <param name="sourceLanguage">The newly captured source, if resolved.</param>
+    /// <returns>True when a known retry owner must be discarded.</returns>
+    public bool ShouldInvalidateFor(SourceClientLanguage? sourceLanguage)
+    {
+        return this.ShouldInvalidateFor(
+            sourceLanguage.HasValue
+                ? new TranslationReuseScope(
+                    sourceLanguage.Value.PersistenceCode,
+                    string.Empty,
+                    null,
+                    false)
+                : null);
+    }
+
+    /// <summary>
+    ///     Determines whether moving to the supplied full reuse scope
+    ///     invalidates the current retry owner.
+    /// </summary>
+    /// <param name="scope">The newly captured operation scope, if resolved.</param>
+    /// <returns>True when a known retry owner must be discarded.</returns>
+    public bool ShouldInvalidateFor(TranslationReuseScope? scope)
+    {
+        lock (this.stateGate)
+        {
+            return this.scope.HasValue && this.scope != scope;
+        }
+    }
+
+    /// <summary>
+    ///     Transitions the gate to one captured source and clears cooldown state
+    ///     whenever ownership changes.
+    /// </summary>
+    /// <param name="sourceLanguage">The captured source, if resolved.</param>
+    /// <returns>The current source operation token.</returns>
+    public DbFirstSourceOperation TransitionTo(
+        SourceClientLanguage? sourceLanguage)
+    {
+        return this.TransitionTo(
+            sourceLanguage.HasValue
+                ? new TranslationReuseScope(
+                    sourceLanguage.Value.PersistenceCode,
+                    string.Empty,
+                    null,
+                    false)
+                : null);
+    }
+
+    /// <summary>
+    ///     Transitions the gate to one complete captured scope and clears
+    ///     cooldown state whenever any scope member changes.
+    /// </summary>
+    /// <param name="scope">The captured operation scope, if resolved.</param>
+    /// <returns>The current operation token.</returns>
+    public DbFirstSourceOperation TransitionTo(TranslationReuseScope? scope)
+    {
+        lock (this.stateGate)
+        {
+            if (!scope.HasValue)
+            {
+                this.ResetLocked();
+                return default;
+            }
+
+            if (this.scope != scope)
+            {
+                this.scope = scope;
+                this.nextRetryUtc = DateTime.MinValue;
+                this.generation++;
+            }
+
+            return new DbFirstSourceOperation(
+                scope.Value.SourceLanguageCode,
+                this.generation)
+            {
+                Scope = scope,
+            };
+        }
+    }
+
+    /// <summary>
+    ///     Stores one retry deadline only while the supplied operation still
+    ///     owns this gate.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <param name="retryUtc">The next eligible retry time.</param>
+    /// <returns>True when the operation still owned the gate.</returns>
+    public bool TrySetRetry(
+        DbFirstSourceOperation operation,
+        DateTime retryUtc)
+    {
+        lock (this.stateGate)
+        {
+            if (!this.MatchesLocked(operation))
+            {
+                return false;
+            }
+
+            this.nextRetryUtc = retryUtc;
+            return true;
+        }
+    }
+
+    /// <summary>
+    ///     Clears one retry deadline only while the supplied operation still
+    ///     owns this gate.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <returns>True when the operation still owned the gate.</returns>
+    public bool TryClearRetry(DbFirstSourceOperation operation)
+    {
+        return this.TrySetRetry(operation, DateTime.MinValue);
+    }
+
+    /// <summary>
+    ///     Determines whether one current source operation is cooling down.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <param name="nowUtc">The current UTC time.</param>
+    /// <returns>True when the matching operation is still cooling down.</returns>
+    public bool IsCoolingDown(
+        DbFirstSourceOperation operation,
+        DateTime nowUtc)
+    {
+        lock (this.stateGate)
+        {
+            return this.MatchesLocked(operation) &&
+                   nowUtc < this.nextRetryUtc;
+        }
+    }
+
+    /// <summary>
+    ///     Runs a completion mutation and clears its cooldown only when the
+    ///     captured source generation is still current.
+    /// </summary>
+    /// <param name="operation">The captured source operation.</param>
+    /// <param name="mutation">The completion mutation to run.</param>
+    /// <returns>True when the completion was accepted.</returns>
+    public bool TryRunIfCurrent(
+        DbFirstSourceOperation operation,
+        Action mutation)
+    {
+        ArgumentNullException.ThrowIfNull(mutation);
+
+        lock (this.stateGate)
+        {
+            if (!this.MatchesLocked(operation))
+            {
+                return false;
+            }
+
+            this.nextRetryUtc = DateTime.MinValue;
+            mutation();
+            return true;
+        }
+    }
+
+    /// <summary>
+    ///     Clears the current source owner and invalidates every captured
+    ///     operation token.
+    /// </summary>
+    public void Reset()
+    {
+        lock (this.stateGate)
+        {
+            this.ResetLocked();
+        }
+    }
+
+    private bool MatchesLocked(DbFirstSourceOperation operation)
+    {
+        if (operation.Generation != this.generation || !this.scope.HasValue)
+        {
+            return false;
+        }
+
+        return operation.Scope.HasValue
+            ? operation.Scope == this.scope
+            : !string.IsNullOrWhiteSpace(operation.SourceLanguageCode) &&
+              RuntimeLanguageHelper.LanguagesMatch(
+                  operation.SourceLanguageCode,
+                  this.scope.Value.SourceLanguageCode);
+    }
+
+    private void ResetLocked()
+    {
+        this.scope = null;
+        this.nextRetryUtc = DateTime.MinValue;
+        this.generation++;
+    }
+}
+
+/// <summary>
+///     Identifies one publication operation owned by a source generation.
+/// </summary>
+/// <param name="SourceLanguageCode">The canonical source persistence identity.</param>
+/// <param name="Generation">The source generation captured by the operation.</param>
+internal readonly record struct SourcePublicationOperation(
+    string SourceLanguageCode,
+    long Generation)
+{
+    /// <summary>
+    ///     Gets the complete reuse scope captured when this operation began.
+    /// </summary>
+    public TranslationReuseScope? Scope { get; init; }
+
+    /// <summary>
+    ///     Gets the cancellation token retired when the owning full reuse scope
+    ///     changes.
+    /// </summary>
+    public CancellationToken CancellationToken { get; init; }
+}
+
+/// <summary>
+///     Orders source invalidation and asynchronous publication so a stale
+///     operation cannot publish after its source generation is retired.
+/// </summary>
+internal sealed class SourcePublicationLifecycle
+{
+    private readonly object gate = new();
+    private ScopeState? currentState;
+    private long generation;
+
+    /// <summary>
+    ///     Transitions to the supplied source and atomically runs invalidation
+    ///     when the canonical source identity changed.
+    /// </summary>
+    /// <param name="sourceLanguage">The current source, or no value when unresolved.</param>
+    /// <param name="invalidate">The handler-owned invalidation action.</param>
+    /// <returns>The operation token for the resulting source generation.</returns>
+    public SourcePublicationOperation TransitionTo(
+        SourceClientLanguage? sourceLanguage,
+        Action invalidate)
+    {
+        return this.TransitionTo(
+            sourceLanguage.HasValue
+                ? new TranslationReuseScope(
+                    sourceLanguage.Value.PersistenceCode,
+                    string.Empty,
+                    null,
+                    false)
+                : null,
+            invalidate);
+    }
+
+    /// <summary>
+    ///     Transitions to the supplied full scope and atomically runs
+    ///     invalidation when source, target, engine, or policy changed.
+    /// </summary>
+    /// <param name="scope">The current operation scope, or no value when unresolved.</param>
+    /// <param name="invalidate">The handler-owned invalidation action.</param>
+    /// <returns>The operation token for the resulting scope generation.</returns>
+    public SourcePublicationOperation TransitionTo(
+        TranslationReuseScope? scope,
+        Action invalidate)
+    {
+        var observedState = Volatile.Read(ref this.currentState);
+        if (observedState?.Scope == scope)
+        {
+            return observedState.CreateOperation();
+        }
+
+        lock (this.gate)
+        {
+            var currentState = this.currentState;
+            if (currentState?.Scope == scope)
+            {
+                return currentState.CreateOperation();
+            }
+
+            Volatile.Write(ref this.currentState, null);
+            currentState?.Cancel();
+            invalidate();
+            this.generation++;
+            currentState = new ScopeState(scope, this.generation);
+            Volatile.Write(ref this.currentState, currentState);
+            return currentState.CreateOperation();
+        }
+    }
+
+    /// <summary>
+    ///     Captures the current operation token for a resolved source.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation source.</param>
+    /// <returns>
+    ///     The current token, or the default token when the source is not the
+    ///     active generation.
+    /// </returns>
+    public SourcePublicationOperation Capture(
+        SourceClientLanguage sourceLanguage)
+    {
+        return this.Capture(new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            string.Empty,
+            null,
+            false));
+    }
+
+    /// <summary>
+    ///     Captures the current operation token for one full reuse scope.
+    /// </summary>
+    /// <param name="scope">The operation scope.</param>
+    /// <returns>The current token, or default when the scope is no longer active.</returns>
+    public SourcePublicationOperation Capture(TranslationReuseScope scope)
+    {
+        var currentState = Volatile.Read(ref this.currentState);
+        if (currentState?.Scope != scope)
+        {
+            return default;
+        }
+
+        return currentState.CreateOperation();
+    }
+
+    /// <summary>
+    ///     Publishes one operation only while its source generation remains
+    ///     current, holding the lifecycle gate through the publication action.
+    /// </summary>
+    /// <param name="operation">The operation-captured source token.</param>
+    /// <param name="publish">The handler-owned publication action.</param>
+    /// <returns>True when the publication ran.</returns>
+    public bool TryPublish(
+        SourcePublicationOperation operation,
+        Action publish)
+    {
+        lock (this.gate)
+        {
+            if (!this.MatchesLocked(operation))
+            {
+                return false;
+            }
+
+            publish();
+            return true;
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether one captured operation remains eligible to
+    ///     persist or publish under the active full reuse scope.
+    /// </summary>
+    /// <param name="operation">The operation token to inspect.</param>
+    /// <returns>True when the token still owns the lifecycle.</returns>
+    public bool IsCurrent(SourcePublicationOperation operation)
+    {
+        lock (this.gate)
+        {
+            return this.MatchesLocked(operation);
+        }
+    }
+
+    private bool MatchesLocked(SourcePublicationOperation operation)
+    {
+        var currentState = this.currentState;
+        if (currentState == null || operation.Generation != currentState.Generation)
+        {
+            return false;
+        }
+
+        return operation.Scope.HasValue
+            ? operation.Scope == currentState.Scope
+            : string.Equals(
+                operation.SourceLanguageCode,
+                currentState.Scope?.SourceLanguageCode ?? string.Empty,
+                StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Holds one immutable lifecycle generation for lock-free capture.
+    /// </summary>
+    /// <param name="Scope">The complete active reuse scope, if resolved.</param>
+    /// <param name="Generation">The lifecycle generation.</param>
+    private sealed record ScopeState(
+        TranslationReuseScope? Scope,
+        long Generation)
+    {
+        private readonly CancellationTokenSource cancellationTokenSource = new();
+
+        /// <summary>
+        ///     Cancels persistence that has not committed for this retired
+        ///     lifecycle state.
+        /// </summary>
+        public void Cancel()
+        {
+            this.cancellationTokenSource.Cancel();
+        }
+
+        /// <summary>
+        ///     Creates an operation token for this immutable lifecycle state.
+        /// </summary>
+        /// <returns>The operation token.</returns>
+        public SourcePublicationOperation CreateOperation()
+        {
+            return new SourcePublicationOperation(
+                this.Scope?.SourceLanguageCode ?? string.Empty,
+                this.Generation)
+            {
+                Scope = this.Scope,
+                CancellationToken = this.cancellationTokenSource.Token,
+            };
+        }
+    }
+}
+
+/// <summary>
+///     Restores one plugin-owned native field only while the live field still
+///     contains the exact replacement written by the plugin.
+/// </summary>
+internal static class NativeMutationOwnership
+{
+    /// <summary>
+    ///     Performs one guarded restore mutation.
+    /// </summary>
+    /// <param name="liveText">The current live field text.</param>
+    /// <param name="replacementText">The exact plugin-applied replacement.</param>
+    /// <param name="originalText">The original game-owned text.</param>
+    /// <param name="restore">The native restore mutation.</param>
+    /// <returns>True when the plugin still owned the field and restored it.</returns>
+    public static bool TryRestore(
+        string? liveText,
+        string? replacementText,
+        string originalText,
+        Action<string> restore)
+    {
+        ArgumentNullException.ThrowIfNull(restore);
+
+        if (string.IsNullOrWhiteSpace(replacementText) ||
+            !string.Equals(
+                liveText,
+                replacementText,
+                StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        restore(originalText);
+        return true;
+    }
+}
+
+/// <summary>
 ///     Tracks the currently applied DB-first payload for one addon instance.
 /// </summary>
+/// <param name="SourceLanguageCode">The canonical persistence source identity.</param>
 /// <param name="PayloadKey">The stable payload key.</param>
 /// <param name="OriginalPayload">The original payload.</param>
 /// <param name="TranslatedPayload">The translated payload.</param>
 internal sealed record DbFirstGameWindowRuntimeState(
+    string SourceLanguageCode,
     string PayloadKey,
     DbFirstGameWindowPayload OriginalPayload,
-    DbFirstGameWindowPayload TranslatedPayload);
+    DbFirstGameWindowPayload TranslatedPayload)
+{
+    /// <summary>
+    ///     Determines whether this state belongs to the operation-captured
+    ///     client source.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source, if resolved.</param>
+    /// <returns>True when source identity matches.</returns>
+    public bool MatchesSource(SourceClientLanguage? sourceLanguage)
+    {
+        return NativeRuntimeSourceScope.MatchesSource(
+            this.SourceLanguageCode,
+            sourceLanguage);
+    }
+
+    /// <summary>
+    ///     Determines whether this state must be discarded before reuse.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source, if resolved.</param>
+    /// <returns>True when source identity is missing or changed.</returns>
+    public bool ShouldInvalidateFor(SourceClientLanguage? sourceLanguage)
+    {
+        return !this.MatchesSource(sourceLanguage);
+    }
+
+    /// <summary>
+    ///     Restores one text node only when the same stable key still contains
+    ///     the exact replacement recorded for that key.
+    /// </summary>
+    /// <param name="textNodeKey">The stable node id and ordinal key.</param>
+    /// <param name="currentText">The current game-visible text.</param>
+    /// <param name="restore">The native restore mutation.</param>
+    /// <returns>True when the exact owned replacement was restored.</returns>
+    public bool TryRestoreTextNode(
+        string textNodeKey,
+        string currentText,
+        Action<string> restore)
+    {
+        return this.OriginalPayload.TextNodes.TryGetValue(
+                   textNodeKey,
+                   out var originalText) &&
+               this.TranslatedPayload.TextNodes.TryGetValue(
+                   textNodeKey,
+                   out var replacementText) &&
+               NativeMutationOwnership.TryRestore(
+                   currentText,
+                   replacementText,
+                   originalText,
+                   restore);
+    }
+}
+
+/// <summary>
+///     Matches native runtime state against operation-captured source identity.
+/// </summary>
+internal static class NativeRuntimeSourceScope
+{
+    /// <summary>
+    ///     Determines whether a stored canonical source belongs to the current
+    ///     operation source.
+    /// </summary>
+    /// <param name="storedSourceLanguageCode">The stored canonical source code.</param>
+    /// <param name="sourceLanguage">The operation-captured source, if resolved.</param>
+    /// <returns>True when both source identities are compatible.</returns>
+    public static bool MatchesSource(
+        string? storedSourceLanguageCode,
+        SourceClientLanguage? sourceLanguage)
+    {
+        return sourceLanguage.HasValue &&
+               !string.IsNullOrWhiteSpace(storedSourceLanguageCode) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   storedSourceLanguageCode,
+                   sourceLanguage.Value.PersistenceCode);
+    }
+
+    /// <summary>
+    ///     Determines whether one dialogue cache entry matches source, speaker,
+    ///     and visible source text.
+    /// </summary>
+    /// <param name="storedSourceLanguageCode">The stored canonical source code.</param>
+    /// <param name="storedOriginalName">The stored source speaker.</param>
+    /// <param name="storedOriginalText">The stored source text.</param>
+    /// <param name="sourceLanguage">The operation-captured source.</param>
+    /// <param name="originalName">The current source speaker.</param>
+    /// <param name="originalText">The current source text.</param>
+    /// <returns>True when the complete dialogue cache identity matches.</returns>
+    public static bool MatchesDialogueState(
+        string? storedSourceLanguageCode,
+        string storedOriginalName,
+        string storedOriginalText,
+        SourceClientLanguage sourceLanguage,
+        string originalName,
+        string originalText)
+    {
+        return MatchesSource(storedSourceLanguageCode, sourceLanguage) &&
+               string.Equals(
+                   storedOriginalName,
+                   originalName,
+                   StringComparison.Ordinal) &&
+               string.Equals(
+                   storedOriginalText,
+                   originalText,
+                   StringComparison.Ordinal);
+    }
+}
+
+/// <summary>
+///     Builds source-scoped DB-first in-flight and failure-cooldown keys.
+/// </summary>
+internal static class DbFirstGameWindowWorkKey
+{
+    /// <summary>
+    ///     Builds one stable work key from the complete captured reuse scope.
+    /// </summary>
+    /// <param name="addonName">The owning addon name.</param>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="payloadIdentity">The serialized payload or source hash.</param>
+    /// <returns>The source-scoped work key.</returns>
+    public static string Build(
+        string addonName,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        string payloadIdentity)
+    {
+        return string.Join(
+            '|',
+            addonName,
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture) ??
+            "null",
+            scope.RequireMatchingEngine ? "strict" : "compatible",
+            gameVersion,
+            payloadIdentity);
+    }
+}
+
+/// <summary>
+///     Applies the established reuse scope to non-preloaded GameWindow DB
+///     fallback candidates while retaining payload and context validation.
+/// </summary>
+internal static class DbFirstGameWindowFallbackPolicy
+{
+    /// <summary>
+    ///     Determines whether one persisted row is compatible with an exact
+    ///     DB-first fallback request.
+    /// </summary>
+    /// <param name="candidate">The persisted candidate.</param>
+    /// <param name="addonName">The owning addon name.</param>
+    /// <param name="scope">The complete operation-captured reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobId">The exact class/job discriminator.</param>
+    /// <param name="originalJson">The exact serialized original payload.</param>
+    /// <returns>True when the row is compatible with the request.</returns>
+    public static bool Matches(
+        GameWindow candidate,
+        string addonName,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        uint? classJobId,
+        string originalJson)
+    {
+        return candidate.WindowAddonName == addonName &&
+               scope.Matches(
+                   candidate.OriginalWindowStringsLang,
+                   candidate.TranslationLang,
+                   candidate.TranslationEngine) &&
+               (candidate.GameVersion == null ||
+                candidate.GameVersion == gameVersion) &&
+               candidate.ClassJobId == classJobId &&
+               candidate.OriginalWindowStrings == originalJson;
+    }
+}
 
 

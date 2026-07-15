@@ -209,67 +209,37 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var originalRow = registration.CreateRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+        var translationService = TranslationService;
+        RunReferenceTextPrefetchOperationEntry(
+            registration.Key,
+            originalPayload,
             GetGameVersion(),
-            originalPayload,
-            null);
-        var existingRow = registration.FindRow(originalRow) ?? originalRow;
-        registration.InsertRow(originalRow);
+            ResolveCurrentPrefetchSourceLanguage,
+            this.configuration,
+            this.TryGetQueuedTranslation,
+            this.QueueTranslation,
+            (sourceText, capturedSource, targetLanguage) =>
+                translationService.Translate(
+                    sourceText,
+                    capturedSource,
+                    targetLanguage),
+            registration.CreateRow,
+            registration.FindRow,
+            registration.InsertRow,
+            out var sourceLanguage,
+            out var scope,
+            out var existingRow);
+        if (existingRow == null)
+        {
+            return;
+        }
 
-        this.PrefetchReferenceTextName(
-            registration,
-            originalPayload,
-            existingRow);
         this.PrefetchReferenceTextDescription(
             registration,
             originalPayload,
-            existingRow);
-    }
-
-    /// <summary>
-    ///     Prefetches the translated reference-text name when it is not yet
-    ///     persisted.
-    /// </summary>
-    /// <param name="registration">The registration describing the sheet family.</param>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    private void PrefetchReferenceTextName(
-        ReferenceTextPrefetchRegistration registration,
-        ReferenceTextCanonicalPayload originalPayload,
-        ReferenceTextRowBase existingRow)
-    {
-        if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedName))
-        {
-            return;
-        }
-
-        var translationKey =
-            $"{registration.Key}|{originalPayload.ReferenceId}|Name|{originalPayload.Name}";
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedName))
-        {
-            this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                translatedName: cachedTranslatedName);
-            return;
-        }
-
-        this.QueueTranslation(
-            translationKey,
-            () => TranslationService.Translate(
-                originalPayload.Name,
-                ClientStateInterface.ClientLanguage.Humanize(),
-                LangDict[LanguageInt].Code),
-            translatedName => this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                translatedName: translatedName));
+            existingRow,
+            sourceLanguage,
+            scope);
     }
 
     /// <summary>
@@ -279,10 +249,14 @@ public unsafe partial class Echoglossian
     /// <param name="registration">The registration describing the sheet family.</param>
     /// <param name="originalPayload">The canonical original payload.</param>
     /// <param name="existingRow">The currently persisted row, if any.</param>
+    /// <param name="sourceLanguage">The resolved source language.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     private void PrefetchReferenceTextDescription(
         ReferenceTextPrefetchRegistration registration,
         ReferenceTextCanonicalPayload originalPayload,
-        ReferenceTextRowBase existingRow)
+        ReferenceTextRowBase existingRow,
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
             !string.IsNullOrWhiteSpace(existingRow.TranslatedDescription))
@@ -290,29 +264,23 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var translationKey =
-            $"{registration.Key}|{originalPayload.ReferenceId}|Description|{originalPayload.Description}";
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedDescription))
-        {
-            this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                translatedDescription: cachedTranslatedDescription);
-            return;
-        }
-
-        this.QueueTranslation(
-            translationKey,
-            () => TranslationService.Translate(
+        var translationService = TranslationService;
+        DispatchReferenceTextPrefetchTranslation(
+            $"{registration.Key}|{originalPayload.ReferenceId}|Description|{originalPayload.Description}",
+            sourceLanguage,
+            scope,
+            this.TryGetQueuedTranslation,
+            this.QueueTranslation,
+            () => translationService.Translate(
                 originalPayload.Description,
-                ClientStateInterface.ClientLanguage.Humanize(),
-                LangDict[LanguageInt].Code),
-            translatedDescription => this.ApplyReferenceTextTranslation(
-                registration,
-                originalPayload.ReferenceId,
-                translatedDescription: translatedDescription));
+                sourceLanguage,
+                scope.TargetLanguageCode),
+            (translatedDescription, capturedScope, _) =>
+                this.ApplyReferenceTextTranslation(
+                    registration,
+                    originalPayload.ReferenceId,
+                    capturedScope,
+                    translatedDescription: translatedDescription));
     }
 
     /// <summary>
@@ -321,11 +289,13 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="registration">The registration describing the sheet family.</param>
     /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
     /// <param name="translatedName">The translated name, if any.</param>
     /// <param name="translatedDescription">The translated description, if any.</param>
     private void ApplyReferenceTextTranslation(
         ReferenceTextPrefetchRegistration registration,
         uint referenceId,
+        TranslationReuseScope scope,
         string? translatedName = null,
         string? translatedDescription = null)
     {
@@ -334,16 +304,49 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var existingProbe = registration.CreateRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
+        var translatedRow = CreateReferenceTextTranslationRow(
+            originalPayload,
             GetGameVersion(),
+            scope,
+            registration.CreateRow,
+            registration.FindRow,
+            translatedName,
+            translatedDescription);
+        registration.InsertRow(translatedRow);
+    }
+
+    /// <summary>
+    ///     Builds the canonical reference-text row sent to production
+    ///     persistence after broker completion.
+    /// </summary>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <param name="createRow">The registration's canonical row creator.</param>
+    /// <param name="findRow">The registration's production row lookup.</param>
+    /// <param name="translatedName">The translated name, if any.</param>
+    /// <param name="translatedDescription">The translated description, if any.</param>
+    /// <returns>The canonical translated row.</returns>
+    private static ReferenceTextRowBase CreateReferenceTextTranslationRow(
+        ReferenceTextCanonicalPayload originalPayload,
+        string? gameVersion,
+        TranslationReuseScope scope,
+        Func<string, string, int?, string?, ReferenceTextCanonicalPayload, ReferenceTextCanonicalPayload?, ReferenceTextRowBase> createRow,
+        Func<ReferenceTextRowBase, ReferenceTextRowBase?> findRow,
+        string? translatedName = null,
+        string? translatedDescription = null)
+    {
+        var existingProbe = createRow(
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
+            gameVersion,
             originalPayload,
             null);
-        var existingRow = registration.FindRow(existingProbe);
+        var existingRow = findRow(existingProbe);
         var translatedPayload = existingRow == null
-            ? originalPayload
+            ? ReferenceTextCanonicalPayload.Deserialize(
+                originalPayload.Serialize()) ?? originalPayload
             : ReferenceTextCanonicalPayload.Deserialize(
                     existingRow.CanonicalPayloadAsText) ??
                 originalPayload;
@@ -362,14 +365,196 @@ public unsafe partial class Echoglossian
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
 
-        var translatedRow = registration.CreateRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            GetGameVersion(),
+        return createRow(
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
+            gameVersion,
             originalPayload,
             translatedPayload);
-        registration.InsertRow(translatedRow);
+    }
+
+    /// <summary>
+    ///     Adds the complete operation scope to one reference-text payload key.
+    /// </summary>
+    /// <param name="payloadIdentity">The existing payload identity.</param>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <returns>The source-scoped broker key.</returns>
+    private static string BuildReferenceTextScopedTranslationKey(
+        string payloadIdentity,
+        TranslationReuseScope scope)
+    {
+        return BuildTranslationReuseScopedKey(payloadIdentity, scope);
+    }
+
+    /// <summary>
+    ///     Dispatches reference-text work through the production scoped
+    ///     prefetch orchestrator.
+    /// </summary>
+    /// <param name="payloadIdentity">The reference payload identity.</param>
+    /// <param name="sourceLanguage">The operation-captured source contract.</param>
+    /// <param name="scope">The operation-captured reuse scope.</param>
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    /// <param name="queueTranslation">The shared broker queue operation.</param>
+    /// <param name="resolver">The translation resolver.</param>
+    /// <param name="onCompleted">The persistence callback.</param>
+    /// <returns>The production dispatch result.</returns>
+    internal static PrefetchTranslationDispatchResult
+        DispatchReferenceTextPrefetchTranslation(
+            string payloadIdentity,
+            SourceClientLanguage sourceLanguage,
+            TranslationReuseScope scope,
+            TryGetPrefetchTranslationDelegate tryGetTranslation,
+            QueuePrefetchTranslationDelegate queueTranslation,
+            Func<string> resolver,
+            Action<string, TranslationReuseScope, bool> onCompleted)
+    {
+        return DispatchScopedPrefetchTranslation(
+            BuildReferenceTextScopedTranslationKey(payloadIdentity, scope),
+            sourceLanguage,
+            scope,
+            tryGetTranslation,
+            queueTranslation,
+            resolver,
+            onCompleted);
+    }
+
+    /// <summary>
+    ///     Captures live scope and runs one production ReferenceText operation
+    ///     from canonical persistence through name broker completion.
+    /// </summary>
+    /// <param name="registrationKey">The reference-text family identity.</param>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="sourceLanguageResolver">Resolves the live client source.</param>
+    /// <param name="configuration">The live translation configuration.</param>
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    /// <param name="queueTranslation">The shared broker queue operation.</param>
+    /// <param name="translate">The production translation operation.</param>
+    /// <param name="createRow">The registration's canonical row creator.</param>
+    /// <param name="findRow">The registration's production row lookup.</param>
+    /// <param name="persistRow">The registration's persistence operation.</param>
+    /// <param name="sourceLanguage">The captured source contract.</param>
+    /// <param name="scope">The captured reuse scope.</param>
+    /// <param name="existingRow">The canonical row used by sibling work units.</param>
+    /// <returns>The production dispatch result.</returns>
+    internal static PrefetchTranslationDispatchResult
+        RunReferenceTextPrefetchOperationEntry(
+            string registrationKey,
+            ReferenceTextCanonicalPayload originalPayload,
+            string? gameVersion,
+            Func<SourceClientLanguage?> sourceLanguageResolver,
+            Config configuration,
+            TryGetPrefetchTranslationDelegate tryGetTranslation,
+            QueuePrefetchTranslationDelegate queueTranslation,
+            ResolvePrefetchTranslationDelegate translate,
+            Func<string, string, int?, string?, ReferenceTextCanonicalPayload, ReferenceTextCanonicalPayload?, ReferenceTextRowBase> createRow,
+            Func<ReferenceTextRowBase, ReferenceTextRowBase?> findRow,
+            Action<ReferenceTextRowBase> persistRow,
+            out SourceClientLanguage sourceLanguage,
+            out TranslationReuseScope scope,
+            out ReferenceTextRowBase existingRow)
+    {
+        if (!TryCapturePrefetchOperationScope(
+                sourceLanguageResolver,
+                configuration,
+                out sourceLanguage,
+                out scope))
+        {
+            existingRow = null!;
+            return PrefetchTranslationDispatchResult.Rejected;
+        }
+
+        return RunReferenceTextPrefetchOperationEntry(
+            registrationKey,
+            originalPayload,
+            gameVersion,
+            sourceLanguage,
+            scope,
+            tryGetTranslation,
+            queueTranslation,
+            translate,
+            createRow,
+            findRow,
+            persistRow,
+            out existingRow);
+    }
+
+    /// <summary>
+    ///     Runs one captured ReferenceText operation from canonical persistence
+    ///     through name broker completion.
+    /// </summary>
+    /// <param name="registrationKey">The reference-text family identity.</param>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="sourceLanguage">The operation-captured source contract.</param>
+    /// <param name="scope">The operation-captured reuse scope.</param>
+    /// <param name="tryGetTranslation">The shared broker cache lookup.</param>
+    /// <param name="queueTranslation">The shared broker queue operation.</param>
+    /// <param name="translate">The production translation operation.</param>
+    /// <param name="createRow">The registration's canonical row creator.</param>
+    /// <param name="findRow">The registration's production row lookup.</param>
+    /// <param name="persistRow">The registration's persistence operation.</param>
+    /// <param name="existingRow">The canonical row used by sibling work units.</param>
+    /// <returns>The production dispatch result.</returns>
+    private static PrefetchTranslationDispatchResult
+        RunReferenceTextPrefetchOperationEntry(
+            string registrationKey,
+            ReferenceTextCanonicalPayload originalPayload,
+            string? gameVersion,
+            SourceClientLanguage sourceLanguage,
+            TranslationReuseScope scope,
+            TryGetPrefetchTranslationDelegate tryGetTranslation,
+            QueuePrefetchTranslationDelegate queueTranslation,
+            ResolvePrefetchTranslationDelegate translate,
+            Func<string, string, int?, string?, ReferenceTextCanonicalPayload, ReferenceTextCanonicalPayload?, ReferenceTextRowBase> createRow,
+            Func<ReferenceTextRowBase, ReferenceTextRowBase?> findRow,
+            Action<ReferenceTextRowBase> persistRow,
+            out ReferenceTextRowBase existingRow)
+    {
+        if (!IsValidCapturedPrefetchScope(sourceLanguage, scope))
+        {
+            existingRow = null!;
+            return PrefetchTranslationDispatchResult.Rejected;
+        }
+
+        var originalRow = createRow(
+            scope.SourceLanguageCode,
+            scope.TargetLanguageCode,
+            scope.TranslationEngine!.Value,
+            gameVersion,
+            originalPayload,
+            null);
+        existingRow = findRow(originalRow) ?? originalRow;
+        persistRow(originalRow);
+
+        if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
+            !string.IsNullOrWhiteSpace(existingRow.TranslatedName))
+        {
+            return PrefetchTranslationDispatchResult.Rejected;
+        }
+
+        return DispatchReferenceTextPrefetchTranslation(
+            $"{registrationKey}|{originalPayload.ReferenceId}|Name|{originalPayload.Name}",
+            sourceLanguage,
+            scope,
+            tryGetTranslation,
+            queueTranslation,
+            () => translate(
+                originalPayload.Name,
+                sourceLanguage,
+                scope.TargetLanguageCode),
+            (translatedName, capturedScope, _) =>
+            {
+                var translatedRow = CreateReferenceTextTranslationRow(
+                    originalPayload,
+                    gameVersion,
+                    capturedScope,
+                    createRow,
+                    findRow,
+                    translatedName: translatedName);
+                persistRow(translatedRow);
+            });
     }
 
     /// <summary>

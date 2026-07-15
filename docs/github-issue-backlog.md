@@ -477,11 +477,19 @@ work rather than release fallout.
 
 ### #139 Arabic Translation Support
 
-- Status: keep open
+- Status: Phase A implemented; keep open for validation and Phase B research
 - Notes:
-  - Engine-side support alone is not enough.
-  - Proper overlay and UI support still depends on right-to-left rendering
-    remediation.
+  - Texture-backed, right-aligned presentation is available for plugin-owned
+    overlays and hover tooltips through `LanguagePresentationPolicy`.
+  - Rasterization is bounded before allocation/upload to `2048 px` per side and
+    `2,097,152 px` per texture; the cache also caps one entry at `48 MiB`.
+    Layout construction also stops at `32,768` source characters, a
+    height-compatible line bound, or an exceeded measured area before a target
+    bitmap is allocated.
+  - This is not universal bidi support for game-native or arbitrary ImGui
+    widgets. In-game acceptance remains unrecorded.
+  - Phase B is limited to shaped static-text and upstream ImGui research;
+    editable widgets remain separate work.
 
 ### #104 Add quest translations to the Unending Journey
 

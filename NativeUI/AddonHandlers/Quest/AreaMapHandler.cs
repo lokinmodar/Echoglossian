@@ -102,6 +102,12 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
         return;
       }
 
+      if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+              out var sourceLanguage))
+      {
+        return;
+      }
+
       if (this.TryGetAreaMapCachedText(
               questNameText,
               out var appliedQuestSnapshot))
@@ -133,7 +139,10 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
         return;
       }
 
-      var questPlate = this.CreateQuestPlate(questNameText, string.Empty);
+      var questPlate = this.CreateQuestPlate(
+          sourceLanguage,
+          questNameText,
+          string.Empty);
       var foundQuestPlate = this.FindQuestPlateByName(questPlate);
       var cacheKey = $"AreaMap|{questNameText}";
       if (foundQuestPlate != null)
@@ -223,10 +232,11 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
 
       this.QueueTranslation(
           cacheKey,
-          () => this.Translate(questNameText),
+          () => this.Translate(questNameText, sourceLanguage),
           translatedNameText =>
           {
             var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+                sourceLanguage,
                 questNameText,
                 string.Empty,
                 translatedNameText,

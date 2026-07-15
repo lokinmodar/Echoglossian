@@ -29,17 +29,19 @@ internal static class TranslationFailureKey
     ///     and translation engine.
     /// </summary>
     /// <param name="sourceTextHash">The stable source-text hash.</param>
-    /// <param name="sourceLanguage">The source language code.</param>
+    /// <param name="sourcePersistenceLanguage">
+    ///     The canonical persisted source identity, never a provider alias.
+    /// </param>
     /// <param name="targetLanguage">The target language code.</param>
     /// <param name="translationEngine">The translation-engine identifier.</param>
     /// <returns>The stable lookup key.</returns>
     public static string BuildLookupKey(
         string sourceTextHash,
-        string? sourceLanguage,
+        string? sourcePersistenceLanguage,
         string? targetLanguage,
         int translationEngine)
     {
         return
-            $"{sourceTextHash}|{RuntimeLanguageHelper.NormalizeLanguage(sourceLanguage)}|{RuntimeLanguageHelper.NormalizeLanguage(targetLanguage)}|{translationEngine}";
+            $"{sourceTextHash}|{RuntimeLanguageHelper.NormalizeLanguage(sourcePersistenceLanguage)}|{RuntimeLanguageHelper.NormalizeLanguage(targetLanguage)}|{translationEngine}";
     }
 }

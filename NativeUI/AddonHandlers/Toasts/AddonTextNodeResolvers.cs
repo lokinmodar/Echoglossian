@@ -127,6 +127,33 @@ internal static unsafe class AddonTextNodeResolvers
   }
 
   /// <summary>
+  ///     Resolves every readable, visible text node found anywhere in the live
+  ///     addon tree.
+  /// </summary>
+  /// <param name="addon">The live addon instance.</param>
+  /// <returns>
+  ///     A list of readable, visible text-node addresses in tree order.
+  /// </returns>
+  public static List<nint> ResolveReadableTextNodes(AtkUnitBase* addon)
+  {
+    var textNodes = new List<nint>();
+    if (addon == null)
+    {
+      return textNodes;
+    }
+
+    var seenTextNodes = new HashSet<nint>();
+    var visitedNodes = new HashSet<nint>();
+    CollectReadableTextNodes(
+        addon->UldManager.NodeList,
+        (int)addon->UldManager.NodeListCount,
+        textNodes,
+        seenTextNodes,
+        visitedNodes);
+    return textNodes;
+  }
+
+  /// <summary>
   ///     Resolves the first text node found anywhere in the provided node list,
   ///     including nested component node lists.
   /// </summary>
@@ -221,12 +248,18 @@ internal static unsafe class AddonTextNodeResolvers
   /// <param name="nodeList">The node list to inspect.</param>
   /// <param name="nodeCount">The number of nodes in the list.</param>
   /// <param name="results">Receives the collected node addresses.</param>
-  /// <param name="seen">Receives the node addresses already collected.</param>
+  /// <param name="seenTextNodes">
+  ///     Receives the text-node addresses already collected.
+  /// </param>
+  /// <param name="visitedNodes">
+  ///     Receives every structural node address already traversed.
+  /// </param>
   private static void CollectReadableTextNodes(
       AtkResNode** nodeList,
       int nodeCount,
       List<nint> results,
-      HashSet<nint> seen)
+      HashSet<nint> seenTextNodes,
+      HashSet<nint> visitedNodes)
   {
     if (nodeList == null || nodeCount <= 0)
     {
@@ -235,7 +268,11 @@ internal static unsafe class AddonTextNodeResolvers
 
     for (var i = 0; i < nodeCount; i++)
     {
-      CollectReadableTextNodes(nodeList[i], results, seen);
+      CollectReadableTextNodes(
+          nodeList[i],
+          results,
+          seenTextNodes,
+          visitedNodes);
     }
   }
 
@@ -388,13 +425,20 @@ internal static unsafe class AddonTextNodeResolvers
   /// </summary>
   /// <param name="node">The node to inspect.</param>
   /// <param name="results">Receives the collected node addresses.</param>
-  /// <param name="seen">Receives the node addresses already collected.</param>
+  /// <param name="seenTextNodes">
+  ///     Receives the text-node addresses already collected.
+  /// </param>
+  /// <param name="visitedNodes">
+  ///     Receives every structural node address already traversed.
+  /// </param>
   private static void CollectReadableTextNodes(
       AtkResNode* node,
       List<nint> results,
-      HashSet<nint> seen)
+      HashSet<nint> seenTextNodes,
+      HashSet<nint> visitedNodes)
   {
-    if (node == null)
+    if (node == null ||
+        !TryVisitNodeAddress(visitedNodes, (nint)node))
     {
       return;
     }
@@ -405,7 +449,7 @@ internal static unsafe class AddonTextNodeResolvers
       var textNodeAddress = (nint)textNode;
       if (textNode->IsVisible() &&
           HasReadableText(textNode) &&
-          seen.Add(textNodeAddress))
+          seenTextNodes.Add(textNodeAddress))
       {
         results.Add(textNodeAddress);
       }
@@ -420,12 +464,37 @@ internal static unsafe class AddonTextNodeResolvers
             componentNode->Component->UldManager.NodeList,
             (int)componentNode->Component->UldManager.NodeListCount,
             results,
-            seen);
+            seenTextNodes,
+            visitedNodes);
       }
     }
 
-    CollectReadableTextNodes(node->ChildNode, results, seen);
-    CollectReadableTextNodes(node->NextSiblingNode, results, seen);
+    CollectReadableTextNodes(
+        node->ChildNode,
+        results,
+        seenTextNodes,
+        visitedNodes);
+    CollectReadableTextNodes(
+        node->NextSiblingNode,
+        results,
+        seenTextNodes,
+        visitedNodes);
+  }
+
+  /// <summary>
+  ///     Records one structural node address for the current traversal.
+  /// </summary>
+  /// <param name="visitedNodes">The addresses already traversed.</param>
+  /// <param name="nodeAddress">The structural node address to record.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the node was not visited before;
+  ///     otherwise <see langword="false" />.
+  /// </returns>
+  internal static bool TryVisitNodeAddress(
+      HashSet<nint> visitedNodes,
+      nint nodeAddress)
+  {
+    return nodeAddress != nint.Zero && visitedNodes.Add(nodeAddress);
   }
 
   /// <summary>

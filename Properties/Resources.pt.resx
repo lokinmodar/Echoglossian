@@ -652,7 +652,7 @@
     <value>Este modo controla as superfícies ActionDetail e ItemDetail. Native UI grava o texto detalhado traduzido no complemento do jogo, o modo somente Plugin Overlay mantém o complemento nativo intacto e usa Plugin Overlays, e Tradução de Native UI + Plugin Overlay original grava a tradução nativamente enquanto mostra o original na nossa Plugin Overlay.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Habilitar tradução de detalhes de ação/item e Plugin Tooltips compartilhadas</value>
+    <value>Habilitar tradução de detalhes de ação/item</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Não foi possível buscar modelos. Ollama está sendo executado localmente?</value>
@@ -664,10 +664,16 @@
     <value>Janelas de jogo</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Essas cores se aplicam às Plugin Tooltips usadas pelas superfícies de missão e DB-first.</value>
+    <value>Essas opções se aplicam às Plugin Tooltips de hover usadas pelas superfícies de missão e DB-first.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Aparência das Plugin Tooltips</value>
+    <value>Aparência das Plugin Tooltips de hover</value>
+  </data>
+  <data name="HoverTooltipFontScaleLabel" xml:space="preserve">
+    <value>Escala de fonte da Plugin Tooltip</value>
+  </data>
+  <data name="HoverTooltipMaxWidthLabel" xml:space="preserve">
+    <value>Largura máxima da Plugin Tooltip</value>
   </data>
   <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
     <value>Cor de fundo da Plugin Tooltip</value>
@@ -677,6 +683,12 @@
   </data>
   <data name="HoverTooltipTextColorLabel" xml:space="preserve">
     <value>Cor do texto da Plugin Tooltip</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleLabel" xml:space="preserve">
+    <value>Altura de linha do texto por textura</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleDescription" xml:space="preserve">
+    <value>Aplica-se ao texto complexo renderizado por textura em tooltips e overlays.</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
     <value>Este modo controla Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept e JournalResult. As Plugin Tooltips do Journal seguem esse modo diretamente; a alternância global de Plugin Tooltip afeta apenas outras UIs traduzidas.</value>

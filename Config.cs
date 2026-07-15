@@ -1042,6 +1042,18 @@ public class Config : IPluginConfiguration
   /// <summary>Background opacity used by Echoglossian hover tooltips.</summary>
   [DefaultValue(0.95f)] public float HoverTooltipBackgroundOpacity = 0.95f;
 
+  /// <summary>Font scale used by Echoglossian hover tooltips.</summary>
+  [DefaultValue(0.85f)] public float HoverTooltipFontScale = 0.85f;
+
+  /// <summary>Maximum width used by Echoglossian hover tooltips.</summary>
+  [DefaultValue(720f)] public float HoverTooltipMaxWidth = 720f;
+
+  /// <summary>
+  ///     Shared line-height scale used by texture-backed complex-script text
+  ///     such as RTL hover tooltips and overlay-only surfaces.
+  /// </summary>
+  [DefaultValue(0.9f)] public float TexturePresentationLineHeightScale = 0.9f;
+
   /// <summary>Translate wide-format toast messages.</summary>
   [DefaultValue(false)] public bool TranslateWideTextToast = false;
 

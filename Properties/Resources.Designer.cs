@@ -1469,6 +1469,28 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip font scale.
+        /// </summary>
+        public static string HoverTooltipFontScaleLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("HoverTooltipFontScaleLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip max width.
+        /// </summary>
+        public static string HoverTooltipMaxWidthLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("HoverTooltipMaxWidthLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Plugin Tooltip background color.
         /// </summary>
         public static string HoverTooltipBackgroundColorLabel
@@ -1509,6 +1531,28 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("HoverTooltipTextColorLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Texture text line height.
+        /// </summary>
+        public static string TexturePresentationLineHeightScaleLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("TexturePresentationLineHeightScaleLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Applies to texture-backed complex-script text across hover tooltips and overlays..
+        /// </summary>
+        public static string TexturePresentationLineHeightScaleDescription
+        {
+            get
+            {
+                return ResourceManager.GetString("TexturePresentationLineHeightScaleDescription", resourceCulture);
             }
         }
         

@@ -5,8 +5,10 @@
 
 using Echoglossian.Cache;
 using Echoglossian.NativeUI.AddonHandlers.Common;
+using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,6 +22,12 @@ namespace Echoglossian.NativeUI.AddonHandlers.ActionMenu;
 /// </summary>
 public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 {
+    private const uint SectionHeadingTextNodeId = 2;
+    private const uint WindowTitleTextNodeId = 3;
+    private const uint MenuEntryTextNodeId = 7;
+    private const uint ActionEntryTextNodeId = 10;
+    private const uint DescriptionTextNodeId = 71;
+    private const uint DisplayModeTextNodeId = 72;
     private const int SwitchViewAtkValueIndex = 0;
     private const int LevelAtkValueIndex = 10;
     private const int ClassJobAtkValueIndex = 12;
@@ -31,16 +39,21 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     private static readonly TimeSpan AppliedStateRefreshWindow =
         TimeSpan.FromMilliseconds(250);
+    private static readonly IReadOnlyDictionary<string, string>
+        EmptyFallbackLookup = new Dictionary<string, string>(
+            StringComparer.Ordinal);
     private static readonly Regex TrailingLevelTokenPattern = new(
-        @"^(?<prefix>.*?)(?<separator>\s*)(?<level>(?:Lv\.|Nv\.|Level|Nível)\s*\d+)$",
+        @"^(?:(?<prefix>.+?)(?<separator>\r\n|\r|\n|[ \t]+)(?<level>(?:\p{Lu}\p{Ll}{0,11}\.?|\p{Lu}{1,5}\.|\p{Ll}{1,12}\.?|\p{Lo}{1,12}\.?)[ \t]*\d+)|(?<prefix>.+)(?<separator>)(?<level>\p{Lu}\p{Ll}{0,11}\.[ \t]*\d+))$",
         RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
     private readonly Config config;
     private readonly PayloadStabilityTracker newPayloadStabilityTracker = new(
         minimumObservations: 2,
         minimumStableDuration: TimeSpan.FromMilliseconds(150));
-    private readonly HashSet<string> queuedStablePayloadSignatures = new(
-        StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, PersistedActionMenuLookupSnapshot>
+        persistedLookupSnapshots = new(StringComparer.Ordinal);
+    private readonly ActionMenuQueuedSignatureTracker
+        queuedStablePayloadSignatures = new();
 
     /// <summary>
 ///     Initializes a new instance of the
@@ -94,17 +107,48 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <inheritdoc />
     private protected override bool ShouldPersistNewGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
-        return this.ShouldAllowNewPayloadPersistence(originalPayload);
+        return this.ShouldAllowNewPayloadPersistence(
+            sourceLanguage,
+            originalPayload);
     }
 
     /// <inheritdoc />
     private protected override bool ShouldQueueNewGameWindowTranslation(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        return this.ShouldAllowNewPayloadTranslation(originalPayload);
+        return this.ShouldAllowNewPayloadTranslation(
+            sourceLanguage,
+            originalPayload);
+    }
+
+    /// <inheritdoc />
+    private protected override bool ShouldQueueNewGameWindowTranslation(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        bool retryCoolingDown)
+    {
+        if (!this.ShouldAllowNewPayloadTranslation(
+                sourceLanguage,
+                originalPayload))
+        {
+            return false;
+        }
+
+        return this.queuedStablePayloadSignatures.TryQueue(
+            scope,
+            sourceOperation.Generation,
+            BuildCanonicalStablePayloadSignature(
+                originalPayload,
+                scope,
+                GetGameVersion()),
+            retryCoolingDown);
     }
 
     /// <inheritdoc />
@@ -123,76 +167,160 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    private protected override (
+        DbFirstGameWindowPayload OriginalPayload,
+        DbFirstGameWindowPayload TranslatedPayload)
+        PreparePersistedGameWindowPayload(
+            TranslationReuseScope scope,
+            DbFirstGameWindowPayload originalPayload,
+            DbFirstGameWindowPayload translatedPayload)
+    {
+        return FilterPersistedPayloadPair(
+            scope,
+            GetGameVersion(),
+            originalPayload,
+            translatedPayload);
+    }
+
+    /// <summary>
+    ///     Creates the canonical cache scope for one captured ActionMenu
+    ///     operation.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <returns>The complete translation reuse scope.</returns>
+    private TranslationReuseScope CreateTranslationReuseScope(
+        SourceClientLanguage sourceLanguage)
+    {
+        return new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.GetOperationTranslationEngineId(),
+            this.config.TranslateAlreadyTranslatedTexts);
+    }
+
+    /// <inheritdoc />
     private protected override async Task<bool>
         TranslateAndPersistGameWindowPayloadAsync(
+            TranslationReuseScope scope,
+            DbFirstSourceOperation sourceOperation,
+            SourceClientLanguage sourceLanguage,
             DbFirstGameWindowPayload originalPayload)
     {
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
-        var translatedPayloadResult = await GenericAddonHandlerHelper
-            .TranslatePayloadAsync(
-                originalPayload.AtkValues,
-                originalPayload.StringArrayValues,
-                originalPayload.TextNodes,
-                originalPayload.AtkValues,
-                originalPayload.StringArrayValues,
-                originalPayload.TextNodes,
-                ClientStateInterface.ClientLanguage.Humanize(),
-                RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                    this.config.Lang),
-                this.HandlerTranslationService);
-        if (!translatedPayloadResult.HasValue)
+        var stablePayloadSignature = BuildCanonicalStablePayloadSignature(
+            originalPayload,
+            scope,
+            GetGameVersion());
+        if (!scope.TranslationEngine.HasValue)
         {
             return false;
         }
 
-        var translatedPayload = this.NormalizeResolvedTranslatedPayload(
-            originalPayload,
-            translatedPayloadResult.Value,
-            classJobId,
-            classJobName);
-        if (!this.ShouldAcceptResolvedTranslatedPayload(
+        var translatorResolution = this.HandlerTranslationService
+            .CaptureTranslatorResolution(
+                scope.TranslationEngine.Value,
+                TranslationSurfaceGroup.Default);
+        try
+        {
+            var translatedPayloadResult = await GenericAddonHandlerHelper
+                .TranslatePayloadAsync(
+                    originalPayload.AtkValues,
+                    originalPayload.StringArrayValues,
+                    originalPayload.TextNodes,
+                    originalPayload.AtkValues,
+                    originalPayload.StringArrayValues,
+                    originalPayload.TextNodes,
+                    sourceLanguage,
+                    scope.TargetLanguageCode,
+                    this.HandlerTranslationService,
+                    translatorResolution);
+            if (!translatedPayloadResult.HasValue)
+            {
+                this.queuedStablePayloadSignatures.Release(
+                    scope,
+                    sourceOperation.Generation,
+                    stablePayloadSignature);
+                return false;
+            }
+
+            var translatedPayload = this.NormalizeResolvedTranslatedPayload(
+                sourceLanguage,
                 originalPayload,
-                translatedPayload))
-        {
-            return true;
-        }
+                translatedPayloadResult.Value,
+                classJobId,
+                classJobName,
+                scope);
+            if (!this.ShouldAcceptResolvedTranslatedPayload(
+                    originalPayload,
+                    translatedPayload))
+            {
+                this.queuedStablePayloadSignatures.Release(
+                    scope,
+                    sourceOperation.Generation,
+                    stablePayloadSignature);
+                return false;
+            }
 
-        var stablePayloadSignature = BuildStablePayloadSignature(
-            originalPayload);
-        var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
-            originalPayload,
-            classJobId,
-            classJobName);
-        var (candidateCount, stableMatchCount) =
-            this.GetPersistedCandidateDiagnostics(
-                stablePayloadSignature,
+            var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+                sourceLanguage,
+                originalPayload,
+                classJobId,
+                classJobName,
+                scope);
+            var (candidateCount, stableMatchCount) =
+                this.GetPersistedCandidateDiagnostics(
+                    sourceLanguage,
+                    stablePayloadSignature,
+                    classJobId,
+                    scope);
+            var sufficientCoverage =
+                !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
+                this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
+            if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
+                !sufficientCoverage ||
+                stableMatchCount > 0 ||
+                unseenCount <= 0)
+            {
+                return true;
+            }
+
+            var persisted = this.PersistResolvedGameWindowPayload(
+                scope,
+                sourceOperation,
+                originalPayload,
+                translatedPayload,
                 classJobId);
-        var sufficientCoverage =
-            !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
-            this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
-        if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
-            !sufficientCoverage ||
-            stableMatchCount > 0 ||
-            unseenCount <= 0)
-        {
-            return true;
-        }
+            if (!persisted)
+            {
+                this.queuedStablePayloadSignatures.Release(
+                    scope,
+                    sourceOperation.Generation,
+                    stablePayloadSignature);
+            }
 
-        this.PersistResolvedGameWindowPayload(
-            originalPayload,
-            translatedPayload,
-            classJobId);
-        return true;
+            return persisted;
+        }
+        catch
+        {
+            this.queuedStablePayloadSignatures.Release(
+                scope,
+                sourceOperation.Generation,
+                stablePayloadSignature);
+            throw;
+        }
     }
 
     /// <inheritdoc />
     private protected override DbFirstGameWindowPayload
         NormalizeResolvedTranslatedPayload(
+            SourceClientLanguage sourceLanguage,
             DbFirstGameWindowPayload originalPayload,
             DbFirstGameWindowPayload translatedPayload)
     {
         return this.NormalizeResolvedTranslatedPayload(
+            sourceLanguage,
             originalPayload,
             translatedPayload,
             GetCurrentClassJobId(),
@@ -203,30 +331,34 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Normalizes one resolved translated payload by merging canonical
     ///     ActionMenu lookups for the provided class/job scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original-facing payload.</param>
     /// <param name="translatedPayload">The translated payload candidate.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <param name="classJobName">The current class/job name.</param>
     /// <returns>The normalized translated payload.</returns>
     private DbFirstGameWindowPayload NormalizeResolvedTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
         uint? classJobId,
-        string? classJobName)
+        string? classJobName,
+        TranslationReuseScope? operationScope = null)
     {
-        var targetLanguage = RuntimeLanguageHelper
-            .GetConfiguredTargetLanguageCode(this.config.Lang);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         return MergeResolvedTranslatedPayload(
             originalPayload,
             translatedPayload,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup);
     }
@@ -246,6 +378,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     {
         base.OnCleanupEvent(evt, args);
         this.newPayloadStabilityTracker.Reset();
+        this.queuedStablePayloadSignatures.Clear();
     }
 
     /// <inheritdoc />
@@ -254,21 +387,30 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string visibleText)
     {
         return textNode != null &&
-               !string.IsNullOrWhiteSpace(visibleText);
+               ShouldCaptureActionMenuTextNode(
+                   textNode->AtkResNode.NodeId,
+                   visibleText);
+    }
+
+    /// <inheritdoc />
+    protected override unsafe List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
+    {
+        return ResolveActionMenuTextNodeAddresses(addon);
     }
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
         originalPayload = DbFirstGameWindowPayload.Empty;
 
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var gameVersion = GetGameVersion();
         var classJobId = GetCurrentClassJobId();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out var persistedOriginalLookup,
             out _,
             classJobId,
@@ -277,22 +419,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         var changed = false;
         var resolvedAtkValues = this.CanonicalizeIntMap(
             livePayload.AtkValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedOriginalLookup,
             ref changed);
         var resolvedStringArrayValues = this.CanonicalizeIntMap(
             livePayload.StringArrayValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedOriginalLookup,
             ref changed);
         var resolvedTextNodes = this.CanonicalizeStringMap(
             livePayload.TextNodes,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedOriginalLookup,
             ref changed);
@@ -311,14 +450,15 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var gameVersion = GetGameVersion();
         var classJobId = GetCurrentClassJobId();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
@@ -327,22 +467,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
         var translatedAtkValues = TranslateIntMap(
             originalPayload.AtkValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup,
             ref changed);
         var translatedStringArrayValues = TranslateIntMap(
             originalPayload.StringArrayValues,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup,
             ref changed);
         var translatedTextNodes = TranslateStringMap(
             originalPayload.TextNodes,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup,
             ref changed);
@@ -365,8 +502,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     canonical structured-tooltip caches.
     /// </summary>
     /// <param name="sourceValues">The original values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="changed">
     ///     Receives whether any translated value differs from the original.
@@ -374,8 +510,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The translated map.</returns>
     private static SortedDictionary<int, string> TranslateIntMap(
         SortedDictionary<int, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -386,8 +521,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var translatedText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(
@@ -409,8 +543,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     canonical structured-tooltip caches.
     /// </summary>
     /// <param name="sourceValues">The original values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="changed">
     ///     Receives whether any translated value differs from the original.
@@ -418,8 +551,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The translated map.</returns>
     private static SortedDictionary<string, string> TranslateStringMap(
         SortedDictionary<string, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -431,8 +563,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var translatedText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(
@@ -454,31 +585,17 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     falling back to the original text when no exact translation exists.
     /// </summary>
     /// <param name="originalText">The original visible text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <returns>The translated text, or the original text.</returns>
     private static string ResolveTranslatedText(
         string originalText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        if (TryResolveLevelAwareTranslatedText(
-                originalText,
-                targetLanguage,
-                engine,
-                gameVersion,
-                fallbackLookup,
-                out var levelAwareTranslatedText))
-        {
-            return levelAwareTranslatedText;
-        }
-
         if (TryFindTranslatedCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalText,
                 out var translatedText))
@@ -486,9 +603,22 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return PreserveSourceLevelSeparator(originalText, translatedText);
         }
 
-        if (fallbackLookup.TryGetValue(originalText, out translatedText))
+        if (TryFindFallbackLookupValue(
+                fallbackLookup,
+                originalText,
+                out translatedText))
         {
             return PreserveSourceLevelSeparator(originalText, translatedText);
+        }
+
+        if (TryResolveLevelAwareTranslatedText(
+                originalText,
+                scope,
+                gameVersion,
+                fallbackLookup,
+                out var levelAwareTranslatedText))
+        {
+            return levelAwareTranslatedText;
         }
 
         return originalText;
@@ -499,8 +629,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     action-tooltip cache or previously persisted ActionMenu rows.
     /// </summary>
     /// <param name="visibleText">The currently visible text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The reverse lookup built from persisted ActionMenu rows.
@@ -508,25 +637,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The canonical original text, or the visible text.</returns>
     private static string ResolveOriginalText(
         string visibleText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        if (TryResolveLevelAwareOriginalText(
-                visibleText,
-                targetLanguage,
-                engine,
-                gameVersion,
-                fallbackLookup,
-                out var levelAwareOriginalText))
-        {
-            return levelAwareOriginalText;
-        }
-
         if (TryFindOriginalCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 visibleText,
                 out var originalText))
@@ -534,9 +650,22 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return PreserveSourceLevelSeparator(visibleText, originalText);
         }
 
-        if (fallbackLookup.TryGetValue(visibleText, out originalText))
+        if (TryFindFallbackLookupValue(
+                fallbackLookup,
+                visibleText,
+                out originalText))
         {
             return PreserveSourceLevelSeparator(visibleText, originalText);
+        }
+
+        if (TryResolveLevelAwareOriginalText(
+                visibleText,
+                scope,
+                gameVersion,
+                fallbackLookup,
+                out var levelAwareOriginalText))
+        {
+            return levelAwareOriginalText;
         }
 
         return visibleText;
@@ -551,8 +680,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <param name="resolvedTranslatedPayload">
     ///     The resolved translated payload from cache or DB.
     /// </param>
-    /// <param name="targetLanguage">The active target language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The original-to-translated fallback lookup built from persisted
@@ -562,8 +690,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     internal static DbFirstGameWindowPayload MergeResolvedTranslatedPayload(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload resolvedTranslatedPayload,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
@@ -571,22 +698,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             MergeTranslatedIntMap(
                 originalPayload.AtkValues,
                 resolvedTranslatedPayload.AtkValues,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup),
             MergeTranslatedIntMap(
                 originalPayload.StringArrayValues,
                 resolvedTranslatedPayload.StringArrayValues,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup),
             MergeTranslatedStringMap(
                 originalPayload.TextNodes,
                 resolvedTranslatedPayload.TextNodes,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup));
     }
@@ -671,30 +795,66 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Builds one canonical-aware stable ActionMenu page signature that
+    ///     excludes short labels already covered by shared canonical action,
+    ///     trait, or reference-text storage.
+    /// </summary>
+    /// <param name="payload">The payload to summarize.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>The canonical-aware stable page signature.</returns>
+    internal static string BuildCanonicalStablePayloadSignature(
+        DbFirstGameWindowPayload payload,
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        var canonicalLookup = ActionMenuCanonicalTextCache.GetSnapshot(
+            scope,
+            gameVersion);
+        var texts = EnumerateStableSignatureTexts(payload)
+            .Where(text => !IsKnownCanonicalOnlyActionMenuText(
+                text,
+                canonicalLookup))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static text => text, StringComparer.Ordinal)
+            .ToList();
+        if (TryGetPayloadClassJobName(payload, out var classJobName))
+        {
+            texts.Add($"job:{classJobName}");
+        }
+
+        texts = texts
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static text => text, StringComparer.Ordinal)
+            .ToList();
+        return texts.Count == 0
+            ? string.Empty
+            : string.Join("\u001F", texts);
+    }
+
+    /// <summary>
     ///     Counts one payload's distinct short texts that are still not
     ///     covered by canonical ActionMenu sources.
     /// </summary>
     /// <param name="payload">The original-facing payload.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
     /// <param name="fallbackLookup">
     ///     The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
     /// </param>
     /// <returns>The count of unresolved short texts.</returns>
     internal static int CountMeaningfulUnseenTexts(
         DbFirstGameWindowPayload payload,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
+        var canonicalLookup = ActionMenuCanonicalTextCache.GetSnapshot(
+            scope,
+            gameVersion);
         return EnumerateStableSignatureTexts(payload)
             .Where(text => !IsKnownCanonicalActionMenuText(
                 text,
-                targetLanguage,
-                engine,
-                gameVersion,
+                canonicalLookup,
                 fallbackLookup))
             .Distinct(StringComparer.Ordinal)
             .Count();
@@ -746,14 +906,52 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Resolves the readable text nodes that belong to the active
+    ///     <c>ActionMenu</c> page so capture does not stop at the first
+    ///     readable child exposed by each top-level component.
+    /// </summary>
+    /// <param name="addon">The live addon instance.</param>
+    /// <returns>The readable text-node addresses in tree order.</returns>
+    internal static unsafe List<nint> ResolveActionMenuTextNodeAddresses(
+        AtkUnitBase* addon)
+    {
+        return AddonTextNodeResolvers.ResolveReadableTextNodes(addon);
+    }
+
+    /// <summary>
+    ///     Determines whether one observed ActionMenu text node should
+    ///     participate in payload capture.
+    /// </summary>
+    /// <param name="nodeId">The live text-node identifier.</param>
+    /// <param name="visibleText">The visible text content.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the node belongs to the active
+    ///     ActionMenu page surface; otherwise <see langword="false" />.
+    /// </returns>
+    internal static bool ShouldCaptureActionMenuTextNode(
+        uint nodeId,
+        string visibleText)
+    {
+        if (string.IsNullOrWhiteSpace(visibleText))
+        {
+            return false;
+        }
+
+        return nodeId is SectionHeadingTextNodeId or
+               WindowTitleTextNodeId or
+               MenuEntryTextNodeId or
+               ActionEntryTextNodeId or
+               DescriptionTextNodeId or
+               DisplayModeTextNodeId;
+    }
+
+    /// <summary>
     ///     Tries to resolve one translated text by translating only the
     ///     visible action name when the source text ends with a trailing level
     ///     token.
     /// </summary>
     /// <param name="originalText">The original visible text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <param name="translatedText">The resolved translated text.</param>
     /// <returns>
@@ -762,8 +960,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private static bool TryResolveLevelAwareTranslatedText(
         string originalText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         out string translatedText)
@@ -773,16 +970,15 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 originalText,
                 out var originalPrefix,
                 out var separator,
-                out var levelLabel,
-                out var levelNumber))
+                out var levelToken,
+                out _))
         {
             return false;
         }
 
         var translatedPrefix = ResolveTranslatedBaseText(
             originalPrefix,
-            targetLanguage,
-            engine,
+            scope,
             gameVersion,
             fallbackLookup);
         if (string.Equals(
@@ -796,7 +992,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         translatedText = string.Concat(
             translatedPrefix,
             NormalizeResolvedLevelSeparator(separator),
-            NormalizeTranslatedLevelToken(levelLabel, levelNumber, targetLanguage));
+            levelToken);
         return true;
     }
 
@@ -806,8 +1002,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     level token.
     /// </summary>
     /// <param name="visibleText">The visible translated text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted reverse lookup.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -817,8 +1012,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private static bool TryResolveLevelAwareOriginalText(
         string visibleText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         out string originalText)
@@ -828,16 +1022,15 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 visibleText,
                 out var visiblePrefix,
                 out var separator,
-                out var levelLabel,
-                out var levelNumber))
+                out var levelToken,
+                out _))
         {
             return false;
         }
 
         var resolvedOriginalPrefix = ResolveOriginalBaseText(
             visiblePrefix,
-            targetLanguage,
-            engine,
+            scope,
             gameVersion,
             fallbackLookup);
         if (string.Equals(
@@ -851,7 +1044,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         originalText = string.Concat(
             resolvedOriginalPrefix,
             NormalizeResolvedLevelSeparator(separator),
-            NormalizeOriginalLevelToken(levelLabel, levelNumber));
+            levelToken);
         return true;
     }
 
@@ -860,21 +1053,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     decomposition.
     /// </summary>
     /// <param name="originalText">The original text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <returns>The resolved translated text, or the original text.</returns>
     private static string ResolveTranslatedBaseText(
         string originalText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         if (TryFindTranslatedCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalText,
                 out var translatedText))
@@ -898,21 +1088,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     level-token decomposition.
     /// </summary>
     /// <param name="visibleText">The translated text.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted reverse lookup.</param>
     /// <returns>The resolved original text, or the visible text.</returns>
     private static string ResolveOriginalBaseText(
         string visibleText,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
         if (TryFindOriginalCanonicalText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 visibleText,
                 out var originalText))
@@ -938,7 +1125,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <param name="text">The text to parse.</param>
     /// <param name="prefix">The visible text before the level token.</param>
     /// <param name="separator">The separator before the level token.</param>
-    /// <param name="levelLabel">The level label prefix.</param>
+    /// <param name="levelToken">The complete trailing level token.</param>
     /// <param name="levelNumber">The trailing level number.</param>
     /// <returns>
     ///     <see langword="true" /> when the text contains one trailing level
@@ -948,12 +1135,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         string text,
         out string prefix,
         out string separator,
-        out string levelLabel,
+        out string levelToken,
         out string levelNumber)
     {
         prefix = string.Empty;
         separator = string.Empty;
-        levelLabel = string.Empty;
+        levelToken = string.Empty;
         levelNumber = string.Empty;
 
         var match = TrailingLevelTokenPattern.Match(text);
@@ -964,63 +1151,17 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
 
         prefix = match.Groups["prefix"].Value;
         separator = match.Groups["separator"].Value;
-        var levelValue = match.Groups["level"].Value;
-        var numberIndex = levelValue.Length - 1;
-        while (numberIndex >= 0 && char.IsDigit(levelValue[numberIndex]))
+        levelToken = match.Groups["level"].Value;
+        var numberStart = levelToken.Length - 1;
+        while (numberStart >= 0 && char.IsDigit(levelToken[numberStart]))
         {
-            numberIndex--;
+            numberStart--;
         }
 
-        if (numberIndex < 0 || numberIndex >= levelValue.Length - 1)
-        {
-            return false;
-        }
-
-        levelLabel = levelValue[..(numberIndex + 1)].TrimEnd();
-        levelNumber = levelValue[(numberIndex + 1)..];
+        levelNumber = levelToken[(numberStart + 1)..];
         return !string.IsNullOrWhiteSpace(prefix) &&
-               !string.IsNullOrWhiteSpace(levelLabel) &&
+               !string.IsNullOrWhiteSpace(levelToken) &&
                !string.IsNullOrWhiteSpace(levelNumber);
-    }
-
-    /// <summary>
-    ///     Normalizes one translated level token for the target language.
-    /// </summary>
-    /// <param name="levelLabel">The source level label.</param>
-    /// <param name="levelNumber">The trailing level number.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <returns>The normalized translated level token.</returns>
-    private static string NormalizeTranslatedLevelToken(
-        string levelLabel,
-        string levelNumber,
-        string targetLanguage)
-    {
-        if (RuntimeLanguageHelper.NormalizeLanguage(targetLanguage)
-                .StartsWith("pt", StringComparison.OrdinalIgnoreCase))
-        {
-            return $"Nv. {levelNumber}";
-        }
-
-        return $"{levelLabel} {levelNumber}";
-    }
-
-    /// <summary>
-    ///     Normalizes one translated level token back to the canonical English
-    ///     source token.
-    /// </summary>
-    /// <param name="levelLabel">The visible translated level label.</param>
-    /// <param name="levelNumber">The trailing level number.</param>
-    /// <returns>The canonical English level token.</returns>
-    private static string NormalizeOriginalLevelToken(
-        string levelLabel,
-        string levelNumber)
-    {
-        if (levelLabel is "Nv." or "Nível")
-        {
-            return $"Lv. {levelNumber}";
-        }
-
-        return $"{levelLabel} {levelNumber}";
     }
 
     /// <summary>
@@ -1040,16 +1181,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </summary>
     /// <param name="originalValues">The original values.</param>
     /// <param name="resolvedTranslatedValues">The resolved translated values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <returns>The merged translated map.</returns>
     private static SortedDictionary<int, string> MergeTranslatedIntMap(
         SortedDictionary<int, string> originalValues,
         SortedDictionary<int, string> resolvedTranslatedValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
@@ -1060,8 +1199,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             resolvedTranslatedValues.TryGetValue(key, out var currentText);
             var canonicalText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             mergedValues[key] = SelectResolvedTranslatedValue(
@@ -1087,16 +1225,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </summary>
     /// <param name="originalValues">The original values.</param>
     /// <param name="resolvedTranslatedValues">The resolved translated values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">The persisted fallback lookup.</param>
     /// <returns>The merged translated map.</returns>
     private static SortedDictionary<string, string> MergeTranslatedStringMap(
         SortedDictionary<string, string> originalValues,
         SortedDictionary<string, string> resolvedTranslatedValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
@@ -1108,8 +1244,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             resolvedTranslatedValues.TryGetValue(key, out var currentText);
             var canonicalText = ResolveTranslatedText(
                 originalText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             mergedValues[key] = SelectResolvedTranslatedValue(
@@ -1216,25 +1351,35 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether the current payload is stable and novel enough to
     ///     justify persisting one new canonical ActionMenu row.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when one new row should be persisted;
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool ShouldAllowNewPayloadPersistence(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
+        var stablePayloadSignature = BuildCanonicalStablePayloadSignature(
+            originalPayload,
+            scope,
+            GetGameVersion());
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
         var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            sourceLanguage,
             originalPayload,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         var (candidateCount, stableMatchCount) =
             this.GetPersistedCandidateDiagnostics(
+                sourceLanguage,
                 stablePayloadSignature,
-                classJobId);
+                classJobId,
+                scope);
         var sufficientCoverage =
             !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
             this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
@@ -1256,25 +1401,35 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether the current payload is stable and unresolved
     ///     enough to justify one new remote translation request.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when one remote translation may be queued;
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool ShouldAllowNewPayloadTranslation(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        var stablePayloadSignature = BuildStablePayloadSignature(originalPayload);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
+        var stablePayloadSignature = BuildCanonicalStablePayloadSignature(
+            originalPayload,
+            scope,
+            GetGameVersion());
         var classJobId = GetCurrentClassJobId();
         var classJobName = GetPayloadClassJobName(originalPayload);
         var unseenCount = this.CountMeaningfulUnseenTextsForDiagnostics(
+            sourceLanguage,
             originalPayload,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         var (candidateCount, stableMatchCount) =
             this.GetPersistedCandidateDiagnostics(
+                sourceLanguage,
                 stablePayloadSignature,
-                classJobId);
+                classJobId,
+                scope);
         var sufficientCoverage =
             !string.IsNullOrWhiteSpace(stablePayloadSignature) &&
             this.HasSufficientStableSignatureCoverage(stablePayloadSignature);
@@ -1295,9 +1450,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return false;
         }
 
-        var queueAdded = this.queuedStablePayloadSignatures.Add(
-            stablePayloadSignature);
-        return queueAdded;
+        return true;
     }
 
     /// <summary>
@@ -1323,15 +1476,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     texts that are not already covered by canonical action or menu
     ///     sources.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when unresolved short texts remain;
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool HasMeaningfulUnseenTexts(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
         return this.HasMeaningfulUnseenTexts(
+            sourceLanguage,
             originalPayload,
             GetCurrentClassJobId(),
             GetPayloadClassJobName(originalPayload));
@@ -1342,6 +1498,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     texts that are not already covered by canonical action or menu
     ///     sources for the provided class/job scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <param name="classJobName">The current class/job name.</param>
@@ -1350,11 +1507,13 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool HasMeaningfulUnseenTexts(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         uint? classJobId,
         string? classJobName)
     {
         return this.CountMeaningfulUnseenTextsForDiagnostics(
+                   sourceLanguage,
                    originalPayload,
                    classJobId,
                    classJobName) > 0;
@@ -1364,14 +1523,18 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether one stable ActionMenu page signature already
     ///     exists in persisted ActionMenu rows for the current scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="stablePayloadSignature">The page signature to inspect.</param>
     /// <returns>
     ///     <see langword="true" /> when a persisted row already covers the
     ///     same stable page shape; otherwise <see langword="false" />.
     /// </returns>
-    private bool HasPersistedStableSignature(string stablePayloadSignature)
+    private bool HasPersistedStableSignature(
+        SourceClientLanguage sourceLanguage,
+        string stablePayloadSignature)
     {
         return this.HasPersistedStableSignature(
+            sourceLanguage,
             stablePayloadSignature,
             GetCurrentClassJobId());
     }
@@ -1381,6 +1544,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     exists in persisted ActionMenu rows for the provided class/job
     ///     scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="stablePayloadSignature">The page signature to inspect.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <returns>
@@ -1388,10 +1552,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     same stable page shape; otherwise <see langword="false" />.
     /// </returns>
     private bool HasPersistedStableSignature(
+        SourceClientLanguage sourceLanguage,
         string stablePayloadSignature,
         uint? classJobId)
     {
         return this.GetPersistedCandidateDiagnostics(
+            sourceLanguage,
             stablePayloadSignature,
             classJobId).StableMatchCount > 0;
     }
@@ -1400,27 +1566,31 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Counts the unresolved short texts for the current ActionMenu payload
     ///     using the same canonical fallback rules as the persistence gate.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original-facing payload.</param>
     /// <param name="classJobId">The current class/job identifier.</param>
     /// <param name="classJobName">The current class/job name.</param>
     /// <returns>The count of short texts not yet covered by canonical data.</returns>
     private int CountMeaningfulUnseenTextsForDiagnostics(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         uint? classJobId,
-        string? classJobName)
+        string? classJobName,
+        TranslationReuseScope? operationScope = null)
     {
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
         var gameVersion = GetGameVersion();
         this.BuildPersistedActionMenuLookups(
+            sourceLanguage,
             out _,
             out var persistedTranslatedLookup,
             classJobId,
-            classJobName);
+            classJobName,
+            scope);
         return CountMeaningfulUnseenTexts(
             originalPayload,
-            targetLanguage,
-            this.config.ChosenTransEngine,
+            scope,
             gameVersion,
             persistedTranslatedLookup);
     }
@@ -1430,6 +1600,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     subset whose stable signature matches the supplied payload
     ///     signature.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="stablePayloadSignature">The stable signature to compare.</param>
     /// <param name="classJobId">The class/job scope to inspect.</param>
     /// <returns>
@@ -1438,21 +1609,29 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private (int CandidateCount, int StableMatchCount)
         GetPersistedCandidateDiagnostics(
+            SourceClientLanguage sourceLanguage,
             string stablePayloadSignature,
-            uint? classJobId)
+            uint? classJobId,
+            TranslationReuseScope? operationScope = null)
     {
-        var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-            this.config.Lang);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
         var candidateCount = 0;
         var stableMatchCount = 0;
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
-                     targetLanguage,
-                     this.config.ChosenTransEngine,
+                     scope,
                      GetGameVersion(),
                      classJobId))
         {
+            if (!MatchesPersistedSourceIdentity(
+                    row.OriginalWindowStringsLang,
+                    sourceLanguage))
+            {
+                continue;
+            }
+
             candidateCount++;
             if (string.IsNullOrWhiteSpace(stablePayloadSignature) ||
                 !TryParseSerializedPayload(
@@ -1463,7 +1642,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             }
 
             if (string.Equals(
-                    BuildStablePayloadSignature(rowOriginalPayload),
+                    BuildCanonicalStablePayloadSignature(
+                        rowOriginalPayload,
+                        scope,
+                        GetGameVersion()),
                     stablePayloadSignature,
                     StringComparison.Ordinal))
             {
@@ -1640,8 +1822,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     lookups.
     /// </summary>
     /// <param name="text">The text to inspect.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The persisted ActionMenu and <c>_MainCommand</c> fallback lookup.
@@ -1652,22 +1833,15 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// </returns>
     private static bool IsKnownCanonicalActionMenuText(
         string text,
-        string targetLanguage,
-        int engine,
-        string? gameVersion,
+        CanonicalTextLookupSnapshot canonicalLookup,
         IReadOnlyDictionary<string, string> fallbackLookup)
     {
-        if (TryContainsCanonicalOriginalText(
-                targetLanguage,
-                engine,
-                gameVersion,
+        if (CanonicalLookupContainsOriginalText(
+                canonicalLookup,
                 text) ||
-            TryFindTranslatedCanonicalText(
-                targetLanguage,
-                engine,
-                gameVersion,
-                text,
-                out _) ||
+            CanonicalLookupContainsTranslatedText(
+                canonicalLookup,
+                text) ||
             TryContainsFallbackLookupKey(
                 fallbackLookup,
                 text))
@@ -1680,20 +1854,55 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                    out var prefix,
                    out _,
                    out _,
-                   out _) &&
-               (TryContainsCanonicalOriginalText(
-                    targetLanguage,
-                    engine,
-                    gameVersion,
+                    out _) &&
+               (CanonicalLookupContainsOriginalText(
+                    canonicalLookup,
                     prefix) ||
-                TryFindTranslatedCanonicalText(
-                    targetLanguage,
-                    engine,
-                    gameVersion,
-                    prefix,
-                    out _) ||
+                CanonicalLookupContainsTranslatedText(
+                    canonicalLookup,
+                    prefix) ||
                 TryContainsFallbackLookupKey(
                     fallbackLookup,
+                    prefix));
+    }
+
+    /// <summary>
+    ///     Determines whether one ActionMenu text is already covered by shared
+    ///     canonical action, trait, or reference-text storage without relying
+    ///     on persisted ActionMenu fallback rows.
+    /// </summary>
+    /// <param name="text">The text to inspect.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>
+    ///     <see langword="true" /> when canonical storage already covers the
+    ///     text; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool IsKnownCanonicalOnlyActionMenuText(
+        string text,
+        CanonicalTextLookupSnapshot canonicalLookup)
+    {
+        if (CanonicalLookupContainsOriginalText(
+                canonicalLookup,
+                text) ||
+            CanonicalLookupContainsTranslatedText(
+                canonicalLookup,
+                text))
+        {
+            return true;
+        }
+
+        return TryParseTrailingLevelToken(
+                   NormalizeCanonicalLookupText(text),
+                   out var prefix,
+                   out _,
+                   out _,
+                   out _) &&
+               (CanonicalLookupContainsOriginalText(
+                    canonicalLookup,
+                    prefix) ||
+                CanonicalLookupContainsTranslatedText(
+                    canonicalLookup,
                     prefix));
     }
 
@@ -1701,8 +1910,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Determines whether one canonical original ActionMenu-facing text
     ///     already exists in shared action, trait, or reference-text storage.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to test.</param>
     /// <returns>
@@ -1710,8 +1918,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     original text; otherwise <see langword="false" />.
     /// </returns>
     private static bool TryContainsCanonicalOriginalText(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText)
     {
@@ -1720,11 +1927,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return false;
         }
 
-        if (ContainsCanonicalOriginalTextCore(
-                targetLanguage,
-                engine,
-                gameVersion,
-                originalText))
+        var canonicalLookup = ActionMenuCanonicalTextCache.GetSnapshot(
+            scope,
+            gameVersion);
+        if (canonicalLookup.ContainsOriginalText(originalText))
         {
             return true;
         }
@@ -1734,55 +1940,84 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                    normalizedText,
                    originalText,
                    StringComparison.Ordinal) &&
-               ContainsCanonicalOriginalTextCore(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
+               canonicalLookup.ContainsOriginalText(
                    normalizedText);
     }
 
     /// <summary>
-    ///     Determines whether one exact canonical original ActionMenu-facing
-    ///     text exists in shared canonical storage without applying
-    ///     ActionMenu-specific normalization.
+    ///     Gets whether one canonical lookup snapshot already contains the
+    ///     supplied original-facing text after ActionMenu normalization.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
     /// <param name="originalText">The original text to test.</param>
     /// <returns>
-    ///     <see langword="true" /> when canonical storage already contains the
-    ///     original text; otherwise <see langword="false" />.
+    ///     <see langword="true" /> when the text already exists in canonical
+    ///     storage; otherwise <see langword="false" />.
     /// </returns>
-    private static bool ContainsCanonicalOriginalTextCore(
-        string targetLanguage,
-        int engine,
-        string? gameVersion,
+    private static bool CanonicalLookupContainsOriginalText(
+        CanonicalTextLookupSnapshot canonicalLookup,
         string originalText)
     {
-        return ActionTooltipCacheManager.ContainsOriginalText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   originalText) ||
-               TraitCacheManager.ContainsOriginalText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   originalText) ||
-               ReferenceTextCacheRegistry.ContainsOriginalText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   originalText);
+        if (string.IsNullOrWhiteSpace(originalText))
+        {
+            return false;
+        }
+
+        if (canonicalLookup.ContainsOriginalText(originalText))
+        {
+            return true;
+        }
+
+        var normalizedText = NormalizeCanonicalLookupText(originalText);
+        return !string.Equals(
+                   normalizedText,
+                   originalText,
+                   StringComparison.Ordinal) &&
+               canonicalLookup.ContainsOriginalText(
+                   normalizedText);
+    }
+
+    /// <summary>
+    ///     Gets whether one canonical lookup snapshot already resolves the
+    ///     supplied translated-facing text after ActionMenu normalization.
+    /// </summary>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <param name="translatedText">The translated text to test.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the translated text is already
+    ///     reversible from canonical storage; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool CanonicalLookupContainsTranslatedText(
+        CanonicalTextLookupSnapshot canonicalLookup,
+        string translatedText)
+    {
+        if (string.IsNullOrWhiteSpace(translatedText))
+        {
+            return false;
+        }
+
+        if (canonicalLookup.TryFindOriginalText(
+                translatedText,
+                out _))
+        {
+            return true;
+        }
+
+        var normalizedText = NormalizeCanonicalLookupText(translatedText);
+        return !string.Equals(
+                   normalizedText,
+                   translatedText,
+                   StringComparison.Ordinal) &&
+               canonicalLookup.TryFindOriginalText(
+                   normalizedText,
+                   out _);
     }
 
     /// <summary>
     ///     Tries to resolve one translated structured-tooltip text from
     ///     canonical action or trait storage.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The resolved translated text.</param>
@@ -1790,18 +2025,37 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact translated text was found.
     /// </returns>
     private static bool TryFindTranslatedCanonicalText(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
+        string originalText,
+        out string translatedText)
+    {
+        return TryFindTranslatedCanonicalText(
+            ActionMenuCanonicalTextCache.GetSnapshot(
+                scope,
+                gameVersion),
+            originalText,
+            out translatedText);
+    }
+
+    /// <summary>
+    ///     Tries to resolve one exact translated structured-tooltip text from
+    ///     one aggregated canonical lookup snapshot.
+    /// </summary>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <param name="translatedText">The resolved translated text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact translated text was found.
+    /// </returns>
+    private static bool TryFindTranslatedCanonicalText(
+        CanonicalTextLookupSnapshot canonicalLookup,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        if (TryFindTranslatedCanonicalTextCore(
-                targetLanguage,
-                engine,
-                gameVersion,
+        if (canonicalLookup.TryFindTranslatedText(
                 originalText,
                 out translatedText))
         {
@@ -1812,53 +2066,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         return !string.Equals(
                    normalizedText,
                    originalText,
-                   StringComparison.Ordinal) &&
-               TryFindTranslatedCanonicalTextCore(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
+                    StringComparison.Ordinal) &&
+               canonicalLookup.TryFindTranslatedText(
                    normalizedText,
-                   out translatedText);
-    }
-
-    /// <summary>
-    ///     Tries one exact translated structured-tooltip lookup without any
-    ///     ActionMenu-specific text normalization.
-    /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
-    /// <param name="originalText">The original text to translate.</param>
-    /// <param name="translatedText">The resolved translated text.</param>
-    /// <returns>
-    ///     <see langword="true" /> when an exact translated text was found.
-    /// </returns>
-    private static bool TryFindTranslatedCanonicalTextCore(
-        string targetLanguage,
-        int engine,
-        string? gameVersion,
-        string originalText,
-        out string translatedText)
-    {
-        translatedText = string.Empty;
-
-        return ActionTooltipCacheManager.TryFindTranslatedText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   originalText,
-                   out translatedText) ||
-               TraitCacheManager.TryFindTranslatedText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   originalText,
-                   out translatedText) ||
-               ReferenceTextCacheRegistry.TryFindTranslatedText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   originalText,
                    out translatedText);
     }
 
@@ -1866,8 +2076,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tries to resolve one canonical original structured-tooltip text from
     ///     canonical action or trait storage.
     /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="visibleText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -1875,18 +2084,37 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when an exact original text was found.
     /// </returns>
     private static bool TryFindOriginalCanonicalText(
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
+        string visibleText,
+        out string originalText)
+    {
+        return TryFindOriginalCanonicalText(
+            ActionMenuCanonicalTextCache.GetSnapshot(
+                scope,
+                gameVersion),
+            visibleText,
+            out originalText);
+    }
+
+    /// <summary>
+    ///     Tries to resolve one exact canonical original structured-tooltip
+    ///     text from one aggregated canonical lookup snapshot.
+    /// </summary>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <param name="visibleText">The translated text to reverse.</param>
+    /// <param name="originalText">The resolved canonical original text.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact original text was found.
+    /// </returns>
+    private static bool TryFindOriginalCanonicalText(
+        CanonicalTextLookupSnapshot canonicalLookup,
         string visibleText,
         out string originalText)
     {
         originalText = string.Empty;
 
-        if (TryFindOriginalCanonicalTextCore(
-                targetLanguage,
-                engine,
-                gameVersion,
+        if (canonicalLookup.TryFindOriginalText(
                 visibleText,
                 out originalText))
         {
@@ -1898,52 +2126,8 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                    normalizedText,
                    visibleText,
                    StringComparison.Ordinal) &&
-               TryFindOriginalCanonicalTextCore(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
+               canonicalLookup.TryFindOriginalText(
                    normalizedText,
-                   out originalText);
-    }
-
-    /// <summary>
-    ///     Tries one exact canonical-original structured-tooltip lookup
-    ///     without any ActionMenu-specific text normalization.
-    /// </summary>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
-    /// <param name="gameVersion">The current game version.</param>
-    /// <param name="visibleText">The translated text to reverse.</param>
-    /// <param name="originalText">The resolved canonical original text.</param>
-    /// <returns>
-    ///     <see langword="true" /> when an exact original text was found.
-    /// </returns>
-    private static bool TryFindOriginalCanonicalTextCore(
-        string targetLanguage,
-        int engine,
-        string? gameVersion,
-        string visibleText,
-        out string originalText)
-    {
-        originalText = string.Empty;
-
-        return ActionTooltipCacheManager.TryFindOriginalText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   visibleText,
-                   out originalText) ||
-               TraitCacheManager.TryFindOriginalText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   visibleText,
-                   out originalText) ||
-               ReferenceTextCacheRegistry.TryFindOriginalText(
-                   targetLanguage,
-                   engine,
-                   gameVersion,
-                   visibleText,
                    out originalText);
     }
 
@@ -1951,8 +2135,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Canonicalizes one integer-keyed payload map back to original text.
     /// </summary>
     /// <param name="sourceValues">The currently visible values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The reverse lookup built from persisted ActionMenu rows.
@@ -1964,8 +2147,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The canonicalized original-facing map.</returns>
     private SortedDictionary<int, string> CanonicalizeIntMap(
         SortedDictionary<int, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -1976,8 +2158,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var originalText = ResolveOriginalText(
                 visibleText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(
@@ -1998,8 +2179,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Canonicalizes one text-node payload map back to original text.
     /// </summary>
     /// <param name="sourceValues">The currently visible values.</param>
-    /// <param name="targetLanguage">The target translation language.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="fallbackLookup">
     ///     The reverse lookup built from persisted ActionMenu rows.
@@ -2011,8 +2191,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     /// <returns>The canonicalized original-facing map.</returns>
     private SortedDictionary<string, string> CanonicalizeStringMap(
         SortedDictionary<string, string> sourceValues,
-        string targetLanguage,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         IReadOnlyDictionary<string, string> fallbackLookup,
         ref bool changed)
@@ -2024,8 +2203,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         {
             var originalText = ResolveOriginalText(
                 visibleText,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 fallbackLookup);
             if (!string.Equals(
@@ -2047,6 +2225,7 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     previously translated window chrome can be reused without calling
     ///     the remote translator again.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalLookup">
     ///     Receives the translated-to-original reverse lookup.
     /// </param>
@@ -2054,16 +2233,102 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Receives the original-to-translated forward lookup.
     /// </param>
     private void BuildPersistedActionMenuLookups(
+        SourceClientLanguage sourceLanguage,
         out Dictionary<string, string> originalLookup,
         out Dictionary<string, string> translatedLookup,
         uint? classJobId = null,
-        string? classJobName = null)
+        string? classJobName = null,
+        TranslationReuseScope? operationScope = null)
     {
-        originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-        translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var scope = operationScope ?? this.CreateTranslationReuseScope(
+            sourceLanguage);
+        var snapshot = this.GetPersistedActionMenuLookupSnapshot(
+            sourceLanguage,
+            scope,
+            classJobId,
+            classJobName);
+        originalLookup = new Dictionary<string, string>(
+            snapshot.OriginalLookup,
+            StringComparer.Ordinal);
+        translatedLookup = new Dictionary<string, string>(
+            snapshot.TranslatedLookup,
+            StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    ///     Gets one cached persisted ActionMenu fallback snapshot for the
+    ///     current scope, class/job, and canonical-cache revisions.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <param name="classJobId">The current class/job identifier.</param>
+    /// <param name="classJobName">The current class/job name.</param>
+    /// <returns>The cached persisted fallback snapshot.</returns>
+    private PersistedActionMenuLookupSnapshot GetPersistedActionMenuLookupSnapshot(
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
+        uint? classJobId,
+        string? classJobName)
+    {
+        if (this.persistedLookupSnapshots.Count > 64)
+        {
+            this.persistedLookupSnapshots.Clear();
+        }
+
+        var gameVersion = GetGameVersion();
+        var cacheKey = BuildPersistedLookupSnapshotCacheKey(
+            sourceLanguage,
+            scope,
+            gameVersion,
+            classJobId,
+            classJobName);
+        return this.persistedLookupSnapshots.GetOrAdd(
+            cacheKey,
+            static (_, state) => state.Handler.BuildPersistedActionMenuLookupSnapshot(
+                state.SourceLanguage,
+                state.Scope,
+                state.GameVersion,
+                state.ClassJobId,
+                state.ClassJobName),
+            (
+                Handler: this,
+                SourceLanguage: sourceLanguage,
+                Scope: scope,
+                GameVersion: gameVersion,
+                ClassJobId: classJobId,
+                ClassJobName: classJobName));
+    }
+
+    /// <summary>
+    ///     Builds one persisted ActionMenu fallback snapshot from the current
+    ///     GameWindow cache while excluding labels already resolved by
+    ///     canonical action, trait, or reference-text storage.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobId">The current class/job identifier.</param>
+    /// <param name="classJobName">The current class/job name.</param>
+    /// <returns>The built persisted fallback snapshot.</returns>
+    private PersistedActionMenuLookupSnapshot BuildPersistedActionMenuLookupSnapshot(
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        uint? classJobId,
+        string? classJobName)
+    {
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
         var ambiguousOriginalKeys = new HashSet<string>(StringComparer.Ordinal);
+        var canonicalLookup = ActionMenuCanonicalTextCache.GetSnapshot(
+            scope,
+            gameVersion);
 
         this.AppendPersistedWindowLookups(
+            sourceLanguage,
+            scope,
+            gameVersion,
+            canonicalLookup,
             MainCommandWindowTitle,
             translatedLookup,
             originalLookup,
@@ -2071,18 +2336,65 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             expectedClassJobId: null,
             expectedClassJobName: null);
         this.AppendPersistedWindowLookups(
+            sourceLanguage,
+            scope,
+            gameVersion,
+            canonicalLookup,
             this.AddonName,
             translatedLookup,
             originalLookup,
             ambiguousOriginalKeys,
             classJobId,
             classJobName);
+        return new PersistedActionMenuLookupSnapshot(
+            originalLookup,
+            translatedLookup);
+    }
+
+    /// <summary>
+    ///     Builds one stable persisted-lookup snapshot cache key from the
+    ///     operation-captured source, reuse scope, class/job, and the current
+    ///     GameWindow and canonical-cache revisions.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="classJobId">The current class/job identifier.</param>
+    /// <param name="classJobName">The current class/job name.</param>
+    /// <returns>The stable cache key.</returns>
+    private static string BuildPersistedLookupSnapshotCacheKey(
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        uint? classJobId,
+        string? classJobName)
+    {
+        var source = RuntimeLanguageHelper.NormalizeLanguage(
+            sourceLanguage.PersistenceCode);
+        var target = RuntimeLanguageHelper.NormalizeLanguage(
+            scope.TargetLanguageCode);
+        var engine = scope.RequireMatchingEngine
+            ? scope.TranslationEngine?.ToString() ?? string.Empty
+            : "*";
+        return string.Join(
+            "\u001F",
+            source,
+            target,
+            engine,
+            gameVersion ?? string.Empty,
+            classJobId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            classJobName ?? string.Empty,
+            GameWindowCacheManager.Revision.ToString(CultureInfo.InvariantCulture),
+            ActionTooltipCacheManager.Revision.ToString(CultureInfo.InvariantCulture),
+            TraitCacheManager.Revision.ToString(CultureInfo.InvariantCulture),
+            ReferenceTextCacheRegistry.Revision.ToString(CultureInfo.InvariantCulture));
     }
 
     /// <summary>
     ///     Appends one persisted window's forward and reverse text pairs into
     ///     the ActionMenu fallback lookups.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="windowTitle">The persisted window title to read.</param>
     /// <param name="translatedLookup">The original-to-translated lookup.</param>
     /// <param name="originalLookup">The translated-to-original lookup.</param>
@@ -2090,6 +2402,10 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     ///     Tracks translated texts that map to multiple originals.
     /// </param>
     private void AppendPersistedWindowLookups(
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        CanonicalTextLookupSnapshot canonicalLookup,
         string windowTitle,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
@@ -2099,13 +2415,14 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     {
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      windowTitle,
-                     RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                         this.config.Lang),
-                     this.config.ChosenTransEngine,
-                     GetGameVersion(),
+                     scope,
+                     gameVersion,
                      expectedClassJobId).OrderBy(candidate => candidate.Id))
         {
-            if (!TryParseSerializedPayload(
+            if (!MatchesPersistedSourceIdentity(
+                    row.OriginalWindowStringsLang,
+                    sourceLanguage) ||
+                !TryParseSerializedPayload(
                     row.OriginalWindowStrings,
                     out var rowOriginalPayload) ||
                 !TryParseSerializedPayload(
@@ -2135,18 +2452,27 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             AppendLookupEntries(
                 rowOriginalPayload.AtkValues,
                 rowTranslatedPayload.AtkValues,
+                scope,
+                gameVersion,
+                canonicalLookup,
                 translatedLookup,
                 originalLookup,
                 ambiguousOriginalKeys);
             AppendLookupEntries(
                 rowOriginalPayload.StringArrayValues,
                 rowTranslatedPayload.StringArrayValues,
+                scope,
+                gameVersion,
+                canonicalLookup,
                 translatedLookup,
                 originalLookup,
                 ambiguousOriginalKeys);
             AppendLookupEntries(
                 rowOriginalPayload.TextNodes,
                 rowTranslatedPayload.TextNodes,
+                scope,
+                gameVersion,
+                canonicalLookup,
                 translatedLookup,
                 originalLookup,
                 ambiguousOriginalKeys);
@@ -2276,6 +2602,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static void AppendLookupEntries(
         IReadOnlyDictionary<int, string> originalValues,
         IReadOnlyDictionary<int, string> translatedValues,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        CanonicalTextLookupSnapshot canonicalLookup,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
         ISet<string> ambiguousOriginalKeys)
@@ -2290,6 +2619,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             TryAddLookupEntry(
                 originalText,
                 translatedText,
+                scope,
+                gameVersion,
+                canonicalLookup,
                 translatedLookup,
                 originalLookup,
                 ambiguousOriginalKeys);
@@ -2310,6 +2642,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static void AppendLookupEntries(
         IReadOnlyDictionary<string, string> originalValues,
         IReadOnlyDictionary<string, string> translatedValues,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        CanonicalTextLookupSnapshot canonicalLookup,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
         ISet<string> ambiguousOriginalKeys)
@@ -2324,6 +2659,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             TryAddLookupEntry(
                 originalText,
                 translatedText,
+                scope,
+                gameVersion,
+                canonicalLookup,
                 translatedLookup,
                 originalLookup,
                 ambiguousOriginalKeys);
@@ -2344,6 +2682,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static void TryAddLookupEntry(
         string? originalText,
         string? translatedText,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        CanonicalTextLookupSnapshot canonicalLookup,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
         ISet<string> ambiguousOriginalKeys)
@@ -2351,6 +2692,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         TryAddLookupPair(
             originalText,
             translatedText,
+            scope,
+            gameVersion,
+            canonicalLookup,
             translatedLookup,
             originalLookup,
             ambiguousOriginalKeys);
@@ -2378,6 +2722,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         TryAddLookupPair(
             originalPrefix,
             translatedPrefix,
+            scope,
+            gameVersion,
+            canonicalLookup,
             translatedLookup,
             originalLookup,
             ambiguousOriginalKeys);
@@ -2398,6 +2745,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static void TryAddLookupPair(
         string? originalText,
         string? translatedText,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        CanonicalTextLookupSnapshot canonicalLookup,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
         ISet<string> ambiguousOriginalKeys)
@@ -2405,6 +2755,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         TryAddLookupPairCore(
             originalText,
             translatedText,
+            scope,
+            gameVersion,
+            canonicalLookup,
             translatedLookup,
             originalLookup,
             ambiguousOriginalKeys);
@@ -2425,6 +2778,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             TryAddLookupPairCore(
                 normalizedOriginalText,
                 normalizedTranslatedText,
+                scope,
+                gameVersion,
+                canonicalLookup,
                 translatedLookup,
                 originalLookup,
                 ambiguousOriginalKeys);
@@ -2445,6 +2801,9 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     private static void TryAddLookupPairCore(
         string? originalText,
         string? translatedText,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        CanonicalTextLookupSnapshot canonicalLookup,
         IDictionary<string, string> translatedLookup,
         IDictionary<string, string> originalLookup,
         ISet<string> ambiguousOriginalKeys)
@@ -2459,7 +2818,19 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
             return;
         }
 
-        translatedLookup[originalText] = translatedText;
+        if (!ShouldSkipPersistedForwardLookupEntry(
+                originalText,
+                canonicalLookup))
+        {
+            translatedLookup[originalText] = translatedText;
+        }
+
+        if (ShouldSkipPersistedReverseLookupEntry(
+                translatedText,
+                canonicalLookup))
+        {
+            return;
+        }
 
         if (ambiguousOriginalKeys.Contains(translatedText))
         {
@@ -2481,6 +2852,116 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Gets whether one persisted forward lookup entry is redundant because
+    ///     canonical action, trait, or reference-text storage already resolves
+    ///     the same original-facing text.
+    /// </summary>
+    /// <param name="originalText">The original text to test.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <returns>
+    ///     <see langword="true" /> when persisted forward fallback is not
+    ///     needed; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool ShouldSkipPersistedForwardLookupEntry(
+        string originalText,
+        CanonicalTextLookupSnapshot canonicalLookup)
+    {
+        return CanonicalLookupCanTranslateText(
+            canonicalLookup,
+            originalText);
+    }
+
+    /// <summary>
+    ///     Gets whether one persisted reverse lookup entry is redundant because
+    ///     canonical action, trait, or reference-text storage already resolves
+    ///     the same translated-facing text.
+    /// </summary>
+    /// <param name="translatedText">The translated text to test.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <returns>
+    ///     <see langword="true" /> when persisted reverse fallback is not
+    ///     needed; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool ShouldSkipPersistedReverseLookupEntry(
+        string translatedText,
+        CanonicalTextLookupSnapshot canonicalLookup)
+    {
+        return CanonicalLookupCanResolveOriginalText(
+            canonicalLookup,
+            translatedText);
+    }
+
+    /// <summary>
+    ///     Gets whether the canonical lookup snapshot can translate one
+    ///     ActionMenu text exactly, after normalization, or by level-aware
+    ///     prefix reuse.
+    /// </summary>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <param name="originalText">The original text to translate.</param>
+    /// <returns>
+    ///     <see langword="true" /> when canonical storage already translates
+    ///     the text; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool CanonicalLookupCanTranslateText(
+        CanonicalTextLookupSnapshot canonicalLookup,
+        string originalText)
+    {
+        if (TryFindTranslatedCanonicalText(
+                canonicalLookup,
+                originalText,
+                out _))
+        {
+            return true;
+        }
+
+        return TryParseTrailingLevelToken(
+                   NormalizeCanonicalLookupText(originalText),
+                   out var prefix,
+                   out _,
+                   out _,
+                   out _) &&
+               TryFindTranslatedCanonicalText(
+                   canonicalLookup,
+                   prefix,
+                   out _);
+    }
+
+    /// <summary>
+    ///     Gets whether the canonical lookup snapshot can reverse one
+    ///     ActionMenu text exactly, after normalization, or by level-aware
+    ///     prefix reuse.
+    /// </summary>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <param name="translatedText">The translated text to reverse.</param>
+    /// <returns>
+    ///     <see langword="true" /> when canonical storage already reverses the
+    ///     text; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool CanonicalLookupCanResolveOriginalText(
+        CanonicalTextLookupSnapshot canonicalLookup,
+        string translatedText)
+    {
+        if (TryFindOriginalCanonicalText(
+                canonicalLookup,
+                translatedText,
+                out _))
+        {
+            return true;
+        }
+
+        return TryParseTrailingLevelToken(
+                   NormalizeCanonicalLookupText(translatedText),
+                   out var prefix,
+                   out _,
+                   out _,
+                   out _) &&
+               TryFindOriginalCanonicalText(
+                   canonicalLookup,
+                   prefix,
+                   out _);
+    }
+
+    /// <summary>
     ///     Tries to find one persisted ActionMenu fallback lookup entry while
     ///     tolerating formatting noise present in captured UI strings.
     /// </summary>
@@ -2497,19 +2978,26 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
         out string value)
     {
         value = string.Empty;
-        if (lookup.TryGetValue(text, out value))
+        if (lookup.TryGetValue(text, out var exactValue))
         {
+            value = exactValue;
             return true;
         }
 
         var normalizedText = NormalizeCanonicalLookupText(text);
-        return !string.Equals(
-                   normalizedText,
-                   text,
-                   StringComparison.Ordinal) &&
-               lookup.TryGetValue(
-                   normalizedText,
-                   out value);
+        if (!string.Equals(
+                normalizedText,
+                text,
+                StringComparison.Ordinal) &&
+            lookup.TryGetValue(
+                normalizedText,
+                out var normalizedValue))
+        {
+            value = normalizedValue;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -2567,4 +3055,307 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 [' ', '\r', '\n', '\t'],
                 StringSplitOptions.RemoveEmptyEntries));
     }
+
+    /// <summary>
+    ///     Filters one persisted ActionMenu payload pair down to the residual
+    ///     texts still needed by <see cref="GameWindow" /> fallback after
+    ///     canonical action, trait, and reference-text coverage is applied.
+    /// </summary>
+    /// <param name="scope">The immutable persistence scope.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="originalPayload">The original payload to persist.</param>
+    /// <param name="translatedPayload">The translated payload to persist.</param>
+    /// <returns>The filtered residual payload pair.</returns>
+    internal static (
+        DbFirstGameWindowPayload OriginalPayload,
+        DbFirstGameWindowPayload TranslatedPayload)
+        FilterPersistedPayloadPair(
+            TranslationReuseScope scope,
+            string? gameVersion,
+            DbFirstGameWindowPayload originalPayload,
+            DbFirstGameWindowPayload translatedPayload)
+    {
+        var canonicalLookup = ActionMenuCanonicalTextCache.GetSnapshot(
+            scope,
+            gameVersion);
+        var filteredOriginalAtkValues = new SortedDictionary<int, string>();
+        var filteredTranslatedAtkValues = new SortedDictionary<int, string>();
+        var filteredOriginalStringArrays = new SortedDictionary<int, string>();
+        var filteredTranslatedStringArrays = new SortedDictionary<int, string>();
+        var filteredOriginalTextNodes = new SortedDictionary<string, string>(
+            StringComparer.Ordinal);
+        var filteredTranslatedTextNodes = new SortedDictionary<string, string>(
+            StringComparer.Ordinal);
+
+        FilterPersistedLookupEntries(
+            originalPayload.AtkValues,
+            translatedPayload.AtkValues,
+            canonicalLookup,
+            filteredOriginalAtkValues,
+            filteredTranslatedAtkValues);
+        FilterPersistedLookupEntries(
+            originalPayload.StringArrayValues,
+            translatedPayload.StringArrayValues,
+            canonicalLookup,
+            filteredOriginalStringArrays,
+            filteredTranslatedStringArrays);
+        FilterPersistedLookupEntries(
+            originalPayload.TextNodes,
+            translatedPayload.TextNodes,
+            canonicalLookup,
+            filteredOriginalTextNodes,
+            filteredTranslatedTextNodes);
+
+        return (
+            new DbFirstGameWindowPayload(
+                filteredOriginalAtkValues,
+                filteredOriginalStringArrays,
+                filteredOriginalTextNodes),
+            new DbFirstGameWindowPayload(
+                filteredTranslatedAtkValues,
+                filteredTranslatedStringArrays,
+                filteredTranslatedTextNodes));
+    }
+
+    /// <summary>
+    ///     Filters one numeric payload map pair to only the residual entries
+    ///     still needed by persisted ActionMenu fallback.
+    /// </summary>
+    /// <param name="originalValues">The original payload values.</param>
+    /// <param name="translatedValues">The translated payload values.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <param name="filteredOriginalValues">Receives retained original values.</param>
+    /// <param name="filteredTranslatedValues">
+    ///     Receives retained translated values.
+    /// </param>
+    private static void FilterPersistedLookupEntries(
+        IReadOnlyDictionary<int, string> originalValues,
+        IReadOnlyDictionary<int, string> translatedValues,
+        CanonicalTextLookupSnapshot canonicalLookup,
+        IDictionary<int, string> filteredOriginalValues,
+        IDictionary<int, string> filteredTranslatedValues)
+    {
+        foreach (var (key, originalText) in originalValues)
+        {
+            if (!translatedValues.TryGetValue(key, out var translatedText) ||
+                !ShouldRetainPersistedLookupEntry(
+                    originalText,
+                    translatedText,
+                    canonicalLookup))
+            {
+                continue;
+            }
+
+            filteredOriginalValues[key] = originalText;
+            filteredTranslatedValues[key] = translatedText;
+        }
+    }
+
+    /// <summary>
+    ///     Filters one text-node payload map pair to only the residual entries
+    ///     still needed by persisted ActionMenu fallback.
+    /// </summary>
+    /// <param name="originalValues">The original payload values.</param>
+    /// <param name="translatedValues">The translated payload values.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <param name="filteredOriginalValues">Receives retained original values.</param>
+    /// <param name="filteredTranslatedValues">
+    ///     Receives retained translated values.
+    /// </param>
+    private static void FilterPersistedLookupEntries(
+        IReadOnlyDictionary<string, string> originalValues,
+        IReadOnlyDictionary<string, string> translatedValues,
+        CanonicalTextLookupSnapshot canonicalLookup,
+        IDictionary<string, string> filteredOriginalValues,
+        IDictionary<string, string> filteredTranslatedValues)
+    {
+        foreach (var (key, originalText) in originalValues)
+        {
+            if (!translatedValues.TryGetValue(key, out var translatedText) ||
+                !ShouldRetainPersistedLookupEntry(
+                    originalText,
+                    translatedText,
+                    canonicalLookup))
+            {
+                continue;
+            }
+
+            filteredOriginalValues[key] = originalText;
+            filteredTranslatedValues[key] = translatedText;
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether one persisted ActionMenu text pair must remain
+    ///     in the residual <see cref="GameWindow" /> payload because canonical
+    ///     storage still cannot fully replace both forward and reverse lookup
+    ///     behavior for that pair.
+    /// </summary>
+    /// <param name="originalText">The original-facing text.</param>
+    /// <param name="translatedText">The translated-facing text.</param>
+    /// <param name="canonicalLookup">The aggregated canonical lookup snapshot.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the pair should remain persisted;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool ShouldRetainPersistedLookupEntry(
+        string? originalText,
+        string? translatedText,
+        CanonicalTextLookupSnapshot canonicalLookup)
+    {
+        if (string.IsNullOrWhiteSpace(originalText) ||
+            string.IsNullOrWhiteSpace(translatedText) ||
+            string.Equals(
+                originalText,
+                translatedText,
+                StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return !ShouldSkipPersistedForwardLookupEntry(
+                   originalText,
+                   canonicalLookup) ||
+               !ShouldSkipPersistedReverseLookupEntry(
+                   translatedText,
+                   canonicalLookup);
+    }
+}
+
+/// <summary>
+///     Holds one cached persisted ActionMenu fallback snapshot whose contents
+///     are already filtered to only the residual window-chrome texts not
+///     covered by canonical action, trait, or reference-text storage.
+/// </summary>
+internal sealed class PersistedActionMenuLookupSnapshot
+{
+    /// <summary>
+    ///     Initializes a new instance of the
+    ///     <see cref="PersistedActionMenuLookupSnapshot" /> class.
+    /// </summary>
+    /// <param name="originalLookup">
+    ///     The translated-to-original reverse lookup.
+    /// </param>
+    /// <param name="translatedLookup">
+    ///     The original-to-translated forward lookup.
+    /// </param>
+    public PersistedActionMenuLookupSnapshot(
+        Dictionary<string, string> originalLookup,
+        Dictionary<string, string> translatedLookup)
+    {
+        this.OriginalLookup = originalLookup;
+        this.TranslatedLookup = translatedLookup;
+    }
+
+    /// <summary>
+    ///     Gets the translated-to-original reverse lookup.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> OriginalLookup { get; }
+
+    /// <summary>
+    ///     Gets the original-to-translated forward lookup.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> TranslatedLookup { get; }
+}
+
+/// <summary>
+///     Owns stable ActionMenu payload signatures for exactly one immutable
+///     translation reuse scope at a time.
+/// </summary>
+internal sealed class ActionMenuQueuedSignatureTracker
+{
+    private readonly object gate = new();
+    private readonly HashSet<string> signatures = new(StringComparer.Ordinal);
+    private QueueOwner? activeOwner;
+
+    /// <summary>
+    ///     Claims one stable payload signature for a captured operation scope.
+    /// </summary>
+    /// <param name="scope">The immutable scope captured before queueing.</param>
+    /// <param name="generation">The lifecycle generation captured before queueing.</param>
+    /// <param name="signature">The stable ActionMenu payload signature.</param>
+    /// <returns>True when this scope did not already own the signature.</returns>
+    public bool TryQueue(
+        TranslationReuseScope scope,
+        long generation,
+        string signature)
+    {
+        return this.TryQueue(
+            scope,
+            generation,
+            signature,
+            retryCoolingDown: false);
+    }
+
+    /// <summary>
+    ///     Claims one stable payload signature only when translation retry is
+    ///     currently eligible for its captured operation scope.
+    /// </summary>
+    /// <param name="scope">The immutable operation reuse scope.</param>
+    /// <param name="generation">The lifecycle generation captured before queueing.</param>
+    /// <param name="signature">The stable ActionMenu payload signature.</param>
+    /// <param name="retryCoolingDown">
+    ///     Whether the payload must wait before its next translation attempt.
+    /// </param>
+    /// <returns>True when this scope claimed the signature for queueing.</returns>
+    public bool TryQueue(
+        TranslationReuseScope scope,
+        long generation,
+        string signature,
+        bool retryCoolingDown)
+    {
+        if (retryCoolingDown)
+        {
+            return false;
+        }
+
+        lock (this.gate)
+        {
+            var owner = new QueueOwner(scope, generation);
+            if (this.activeOwner != owner)
+            {
+                this.activeOwner = owner;
+                this.signatures.Clear();
+            }
+
+            return this.signatures.Add(signature);
+        }
+    }
+
+    /// <summary>
+    ///     Releases a failed signature only when it belongs to the active
+    ///     operation scope and lifecycle generation.
+    /// </summary>
+    /// <param name="scope">The scope that owned the failed request.</param>
+    /// <param name="generation">The generation that owned the failed request.</param>
+    /// <param name="signature">The failed payload signature.</param>
+    public void Release(
+        TranslationReuseScope scope,
+        long generation,
+        string signature)
+    {
+        lock (this.gate)
+        {
+            if (this.activeOwner == new QueueOwner(scope, generation))
+            {
+                this.signatures.Remove(signature);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Clears all signatures during addon cleanup.
+    /// </summary>
+    public void Clear()
+    {
+        lock (this.gate)
+        {
+            this.activeOwner = null;
+            this.signatures.Clear();
+        }
+    }
+
+    private readonly record struct QueueOwner(
+        TranslationReuseScope Scope,
+        long Generation);
 }

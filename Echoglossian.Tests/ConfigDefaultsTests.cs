@@ -34,4 +34,48 @@ public class ConfigDefaultsTests
 
         Assert.False(config.UseToastGuiRuntimeForSupportedToasts);
     }
+
+    /// <summary>
+    ///     Ensures hover tooltips use a slightly smaller text scale than the
+    ///     global overlay default so dense RTL content remains readable.
+    /// </summary>
+    [Fact]
+    public void HoverTooltipFontScale_DefaultsToEightyFivePercent()
+    {
+        var config = new Config();
+        var field = typeof(Config).GetField(nameof(Config.HoverTooltipFontScale));
+
+        Assert.NotNull(field);
+        Assert.Equal(0.85f, Assert.IsType<float>(field!.GetValue(config)));
+    }
+
+    /// <summary>
+    ///     Ensures hover tooltips can use a wider layout cap than the legacy
+    ///     hardcoded width so long RTL paragraphs do not collapse into a tall
+    ///     column.
+    /// </summary>
+    [Fact]
+    public void HoverTooltipMaxWidth_DefaultsToSevenHundredTwentyPixels()
+    {
+        var config = new Config();
+        var field = typeof(Config).GetField(nameof(Config.HoverTooltipMaxWidth));
+
+        Assert.NotNull(field);
+        Assert.Equal(720f, Assert.IsType<float>(field!.GetValue(config)));
+    }
+
+    /// <summary>
+    ///     Ensures texture-backed complex-script text uses a slightly tighter
+    ///     default line height so multiline output does not become overly tall.
+    /// </summary>
+    [Fact]
+    public void TexturePresentationLineHeightScale_DefaultsToNinetyPercent()
+    {
+        var config = new Config();
+        var field = typeof(Config).GetField(
+            nameof(Config.TexturePresentationLineHeightScale));
+
+        Assert.NotNull(field);
+        Assert.Equal(0.9f, Assert.IsType<float>(field!.GetValue(config)));
+    }
 }
