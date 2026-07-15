@@ -1,0 +1,41 @@
+---
+title: Build, Test, and Contributing
+description: Local validation and contribution expectations for the plugin and the GitHub Pages docs site.
+---
+
+## Repository Rules For This Site
+
+- `Echoglossian.Docs/` is intentionally not part of `Echoglossian.sln`.
+- The root plugin project explicitly excludes the docs tree from `Compile`, `EmbeddedResource`, and `None`.
+- The docs deployment flow is separate from the plugin and D17 release flow.
+
+## Local Validation
+
+Plugin validation:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Docs-site validation:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd ci
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Contribution Expectations
+
+- keep changes narrow
+- preserve current behavior unless the change explicitly targets behavior
+- reuse shared plugin architecture instead of introducing parallel paths
+- keep public docs curated and audience-specific instead of publishing internal notes wholesale
+
+## Release Boundary
+
+This public documentation site intentionally does not describe the private release-maintainer flow for external manifest submission. That workflow stays in repository-internal documentation.

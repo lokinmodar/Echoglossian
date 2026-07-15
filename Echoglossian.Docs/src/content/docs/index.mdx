@@ -1,0 +1,40 @@
+---
+title: Echoglossian Documentation
+description: Curated setup, usage, architecture, and contribution guides.
+template: splash
+hero:
+  title: Echoglossian Documentation
+  tagline: Public setup guides for plugin users and public technical reference for contributors, isolated from the plugin build and release flow.
+  actions:
+    - text: User Guides
+      link: /users/
+      icon: right-arrow
+    - text: Technical Docs
+      link: /technical/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Public Scope
+
+This site publishes curated documentation only.
+
+- Plugin usage, setup, configuration, and troubleshooting live here.
+- Current architecture, runtime flow, and contributor guidance live here.
+- Internal handoffs, release-maintainer notes, plans, and backlog material stay in the repository `docs/` tree and are not published by this site.
+
+## Start Here
+
+<CardGrid stagger>
+  <Card title="Plugin User Docs" icon="seti:gear" href="/users/">
+    Installation, first run, provider setup, presentation modes, support coverage, and troubleshooting.
+  </Card>
+  <Card title="Technical Docs" icon="seti:code" href="/technical/">
+    Runtime architecture, translation pipeline, persistence boundaries, diagnostics, and development workflow.
+  </Card>
+</CardGrid>
+
+## Localization Model
+
+The site exposes the same locale list as the plugin resource files. English is the neutral source locale. If a localized page does not exist yet, Starlight renders the English page with its built-in untranslated-content notice instead of producing a broken route.

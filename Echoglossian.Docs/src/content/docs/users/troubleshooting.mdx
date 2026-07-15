@@ -1,0 +1,44 @@
+---
+title: Troubleshooting and FAQ
+description: Common setup, provider, and surface-coverage issues.
+---
+
+## Translation Does Not Stay Enabled
+
+Check these first:
+
+- target language and engine match
+- provider configuration is complete
+- any required downloaded font assets are present
+
+If one of those checks fails, global translation may switch itself back off.
+
+## The Engine Picker Does Not Show The Provider I Expected
+
+Engine visibility depends on the selected target language. Change the target language or switch to an engine family with broader coverage.
+
+## The Overlay Works But Native Text Looks Wrong
+
+That usually means the translation pipeline is healthy and the problem is surface-specific native layout. Switch that surface back to overlay-only mode first, then decide whether native presentation is still worth using there.
+
+## A Specific Surface Does Not Translate
+
+Verify all three scopes:
+
+- global translation is active
+- the surface family toggle is enabled
+- the specific surface toggle is enabled
+
+Then compare the surface against the [Support Matrix](/users/support-matrix/).
+
+## What Should I Share When Reporting A Problem
+
+Useful information:
+
+- plugin version
+- source and target languages
+- selected engine
+- target surface name
+- whether you were using overlay, native, or swap mode
+
+Do not include real provider keys or secrets in the report.

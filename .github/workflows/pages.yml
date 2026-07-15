@@ -1,0 +1,79 @@
+name: GitHub Pages
+
+on:
+  pull_request:
+    branches:
+      - v4-series
+    paths:
+      - .github/workflows/pages.yml
+      - Echoglossian.Docs/**
+      - Properties/Resources*.resx
+  push:
+    branches:
+      - v4-series
+    paths:
+      - .github/workflows/pages.yml
+      - Echoglossian.Docs/**
+      - Properties/Resources*.resx
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Echoglossian.Docs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Echoglossian.Docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate locale mapping
+        run: npm run test:locales
+
+      - name: Check locale configuration
+        run: npm run check:locales
+
+      - name: Run Astro checks
+        run: npm run check
+
+      - name: Build site
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: Echoglossian.Docs/dist
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/v4-series'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
