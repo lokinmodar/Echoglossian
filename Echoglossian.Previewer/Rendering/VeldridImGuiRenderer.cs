@@ -335,7 +335,7 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
         return resourceSet;
     }
 
-    private void RecreateFontDeviceTexture()
+    internal void RecreateFontDeviceTexture()
     {
         ImGuiIOPtr io = ImGui.GetIO();
         byte* pixels = null;

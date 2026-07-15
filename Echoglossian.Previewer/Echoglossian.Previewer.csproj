@@ -23,6 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\Font\**\*">
+      <Link>Font\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Echoglossian.csproj" />
   </ItemGroup>
 

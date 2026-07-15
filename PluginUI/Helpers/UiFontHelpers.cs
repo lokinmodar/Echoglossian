@@ -10,7 +10,7 @@ namespace Echoglossian;
 /// </summary>
 public partial class Echoglossian
 {
-  public static readonly string FontFileName = "NotoSans-Medium.ttf";
+  public static readonly string FontFileName = UiFontFileNames.BaseFontFileName;
 
   public static string SpecialFontFileName = string.Empty;
   public ImFontPtr ConfigUiFont;
@@ -46,20 +46,30 @@ public partial class Echoglossian
     AdjustLanguageForFontBuild();
 
     var resolvedSpecialFontPath =
-        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{SpecialFontFileName}";
+        UiFontFileNames.ResolvePath(
+            PluginInterface.AssemblyLocation.DirectoryName!,
+            SpecialFontFileName);
     SpecialFontFilePath = AssetsManager.RequiresDownloadedAsset(
             SpecialFontFileName) &&
         !File.Exists(resolvedSpecialFontPath)
         ? string.Empty
         : resolvedSpecialFontPath;
     FontFilePath =
-        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}{FontFileName}";
+        UiFontFileNames.ResolvePath(
+            PluginInterface.AssemblyLocation.DirectoryName!,
+            FontFileName);
     SymbolsFontFilePath =
-        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}symbols.ttf";
+        UiFontFileNames.ResolvePath(
+            PluginInterface.AssemblyLocation.DirectoryName!,
+            UiFontFileNames.SymbolsFontFileName);
     DummyFontFilePath =
-        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Regular.ttf";
+        UiFontFileNames.ResolvePath(
+            PluginInterface.AssemblyLocation.DirectoryName!,
+            UiFontFileNames.DummyFontFileName);
     LangComboFontFilePath =
-        $@"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSans-Medium-Custom2.otf";
+        UiFontFileNames.ResolvePath(
+            PluginInterface.AssemblyLocation.DirectoryName!,
+            UiFontFileNames.LanguageComboFontFileName);
     PluginRuntimeLog.Debug(
         "Fonts paths:\n " + SpecialFontFilePath + "\n " + FontFilePath +
         "\n " + SymbolsFontFilePath + "\n " + DummyFontFilePath);

@@ -24731,6 +24731,44 @@
                 profile is configured; otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.UiFontFileNames">
+            <summary>
+            Defines the common font files used by the plugin and standalone previewer.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.BaseFontFileName">
+            <summary>
+            Gets the primary Latin font file name.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.SymbolsFontFileName">
+            <summary>
+            Gets the symbol font file name.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.DummyFontFileName">
+            <summary>
+            Gets the font used to initialize language-specific font stacks.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.LanguageComboFontFileName">
+            <summary>
+            Gets the font used for the language-selection control.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.Helpers.UiFontFileNames.ComplementaryFontFileNames">
+            <summary>
+            Gets the complementary Japanese variable-font file names.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.UiFontFileNames.ResolvePath(System.String,System.String)">
+            <summary>
+            Resolves one font file below a plugin or previewer root directory.
+            </summary>
+            <param name="rootDirectory">The root containing the <c>Font</c> directory.</param>
+            <param name="fileName">The font file name.</param>
+            <returns>The absolute or relative font path.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.Helpers.UIWarningHelpers">
             <summary>
                 Utility methods for drawing UI warnings.
