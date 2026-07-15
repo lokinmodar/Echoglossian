@@ -345,3 +345,12 @@ If this analysis is accepted, the next implementation step should be:
 3. treat the typed `AddonItemDetail` path as a preferred resolver with heuristic fallback
 
 That is the smallest change with the best expected return.
+
+## #139 Text-Node Identity Rule
+
+The shared DB-first runtime identifies effectively visible duplicate text nodes
+as `nodeId:ordinal`. Capture, apply, stale recovery, and restore use the same
+allocation; a filtered visible node still consumes an ordinal. Source changes
+and target, engine, or policy changes invalidate the old publication state
+before a new scope generation is exposed. Restore writes only exact
+plugin-owned replacements.

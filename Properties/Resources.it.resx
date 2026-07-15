@@ -951,4 +951,28 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Modello Claude di livello più alto quando desideri la massima qualità.</value>
   </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[La traduzione OpenAI-compatible non è disponibile. Controlla endpoint, chiave API e impostazioni del modello.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La configurazione del provider OpenAI-compatible è incompleta. La traduzione non sarà disponibile finché endpoint, chiave API e modello non saranno compilati.</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Configura un endpoint, una chiave API e un modello OpenAI-compatible. Il recupero live dei modelli è facoltativo; se il provider non espone correttamente /models, usa un ID modello manuale.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Impossibile recuperare i modelli dal provider OpenAI-compatible configurato. Mantieni un ID modello manuale o verifica endpoint e credenziali.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Usa l'ID esatto del modello esposto dal tuo provider OpenAI-compatible quando l'elenco modelli live non è disponibile o è disattivato.</value>
+  </data>
 </root>

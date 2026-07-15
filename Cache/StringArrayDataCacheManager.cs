@@ -18,6 +18,14 @@ public static class StringArrayDataCacheManager
     private static readonly Dictionary<string, List<StringArrayDatas>> Cache =
         new(StringComparer.Ordinal);
 
+    private static long revision;
+
+    /// <summary>
+    ///     Gets the monotonically increasing revision of the canonical cache.
+    ///     Runtime-local lookup snapshots must rebuild when this changes.
+    /// </summary>
+    public static long Revision => Interlocked.Read(ref revision);
+
     /// <summary>
     ///     Loads all canonical <see cref="StringArrayDatas" /> rows into memory.
     /// </summary>
@@ -33,6 +41,7 @@ public static class StringArrayDataCacheManager
                 .ToList();
 
             Cache.Clear();
+            Interlocked.Increment(ref revision);
             foreach (var row in allRows)
             {
                 var typeKey = row.Type!;
@@ -72,7 +81,12 @@ public static class StringArrayDataCacheManager
 
         var existing = rows.FirstOrDefault(row =>
             row.ContextKey == newRecord.ContextKey &&
-            row.TranslationLang == newRecord.TranslationLang &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.OriginalLang,
+                newRecord.OriginalLang) &&
+            RuntimeLanguageHelper.LanguagesMatch(
+                row.TranslationLang,
+                newRecord.TranslationLang) &&
             row.TranslationEngine == newRecord.TranslationEngine &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
@@ -84,6 +98,7 @@ public static class StringArrayDataCacheManager
         }
 
         rows.Add(newRecord);
+        Interlocked.Increment(ref revision);
     }
 
     /// <summary>
@@ -91,22 +106,19 @@ public static class StringArrayDataCacheManager
     /// </summary>
     /// <param name="type">The logical payload type.</param>
     /// <param name="contextKey">The semantic surface context.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine id.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
     /// <param name="sourceContentHash">The stable source payload hash.</param>
     /// <returns>The matching cached row, or <see langword="null" />.</returns>
     public static StringArrayDatas? TryFindCanonicalMatch(
         string type,
         string contextKey,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string sourceContentHash)
     {
         if (string.IsNullOrWhiteSpace(type) ||
             string.IsNullOrWhiteSpace(contextKey) ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
             return null;
@@ -119,8 +131,10 @@ public static class StringArrayDataCacheManager
 
         return rows.FirstOrDefault(row =>
             row.ContextKey == contextKey &&
-            row.TranslationLang == lang &&
-            row.TranslationEngine == engine &&
+            scope.Matches(
+                row.OriginalLang,
+                row.TranslationLang,
+                row.TranslationEngine) &&
             GameVersionLookupHelper.MatchesStoredVersion(
                 row.GameVersion,
                 gameVersion) &&
@@ -133,20 +147,23 @@ public static class StringArrayDataCacheManager
     /// </summary>
     /// <param name="type">The logical payload type.</param>
     /// <param name="contextKey">The semantic surface context.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine id.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
+    /// <param name="includeHistoricalVersions">
+    ///     When set, returns source-compatible rows from every stored game
+    ///     version so callers can reuse translations only after independently
+    ///     matching unchanged canonical source text.
+    /// </param>
     /// <returns>The matching cached rows.</returns>
     public static IReadOnlyList<StringArrayDatas> GetCandidates(
         string type,
         string contextKey,
-        string lang,
-        int engine,
-        string? gameVersion)
+        TranslationReuseScope scope,
+        string? gameVersion,
+        bool includeHistoricalVersions = false)
     {
         if (string.IsNullOrWhiteSpace(type) ||
-            string.IsNullOrWhiteSpace(contextKey) ||
-            string.IsNullOrWhiteSpace(lang))
+            string.IsNullOrWhiteSpace(contextKey))
         {
             return [];
         }
@@ -159,11 +176,14 @@ public static class StringArrayDataCacheManager
         return rows
             .Where(row =>
                 row.ContextKey == contextKey &&
-                row.TranslationLang == lang &&
-                row.TranslationEngine == engine &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion))
+                scope.Matches(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    row.TranslationEngine) &&
+                (includeHistoricalVersions ||
+                 GameVersionLookupHelper.MatchesStoredVersion(
+                     row.GameVersion,
+                     gameVersion)))
             .ToList();
     }
 
@@ -173,8 +193,10 @@ public static class StringArrayDataCacheManager
     public static void Clear()
     {
         Cache.Clear();
+        Interlocked.Increment(ref revision);
         PluginRuntimeLog.Debug("[StringArrayDataCacheManager] Cleared StringArrayData cache.");
     }
+
 }
 
 

@@ -143,9 +143,16 @@ internal sealed class ToastGuiCaptureRuntime
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var lookupToast = this.BuildLookupMessage(
         toastType,
-        originalText);
+        originalText,
+        sourceLanguage);
     var storedToast = this.findToastMessage(lookupToast);
     if (this.IsStoredTranslationUsable(
             storedToast,
@@ -158,6 +165,7 @@ internal sealed class ToastGuiCaptureRuntime
     if (!this.TryBeginPrefetch(
             toastType,
             originalText,
+            sourceLanguage,
             out var inFlightKey))
     {
       return;
@@ -166,7 +174,8 @@ internal sealed class ToastGuiCaptureRuntime
     Task.Run(() => this.ResolveTranslationAsync(
         toastType,
         originalText,
-        inFlightKey));
+        inFlightKey,
+        sourceLanguage));
   }
 
   /// <summary>
@@ -175,6 +184,7 @@ internal sealed class ToastGuiCaptureRuntime
   /// </summary>
   /// <param name="toastType">The persisted toast type.</param>
   /// <param name="originalText">The original toast text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="inFlightKey">
   ///     Receives the unique in-flight key for the request.
   /// </param>
@@ -185,11 +195,13 @@ internal sealed class ToastGuiCaptureRuntime
   private bool TryBeginPrefetch(
       string toastType,
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out string inFlightKey)
   {
     inFlightKey = this.BuildInFlightKey(
         toastType,
-        originalText);
+        originalText,
+        sourceLanguage);
 
     lock (this.stateGate)
     {
@@ -204,17 +216,19 @@ internal sealed class ToastGuiCaptureRuntime
   /// <param name="toastType">The persisted toast type.</param>
   /// <param name="originalText">The original toast text.</param>
   /// <param name="inFlightKey">The key representing the queued request.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation attempt finishes.</returns>
   private async Task ResolveTranslationAsync(
       string toastType,
       string originalText,
-      string inFlightKey)
+      string inFlightKey,
+      SourceClientLanguage sourceLanguage)
   {
     try
     {
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
+          sourceLanguage,
           LangDict[LanguageInt].Code) ?? string.Empty;
       if (string.IsNullOrWhiteSpace(translatedText))
       {
@@ -225,7 +239,7 @@ internal sealed class ToastGuiCaptureRuntime
           new ToastMessage(
               toastType,
               originalText,
-              ClientStateInterface.ClientLanguage.Humanize(),
+              sourceLanguage.PersistenceCode,
               translatedText,
               LangDict[LanguageInt].Code,
               this.config.ChosenTransEngine,
@@ -247,15 +261,17 @@ internal sealed class ToastGuiCaptureRuntime
   /// </summary>
   /// <param name="toastType">The persisted toast type.</param>
   /// <param name="originalText">The original toast text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A formatted <see cref="ToastMessage" /> for DB lookup.</returns>
   private ToastMessage BuildLookupMessage(
       string toastType,
-      string originalText)
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return new ToastMessage(
         toastType,
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         LangDict[LanguageInt].Code,
         this.config.ChosenTransEngine,
@@ -298,12 +314,14 @@ internal sealed class ToastGuiCaptureRuntime
   /// </summary>
   /// <param name="toastType">The persisted toast type.</param>
   /// <param name="originalText">The original toast text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>The stable in-flight dedupe key.</returns>
   private string BuildInFlightKey(
       string toastType,
-      string originalText)
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return
-        $"{toastType}|{ClientStateInterface.ClientLanguage.Humanize()}|{LangDict[LanguageInt].Code}|{this.config.ChosenTransEngine}|{originalText}";
+        $"{toastType}|{sourceLanguage.PersistenceCode}|{LangDict[LanguageInt].Code}|{this.config.ChosenTransEngine}|{originalText}";
   }
 }

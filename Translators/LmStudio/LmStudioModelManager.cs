@@ -21,6 +21,14 @@ public static class LmStudioModelManager
         LmStudioTextModelDefaults.PredefinedModels;
 
     /// <summary>
+    ///     Restores the committed fallback model list.
+    /// </summary>
+    public static void ResetToDefault()
+    {
+        CurrentModelList = LmStudioTextModelDefaults.PredefinedModels;
+    }
+
+    /// <summary>
     ///     Refreshes the LM Studio model list from the live API.
     /// </summary>
     /// <param name="baseUrl">Base API URL.</param>
@@ -81,7 +89,7 @@ public static class LmStudioModelManager
         {
             PluginRuntimeLog.Warning(
                 $"[LmStudioModelManager] Failed to fetch models: {ex.Message}");
-            CurrentModelList = LmStudioTextModelDefaults.PredefinedModels;
+            ResetToDefault();
         }
     }
 }

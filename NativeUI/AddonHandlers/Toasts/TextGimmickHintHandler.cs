@@ -14,7 +14,9 @@ namespace Echoglossian.NativeUI.AddonHandlers.Toasts;
 ///     the TextGimmickHint.uld layout referenced by other open-source Dalamud
 ///     tooling.
 /// </summary>
-internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
+internal sealed class TextGimmickHintHandler :
+    IAddonTranslationHandler,
+    IVisibleDialogueRetranslationHandler
 {
   private const string TextGimmickHintAddonName = "_TextGimmickHint";
 
@@ -110,6 +112,174 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
         }));
   }
 
+  /// <inheritdoc />
+  public async Task<VisibleDialogueRetranslationResult>
+      RetranslateVisibleTextAndPersistAsync()
+  {
+    const VisibleStorySurfaceKind surface = VisibleStorySurfaceKind.TextGimmickHint;
+    var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
+    string originalText;
+    int requestId;
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return new VisibleDialogueRetranslationResult(
+          false,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+    }
+
+    var sourceLang = sourceLanguage.ProviderCode;
+    var targetLang = LangDict[LanguageInt].Code;
+
+    lock (this.stateGate)
+    {
+      originalText = this.currentOriginalText;
+      if (string.IsNullOrWhiteSpace(originalText))
+      {
+        return new VisibleDialogueRetranslationResult(
+            false,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+      }
+
+      this.activeRequestId++;
+      requestId = this.activeRequestId;
+      this.translationInFlight = true;
+      this.lastFailedOriginalText = string.Empty;
+    }
+
+    try
+    {
+      var translatedText = await this.translationService.TranslateAsync(
+              originalText,
+              sourceLanguage,
+              targetLang,
+              TranslationSurfaceGroup.Dialogue)
+          .ConfigureAwait(false) ?? string.Empty;
+
+      if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              originalText,
+              translatedText,
+              sourceLang,
+              targetLang))
+      {
+        lock (this.stateGate)
+        {
+          if (requestId == this.activeRequestId)
+          {
+            this.translationInFlight = false;
+            this.lastFailedOriginalText = originalText;
+          }
+        }
+
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoUsableTranslationMessage(surface));
+      }
+
+      var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
+      var translatedGimmickHint = new TextGimmickHintMessage(
+          originalText,
+          sourceLanguage.PersistenceCode,
+          translatedText,
+          targetLang,
+          dialogueTranslationEngine,
+          DateTime.Now,
+          DateTime.Now);
+      var persistenceResult = await this.insertTextGimmickHintMessageAsync(
+              translatedGimmickHint)
+          .ConfigureAwait(false);
+      var persistenceSucceeded = !persistenceResult.StartsWith(
+          "ErrorSavingData:",
+          StringComparison.Ordinal) &&
+                                 !string.Equals(
+                                     persistenceResult,
+                                     "No data to save.",
+                                     StringComparison.Ordinal);
+      var replacementText = this.NormalizeForReplacement(translatedText);
+      var sourceChangedBeforeApply = false;
+      lock (this.stateGate)
+      {
+        sourceChangedBeforeApply = requestId != this.activeRequestId;
+        if (!sourceChangedBeforeApply)
+        {
+          this.currentTranslatedText = translatedText;
+          this.currentReplacementText = replacementText;
+          this.translationInFlight = false;
+          this.lastFailedOriginalText = string.Empty;
+        }
+      }
+
+      if (!sourceChangedBeforeApply)
+      {
+        this.RecordDiagnosticsSnapshot(
+            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+            originalText,
+            translatedText,
+            dialogueTranslationEngine);
+        this.PublishOverlay(originalText, translatedText, "explicit-retranslate");
+      }
+
+      if (!persistenceSucceeded)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistenceFailedMessage(
+                surface,
+                persistenceResult));
+      }
+
+      if (sourceChangedBeforeApply)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            true,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(
+                surface));
+      }
+
+      return new VisibleDialogueRetranslationResult(
+          true,
+          true,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(surface));
+    }
+    catch (Exception ex)
+    {
+      lock (this.stateGate)
+      {
+        if (requestId == this.activeRequestId)
+        {
+          this.translationInFlight = false;
+          this.lastFailedOriginalText = originalText;
+        }
+      }
+
+      PluginRuntimeLog.Error(
+          $"[{TextGimmickHintAddonName}] Error retranslating visible TextGimmickHint text: {ex}");
+      return new VisibleDialogueRetranslationResult(
+          true,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslationFailedMessage(surface));
+    }
+  }
+
   /// <summary>
   ///     Registers a local delegate for the specified addon event.
   /// </summary>
@@ -141,8 +311,17 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var textNode = this.resolveToastTextNode(addon);
-    if (!this.TryReadCurrentSource(textNode, out var originalText))
+    if (!this.TryReadCurrentSource(
+            textNode,
+            sourceLanguage,
+            out var originalText))
     {
       return;
     }
@@ -152,7 +331,10 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     //     $"[{TextGimmickHintAddonName}] trigger={type} captured source='{originalText}' " +
     //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
     //     $"swap={this.ShouldSwapTexts()}");
-    this.TryCaptureOrQueueSource(originalText, type.ToString());
+    this.TryCaptureOrQueueSource(
+        originalText,
+        type.ToString(),
+        sourceLanguage);
   }
 
   /// <summary>
@@ -168,8 +350,17 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       return;
     }
 
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
     var textNode = this.resolveToastTextNode(addon);
-    if (!this.TryReadCurrentSource(textNode, out var visibleOriginalText))
+    if (!this.TryReadCurrentSource(
+            textNode,
+            sourceLanguage,
+            out var visibleOriginalText))
     {
       return;
     }
@@ -182,7 +373,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     if (this.TryHandleVisibleSourceChange(
             visibleOriginalText,
-            $"{type}-visible-reconcile"))
+            $"{type}-visible-reconcile",
+            sourceLanguage))
     {
       return;
     }
@@ -194,7 +386,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     {
       if (this.TryCaptureOrQueueSource(
               visibleOriginalText,
-              $"{type}-visible-fallback"))
+              $"{type}-visible-fallback",
+              sourceLanguage))
       {
         return;
       }
@@ -280,6 +473,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
 
     this.TryRestoreNativeLayout(layoutSnapshot, layoutOriginalText);
+    VisibleStorySurfaceDiagnosticsStore.Clear(
+        VisibleStorySurfaceKind.TextGimmickHint);
     this.clearOverlay();
   }
 
@@ -351,13 +546,15 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="visibleOriginalText">The currently visible source line.</param>
   /// <param name="trigger">The trigger label used for capture or queueing.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>
   ///     <see langword="true" /> when the source changed and the new source was
   ///     handled immediately; otherwise, <see langword="false" />.
   /// </returns>
   private bool TryHandleVisibleSourceChange(
       string visibleOriginalText,
-      string trigger)
+      string trigger,
+      SourceClientLanguage sourceLanguage)
   {
     var shouldReconcile = false;
 
@@ -378,7 +575,8 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     this.RestoreTrackedNativeLayoutIfNeeded(visibleOriginalText);
     return this.TryCaptureOrQueueSource(
         visibleOriginalText,
-        trigger);
+        trigger,
+        sourceLanguage);
   }
 
   /// <summary>
@@ -387,13 +585,15 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="originalText">The current visible source line.</param>
   /// <param name="trigger">The trigger label associated with the call.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>
   ///     <see langword="true" /> when the source was handled immediately;
   ///     otherwise, <see langword="false" />.
   /// </returns>
   private bool TryCaptureOrQueueSource(
       string originalText,
-      string trigger)
+      string trigger,
+      SourceClientLanguage sourceLanguage)
   {
     if (this.TryGetCachedTranslation(
             originalText,
@@ -408,17 +608,19 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       return true;
     }
 
-    var lookupToast = this.BuildLookupMessage(originalText);
-    var storedToast = this.findTextGimmickHintMessage(lookupToast);
-    if (this.IsStoredTranslationUsable(storedToast, originalText))
+    if (this.TryLoadStoredTranslation(
+            originalText,
+            sourceLanguage,
+            out var storedTranslatedText,
+            out var storedReplacementText))
     {
       this.SetResolvedState(
           originalText,
-          storedToast!.TranslatedText!,
-          this.NormalizeForReplacement(storedToast.TranslatedText!));
+          storedTranslatedText,
+          storedReplacementText);
       this.PublishOverlay(
           originalText,
-          storedToast.TranslatedText!,
+          storedTranslatedText,
           trigger);
       return true;
     }
@@ -426,7 +628,10 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     if (this.TryQueueTranslation(originalText, out var requestId))
     {
       this.PublishOverlay(originalText, string.Empty, trigger);
-      Task.Run(() => this.ResolveTranslationAsync(originalText, requestId));
+      Task.Run(() => this.ResolveTranslationAsync(
+          originalText,
+          requestId,
+          sourceLanguage));
       return true;
     }
 
@@ -439,18 +644,23 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="originalText">The original gimmick-hint text.</param>
   /// <param name="requestId">The request identifier used to reject stale updates.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A task that completes when the translation attempt finishes.</returns>
   private async Task ResolveTranslationAsync(
       string originalText,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
+    var sourceLang = sourceLanguage.ProviderCode;
+    var targetLang = LangDict[LanguageInt].Code;
     string translatedText;
     try
     {
       translatedText = await this.translationService.TranslateAsync(
           originalText,
-          ClientStateInterface.ClientLanguage.Humanize(),
-          LangDict[LanguageInt].Code) ?? string.Empty;
+          sourceLanguage,
+          targetLang,
+          TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
     }
     catch (Exception ex)
     {
@@ -459,7 +669,11 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       translatedText = string.Empty;
     }
 
-    if (string.IsNullOrWhiteSpace(translatedText))
+    if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
+            originalText,
+            translatedText,
+            sourceLang,
+            targetLang))
     {
       // PluginRuntimeLog.Debug(
       //     $"[{TextGimmickHintAddonName}] trigger=async-resolve empty translation for source='{originalText}'");
@@ -477,18 +691,29 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
     }
 
     var replacementText = this.NormalizeForReplacement(translatedText);
+    var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
     // PluginRuntimeLog.Debug(
     //     $"[{TextGimmickHintAddonName}] trigger=async-resolve translation ready for source='{originalText}'");
     var translatedGimmickHint = new TextGimmickHintMessage(
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         translatedText,
-        LangDict[LanguageInt].Code,
-        this.config.ChosenTransEngine,
+        targetLang,
+        dialogueTranslationEngine,
         DateTime.Now,
         DateTime.Now);
 
-    await this.insertTextGimmickHintMessageAsync(translatedGimmickHint);
+    try
+    {
+      await this.insertTextGimmickHintMessageAsync(translatedGimmickHint)
+          .ConfigureAwait(false);
+    }
+    catch (Exception ex)
+    {
+      PluginRuntimeLog.Warning(
+          ex,
+          $"[{TextGimmickHintAddonName}] Failed to persist translated TextGimmickHint text.");
+    }
 
     lock (this.stateGate)
     {
@@ -503,6 +728,11 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
       this.lastFailedOriginalText = string.Empty;
     }
 
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+        originalText,
+        translatedText,
+        dialogueTranslationEngine);
     this.PublishOverlay(originalText, translatedText, "async-resolve");
   }
 
@@ -542,6 +772,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   ///     Attempts to load a stored gimmick-hint translation from the database.
   /// </summary>
   /// <param name="originalText">The source gimmick-hint text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="translatedText">Receives the translated text.</param>
   /// <param name="replacementText">Receives the normalized replacement text.</param>
   /// <returns>
@@ -550,11 +781,12 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// </returns>
   private bool TryLoadStoredTranslation(
       string originalText,
+      SourceClientLanguage sourceLanguage,
       out string translatedText,
       out string replacementText)
   {
     var lookup = this.findTextGimmickHintMessage(
-        this.BuildLookupMessage(originalText));
+        this.BuildLookupMessage(originalText, sourceLanguage));
     if (lookup == null ||
         !string.Equals(
             lookup.OriginalText,
@@ -569,29 +801,12 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     translatedText = lookup.TranslatedText!;
     replacementText = this.NormalizeForReplacement(translatedText);
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.DbReuse,
+        originalText,
+        translatedText,
+        lookup.TranslationEngine ?? this.GetDialogueTranslationEngineId());
     return true;
-  }
-
-  /// <summary>
-  ///     Determines whether a stored gimmick-hint row still represents a usable
-  ///     translation for the current source line.
-  /// </summary>
-  /// <param name="textGimmickHintMessage">The stored gimmick-hint row to validate.</param>
-  /// <param name="originalText">The expected original gimmick-hint text.</param>
-  /// <returns>
-  ///     <see langword="true" /> when the stored row contains a non-empty
-  ///     translation for the same source line; otherwise, <see langword="false" />.
-  /// </returns>
-  private bool IsStoredTranslationUsable(
-      TextGimmickHintMessage? textGimmickHintMessage,
-      string originalText)
-  {
-    return textGimmickHintMessage != null &&
-           string.Equals(
-               textGimmickHintMessage.OriginalText,
-               originalText,
-               StringComparison.Ordinal) &&
-           !string.IsNullOrWhiteSpace(textGimmickHintMessage.TranslatedText);
   }
 
   /// <summary>
@@ -719,6 +934,51 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Records the latest visible TextGimmickHint provenance snapshot for
+  ///     the debugger.
+  /// </summary>
+  /// <param name="provenance">The provenance label kind to expose.</param>
+  /// <param name="originalText">The original gimmick-hint text.</param>
+  /// <param name="translatedText">The translated gimmick-hint text.</param>
+  /// <param name="effectiveTranslationEngineId">
+  /// The effective dialogue translation engine identifier.
+  /// </param>
+  private void RecordDiagnosticsSnapshot(
+      VisibleStorySurfaceProvenanceKind provenance,
+      string originalText,
+      string translatedText,
+      int effectiveTranslationEngineId)
+  {
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.TextGimmickHint,
+            provenance,
+            VisibleStorySurfaceTableMap.Resolve(
+                VisibleStorySurfaceKind.TextGimmickHint),
+            string.Empty,
+            originalText,
+            string.Empty,
+            string.Empty,
+            translatedText,
+            string.Empty,
+            false,
+            effectiveTranslationEngineId,
+            DateTime.UtcNow,
+            null,
+            null));
+  }
+
+  /// <summary>
+  ///     Resolves the effective dialogue translation engine identifier.
+  /// </summary>
+  /// <returns>The effective dialogue translation engine identifier.</returns>
+  private int GetDialogueTranslationEngineId()
+  {
+    return this.translationService.GetEffectiveTranslationEngineId(
+        TranslationSurfaceGroup.Dialogue);
+  }
+
+  /// <summary>
   ///     Determines whether this gimmick-hint request should render through the
   ///     overlay path.
   /// </summary>
@@ -815,12 +1075,15 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   ///     already used by the plugin database.
   /// </summary>
   /// <param name="originalText">The original gimmick-hint text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <returns>A formatted <see cref="TextGimmickHintMessage" /> for DB lookup.</returns>
-  private TextGimmickHintMessage BuildLookupMessage(string originalText)
+  private TextGimmickHintMessage BuildLookupMessage(
+      string originalText,
+      SourceClientLanguage sourceLanguage)
   {
     return new TextGimmickHintMessage(
         originalText,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         LangDict[LanguageInt].Code,
         this.config.ChosenTransEngine,
@@ -853,6 +1116,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   ///     needed.
   /// </summary>
   /// <param name="textNode">The text node to inspect.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="originalText">Receives the logical original text.</param>
   /// <returns>
   ///     <see langword="true" /> when readable text is available; otherwise,
@@ -860,6 +1124,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// </returns>
   private unsafe bool TryReadCurrentSource(
       AtkTextNode* textNode,
+      SourceClientLanguage sourceLanguage,
       out string originalText)
   {
     originalText = string.Empty;
@@ -892,6 +1157,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
         this.TryConfirmOriginalPointerMatchesVisible(
             originalPointerText,
             visibleText,
+            sourceLanguage,
             out var confirmedOriginalText))
     {
       originalText = confirmedOriginalText;
@@ -909,6 +1175,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="originalPointerText">The text read from <c>OriginalTextPointer</c>.</param>
   /// <param name="visibleText">The text currently visible in the node.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="originalText">Receives the confirmed original text.</param>
   /// <returns>
   ///     <see langword="true" /> when the pointer text can be proven to explain
@@ -918,6 +1185,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
   private bool TryConfirmOriginalPointerMatchesVisible(
       string originalPointerText,
       string visibleText,
+      SourceClientLanguage sourceLanguage,
       out string originalText)
   {
     lock (this.stateGate)
@@ -932,6 +1200,7 @@ internal sealed class TextGimmickHintHandler : IAddonTranslationHandler
 
     if (this.TryLoadStoredTranslation(
             originalPointerText,
+            sourceLanguage,
             out _,
             out var replacementText) &&
         this.TextMatches(visibleText, replacementText))

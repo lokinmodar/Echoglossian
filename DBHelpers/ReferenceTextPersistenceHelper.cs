@@ -87,15 +87,25 @@ public static class ReferenceTextPersistenceHelper
             var set = setSelector(context);
             var hasRequestedGameVersion =
                 GameVersionLookupHelper.HasRequestedVersion(row.GameVersion);
-            var existing = set.FirstOrDefault(existing =>
-                existing.ReferenceId == row.ReferenceId &&
-                existing.TranslationLang == row.TranslationLang &&
-                existing.TranslationEngine == row.TranslationEngine &&
-                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
-                 (hasRequestedGameVersion &&
-                  (existing.GameVersion == null ||
-                   existing.GameVersion == row.GameVersion))) &&
-                existing.SourceContentHash == row.SourceContentHash);
+            var existing = set
+                .Where(existing =>
+                    existing.ReferenceId == row.ReferenceId &&
+                    existing.TranslationEngine == row.TranslationEngine &&
+                    ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (existing.GameVersion == null ||
+                       existing.GameVersion == row.GameVersion))) &&
+                    existing.SourceContentHash == row.SourceContentHash)
+                .AsEnumerable()
+                .Where(existing => RuntimeLanguageHelper.LanguagesMatch(
+                    existing.OriginalLang,
+                    row.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        existing.TranslationLang,
+                        row.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(existing => existing.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, row);
@@ -138,6 +148,39 @@ public static class ReferenceTextPersistenceHelper
         Func<EchoglossianDbContext, DbSet<TRow>> setSelector)
         where TRow : ReferenceTextRowBase
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        return FindReferenceText(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true),
+            setSelector);
+    }
+
+    /// <summary>
+    ///     Finds one canonical reference-text row using an explicit translation
+    ///     reuse scope.
+    /// </summary>
+    /// <typeparam name="TRow">The concrete row type.</typeparam>
+    /// <param name="configDirectory">The plugin config directory containing SQLite.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <param name="setSelector">Selects the matching DbSet.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static TRow? FindReferenceText<TRow>(
+        string configDirectory,
+        TRow probe,
+        TranslationReuseScope scope,
+        Func<EchoglossianDbContext, DbSet<TRow>> setSelector)
+        where TRow : ReferenceTextRowBase
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -153,16 +196,22 @@ public static class ReferenceTextPersistenceHelper
 
             return set
                 .AsNoTracking()
-                .FirstOrDefault(existing =>
+                .Where(existing =>
                     existing.ReferenceId == probe.ReferenceId &&
-                    existing.TranslationLang == probe.TranslationLang &&
-                    existing.TranslationEngine == probe.TranslationEngine &&
                     ((!hasRequestedGameVersion &&
                       existing.GameVersion == null) ||
                      (hasRequestedGameVersion &&
                       (existing.GameVersion == null ||
                        existing.GameVersion == probe.GameVersion))) &&
-                    existing.SourceContentHash == probe.SourceContentHash);
+                    existing.SourceContentHash == probe.SourceContentHash)
+                .AsEnumerable()
+                .Where(existing => scope.Matches(
+                    existing.OriginalLang,
+                    existing.TranslationLang,
+                    existing.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(existing => existing.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -182,6 +231,7 @@ public static class ReferenceTextPersistenceHelper
     {
         return row != null &&
                row.ReferenceId > 0 &&
+               !string.IsNullOrWhiteSpace(row.OriginalLang) &&
                !string.IsNullOrWhiteSpace(row.TranslationLang) &&
                !string.IsNullOrWhiteSpace(row.SourceContentHash);
     }
@@ -221,6 +271,30 @@ public static class ReferenceTextPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated reference fields are populated so
+    ///     alias reuse prefers a completed row over an incomplete row.
+    /// </summary>
+    /// <typeparam name="TRow">The concrete reference-text row type.</typeparam>
+    /// <param name="row">The reference-text row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore<TRow>(TRow row)
+        where TRow : ReferenceTextRowBase
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedDescription))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

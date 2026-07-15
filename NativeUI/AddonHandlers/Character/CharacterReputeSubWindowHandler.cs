@@ -66,17 +66,23 @@ public unsafe class CharacterReputeSubWindowHandler
 
     /// <inheritdoc />
     private protected override bool ShouldPersistNewGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
-        return this.ShouldAllowNewPayloadPersistence(originalPayload);
+        return this.ShouldAllowNewPayloadPersistence(
+            sourceLanguage,
+            originalPayload);
     }
 
     /// <inheritdoc />
     private protected override bool ShouldQueueNewGameWindowTranslation(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        return this.ShouldAllowNewPayloadPersistence(originalPayload);
+        return this.ShouldAllowNewPayloadPersistence(
+            sourceLanguage,
+            originalPayload);
     }
 
     /// <inheritdoc />
@@ -109,15 +115,17 @@ public unsafe class CharacterReputeSubWindowHandler
     ///     justify creating one new persisted shape or queueing fresh remote
     ///     translation.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when the payload is stable enough to create
     ///     one new persisted shape; otherwise <see langword="false" />.
     /// </returns>
     private bool ShouldAllowNewPayloadPersistence(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        if (this.HasPersistedReputeRows())
+        if (this.HasPersistedReputeRows(sourceLanguage))
         {
             return false;
         }
@@ -131,19 +139,17 @@ public unsafe class CharacterReputeSubWindowHandler
     ///     Determines whether one persisted Repute row already exists for the
     ///     current language and engine scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <returns>
     ///     <see langword="true" /> when at least one persisted row exists;
     ///     otherwise <see langword="false" />.
     /// </returns>
-    private bool HasPersistedReputeRows()
+    private bool HasPersistedReputeRows(SourceClientLanguage sourceLanguage)
     {
-        var targetLanguage =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.HandlerConfig.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         return GameWindowCacheManager.GetCandidates(
                 this.AddonName,
-                targetLanguage,
-                this.HandlerConfig.ChosenTransEngine,
+                scope,
                 GetGameVersion())
             .Any();
     }

@@ -20,7 +20,9 @@ public static class TranslationFailurePersistenceHelper
     /// </summary>
     /// <param name="configDirectory">The plugin configuration directory.</param>
     /// <param name="sourceText">The exact sanitized source text.</param>
-    /// <param name="sourceLanguage">The source language code.</param>
+    /// <param name="sourcePersistenceLanguage">
+    ///     The canonical persisted source identity, never a provider alias.
+    /// </param>
     /// <param name="targetLanguage">The target language code.</param>
     /// <param name="translationEngine">The translation engine identifier.</param>
     /// <param name="failureReason">The failure reason to persist.</param>
@@ -29,7 +31,7 @@ public static class TranslationFailurePersistenceHelper
     public static void RecordFailure(
         string configDirectory,
         string sourceText,
-        string sourceLanguage,
+        string sourcePersistenceLanguage,
         string targetLanguage,
         int translationEngine,
         string failureReason,
@@ -38,6 +40,7 @@ public static class TranslationFailurePersistenceHelper
     {
         if (string.IsNullOrWhiteSpace(configDirectory) ||
             string.IsNullOrWhiteSpace(sourceText) ||
+            string.IsNullOrWhiteSpace(sourcePersistenceLanguage) ||
             !TranslationPersistenceGuard.IsPersistentFailureReason(
                 failureReason))
         {
@@ -46,7 +49,8 @@ public static class TranslationFailurePersistenceHelper
 
         var sourceTextHash = TranslationFailureKey.ComputeSourceTextHash(sourceText);
         var normalizedSourceLanguage =
-            RuntimeLanguageHelper.NormalizeLanguage(sourceLanguage);
+            RuntimeLanguageHelper.NormalizeLanguage(
+                sourcePersistenceLanguage);
         var normalizedTargetLanguage =
             RuntimeLanguageHelper.NormalizeLanguage(targetLanguage);
 

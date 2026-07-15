@@ -19,8 +19,11 @@ public sealed class ReferenceTextCacheStore<TRow>
     private readonly string cacheName;
     private readonly Dictionary<string, Dictionary<string, string>>
         forwardTextLookupCache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, HashSet<string>>
+        originalTextLookupCache = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Dictionary<string, string>>
         reverseTextLookupCache = new(StringComparer.Ordinal);
+    private long revision;
 
     /// <summary>
     ///     Initializes a new instance of the
@@ -31,6 +34,11 @@ public sealed class ReferenceTextCacheStore<TRow>
     {
         this.cacheName = cacheName;
     }
+
+    /// <summary>
+    ///     Gets the monotonically increasing cache revision.
+    /// </summary>
+    public long Revision => Interlocked.Read(ref this.revision);
 
     /// <summary>
     ///     Loads all canonical reference-text rows into memory.
@@ -62,7 +70,9 @@ public sealed class ReferenceTextCacheStore<TRow>
             }
 
             this.forwardTextLookupCache.Clear();
+            this.originalTextLookupCache.Clear();
             this.reverseTextLookupCache.Clear();
+            Interlocked.Increment(ref this.revision);
         }
         catch (Exception ex)
         {
@@ -89,44 +99,38 @@ public sealed class ReferenceTextCacheStore<TRow>
             this.cache[newRecord.ReferenceId] = rows;
         }
 
-        var existing = rows.FirstOrDefault(row =>
-            row.ReferenceId == newRecord.ReferenceId &&
-            RuntimeLanguageHelper.LanguagesMatch(
-                row.TranslationLang,
-                newRecord.TranslationLang) &&
-            row.TranslationEngine == newRecord.TranslationEngine &&
-            GameVersionLookupHelper.MatchesStoredVersion(
-                row.GameVersion,
-                newRecord.GameVersion) &&
-            row.SourceContentHash == newRecord.SourceContentHash);
-        if (existing != null)
-        {
-            rows.Remove(existing);
-        }
+        var matchingRows = rows
+            .Where(row => HasSameCacheIdentity(row, newRecord))
+            .ToList();
+        var preferredRecord = matchingRows
+            .Append(newRecord)
+            .OrderByDescending(GetTranslationCompletenessScore)
+            .ThenByDescending(static row => row.UpdatedDate)
+            .First();
 
-        rows.Add(newRecord);
+        rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
+        rows.Add(preferredRecord);
         this.forwardTextLookupCache.Clear();
+        this.originalTextLookupCache.Clear();
         this.reverseTextLookupCache.Clear();
+        Interlocked.Increment(ref this.revision);
     }
 
     /// <summary>
     ///     Tries to find one canonical row in memory.
     /// </summary>
     /// <param name="referenceId">The sheet-row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The matching row, or <see langword="null" />.</returns>
     public TRow? TryFindCanonicalMatch(
         uint referenceId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string sourceContentHash)
     {
         if (referenceId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
             return null;
@@ -139,10 +143,10 @@ public sealed class ReferenceTextCacheStore<TRow>
         }
 
         return rows.FirstOrDefault(row =>
-            RuntimeLanguageHelper.LanguagesMatch(
+            scope.Matches(
+                row.OriginalLang,
                 row.TranslationLang,
-                lang) &&
-            row.TranslationEngine == engine &&
+                row.TranslationEngine) &&
             GameVersionLookupHelper.MatchesStoredVersion(
             row.GameVersion,
             gameVersion) &&
@@ -154,17 +158,15 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     identity when the stricter canonical hash does not match.
     /// </summary>
     /// <param name="referenceId">The sheet-row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <returns>The best translated row, or <see langword="null" />.</returns>
     public TRow? TryFindIdentityMatch(
         uint referenceId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion)
     {
-        if (referenceId == 0 || string.IsNullOrWhiteSpace(lang))
+        if (referenceId == 0)
         {
             return null;
         }
@@ -177,13 +179,14 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
-                    gameVersion))
+                    gameVersion) &&
+                HasCompleteTranslation(row))
             .OrderByDescending(row => ComputeIdentityMatchScore(
                 row,
                 gameVersion))
@@ -194,8 +197,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <summary>
     ///     Tries to resolve one exact translated text from this cache scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The resolved translated text.</param>
@@ -204,23 +206,20 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     public bool TryFindTranslatedText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalText))
+        if (string.IsNullOrWhiteSpace(originalText))
         {
             return false;
         }
 
         if (this.TryFindTranslatedTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 originalText,
                 out translatedText))
@@ -231,8 +230,7 @@ public sealed class ReferenceTextCacheStore<TRow>
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return this.TryFindTranslatedTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 originalText,
                 out translatedText);
@@ -245,8 +243,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Tries to resolve one exact canonical original text from this cache
     ///     scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="translatedText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved canonical original text.</param>
@@ -255,23 +252,20 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     public bool TryFindOriginalText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string translatedText,
         out string originalText)
     {
         originalText = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(translatedText))
+        if (string.IsNullOrWhiteSpace(translatedText))
         {
             return false;
         }
 
         if (this.TryFindOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 translatedText,
                 out originalText))
@@ -282,8 +276,7 @@ public sealed class ReferenceTextCacheStore<TRow>
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return this.TryFindOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 translatedText,
                 out originalText);
@@ -296,8 +289,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Determines whether one canonical original text already exists in
     ///     this cache for the requested scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="originalText">The canonical original text to test.</param>
     /// <returns>
@@ -305,20 +297,17 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     public bool ContainsOriginalText(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string originalText)
     {
-        if (string.IsNullOrWhiteSpace(lang) ||
-            string.IsNullOrWhiteSpace(originalText))
+        if (string.IsNullOrWhiteSpace(originalText))
         {
             return false;
         }
 
         if (this.ContainsOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 gameVersion,
                 originalText))
         {
@@ -328,13 +317,35 @@ public sealed class ReferenceTextCacheStore<TRow>
         if (!string.IsNullOrWhiteSpace(gameVersion))
         {
             return this.ContainsOriginalTextInScope(
-                lang,
-                engine,
+                scope,
                 version: null,
                 originalText);
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Gets one scope-aware exact-text lookup snapshot for canonical
+    ///     ActionMenu reuse.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <returns>The canonical lookup snapshot.</returns>
+    internal CanonicalTextLookupSnapshot GetTextLookupSnapshot(
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        var preferredSnapshot = this.GetExactTextLookupSnapshot(
+            scope,
+            gameVersion);
+        return string.IsNullOrWhiteSpace(gameVersion)
+            ? preferredSnapshot
+            : CanonicalTextLookupSnapshot.Combine(
+                preferredSnapshot,
+                this.GetExactTextLookupSnapshot(
+                    scope,
+                    version: null));
     }
 
     /// <summary>
@@ -344,7 +355,9 @@ public sealed class ReferenceTextCacheStore<TRow>
     {
         this.cache.Clear();
         this.forwardTextLookupCache.Clear();
+        this.originalTextLookupCache.Clear();
         this.reverseTextLookupCache.Clear();
+        Interlocked.Increment(ref this.revision);
         PluginRuntimeLog.Debug(
             this.cacheName,
             "Cleared reference-text cache.");
@@ -353,8 +366,7 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <summary>
     ///     Tries to resolve one translated text from one cached scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <param name="originalText">The original text to translate.</param>
     /// <param name="translatedText">The translated text.</param>
@@ -363,29 +375,35 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool TryFindTranslatedTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string originalText,
         out string translatedText)
     {
         translatedText = string.Empty;
 
-        var scopeKey = BuildScopeKey(lang, engine, version);
+        var scopeKey = BuildScopeKey(scope, version);
         if (!this.forwardTextLookupCache.TryGetValue(scopeKey, out var lookup))
         {
-            lookup = this.BuildForwardLookup(lang, engine, version);
+            lookup = this.BuildForwardLookup(
+                scope,
+                version);
             this.forwardTextLookupCache[scopeKey] = lookup;
         }
 
-        return lookup.TryGetValue(originalText, out translatedText);
+        if (lookup.TryGetValue(originalText, out var resolvedTranslatedText))
+        {
+            translatedText = resolvedTranslatedText;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
     ///     Tries to resolve one original text from one cached scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <param name="translatedText">The translated text to reverse.</param>
     /// <param name="originalText">The resolved original text.</param>
@@ -394,30 +412,34 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     otherwise <see langword="false" />.
     /// </returns>
     private bool TryFindOriginalTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string translatedText,
         out string originalText)
     {
         originalText = string.Empty;
 
-        var scopeKey = BuildScopeKey(lang, engine, version);
+        var scopeKey = BuildScopeKey(scope, version);
         if (!this.reverseTextLookupCache.TryGetValue(scopeKey, out var lookup))
         {
-            lookup = this.BuildReverseLookup(lang, engine, version);
+            lookup = this.BuildReverseLookup(scope, version);
             this.reverseTextLookupCache[scopeKey] = lookup;
         }
 
-        return lookup.TryGetValue(translatedText, out originalText);
+        if (lookup.TryGetValue(translatedText, out var resolvedOriginalText))
+        {
+            originalText = resolvedOriginalText;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
     ///     Determines whether one exact canonical original text exists in one
     ///     cache scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <param name="originalText">The canonical original text to test.</param>
     /// <returns>
@@ -425,53 +447,108 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     requested scope; otherwise <see langword="false" />.
     /// </returns>
     private bool ContainsOriginalTextInScope(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version,
         string originalText)
     {
-        return this.cache.Values.SelectMany(static rows => rows)
-            .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+        var scopeKey = BuildScopeKey(scope, version);
+        if (!this.originalTextLookupCache.TryGetValue(scopeKey, out var lookup))
+        {
+            lookup = this.BuildOriginalTextLookup(scope, version);
+            this.originalTextLookupCache[scopeKey] = lookup;
+        }
+
+        return lookup.Contains(originalText);
+    }
+
+    /// <summary>
+    ///     Gets one exact-version canonical lookup snapshot.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <returns>The exact-version lookup snapshot.</returns>
+    private CanonicalTextLookupSnapshot GetExactTextLookupSnapshot(
+        TranslationReuseScope scope,
+        string? version)
+    {
+        var scopeKey = BuildScopeKey(scope, version);
+        if (!this.forwardTextLookupCache.TryGetValue(scopeKey, out var forwardLookup))
+        {
+            forwardLookup = this.BuildForwardLookup(
+                scope,
+                version);
+            this.forwardTextLookupCache[scopeKey] = forwardLookup;
+        }
+
+        if (!this.reverseTextLookupCache.TryGetValue(scopeKey, out var reverseLookup))
+        {
+            reverseLookup = this.BuildReverseLookup(scope, version);
+            this.reverseTextLookupCache[scopeKey] = reverseLookup;
+        }
+
+        if (!this.originalTextLookupCache.TryGetValue(scopeKey, out var originalLookup))
+        {
+            originalLookup = this.BuildOriginalTextLookup(scope, version);
+            this.originalTextLookupCache[scopeKey] = originalLookup;
+        }
+
+        return new CanonicalTextLookupSnapshot(
+            originalLookup,
+            forwardLookup,
+            reverseLookup);
+    }
+
+    /// <summary>
+    ///     Builds one original-text lookup for one cached scope.
+    /// </summary>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="version">The exact stored game-version scope.</param>
+    /// <returns>The lookup set.</returns>
+    private HashSet<string> BuildOriginalTextLookup(
+        TranslationReuseScope scope,
+        string? version)
+    {
+        var lookup = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var row in this.cache.Values.SelectMany(static rows => rows))
+        {
+            if (!scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
-                string.Equals(
+                    row.TranslationEngine) ||
+                !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
-                    version,
-                    StringComparison.Ordinal))
-            .Any(row =>
-                string.Equals(
-                    row.OriginalName,
-                    originalText,
-                    StringComparison.Ordinal) ||
-                string.Equals(
-                    row.OriginalDescription,
-                    originalText,
-                    StringComparison.Ordinal));
+                    version))
+            {
+                continue;
+            }
+
+            TryAddOriginalText(lookup, row.OriginalName);
+            TryAddOriginalText(lookup, row.OriginalDescription);
+        }
+
+        return lookup;
     }
 
     /// <summary>
     ///     Builds one forward original-to-translated lookup for one cached
     ///     scope.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <returns>The lookup.</returns>
     private Dictionary<string, string> BuildForwardLookup(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
         var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var row in this.cache.Values.SelectMany(static rows => rows))
         {
-            if (!RuntimeLanguageHelper.LanguagesMatch(
+            if (!scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) ||
-                row.TranslationEngine != engine ||
+                    row.TranslationEngine) ||
                 !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     version))
@@ -496,13 +573,11 @@ public sealed class ReferenceTextCacheStore<TRow>
     ///     Builds one reverse translated-to-original lookup for one cached
     ///     scope while excluding ambiguous mappings.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <returns>The lookup.</returns>
     private Dictionary<string, string> BuildReverseLookup(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
         var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -510,10 +585,10 @@ public sealed class ReferenceTextCacheStore<TRow>
 
         foreach (var row in this.cache.Values.SelectMany(static rows => rows))
         {
-            if (!RuntimeLanguageHelper.LanguagesMatch(
+            if (!scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) ||
-                row.TranslationEngine != engine ||
+                    row.TranslationEngine) ||
                 !GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     version))
@@ -596,6 +671,70 @@ public sealed class ReferenceTextCacheStore<TRow>
     }
 
     /// <summary>
+    ///     Adds one canonical original text to the scope-local lookup when the
+    ///     value is populated.
+    /// </summary>
+    /// <param name="lookup">The original-text lookup to update.</param>
+    /// <param name="originalText">The original text to add.</param>
+    private static void TryAddOriginalText(
+        ISet<string> lookup,
+        string? originalText)
+    {
+        if (!string.IsNullOrWhiteSpace(originalText))
+        {
+            lookup.Add(originalText);
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether two reference-text rows represent the same
+    ///     effective cache identity after language normalization.
+    /// </summary>
+    /// <param name="left">The cached row.</param>
+    /// <param name="right">The incoming row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when both rows share one cache identity;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool HasSameCacheIdentity(TRow left, TRow right)
+    {
+        return left.ReferenceId == right.ReferenceId &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.OriginalLang,
+                   right.OriginalLang) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.TranslationLang,
+                   right.TranslationLang) &&
+               left.TranslationEngine == right.TranslationEngine &&
+               GameVersionLookupHelper.MatchesStoredVersion(
+                   left.GameVersion,
+                   right.GameVersion) &&
+               left.SourceContentHash == right.SourceContentHash;
+    }
+
+    /// <summary>
+    ///     Computes how many translated reference fields are populated so an
+    ///     incomplete alias row cannot displace a completed canonical row.
+    /// </summary>
+    /// <param name="row">The reference-text row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(TRow row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedDescription))
+        {
+            score++;
+        }
+
+        return score;
+    }
+
+    /// <summary>
     ///     Computes one ordering score for tolerant identity-based reference
     ///     text lookup.
     /// </summary>
@@ -648,18 +787,23 @@ public sealed class ReferenceTextCacheStore<TRow>
     }
 
     /// <summary>
-    ///     Builds one cache scope key from language, engine, and version.
+    ///     Builds one cache key from the complete reuse scope and version.
     /// </summary>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="version">The exact stored game-version scope.</param>
     /// <returns>The scope key.</returns>
     private static string BuildScopeKey(
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? version)
     {
-        return
-            $"{RuntimeLanguageHelper.NormalizeLanguage(lang)}\u001F{engine}\u001F{version ?? string.Empty}";
+        var source = RuntimeLanguageHelper.NormalizeLanguage(
+            scope.SourceLanguageCode);
+        var target = RuntimeLanguageHelper.NormalizeLanguage(
+            scope.TargetLanguageCode);
+        var engine = scope.RequireMatchingEngine
+            ? scope.TranslationEngine?.ToString() ?? string.Empty
+            : "*";
+        return $"{source}\u001F{target}\u001F{engine}\u001F{version ?? string.Empty}";
     }
+
 }

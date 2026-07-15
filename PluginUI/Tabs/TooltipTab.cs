@@ -36,34 +36,46 @@ public static class TooltipTab
         ImGui.Separator();
 
         changed |= ImGui.Checkbox(
-            GetText(
-                "ActionAndItemTooltipsToggleLabel",
-                "Enable action/item detail translation and shared hover tooltips"),
+            Resources.ActionAndItemTooltipsToggleLabel,
             ref config.TranslateTooltips);
 
-        if (!config.TranslateTooltips)
+        if (config.TranslateTooltips)
         {
-            if (changed)
-            {
-                FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-                Echoglossian.SaveConfig(config);
-            }
-
-            return changed;
+            changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+                nameof(config.TooltipTranslationDisplayMode),
+                ref config.TooltipTranslationDisplayMode,
+                config.OverlayOnlyLanguage,
+                Resources.ActionAndItemTooltipsDisplayModeLabel,
+                Resources.ActionAndItemTooltipsDisplayModeDescription,
+                DetailDisplayModes);
         }
-
-        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
-            nameof(config.TooltipTranslationDisplayMode),
-            ref config.TooltipTranslationDisplayMode,
-            config.OverlayOnlyLanguage,
-            Resources.ActionAndItemTooltipsDisplayModeLabel,
-            Resources.ActionAndItemTooltipsDisplayModeDescription,
-            DetailDisplayModes);
 
         ImGui.Spacing();
         ImGui.TextUnformatted(Resources.HoverTooltipAppearanceSectionLabel);
         ImGui.Separator();
         ImGui.TextWrapped(Resources.HoverTooltipAppearanceDescription);
+
+        changed |= ImGui.SliderFloat(
+            Resources.HoverTooltipFontScaleLabel,
+            ref config.HoverTooltipFontScale,
+            0.25f,
+            3f,
+            "%.2f");
+
+        changed |= ImGui.SliderFloat(
+            Resources.HoverTooltipMaxWidthLabel,
+            ref config.HoverTooltipMaxWidth,
+            240f,
+            960f,
+            "%.0f px");
+
+        changed |= ImGui.SliderFloat(
+            Resources.TexturePresentationLineHeightScaleLabel,
+            ref config.TexturePresentationLineHeightScale,
+            0.8f,
+            1.2f,
+            "%.2f");
+        ImGui.TextWrapped(Resources.TexturePresentationLineHeightScaleDescription);
 
         var textColorLabel = Resources.HoverTooltipTextColorLabel;
         ImGui.Text(textColorLabel);
@@ -95,11 +107,5 @@ public static class TooltipTab
         }
 
         return changed;
-    }
-
-    private static string GetText(string key, string fallback)
-    {
-        return Resources.ResourceManager.GetString(key, Resources.Culture) ??
-               fallback;
     }
 }

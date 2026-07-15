@@ -228,36 +228,6 @@
   <data name="WhichToastsToTranslate" xml:space="preserve">
     <value>Selecione qual tipo de mensagens de toast traduzir</value>
   </data>
-  <data name="ToastGuiCaptureForSupportedToastsLabel" xml:space="preserve">
-    <value>Usar captura assistida por ToastGui para toasts normais/de erro suportados (experimental)</value>
-  </data>
-  <data name="ToastGuiCaptureForSupportedToastsDescription" xml:space="preserve">
-    <value>Mantém os limites da overlay e a substituição nativa nos handlers do addon, mas escuta os callbacks do ToastGui para pré-carregar as traduções mais cedo. Quest toasts já usam ToastGui; Text Gimmick Hint continua usando o caminho do addon.</value>
-  </data>
-  <data name="ToastGuiNormalToastRouteStatusLabel" xml:space="preserve">
-    <value>Rota dos toasts normais suportados</value>
-  </data>
-  <data name="ToastGuiErrorToastRouteStatusLabel" xml:space="preserve">
-    <value>Rota dos toasts de erro suportados</value>
-  </data>
-  <data name="ToastGuiQuestToastRouteStatusLabel" xml:space="preserve">
-    <value>Rota dos quest toasts</value>
-  </data>
-  <data name="ToastGuiTextGimmickHintRouteStatusLabel" xml:space="preserve">
-    <value>Rota do Text Gimmick Hint</value>
-  </data>
-  <data name="ToastGuiRouteStateLegacyAddonHandlers" xml:space="preserve">
-    <value>Handlers legados do addon</value>
-  </data>
-  <data name="ToastGuiRouteStateCapturePrefetch" xml:space="preserve">
-    <value>Captura/pré-busca via ToastGui</value>
-  </data>
-  <data name="ToastGuiRouteStateFullRuntime" xml:space="preserve">
-    <value>Runtime completo via ToastGui</value>
-  </data>
-  <data name="ToastGuiRouteStateAddonHandlerOnly" xml:space="preserve">
-    <value>Apenas handler do addon</value>
-  </data>
   <data name="AssetsCheckingPopupMsg" xml:space="preserve">
     <value>Verificando os arquivos do Plugin!</value>
   </data>
@@ -525,6 +495,9 @@
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
     <value>Abre o Editor de banco de dados ecoglossiano.</value>
   </data>
+  <data name="OpensTheTranslatorDebuggerAndMetricsWindow" xml:space="preserve">
+    <value>Abre a janela de Depuração e Métricas do Tradutor.</value>
+  </data>
   <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
     <value>Digitalize o QR Code para enviar criptomoeda. Qualquer valor é apreciado :)</value>
   </data>
@@ -619,7 +592,7 @@
     <value>Este modo controla as superfícies ActionDetail e ItemDetail. Native UI grava o texto detalhado traduzido no complemento do jogo, o modo somente Plugin Overlay mantém o complemento nativo intacto e usa Plugin Overlays, e Tradução de Native UI + Plugin Overlay original grava a tradução nativamente enquanto mostra o original na nossa Plugin Overlay.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Habilitar tradução de detalhes de ação/item e Plugin Tooltips compartilhadas</value>
+    <value>Habilitar tradução de detalhes de ação/item</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Não foi possível buscar modelos. Ollama está sendo executado localmente?</value>
@@ -631,10 +604,16 @@
     <value>Janelas de jogo</value>
   </data>
   <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Essas cores se aplicam às Plugin Tooltips usadas pelas superfícies de quest e DB-first.</value>
+    <value>Essas opções se aplicam às Plugin Tooltips de hover usadas pelas superfícies de quest e DB-first.</value>
   </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Aparência das Plugin Tooltips</value>
+    <value>Aparência das Plugin Tooltips de hover</value>
+  </data>
+  <data name="HoverTooltipFontScaleLabel" xml:space="preserve">
+    <value>Escala de fonte da Plugin Tooltip</value>
+  </data>
+  <data name="HoverTooltipMaxWidthLabel" xml:space="preserve">
+    <value>Largura máxima da Plugin Tooltip</value>
   </data>
   <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
     <value>Cor de fundo da Plugin Tooltip</value>
@@ -644,6 +623,12 @@
   </data>
   <data name="HoverTooltipTextColorLabel" xml:space="preserve">
     <value>Cor do texto da Plugin Tooltip</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleLabel" xml:space="preserve">
+    <value>Altura de linha do texto por textura</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleDescription" xml:space="preserve">
+    <value>Aplica-se ao texto complexo renderizado por textura em tooltips e overlays.</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
     <value>Este modo controla Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept e JournalResult. As Plugin Tooltips do Journal seguem esse modo diretamente; o toggle global de Plugin Tooltip afeta apenas outras UIs traduzidas.</value>
@@ -950,6 +935,291 @@
   </data>
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Modelo Claude de nível mais alto quando você deseja qualidade máxima.</value>
+  </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[A tradução OpenAI-compatible está indisponível. Verifique o endpoint, a chave de API e as configurações do modelo.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>A configuração do provedor OpenAI-compatible está incompleta. A tradução não ficará disponível até que endpoint, chave de API e modelo sejam preenchidos.</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Provedor</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Configure um endpoint, uma chave de API e um modelo OpenAI-compatible. A busca de modelos ao vivo é opcional; se o provedor não expuser /models corretamente, use um ID de modelo manual.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Não foi possível buscar modelos do provedor OpenAI-compatible configurado. Mantenha um ID de modelo manual ou verifique o endpoint e as credenciais.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Use o ID exato do modelo exposto pelo seu provedor OpenAI-compatible quando a lista de modelos ao vivo não estiver disponível ou estiver desativada.</value>
+  </data>
+  <data name="DialogueGlossarySectionLabel" xml:space="preserve">
+    <value>Glossário de diálogo</value>
+  </data>
+  <data name="DialogueGlossaryDescription" xml:space="preserve">
+    <value>Injeta um glossário estruturado nas requisições LLM da família de diálogo usando um arquivo JSON gerenciado pelo operador.</value>
+  </data>
+  <data name="EnableDialogueGlossaryInjectionLabel" xml:space="preserve">
+    <value>Ativar injeção de glossário de diálogo</value>
+  </data>
+  <data name="DialogueGlossaryFilePathLabel" xml:space="preserve">
+    <value>Caminho do arquivo do glossário de diálogo</value>
+  </data>
+  <data name="ReloadDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Recarregar glossário de diálogo</value>
+  </data>
+  <data name="ClearDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Limpar glossário carregado</value>
+  </data>
+  <data name="DialogueGlossaryStatusLoaded" xml:space="preserve">
+    <value>Carregado</value>
+  </data>
+  <data name="DialogueGlossaryStatusFailed" xml:space="preserve">
+    <value>Falhou</value>
+  </data>
+  <data name="DialogueGlossaryStatusIdle" xml:space="preserve">
+    <value>Inativo</value>
+  </data>
+  <data name="DialogueGlossarySnapshotSummary" xml:space="preserve">
+    <value>Status: {0}  |  Entradas: {1}  |  Linhas ignoradas: {2}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotPath" xml:space="preserve">
+    <value>Último caminho: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotUtc" xml:space="preserve">
+    <value>Último carregamento UTC: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotFailure" xml:space="preserve">
+    <value>Última falha ao carregar o glossário: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerWindowTitle" xml:space="preserve">
+    <value>Depurador e Métricas do Tradutor</value>
+  </data>
+  <data name="TranslatorDebuggerWindowDescription" xml:space="preserve">
+    <value>Métricas agregadas de tempo de execução para a atividade do tradutor nesta sessão.</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslateVisibleDialogueAndPersist" xml:space="preserve">
+    <value>Retraduzir diálogo visível e persistir</value>
+  </data>
+  <data name="TranslatorDebuggerClearMetrics" xml:space="preserve">
+    <value>Limpar métricas</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueSessions" xml:space="preserve">
+    <value>Limpar sessões de diálogo</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslatingVisibleDialogue" xml:space="preserve">
+    <value>Retraduzindo a linha de diálogo visível no momento...</value>
+  </data>
+  <data name="TranslatorDebuggerNoMetricsRecorded" xml:space="preserve">
+    <value>Ainda não foram registradas métricas do tradutor nesta sessão.</value>
+  </data>
+  <data name="TranslatorDebuggerEngineSummary" xml:space="preserve">
+    <value>Engines: {0}  |  Requisições ao vivo: {1}  |  Com contexto: {2}  |  Falhas: {3}  |  Curto-circuitos: {4}</value>
+  </data>
+  <data name="TranslatorDebuggerStructuredSummary" xml:space="preserve">
+    <value>Tentativas estruturadas: {0}  |  Sucessos estruturados: {1}  |  Assistidas por glossário: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionsCount" xml:space="preserve">
+    <value>Sessões de diálogo: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableEngine" xml:space="preserve">
+    <value>Engine</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableProvider" xml:space="preserve">
+    <value>Provedor</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableModel" xml:space="preserve">
+    <value>Modelo</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLiveRequests" xml:space="preserve">
+    <value>Requisições ao vivo</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableContextAware" xml:space="preserve">
+    <value>Com contexto</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructured" xml:space="preserve">
+    <value>Estruturado</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructuredOk" xml:space="preserve">
+    <value>Estruturado OK</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableGlossary" xml:space="preserve">
+    <value>Glossário</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableSuccesses" xml:space="preserve">
+    <value>Sucessos</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableFailures" xml:space="preserve">
+    <value>Falhas</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableShortCircuits" xml:space="preserve">
+    <value>Curto-circuitos</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableAverageMs" xml:space="preserve">
+    <value>Média ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableMaxMs" xml:space="preserve">
+    <value>Máx. ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastMs" xml:space="preserve">
+    <value>Último ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastRequestUtc" xml:space="preserve">
+    <value>Última requisição UTC</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastFailure" xml:space="preserve">
+    <value>Última falha</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionDescription" xml:space="preserve">
+    <value>Sessões de diálogo somente em tempo de execução atualmente retidas para tradução com contexto.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableNamespace" xml:space="preserve">
+    <value>Namespace</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableSessionKey" xml:space="preserve">
+    <value>Chave da sessão</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastSpeaker" xml:space="preserve">
+    <value>Último falante</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableRetainedTurns" xml:space="preserve">
+    <value>Turnos retidos</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastObservedUtc" xml:space="preserve">
+    <value>Última observação UTC</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossarySummary" xml:space="preserve">
+    <value>Glossário de diálogo ativado: {0}  |  Entradas: {1}  |  Linhas ignoradas: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryPath" xml:space="preserve">
+    <value>Caminho do arquivo configurado: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryLoadStatus" xml:space="preserve">
+    <value>Último carregamento do glossário: {0}  |  Último carregamento UTC: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerReloadDialogueGlossary" xml:space="preserve">
+    <value>Recarregar glossário de diálogo</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueGlossary" xml:space="preserve">
+    <value>Limpar glossário carregado</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryFailure" xml:space="preserve">
+    <value>Última falha ao carregar o glossário: {0}</value>
+  </data>
+  <data name="DialogueLlmOverrideSectionLabel" xml:space="preserve">
+    <value>Override LLM de diálogo</value>
+  </data>
+  <data name="DialogueLlmOverrideDescription" xml:space="preserve">
+    <value>Roteia Talk, BattleTalk, TalkSubtitle e MiniTalk por um LLM dedicado sem alterar a engine principal usada no restante.</value>
+  </data>
+  <data name="UseDialogueLlmOverrideLabel" xml:space="preserve">
+    <value>Usar um LLM dedicado para superfícies da família de diálogo</value>
+  </data>
+  <data name="DialogueLlmEngineLabel" xml:space="preserve">
+    <value>Engine LLM de diálogo</value>
+  </data>
+  <data name="DialogueLlmOverrideNeedsConfigurationText" xml:space="preserve">
+    <value>O override LLM de diálogo selecionado ainda não está totalmente configurado. As superfícies da família de diálogo continuarão usando a engine principal até que o override esteja pronto.</value>
+  </data>
+  <data name="DialogueLlmOverrideMatchesPrimaryText" xml:space="preserve">
+    <value>As superfícies da família de diálogo estão reutilizando no momento a mesma configuração de engine selecionada acima.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverridePrimaryAndEffective" xml:space="preserve">
+    <value>Mecanismo primário: {0}  |  Mecanismo efetivo de diálogo: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideDisabled" xml:space="preserve">
+    <value>O override LLM de diálogo está desativado no momento. As superfícies da família de diálogo usam o mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideMatchesPrimary" xml:space="preserve">
+    <value>O override LLM de diálogo está ativado, mas no momento corresponde à seleção do mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideActive" xml:space="preserve">
+    <value>O override LLM de diálogo está ativo e roteia as superfícies da família de diálogo por {0}.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideInactiveFallback" xml:space="preserve">
+    <value>O override LLM de diálogo está ativado, mas não está ativo no momento. As superfícies da família de diálogo continuam usando o mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideNotConfigured" xml:space="preserve">
+    <value>O override LLM de diálogo está ativado, mas {0} ainda não está totalmente configurado. As superfícies da família de diálogo continuam usando o mecanismo primário.</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiProviderSummary" xml:space="preserve">
+    <value>Provedor da família OpenAI: {0}  |  Variante: {1}  |  Configurado: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiEndpoint" xml:space="preserve">
+    <value>Endpoint: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiModelSummary" xml:space="preserve">
+    <value>Modelo: {0}  |  Modelos ao vivo: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshSummary" xml:space="preserve">
+    <value>Última atualização de modelos: {0}  |  Provedor: {1}  |  Total de modelos atual: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshUtc" xml:space="preserve">
+    <value>Última atualização UTC: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshEndpoint" xml:space="preserve">
+    <value>Endpoint de atualização: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshFailure" xml:space="preserve">
+    <value>Última falha ao atualizar modelos: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerYes" xml:space="preserve">
+    <value>Sim</value>
+  </data>
+  <data name="TranslatorDebuggerNo" xml:space="preserve">
+    <value>Não</value>
+  </data>
+  <data name="TranslatorDebuggerEnabled" xml:space="preserve">
+    <value>Ativado</value>
+  </data>
+  <data name="TranslatorDebuggerDisabled" xml:space="preserve">
+    <value>Desativado</value>
+  </data>
+  <data name="TranslatorDebuggerSucceeded" xml:space="preserve">
+    <value>Concluída</value>
+  </data>
+  <data name="TranslatorDebuggerFailed" xml:space="preserve">
+    <value>Falhou</value>
+  </data>
+  <data name="TranslatorDebuggerNeverAttempted" xml:space="preserve">
+    <value>Nunca tentada</value>
+  </data>
+  <data name="ToastGuiCaptureForSupportedToastsLabel" xml:space="preserve">
+    <value>Usar captura assistida por ToastGui para toasts normais/de erro suportados (experimental)</value>
+  </data>
+  <data name="ToastGuiCaptureForSupportedToastsDescription" xml:space="preserve">
+    <value>Mantém os limites da overlay e a substituição nativa nos handlers do addon, mas escuta os callbacks do ToastGui para pré-carregar as traduções mais cedo. Quest toasts já usam ToastGui; Text Gimmick Hint continua usando o caminho do addon.</value>
+  </data>
+  <data name="ToastGuiNormalToastRouteStatusLabel" xml:space="preserve">
+    <value>Rota dos toasts normais suportados</value>
+  </data>
+  <data name="ToastGuiErrorToastRouteStatusLabel" xml:space="preserve">
+    <value>Rota dos toasts de erro suportados</value>
+  </data>
+  <data name="ToastGuiQuestToastRouteStatusLabel" xml:space="preserve">
+    <value>Rota dos quest toasts</value>
+  </data>
+  <data name="ToastGuiTextGimmickHintRouteStatusLabel" xml:space="preserve">
+    <value>Rota do Text Gimmick Hint</value>
+  </data>
+  <data name="ToastGuiRouteStateLegacyAddonHandlers" xml:space="preserve">
+    <value>Handlers legados do addon</value>
+  </data>
+  <data name="ToastGuiRouteStateCapturePrefetch" xml:space="preserve">
+    <value>Captura/pré-busca via ToastGui</value>
+  </data>
+  <data name="ToastGuiRouteStateFullRuntime" xml:space="preserve">
+    <value>Runtime completo via ToastGui</value>
+  </data>
+  <data name="ToastGuiRouteStateAddonHandlerOnly" xml:space="preserve">
+    <value>Apenas handler do addon</value>
   </data>
   <data name="AddonProbeNoActiveWatch" xml:space="preserve">
     <value>Não há um watch ativo do addon probe para parar.</value>

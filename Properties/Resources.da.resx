@@ -923,4 +923,28 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Højeste niveau Claude model, når du ønsker maksimal kvalitet.</value>
   </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[OpenAI-kompatibel oversættelse er utilgængelig. Kontrollér endpoint, API-nøgle og modelindstillinger.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>OpenAI-kompatibel provider-konfiguration er ufuldstændig. Oversættelse vil ikke være tilgængelig, før endpoint, API-nøgle og model er udfyldt.</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Konfigurer et OpenAI-kompatibelt endpoint, en API-nøgle og en model. Live modelhentning er valgfri; hvis provideren ikke eksponerer /models korrekt, skal du bruge et manuelt model-id.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Kunne ikke hente modeller fra den konfigurerede OpenAI-kompatible provider. Behold et manuelt model-id, eller kontrollér endpoint og legitimationsoplysninger.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Brug det præcise model-id, som din OpenAI-kompatible provider eksponerer, når live modelliste ikke er tilgængelig eller er deaktiveret.</value>
+  </data>
 </root>

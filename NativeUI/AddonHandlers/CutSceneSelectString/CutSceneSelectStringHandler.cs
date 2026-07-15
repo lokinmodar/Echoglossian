@@ -17,7 +17,9 @@ public unsafe delegate void SyncCutSceneSelectStringOverlayBoundsDelegate(
 ///     The first readable text node becomes the question/title and the remaining
 ///     text nodes become the selectable options.
 /// </summary>
-public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
+public sealed class CutSceneSelectStringHandler :
+    IAddonTranslationHandler,
+    IVisibleDialogueRetranslationHandler
 {
   private const string AddonName = "CutSceneSelectString";
 
@@ -112,6 +114,197 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
         }));
   }
 
+  /// <inheritdoc />
+  public async Task<VisibleDialogueRetranslationResult>
+      RetranslateVisibleTextAndPersistAsync()
+  {
+    const VisibleStorySurfaceKind surface =
+        VisibleStorySurfaceKind.CutSceneSelectString;
+    var surfaceName = VisibleStorySurfaceText.ResolveSurfaceName(surface);
+    string originalQuestion;
+    List<string> originalOptions;
+    int requestId;
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return new VisibleDialogueRetranslationResult(
+          false,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+    }
+
+    var sourceLang = sourceLanguage.ProviderCode;
+    var targetLang = LangDict[LanguageInt].Code;
+
+    lock (this.stateGate)
+    {
+      originalQuestion = this.state.CurrentOriginalQuestion;
+      originalOptions = [.. this.state.CurrentOriginalOptions];
+      if (string.IsNullOrWhiteSpace(originalQuestion))
+      {
+        return new VisibleDialogueRetranslationResult(
+            false,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoVisibleTextMessage(surface));
+      }
+
+      this.state.ActiveRequestId++;
+      requestId = this.state.ActiveRequestId;
+      this.state.TranslationInFlight = true;
+      this.state.CurrentTranslatedQuestion = string.Empty;
+      this.state.CurrentTranslatedOptions = [];
+      this.state.CurrentReplacementQuestion = string.Empty;
+      this.state.CurrentReplacementOptions = [];
+    }
+
+    try
+    {
+      var (translatedQuestion, translatedOptions) = await this.TranslateDialogAsync(
+              originalQuestion,
+              originalOptions,
+              sourceLanguage,
+              TranslationSurfaceGroup.Dialogue)
+          .ConfigureAwait(false);
+
+      if (!this.HasUsableTranslatedDialogPayload(
+              originalQuestion,
+              originalOptions,
+              translatedQuestion,
+              translatedOptions,
+              sourceLang,
+              targetLang))
+      {
+        lock (this.stateGate)
+        {
+          if (this.state.ActiveRequestId == requestId)
+          {
+            this.state.TranslationInFlight = false;
+            this.state.LastFailedSourceKey = this.BuildSourceKey(
+                originalQuestion,
+                originalOptions);
+          }
+        }
+
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetNoUsableTranslationMessage(surface));
+      }
+
+      var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
+      var replacementQuestion = this.NormalizeForReplacement(translatedQuestion);
+      var replacementOptions = translatedOptions
+          .Select(this.NormalizeForReplacement)
+          .ToList();
+      var selectString = new SelectString(
+          originalQuestion,
+          sourceLanguage.PersistenceCode,
+          JsonConvert.SerializeObject(originalOptions),
+          translatedQuestion,
+          JsonConvert.SerializeObject(translatedOptions),
+          targetLang,
+          dialogueTranslationEngine,
+          DateTime.Now,
+          DateTime.Now);
+      var persistenceResult = await this.insertCutSceneSelectStringMessageAsync(
+              selectString)
+          .ConfigureAwait(false);
+      var persistenceSucceeded = !persistenceResult.StartsWith(
+          "ErrorSavingData:",
+          StringComparison.Ordinal) &&
+                                 !string.Equals(
+                                     persistenceResult,
+                                     "No data to save.",
+                                     StringComparison.Ordinal);
+      var sourceChangedBeforeApply = false;
+      lock (this.stateGate)
+      {
+        sourceChangedBeforeApply = this.state.ActiveRequestId != requestId;
+        if (!sourceChangedBeforeApply)
+        {
+          this.state.CurrentOriginalQuestion = originalQuestion;
+          this.state.CurrentOriginalOptions = [.. originalOptions];
+          this.state.CurrentTranslatedQuestion = translatedQuestion;
+          this.state.CurrentTranslatedOptions = [.. translatedOptions];
+          this.state.CurrentReplacementQuestion = replacementQuestion;
+          this.state.CurrentReplacementOptions = [.. replacementOptions];
+          this.state.TranslationInFlight = false;
+          this.state.LastFailedSourceKey = string.Empty;
+        }
+      }
+
+      if (!sourceChangedBeforeApply)
+      {
+        this.RecordDiagnosticsSnapshot(
+            VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+            originalQuestion,
+            originalOptions,
+            translatedQuestion,
+            translatedOptions,
+            dialogueTranslationEngine);
+        this.PublishOverlay();
+      }
+
+      if (!persistenceSucceeded)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            false,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistenceFailedMessage(
+                surface,
+                persistenceResult));
+      }
+
+      if (sourceChangedBeforeApply)
+      {
+        return new VisibleDialogueRetranslationResult(
+            true,
+            true,
+            surface,
+            surfaceName,
+            VisibleStorySurfaceText.GetPersistedButVisibleChangedMessage(
+                surface));
+      }
+
+      return new VisibleDialogueRetranslationResult(
+          true,
+          true,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslatedAndPersistedMessage(surface));
+    }
+    catch (Exception ex)
+    {
+      lock (this.stateGate)
+      {
+        if (this.state.ActiveRequestId == requestId)
+        {
+          this.state.TranslationInFlight = false;
+          this.state.LastFailedSourceKey = this.BuildSourceKey(
+              originalQuestion,
+              originalOptions);
+        }
+      }
+
+      PluginRuntimeLog.Error(
+          $"[{AddonName}] Error retranslating visible CutSceneSelectString text: {ex}");
+      return new VisibleDialogueRetranslationResult(
+          true,
+          false,
+          surface,
+          surfaceName,
+          VisibleStorySurfaceText.GetRetranslationFailedMessage(surface));
+    }
+  }
+
   /// <summary>
   ///     Registers a local delegate for the specified addon event.
   /// </summary>
@@ -137,6 +330,12 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   private unsafe void OnCaptureDialog(AddonEvent type, AddonArgs args)
   {
     if (!this.ShouldHandleCutSceneSelectString(args, out var addon))
+    {
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
     {
       return;
     }
@@ -167,6 +366,7 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
     if (this.TryGetCachedTranslation(
             originalQuestion,
             originalOptions,
+            sourceLanguage,
             out var translatedQuestion,
             out var translatedOptions,
             out var replacementQuestion,
@@ -189,6 +389,7 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
     if (this.TryLoadStoredTranslation(
             originalQuestion,
             originalOptions,
+            sourceLanguage,
             out var storedTranslatedQuestion,
             out var storedTranslatedOptions,
             out var storedReplacementQuestion,
@@ -224,7 +425,11 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
       this.Trace(
           $"trigger={type} queued translation request={requestId} " +
           $"source='{this.Preview(originalQuestion)}' options={originalOptions.Count}");
-      Task.Run(() => this.ResolveTranslationAsync(originalQuestion, originalOptions, requestId));
+      Task.Run(() => this.ResolveTranslationAsync(
+          originalQuestion,
+          originalOptions,
+          requestId,
+          sourceLanguage));
     }
   }
 
@@ -235,6 +440,11 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   private unsafe void OnUpdateVisibleAddon(AddonEvent type, AddonArgs args)
   {
     if (!this.ShouldHandleCutSceneSelectString(args, out var addon))
+    {
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(out _))
     {
       return;
     }
@@ -296,6 +506,8 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
       this.state = new DialogState();
     }
 
+    VisibleStorySurfaceDiagnosticsStore.Clear(
+        VisibleStorySurfaceKind.CutSceneSelectString);
     this.clearOverlay();
   }
 
@@ -338,11 +550,19 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   /// <summary>
   ///     Resolves a CutSceneSelectString translation without blocking the game UI.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="requestId">The active request identifier.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>A task that completes after the translation attempt.</returns>
   private async Task ResolveTranslationAsync(
       string originalQuestion,
       List<string> originalOptions,
-      int requestId)
+      int requestId,
+      SourceClientLanguage sourceLanguage)
   {
+    var sourceLang = sourceLanguage.ProviderCode;
+    var targetLang = LangDict[LanguageInt].Code;
     string translatedQuestion;
     List<string> translatedOptions;
 
@@ -352,7 +572,11 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
           $"request={requestId} translating question='{this.Preview(originalQuestion)}' " +
           $"options={originalOptions.Count}");
       (translatedQuestion, translatedOptions) =
-          await this.TranslateDialogAsync(originalQuestion, originalOptions);
+          await this.TranslateDialogAsync(
+              originalQuestion,
+              originalOptions,
+              sourceLanguage,
+              TranslationSurfaceGroup.Dialogue).ConfigureAwait(false);
     }
     catch (Exception e)
     {
@@ -371,6 +595,29 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
       return;
     }
 
+    if (!this.HasUsableTranslatedDialogPayload(
+            originalQuestion,
+            originalOptions,
+            translatedQuestion,
+            translatedOptions,
+            sourceLang,
+            targetLang))
+    {
+      lock (this.stateGate)
+      {
+        if (this.state.ActiveRequestId == requestId)
+        {
+          this.state.TranslationInFlight = false;
+          this.state.LastFailedSourceKey = this.BuildSourceKey(
+              originalQuestion,
+              originalOptions);
+        }
+      }
+
+      return;
+    }
+
+    var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
     var replacementQuestion = this.NormalizeForReplacement(translatedQuestion);
     var replacementOptions = translatedOptions
         .Select(this.NormalizeForReplacement)
@@ -382,12 +629,12 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
 
     var selectString = new SelectString(
         originalQuestion,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         JsonConvert.SerializeObject(originalOptions),
         translatedQuestion,
         JsonConvert.SerializeObject(translatedOptions),
-        LangDict[LanguageInt].Code,
-        this.config.ChosenTransEngine,
+        targetLang,
+        dialogueTranslationEngine,
         DateTime.Now,
         DateTime.Now);
 
@@ -421,6 +668,14 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
       this.state.TranslationInFlight = false;
       this.state.LastFailedSourceKey = string.Empty;
     }
+
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.FreshLiveTranslation,
+        originalQuestion,
+        originalOptions,
+        translatedQuestion,
+        translatedOptions,
+        dialogueTranslationEngine);
   }
 
   /// <summary>
@@ -428,12 +683,19 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   ///     when possible, falling back to per-item translation if the batch
   ///     parsing fails.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The translated question and options.</returns>
   private async Task<(string TranslatedQuestion, List<string> TranslatedOptions)>
       TranslateDialogAsync(
           string originalQuestion,
-          IReadOnlyList<string> originalOptions)
+          IReadOnlyList<string> originalOptions,
+          SourceClientLanguage sourceLanguage,
+          TranslationSurfaceGroup surfaceGroup)
   {
-    var sourceLang = ClientStateInterface.ClientLanguage.Humanize();
+    var sourceLang = sourceLanguage.ProviderCode;
     var targetLang = LangDict[LanguageInt].Code;
     var translatedMap = new Dictionary<int, string>();
 
@@ -451,8 +713,9 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
     {
       var translatedChunk = await this.translationService.TranslateAsync(
           chunk,
-          sourceLang,
-          targetLang);
+          sourceLanguage,
+          targetLang,
+          surfaceGroup).ConfigureAwait(false);
 
       if (string.IsNullOrWhiteSpace(translatedChunk))
       {
@@ -469,7 +732,9 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
     {
       return await this.TranslateDialogIndividuallyAsync(
           originalQuestion,
-          originalOptions);
+          originalOptions,
+          sourceLanguage,
+          surfaceGroup).ConfigureAwait(false);
     }
 
     var translatedQuestion = translatedMap.TryGetValue(0, out var questionText) &&
@@ -497,17 +762,33 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   /// <summary>
   ///     Falls back to translating each dialog element individually.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The translated question and options.</returns>
   private async Task<(string TranslatedQuestion, List<string> TranslatedOptions)>
       TranslateDialogIndividuallyAsync(
           string originalQuestion,
-          IReadOnlyList<string> originalOptions)
+          IReadOnlyList<string> originalOptions,
+          SourceClientLanguage sourceLanguage,
+          TranslationSurfaceGroup surfaceGroup)
   {
-    var translatedQuestion = await this.TranslateOrFallbackAsync(originalQuestion);
+    var translatedQuestion = await this.TranslateOrFallbackAsync(
+            originalQuestion,
+            sourceLanguage,
+            surfaceGroup)
+        .ConfigureAwait(false);
     var translatedOptions = new List<string>(originalOptions.Count);
 
     foreach (var option in originalOptions)
     {
-      translatedOptions.Add(await this.TranslateOrFallbackAsync(option));
+      translatedOptions.Add(
+          await this.TranslateOrFallbackAsync(
+                  option,
+                  sourceLanguage,
+                  surfaceGroup)
+              .ConfigureAwait(false));
     }
 
     return (translatedQuestion, translatedOptions);
@@ -631,9 +912,18 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   /// <summary>
   ///     Tries to use a cached translation already held in memory.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="translatedQuestion">Receives the translated question.</param>
+  /// <param name="translatedOptions">Receives the translated options.</param>
+  /// <param name="replacementQuestion">Receives the replacement question.</param>
+  /// <param name="replacementOptions">Receives the replacement options.</param>
+  /// <returns>Whether a cached translation was found.</returns>
   private bool TryGetCachedTranslation(
       string originalQuestion,
       List<string> originalOptions,
+      SourceClientLanguage sourceLanguage,
       out string translatedQuestion,
       out List<string> translatedOptions,
       out string replacementQuestion,
@@ -644,7 +934,10 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
     replacementQuestion = string.Empty;
     replacementOptions = [];
 
-    var selectString = this.BuildLookupSelectString(originalQuestion, originalOptions);
+    var selectString = this.BuildLookupSelectString(
+        originalQuestion,
+        originalOptions,
+        sourceLanguage);
     var lookup = this.findCutSceneSelectStringMessage(selectString);
     if (lookup == null ||
         string.IsNullOrWhiteSpace(lookup.TranslatedSelectString))
@@ -670,15 +963,31 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
         translatedOptions,
         replacementQuestion,
         replacementOptions);
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.DbReuse,
+        originalQuestion,
+        originalOptions,
+        translatedQuestion,
+        translatedOptions,
+        lookup.TranslationEngine ?? this.GetDialogueTranslationEngineId());
     return true;
   }
 
   /// <summary>
   ///     Tries to load a translated CutSceneSelectString row from the database.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="translatedQuestion">Receives the translated question.</param>
+  /// <param name="translatedOptions">Receives the translated options.</param>
+  /// <param name="replacementQuestion">Receives the replacement question.</param>
+  /// <param name="replacementOptions">Receives the replacement options.</param>
+  /// <returns>Whether a stored translation was found.</returns>
   private bool TryLoadStoredTranslation(
       string originalQuestion,
       List<string> originalOptions,
+      SourceClientLanguage sourceLanguage,
       out string translatedQuestion,
       out List<string> translatedOptions,
       out string replacementQuestion,
@@ -689,7 +998,10 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
     replacementQuestion = string.Empty;
     replacementOptions = [];
 
-    var selectString = this.BuildLookupSelectString(originalQuestion, originalOptions);
+    var selectString = this.BuildLookupSelectString(
+        originalQuestion,
+        originalOptions,
+        sourceLanguage);
     var lookup = this.findCutSceneSelectStringMessage(selectString);
     if (lookup == null ||
         string.IsNullOrWhiteSpace(lookup.TranslatedSelectString))
@@ -715,6 +1027,13 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
         translatedOptions,
         replacementQuestion,
         replacementOptions);
+    this.RecordDiagnosticsSnapshot(
+        VisibleStorySurfaceProvenanceKind.DbReuse,
+        originalQuestion,
+        originalOptions,
+        translatedQuestion,
+        translatedOptions,
+        lookup.TranslationEngine ?? this.GetDialogueTranslationEngineId());
     return true;
   }
 
@@ -799,13 +1118,18 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   /// <summary>
   ///     Builds a database lookup entity for the currently visible question and options.
   /// </summary>
+  /// <param name="originalQuestion">The original dialog question.</param>
+  /// <param name="originalOptions">The original dialog options.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>The select-string lookup entity.</returns>
   private SelectString BuildLookupSelectString(
       string originalQuestion,
-      List<string> originalOptions)
+      List<string> originalOptions,
+      SourceClientLanguage sourceLanguage)
   {
     return new SelectString(
         originalQuestion,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         JsonConvert.SerializeObject(originalOptions),
         string.Empty,
         string.Empty,
@@ -819,14 +1143,118 @@ public sealed class CutSceneSelectStringHandler : IAddonTranslationHandler
   ///     Translates a piece of text or falls back to the original text when the
   ///     translation service does not return content.
   /// </summary>
-  private async Task<string> TranslateOrFallbackAsync(string text)
+  /// <param name="text">The source text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The translated text or the original fallback.</returns>
+  private async Task<string> TranslateOrFallbackAsync(
+      string text,
+      SourceClientLanguage sourceLanguage,
+      TranslationSurfaceGroup surfaceGroup)
   {
     var translatedText = await this.translationService.TranslateAsync(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
-        LangDict[LanguageInt].Code);
+        sourceLanguage,
+        LangDict[LanguageInt].Code,
+        surfaceGroup).ConfigureAwait(false);
 
     return string.IsNullOrWhiteSpace(translatedText) ? text : translatedText;
+  }
+
+  /// <summary>
+  ///     Determines whether the translated CutSceneSelectString payload
+  ///     contains at least one usable translated question or option.
+  /// </summary>
+  /// <param name="originalQuestion">The original question text.</param>
+  /// <param name="originalOptions">The original option payload.</param>
+  /// <param name="translatedQuestion">The translated question text.</param>
+  /// <param name="translatedOptions">The translated option payload.</param>
+  /// <param name="sourceLang">The original language.</param>
+  /// <param name="targetLang">The target language.</param>
+  /// <returns>
+  ///     <see langword="true" /> when at least one translated element is
+  ///     usable for persistence; otherwise, <see langword="false" />.
+  /// </returns>
+  private bool HasUsableTranslatedDialogPayload(
+      string originalQuestion,
+      IReadOnlyList<string> originalOptions,
+      string translatedQuestion,
+      IReadOnlyList<string> translatedOptions,
+      string sourceLang,
+      string targetLang)
+  {
+    if (TranslationPersistenceGuard.IsUsableDialogueTranslation(
+            originalQuestion,
+            translatedQuestion,
+            sourceLang,
+            targetLang))
+    {
+      return true;
+    }
+
+    var optionCount = Math.Min(originalOptions.Count, translatedOptions.Count);
+    for (var i = 0; i < optionCount; i++)
+    {
+      if (TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              originalOptions[i],
+              translatedOptions[i],
+              sourceLang,
+              targetLang))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Records the latest visible CutSceneSelectString provenance snapshot
+  ///     for the debugger.
+  /// </summary>
+  /// <param name="provenance">The provenance label kind to expose.</param>
+  /// <param name="originalQuestion">The original question text.</param>
+  /// <param name="originalOptions">The original option payload.</param>
+  /// <param name="translatedQuestion">The translated question text.</param>
+  /// <param name="translatedOptions">The translated option payload.</param>
+  /// <param name="effectiveTranslationEngineId">
+  /// The effective dialogue translation engine identifier.
+  /// </param>
+  private void RecordDiagnosticsSnapshot(
+      VisibleStorySurfaceProvenanceKind provenance,
+      string originalQuestion,
+      IReadOnlyList<string> originalOptions,
+      string translatedQuestion,
+      IReadOnlyList<string> translatedOptions,
+      int effectiveTranslationEngineId)
+  {
+    VisibleStorySurfaceDiagnosticsStore.Record(
+        new VisibleStorySurfaceDiagnosticsSnapshot(
+            VisibleStorySurfaceKind.CutSceneSelectString,
+            provenance,
+            VisibleStorySurfaceTableMap.Resolve(
+                VisibleStorySurfaceKind.CutSceneSelectString),
+            string.Empty,
+            originalQuestion,
+            string.Join('\n', originalOptions),
+            string.Empty,
+            translatedQuestion,
+            string.Join('\n', translatedOptions),
+            false,
+            effectiveTranslationEngineId,
+            DateTime.UtcNow,
+            null,
+            null));
+  }
+
+  /// <summary>
+  ///     Resolves the effective dialogue translation engine identifier.
+  /// </summary>
+  /// <returns>The effective dialogue translation engine identifier.</returns>
+  private int GetDialogueTranslationEngineId()
+  {
+    return this.translationService.GetEffectiveTranslationEngineId(
+        TranslationSurfaceGroup.Dialogue);
   }
 
   /// <summary>

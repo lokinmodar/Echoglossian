@@ -13,8 +13,7 @@ namespace Echoglossian.DBManagerUI.Components
   {
     private readonly Func<IReadOnlyList<IProperty>?> getScalarProps;
     private readonly Func<IList<object>?> getRows;
-    private readonly Func<HashSet<int>> getSelection;
-    private readonly Action<object> onRowDoubleClick;
+    private readonly InspectionTableView inspectionTableView;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DbTableView"/> class.
@@ -31,8 +30,21 @@ namespace Echoglossian.DBManagerUI.Components
     {
       this.getScalarProps = getScalarProps;
       this.getRows = getRows;
-      this.getSelection = getSelection;
-      this.onRowDoubleClick = onRowDoubleClick;
+      this.inspectionTableView = new InspectionTableView(
+        tableId: "dbTable",
+        getColumns: this.BuildColumns,
+        getRows: this.BuildRows,
+        noRecordsLoadedMessage: Resources.NoRecordsLoaded,
+        noRecordsFoundMessage: Resources.NoRecordsFoundInThisTable,
+        noColumnsMessage: Resources.NoScalarPropertiesToDisplay,
+        getSelection: getSelection,
+        onRowDoubleClick: (row) =>
+        {
+          if (row.Payload != null)
+          {
+            onRowDoubleClick(row.Payload);
+          }
+        });
     }
 
     /// <summary>
@@ -40,106 +52,43 @@ namespace Echoglossian.DBManagerUI.Components
     /// </summary>
     public void Draw()
     {
-      var props = this.getScalarProps();
-      var rows = this.getRows();
+      this.inspectionTableView.Draw();
+    }
 
-      if (rows == null)
+    private IReadOnlyList<InspectionColumnDefinition>? BuildColumns()
+    {
+      var props = this.getScalarProps();
+      if (props == null)
       {
-        ImGui.Text("No records loaded.");
-        return;
+        return null;
       }
 
-      if (rows.Count == 0)
+      return props
+        .Select(prop => new InspectionColumnDefinition(prop.Name))
+        .ToList();
+    }
+
+    private IReadOnlyList<InspectionRow>? BuildRows()
+    {
+      var props = this.getScalarProps();
+      var rows = this.getRows();
+      if (rows == null)
       {
-        ImGui.Text("No records found in this table.");
-        return;
+        return null;
       }
 
       if (props == null || props.Count == 0)
       {
-        ImGui.Text("No scalar properties to display.");
-        return;
+        return new List<InspectionRow>();
       }
 
-      int totalColumns = 1 + props.Count;
-
-      if (ImGui.BeginTable("##dbTable", totalColumns, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable))
-      {
-        ImGui.TableSetupScrollFreeze(0, 1);
-
-        ImGui.TableSetupColumn("##sel", ImGuiTableColumnFlags.WidthFixed, 28f);
-
-        foreach (var prop in props)
-        {
-          ImGui.TableSetupColumn(prop.Name, ImGuiTableColumnFlags.WidthFixed, 150f);
-        }
-
-        ImGui.TableHeadersRow();
-
-        var selection = this.getSelection();
-
-        for (int i = 0; i < rows.Count; i++)
-        {
-          var row = rows[i];
-
-          ImGui.TableNextRow();
-
-          // Selection checkbox column
-          ImGui.TableSetColumnIndex(0);
-          bool isSelected = selection.Contains(i);
-          if (ImGui.Checkbox($"##chk{i}", ref isSelected))
-          {
-            if (isSelected)
-            {
-              selection.Add(i);
-            }
-            else
-            {
-              selection.Remove(i);
-            }
-          }
-
-          // Data columns
-          for (int c = 0; c < props.Count; c++)
-          {
-            var prop = props[c];
-            ImGui.TableSetColumnIndex(c + 1);
-
-            object? val = this.SafeGetValue(row, prop.PropertyInfo!);
-            string text = this.RenderCellValue(val);
-
-            ImGui.PushID((i * 10000) + c);
-
-            // compute a wrap width equal to the current column content width
-            float wrapAt = ImGui.GetCursorPosX() + ImGui.GetColumnWidth();
-
-            // draw wrapped text item
-            ImGui.PushTextWrapPos(wrapAt);
-            ImGui.TextUnformatted(text);
-            ImGui.PopTextWrapPos();
-
-            // tooltip for very long strings
-            if (text.Length > 256 && ImGui.IsItemHovered())
-            {
-              ImGui.BeginTooltip();
-              ImGui.PushTextWrapPos(ImGui.GetFontSize() * 60.0f);
-              ImGui.TextUnformatted(text);
-              ImGui.PopTextWrapPos();
-              ImGui.EndTooltip();
-            }
-
-            // reliable double-click detection on this item
-            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
-            {
-              this.onRowDoubleClick(row);
-            }
-
-            ImGui.PopID();
-          }
-        }
-
-        ImGui.EndTable();
-      }
+      return rows
+        .Select(row => new InspectionRow(
+          props
+            .Select(prop => InspectionCellFormatter.Format(this.SafeGetValue(row, prop.PropertyInfo!)))
+            .ToList(),
+          row))
+        .ToList();
     }
 
     private object? SafeGetValue(object obj, PropertyInfo pi)
@@ -152,27 +101,6 @@ namespace Echoglossian.DBManagerUI.Components
       {
         return null;
       }
-    }
-
-    private string RenderCellValue(object? val)
-    {
-      if (val == null)
-      {
-        return "(null)";
-      }
-
-      if (val is byte[] bytes)
-      {
-        return $"[BLOB {bytes.Length} bytes]";
-      }
-
-      string s = val.ToString() ?? string.Empty;
-      if (s.Length > 256)
-      {
-        s = s.Substring(0, 256) + "…";
-      }
-
-      return s;
     }
   }
 }

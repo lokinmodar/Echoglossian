@@ -22,23 +22,30 @@ public partial class Echoglossian
     {
         if (probe == null ||
             probe.ActionId == 0 ||
+            string.IsNullOrWhiteSpace(probe.OriginalLang) ||
             string.IsNullOrWhiteSpace(probe.TranslationLang) ||
             string.IsNullOrWhiteSpace(probe.SourceContentHash))
         {
             return null;
         }
 
+        var scope = new TranslationReuseScope(
+            probe.OriginalLang,
+            probe.TranslationLang,
+            probe.TranslationEngine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
         var cached = ActionTooltipCacheManager.TryFindCanonicalMatch(
             probe.ActionId,
-            probe.TranslationLang,
-            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            scope,
             probe.GameVersion,
             probe.SourceContentHash);
         if (cached != null)
         {
             if (!HasTranslatedActionTooltipContent(cached))
             {
-                var promotedCached = this.TryPromoteHistoricalActionTooltip(probe);
+                var promotedCached = this.TryPromoteHistoricalActionTooltip(
+                    probe,
+                    scope);
                 if (promotedCached != null)
                 {
                     return promotedCached;
@@ -48,7 +55,7 @@ public partial class Echoglossian
             return cached;
         }
 
-        var historical = this.TryPromoteHistoricalActionTooltip(probe);
+        var historical = this.TryPromoteHistoricalActionTooltip(probe, scope);
         if (historical != null)
         {
             return historical;
@@ -56,7 +63,8 @@ public partial class Echoglossian
 
         var row = ActionTooltipPersistenceHelper.FindActionTooltip(
             ConfigDirectory,
-            probe);
+            probe,
+            scope);
         if (row != null)
         {
             ActionTooltipCacheManager.Update(row);
@@ -87,23 +95,28 @@ public partial class Echoglossian
     {
         if (probe == null ||
             probe.TraitId == 0 ||
+            string.IsNullOrWhiteSpace(probe.OriginalLang) ||
             string.IsNullOrWhiteSpace(probe.TranslationLang) ||
             string.IsNullOrWhiteSpace(probe.SourceContentHash))
         {
             return null;
         }
 
+        var scope = new TranslationReuseScope(
+            probe.OriginalLang,
+            probe.TranslationLang,
+            probe.TranslationEngine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
         var cached = TraitCacheManager.TryFindCanonicalMatch(
             probe.TraitId,
-            probe.TranslationLang,
-            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            scope,
             probe.GameVersion,
             probe.SourceContentHash);
         if (cached != null)
         {
             if (!HasTranslatedTraitContent(cached))
             {
-                var promotedCached = this.TryPromoteHistoricalTrait(probe);
+                var promotedCached = this.TryPromoteHistoricalTrait(probe, scope);
                 if (promotedCached != null)
                 {
                     return promotedCached;
@@ -113,7 +126,7 @@ public partial class Echoglossian
             return cached;
         }
 
-        var historical = this.TryPromoteHistoricalTrait(probe);
+        var historical = this.TryPromoteHistoricalTrait(probe, scope);
         if (historical != null)
         {
             return historical;
@@ -121,7 +134,8 @@ public partial class Echoglossian
 
         var row = TraitPersistenceHelper.FindTrait(
             ConfigDirectory,
-            probe);
+            probe,
+            scope);
         if (row != null)
         {
             TraitCacheManager.Update(row);
@@ -152,23 +166,30 @@ public partial class Echoglossian
     {
         if (probe == null ||
             probe.ItemId == 0 ||
+            string.IsNullOrWhiteSpace(probe.OriginalLang) ||
             string.IsNullOrWhiteSpace(probe.TranslationLang) ||
             string.IsNullOrWhiteSpace(probe.SourceContentHash))
         {
             return null;
         }
 
+        var scope = new TranslationReuseScope(
+            probe.OriginalLang,
+            probe.TranslationLang,
+            probe.TranslationEngine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
         var cached = ItemTooltipCacheManager.TryFindCanonicalMatch(
             probe.ItemId,
-            probe.TranslationLang,
-            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            scope,
             probe.GameVersion,
             probe.SourceContentHash);
         if (cached != null)
         {
             if (!HasTranslatedItemTooltipContent(cached))
             {
-                var promotedCached = this.TryPromoteHistoricalItemTooltip(probe);
+                var promotedCached = this.TryPromoteHistoricalItemTooltip(
+                    probe,
+                    scope);
                 if (promotedCached != null)
                 {
                     return promotedCached;
@@ -178,7 +199,7 @@ public partial class Echoglossian
             return cached;
         }
 
-        var historical = this.TryPromoteHistoricalItemTooltip(probe);
+        var historical = this.TryPromoteHistoricalItemTooltip(probe, scope);
         if (historical != null)
         {
             return historical;
@@ -186,7 +207,8 @@ public partial class Echoglossian
 
         var row = ItemTooltipPersistenceHelper.FindItemTooltip(
             ConfigDirectory,
-            probe);
+            probe,
+            scope);
         if (row != null)
         {
             ItemTooltipCacheManager.Update(row);
@@ -213,20 +235,21 @@ public partial class Echoglossian
     ///     current game version when the original payload hash still matches.
     /// </summary>
     /// <param name="probe">The current-version probe row.</param>
+    /// <param name="scope">The persisted probe translation scope.</param>
     /// <returns>The promoted row, or <see langword="null" />.</returns>
-    private ActionTooltip? TryPromoteHistoricalActionTooltip(ActionTooltip probe)
+    private ActionTooltip? TryPromoteHistoricalActionTooltip(
+        ActionTooltip probe,
+        TranslationReuseScope scope)
     {
         if (!GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion))
         {
             return null;
         }
 
-        var translationLang = probe.TranslationLang!;
         var sourceContentHash = probe.SourceContentHash!;
         var historical = ActionTooltipCacheManager.TryFindHistoricalCanonicalMatch(
             probe.ActionId,
-            translationLang,
-            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            scope,
             probe.GameVersion,
             sourceContentHash);
         if (historical == null || !HasTranslatedActionTooltipContent(historical))
@@ -244,20 +267,21 @@ public partial class Echoglossian
     ///     version when the original payload hash still matches.
     /// </summary>
     /// <param name="probe">The current-version probe row.</param>
+    /// <param name="scope">The persisted probe translation scope.</param>
     /// <returns>The promoted row, or <see langword="null" />.</returns>
-    private Trait? TryPromoteHistoricalTrait(Trait probe)
+    private Trait? TryPromoteHistoricalTrait(
+        Trait probe,
+        TranslationReuseScope scope)
     {
         if (!GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion))
         {
             return null;
         }
 
-        var translationLang = probe.TranslationLang!;
         var sourceContentHash = probe.SourceContentHash!;
         var historical = TraitCacheManager.TryFindHistoricalCanonicalMatch(
             probe.TraitId,
-            translationLang,
-            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            scope,
             probe.GameVersion,
             sourceContentHash);
         if (historical == null || !HasTranslatedTraitContent(historical))
@@ -275,20 +299,21 @@ public partial class Echoglossian
     ///     game version when the original payload hash still matches.
     /// </summary>
     /// <param name="probe">The current-version probe row.</param>
+    /// <param name="scope">The persisted probe translation scope.</param>
     /// <returns>The promoted row, or <see langword="null" />.</returns>
-    private ItemTooltip? TryPromoteHistoricalItemTooltip(ItemTooltip probe)
+    private ItemTooltip? TryPromoteHistoricalItemTooltip(
+        ItemTooltip probe,
+        TranslationReuseScope scope)
     {
         if (!GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion))
         {
             return null;
         }
 
-        var translationLang = probe.TranslationLang!;
         var sourceContentHash = probe.SourceContentHash!;
         var historical = ItemTooltipCacheManager.TryFindHistoricalCanonicalMatch(
             probe.ItemId,
-            translationLang,
-            probe.TranslationEngine ?? this.configuration.ChosenTransEngine,
+            scope,
             probe.GameVersion,
             sourceContentHash);
         if (historical == null || !HasTranslatedItemTooltipContent(historical))

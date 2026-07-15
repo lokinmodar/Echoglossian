@@ -64,7 +64,7 @@ public static class ModelDropdownUI
         {
             ImGui.TextColored(
                 new Vector4(1f, 0.6f, 0.6f, 1f),
-                GetText("NoModelsAvailable", "No models available."));
+                Resources.NoModelsAvailable);
             return false;
         }
 
@@ -83,7 +83,7 @@ public static class ModelDropdownUI
         string LabelFor(LlmTextModel model)
         {
             var tag = model.IsDefault
-                ? GetText("DefaultTag", " [default]")
+                ? Resources.DefaultTag
                 : string.Empty;
             return $"{model.DisplayName}{tag}";
         }
@@ -92,19 +92,19 @@ public static class ModelDropdownUI
         {
             var tier = model.Id switch
             {
-                var id when id.StartsWith("gpt-4o") => GetText("ModelTierGpt4o", "GPT-4o"),
-                var id when id.StartsWith("gpt-4") => GetText("ModelTierGpt4", "GPT-4"),
-                var id when id.StartsWith("gpt-3.5") => GetText("ModelTierGpt35", "GPT-3.5"),
-                var id when id.StartsWith("gemini-1.5") => GetText("ModelTierGemini15", "Gemini 1.5"),
-                var id when id.StartsWith("gemini-pro") => GetText("ModelTierGeminiPro", "Gemini Pro"),
-                var id when id.StartsWith("deepseek-chat") => GetText("ModelTierChat", "Chat"),
-                var id when id.StartsWith("deepseek-reasoner") => GetText("ModelTierReasoner", "Reasoner"),
-                var id when id.StartsWith("claude-opus") => GetText("ModelTierOpus", "Opus"),
-                var id when id.StartsWith("claude-sonnet") => GetText("ModelTierSonnet", "Sonnet"),
-                var id when id.StartsWith("claude-3-7-sonnet") => GetText("ModelTierSonnet", "Sonnet"),
-                var id when id.StartsWith("claude-3-5-haiku") => GetText("ModelTierHaiku", "Haiku"),
-                var id when id.StartsWith("o1-") => GetText("ModelTierO1", "O1"),
-                _ => GetText("ModelTierOther", "Other"),
+                var id when id.StartsWith("gpt-4o") => Resources.ModelTierGpt4o,
+                var id when id.StartsWith("gpt-4") => Resources.ModelTierGpt4,
+                var id when id.StartsWith("gpt-3.5") => Resources.ModelTierGpt35,
+                var id when id.StartsWith("gemini-1.5") => Resources.ModelTierGemini15,
+                var id when id.StartsWith("gemini-pro") => Resources.ModelTierGeminiPro,
+                var id when id.StartsWith("deepseek-chat") => Resources.ModelTierChat,
+                var id when id.StartsWith("deepseek-reasoner") => Resources.ModelTierReasoner,
+                var id when id.StartsWith("claude-opus") => Resources.ModelTierOpus,
+                var id when id.StartsWith("claude-sonnet") => Resources.ModelTierSonnet,
+                var id when id.StartsWith("claude-3-7-sonnet") => Resources.ModelTierSonnet,
+                var id when id.StartsWith("claude-3-5-haiku") => Resources.ModelTierHaiku,
+                var id when id.StartsWith("o1-") => Resources.ModelTierO1,
+                _ => Resources.ModelTierOther,
             };
 
             return $"{model.EngineName} / {tier}";
@@ -181,7 +181,7 @@ public static class ModelDropdownUI
         ImGui.TextColored(
             new Vector4(1f, 1f, 0.6f, 1f),
             string.Format(
-                GetText("ModelIdLabel", "Model ID: {0}"),
+                Resources.ModelIdLabel,
                 modelId));
         return changed;
     }
@@ -205,11 +205,5 @@ public static class ModelDropdownUI
             var id when id.StartsWith("o1-") => 3,
             _ => 999,
         };
-    }
-
-    private static string GetText(string key, string fallback)
-    {
-        return Resources.ResourceManager.GetString(key, Resources.Culture) ??
-               fallback;
     }
 }

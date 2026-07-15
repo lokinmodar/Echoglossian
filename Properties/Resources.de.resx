@@ -951,4 +951,28 @@
   <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
     <value>Claude-Modell der höchsten Stufe, wenn Sie maximale Qualität wünschen.</value>
   </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[OpenAI-kompatible Übersetzung ist nicht verfügbar. Bitte überprüfen Sie Endpunkt, API-Schlüssel und Modelleinstellungen.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Die Konfiguration des OpenAI-kompatiblen Anbieters ist unvollständig. Übersetzung ist erst verfügbar, wenn Endpunkt, API-Schlüssel und Modell ausgefüllt sind.</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Anbieter</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Konfigurieren Sie einen OpenAI-kompatiblen Endpunkt, API-Schlüssel und ein Modell. Das Abrufen von Live-Modellen ist optional; wenn der Anbieter /models nicht sauber bereitstellt, verwenden Sie eine manuelle Modell-ID.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Modelle konnten vom konfigurierten OpenAI-kompatiblen Anbieter nicht abgerufen werden. Verwenden Sie eine manuelle Modell-ID oder überprüfen Sie Endpunkt und Zugangsdaten.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Verwenden Sie die genaue Modell-ID Ihres OpenAI-kompatiblen Anbieters, wenn die Live-Modellliste nicht verfügbar oder deaktiviert ist.</value>
+  </data>
 </root>

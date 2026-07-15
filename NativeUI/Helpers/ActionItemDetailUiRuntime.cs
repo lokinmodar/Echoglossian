@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.UIOverlays.TranslationOverlay;
@@ -142,6 +143,12 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            return;
+        }
+
         var hoveredAction = GameGuiInterface.HoveredAction;
         var hoveredItemId = (uint)GameGuiInterface.HoveredItem;
         var hoveredActionId = hoveredAction.ActionId != 0
@@ -212,6 +219,7 @@ public unsafe partial class Echoglossian
             }
 
             if (!this.TryFindTranslatedTraitTooltipPayload(
+                    sourceLanguage,
                     originalTraitPayload,
                     out var translatedTraitPayload))
             {
@@ -335,6 +343,7 @@ public unsafe partial class Echoglossian
         }
 
         if (!this.TryFindTranslatedActionTooltipPayload(
+                sourceLanguage,
                 translatedLookupReferenceId,
                 originalPayload,
                 out var translatedPayload))
@@ -442,6 +451,12 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            return;
+        }
+
         var hoveredAction = GameGuiInterface.HoveredAction;
         var hoveredActionId = hoveredAction.ActionId;
         var hoveredItemKind = hoveredAction.DetailKind;
@@ -507,6 +522,7 @@ public unsafe partial class Echoglossian
             TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
 
         if (!this.TryFindTranslatedItemTooltipPayload(
+                sourceLanguage,
                 itemSourceKind,
                 originalPayload,
                 out var translatedPayload))
@@ -905,11 +921,13 @@ public unsafe partial class Echoglossian
     ///     Tries to resolve one translated action-tooltip payload from
     ///     canonical storage.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="referenceId">The hovered action or command identifier.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
     /// <param name="translatedPayload">The translated payload, if any.</param>
     /// <returns><see langword="true" /> when a complete translation is available.</returns>
     private bool TryFindTranslatedActionTooltipPayload(
+        SourceClientLanguage sourceLanguage,
         uint referenceId,
         ActionTooltipCanonicalPayload originalPayload,
         out ActionTooltipCanonicalPayload translatedPayload)
@@ -919,14 +937,21 @@ public unsafe partial class Echoglossian
         var targetLanguage = LangDict[LanguageInt].Code;
         var gameVersion = GetGameVersion();
         var engine = this.configuration.ChosenTransEngine;
-        var row = ActionTooltipCacheManager.TryFindIdentityMatch(
-            originalPayload.ActionId,
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
             targetLanguage,
             engine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
+        var row = ActionTooltipCacheManager.TryFindIdentityMatch(
+            originalPayload.ActionId,
+            scope,
             gameVersion,
             originalPayload.ClassJobId,
             originalPayload.ClassJobCategoryId);
-        if (TryBuildTranslatedActionTooltipPayloadFromRow(
+        if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
+                row?.OriginalLang,
+                sourceLanguage) &&
+            TryBuildTranslatedActionTooltipPayloadFromRow(
                 row,
                 originalPayload,
                 out translatedPayload))
@@ -935,14 +960,17 @@ public unsafe partial class Echoglossian
         }
 
         var probe = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             targetLanguage,
             engine,
             gameVersion,
             originalPayload);
 
         row = this.FindActionTooltip(probe);
-        if (TryBuildTranslatedActionTooltipPayloadFromRow(
+        if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
+                row?.OriginalLang,
+                sourceLanguage) &&
+            TryBuildTranslatedActionTooltipPayloadFromRow(
                 row,
                 originalPayload,
                 out translatedPayload))
@@ -952,8 +980,7 @@ public unsafe partial class Echoglossian
 
         if (ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
                 referenceId,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 out var translatedReferencePayload) &&
             TryBuildTranslatedActionTooltipPayloadFromReferencePayload(
@@ -966,8 +993,7 @@ public unsafe partial class Echoglossian
 
         if (string.IsNullOrWhiteSpace(originalPayload.Description) &&
             ReferenceTextCacheRegistry.TryFindTranslatedText(
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalPayload.Name,
                 out var translatedName))
@@ -986,10 +1012,12 @@ public unsafe partial class Echoglossian
     ///     Tries to resolve one translated trait payload from canonical
     ///     storage.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
     /// <param name="translatedPayload">The translated payload, if any.</param>
     /// <returns><see langword="true" /> when a complete translation is available.</returns>
     private bool TryFindTranslatedTraitTooltipPayload(
+        SourceClientLanguage sourceLanguage,
         TraitCanonicalPayload originalPayload,
         out TraitCanonicalPayload translatedPayload)
     {
@@ -998,14 +1026,21 @@ public unsafe partial class Echoglossian
         var targetLanguage = LangDict[LanguageInt].Code;
         var gameVersion = GetGameVersion();
         var engine = this.configuration.ChosenTransEngine;
-        var row = TraitCacheManager.TryFindIdentityMatch(
-            originalPayload.TraitId,
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
             targetLanguage,
             engine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
+        var row = TraitCacheManager.TryFindIdentityMatch(
+            originalPayload.TraitId,
+            scope,
             gameVersion,
             originalPayload.ClassJobId,
             originalPayload.ClassJobCategoryId);
-        if (TryBuildTranslatedTraitTooltipPayloadFromRow(
+        if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
+                row?.OriginalLang,
+                sourceLanguage) &&
+            TryBuildTranslatedTraitTooltipPayloadFromRow(
                 row,
                 originalPayload,
                 out translatedPayload))
@@ -1014,28 +1049,33 @@ public unsafe partial class Echoglossian
         }
 
         var probe = TraitPersistenceHelper.CreateCanonicalRow(
-            ClientStateInterface.ClientLanguage.Humanize(),
+            sourceLanguage.PersistenceCode,
             targetLanguage,
             engine,
             gameVersion,
             originalPayload);
 
         row = this.FindTrait(probe);
-        return TryBuildTranslatedTraitTooltipPayloadFromRow(
-            row,
-            originalPayload,
-            out translatedPayload);
+        return DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
+                   row?.OriginalLang,
+                   sourceLanguage) &&
+               TryBuildTranslatedTraitTooltipPayloadFromRow(
+                   row,
+                   originalPayload,
+                   out translatedPayload);
     }
 
     /// <summary>
     ///     Tries to resolve one translated item-tooltip payload from canonical
     ///     storage.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="sourceKind">The sheet family that produced the payload.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
     /// <param name="translatedPayload">The translated payload, if any.</param>
     /// <returns><see langword="true" /> when a complete translation is available.</returns>
     private bool TryFindTranslatedItemTooltipPayload(
+        SourceClientLanguage sourceLanguage,
         StructuredTooltipItemSourceKind sourceKind,
         ItemTooltipCanonicalPayload originalPayload,
         out ItemTooltipCanonicalPayload translatedPayload)
@@ -1045,15 +1085,22 @@ public unsafe partial class Echoglossian
         var targetLanguage = LangDict[LanguageInt].Code;
         var gameVersion = GetGameVersion();
         var engine = this.configuration.ChosenTransEngine;
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            targetLanguage,
+            engine,
+            this.configuration.TranslateAlreadyTranslatedTexts);
         if (sourceKind == StructuredTooltipItemSourceKind.Item)
         {
             var row = ItemTooltipCacheManager.TryFindIdentityMatch(
                 originalPayload.ItemId,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 originalPayload.ClassJobCategoryId);
-            if (TryBuildTranslatedItemTooltipPayloadFromRow(
+            if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
+                    row?.OriginalLang,
+                    sourceLanguage) &&
+                TryBuildTranslatedItemTooltipPayloadFromRow(
                     row,
                     originalPayload,
                     out translatedPayload))
@@ -1062,25 +1109,27 @@ public unsafe partial class Echoglossian
             }
 
             var probe = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-                ClientStateInterface.ClientLanguage.Humanize(),
+                sourceLanguage.PersistenceCode,
                 targetLanguage,
                 engine,
                 gameVersion,
                 originalPayload);
 
             row = this.FindItemTooltip(probe);
-            return TryBuildTranslatedItemTooltipPayloadFromRow(
-                row,
-                originalPayload,
-                out translatedPayload);
+            return DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
+                       row?.OriginalLang,
+                       sourceLanguage) &&
+                   TryBuildTranslatedItemTooltipPayloadFromRow(
+                       row,
+                       originalPayload,
+                       out translatedPayload);
         }
 
         return (sourceKind is StructuredTooltipItemSourceKind.EventItem or
             StructuredTooltipItemSourceKind.DeepDungeonItem) &&
             ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(
                 originalPayload.ItemId,
-                targetLanguage,
-                engine,
+                scope,
                 gameVersion,
                 out var translatedReferencePayload) &&
             TryBuildTranslatedItemTooltipPayloadFromReferencePayload(

@@ -142,16 +142,19 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="key">The cache key.</param>
   /// <param name="sourceTexts">The source texts to translate.</param>
+  /// <param name="sourceLanguage">The captured source client language.</param>
   /// <param name="onResolved">Optional callback invoked with the translated array.</param>
   /// <returns>True when the request is queued.</returns>
   private bool QueueTranslationBatch(
       string key,
       IReadOnlyCollection<string> sourceTexts,
+      SourceClientLanguage sourceLanguage,
       Action<string[]>? onResolved = null)
   {
     return this.QueueTranslation(
         key,
-        () => SerializeTranslationBatch(sourceTexts.Select(this.Translate).ToArray()),
+        () => SerializeTranslationBatch(
+            sourceTexts.Select(text => this.Translate(text, sourceLanguage)).ToArray()),
         translatedPayload =>
         {
           if (!TryDeserializeTranslationBatch(

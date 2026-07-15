@@ -16,6 +16,8 @@ public static class RuntimeLanguageHelper
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["zh"] = "zh-CN",
+            ["zh-Hans"] = "zh-CN",
+            ["zh-Hant"] = "zh-TW",
             ["pt"] = "pt-BR",
             ["he"] = "iw",
             ["nb"] = "no",
@@ -24,19 +26,91 @@ public static class RuntimeLanguageHelper
         };
 
     /// <summary>
-    ///     Gets the current native client language as a normalized language
-    ///     code.
+    ///     Gets the current native client language as a persisted source
+    ///     identity.
     /// </summary>
-    /// <returns>The normalized current game language code.</returns>
+    /// <returns>
+    ///     The current persisted source identity, or an empty string when the
+    ///     client language cannot be resolved.
+    /// </returns>
     public static string GetCurrentGameLanguageCode()
     {
-        return ClientStateInterface.ClientLanguage switch
+        return TryResolveCurrentSourceLanguage(out var sourceLanguage)
+            ? sourceLanguage.PersistenceCode
+            : string.Empty;
+    }
+
+    /// <summary>
+    ///     Resolves a client language into its stable persisted identity and
+    ///     provider input code.
+    /// </summary>
+    /// <param name="clientLanguage">The raw Dalamud client language.</param>
+    /// <param name="sourceLanguage">The resolved source-language contract.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the client language has a known
+    ///     identity; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryResolveSourceLanguage(
+        ClientLanguage clientLanguage,
+        out SourceClientLanguage sourceLanguage)
+    {
+        sourceLanguage = (int)clientLanguage switch
         {
-            ClientLanguage.Japanese => "ja",
-            ClientLanguage.German => "de",
-            ClientLanguage.French => "fr",
-            _ => "en",
+            0 => new SourceClientLanguage("ja", "ja"),
+            1 => new SourceClientLanguage("en", "en"),
+            2 => new SourceClientLanguage("de", "de"),
+            3 => new SourceClientLanguage("fr", "fr"),
+            4 => new SourceClientLanguage("chs", "zh-CN"),
+            5 => new SourceClientLanguage("cht", "zh-CN"),
+            6 => new SourceClientLanguage("ko", "ko"),
+            7 => new SourceClientLanguage("tc", "zh-TW"),
+            _ => default,
         };
+
+        if (!string.IsNullOrWhiteSpace(sourceLanguage.PersistenceCode))
+        {
+            return true;
+        }
+
+        // Only host-defined future values may use ToCode; raw undefined values
+        // remain unresolved even when a host fallback code exists.
+        if (!Enum.IsDefined(clientLanguage))
+        {
+            return false;
+        }
+
+        try
+        {
+            var hostCode = NormalizeLanguage(clientLanguage.ToCode());
+            if (!string.IsNullOrWhiteSpace(hostCode))
+            {
+                sourceLanguage = new SourceClientLanguage(hostCode, hostCode);
+                return true;
+            }
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // The current host does not expose an identity for this raw value.
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Resolves the currently active client language into its stable
+    ///     persisted identity and provider input code.
+    /// </summary>
+    /// <param name="sourceLanguage">The resolved source-language contract.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the current client language has a
+    ///     known identity; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryResolveCurrentSourceLanguage(
+        out SourceClientLanguage sourceLanguage)
+    {
+        return TryResolveSourceLanguage(
+            ClientStateInterface.ClientLanguage,
+            out sourceLanguage);
     }
 
     /// <summary>

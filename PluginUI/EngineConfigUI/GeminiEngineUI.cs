@@ -10,6 +10,8 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 
 public static class GeminiEngineUI
 {
+    private const string LiveModelRefreshScope = "Gemini";
+
     public static bool Draw(Config config, PromptTemplateManager promptManager)
     {
         var changed = false;
@@ -25,8 +27,6 @@ public static class GeminiEngineUI
             out isGeminiApiKeyInvalid);
         config.GeminiTranslatorApiKey = geminiApiKey;
 
-        // Optional: Live fetch toggle
-
         if (ImGui.Checkbox(
                 Resources.FetchLiveModels,
                 ref config.UseLiveGeminiModelList))
@@ -34,29 +34,49 @@ public static class GeminiEngineUI
             changed = true;
             if (config.UseLiveGeminiModelList)
             {
-                _ = Task.Run(() =>
-                    GeminiModelManager.RefreshAsync(
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => GeminiModelManager.RefreshAsync(
                         config.GeminiTranslatorApiKey ?? string.Empty));
             }
             else
             {
                 GeminiModelManager.ResetToDefault();
+                LiveModelRefreshCoordinator.Clear(LiveModelRefreshScope);
             }
         }
 
-        // Tooltip info per model
+        if (config.UseLiveGeminiModelList)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button(Resources.Reload))
+            {
+                LiveModelRefreshCoordinator.ForceRefresh(
+                    LiveModelRefreshScope,
+                    BuildLiveModelRefreshSignature(config),
+                    () => GeminiModelManager.RefreshAsync(
+                        config.GeminiTranslatorApiKey ?? string.Empty));
+            }
+        }
+
+        LiveModelRefreshCoordinator.RequestIfNeeded(
+            LiveModelRefreshScope,
+            config.UseLiveGeminiModelList,
+            BuildLiveModelRefreshSignature(config),
+            () => GeminiModelManager.RefreshAsync(
+                config.GeminiTranslatorApiKey ?? string.Empty));
+
         var tooltips = new Dictionary<string, string>
         {
-            ["gemini-pro"] = Resources.ResourceManager.GetString("GeminiModelTooltipPro", Resources.Culture) ??
-                             "🔷 Legacy Gemini Pro model (default)",
-            ["gemini-1.5-pro"] = Resources.ResourceManager.GetString("GeminiModelTooltip15Pro", Resources.Culture) ??
-                                 "🟢 Large context window and high accuracy",
-            ["gemini-1.5-flash"] = Resources.ResourceManager.GetString("GeminiModelTooltip15Flash", Resources.Culture) ??
-                                   "⚡ Fastest and cheapest Gemini model",
+            ["gemini-pro"] = Resources.GeminiModelTooltipPro,
+            ["gemini-1.5-pro"] = Resources.GeminiModelTooltip15Pro,
+            ["gemini-1.5-flash"] = Resources.GeminiModelTooltip15Flash,
         };
 
-        // Use either GeminiModelManager.CurrentModels if live, or static:
-        var models = GeminiTextModelDefaults.PredefinedModels;
+        var models = config.UseLiveGeminiModelList
+            ? GeminiModelManager.CurrentModelList
+            : GeminiTextModelDefaults.PredefinedModels;
 
         changed |= ModelDropdownUI.Draw(
             Resources.LLMModel,
@@ -64,6 +84,7 @@ public static class GeminiEngineUI
             models,
             "Gemini",
             tooltips);
+        config.GeminiModel = config.GeminiModelId;
 
         PromptEditorUI.Draw(
             promptManager,
@@ -78,5 +99,14 @@ public static class GeminiEngineUI
         }
 
         return changed;
+    }
+
+    private static string BuildLiveModelRefreshSignature(Config config)
+    {
+        return LiveModelRefreshSignatureHelper.Build(
+            new LiveModelRefreshSignatureComponent(
+                "apiKeyHash",
+                config.GeminiTranslatorApiKey,
+                Sensitive: true));
     }
 }

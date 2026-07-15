@@ -92,15 +92,25 @@ public static class ItemTooltipPersistenceHelper
                 GameVersionLookupHelper.HasRequestedVersion(
                     itemTooltip.GameVersion);
 
-            var existing = context.ItemTooltip.FirstOrDefault(row =>
-                row.ItemId == itemTooltip.ItemId &&
-                row.TranslationLang == itemTooltip.TranslationLang &&
-                row.TranslationEngine == itemTooltip.TranslationEngine &&
-                ((!hasRequestedGameVersion && row.GameVersion == null) ||
-                 (hasRequestedGameVersion &&
-                  (row.GameVersion == null ||
-                   row.GameVersion == itemTooltip.GameVersion))) &&
-                row.SourceContentHash == itemTooltip.SourceContentHash);
+            var existing = context.ItemTooltip
+                .Where(row =>
+                    row.ItemId == itemTooltip.ItemId &&
+                    row.TranslationEngine == itemTooltip.TranslationEngine &&
+                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (row.GameVersion == null ||
+                       row.GameVersion == itemTooltip.GameVersion))) &&
+                    row.SourceContentHash == itemTooltip.SourceContentHash)
+                .AsEnumerable()
+                .Where(row => RuntimeLanguageHelper.LanguagesMatch(
+                    row.OriginalLang,
+                    itemTooltip.OriginalLang) &&
+                    RuntimeLanguageHelper.LanguagesMatch(
+                        row.TranslationLang,
+                        itemTooltip.TranslationLang))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
             if (existing != null)
             {
                 MergeValues(existing, itemTooltip);
@@ -138,6 +148,34 @@ public static class ItemTooltipPersistenceHelper
         string configDirectory,
         ItemTooltip probe)
     {
+        if (probe == null)
+        {
+            return null;
+        }
+
+        return FindItemTooltip(
+            configDirectory,
+            probe,
+            new TranslationReuseScope(
+                probe.OriginalLang ?? string.Empty,
+                probe.TranslationLang ?? string.Empty,
+                probe.TranslationEngine,
+                true));
+    }
+
+    /// <summary>
+    ///     Finds one canonical item-tooltip row using an explicit translation
+    ///     reuse scope.
+    /// </summary>
+    /// <param name="configDirectory">The plugin config directory containing SQLite.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    public static ItemTooltip? FindItemTooltip(
+        string configDirectory,
+        ItemTooltip probe,
+        TranslationReuseScope scope)
+    {
         using var context = new EchoglossianDbContext(configDirectory);
 
         try
@@ -152,15 +190,21 @@ public static class ItemTooltipPersistenceHelper
 
             return context.ItemTooltip
                 .AsNoTracking()
-                .FirstOrDefault(row =>
+                .Where(row =>
                     row.ItemId == probe.ItemId &&
-                    row.TranslationLang == probe.TranslationLang &&
-                    row.TranslationEngine == probe.TranslationEngine &&
                     ((!hasRequestedGameVersion && row.GameVersion == null) ||
                      (hasRequestedGameVersion &&
                       (row.GameVersion == null ||
                        row.GameVersion == probe.GameVersion))) &&
-                    row.SourceContentHash == probe.SourceContentHash);
+                    row.SourceContentHash == probe.SourceContentHash)
+                .AsEnumerable()
+                .Where(row => scope.Matches(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    row.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
         }
         catch
         {
@@ -177,6 +221,7 @@ public static class ItemTooltipPersistenceHelper
     {
         return row != null &&
                row.ItemId > 0 &&
+               !string.IsNullOrWhiteSpace(row.OriginalLang) &&
                !string.IsNullOrWhiteSpace(row.TranslationLang) &&
                !string.IsNullOrWhiteSpace(row.SourceContentHash);
     }
@@ -229,6 +274,33 @@ public static class ItemTooltipPersistenceHelper
     private static string? FirstNonEmpty(string? preferred, string? fallback)
     {
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
+    }
+
+    /// <summary>
+    ///     Computes how many translated item fields are populated so alias
+    ///     reuse prefers an existing completed row over an incomplete row.
+    /// </summary>
+    /// <param name="row">The item row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(ItemTooltip row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>

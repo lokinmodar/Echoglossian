@@ -618,16 +618,12 @@ namespace Echoglossian
 
       var shouldUseGeneralFont = this.ShouldUseGeneralOverlayFont(config);
       var effectiveFontScale = GetEffectiveOverlayFontScale(config.FontScale);
+      var shouldCenterOverlayText = this.ShouldCenterOverlayText(config.SurfaceId);
+      var shouldRightAlignOverlayText =
+          LanguagePresentationPolicy.ShouldRightAlign(this.configuration.Lang);
       var viewportWidth = ImGui.GetMainViewport().Size.X;
       var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2;
       var baseWidth = overlay.Dimensions.X * config.WidthMultiplier;
-      var overlayTextLines = SplitOverlayTextLines(overlayText);
-      var textWidth = this.MeasureOverlayTextWidth(
-          overlayText,
-          overlayTextLines,
-          shouldUseGeneralFont,
-          effectiveFontScale,
-          horizontalPadding);
       var defaultMaxWidth = Math.Max(320f, viewportWidth - 80f);
       var minWidth = config.MinWidthViewportFraction > 0.0f
           ? viewportWidth * config.MinWidthViewportFraction
@@ -637,6 +633,77 @@ namespace Echoglossian
               viewportWidth * config.MaxWidthViewportFraction,
               defaultMaxWidth)
           : defaultMaxWidth;
+      var renderWidthLimit = this.ResolveOverlayRenderWidthLimit(
+          config,
+          baseWidth,
+          minWidth,
+          maxWidth);
+      var overlayTextRequest = new TextLayoutRequest(
+          overlayText,
+          this.configuration.Lang,
+          SelectedLanguage.Code,
+          Math.Max(64f, renderWidthLimit - horizontalPadding),
+          effectiveFontScale,
+          shouldUseGeneralFont,
+          new Vector4(
+              config.TextColor.X,
+              config.TextColor.Y,
+              config.TextColor.Z,
+              1.0f),
+          Vector4.Zero,
+          config.SurfaceId,
+          shouldCenterOverlayText);
+      var backendKind =
+          TextPresentationResolver.ResolveBackendKind(overlayTextRequest);
+      string[] overlayTextLines = [];
+      RenderedTextBlock? bodyBlock = null;
+      RenderedTextBlock? titleBlock = null;
+      float textWidth;
+
+      if (backendKind == TextPresentationBackendKind.RtlTexture)
+      {
+        bodyBlock = this.rtlTexturePresentationService.TryRender(
+            overlayTextRequest);
+        if (bodyBlock == null)
+        {
+          return;
+        }
+
+        textWidth = bodyBlock.MeasuredSize.X + horizontalPadding;
+        if (config.ForceShowTitle && !string.IsNullOrWhiteSpace(resolvedTitle))
+        {
+          titleBlock = this.rtlTexturePresentationService.TryRender(
+              new TextLayoutRequest(
+                  resolvedTitle,
+                  this.configuration.Lang,
+                  SelectedLanguage.Code,
+                  Math.Max(64f, renderWidthLimit - horizontalPadding),
+                  effectiveFontScale,
+                  shouldUseGeneralFont,
+                  new Vector4(
+                      config.TextColor.X,
+                      config.TextColor.Y,
+                      config.TextColor.Z,
+                      1.0f),
+                  Vector4.Zero,
+                  config.SurfaceId,
+                  CenterAligned: false));
+        }
+      }
+      else
+      {
+        overlayTextLines = SplitOverlayTextLines(overlayText);
+        textWidth = this.MeasureOverlayTextWidth(
+            overlayText,
+            overlayTextLines,
+            shouldUseGeneralFont,
+            effectiveFontScale,
+            horizontalPadding);
+      }
+
+      using var bodyTextureLease = bodyBlock?.Texture;
+      using var titleTextureLease = titleBlock?.Texture;
+
       var desiredWidth = baseWidth;
       if (config.AutoSizeToTextWithMaxWidth)
       {
@@ -674,11 +741,12 @@ namespace Echoglossian
 
       ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1.0f));
 
-      if (shouldUseGeneralFont)
+      if (backendKind == TextPresentationBackendKind.PlainImGui &&
+          shouldUseGeneralFont)
       {
         UINewFontHandler.GeneralFontHandle.Push();
       }
-      else
+      else if (backendKind == TextPresentationBackendKind.PlainImGui)
       {
         UINewFontHandler.LanguageFontHandle.Push();
       }
@@ -690,7 +758,13 @@ namespace Echoglossian
 
       flags |= ImGuiWindowFlags.AlwaysAutoResize;
 
-      if (!config.ForceShowTitle || string.IsNullOrWhiteSpace(resolvedTitle))
+      var useInlineRtlTitle =
+          backendKind == TextPresentationBackendKind.RtlTexture &&
+          config.ForceShowTitle &&
+          !string.IsNullOrWhiteSpace(resolvedTitle);
+      if (useInlineRtlTitle ||
+          !config.ForceShowTitle ||
+          string.IsNullOrWhiteSpace(resolvedTitle))
       {
         flags |= ImGuiWindowFlags.NoTitleBar;
       }
@@ -704,25 +778,48 @@ namespace Echoglossian
         ImGui.SetNextWindowBgAlpha(Math.Clamp(config.BackgroundOpacity, 0f, 1f));
       }
 
-      var windowLabel = !string.IsNullOrWhiteSpace(resolvedTitle)
-          ? resolvedTitle
-          : $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}";
+      var windowLabel =
+          backendKind == TextPresentationBackendKind.RtlTexture
+              ? $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}"
+              : !string.IsNullOrWhiteSpace(resolvedTitle)
+                  ? resolvedTitle
+                  : $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}";
       ImGui.Begin(windowLabel, flags);
-      ImGui.SetWindowFontScale(effectiveFontScale);
+      if (backendKind == TextPresentationBackendKind.PlainImGui)
+      {
+        ImGui.SetWindowFontScale(effectiveFontScale);
+      }
+
       var renderedWindowPos = ImGui.GetWindowPos();
-      var shouldCenterOverlayText = this.ShouldCenterOverlayText(config.SurfaceId);
 
       overlay.Semaphore.Wait();
-      foreach (var line in overlayTextLines)
+      if (useInlineRtlTitle && titleBlock != null)
       {
-        if (string.IsNullOrEmpty(line))
-        {
-          ImGui.Spacing();
-          continue;
-        }
-
-        DrawOverlayLine(line, shouldCenterOverlayText);
+        DrawRenderedTextBlock(titleBlock, centerAligned: false);
+        ImGui.Separator();
       }
+
+      if (backendKind == TextPresentationBackendKind.RtlTexture)
+      {
+          DrawRenderedTextBlock(bodyBlock!, shouldCenterOverlayText);
+      }
+      else
+      {
+        foreach (var line in overlayTextLines)
+        {
+          if (string.IsNullOrEmpty(line))
+          {
+            ImGui.Spacing();
+            continue;
+          }
+
+          DrawOverlayLine(
+              line,
+              shouldCenterOverlayText,
+              shouldRightAlignOverlayText);
+        }
+      }
+
       overlay.Semaphore.Release();
 
       overlay.ImGuiSize = ImGui.GetWindowSize();
@@ -743,14 +840,46 @@ namespace Echoglossian
         //     $"contentWidth={textWidth:0.##} windowWidth={width:0.##} overlayPos=({overlay.Position.X:0.##}, {overlay.Position.Y:0.##})");
       }
 
-      if (shouldUseGeneralFont)
+      if (backendKind == TextPresentationBackendKind.PlainImGui &&
+          shouldUseGeneralFont)
       {
         UINewFontHandler.GeneralFontHandle.Pop();
       }
-      else
+      else if (backendKind == TextPresentationBackendKind.PlainImGui)
       {
         UINewFontHandler.LanguageFontHandle.Pop();
       }
+    }
+
+    /// <summary>
+    /// Resolves the maximum window width available for one overlay render pass
+    /// before the content is rasterized or measured.
+    /// </summary>
+    /// <param name="config">The overlay configuration being drawn.</param>
+    /// <param name="baseWidth">The overlay width derived from addon geometry.</param>
+    /// <param name="minWidth">The minimum allowed width.</param>
+    /// <param name="maxWidth">The maximum allowed width.</param>
+    /// <returns>The width limit to use for content generation.</returns>
+    private float ResolveOverlayRenderWidthLimit(
+        TranslationWindowConfig config,
+        float baseWidth,
+        float minWidth,
+        float maxWidth)
+    {
+      var clampedBaseWidth = Math.Clamp(baseWidth, minWidth, maxWidth);
+      if (config.AutoSizeToTextWithMaxWidth)
+      {
+        return maxWidth;
+      }
+
+      if (config.ExpandWidthToFitText)
+      {
+        return Math.Min(
+            maxWidth,
+            baseWidth * config.MaxAutoExpandedWidthMultiplier);
+      }
+
+      return clampedBaseWidth;
     }
 
     /// <summary>
@@ -931,9 +1060,12 @@ namespace Echoglossian
     /// <param name="centerAligned">
     ///     Whether to center-align the line in the available content region.
     /// </param>
-    private static void DrawOverlayLine(string line, bool centerAligned)
+    private static void DrawOverlayLine(
+        string line,
+        bool centerAligned,
+        bool rightAligned)
     {
-      if (!centerAligned)
+      if (!centerAligned && !rightAligned)
       {
         ImGui.TextWrapped(line);
         return;
@@ -953,9 +1085,52 @@ namespace Echoglossian
         return;
       }
 
-      var centeredOffset = Math.Max(0f, (availableWidth - lineWidth) * 0.5f);
-      ImGui.SetCursorPosX(ImGui.GetCursorPosX() + centeredOffset);
+      var offset = rightAligned
+          ? Math.Max(0f, availableWidth - lineWidth)
+          : Math.Max(0f, (availableWidth - lineWidth) * 0.5f);
+      ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
       ImGui.TextUnformatted(line);
+    }
+
+    /// <summary>
+    /// Draws one rendered block, aligning rasterized RTL content to the right
+    /// edge by default.
+    /// </summary>
+    /// <param name="block">The measured block to draw.</param>
+    /// <param name="centerAligned">
+    /// Whether the caller normally centers content in the available region.
+    /// </param>
+    private static void DrawRenderedTextBlock(
+        RenderedTextBlock block,
+        bool centerAligned)
+    {
+      if (block.Texture == null)
+      {
+        return;
+      }
+
+      var availableWidth = ImGui.GetContentRegionAvail().X;
+      if (availableWidth > 0f && block.MeasuredSize.X < availableWidth)
+      {
+        float offset = 0f;
+        if (block.RightAligned)
+        {
+          offset = Math.Max(0f, availableWidth - block.MeasuredSize.X);
+        }
+        else if (centerAligned)
+        {
+          offset = Math.Max(
+              0f,
+              (availableWidth - block.MeasuredSize.X) * 0.5f);
+        }
+
+        if (offset > 0f)
+        {
+          ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+        }
+      }
+
+      ImGui.Image(block.Texture.Handle, block.MeasuredSize);
     }
   }
 }

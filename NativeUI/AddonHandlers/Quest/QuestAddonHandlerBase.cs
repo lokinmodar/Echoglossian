@@ -8,7 +8,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 /// <summary>
 ///     Shared base implementation for standalone quest addon handlers.
 /// </summary>
-internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
+internal abstract class QuestAddonHandlerBase
+    : IAddonTranslationHandler, IPluginUnloadAwareAddonHandler
 {
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>>
       eventHandlers = new();
@@ -54,6 +55,14 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   }
 
   /// <summary>
+  ///     Clears any visible native quest UI state when the handler is being
+  ///     rebuilt or the plugin is unloading.
+  /// </summary>
+  public virtual void OnPluginUnload()
+  {
+  }
+
+  /// <summary>
   ///     Registers a local delegate for the specified addon event.
   /// </summary>
   /// <param name="evt">The lifecycle event to handle.</param>
@@ -72,14 +81,16 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   }
 
   /// <summary>
-  ///     Creates a canonical quest plate snapshot using the current plugin
-  ///     language and engine settings.
+  ///     Creates a canonical quest plate snapshot using the captured source
+  ///     language and current engine settings.
   /// </summary>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <param name="questName">The quest name.</param>
   /// <param name="questMessage">The quest message.</param>
   /// <param name="questId">Optional quest id.</param>
   /// <returns>A canonical quest plate snapshot.</returns>
   protected QuestPlate CreateQuestPlate(
+      SourceClientLanguage sourceLanguage,
       string questName,
       string questMessage,
       string? questId = null)
@@ -87,7 +98,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
     return new QuestPlate(
         questName,
         questMessage,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         string.Empty,
         string.Empty,
         questId,
@@ -101,6 +112,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   /// <summary>
   ///     Creates a canonical quest plate snapshot with translated fields.
   /// </summary>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <param name="questName">The original quest name.</param>
   /// <param name="questMessage">The original quest message.</param>
   /// <param name="translatedQuestName">The translated quest name.</param>
@@ -108,6 +120,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   /// <param name="questId">Optional quest id.</param>
   /// <returns>A translated quest plate snapshot.</returns>
   protected QuestPlate CreateTranslatedQuestPlate(
+      SourceClientLanguage sourceLanguage,
       string questName,
       string questMessage,
       string translatedQuestName,
@@ -117,7 +130,7 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
     return new QuestPlate(
         questName,
         questMessage,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage.PersistenceCode,
         translatedQuestName,
         translatedQuestMessage,
         questId,
@@ -132,12 +145,15 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   ///     Translates the given text using the shared translation service.
   /// </summary>
   /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <returns>The translated text.</returns>
-  protected string Translate(string text)
+  protected string Translate(
+      string text,
+      SourceClientLanguage sourceLanguage)
   {
     return this.TranslationService.Translate(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage,
         LangDict[LanguageInt].Code);
   }
 
@@ -146,12 +162,15 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   ///     service.
   /// </summary>
   /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
   /// <returns>The translated text task.</returns>
-  protected Task<string> TranslateAsync(string text)
+  protected Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage)
   {
     return this.TranslationService.TranslateAsync(
         text,
-        ClientStateInterface.ClientLanguage.Humanize(),
+        sourceLanguage,
         LangDict[LanguageInt].Code);
   }
 
@@ -189,14 +208,20 @@ internal abstract class QuestAddonHandlerBase : IAddonTranslationHandler
   /// </summary>
   /// <param name="key">Stable translation key.</param>
   /// <param name="sourceTexts">The source texts to translate.</param>
+  /// <param name="sourceLanguage">The captured source client language.</param>
   /// <param name="onResolved">Optional callback invoked with the translated batch.</param>
   /// <returns>True if the request was queued.</returns>
   protected bool QueueTranslationBatch(
       string key,
       IReadOnlyCollection<string> sourceTexts,
+      SourceClientLanguage sourceLanguage,
       Action<string[]>? onResolved = null)
   {
-    return this.Dependencies.QueueTranslationBatch(key, sourceTexts, onResolved);
+    return this.Dependencies.QueueTranslationBatch(
+        key,
+        sourceTexts,
+        sourceLanguage,
+        onResolved);
   }
 
   /// <summary>

@@ -106,7 +106,16 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       PluginRuntimeLog.Debug($"Quest message: {questMessage}");
 #endif
 
-      var questPlate = this.CreateQuestPlate(questName, questMessage);
+      if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+              out var sourceLanguage))
+      {
+        return;
+      }
+
+      var questPlate = this.CreateQuestPlate(
+          sourceLanguage,
+          questName,
+          questMessage);
       if (QuestProgressResolver.TryResolveQuestProgress(
               questPlate,
               out var resolvedAcceptSnapshot))
@@ -177,8 +186,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
           this.QueueTranslation(
               cacheKey,
               () => SerializeTranslationPair(
-                  this.Translate(questName),
-                  this.Translate(questMessage)),
+                  this.Translate(questName, sourceLanguage),
+                  this.Translate(questMessage, sourceLanguage)),
               translatedPayload =>
               {
                 if (!TryDeserializeTranslationPair(
@@ -190,6 +199,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
                 }
 
                 var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+                    sourceLanguage,
                     questName,
                     questMessage,
                     resolvedQuestName,

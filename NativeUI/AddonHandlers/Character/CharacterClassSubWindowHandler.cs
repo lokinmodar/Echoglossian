@@ -61,17 +61,23 @@ public unsafe class CharacterClassSubWindowHandler
 
     /// <inheritdoc />
     private protected override bool ShouldPersistNewGameWindowPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
-        return this.ShouldAllowNewPayloadPersistence(originalPayload);
+        return this.ShouldAllowNewPayloadPersistence(
+            sourceLanguage,
+            originalPayload);
     }
 
     /// <inheritdoc />
     private protected override bool ShouldQueueNewGameWindowTranslation(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        return this.ShouldAllowNewPayloadPersistence(originalPayload);
+        return this.ShouldAllowNewPayloadPersistence(
+            sourceLanguage,
+            originalPayload);
     }
 
     /// <inheritdoc />
@@ -104,12 +110,14 @@ public unsafe class CharacterClassSubWindowHandler
     ///     justify creating one persisted shape or queueing one fresh remote
     ///     translation.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when the payload is stable enough to create
     ///     one canonical row; otherwise <see langword="false" />.
     /// </returns>
     private bool ShouldAllowNewPayloadPersistence(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
         if (!this.HasSufficientClassCoverage(originalPayload))
@@ -117,14 +125,16 @@ public unsafe class CharacterClassSubWindowHandler
             return false;
         }
 
-        if (!this.HasPersistedClassRows())
+        if (!this.HasPersistedClassRows(sourceLanguage))
         {
             return this.newPayloadStabilityTracker.Observe(
                 originalPayload.Serialize(),
                 DateTime.UtcNow);
         }
 
-        if (!this.HasMeaningfulUnseenClassTexts(originalPayload))
+        if (!this.HasMeaningfulUnseenClassTexts(
+                sourceLanguage,
+                originalPayload))
         {
             return false;
         }
@@ -158,19 +168,17 @@ public unsafe class CharacterClassSubWindowHandler
     ///     Determines whether one persisted Class row already exists for the
     ///     current language and engine scope.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <returns>
     ///     <see langword="true" /> when at least one persisted row exists;
     ///     otherwise <see langword="false" />.
     /// </returns>
-    private bool HasPersistedClassRows()
+    private bool HasPersistedClassRows(SourceClientLanguage sourceLanguage)
     {
-        var targetLanguage =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.HandlerConfig.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         return GameWindowCacheManager.GetCandidates(
                 this.AddonName,
-                targetLanguage,
-                this.HandlerConfig.ChosenTransEngine,
+                scope,
                 GetGameVersion())
             .Any();
     }
@@ -179,23 +187,22 @@ public unsafe class CharacterClassSubWindowHandler
     ///     Determines whether the current Class payload introduces enough new
     ///     stable text to justify expanding the canonical bank.
     /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The current original-facing payload.</param>
     /// <returns>
     ///     <see langword="true" /> when the payload contains a meaningful set
     ///     of previously unseen texts; otherwise <see langword="false" />.
     /// </returns>
     private bool HasMeaningfulUnseenClassTexts(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload)
     {
-        var targetLanguage =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.HandlerConfig.Lang);
+        var scope = this.CreateTranslationReuseScope(sourceLanguage);
         var knownTexts = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
-                     targetLanguage,
-                     this.HandlerConfig.ChosenTransEngine,
+                     scope,
                      GetGameVersion()))
         {
             if (!TryParseSerializedPayload(

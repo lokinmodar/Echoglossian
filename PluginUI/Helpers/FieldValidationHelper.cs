@@ -118,9 +118,6 @@ public static class FieldValidationHelper
 
   private static string FormatRequiredFieldMessage(string label)
   {
-    var format =
-      Resources.ResourceManager.GetString("RequiredFieldMessageFormat", Resources.Culture) ??
-      "{0} is required.";
-    return string.Format(format, label);
+    return string.Format(Resources.RequiredFieldMessageFormat, label);
   }
 }

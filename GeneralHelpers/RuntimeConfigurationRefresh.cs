@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.AddonHandlers.Common;
+
 using Newtonsoft.Json;
 
 namespace Echoglossian;
@@ -44,6 +46,16 @@ public partial class Echoglossian
     this.TryShowTranslationActivationBlockedNotification();
     PluginInterface.UiBuilder.DisableCutsceneUiHide =
         this.configuration.ShowInCutscenes;
+    var glossarySignature =
+        this.ComputeStructuredDialogueGlossaryRuntimeSignature();
+    if (!string.Equals(
+            glossarySignature,
+            this.structuredDialogueGlossaryRuntimeSignature,
+            StringComparison.Ordinal))
+    {
+      this.RefreshStructuredDialogueGlossaryRuntime();
+      this.structuredDialogueGlossaryRuntimeSignature = glossarySignature;
+    }
 
     var translationSignature = this.ComputeTranslationRuntimeSignature();
     var translationChanged = !string.Equals(
@@ -53,6 +65,7 @@ public partial class Echoglossian
 
     if (translationChanged)
     {
+      this.ResetRuntimeTranslationPresentationState();
       this.RebuildTranslationServiceSafely();
       this.RebuildQueuedTranslationBroker();
       this.RebuildToastGuiRuntimes();
@@ -94,10 +107,15 @@ public partial class Echoglossian
           this.configuration.ChatGPTBaseUrl,
           this.configuration.ChatGptEngine,
           this.configuration.ChatGptModel,
+          this.configuration.OpenAiProviderVariant,
           this.configuration.OpenAILlmModel,
           this.configuration.ChatGptTemperature,
           this.configuration.ChatGptPrompt,
           this.configuration.UseLiveOpenAIModelList,
+          this.configuration.CustomOpenAiCompatibleApiKey,
+          this.configuration.CustomOpenAiCompatibleBaseUrl,
+          this.configuration.CustomOpenAiCompatibleModel,
+          this.configuration.UseLiveCustomOpenAiCompatibleModelList,
           this.configuration.ClaudeApiKey,
           this.configuration.ClaudeBaseUrl,
           this.configuration.ClaudeModel,
@@ -151,6 +169,46 @@ public partial class Echoglossian
           this.configuration.UseLiveLmStudioModelList,
           this.configuration.UseLmStudioAuth,
         });
+  }
+
+  /// <summary>
+  ///     Computes a signature for runtime-only structured dialogue glossary
+  ///     settings so glossary reloads happen only when the operator-facing
+  ///     glossary state changes.
+  /// </summary>
+  /// <returns>A stable serialized signature.</returns>
+  private string ComputeStructuredDialogueGlossaryRuntimeSignature()
+  {
+    return JsonConvert.SerializeObject(
+        new
+        {
+          this.configuration.EnableDialogueGlossaryInjection,
+          DialogueGlossaryFilePath =
+              this.configuration.DialogueGlossaryFilePath?.Trim() ??
+              string.Empty,
+        });
+  }
+
+  /// <summary>
+  ///     Refreshes the shared structured dialogue glossary store from the
+  ///     current configuration.
+  /// </summary>
+  private void RefreshStructuredDialogueGlossaryRuntime()
+  {
+    if (!this.configuration.EnableDialogueGlossaryInjection)
+    {
+      StructuredDialogueGlossaryStore.Clear();
+      return;
+    }
+
+    if (string.IsNullOrWhiteSpace(this.configuration.DialogueGlossaryFilePath))
+    {
+      StructuredDialogueGlossaryStore.Clear();
+      return;
+    }
+
+    StructuredDialogueGlossaryStore.Refresh(
+        this.configuration.DialogueGlossaryFilePath);
   }
 
   /// <summary>
@@ -235,5 +293,41 @@ public partial class Echoglossian
 
     this.hoverTooltipManager.Clear();
     this.EgloAddonHandler();
+  }
+
+  /// <summary>
+  ///     Clears live translation presentation state and runtime-only caches so
+  ///     language or engine changes do not leave stale translated UI state on
+  ///     screen.
+  /// </summary>
+  private void ResetRuntimeTranslationPresentationState()
+  {
+    this.hoverTooltipManager.Clear();
+    this.rtlTexturePresentationService.Clear();
+    this.ClearOverlay(this.talkOverlay, clearText: true);
+    this.ClearOverlay(this.battleTalkOverlay, clearText: true);
+    this.ClearOverlay(this.talkSubtitleOverlay, clearText: true);
+    this.ClearOverlay(this.toastOverlay, clearText: true);
+    this.ClearOverlay(this.errorToastOverlay, clearText: true);
+    this.ClearOverlay(this.areaToastOverlay, clearText: true);
+    this.ClearOverlay(this.classChangeToastOverlay, clearText: true);
+    this.ClearOverlay(this.questToastOverlay, clearText: true);
+    this.ClearOverlay(this.cutSceneSelectStringOverlay, clearText: true);
+    this.ClearOverlay(this.textGimmickHintOverlay, clearText: true);
+    this.ClearOverlay(this.chatBubbleOverlay, clearText: true);
+    this.ClearOverlay(this.actionDetailOverlay, clearText: true);
+    this.ClearOverlay(this.itemDetailOverlay, clearText: true);
+    this.DisposeMiniTalkBubbleOverlays();
+    DialogueTranslationSessionStore.Clear();
+    QuestUiTranslationCache.Clear();
+    QuestHoverTranslationCache.Clear();
+    DbFirstGameWindowAddonHandler.ClearSessionCaches();
+    QuestProgressResolver.Clear();
+    QuestTodoProgressResolver.Clear();
+    this.ClearAcceptedQuestPrefetchState();
+    this.ClearActionDetailPrefetchState();
+    this.ClearItemDetailPrefetchState();
+    this.ClearTraitDetailPrefetchState();
+    this.ClearReferenceTextPrefetchState();
   }
 }

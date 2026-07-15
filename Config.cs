@@ -20,6 +20,22 @@ public enum JournalTranslationDisplayMode
   NativeUiTranslationWithOriginalTooltips = 2,
 }
 
+/// <summary>
+///     Selects which provider profile the OpenAI-family engine should use.
+/// </summary>
+public enum OpenAiProviderVariant
+{
+  /// <summary>
+  ///     Use the official OpenAI-hosted provider profile.
+  /// </summary>
+  OfficialOpenAI = 0,
+
+  /// <summary>
+  ///     Use a custom OpenAI-compatible provider profile.
+  /// </summary>
+  CustomOpenAICompatible = 1,
+}
+
 public class Config : IPluginConfiguration
 {
   /// <summary>Generic prompt used by all AI translators when applicable.</summary>
@@ -66,11 +82,49 @@ public class Config : IPluginConfiguration
   [DefaultValue(0)] public int ChosenTransEngine = 0;
 
   /// <summary>
+  ///     Selects whether the OpenAI-family engine should use the official
+  ///     provider profile or a custom OpenAI-compatible profile.
+  /// </summary>
+  [DefaultValue(OpenAiProviderVariant.OfficialOpenAI)]
+  public OpenAiProviderVariant OpenAiProviderVariant =
+      OpenAiProviderVariant.OfficialOpenAI;
+
+  /// <summary>
   ///     Selected translation engine key persisted alongside the numeric
   ///     engine id so engine selection remains stable across enum-layout
   ///     changes.
   /// </summary>
   [DefaultValue("Google")] public string ChosenTransEngineKey = "Google";
+
+  /// <summary>
+  ///     Enables the first-pass dialogue-family LLM override routing.
+  /// </summary>
+  [DefaultValue(false)] public bool UseDialogueLlmOverride = false;
+
+  /// <summary>
+  ///     Selected LLM override engine for dialogue-family surfaces.
+  /// </summary>
+  [DefaultValue((int)Echoglossian.TransEngines.ChatGPT)]
+  public int DialogueLlmEngine = (int)Echoglossian.TransEngines.ChatGPT;
+
+  /// <summary>
+  ///     Selected dialogue-family LLM override key persisted alongside the
+  ///     numeric engine id so the override remains stable across enum-layout
+  ///     changes.
+  /// </summary>
+  [DefaultValue("ChatGPT")] public string DialogueLlmEngineKey = "ChatGPT";
+
+  /// <summary>
+  ///     Enables structured dialogue glossary injection for dialogue-family
+  ///     LLM requests.
+  /// </summary>
+  [DefaultValue(false)] public bool EnableDialogueGlossaryInjection = false;
+
+  /// <summary>
+  ///     Operator-managed file path for the structured dialogue glossary
+  ///     document.
+  /// </summary>
+  [DefaultValue("")] public string DialogueGlossaryFilePath = string.Empty;
 
   /// <summary>API key for Anthropic Claude usage.</summary>
   [DefaultValue("")] public string ClaudeApiKey = string.Empty;
@@ -380,6 +434,31 @@ public class Config : IPluginConfiguration
 
   /// <summary>OpenAI LLM model for ChatGPT use.</summary>
   [DefaultValue("gpt-4o-mini")] public string OpenAILlmModel = "gpt-4o-mini";
+
+  /// <summary>
+  ///     API key used by the custom OpenAI-compatible provider profile.
+  /// </summary>
+  [DefaultValue("")]
+  public string CustomOpenAiCompatibleApiKey = string.Empty;
+
+  /// <summary>
+  ///     Base URL used by the custom OpenAI-compatible provider profile.
+  /// </summary>
+  [DefaultValue("")]
+  public string CustomOpenAiCompatibleBaseUrl = string.Empty;
+
+  /// <summary>
+  ///     Model used by the custom OpenAI-compatible provider profile.
+  /// </summary>
+  [DefaultValue("")]
+  public string CustomOpenAiCompatibleModel = string.Empty;
+
+  /// <summary>
+  ///     Uses live model listing for the custom OpenAI-compatible provider
+  ///     profile when the endpoint supports <c>/models</c>.
+  /// </summary>
+  [DefaultValue(false)]
+  public bool UseLiveCustomOpenAiCompatibleModelList = false;
 
   /// <summary>API key for OpenRouter.ai service.</summary>
   [DefaultValue("")] public string? OpenRouterApiKey = string.Empty;
@@ -962,6 +1041,18 @@ public class Config : IPluginConfiguration
 
   /// <summary>Background opacity used by Echoglossian hover tooltips.</summary>
   [DefaultValue(0.95f)] public float HoverTooltipBackgroundOpacity = 0.95f;
+
+  /// <summary>Font scale used by Echoglossian hover tooltips.</summary>
+  [DefaultValue(0.85f)] public float HoverTooltipFontScale = 0.85f;
+
+  /// <summary>Maximum width used by Echoglossian hover tooltips.</summary>
+  [DefaultValue(720f)] public float HoverTooltipMaxWidth = 720f;
+
+  /// <summary>
+  ///     Shared line-height scale used by texture-backed complex-script text
+  ///     such as RTL hover tooltips and overlay-only surfaces.
+  /// </summary>
+  [DefaultValue(0.9f)] public float TexturePresentationLineHeightScale = 0.9f;
 
   /// <summary>Translate wide-format toast messages.</summary>
   [DefaultValue(false)] public bool TranslateWideTextToast = false;

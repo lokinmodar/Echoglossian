@@ -17,11 +17,7 @@ public static class UIWarningHelpers
     public static void ShowFieldRequiredWarningIfEmpty(string fieldName)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.4f, 0.4f, 1f));
-        var format = Resources.ResourceManager.GetString(
-                         "RequiredFieldMessageFormat",
-                         Resources.Culture) ??
-                     "{0} is required.";
-        ImGui.TextWrapped(string.Format(format, fieldName));
+        ImGui.TextWrapped(string.Format(Resources.RequiredFieldMessageFormat, fieldName));
         ImGui.PopStyleColor();
     }
 }

@@ -16,8 +16,7 @@ public static class LibreTranslateEngineUI
         {
             "libretranslate.com",
             "libretranslate.de",
-            Resources.ResourceManager.GetString("CustomLabel", Resources.Culture) ??
-            "Custom",
+            Resources.CustomLabel,
         };
 
         ImGui.TextWrapped(Resources.SettingsForLibreTranslateText);
@@ -25,8 +24,7 @@ public static class LibreTranslateEngineUI
         // Instance type dropdown
         var currentInstanceIndex = (int)config.LibreTranslateInstanceType;
         if (ImGui.Combo(
-                Resources.ResourceManager.GetString("LibreTranslateInstanceLabel", Resources.Culture) ??
-                "Instance",
+                Resources.LibreTranslateInstanceLabel,
                 ref currentInstanceIndex,
                 instanceLabels,
                 instanceLabels.Length))
@@ -51,8 +49,7 @@ public static class LibreTranslateEngineUI
         // Optional API key
         bool isApiKeyInvalid;
         changed |= FieldValidationHelper.ValidatedInputText(
-            Resources.ResourceManager.GetString("OptionalApiKeyLabel", Resources.Culture) ??
-            "API Key (optional)",
+            Resources.OptionalApiKeyLabel,
             ref config.LibreTranslateApiKey,
             300,
             out isApiKeyInvalid);

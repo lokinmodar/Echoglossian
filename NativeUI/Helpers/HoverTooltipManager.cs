@@ -19,6 +19,7 @@ public sealed class HoverTooltipManager
     private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(30);
     private readonly Config config;
     private readonly UINewFontHandler fontHandler;
+    private readonly RtlTexturePresentationService rtlTexturePresentationService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="HoverTooltipManager" />
@@ -27,12 +28,14 @@ public sealed class HoverTooltipManager
     /// <param name="config">
     ///     The live plugin configuration used to style hover tooltips.
     /// </param>
-    public HoverTooltipManager(
+    internal HoverTooltipManager(
         Config config,
-        UINewFontHandler fontHandler)
+        UINewFontHandler fontHandler,
+        RtlTexturePresentationService rtlTexturePresentationService)
     {
         this.config = config;
         this.fontHandler = fontHandler;
+        this.rtlTexturePresentationService = rtlTexturePresentationService;
     }
 
     /// <summary>
@@ -178,13 +181,18 @@ public sealed class HoverTooltipManager
             this.config.HoverTooltipTextColor.Y,
             this.config.HoverTooltipTextColor.Z,
             1f);
+        var shouldRightAlign =
+            LanguagePresentationPolicy.ShouldRightAlign(this.config.Lang);
         ImGui.PushStyleColor(ImGuiCol.PopupBg, backgroundColor);
         ImGui.PushStyleColor(ImGuiCol.Text, textColor);
-        if (hoveredEntry.UseGeneralFont)
+        var useTexturePresentation =
+            LanguagePresentationPolicy.UsesTexturePresentation(
+                this.config.Lang);
+        if (!useTexturePresentation && hoveredEntry.UseGeneralFont)
         {
             this.fontHandler.GeneralFontHandle.Push();
         }
-        else
+        else if (!useTexturePresentation)
         {
             this.fontHandler.LanguageFontHandle.Push();
         }
@@ -192,25 +200,60 @@ public sealed class HoverTooltipManager
         ImGui.BeginTooltip();
         try
         {
+            if (useTexturePresentation)
+            {
+                var titleBlock = this.TryRenderTooltipTextBlock(
+                    hoveredEntry.Title,
+                    hoveredEntry.UseGeneralFont,
+                    textColor);
+                var bodyBlock = this.TryRenderTooltipTextBlock(
+                    hoveredEntry.Body,
+                    hoveredEntry.UseGeneralFont,
+                    textColor);
+                using var titleTextureLease = titleBlock?.Texture;
+                using var bodyTextureLease = bodyBlock?.Texture;
+
+                if (titleBlock == null && bodyBlock == null)
+                {
+                    return;
+                }
+
+                if (titleBlock != null)
+                {
+                    DrawRenderedTooltipBlock(titleBlock);
+                    if (bodyBlock != null)
+                    {
+                        ImGui.Separator();
+                    }
+                }
+
+                if (bodyBlock != null)
+                {
+                    DrawRenderedTooltipBlock(bodyBlock);
+                }
+
+                return;
+            }
+
             var title = WrapTooltipText(hoveredEntry.Title);
             var body = WrapTooltipText(hoveredEntry.Body);
 
             if (!string.IsNullOrWhiteSpace(title))
             {
-                ImGui.TextUnformatted(title);
+                DrawPlainTooltipText(title, shouldRightAlign);
                 ImGui.Separator();
             }
 
-            ImGui.TextUnformatted(body);
+            DrawPlainTooltipText(body, shouldRightAlign);
         }
         finally
         {
             ImGui.EndTooltip();
-            if (hoveredEntry.UseGeneralFont)
+            if (!useTexturePresentation && hoveredEntry.UseGeneralFont)
             {
                 this.fontHandler.GeneralFontHandle.Pop();
             }
-            else
+            else if (!useTexturePresentation)
             {
                 this.fontHandler.LanguageFontHandle.Pop();
             }
@@ -294,6 +337,92 @@ public sealed class HoverTooltipManager
         }
 
         return builder.ToString();
+    }
+
+    private static void DrawRenderedTooltipBlock(RenderedTextBlock block)
+    {
+        if (block.Texture == null)
+        {
+            return;
+        }
+
+        var availableWidth = ImGui.GetContentRegionAvail().X;
+        if (block.RightAligned && availableWidth > block.MeasuredSize.X)
+        {
+            var offset = Math.Max(0f, availableWidth - block.MeasuredSize.X);
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+        }
+
+        ImGui.Image(block.Texture.Handle, block.MeasuredSize);
+    }
+
+    private static void DrawPlainTooltipText(
+        string text,
+        bool rightAligned)
+    {
+        if (!rightAligned)
+        {
+            ImGui.TextUnformatted(text);
+            return;
+        }
+
+        var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        foreach (var line in lines)
+        {
+            if (line.Length == 0)
+            {
+                ImGui.Spacing();
+                continue;
+            }
+
+            var availableWidth = ImGui.GetContentRegionAvail().X;
+            var lineWidth = ImGui.CalcTextSize(line).X;
+            if (availableWidth > 0f && lineWidth < availableWidth)
+            {
+                var offset = Math.Max(0f, availableWidth - lineWidth);
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+            }
+
+            ImGui.TextUnformatted(line);
+        }
+    }
+
+    private RenderedTextBlock? TryRenderTooltipTextBlock(
+        string text,
+        bool useGeneralFont,
+        Vector4 textColor)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var languageCode = LangDict.TryGetValue(this.config.Lang, out var language)
+            ? language.Code
+            : string.Empty;
+        var fontScale =
+            HoverTooltipLayoutPolicy.ResolveTextureFontScale(this.config);
+        var request = new TextLayoutRequest(
+            text,
+            this.config.Lang,
+            languageCode,
+            0f,
+            fontScale,
+            useGeneralFont,
+            textColor,
+            Vector4.Zero,
+            TranslationOverlaySurfaceId.ItemDetail,
+            CenterAligned: false);
+        var maxWidth =
+            this.rtlTexturePresentationService.ResolveAdaptiveHoverTooltipMaxWidth(
+                request,
+                ImGui.GetMainViewport().Size.X);
+        request = request with
+        {
+            MaxWidth = maxWidth,
+        };
+
+        return this.rtlTexturePresentationService.TryRender(request);
     }
 
     private sealed record HoverTooltipEntry(

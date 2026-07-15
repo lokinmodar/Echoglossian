@@ -154,24 +154,49 @@ public partial class Echoglossian
       return false;
     }
 
+    this.DrawTranslationSetupSectionHeader(Resources.LanguageSelectLabelText);
     changed |= this.DrawTranslationLanguageSelectionSection();
-    ImGui.Separator();
+    this.DrawTranslationSetupSectionBreak();
 
+    this.DrawTranslationSetupSectionHeader(Resources.TranslationEngineChoose);
     changed |= TranslationEnginesTab.Draw(
         this.configuration,
         LanguageInt,
         LangDict,
         this.RebuildTranslationServiceSafely);
 
-    ImGui.Separator();
+    this.DrawTranslationSetupSectionBreak();
+    this.DrawTranslationSetupSectionHeader(Resources.EnableTranslation);
     changed |= this.DrawTranslationActivationSection();
 
-    ImGui.Separator();
-    ImGui.Text(Resources.ConfigTabGeneralName);
-    ImGui.Spacing();
+    this.DrawTranslationSetupSectionBreak();
+    this.DrawTranslationSetupSectionHeader(Resources.ConfigTabGeneralName);
     changed |= GeneralTab.Draw(this.configuration);
 
     return changed;
+  }
+
+  /// <summary>
+  /// Draws the compact heading used to visually separate groups inside the
+  /// translation setup tab.
+  /// </summary>
+  /// <param name="title">The section title to render.</param>
+  private void DrawTranslationSetupSectionHeader(string title)
+  {
+    ImGui.TextDisabled(title);
+    ImGui.Separator();
+    ImGui.Spacing();
+  }
+
+  /// <summary>
+  /// Draws extra vertical spacing between setup-tab option groups so the first
+  /// configuration page reads less densely.
+  /// </summary>
+  private void DrawTranslationSetupSectionBreak()
+  {
+    ImGui.Spacing();
+    ImGui.Spacing();
+    ImGui.Spacing();
   }
 
   /// <summary>
@@ -196,20 +221,7 @@ public partial class Echoglossian
       SpecialFontFileName = LangDict[this.configuration.Lang].FontName;
       SelectedLanguage =
           this.languagesDictionary[this.configuration.Lang];
-
-      var languageNotSupported = this.configuration.Lang is 2 or 3 or 5
-          or 6 or 11 or 13 or 40 or 42 or 57 or 78 or 82 or 106 or 108
-          or 111 or 112 or 116;
-      var languageOnlySupportedThruOverlay = this.configuration.Lang is 4
-          or 8 or 9 or 10 or 12 or 14 or 15 or 16 or 18 or 19 or 21 or 22
-          or 29 or 35 or 37 or 38 or 41 or 43 or 45 or 46 or 51 or 52
-          or 53 or 55 or 56 or 58 or 64 or 67 or 69 or 70 or 71 or 72
-          or 76 or 77 or 85 or 86 or 89 or 90 or 92 or 99 or 100 or 101
-          or 102 or 103 or 107;
-
-      this.configuration.UnsupportedLanguage = languageNotSupported;
-      this.configuration.OverlayOnlyLanguage = !languageNotSupported &&
-          languageOnlySupportedThruOverlay;
+      LanguagePresentationPolicy.ApplyLanguageFlags(this.configuration);
 
       if (TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
               this.configuration,

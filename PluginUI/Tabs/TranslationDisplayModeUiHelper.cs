@@ -27,7 +27,9 @@ internal static class TranslationDisplayModeUiHelper
     ///     Whether the selected language forbids native UI mutation.
     /// </param>
     /// <param name="label">Optional label override for the combo.</param>
-    /// <param name="description">Optional help text shown below the combo.</param>
+    /// <param name="description">
+    ///     Optional help text shown by the inline hover indicator.
+    /// </param>
     /// <param name="modeLabels">Optional display labels for the three modes.</param>
     /// <returns><c>true</c> when the selection changed.</returns>
     public static bool DrawDisplayModeCombo(
@@ -72,10 +74,19 @@ internal static class TranslationDisplayModeUiHelper
             changed = true;
         }
 
-        ImGui.TextWrapped(description);
-        if (overlayOnlyLanguage)
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
         {
-            ImGui.TextWrapped(Resources.OverlayOnlyLanguageModeDescription);
+            if (overlayOnlyLanguage)
+            {
+                ImGui.SetTooltip(
+                    $"{description}\n\n{Resources.OverlayOnlyLanguageModeDescription}");
+            }
+            else
+            {
+                ImGui.SetTooltip(description);
+            }
         }
 
         ImGui.PopID();

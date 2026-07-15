@@ -8,6 +8,7 @@ using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Tests.TestDoubles;
+using System.Reflection;
 
 using Xunit;
 
@@ -27,6 +28,108 @@ public class ActionMenuWindowHandlerTests
     {
         Echoglossian.PluginLog ??=
             new NoOpPluginLog();
+    }
+
+    /// <summary>
+    ///     Ensures the shared GameWindow runtime cannot reuse a persisted row
+    ///     from a different source client language.
+    /// </summary>
+    [Fact]
+    public void MatchesPersistedSourceIdentity_ReturnsFalseForDifferentSource()
+    {
+        var sourceLanguage = new SourceClientLanguage("de", "de");
+
+        var matches = DbFirstGameWindowAddonHandler
+            .MatchesPersistedSourceIdentity("en", sourceLanguage);
+
+        Assert.False(matches);
+    }
+
+    /// <summary>
+    ///     Ensures a failed queued ActionMenu payload can retry under the same
+    ///     scope and that a matching page signature in another full scope is
+    ///     not blocked by the first queue owner.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_FailureReleasesSignatureAndScopeChangeAllowsRetry()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var originalScope = new TranslationReuseScope("en", "pt-BR", 0, false);
+        var changedScope = new TranslationReuseScope("en", "ja", 7, true);
+
+        Assert.True(tracker.TryQueue(originalScope, generation: 1, signature));
+        Assert.False(tracker.TryQueue(originalScope, generation: 1, signature));
+
+        tracker.Release(originalScope, generation: 1, signature);
+
+        Assert.True(tracker.TryQueue(originalScope, generation: 1, signature));
+        Assert.True(tracker.TryQueue(changedScope, generation: 2, signature));
+        Assert.False(tracker.TryQueue(changedScope, generation: 2, signature));
+    }
+
+    /// <summary>
+    ///     Ensures a completion from an older scope cannot release the active
+    ///     scope's queued signature.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_StaleScopeCannotReleaseActiveSignature()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var originalScope = new TranslationReuseScope("en", "pt-BR", 0, false);
+        var activeScope = new TranslationReuseScope("en", "ja", 7, true);
+
+        Assert.True(tracker.TryQueue(originalScope, generation: 1, signature));
+        Assert.True(tracker.TryQueue(activeScope, generation: 2, signature));
+
+        tracker.Release(originalScope, generation: 1, signature);
+
+        Assert.False(tracker.TryQueue(activeScope, generation: 2, signature));
+    }
+
+    /// <summary>
+    ///     Ensures an older A completion cannot release a new A request after
+    ///     the active lifecycle has progressed through A to B and back to A.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_ScopeCycleKeepsNewGenerationClaimed()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var scopeA = new TranslationReuseScope("en", "pt-BR", 0, false);
+        var scopeB = new TranslationReuseScope("en", "ja", 7, true);
+
+        Assert.True(tracker.TryQueue(scopeA, generation: 1, signature));
+        Assert.True(tracker.TryQueue(scopeB, generation: 2, signature));
+        Assert.True(tracker.TryQueue(scopeA, generation: 3, signature));
+
+        tracker.Release(scopeA, generation: 1, signature);
+
+        Assert.False(tracker.TryQueue(scopeA, generation: 3, signature));
+    }
+
+    /// <summary>
+    ///     Ensures a failure cooldown is evaluated before an ActionMenu
+    ///     signature can be claimed, so the next eligible refresh can retry.
+    /// </summary>
+    [Fact]
+    public void ActionMenuQueue_CooldownDoesNotClaimSignature()
+    {
+        const string signature = "Dancer\u001FSupport Desk";
+        var tracker = new ActionMenuQueuedSignatureTracker();
+        var scope = new TranslationReuseScope("en", "pt-BR", 0, false);
+
+        Assert.False(tracker.TryQueue(
+            scope,
+            generation: 1,
+            signature,
+            retryCoolingDown: true));
+        Assert.True(tracker.TryQueue(
+            scope,
+            generation: 1,
+            signature,
+            retryCoolingDown: false));
     }
 
     /// <summary>
@@ -86,11 +189,52 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
-    ///     Ensures level-aware action-name resolution can translate a visible
-    ///     ActionMenu label by reusing the canonical action-tooltip cache.
+    ///     Ensures the ActionMenu capture policy accepts the text-node ids
+    ///     observed in the live left rail, window title, command grid, and
+    ///     mode-description surfaces from the addon probe logs.
+    /// </summary>
+    /// <param name="nodeId">The observed text-node identifier.</param>
+    /// <param name="visibleText">One representative visible text.</param>
+    [Theory]
+    [InlineData(2u, "ACTIONS")]
+    [InlineData(3u, "Actions & Traits")]
+    [InlineData(7u, "Support Desk\r")]
+    [InlineData(10u, "Peloton\r\nLv. 20")]
+    [InlineData(71u, "Display job gauge description.")]
+    [InlineData(72u, "Display Mode")]
+    public void ShouldCaptureActionMenuTextNode_ReturnsTrueForObservedNodeIds(
+        uint nodeId,
+        string visibleText)
+    {
+        var shouldCapture = ActionMenuWindowHandler
+            .ShouldCaptureActionMenuTextNode(
+                nodeId,
+                visibleText);
+
+        Assert.True(shouldCapture);
+    }
+
+    /// <summary>
+    ///     Ensures the ActionMenu capture policy rejects node ids and texts
+    ///     that do not belong to the active page surface.
     /// </summary>
     [Fact]
-    public void MergeResolvedTranslatedPayload_UsesLevelAwareActionTooltipLookup()
+    public void ShouldCaptureActionMenuTextNode_ReturnsFalseForIrrelevantInputs()
+    {
+        Assert.False(ActionMenuWindowHandler.ShouldCaptureActionMenuTextNode(
+            99,
+            "Untracked Surface"));
+        Assert.False(ActionMenuWindowHandler.ShouldCaptureActionMenuTextNode(
+            7,
+            " "));
+    }
+
+    /// <summary>
+    ///     Ensures base-name-only action resolution preserves the captured
+    ///     level token and separator verbatim.
+    /// </summary>
+    [Fact]
+    public void MergeResolvedTranslatedPayload_BaseNameOnlyPreservesLevelToken()
     {
         ActionTooltipCacheManager.Clear();
 
@@ -101,6 +245,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 1,
                 ActionId = 16001,
                 ActionName = "Peloton",
+                OriginalLang = "en",
                 TranslatedActionName = "Pelotão",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -127,13 +272,12 @@ public class ActionMenuWindowHandlerTests
                 .MergeResolvedTranslatedPayload(
                     originalPayload,
                     resolvedTranslatedPayload,
-                    "pt-BR",
-                    0,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
                     "7.3",
                     new Dictionary<string, string>(StringComparer.Ordinal));
 
             Assert.Equal(
-                "Pelotão\r\nNv. 20",
+                "Pelotão\r\nLv. 20",
                 mergedPayload.AtkValues[17]);
         }
         finally
@@ -143,8 +287,8 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
-    ///     Ensures level-aware trait-name resolution can translate a visible
-    ///     ActionMenu label by reusing the canonical trait cache.
+    ///     Ensures level-aware trait-name resolution preserves the captured
+    ///     level token while reusing the canonical trait cache.
     /// </summary>
     [Fact]
     public void MergeResolvedTranslatedPayload_UsesLevelAwareTraitLookup()
@@ -158,6 +302,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 1,
                 TraitId = 201,
                 TraitName = "Enhanced Windmill",
+                OriginalLang = "en",
                 TranslatedTraitName = "Moinho Aprimorado",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -184,18 +329,75 @@ public class ActionMenuWindowHandlerTests
                 .MergeResolvedTranslatedPayload(
                     originalPayload,
                     resolvedTranslatedPayload,
-                    "pt-BR",
-                    0,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
                     "7.3",
                     new Dictionary<string, string>(StringComparer.Ordinal));
 
             Assert.Equal(
-                "Moinho Aprimorado\r\nNv. 15",
+                "Moinho Aprimorado\r\nLv. 15",
                 mergedPayload.AtkValues[17]);
         }
         finally
         {
             TraitCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures one CR-only ActionMenu level label still reuses the
+    ///     canonical action cache when one persisted or provider-resolved row
+    ///     collapsed the separator.
+    /// </summary>
+    [Fact]
+    public void MergeResolvedTranslatedPayload_UsesCarriageReturnOnlyLevelAwareActionLookup()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 4,
+                ActionId = 16004,
+                ActionName = "Leg Graze",
+                OriginalLang = "en",
+                TranslatedActionName = "Arranhao na perna",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-leg-graze",
+            });
+
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
+            var resolvedTranslatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
+
+            var mergedPayload = ActionMenuWindowHandler
+                .MergeResolvedTranslatedPayload(
+                    originalPayload,
+                    resolvedTranslatedPayload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(
+                "Arranhao na perna\rLv. 6",
+                mergedPayload.TextNodes["7:0"]);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
         }
     }
 
@@ -226,8 +428,7 @@ public class ActionMenuWindowHandlerTests
             .MergeResolvedTranslatedPayload(
                 originalPayload,
                 resolvedTranslatedPayload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
@@ -235,7 +436,7 @@ public class ActionMenuWindowHandlerTests
                 });
 
         Assert.Equal(
-            "Pelotão Nv. 20",
+            "Pelotão Lv. 20",
             mergedPayload.AtkValues[17]);
     }
 
@@ -265,8 +466,7 @@ public class ActionMenuWindowHandlerTests
             .MergeResolvedTranslatedPayload(
                 originalPayload,
                 resolvedTranslatedPayload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
@@ -276,6 +476,73 @@ public class ActionMenuWindowHandlerTests
         Assert.Equal(
             "Sistema",
             mergedPayload.TextNodes["3:100"]);
+    }
+
+    /// <summary>
+    ///     Ensures ActionMenu persistence keeps only residual window chrome
+    ///     when canonical action storage already owns one action label pair.
+    /// </summary>
+    [Fact]
+    public void FilterPersistedPayloadPair_RemovesCanonicalActionLabelsAndKeepsResidualChrome()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 8,
+                ActionId = 16008,
+                ActionName = "Sprint",
+                OriginalLang = "en",
+                TranslatedActionName = "Corrida",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-sprint-filtered-persisted-payload",
+            });
+
+            var originalPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Sprint",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["3:100"] = "Support Desk",
+                });
+            var translatedPayload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Corrida",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["3:100"] = "Central de Suporte",
+                });
+
+            var filteredPayload = ActionMenuWindowHandler
+                .FilterPersistedPayloadPair(
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    originalPayload,
+                    translatedPayload);
+
+            Assert.Empty(filteredPayload.OriginalPayload.AtkValues);
+            Assert.Empty(filteredPayload.TranslatedPayload.AtkValues);
+            Assert.Equal(
+                "Support Desk",
+                filteredPayload.OriginalPayload.TextNodes["3:100"]);
+            Assert.Equal(
+                "Central de Suporte",
+                filteredPayload.TranslatedPayload.TextNodes["3:100"]);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
     }
 
     /// <summary>
@@ -386,6 +653,95 @@ public class ActionMenuWindowHandlerTests
     }
 
     /// <summary>
+    ///     Ensures the canonical-aware ActionMenu stability signature ignores
+    ///     level-tagged action labels that are already covered by structured
+    ///     action caches so page novelty is driven by real window chrome and
+    ///     unresolved command labels.
+    /// </summary>
+    [Fact]
+    public void BuildCanonicalStablePayloadSignature_IgnoresCanonicalLevelAwareActionLabels()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 5,
+                ActionId = 16005,
+                ActionName = "Leg Graze",
+                OriginalLang = "en",
+                TranslatedActionName = "Arranhao na perna",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-leg-graze-stable-signature",
+            });
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 6,
+                ActionId = 16006,
+                ActionName = "Peloton",
+                OriginalLang = "en",
+                TranslatedActionName = "Peloton",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-peloton-stable-signature",
+            });
+
+            var payloadA = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [12] = "Dancer",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["2:0"] = "Extras",
+                    ["2:1"] = "Actions",
+                    ["3:0"] = "Actions & Traits",
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
+            var payloadB = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [12] = "Dancer",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["2:0"] = "Extras",
+                    ["2:1"] = "Actions",
+                    ["3:0"] = "Actions & Traits",
+                    ["7:0"] = "Peloton\rLv. 20",
+                });
+
+            var scope = new TranslationReuseScope("en", "pt-BR", 0, true);
+            var signatureA = ActionMenuWindowHandler
+                .BuildCanonicalStablePayloadSignature(
+                    payloadA,
+                    scope,
+                    "7.3");
+            var signatureB = ActionMenuWindowHandler
+                .BuildCanonicalStablePayloadSignature(
+                    payloadB,
+                    scope,
+                    "7.3");
+
+            Assert.Equal(signatureA, signatureB);
+            Assert.DoesNotContain("Leg Graze", signatureA, StringComparison.Ordinal);
+            Assert.DoesNotContain("Peloton", signatureA, StringComparison.Ordinal);
+            Assert.Contains("Actions & Traits", signatureA, StringComparison.Ordinal);
+            Assert.Contains("job:Dancer", signatureA, StringComparison.Ordinal);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures the unseen-text counter excludes short texts already
     ///     covered by either canonical action names or persisted window-chrome
     ///     fallbacks.
@@ -402,6 +758,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 1,
                 ActionId = 16001,
                 ActionName = "Peloton",
+                OriginalLang = "en",
                 TranslatedActionName = "Peloton",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -425,8 +782,7 @@ public class ActionMenuWindowHandlerTests
 
             var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
                 payload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
@@ -460,6 +816,7 @@ public class ActionMenuWindowHandlerTests
                 Id = 2,
                 ActionId = 16002,
                 ActionName = "Canonical Peloton Test",
+                OriginalLang = "en",
                 TranslatedActionName = "Canonical Peloton Test",
                 TranslationLang = "pt",
                 TranslationEngine = 0,
@@ -477,8 +834,54 @@ public class ActionMenuWindowHandlerTests
 
             var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
                 payload,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(0, unseenCount);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the unseen-text counter treats CR-only level-tagged
+    ///     ActionMenu labels as canonical when the base action name already
+    ///     exists in cache.
+    /// </summary>
+    [Fact]
+    public void CountMeaningfulUnseenTexts_TreatsCarriageReturnOnlyLevelAwareCanonicalNamesAsKnown()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 7,
+                ActionId = 16007,
+                ActionName = "Leg Graze",
+                OriginalLang = "en",
+                TranslatedActionName = "Arranhao na perna",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-leg-graze-cr-only",
+            });
+
+            var payload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["7:0"] = "Leg Graze\rLv. 6",
+                });
+
+            var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+                payload,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 new Dictionary<string, string>(StringComparer.Ordinal));
 
@@ -503,6 +906,7 @@ public class ActionMenuWindowHandlerTests
         {
             Id = 7001,
             ReferenceId = 7001,
+            OriginalLang = "en",
             TranslationLang = "pt",
             TranslationEngine = 0,
             GameVersion = "7.3",
@@ -523,8 +927,7 @@ public class ActionMenuWindowHandlerTests
 
         var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
             payload,
-            "pt-BR",
-            0,
+            new TranslationReuseScope("en", "pt-BR", 0, true),
             "7.3",
             new Dictionary<string, string>(StringComparer.Ordinal));
 
@@ -555,8 +958,7 @@ public class ActionMenuWindowHandlerTests
 
         var unseenCount = ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
             payload,
-            "pt-BR",
-            0,
+            new TranslationReuseScope("en", "pt-BR", 0, true),
             "7.3",
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -565,6 +967,59 @@ public class ActionMenuWindowHandlerTests
             });
 
         Assert.Equal(0, unseenCount);
+    }
+
+    /// <summary>
+    ///     Ensures canonical ActionMenu lookup never reuses an otherwise
+    ///     compatible action row from a different source language.
+    /// </summary>
+    [Fact]
+    public void CountMeaningfulUnseenTexts_DifferentSource_DoesNotReuseCanonicalRow()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                Id = 3,
+                ActionId = 16003,
+                ActionName = "Source Scoped Action",
+                OriginalLang = "en",
+                TranslatedActionName = "Acao com origem",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "7.3",
+                SourceContentHash = "hash-source-scoped-action",
+            });
+            var payload = new DbFirstGameWindowPayload(
+                new SortedDictionary<int, string>
+                {
+                    [17] = "Source Scoped Action",
+                },
+                new SortedDictionary<int, string>(),
+                new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+            var matchingSourceCount =
+                ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+                    payload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    "7.3",
+                    new Dictionary<string, string>(StringComparer.Ordinal));
+            var mismatchedSourceCount =
+                ActionMenuWindowHandler.CountMeaningfulUnseenTexts(
+                    payload,
+                    new TranslationReuseScope("de", "pt-BR", 0, true),
+                    "7.3",
+                    new Dictionary<string, string>(StringComparer.Ordinal));
+
+            Assert.Equal(0, matchingSourceCount);
+            Assert.Equal(1, mismatchedSourceCount);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
     }
 
     /// <summary>
@@ -660,6 +1115,83 @@ public class ActionMenuWindowHandlerTests
                 translatedPayload);
 
         Assert.True(accepted);
+    }
+
+    /// <summary>
+    ///     Ensures generic hover-tooltip lookup still resolves when the saved
+    ///     payload captured line feeds but the live text node exposes carriage
+    ///     returns for the same ActionMenu entry.
+    /// </summary>
+    [Fact]
+    public void BuildTooltipTextMap_NormalizesLineEndingsForHoverLookup()
+    {
+        var originalPayload = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>
+            {
+                [25] = "Second Wind\nLv. 8",
+            },
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
+        var translatedPayload = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string>
+            {
+                [25] = "Segundo fôlego\nNv. 8",
+            },
+            new SortedDictionary<int, string>(),
+            new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+        var lookup = BuildTooltipTextMap(
+            originalPayload,
+            translatedPayload,
+            useTranslatedKeys: false);
+        var normalizedVisibleText = NormalizeTooltipLookupText(
+            "Second Wind\rLv. 8");
+
+        Assert.True(lookup.TryGetValue(
+            normalizedVisibleText,
+            out var tooltipBody));
+        Assert.Equal("Segundo fôlego\nNv. 8", tooltipBody);
+    }
+
+    /// <summary>
+    ///     Invokes the shared hover-tooltip lookup builder through reflection.
+    /// </summary>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="useTranslatedKeys">
+    ///     Whether translated texts should become the lookup keys.
+    /// </param>
+    /// <returns>The built lookup map.</returns>
+    private static Dictionary<string, string> BuildTooltipTextMap(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        bool useTranslatedKeys)
+    {
+        var method = typeof(DbFirstGameWindowAddonHandler).GetMethod(
+            "BuildTooltipTextMap",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var result = method!.Invoke(
+            null,
+            [originalPayload, translatedPayload, useTranslatedKeys]);
+        return Assert.IsType<Dictionary<string, string>>(result);
+    }
+
+    /// <summary>
+    ///     Invokes the shared tooltip-text normalizer through reflection.
+    /// </summary>
+    /// <param name="text">The text to normalize.</param>
+    /// <returns>The normalized lookup text.</returns>
+    private static string NormalizeTooltipLookupText(string text)
+    {
+        var method = typeof(DbFirstGameWindowAddonHandler).GetMethod(
+            "NormalizeTooltipLookupText",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var result = method!.Invoke(null, [text]);
+        return Assert.IsType<string>(result);
     }
 }
 

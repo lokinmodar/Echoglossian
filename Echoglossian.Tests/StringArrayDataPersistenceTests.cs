@@ -239,30 +239,191 @@ public class StringArrayDataPersistenceTests
     }
 
     /// <summary>
+    ///     Ensures canonical rows with identical content identity remain
+    ///     separated by normalized source language.
+    /// </summary>
+    [Fact]
+    public void InsertStringArrayData_PreservesDistinctCanonicalSources()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var english = CreateCanonicalRow(
+                "MainCommand",
+                "MainCommand:Root",
+                "same-hash",
+                "{\"slots\":{\"0\":\"English translation\"}}",
+                originalLang: "en");
+            var german = CreateCanonicalRow(
+                "MainCommand",
+                "MainCommand:Root",
+                "same-hash",
+                "{\"slots\":{\"0\":\"German translation\"}}",
+                originalLang: "de");
+
+            StringArrayDataPersistenceHelper.InsertStringArrayData(configDir, english);
+            StringArrayDataPersistenceHelper.InsertStringArrayData(configDir, german);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.StringArrayDatas.Count());
+
+            var englishMatch = StringArrayDataPersistenceHelper.FindStringArrayData(
+                configDir,
+                english);
+            var germanMatch = StringArrayDataPersistenceHelper.FindStringArrayData(
+                configDir,
+                german);
+            Assert.Equal("en", englishMatch?.OriginalLang);
+            Assert.Equal("de", germanMatch?.OriginalLang);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures canonical identity cannot be persisted or read without a
+    ///     source language.
+    /// </summary>
+    [Fact]
+    public void CanonicalStringArrayData_RejectsMissingSourceLanguage()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var row = CreateCanonicalRow(
+                "MainCommand",
+                "MainCommand:Root",
+                "same-hash",
+                "{\"slots\":{\"0\":\"Translation\"}}");
+            row.OriginalLang = null;
+
+            Assert.Equal(
+                "Invalid data.",
+                StringArrayDataPersistenceHelper.InsertStringArrayData(
+                    configDir,
+                    row));
+            Assert.Null(StringArrayDataPersistenceHelper.FindStringArrayData(
+                configDir,
+                row));
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Empty(validationContext.StringArrayDatas);
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures canonical StringArrayData fallback reads honor the requested
+    ///     engine reuse policy while writes retain exact-engine history.
+    /// </summary>
+    [Fact]
+    public void CanonicalStringArrayData_AppliesEngineReusePolicy()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            var stored = CreateCanonicalRow(
+                "MainCommand",
+                "MainCommand:Root",
+                "same-hash",
+                "{\"slots\":{\"0\":\"Translation\"}}",
+                translationEngine: 7);
+            var probe = CreateCanonicalRow(
+                "MainCommand",
+                "MainCommand:Root",
+                "same-hash",
+                "{\"slots\":{\"0\":\"Translation\"}}",
+                translationEngine: 0);
+            var compatibleScope = new TranslationReuseScope("en", "pt", 0, false);
+            var strictScope = new TranslationReuseScope("en", "pt", 0, true);
+
+            StringArrayDataPersistenceHelper.InsertStringArrayData(configDir, stored);
+
+            Assert.Equal(
+                7,
+                StringArrayDataPersistenceHelper.FindStringArrayData(
+                    configDir,
+                    probe,
+                    compatibleScope)?.TranslationEngine);
+            Assert.Null(StringArrayDataPersistenceHelper.FindStringArrayData(
+                configDir,
+                probe,
+                strictScope));
+
+            StringArrayDataPersistenceHelper.InsertStringArrayData(configDir, probe);
+
+            using var validationContext = new EchoglossianDbContext(configDir);
+            Assert.Equal(2, validationContext.StringArrayDatas.Count());
+        }
+        finally
+        {
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Creates a canonical string-array row for persistence tests.
     /// </summary>
     /// <param name="type">The string-array type.</param>
     /// <param name="contextKey">The canonical context key.</param>
     /// <param name="sourceHash">The stable source-content hash.</param>
     /// <param name="translatedPayload">The translated structured payload.</param>
+    /// <param name="translationEngine">The translation-engine identity.</param>
     /// <returns>The canonical row.</returns>
     private static StringArrayDatas CreateCanonicalRow(
         string type,
         string contextKey,
         string sourceHash,
-        string translatedPayload)
+        string translatedPayload,
+        string originalLang = "en",
+        int? translationEngine = 0)
     {
         return new StringArrayDatas(
             type: type,
             size: 1,
             rawData: [0x01, 0x02],
             formattedRawData: "0102",
-            originalLang: "en",
+            originalLang: originalLang,
             originalStrings: "{\"0\":\"Profile\"}",
             translationLang: "pt",
             translatedStrings: "{\"0\":\"Perfil\"}",
             translatedStringsWithPayloads: null,
-            translationEngine: 0,
+            translationEngine: translationEngine,
             gameVersion: "7.3",
             createdAt: DateTime.UtcNow,
             updatedAt: DateTime.UtcNow)

@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+namespace Echoglossian.ImageGeneration;
+
 /// <summary>
 /// Generates textures from text using a specified font and size.
 /// </summary>
@@ -13,7 +15,7 @@ public sealed class TextTextureGenerator
   /// <summary>
   /// Initializes a new instance of the <see cref="TextTextureGenerator"/> class.
   /// </summary>
-  /// <param name="textureProvider"></param>
+  /// <param name="textureProvider">The texture provider used to upload images.</param>
   public TextTextureGenerator(ITextureProvider textureProvider)
   {
     this.textureProvider = textureProvider;
@@ -22,14 +24,17 @@ public sealed class TextTextureGenerator
   /// <summary>
   /// Creates a texture from the specified text using the given font and size.
   /// </summary>
-  /// <param name="text"></param>
-  /// <param name="fontPath"></param>
-  /// <param name="fontSize"></param>
-  /// <param name="textColor"></param>
-  /// <param name="backgroundColor"></param>
-  /// <param name="fontStyle"></param>
-  /// <param name="maxWidth"></param>
-  /// <returns></returns>
+  /// <param name="text">The logical text to rasterize.</param>
+  /// <param name="fontPath">The font file path used for rasterization.</param>
+  /// <param name="fontSize">The font size in pixels.</param>
+  /// <param name="textColor">The rasterized foreground color.</param>
+  /// <param name="backgroundColor">The rasterized background color.</param>
+  /// <param name="fontStyle">The font style used during rasterization.</param>
+  /// <param name="maxWidth">Optional pixel width used for wrapping.</param>
+  /// <param name="lineHeightScale">
+  /// Shared line-height scale used during multiline rasterization.
+  /// </param>
+  /// <returns>The uploaded Dalamud texture.</returns>
   public async Task<IDalamudTextureWrap> CreateTextTextureAsync(
       string text,
       string fontPath,
@@ -37,13 +42,15 @@ public sealed class TextTextureGenerator
       Color? textColor = null,
       Color? backgroundColor = null,
       FontStyle fontStyle = FontStyle.Regular,
-      int? maxWidth = null)
+      int? maxWidth = null,
+      float lineHeightScale = 1.0f)
   {
-    using TextImageRenderer renderer = new(fontPath, fontSize, fontStyle);
+    using TextImageRenderer renderer =
+        new(fontPath, fontSize, fontStyle, lineHeightScale);
     using Bitmap bmp = renderer.RenderShapedText(
         text,
         textColor ?? Color.White,
-        backgroundColor ?? Color.Black,
+        backgroundColor ?? Color.Transparent,
         maxWidth);
 
     using MemoryStream ms = new();

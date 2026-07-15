@@ -23,6 +23,7 @@ internal static class TranslationPersistenceGuard
   public static bool IsPersistentFailureReason(string? failureReason)
   {
     return !string.IsNullOrWhiteSpace(failureReason) &&
+           !failureReason.StartsWith("llm-", StringComparison.Ordinal) &&
            !string.Equals(
                failureReason,
                "empty-result",

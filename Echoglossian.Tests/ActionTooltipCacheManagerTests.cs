@@ -17,6 +17,222 @@ namespace Echoglossian.Tests;
 public class ActionTooltipCacheManagerTests
 {
     /// <summary>
+    ///     Ensures action canonical lookup cannot reuse another source
+    ///     language even when target, engine, version, and hash all match.
+    /// </summary>
+    [Fact]
+    public void TryFindCanonicalMatch_DifferentSourceLanguage_ReturnsNull()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                ActionId = 15998,
+                OriginalLang = "en",
+                TranslationLang = "iw",
+                TranslationEngine = 4,
+                GameVersion = "7.3",
+                SourceContentHash = "english-hash",
+            });
+
+            var scope = new TranslationReuseScope("ja", "iw", 4, false);
+
+            Assert.Null(ActionTooltipCacheManager.TryFindCanonicalMatch(
+                15998,
+                scope,
+                "7.3",
+                "english-hash"));
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures item canonical lookup cannot reuse another source language.
+    /// </summary>
+    [Fact]
+    public void TryFindCanonicalMatch_ItemDifferentSourceLanguage_ReturnsNull()
+    {
+        ItemTooltipCacheManager.Clear();
+
+        try
+        {
+            ItemTooltipCacheManager.Update(new ItemTooltip
+            {
+                ItemId = 4868,
+                OriginalLang = "en",
+                TranslationLang = "iw",
+                TranslationEngine = 4,
+                GameVersion = "7.3",
+                SourceContentHash = "english-hash",
+            });
+
+            var scope = new TranslationReuseScope("ja", "iw", 4, false);
+
+            Assert.Null(ItemTooltipCacheManager.TryFindCanonicalMatch(
+                4868,
+                scope,
+                "7.3",
+                "english-hash"));
+        }
+        finally
+        {
+            ItemTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures trait canonical lookup cannot reuse another source language.
+    /// </summary>
+    [Fact]
+    public void TryFindCanonicalMatch_TraitDifferentSourceLanguage_ReturnsNull()
+    {
+        TraitCacheManager.Clear();
+
+        try
+        {
+            TraitCacheManager.Update(new Trait
+            {
+                TraitId = 201,
+                OriginalLang = "en",
+                TranslationLang = "iw",
+                TranslationEngine = 4,
+                GameVersion = "7.3",
+                SourceContentHash = "english-hash",
+            });
+
+            var scope = new TranslationReuseScope("ja", "iw", 4, false);
+
+            Assert.Null(TraitCacheManager.TryFindCanonicalMatch(
+                201,
+                scope,
+                "7.3",
+                "english-hash"));
+        }
+        finally
+        {
+            TraitCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures reference-text canonical lookup cannot reuse another source
+    ///     language.
+    /// </summary>
+    [Fact]
+    public void TryFindCanonicalMatch_ReferenceDifferentSourceLanguage_ReturnsNull()
+    {
+        var cache = new ReferenceTextCacheStore<MainCommandText>(
+            "SourceScopedReferenceTextTestCache");
+        cache.Update(new MainCommandText
+        {
+            ReferenceId = 12,
+            OriginalLang = "en",
+            TranslationLang = "iw",
+            TranslationEngine = 4,
+            GameVersion = "7.3",
+            SourceContentHash = "english-hash",
+        });
+
+        var scope = new TranslationReuseScope("ja", "iw", 4, false);
+
+        Assert.Null(cache.TryFindCanonicalMatch(
+            12,
+            scope,
+            "7.3",
+            "english-hash"));
+    }
+
+    /// <summary>
+    ///     Ensures structured string-array canonical lookup cannot reuse
+    ///     another source language.
+    /// </summary>
+    [Fact]
+    public void TryFindCanonicalMatch_StringArrayDifferentSourceLanguage_ReturnsNull()
+    {
+        StringArrayDataCacheManager.Clear();
+
+        try
+        {
+            StringArrayDataCacheManager.Update(new StringArrayDatas(
+                type: "Character",
+                size: 1,
+                rawData: null,
+                formattedRawData: null,
+                originalLang: "en",
+                originalStrings: "{\"0\":\"Profile\"}",
+                translationLang: "iw",
+                translatedStrings: "{\"0\":\"Translated\"}",
+                translatedStringsWithPayloads: null,
+                translationEngine: 4,
+                gameVersion: "7.3",
+                createdAt: DateTime.UtcNow,
+                updatedAt: DateTime.UtcNow)
+            {
+                ContextKey = "Character:Profile",
+                SourceContentHash = "english-hash",
+            });
+
+            var scope = new TranslationReuseScope("ja", "iw", 4, false);
+
+            Assert.Null(StringArrayDataCacheManager.TryFindCanonicalMatch(
+                "Character",
+                "Character:Profile",
+                scope,
+                "7.3",
+                "english-hash"));
+        }
+        finally
+        {
+            StringArrayDataCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures reverse lookup cannot restore original text from another
+    ///     source language.
+    /// </summary>
+    [Fact]
+    public void TryFindOriginalText_DifferentSourceLanguage_ReturnsFalse()
+    {
+        ActionTooltipCacheManager.Clear();
+
+        try
+        {
+            ActionTooltipCacheManager.Update(new ActionTooltip
+            {
+                ActionId = 16013,
+                ActionName = "Flourish",
+                TranslatedActionName = "Translated Flourish",
+                OriginalLang = "en",
+                TranslationLang = "iw",
+                TranslationEngine = 4,
+                GameVersion = "7.3",
+                SourceContentHash = "english-hash",
+            });
+
+            var scope = new TranslationReuseScope("ja", "iw", 4, false);
+
+            var found = ActionTooltipCacheManager.TryFindOriginalText(
+                scope,
+                "7.3",
+                "Translated Flourish",
+                out var originalText);
+
+            Assert.False(found);
+            Assert.Equal(string.Empty, originalText);
+        }
+        finally
+        {
+            ActionTooltipCacheManager.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures an exact-version action-tooltip translation wins when both
     ///     exact and version-agnostic rows exist for the same original text.
     /// </summary>
@@ -32,6 +248,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 1,
                 ActionId = 15998,
                 ActionName = "Technical Step",
+                OriginalLang = "en",
                 TranslatedActionName = "Passo Técnico (fallback)",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -43,6 +260,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 2,
                 ActionId = 15998,
                 ActionName = "Technical Step",
+                OriginalLang = "en",
                 TranslatedActionName = "Passo Técnico",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -51,14 +269,20 @@ public class ActionTooltipCacheManagerTests
             });
 
             var found = ActionTooltipCacheManager.TryFindTranslatedText(
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 "Technical Step",
                 out var translatedText);
+            var mismatchedSourceFound =
+                ActionTooltipCacheManager.TryFindTranslatedText(
+                    new TranslationReuseScope("de", "pt-BR", 0, true),
+                    "7.3",
+                    "Technical Step",
+                    out _);
 
             Assert.True(found);
             Assert.Equal("Passo Técnico", translatedText);
+            Assert.False(mismatchedSourceFound);
         }
         finally
         {
@@ -82,6 +306,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 1,
                 ActionId = 15998,
                 ActionName = "Technical Step",
+                OriginalLang = "en",
                 TranslatedActionName = "Passo Técnico",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -90,8 +315,7 @@ public class ActionTooltipCacheManagerTests
             });
 
             var found = ActionTooltipCacheManager.TryFindTranslatedText(
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 "Technical Step",
                 out var translatedText);
@@ -120,6 +344,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 1,
                 ActionId = 15998,
                 ActionDescription = "Begin dancing, granting yourself Technical Finish.",
+                OriginalLang = "en",
                 TranslatedActionDescription = "Comece a dançar, concedendo Technical Finish.",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -128,8 +353,7 @@ public class ActionTooltipCacheManagerTests
             });
 
             var found = ActionTooltipCacheManager.TryFindTranslatedText(
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 "Begin dancing, granting yourself Technical Finish.",
                 out var translatedText);
@@ -161,6 +385,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 1,
                 ActionId = 15998,
                 ActionName = "Technical Step",
+                OriginalLang = "en",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
                 GameVersion = "7.3",
@@ -171,6 +396,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 2,
                 ActionId = 15998,
                 ActionName = "Technical Step",
+                OriginalLang = "en",
                 TranslatedActionName = "Passo Técnico",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -180,8 +406,7 @@ public class ActionTooltipCacheManagerTests
 
             var found = ActionTooltipCacheManager.TryFindHistoricalCanonicalMatch(
                 15998,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 "hash-exact");
 
@@ -211,6 +436,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 1,
                 ActionId = 15998,
                 ActionName = "Technical Step",
+                OriginalLang = "en",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
                 GameVersion = "7.3",
@@ -221,6 +447,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 2,
                 ActionId = 15998,
                 ActionName = "Technical Step",
+                OriginalLang = "en",
                 TranslatedActionName = "Passo Técnico",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -230,8 +457,7 @@ public class ActionTooltipCacheManagerTests
 
             var found = ActionTooltipCacheManager.TryFindCanonicalMatch(
                 15998,
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 "hash-exact");
 
@@ -260,6 +486,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 1,
                 ActionId = 16013,
                 ActionName = "Flourish",
+                OriginalLang = "en",
                 TranslatedActionName = "Florescer",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -268,8 +495,7 @@ public class ActionTooltipCacheManagerTests
             });
 
             var found = ActionTooltipCacheManager.TryFindOriginalText(
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 "Florescer",
                 out var originalText);
@@ -299,6 +525,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 1,
                 ActionId = 16013,
                 ActionName = "Flourish",
+                OriginalLang = "en",
                 TranslatedActionName = "Florescer",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -310,6 +537,7 @@ public class ActionTooltipCacheManagerTests
                 Id = 2,
                 ActionId = 16014,
                 ActionName = "Bloom",
+                OriginalLang = "en",
                 TranslatedActionName = "Florescer",
                 TranslationLang = "pt-BR",
                 TranslationEngine = 0,
@@ -318,8 +546,7 @@ public class ActionTooltipCacheManagerTests
             });
 
             var found = ActionTooltipCacheManager.TryFindOriginalText(
-                "pt-BR",
-                0,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
                 "7.3",
                 "Florescer",
                 out var originalText);

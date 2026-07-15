@@ -7,6 +7,9 @@ namespace Echoglossian;
 
 public partial class Echoglossian
 {
+  private readonly VisibleStorySurfaceRetranslationDispatcher
+      visibleStorySurfaceRetranslationDispatcher = new();
+
   /// <summary>
   /// Updates the plugin's state on each tick.
   /// </summary>
@@ -70,6 +73,8 @@ public partial class Echoglossian
   /// </summary>
   private void BuildUi()
   {
+    this.rtlTexturePresentationService.BeginDrawFrame();
+
     if (this.config)
     {
       this.EchoglossianConfigUi();
@@ -152,6 +157,58 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  /// Draws the translator debugger and metrics window.
+  /// </summary>
+  private void DrawTranslatorMetricsWindow()
+  {
+    this.translatorMetricsWindow?.Draw();
+  }
+
+  /// <summary>
+  ///     Retranslates the currently visible story-facing text using the active
+  ///     engine and persists the refreshed result when a registered handler can
+  ///     resolve a live source payload.
+  /// </summary>
+  /// <returns>
+  ///     A result describing whether a visible story-facing surface was
+  ///     available and whether the explicit retranslation succeeded.
+  /// </returns>
+  private async Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>
+      RetranslateVisibleDialogueAndPersistAsync()
+  {
+    IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)> handlers =
+        this.registeredAddonHandlers ?? [];
+    var result = await this.visibleStorySurfaceRetranslationDispatcher
+        .DispatchAsync(handlers)
+        .ConfigureAwait(false);
+
+    if (result.IsApplicable && result.Surface != null)
+    {
+      VisibleStorySurfaceDiagnosticsStore.SetRetranslationOutcome(
+          result.Surface.Value,
+          result.Success,
+          result.Message,
+          DateTime.UtcNow);
+    }
+
+    return result;
+  }
+
+  /// <summary>
+  /// Opens the DB editor and preselects a requested table.
+  /// </summary>
+  /// <param name="tableName">The requested DB manager table name.</param>
+  private void OpenDbEditorForTable(string tableName)
+  {
+    if (this.dbEditorWindow == null)
+    {
+      return;
+    }
+
+    this.dbEditorWindow.OpenAndSelectTable(tableName);
+  }
+
+  /// <summary>
   /// Open the Echoglossian DB Editor window when the command is executed.
   /// </summary>
   /// <param name="command">Command name.</param>
@@ -159,6 +216,19 @@ public partial class Echoglossian
   private void OnEgloDbEditorCommand(string command, string args)
   {
     this.dbEditorWindow?.IsOpen = true;
+  }
+
+  /// <summary>
+  /// Opens the translator debugger and metrics window when the command is executed.
+  /// </summary>
+  /// <param name="command">Command name.</param>
+  /// <param name="args">Command arguments.</param>
+  private void OnEgloTranslatorDebuggerCommand(string command, string args)
+  {
+    if (this.translatorMetricsWindow is not null)
+    {
+      this.translatorMetricsWindow.IsOpen = true;
+    }
   }
 
   /// <summary>

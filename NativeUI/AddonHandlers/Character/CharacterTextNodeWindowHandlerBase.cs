@@ -20,6 +20,10 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
         TimeSpan.FromMilliseconds(500);
 
     private readonly Config config;
+    private readonly CharacterCanonicalLookupSnapshotCache
+        characterLookupSnapshotCache = new();
+
+    private CharacterCanonicalLookups? cachedCharacterLookups;
 
     /// <summary>
     ///     Initializes a new instance of the
@@ -66,6 +70,12 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                !string.IsNullOrWhiteSpace(visibleText);
     }
 
+    /// <inheritdoc />
+    protected override List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
+    {
+        return AddonTextNodeResolvers.ResolveReadableTextNodes(addon);
+    }
+
     /// <summary>
     ///     Determines whether the visible text can be resolved through the
     ///     canonical shared Character string-array payload.
@@ -78,7 +88,9 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
     protected bool CanCaptureSupplementalCharacterText(string visibleText)
     {
         if (string.IsNullOrWhiteSpace(visibleText) ||
+            !this.TryCreateCurrentTranslationReuseScope(out var scope) ||
             !this.TryBuildCharacterLookups(
+                scope,
                 out _,
                 out _,
                 out var knownTexts))
@@ -144,12 +156,16 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
             return false;
         }
 
-        var hasCanonicalLookups = this.TryBuildCharacterLookups(
-            out var originalLookup,
-            out var translatedLookup,
-            out _);
-        var nodeAddresses = AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(
-            addon);
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var hasCanonicalLookups =
+            this.TryCreateCurrentTranslationReuseScope(out var scope) &&
+            this.TryBuildCharacterLookups(
+                scope,
+                out originalLookup,
+                out translatedLookup,
+                out _);
+        var nodeAddresses = this.ResolveTextNodeAddresses(addon);
         foreach (var nodeAddress in nodeAddresses)
         {
             var textNode = (AtkTextNode*)nodeAddress;
@@ -193,12 +209,14 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload livePayload,
         out DbFirstGameWindowPayload originalPayload)
     {
         originalPayload = DbFirstGameWindowPayload.Empty;
 
         if (!this.TryBuildCharacterLookups(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 out var originalLookup,
                 out _,
                 out _))
@@ -215,12 +233,14 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
 
     /// <inheritdoc />
     private protected override bool TryResolveSupplementalTranslatedPayload(
+        SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         out DbFirstGameWindowPayload translatedPayload)
     {
         translatedPayload = DbFirstGameWindowPayload.Empty;
 
         if (!this.TryBuildCharacterLookups(
+                this.CreateTranslationReuseScope(sourceLanguage),
                 out _,
                 out var translatedLookup,
                 out _))
@@ -257,35 +277,65 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
     ///     be resolved from cache; otherwise <see langword="false" />.
     /// </returns>
     private bool TryBuildCharacterLookups(
+        TranslationReuseScope scope,
         out Dictionary<string, string> originalLookup,
         out Dictionary<string, string> translatedLookup,
         out HashSet<string> knownTexts)
     {
-        originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-        translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-        knownTexts = new HashSet<string>(StringComparer.Ordinal);
-        var structuredRowsScanned = 0;
-        var structuredRowsResolved = 0;
-        var gameWindowRowsScanned = 0;
-        var gameWindowRowsResolved = 0;
+        var gameVersion = GetGameVersion();
+        var structuredCacheRevision = StringArrayDataCacheManager.Revision;
+        var gameWindowCacheRevision = GameWindowCacheManager.Revision;
+        if (!this.characterLookupSnapshotCache.IsCurrent(
+                scope,
+                gameVersion,
+                structuredCacheRevision,
+                gameWindowCacheRevision) ||
+            this.cachedCharacterLookups == null)
+        {
+            this.cachedCharacterLookups = this.BuildCharacterLookups(
+                scope,
+                gameVersion);
+            this.characterLookupSnapshotCache.Store(
+                scope,
+                gameVersion,
+                structuredCacheRevision,
+                gameWindowCacheRevision);
+        }
 
-        var targetLanguage =
-            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.config.Lang);
+        originalLookup = this.cachedCharacterLookups.OriginalLookup;
+        translatedLookup = this.cachedCharacterLookups.TranslatedLookup;
+        knownTexts = this.cachedCharacterLookups.KnownTexts;
+        return translatedLookup.Count > 0;
+    }
+
+    /// <summary>
+    ///     Rebuilds the Character canonical lookup from both live cache
+    ///     sources after their revision, scope, or game version changed.
+    /// </summary>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <param name="gameVersion">The requested game version.</param>
+    /// <returns>The resolved lookup snapshot, including an empty snapshot.</returns>
+    private CharacterCanonicalLookups BuildCharacterLookups(
+        TranslationReuseScope scope,
+        string? gameVersion)
+    {
+        var originalLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var translatedLookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        var knownTexts = new HashSet<string>(StringComparer.Ordinal);
+
         foreach (var contextKey in this.GetCharacterStructuredContextKeys())
         {
             var candidates = StringArrayDataCacheManager.GetCandidates(
                     type: StringArrayType.Character.ToString(),
                     contextKey: contextKey,
-                    lang: targetLanguage,
-                    engine: this.config.ChosenTransEngine,
-                    gameVersion: GetGameVersion())
+                    scope: scope,
+                    gameVersion: gameVersion,
+                    includeHistoricalVersions: true)
                 .OrderBy(row => row.Id)
                 .ToList();
 
             foreach (var row in candidates)
             {
-                structuredRowsScanned++;
                 if (!StringArrayStructuredPayloadResolver.TryResolvePayloads(
                         row,
                         out var originalStructuredPayload,
@@ -296,14 +346,13 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                     continue;
                 }
 
-                structuredRowsResolved++;
                 CharacterCanonicalPayloadHelper.AppendLookupEntries(
-                    originalStructuredPayload.Slots.Values,
+                    translatedStructuredPayload.Slots.Values,
                     originalLookup,
                     translatedLookup,
                     knownTexts);
                 CharacterCanonicalPayloadHelper.AppendLookupEntries(
-                    originalStructuredPayload.TextNodes.Values,
+                    translatedStructuredPayload.TextNodes.Values,
                     originalLookup,
                     translatedLookup,
                     knownTexts);
@@ -312,11 +361,11 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
 
         foreach (var row in GameWindowCacheManager.GetCandidates(
                      this.AddonName,
-                     targetLanguage,
-                     this.config.ChosenTransEngine,
-                     GetGameVersion()).OrderBy(candidate => candidate.Id))
+                     scope,
+                     gameVersion,
+                     includeHistoricalVersions: true)
+                 .OrderBy(candidate => candidate.Id))
         {
-            gameWindowRowsScanned++;
             if (!TryParseSerializedPayload(
                     row.OriginalWindowStrings,
                     out var rowOriginalPayload) ||
@@ -327,7 +376,6 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 continue;
             }
 
-            gameWindowRowsResolved++;
             CharacterCanonicalPayloadHelper.AppendLookupEntries(
                 rowOriginalPayload.AtkValues,
                 rowTranslatedPayload.AtkValues,
@@ -351,18 +399,92 @@ public abstract unsafe class CharacterTextNodeWindowHandlerBase
                 requireDifference: true);
         }
 
-        if (string.Equals(
-                this.AddonName,
-                "Character",
-                StringComparison.Ordinal))
+        return new CharacterCanonicalLookups(
+            originalLookup,
+            translatedLookup,
+            knownTexts);
+    }
+
+    /// <summary>
+    ///     Holds one immutable-by-convention canonical lookup projection for
+    ///     the current Character handler scope.
+    /// </summary>
+    private sealed class CharacterCanonicalLookups
+    {
+        /// <summary>
+        ///     Initializes a new instance of the
+        ///     <see cref="CharacterCanonicalLookups" /> class.
+        /// </summary>
+        /// <param name="originalLookup">
+        ///     The mapping from visible text to canonical original text.
+        /// </param>
+        /// <param name="translatedLookup">
+        ///     The mapping from visible text to target translated text.
+        /// </param>
+        /// <param name="knownTexts">
+        ///     The set of original and translated texts known to this scope.
+        /// </param>
+        public CharacterCanonicalLookups(
+            Dictionary<string, string> originalLookup,
+            Dictionary<string, string> translatedLookup,
+            HashSet<string> knownTexts)
         {
-            CharacterWindowHandler.AppendStableHeaderFallbackTranslations(
-                originalLookup,
-                translatedLookup,
-                knownTexts);
+            this.OriginalLookup = originalLookup;
+            this.TranslatedLookup = translatedLookup;
+            this.KnownTexts = knownTexts;
         }
 
-        return translatedLookup.Count > 0;
+        /// <summary>
+        ///     Gets the mapping from visible text to canonical original text.
+        /// </summary>
+        public Dictionary<string, string> OriginalLookup { get; }
+
+        /// <summary>
+        ///     Gets the mapping from visible text to target translated text.
+        /// </summary>
+        public Dictionary<string, string> TranslatedLookup { get; }
+
+        /// <summary>
+        ///     Gets the set of original and translated texts known to this
+        ///     scope.
+        /// </summary>
+        public HashSet<string> KnownTexts { get; }
+    }
+
+    /// <summary>
+    ///     Creates the structured Character cache scope for one captured
+    ///     source language.
+    /// </summary>
+    /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <returns>The complete translation reuse scope.</returns>
+    private protected TranslationReuseScope CreateTranslationReuseScope(
+        SourceClientLanguage sourceLanguage)
+    {
+        return new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.config.Lang),
+            this.GetOperationTranslationEngineId(),
+            this.config.TranslateAlreadyTranslatedTexts);
+    }
+
+    /// <summary>
+    ///     Captures the current source once at a Character text-node boundary.
+    /// </summary>
+    /// <param name="scope">The complete translation reuse scope.</param>
+    /// <returns>Whether the current source language was available.</returns>
+    private bool TryCreateCurrentTranslationReuseScope(
+        out TranslationReuseScope scope)
+    {
+        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+                out var sourceLanguage))
+        {
+            scope = default;
+            return false;
+        }
+
+        scope = this.CreateTranslationReuseScope(sourceLanguage);
+        return true;
     }
 
     /// <summary>

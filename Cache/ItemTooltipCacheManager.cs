@@ -66,40 +66,34 @@ public static class ItemTooltipCacheManager
             Cache[newRecord.ItemId] = rows;
         }
 
-        var existing = rows.FirstOrDefault(row =>
-            row.ItemId == newRecord.ItemId &&
-            row.TranslationLang == newRecord.TranslationLang &&
-            row.TranslationEngine == newRecord.TranslationEngine &&
-            GameVersionLookupHelper.MatchesStoredVersion(
-                row.GameVersion,
-                newRecord.GameVersion) &&
-            row.SourceContentHash == newRecord.SourceContentHash);
-        if (existing != null)
-        {
-            rows.Remove(existing);
-        }
+        var matchingRows = rows
+            .Where(row => HasSameCacheIdentity(row, newRecord))
+            .ToList();
+        var preferredRecord = matchingRows
+            .Append(newRecord)
+            .OrderByDescending(GetTranslationCompletenessScore)
+            .ThenByDescending(static row => row.UpdatedDate)
+            .First();
 
-        rows.Add(newRecord);
+        rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
+        rows.Add(preferredRecord);
     }
 
     /// <summary>
     ///     Tries to find one canonical item-tooltip row in memory.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The matching row, or <see langword="null" />.</returns>
     public static ItemTooltip? TryFindCanonicalMatch(
         uint itemId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         string sourceContentHash)
     {
         if (itemId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
             return null;
@@ -112,10 +106,10 @@ public static class ItemTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion) &&
@@ -133,20 +127,17 @@ public static class ItemTooltipCacheManager
     ///     payload.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="requestedGameVersion">The current game version.</param>
     /// <param name="sourceContentHash">The stable source-content hash.</param>
     /// <returns>The best matching historical row, or <see langword="null" />.</returns>
     public static ItemTooltip? TryFindHistoricalCanonicalMatch(
         uint itemId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? requestedGameVersion,
         string sourceContentHash)
     {
         if (itemId == 0 ||
-            string.IsNullOrWhiteSpace(lang) ||
             string.IsNullOrWhiteSpace(requestedGameVersion) ||
             string.IsNullOrWhiteSpace(sourceContentHash))
         {
@@ -160,10 +151,10 @@ public static class ItemTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 row.SourceContentHash == sourceContentHash &&
                 !string.IsNullOrWhiteSpace(row.GameVersion) &&
                 !string.Equals(
@@ -180,8 +171,7 @@ public static class ItemTooltipCacheManager
     ///     identity when the stricter canonical hash does not match.
     /// </summary>
     /// <param name="itemId">The item row identifier.</param>
-    /// <param name="lang">The target language code.</param>
-    /// <param name="engine">The translation-engine identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
     /// <param name="gameVersion">The current game version.</param>
     /// <param name="classJobCategoryId">
     ///     The preferred class-job-category identifier.
@@ -189,12 +179,11 @@ public static class ItemTooltipCacheManager
     /// <returns>The best translated row, or <see langword="null" />.</returns>
     public static ItemTooltip? TryFindIdentityMatch(
         uint itemId,
-        string lang,
-        int engine,
+        TranslationReuseScope scope,
         string? gameVersion,
         uint classJobCategoryId)
     {
-        if (itemId == 0 || string.IsNullOrWhiteSpace(lang))
+        if (itemId == 0)
         {
             return null;
         }
@@ -206,10 +195,10 @@ public static class ItemTooltipCacheManager
 
         return rows
             .Where(row =>
-                RuntimeLanguageHelper.LanguagesMatch(
+                scope.Matches(
+                    row.OriginalLang,
                     row.TranslationLang,
-                    lang) &&
-                row.TranslationEngine == engine &&
+                    row.TranslationEngine) &&
                 GameVersionLookupHelper.MatchesStoredVersion(
                     row.GameVersion,
                     gameVersion))
@@ -230,6 +219,61 @@ public static class ItemTooltipCacheManager
         PluginRuntimeLog.Debug(
             "ItemTooltipCacheManager",
             "Cleared item-tooltip cache.");
+    }
+
+    /// <summary>
+    ///     Determines whether two item rows represent the same effective cache
+    ///     identity after source and target language normalization.
+    /// </summary>
+    /// <param name="left">The cached row.</param>
+    /// <param name="right">The incoming row.</param>
+    /// <returns>
+    ///     <see langword="true" /> when both rows share one cache identity;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private static bool HasSameCacheIdentity(
+        ItemTooltip left,
+        ItemTooltip right)
+    {
+        return left.ItemId == right.ItemId &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.OriginalLang,
+                   right.OriginalLang) &&
+               RuntimeLanguageHelper.LanguagesMatch(
+                   left.TranslationLang,
+                   right.TranslationLang) &&
+               left.TranslationEngine == right.TranslationEngine &&
+               GameVersionLookupHelper.MatchesStoredVersion(
+                   left.GameVersion,
+                   right.GameVersion) &&
+               left.SourceContentHash == right.SourceContentHash;
+    }
+
+    /// <summary>
+    ///     Computes how many translated item fields are populated so an
+    ///     incomplete alias row cannot displace a completed canonical row.
+    /// </summary>
+    /// <param name="row">The item row to score.</param>
+    /// <returns>The number of populated translated fields.</returns>
+    private static int GetTranslationCompletenessScore(ItemTooltip row)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemName))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedItemDescription))
+        {
+            score++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedTooltipText))
+        {
+            score++;
+        }
+
+        return score;
     }
 
     /// <summary>
@@ -346,4 +390,5 @@ public static class ItemTooltipCacheManager
                 !string.IsNullOrWhiteSpace(
                     row.TranslatedItemDescription));
     }
+
 }

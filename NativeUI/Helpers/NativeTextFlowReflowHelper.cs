@@ -154,8 +154,7 @@ internal static unsafe class NativeTextFlowReflowHelper
       return;
     }
 
-    var cumulativeDelta = 0f;
-    var finalBottom = 0f;
+    Dictionary<nint, ushort> desiredWrapperHeights = [];
 
     foreach (var block in flowBlocks)
     {
@@ -166,10 +165,9 @@ internal static unsafe class NativeTextFlowReflowHelper
         continue;
       }
 
-      var wrapperY = block.WrapperY + cumulativeDelta;
       wrapperNode->SetPositionShort(
           block.WrapperX,
-          ClampToShort(wrapperY));
+          block.WrapperY);
       wrapperNode->SetHeight(block.WrapperHeight);
 
       if (block.WrapperNodeAddress != block.TextNodeAddress)
@@ -200,17 +198,37 @@ internal static unsafe class NativeTextFlowReflowHelper
           Math.Ceiling(desiredWrapperHeight),
           ushort.MinValue,
           ushort.MaxValue);
-      wrapperNode->SetHeight(clampedWrapperHeight);
-
-      finalBottom = Math.Max(
-          finalBottom,
-          wrapperY + clampedWrapperHeight);
-      cumulativeDelta += clampedWrapperHeight - block.WrapperHeight;
+      desiredWrapperHeights[block.TextNodeAddress] = clampedWrapperHeight;
     }
 
-    ApplyContainerHeights(
-        containerSnapshots,
-        finalBottom);
+    var layoutPlan = CalculateVerticalLayoutPlan(
+        flowBlocks,
+        desiredWrapperHeights,
+        containerSnapshots);
+    foreach (var blockPlan in layoutPlan.BlockPlans)
+    {
+      var wrapperNode = (AtkResNode*)blockPlan.WrapperNodeAddress;
+      if (wrapperNode == null)
+      {
+        continue;
+      }
+
+      wrapperNode->SetPositionShort(
+          blockPlan.WrapperX,
+          blockPlan.WrapperY);
+      wrapperNode->SetHeight(blockPlan.WrapperHeight);
+    }
+
+    foreach (var containerPlan in layoutPlan.ContainerPlans)
+    {
+      var containerNode = (AtkResNode*)containerPlan.ContainerNodeAddress;
+      if (containerNode == null)
+      {
+        continue;
+      }
+
+      containerNode->SetHeight(containerPlan.Height);
+    }
   }
 
   /// <summary>
@@ -357,31 +375,63 @@ internal static unsafe class NativeTextFlowReflowHelper
   }
 
   /// <summary>
-  ///     Applies container height growth after the text flow has been reflowed.
+  ///     Calculates the wrapper positions and container heights implied by one
+  ///     measured vertical text flow.
   /// </summary>
+  /// <param name="flowBlocks">The ordered original flow blocks.</param>
+  /// <param name="desiredWrapperHeights">
+  ///     The desired wrapper heights keyed by text-node address after
+  ///     translated measurement.
+  /// </param>
   /// <param name="containerSnapshots">The captured container snapshots.</param>
-  /// <param name="finalBottom">The last occupied vertical pixel of the flow.</param>
-  private static void ApplyContainerHeights(
-      IReadOnlyList<NativeTextFlowContainerSnapshot> containerSnapshots,
-      float finalBottom)
+  /// <returns>The calculated layout plan.</returns>
+  internal static NativeTextFlowLayoutPlan CalculateVerticalLayoutPlan(
+      IReadOnlyList<NativeTextFlowBlockSnapshot> flowBlocks,
+      IReadOnlyDictionary<nint, ushort> desiredWrapperHeights,
+      IReadOnlyList<NativeTextFlowContainerSnapshot> containerSnapshots)
   {
+    List<NativeTextFlowBlockLayoutPlan> blockPlans = [];
+    var cumulativeDelta = 0f;
+    var finalBottom = 0f;
+
+    foreach (var block in flowBlocks)
+    {
+      var wrapperHeight = desiredWrapperHeights.TryGetValue(
+          block.TextNodeAddress,
+          out var desiredWrapperHeight)
+          ? desiredWrapperHeight
+          : block.WrapperHeight;
+      var wrapperY = block.WrapperY + cumulativeDelta;
+      blockPlans.Add(
+          new NativeTextFlowBlockLayoutPlan(
+              block.WrapperNodeAddress,
+              block.WrapperX,
+              ClampToShort(wrapperY),
+              wrapperHeight));
+      finalBottom = Math.Max(
+          finalBottom,
+          wrapperY + wrapperHeight);
+      cumulativeDelta += wrapperHeight - block.WrapperHeight;
+    }
+
+    List<NativeTextFlowContainerLayoutPlan> containerPlans = [];
     foreach (var containerSnapshot in containerSnapshots)
     {
-      var containerNode = (AtkResNode*)containerSnapshot.ContainerNodeAddress;
-      if (containerNode == null)
-      {
-        continue;
-      }
-
       var desiredHeight = Math.Max(
           containerSnapshot.Height,
           containerSnapshot.FlowOriginY + finalBottom + containerSnapshot.BottomPadding);
-      containerNode->SetHeight(
-          (ushort)Math.Clamp(
-              Math.Ceiling(desiredHeight),
-              ushort.MinValue,
-              ushort.MaxValue));
+      containerPlans.Add(
+          new NativeTextFlowContainerLayoutPlan(
+              containerSnapshot.ContainerNodeAddress,
+              (ushort)Math.Clamp(
+                  Math.Ceiling(desiredHeight),
+                  ushort.MinValue,
+                  ushort.MaxValue)));
     }
+
+    return new NativeTextFlowLayoutPlan(
+        blockPlans,
+        containerPlans);
   }
 
   /// <summary>
@@ -462,3 +512,36 @@ internal sealed record NativeTextFlowContainerSnapshot(
     short FlowOriginY,
     ushort Height,
     short BottomPadding);
+
+/// <summary>
+///     Captures the calculated reflow plan for one native vertical text flow.
+/// </summary>
+/// <param name="BlockPlans">The ordered wrapper position and size plans.</param>
+/// <param name="ContainerPlans">The container height plans.</param>
+internal sealed record NativeTextFlowLayoutPlan(
+    IReadOnlyList<NativeTextFlowBlockLayoutPlan> BlockPlans,
+    IReadOnlyList<NativeTextFlowContainerLayoutPlan> ContainerPlans);
+
+/// <summary>
+///     Captures the calculated position and height for one wrapper block after
+///     translated reflow.
+/// </summary>
+/// <param name="WrapperNodeAddress">The wrapper node address.</param>
+/// <param name="WrapperX">The wrapper X position.</param>
+/// <param name="WrapperY">The wrapper Y position.</param>
+/// <param name="WrapperHeight">The wrapper height.</param>
+internal sealed record NativeTextFlowBlockLayoutPlan(
+    nint WrapperNodeAddress,
+    short WrapperX,
+    short WrapperY,
+    ushort WrapperHeight);
+
+/// <summary>
+///     Captures the calculated height for one container after native text
+///     reflow.
+/// </summary>
+/// <param name="ContainerNodeAddress">The container node address.</param>
+/// <param name="Height">The calculated container height.</param>
+internal sealed record NativeTextFlowContainerLayoutPlan(
+    nint ContainerNodeAddress,
+    ushort Height);

@@ -7,10 +7,84 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0531.x`
+## Submitted Release `v4.2601.0715.1114`
+
+This package delivers the first production-ready RTL presentation path and a
+broader stabilization of translated game-window, reference-text, and tooltip
+workflows.
+
+Highlights:
+
+- added the Phase A texture-backed RTL presentation path with bidirectional
+  shaping, right alignment, adaptive hover sizing, configurable line height,
+  and bounded CPU/GPU memory caches
+- made client source language, target language, and translation engine part of
+  the canonical reuse identity, including normalized provider language codes
+  and extended Chinese, Korean, and Traditional Chinese client identities
+- stabilized `MainCommand`, `AddonContextMenuTitle`, `ActionMenu`, and the
+  `Character` family with canonical sheet-backed data, incremental translation
+  application, corrected tooltip ownership, and removal of per-frame database
+  work that caused severe frame-rate drops
+- improved plugin hover rendering for dense action, item, quest, and game-window
+  text while keeping tooltip-only `JournalDetail` presentation read-only with
+  respect to native addon nodes
+- added regression and performance coverage plus implementation specifications
+  for later native RTL work in both Echoglossian and Dalamud
+
+## Published Release `v4.2601.0712.1140`
+
+This package was published to the official Dalamud feed and
+extends the story-surface debugger and persistence tooling shipped in the
+current `v4` line.
+
+Published in `DalamudPluginsD17` via
+[PR #9009](https://github.com/goatcorp/DalamudPluginsD17/pull/9009) on
+2026-07-12.
+
+Highlights:
+
+- added explicit retranslate-and-persist coverage for visible `TalkSubtitle`,
+  `CutSceneSelectString`, and `TextGimmickHint` story-facing surfaces alongside
+  the existing `Talk` and `BattleTalk` flows
+- added latest visible story-surface provenance inspection in
+  `/eglotranslatordebugger`, including runtime provenance, effective table,
+  last update status, and a direct `View In DB Manager` handoff
+- extracted the DB-manager read-only inspection table primitives into reusable
+  shared UI components so the debugger and DB manager render the same inspection
+  structures while keeping their data providers separate
+- hardened the new story-surface diagnostics path with follow-up fixes for enum
+  mapping safety, latest-snapshot consistency, retranslation outcome promotion,
+  and operator-facing fallback semantics
+
+## Published Release `v4.2601.0710.1250`
+
+This package advances the LLM dialogue runtime and provider workflow line and
+is now live in the official Dalamud feed.
+
+Published in `DalamudPluginsD17` via
+[PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) on
+2026-07-11.
+
+Highlights:
+
+- added structured dialogue translation plus glossary/context routing across
+  ChatGPT, Claude, Gemini, DeepSeek, LM Studio, Ollama, OpenRouter, and custom
+  OpenAI-compatible providers
+- added runtime model refresh, provider diagnostics, dialogue sessions and
+  metrics, and retranslation controls in `/eglotranslatordebugger`
+- hardened prompt expansion, dialogue history limiting, quota/error feedback,
+  and live model refresh state isolation for OpenAI-compatible engines
+- refreshed target-language coverage and downloadable script-font support for
+  newer LLM workflows
+
+## Published Release `v4.2601.0531.0115`
 
 This package advances the native-dialogue and toast runtime stability line and
-prepares the LLM rework fixes for official feed submission.
+is now live in the official Dalamud feed.
+
+Published in `DalamudPluginsD17` via
+[PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) on
+2026-06-01.
 
 Highlights:
 
@@ -67,6 +141,9 @@ repository workflow.
 | 2026-05-04 | [PR #8510](https://github.com/goatcorp/DalamudPluginsD17/pull/8510) `v4.2600.x` | first official `4.x` / `API15` release |
 | 2026-05-04 | [PR #8522](https://github.com/goatcorp/DalamudPluginsD17/pull/8522) `v4.2600.x` hotfix | first-launch config creation fix |
 | 2026-05-12 | [PR #8626](https://github.com/goatcorp/DalamudPluginsD17/pull/8626) `v4.2600.1105.x` | setup, engine selection, cache-concurrency, and version-reuse stabilization |
+| 2026-06-01 | [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) `v4.2601.0531.0115` | native dialogue/toast reflow stabilization, ToastGui route, and cross-surface isolation fixes |
+| 2026-07-11 | [PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) `v4.2601.0710.1250` | LLM structured dialogue/runtime release: custom OpenAI-compatible providers, live model refresh, debugger diagnostics, and prompt/history hardening |
+| 2026-07-12 | [PR #9009](https://github.com/goatcorp/DalamudPluginsD17/pull/9009) `v4.2601.0712.1140` | story-surface retranslation, debugger provenance, and reusable DB inspection tooling |
 
 ## Pre-Official History
 
