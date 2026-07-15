@@ -31499,7 +31499,8 @@
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ResolveMeasurementWrapWidth(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Single,System.Single)">
             <summary>
-            Preserves the legacy maximum-width measurement path for auto-sized overlays.
+            Preserves the legacy maximum-width measurement path for expanding and
+            auto-sized overlays.
             </summary>
             <param name="request">The current render request.</param>
             <param name="config">The overlay configuration.</param>

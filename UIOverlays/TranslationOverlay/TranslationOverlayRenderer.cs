@@ -175,15 +175,21 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 new Vector2(layout.RequestedSize.X * 4f, maxHeight));
         }
 
-        ImGui.PushStyleColor(
-            ImGuiCol.Text,
-            new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1f));
-        IDisposable? fontScope = backendKind == TextPresentationBackendKind.PlainImGui
-            ? this.fontRuntime.Push(
-                shouldUseGeneralFont ? UiFontKind.General : UiFontKind.Language)
-            : null;
+        var pushedStyleColor = false;
+        var beganWindow = false;
+        IDisposable? fontScope = null;
         try
         {
+            ImGui.PushStyleColor(
+                ImGuiCol.Text,
+                new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1f));
+            pushedStyleColor = true;
+            if (backendKind == TextPresentationBackendKind.PlainImGui)
+            {
+                fontScope = this.fontRuntime.Push(
+                    shouldUseGeneralFont ? UiFontKind.General : UiFontKind.Language);
+            }
+
             var flags = ImGuiWindowFlags.NoNav |
                         ImGuiWindowFlags.NoFocusOnAppearing |
                         ImGuiWindowFlags.NoMouseInputs |
@@ -213,6 +219,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                     ? resolvedTitle
                     : $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}";
             ImGui.Begin(windowLabel, flags);
+            beganWindow = true;
             if (backendKind == TextPresentationBackendKind.PlainImGui)
             {
                 ImGui.SetWindowFontScale(effectiveFontScale);
@@ -263,9 +270,27 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         }
         finally
         {
-            ImGui.PopStyleColor();
-            ImGui.End();
-            fontScope?.Dispose();
+            try
+            {
+                if (beganWindow)
+                {
+                    ImGui.End();
+                }
+            }
+            finally
+            {
+                try
+                {
+                    fontScope?.Dispose();
+                }
+                finally
+                {
+                    if (pushedStyleColor)
+                    {
+                        ImGui.PopStyleColor();
+                    }
+                }
+            }
         }
     }
 
@@ -306,7 +331,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
     }
 
     /// <summary>
-    /// Preserves the legacy maximum-width measurement path for auto-sized overlays.
+    /// Preserves the legacy maximum-width measurement path for expanding and
+    /// auto-sized overlays.
     /// </summary>
     /// <param name="request">The current render request.</param>
     /// <param name="config">The overlay configuration.</param>
@@ -319,17 +345,26 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         float horizontalPadding,
         float finalWrapWidth)
     {
-        if (!config.AutoSizeToTextWithMaxWidth)
-        {
-            return finalWrapWidth;
-        }
-
         var defaultMaxWidth = Math.Max(320f, request.ViewportSize.X - 80f);
         var maxWidth = config.MaxWidthViewportFraction > 0f
             ? Math.Min(
                 request.ViewportSize.X * config.MaxWidthViewportFraction,
                 defaultMaxWidth)
             : defaultMaxWidth;
+        if (config.ExpandWidthToFitText)
+        {
+            var baseWidth = request.AddonSize.X * config.WidthMultiplier;
+            return Math.Max(
+                64f,
+                Math.Min(maxWidth, baseWidth * config.MaxAutoExpandedWidthMultiplier) -
+                horizontalPadding);
+        }
+
+        if (!config.AutoSizeToTextWithMaxWidth)
+        {
+            return finalWrapWidth;
+        }
+
         return Math.Max(64f, maxWidth - horizontalPadding);
     }
 
