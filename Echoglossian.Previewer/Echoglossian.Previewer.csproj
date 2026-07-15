@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Platforms>x64</Platforms>
+    <IsPackable>false</IsPackable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$([System.Environment]::GetFolderPath(System.Environment+SpecialFolder.ApplicationData))\XIVLauncher\addon\Hooks\dev</DalamudLibPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Veldrid" Version="4.9.0" />
+    <PackageReference Include="Veldrid.SDL2" Version="4.9.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Echoglossian.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Dalamud.Bindings.ImGui">
+      <HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImGui.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="HexaGen.Runtime">
+      <HintPath>$(DalamudLibPath)\HexaGen.Runtime.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Content Include="$(DalamudLibPath)\cimgui.dll">
+      <Link>cimgui.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>
