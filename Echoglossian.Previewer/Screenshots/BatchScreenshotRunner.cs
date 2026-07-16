@@ -93,14 +93,7 @@ internal sealed class BatchScreenshotRunner
         PreviewConfiguration sourceConfiguration)
     {
         ArgumentNullException.ThrowIfNull(sourceConfiguration);
-
-        if (!sourceConfiguration.Loaded)
-        {
-            return "defaults";
-        }
-
-        var fileName = Path.GetFileName(sourceConfiguration.SourcePath);
-        return string.IsNullOrWhiteSpace(fileName) ? "config" : fileName;
+        return sourceConfiguration.SourceLabel;
     }
 
     /// <summary>

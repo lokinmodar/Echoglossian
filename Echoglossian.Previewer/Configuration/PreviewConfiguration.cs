@@ -52,6 +52,23 @@ public sealed class PreviewConfiguration
     public IReadOnlyList<string> Diagnostics { get; }
 
     /// <summary>
+    /// Gets a redacted configuration source label safe for screenshots and UI.
+    /// </summary>
+    public string SourceLabel
+    {
+        get
+        {
+            if (!this.Loaded)
+            {
+                return "defaults";
+            }
+
+            var fileName = Path.GetFileName(this.SourcePath);
+            return string.IsNullOrWhiteSpace(fileName) ? "config" : fileName;
+        }
+    }
+
+    /// <summary>
     /// Creates an independent configuration instance for preview-only edits.
     /// </summary>
     /// <returns>A deep clone of the loaded configuration snapshot.</returns>

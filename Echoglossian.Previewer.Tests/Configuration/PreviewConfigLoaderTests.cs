@@ -119,6 +119,31 @@ public sealed class PreviewConfigLoaderTests : IDisposable
         Assert.Contains("\"FontSize\": 29", File.ReadAllText(sourcePath), StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Ensures loaded configuration labels expose only the file name.
+    /// </summary>
+    [Fact]
+    public void SourceLabel_LoadedConfiguration_UsesFileNameOnly()
+    {
+        var sourcePath = this.CreateConfigFile("loaded.json", "{ \"FontSize\": 31 }");
+
+        var result = PreviewConfigLoader.Load(sourcePath);
+
+        Assert.Equal("loaded.json", result.SourceLabel);
+        Assert.DoesNotContain(this.temporaryDirectory, result.SourceLabel, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures default-only preview sessions surface the defaults label.
+    /// </summary>
+    [Fact]
+    public void SourceLabel_UnloadedConfiguration_UsesDefaultsLabel()
+    {
+        var result = PreviewConfigLoader.Load(Path.Combine(this.temporaryDirectory, "missing.json"));
+
+        Assert.Equal("defaults", result.SourceLabel);
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

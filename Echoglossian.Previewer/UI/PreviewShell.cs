@@ -239,7 +239,7 @@ internal sealed class PreviewShell : IDisposable
     {
         ImGui.TextUnformatted("Fidelity summary");
         ImGui.TextWrapped(
-            $"Config source: {(this.sourceConfiguration.Loaded ? this.sourceConfiguration.SourcePath : "defaults")}");
+            $"Config source: {this.sourceConfiguration.SourceLabel}");
         ImGui.TextWrapped(
             $"Font: {Path.GetFileName(this.fontSelection.SpecialFontPath)} / {this.fontSelection.FontSize}px");
         ImGui.TextUnformatted(
