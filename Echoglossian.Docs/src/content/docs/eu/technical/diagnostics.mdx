@@ -1,0 +1,47 @@
+---
+title: Diagnostika
+description: Addon ikerketa eta balidaziorako publikoki dokumentatutako tresnak.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDiagnosticsDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Ikerketa-etapen sailkatzailea"
+  definition={buildDiagnosticsDiagram('eu')}
+/>
+
+## Addon ikerketa
+
+Erabili repoaren addon probe komando hobetsia native UI jokabidea ikertzean:
+
+```text
+/egloaddonprobe <addon>
+```
+
+Hori da lehenengo tresna, addon familia jakin batek espero zenaren aldean bestelako jokabidea duenean.
+
+## Build eta test balidazioa
+
+Pluginaren balidazio estandarra:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Docs gunearen balidazioa:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Diagnostika printzipioak
+
+- lifecycle helperrak eta probe fokalizatuak lehenetsi hot-path debug spam-aren aurretik
+- kendu aldi baterako investigation logging-a arazoa ulertutakoan
+- runtime issue-ak etaparen arabera sailkatu kodea aldatu aurretik

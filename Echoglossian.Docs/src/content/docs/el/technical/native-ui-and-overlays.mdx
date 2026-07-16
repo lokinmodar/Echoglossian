@@ -1,0 +1,46 @@
+---
+title: Native UI και overlays
+description: Πώς η native παρουσίαση και η overlay παρουσίαση διατηρούνται χωριστές.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildNativeUiAndOverlaysDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Το runtime ξεχωρίζει τη μετάφραση από την παρουσίαση. Αυτό το όριο κρατά στενά τα surface fixes.
+
+<MermaidDiagram
+  label="Ιδιοκτησία τρόπων παρουσίασης"
+  definition={buildNativeUiAndOverlaysDiagram('el')}
+/>
+
+## Ιδιοκτησία του overlay
+
+Η κατάσταση του overlay διαχειρίζεται από το overlay layer, όχι από μεμονωμένους handlers με δικό τους renderer:
+
+- `UIOverlays/TranslationOverlay/OverlayConfigs.cs`
+- `UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs`
+
+Οι handlers δημοσιεύουν περιεχόμενο και συγχρονίζουν bounds, αλλά το overlay είναι ξεχωριστή ευθύνη.
+
+## Κανόνες native mutation
+
+- Το overlay-only mode δεν πρέπει να μεταβάλλει native nodes ή payloads.
+- Το native mode μπορεί να γράψει μεταφρασμένο κείμενο σε υποστηριζόμενες native surfaces.
+- Το swap mode κρατά το μεταφρασμένο native text και δημοσιεύει το original μέσω overlay.
+
+## Η σημερινή πραγματικότητα του native layout
+
+Κάποιες surfaces μπορούν να μεταβάλουν καθαρά παλαιότερα payloads. Άλλες εξακολουθούν να εξαρτώνται από αργότερη mutation σε visible text nodes και από ρητούς helpers reflow.
+
+Παραδείγματα:
+
+- Το `TalkSubtitle` μπορεί να εισάγει replacement text νωρίτερα μέσω payloads `AtkValue`.
+- Τα `BattleTalk`, `MiniTalk` και πολλές surfaces της οικογένειας toast εξακολουθούν να βασίζονται σε late native text-node mutation μαζί με κοινή λογική reflow.
+
+Όταν τα visual είναι λάθος, ταξινόμησε πρώτα το πρόβλημα:
+
+- πρόβλημα capture
+- πρόβλημα cache ή persistence
+- πρόβλημα overlay publication
+- πρόβλημα native mutation
+- πρόβλημα wrapper ή background reflow που λείπει

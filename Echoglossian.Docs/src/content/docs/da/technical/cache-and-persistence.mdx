@@ -1,0 +1,38 @@
+---
+title: Cache og persistens
+description: Hvorfor databasen forbliver autoritativ, og hvad caches må gøre.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildCacheAndPersistenceDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Databasen er sandhedskilden for vedvarende oversættelseshistorik. Hukommelsescaches er der for at reducere gentaget arbejde, ikke for at omdefinere semantik.
+
+<MermaidDiagram
+  label="Persistensautoritet og cache-scope"
+  definition={buildCacheAndPersistenceDiagram('da')}
+/>
+
+## Persistensform
+
+Forskellige overfladefamilier persisterer til forskellige entitetssæt, for eksempel:
+
+- dialogfamilie-entiteter som `TalkMessage`, `BattleTalkMessage` og `MiniTalkMessage`
+- toastfamilie-entiteter som `ToastMessage`
+- dedikerede entiteter som `TextGimmickHintMessage`
+
+## Hvad caches må gøre
+
+- undertrykke gentagne oversættelser for den samme synlige kilde
+- genbruge tidligere resultater, når det effektive oversættelsesscope stadig matcher
+- undgå hot-path-retryspam, når en provider fejler
+
+## Hvad caches ikke må gøre
+
+- blive en anden sandhedskilde
+- ændre DB-opslagssemantik
+- overleve de scope-regler, der beskytter den aktuelt synlige overflade
+
+## Scope-disciplin
+
+Kildeidentitet, målsprog, effektiv engine og genbrugspolitik skal forblive bundet til den operation, der startede requesten. Hvis dette scope ændrer sig, må ældre fuldførelser ikke erstatte den nyere synlige tilstand.

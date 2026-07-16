@@ -1,0 +1,49 @@
+---
+title: Build, test και συνεισφορά
+description: Τοπική επικύρωση και προσδοκίες συνεισφοράς για το plugin και το GitHub Pages docs site.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDevelopmentWorkflowDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Ροή επικύρωσης συνεισφορών"
+  definition={buildDevelopmentWorkflowDiagram('el')}
+/>
+
+## Κανόνες repository για αυτό το site
+
+- Το `Echoglossian.Docs/` δεν αποτελεί σκόπιμα μέρος του `Echoglossian.sln`.
+- Το root plugin project εξαιρεί ρητά το δέντρο docs από `Compile`, `EmbeddedResource` και `None`.
+- Το flow deployment των docs είναι ξεχωριστό από το flow release του plugin και του D17.
+
+## Τοπική επικύρωση
+
+Επικύρωση plugin:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Επικύρωση site docs:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd ci
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Προσδοκίες συνεισφοράς
+
+- κράτα τις αλλαγές στενές
+- διατήρησε την τρέχουσα συμπεριφορά εκτός αν η αλλαγή στοχεύει ρητά στη συμπεριφορά
+- επαναχρησιμοποίησε την κοινή αρχιτεκτονική του plugin αντί να εισάγεις παράλληλα μονοπάτια
+- κράτα τα δημόσια docs curated και στοχευμένα στο κοινό τους αντί να δημοσιεύεις εσωτερικές σημειώσεις αυτούσιες
+
+## Όριο release
+
+Αυτό το δημόσιο site τεκμηρίωσης δεν περιγράφει σκόπιμα το ιδιωτικό flow του release maintainer για υποβολή external manifests. Αυτό το workflow παραμένει στην εσωτερική τεκμηρίωση του repository.

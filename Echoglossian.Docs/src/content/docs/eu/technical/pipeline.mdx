@@ -1,0 +1,43 @@
+---
+title: Capture, itzulpen eta aurkezpen pipeline-a
+description: Nola doazen onartutako surfaceak source text capture-tik output itzulira.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Onartutako surface bakoitzak sekuentzia zabal bera jarraitzen du, nahiz eta hook zehatzak desberdinak izan.
+
+<MermaidDiagram
+  label="Capture-tik aurkezpenera doan fluxua"
+  definition={buildPipelineDiagram('eu')}
+/>
+
+1. Onartutako surface batetik source text capture egin.
+2. Itzulpenaren reuse-a eta persistence scope-a ebatzi.
+3. Engine hautaketarako eta translatorrentzako pipeline partekatuaren bidez itzuli.
+4. Emaitza overlay, native edo swap aurkezpenaren bidez argitaratu.
+
+## Etapa mugak
+
+### Capture
+
+Source text honetatik etor daiteke:
+
+- refresh aurreko `AtkValue` payloadetatik
+- ikusgai dauden addon text node-etatik
+- callback payloadetatik, adibidez quest toast `SeString`
+
+### Itzulpena
+
+`TranslationService`-k itzulpen-fluxu partekatua koordinatzen du. Translator konkretuek engine-specific izaten jarraitzen dute eta provider-specific request eta response handling bakarrik eduki behar dute.
+
+### Aurkezpena
+
+- Overlay moduak itzulitako testua native UI-tik kanpo renderizatzen du.
+- Native moduak itzulitako testua onartutako node edo payloadetan idatz dezake.
+- Swap moduak itzulitako native text mantentzen du eta overlaya erabiltzen du original text-erako.
+
+### Persistence eta reuse
+
+Dialogue eta toast entitateek persisted history gehi in-memory suppression erabiltzen dute errepikapenak saihesteko. Berandu bukatutako eskaera batek ez du visible state berriagoa ordezkatu behar bere capture scope-a zaharkituta geratu denean.

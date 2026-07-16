@@ -1,0 +1,49 @@
+---
+title: Build, test og bidrag
+description: Lokal validering og forventninger til bidrag for pluginet og GitHub Pages-docs-sitet.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDevelopmentWorkflowDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Valideringsworkflow for bidrag"
+  definition={buildDevelopmentWorkflowDiagram('da')}
+/>
+
+## Repository-regler for dette site
+
+- `Echoglossian.Docs/` er med vilje ikke en del af `Echoglossian.sln`.
+- Rodplugin-projektet udelukker eksplicit docs-træet fra `Compile`, `EmbeddedResource` og `None`.
+- Docs-deployflowet er adskilt fra pluginets og D17's releaseflow.
+
+## Lokal validering
+
+Plugin-validering:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Validering af docs-site:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd ci
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Forventninger til bidrag
+
+- hold ændringer smalle
+- bevar nuværende adfærd, medmindre ændringen udtrykkeligt retter adfærd
+- genbrug delt pluginarkitektur i stedet for at indføre parallelle stier
+- hold offentlige docs kuraterede og målgruppespecifikke i stedet for at publicere interne noter i helhed
+
+## Release-grænse
+
+Dette offentlige dokumentationssite beskriver bevidst ikke det private release-maintainer-flow til indsendelse af eksterne manifests. Det workflow forbliver i repository-intern dokumentation.

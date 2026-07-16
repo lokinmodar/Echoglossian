@@ -1,0 +1,51 @@
+---
+title: Übersetzerarchitektur
+description: Gemeinsame Übersetzungspipeline plus provider-spezifische Adapter.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildTranslatorArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Echoglossian hat eine gemeinsame Übersetzungspipeline und viele Engine-Adapter.
+
+<MermaidDiagram
+  label="Grenzen zwischen gemeinsamer Runtime und Engine-Adaptern"
+  definition={buildTranslatorArchitectureDiagram('de')}
+/>
+
+## Gemeinsame Verantwortlichkeiten
+
+Die gemeinsame Runtime besitzt:
+
+- Übersetzerwahl
+- Request-Orchestrierung
+- Grenzen der Cache-Wiederverwendung
+- Persistenzübergabe
+- Overlay- und native-Veröffentlichung nach der Übersetzung
+
+## Engine-spezifische Verantwortlichkeiten
+
+Jeder Engine-Adapter sollte nur besitzen:
+
+- Provider-Client-Setup
+- Form des Request-Payloads
+- Response-Parsing
+- Verhalten des Modellkatalogs
+- engine-spezifische Konfigurations-UI
+
+## Aktuelle Engine-Familien
+
+- Vendor-Übersetzungsengines wie Google, DeepL, Microsoft, Amazon und Yandex-Varianten
+- OpenAI-artige Chat-Completions-Engines wie OpenAI, OpenRouter, DeepSeek und LM Studio
+- Gemini `generateContent`
+- Ollama lokale Generierung
+- Claude Messages API
+
+## Sichere Regel für Engine-Arbeit
+
+Wenn du eine Engine hinzufügst oder änderst:
+
+1. `TranslationService` und `ITranslator` wiederverwenden
+2. Sprachunterstützung und Factory-Wiring in derselben Änderung aktualisieren
+3. provider-spezifische Logik schmal halten
+4. Build und Tests direkt nach der engineweiten Änderung validieren

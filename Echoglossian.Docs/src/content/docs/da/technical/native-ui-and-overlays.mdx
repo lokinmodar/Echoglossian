@@ -1,0 +1,46 @@
+---
+title: Native UI og overlays
+description: Hvordan native præsentation og overlay-præsentation holdes adskilt.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildNativeUiAndOverlaysDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Runtimeen skelner mellem oversættelse og præsentation. Den adskillelse er det, der holder surface-fixes smalle.
+
+<MermaidDiagram
+  label="Ejerskab over præsentationstilstande"
+  definition={buildNativeUiAndOverlaysDiagram('da')}
+/>
+
+## Overlay-ejerskab
+
+Overlay-tilstand styres gennem overlay-laget, ikke ved at individuelle handlers ejer deres egen renderer:
+
+- `UIOverlays/TranslationOverlay/OverlayConfigs.cs`
+- `UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs`
+
+Handlers publicerer indhold og synkroniserer bounds, men selve overlayet er et separat ansvar.
+
+## Regler for native mutation
+
+- Overlay-only-tilstand må ikke mutere native noder eller payloads.
+- Native-tilstand må skrive oversat tekst ind i understøttede native overflader.
+- Swap-tilstand bevarer oversat native tekst og publicerer originalen gennem overlayet.
+
+## Aktuel native-layout-virkelighed
+
+Nogle overflader kan mutere tidligere payloads rent. Andre afhænger stadig af senere synlig tekstnode-mutation og eksplicitte reflow-hjælpere.
+
+Eksempler:
+
+- `TalkSubtitle` kan indsætte erstatningstekst tidligere gennem `AtkValue`-payloads.
+- `BattleTalk`, `MiniTalk` og flere toast-familieoverflader er stadig afhængige af sen native tekstnode-mutation plus delt reflow-logik.
+
+Når visualiseringen er forkert, så klassificér først problemet:
+
+- capture-problem
+- cache- eller persistensproblem
+- overlay-publiceringsproblem
+- native-mutationsproblem
+- manglende wrapper- eller baggrunds-reflow-problem
