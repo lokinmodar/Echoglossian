@@ -116,10 +116,10 @@ internal sealed unsafe class PreviewHost : IDisposable
         this.commandList.End();
 
         this.graphicsDevice.SubmitCommands(this.commandList);
-        this.graphicsDevice.WaitForIdle();
+        // Readback paths synchronize during capture; the interactive loop should
+        // stay asynchronous so preview rendering can run at full frame rate.
         beforePresent?.Invoke();
         this.graphicsDevice.SwapBuffers(this.graphicsDevice.MainSwapchain);
-        this.graphicsDevice.WaitForIdle();
     }
 
     /// <summary>

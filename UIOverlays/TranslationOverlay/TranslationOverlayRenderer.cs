@@ -230,11 +230,12 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 ImGui.SetNextWindowBgAlpha(Math.Clamp(config.BackgroundOpacity, 0f, 1f));
             }
 
-            var windowLabel = backendKind == TextPresentationBackendKind.RtlTexture
-                ? $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}"
-                : !string.IsNullOrWhiteSpace(resolvedTitle)
-                    ? resolvedTitle
-                    : $"{config.DefaultTitle}##overlay-{overlay.GetHashCode()}";
+            var windowLabel = BuildWindowLabel(
+                backendKind,
+                config.DefaultTitle,
+                resolvedTitle,
+                overlay.GetHashCode(),
+                useInlineRtlTitle);
             ImGui.Begin(windowLabel, flags);
             beganWindow = true;
             if (backendKind == TextPresentationBackendKind.PlainImGui)
@@ -330,6 +331,36 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                forceShowTitle &&
                hasTitleBlock &&
                !string.IsNullOrWhiteSpace(resolvedTitle);
+    }
+
+    /// <summary>
+    /// Builds the ImGui window label while preserving stable overlay identity.
+    /// </summary>
+    /// <param name="backendKind">The selected presentation backend.</param>
+    /// <param name="defaultTitle">The default surface title.</param>
+    /// <param name="resolvedTitle">The resolved surface or speaker title.</param>
+    /// <param name="overlayId">The stable overlay identity suffix.</param>
+    /// <param name="useInlineRtlTitle">Whether the title is rendered inline.</param>
+    /// <returns>The ImGui window label.</returns>
+    internal static string BuildWindowLabel(
+        TextPresentationBackendKind backendKind,
+        string defaultTitle,
+        string? resolvedTitle,
+        int overlayId,
+        bool useInlineRtlTitle)
+    {
+        var stableSuffix = $"##overlay-{overlayId}";
+        if (backendKind == TextPresentationBackendKind.RtlTexture)
+        {
+            var visibleTitle = useInlineRtlTitle || string.IsNullOrWhiteSpace(resolvedTitle)
+                ? defaultTitle
+                : resolvedTitle;
+            return $"{visibleTitle}{stableSuffix}";
+        }
+
+        return !string.IsNullOrWhiteSpace(resolvedTitle)
+            ? resolvedTitle
+            : $"{defaultTitle}{stableSuffix}";
     }
 
     /// <summary>

@@ -31546,6 +31546,17 @@
             <param name="hasTitleBlock">Whether the RTL title texture is ready.</param>
             <returns><see langword="true"/> when the inline RTL title path is ready.</returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.BuildWindowLabel(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.String,System.String,System.Int32,System.Boolean)">
+            <summary>
+            Builds the ImGui window label while preserving stable overlay identity.
+            </summary>
+            <param name="backendKind">The selected presentation backend.</param>
+            <param name="defaultTitle">The default surface title.</param>
+            <param name="resolvedTitle">The resolved surface or speaker title.</param>
+            <param name="overlayId">The stable overlay identity suffix.</param>
+            <param name="useInlineRtlTitle">Whether the title is rendered inline.</param>
+            <returns>The ImGui window label.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.Dispose">
             <summary>
             Disposes the renderer without disposing externally owned text and font runtimes.

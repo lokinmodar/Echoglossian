@@ -61,4 +61,37 @@ public sealed class TranslationOverlayRendererTests
                 resolvedTitle: "Talk",
                 hasTitleBlock: true));
     }
+
+    /// <summary>
+    /// Ensures the RTL fallback title bar shows the resolved title while keeping
+    /// a stable ImGui identity suffix.
+    /// </summary>
+    [Fact]
+    public void BuildWindowLabel_RtlFallbackUsesResolvedTitleWithStableSuffix()
+    {
+        var actual = TranslationOverlayRenderer.BuildWindowLabel(
+            TextPresentationBackendKind.RtlTexture,
+            defaultTitle: "Talk",
+            resolvedTitle: "Krile",
+            overlayId: 42,
+            useInlineRtlTitle: false);
+
+        Assert.Equal("Krile##overlay-42", actual);
+    }
+
+    /// <summary>
+    /// Ensures the inline RTL title path keeps the default hidden window label.
+    /// </summary>
+    [Fact]
+    public void BuildWindowLabel_RtlInlineTitleKeepsDefaultStableLabel()
+    {
+        var actual = TranslationOverlayRenderer.BuildWindowLabel(
+            TextPresentationBackendKind.RtlTexture,
+            defaultTitle: "Talk",
+            resolvedTitle: "Krile",
+            overlayId: 42,
+            useInlineRtlTitle: true);
+
+        Assert.Equal("Talk##overlay-42", actual);
+    }
 }
