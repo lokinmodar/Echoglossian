@@ -1,12 +1,12 @@
 ---
 title: Documentação do Echoglossian
-description: Guias públicos curados para usuários e contribuidores.
+description: Guias curados de configuração, uso, arquitetura e contribuição.
 template: splash
 hero:
   title: Documentação do Echoglossian
-  tagline: Guias de configuração para usuários do plugin e referência técnica pública para quem contribui, sem acoplar a documentação ao build do plugin.
+  tagline: Guias públicos de configuração para usuários do plugin e referência técnica pública para contribuidores, isolados do fluxo de build e release do plugin.
   actions:
-    - text: Guias de Uso
+    - text: Guias do usuário
       link: ./users/
       icon: right-arrow
     - text: Documentação Técnica
@@ -14,6 +14,27 @@ hero:
       variant: minimal
 ---
 
-## Escopo Público
+import { Card, CardGrid } from '@astrojs/starlight/components';
 
-Esta página inicial está localizada em português do Brasil para provar o roteamento multi-idioma. As páginas que ainda não tiverem tradução continuam usando a versão neutra em inglês com aviso de fallback do próprio Starlight.
+## Escopo público
+
+Este site publica apenas documentação curada.
+
+- O uso, a configuração e a solução de problemas do plugin são publicados aqui.
+- A arquitetura atual, o fluxo de runtime e o guia para contribuidores são publicados aqui.
+- Handoffs internos, notas de release, planos e material de backlog permanecem na árvore `docs/` do repositório e não são publicados por este site.
+
+## Comece aqui
+
+<CardGrid stagger>
+  <Card title="Documentação para usuários do plugin" icon="seti:gear" href="./users/">
+    Instalação, primeira execução, configuração do provider, modos de apresentação, cobertura de suporte e solução de problemas.
+  </Card>
+  <Card title="Documentação técnica" icon="seti:code" href="./technical/">
+    Arquitetura de runtime, pipeline de tradução, limites de persistência, diagnósticos e fluxo de desenvolvimento.
+  </Card>
+</CardGrid>
+
+## Modelo de localização
+
+O site expõe a mesma lista de locales dos arquivos de recursos do plugin. O inglês é a locale de origem neutra. Se uma página localizada ainda não existir, o Starlight renderiza a página em inglês com seu aviso interno de conteúdo não traduzido em vez de produzir uma rota quebrada.

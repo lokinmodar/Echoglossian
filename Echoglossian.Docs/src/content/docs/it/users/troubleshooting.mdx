@@ -1,0 +1,44 @@
+---
+title: Risoluzione dei problemi e FAQ
+description: Problemi comuni di configurazione, provider e copertura delle superfici.
+---
+
+## La traduzione non resta abilitata
+
+Controlla prima questi punti:
+
+- lingua di destinazione e motore corrispondono;
+- la configurazione del provider è completa;
+- eventuali asset di font scaricati richiesti sono presenti.
+
+Se uno di questi controlli fallisce, la traduzione globale può disattivarsi da sola.
+
+## Il selettore del motore non mostra il provider che mi aspettavo
+
+La visibilità del motore dipende dalla lingua di destinazione selezionata. Cambia la lingua di destinazione o passa a una famiglia di motori con copertura più ampia.
+
+## L’overlay funziona ma il testo native appare errato
+
+Di solito significa che la pipeline di traduzione è sana e che il problema è specifico del layout native di quella superficie. Riporta prima quella superficie in modalità overlay-only, poi decidi se la presentazione native valga ancora la pena.
+
+## Una superficie specifica non viene tradotta
+
+Verifica tutti e tre gli ambiti:
+
+- la traduzione globale è attiva;
+- il toggle della famiglia di superfici è abilitato;
+- il toggle della superficie specifica è abilitato.
+
+Poi confronta la superficie con la [Matrice di supporto](../support-matrix/).
+
+## Cosa dovrei condividere quando segnalo un problema
+
+Informazioni utili:
+
+- versione del plugin;
+- lingue di origine e di destinazione;
+- motore selezionato;
+- nome della superficie di destinazione;
+- se stavi usando la modalità overlay, native o swap.
+
+Non includere vere chiavi o veri secret del provider nella segnalazione.

@@ -1,0 +1,42 @@
+---
+title: Configuration
+description: Choisissez les langues, sélectionnez un moteur et configurez le plugin en toute sécurité.
+---
+
+## Réglages essentiels
+
+La configuration minimale utile est :
+
+- une langue source ;
+- une langue cible ;
+- un moteur de traduction qui prend en charge cette paire ;
+- une configuration de provider valide lorsque le moteur exige des identifiants ou un endpoint.
+
+## Configuration du moteur
+
+Les différents moteurs exposent des champs différents, mais les catégories publiques sont stables :
+
+- champs d’identifiants fournisseur tels qu’une clé API ;
+- sélection du modèle pour les moteurs basés sur un LLM ;
+- endpoint personnalisé optionnel ou URL d’un runtime local ;
+- options liées au prompt pour les moteurs sensibles au prompt.
+
+Si un moteur n’est pas disponible pour la langue cible choisie, changez soit de moteur soit de langue cible avant d’essayer d’activer la traduction globale.
+
+## Toggles de surface
+
+Une fois que le traducteur global est sain, n’activez que les surfaces dont vous avez besoin :
+
+- surfaces de dialogue et d’overlay ;
+- surfaces de quête et de journal ;
+- surfaces de toast ;
+- surfaces de game window.
+
+Chaque famille conserve ses propres toggles au niveau des surfaces, même après l’activation de la traduction globale.
+
+## Habitudes de configuration sûres
+
+- Modifiez un groupe de réglages à la fois.
+- Vérifiez la connectivité du provider avant d’activer de nombreuses surfaces.
+- Préférez d’abord la présentation overlay quand vous testez une nouvelle langue ou un nouveau provider.
+- Gardez les captures d’écran et les paramètres exportés exempts de vrais secrets de provider.

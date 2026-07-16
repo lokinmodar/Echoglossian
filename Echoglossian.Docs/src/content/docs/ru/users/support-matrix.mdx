@@ -1,0 +1,73 @@
+---
+title: Матрица поддержки
+description: Публичный перечень документированных поверхностей перевода и семейств режимов.
+---
+
+Эта страница — публичная версия текущего перечня поверхностей перевода. Здесь документируется только реальное поведение runtime.
+
+## Семейства режимов
+
+| Семейство режимов | Режимы | Используется в |
+| --- | --- | --- |
+| Семейство quest / native-window | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Поверхности семейства Journal и game windows DB-first |
+| Семейство overlay | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, subtitles, MiniTalk, CutSceneSelectString и поверхности семейства toast |
+
+## Диалоговые и overlay-поверхности
+
+| Поверхность | Toggle | Статус |
+| --- | --- | --- |
+| Talk | `TranslateTalk` | Включено |
+| BattleTalk | `TranslateBattleTalk` | Включено |
+| TalkSubtitle | `TranslateTalkSubtitle` | Включено |
+| MiniTalk | `TranslateMiniTalk` | Включено |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Включено |
+
+## Поверхности quest и journal
+
+| Поверхность | Toggle | Статус |
+| --- | --- | --- |
+| Journal | `TranslateJournal` | Включено |
+| JournalDetail | `TranslateJournalDetail` | Включено |
+| ToDoList | `TranslateToDoList` | Включено |
+| ScenarioTree | `TranslateScenarioTree` | Включено |
+| JournalAccept | `TranslateJournalAccept` | Включено |
+| JournalResult | `TranslateJournalResult` | Включено |
+| RecommendList | `TranslateRecommendList` | Включено |
+| AreaMap | `TranslateAreaMap` | Включено |
+
+## Toast-поверхности
+
+| Поверхность | Toggle | Статус |
+| --- | --- | --- |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Включено |
+| Error toast | `TranslateErrorToast` | Включено |
+| Area toast | `TranslateAreaToast` | Включено |
+| Class / Job change toast | `TranslateClassChangeToast` | Включено |
+| Text gimmick hint | `TranslateTextGimmickHint` | Включено |
+| Quest toast | `TranslateQuestToast` | Включено |
+
+## Поверхности game window
+
+| Поверхность | Toggle | Статус |
+| --- | --- | --- |
+| Character window | `TranslateCharacterWindow` | Включено |
+| Main Command | `TranslateMainCommandWindow` | Включено |
+| Action Menu | `TranslateActionMenuWindow` | Включено |
+| HUD windows | `TranslateHudWindow` | Включено |
+| Operation Guide | `TranslateOperationGuideWindow` | Включено |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Включено |
+
+## Скрытые или временно ограниченные поверхности
+
+| Поверхность | Toggle | Публичный статус |
+| --- | --- | --- |
+| Action / item detail tooltips | `TranslateTooltips` | Временно отключено для release |
+| Yes/No dialog | `TranslateYesNoScreen` | Реализовано, но скрыто в текущем UI |
+| SelectString dialog | `TranslateSelectString` | Реализовано, но скрыто в текущем UI |
+| SelectOk dialog | `TranslateSelectOk` | Реализовано, но скрыто в текущем UI |
+
+## Операционные заметки
+
+- Для некоторых языков нужны загруженные font assets, прежде чем перевод можно будет безопасно активировать.
+- Языки overlay-only выводятся из native replacement modes, когда native-отображение было бы небезопасным.
+- Поверхность может существовать в конфигурации или коде, но при этом быть намеренно скрытой или отключённой в release.
