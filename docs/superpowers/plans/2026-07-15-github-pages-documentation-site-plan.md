@@ -12,7 +12,7 @@ cultures, and publish only curated public content authored inside the docs
 project. Keep all plugin-facing protection in the root `.csproj` and keep the
 site deployment in a dedicated path-filtered Pages workflow.
 
-**Tech Stack:** Astro 5, `@astrojs/starlight`, TypeScript, Node.js 24 LTS,
+**Tech Stack:** Astro 7, `@astrojs/starlight`, TypeScript, Node.js 24 LTS,
 GitHub Actions Pages, existing `.NET` solution and xUnit test suite.
 
 ## Global Constraints
@@ -35,6 +35,7 @@ GitHub Actions Pages, existing `.NET` solution and xUnit test suite.
   - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
   - `npm.cmd ci`
   - `npm.cmd run test:locales`
+  - `npm.cmd run test:links`
   - `npm.cmd run check:locales`
   - `npm.cmd run check`
   - `npm.cmd run build`
@@ -81,7 +82,7 @@ base: '/Echoglossian/',
   "name": "echoglossian-docs",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -89,13 +90,16 @@ base: '/Echoglossian/',
     "dev": "astro dev",
     "check": "astro check",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test:links": "node --test ./scripts/check-base-links.test.mjs",
+    "test:locales": "node --test ./scripts/check-locales.test.mjs",
+    "check:locales": "node ./scripts/check-locales.mjs"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.4",
-    "@astrojs/starlight": "^0.32.0",
-    "astro": "^5.12.0",
-    "typescript": "^5.9.2"
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/starlight": "^0.41.3",
+    "astro": "^7.0.9",
+    "typescript": "^6.0.3"
   }
 }
 ```
@@ -274,6 +278,7 @@ Run:
 ```powershell
 Set-Location .\Echoglossian.Docs
 npm.cmd run test:locales
+npm.cmd run test:links
 npm.cmd run check:locales
 ```
 
@@ -670,6 +675,7 @@ jobs:
           cache-dependency-path: Echoglossian.Docs/package-lock.json
       - run: npm ci
       - run: npm run test:locales
+      - run: npm run test:links
       - run: npm run check:locales
       - run: npm run check
       - run: npm run build
@@ -705,6 +711,7 @@ Run:
 Set-Location C:\Dante\_dalamud\worktrees\Echoglossian\github-pages-docs\Echoglossian.Docs
 npm.cmd ci
 npm.cmd run test:locales
+npm.cmd run test:links
 npm.cmd run check:locales
 npm.cmd run check
 npm.cmd run build
