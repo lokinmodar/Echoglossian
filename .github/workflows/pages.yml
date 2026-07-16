@@ -50,6 +50,9 @@ jobs:
       - name: Validate locale mapping
         run: npm run test:locales
 
+      - name: Validate Mermaid diagram builders
+        run: npm run test:diagrams
+
       - name: Validate docs coverage tests
         run: npm run test:coverage
 

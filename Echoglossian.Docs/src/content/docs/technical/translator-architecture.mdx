@@ -3,7 +3,15 @@ title: Translator Architecture
 description: Shared translation pipeline plus provider-specific adapters.
 ---
 
+import MermaidDiagram from '../../../components/diagrams/MermaidDiagram.astro';
+import { buildTranslatorArchitectureDiagram } from '../../../components/diagrams/technicalDiagramBuilders.mjs';
+
 Echoglossian has one shared translation pipeline and many engine adapters.
+
+<MermaidDiagram
+  label="Shared runtime and engine adapter boundaries"
+  definition={buildTranslatorArchitectureDiagram('root')}
+/>
 
 ## Shared Responsibilities
 
