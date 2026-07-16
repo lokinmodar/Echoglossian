@@ -1,0 +1,47 @@
+---
+title: Diagnóstico
+description: Ferramentas publicamente documentadas para investigação de addons e validação.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDiagnosticsDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Classificador das etapas de investigação"
+  definition={buildDiagnosticsDiagram('pt')}
+/>
+
+## Investigação de addons
+
+Use o comando addon probe preferido do repositório ao investigar comportamento da native UI:
+
+```text
+/egloaddonprobe <addon>
+```
+
+É a primeira ferramenta a procurar quando uma família específica de addons se comporta de forma diferente do esperado.
+
+## Validação de build e test
+
+Validação standard do plugin:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Validação do site docs:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Princípios de diagnóstico
+
+- prefira lifecycle helpers e probes focados a debug spam em hot paths
+- remova logging temporário de investigação quando o problema estiver compreendido
+- classifique runtime issues por etapa antes de alterar código

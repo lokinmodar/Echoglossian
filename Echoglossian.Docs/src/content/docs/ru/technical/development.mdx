@@ -1,0 +1,49 @@
+---
+title: Build, test и вклад
+description: Локальная валидация и ожидания от вклада для plugin и docs site на GitHub Pages.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDevelopmentWorkflowDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Workflow валидации вкладов"
+  definition={buildDevelopmentWorkflowDiagram('ru')}
+/>
+
+## Правила репозитория для этого site
+
+- `Echoglossian.Docs/` намеренно не входит в `Echoglossian.sln`.
+- Корневой project plugin явно исключает дерево docs из `Compile`, `EmbeddedResource` и `None`.
+- Flow deploy docs отделён от flow release plugin и D17.
+
+## Локальная валидация
+
+Валидация plugin:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Валидация docs site:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd ci
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Ожидания от вклада
+
+- держите изменения узкими
+- сохраняйте текущее поведение, если только изменение явно не нацелено на поведение
+- переиспользуйте общую архитектуру plugin вместо введения параллельных путей
+- держите публичные docs curated и ориентированными на аудиторию вместо публикации внутренних заметок как есть
+
+## Граница release
+
+Этот публичный docs site намеренно не описывает приватный flow release maintainer для отправки external manifests. Этот workflow остаётся во внутренней документации репозитория.

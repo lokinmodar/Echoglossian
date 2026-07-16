@@ -14,12 +14,12 @@ test('buildArchitectureDiagram keeps code-facing identifiers in English', () => 
   assert.ok(diagram.includes('TranslationService'));
 });
 
-test('buildPipelineDiagram localizes prose labels while keeping runtime names', () => {
+test('buildPipelineDiagram localizes pt-br prose labels while keeping runtime names', () => {
   const diagram = buildPipelineDiagram('pt-br');
 
-  assert.ok(diagram.includes('Capture source text'));
+  assert.ok(diagram.includes('Capturar texto de origem'));
   assert.ok(diagram.includes('TranslationService'));
-  assert.ok(diagram.includes('Overlay publication'));
+  assert.ok(diagram.includes('Publicação overlay'));
 });
 
 test('buildDevelopmentWorkflowDiagram falls back to root labels for unknown locales', () => {
