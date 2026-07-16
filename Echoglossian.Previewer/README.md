@@ -46,17 +46,20 @@ By default, the previewer attempts to read:
 %APPDATA%\XIVLauncher\pluginConfigs\Echoglossian.json
 ```
 
-The file is opened read-only with sharing enabled, cloned into preview-owned
-state, and never saved back. If the file is missing or malformed, the previewer
-uses a new default `Config` and shows a non-secret diagnostic. To use another
-configuration:
+The file is opened read-only with sharing enabled, cloned into a preview-owned
+session workspace, and never saved back. The previewer also copies the optional
+database source into that workspace before later preview phases can use it. If
+either source is missing, the previewer retains an isolated default or omits the
+database and records a non-secret session diagnostic. To use other sources:
 
 ```powershell
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --config .\sample\Echoglossian.json
+dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --db .\sample\Echoglossian.db
 ```
 
-Do not point the previewer at a live source database. Phase A does not open the
-plugin DB.
+The default database source is
+`%APPDATA%\XIVLauncher\pluginConfigs\Echoglossian\Echoglossian.db`.
+The previewer does not open or modify the live database after copying it.
 
 ## CLI Options
 
@@ -65,6 +68,8 @@ plugin DB.
   then exits.
 - `--config <path>`: loads an absolute or relative Echoglossian config JSON
   read-only.
+- `--db <path>`: copies an absolute or relative Echoglossian database into the
+  preview-owned session workspace.
 - `--scenario <surface-key>`: selects a scenario; defaults to `talk`.
 - `--viewport <width>x<height>`: selects the logical preview viewport; defaults
   to `1920x1080`.

@@ -11,6 +11,7 @@ using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
+using Echoglossian.Previewer.Session;
 using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -105,8 +106,13 @@ internal static class Program
     /// <param name="commandLine">The parsed command line.</param>
     private static void RunInteractivePreview(PreviewCommandLine commandLine)
     {
-        var sourceConfiguration = PreviewConfigLoader.Load(commandLine.ConfigPath);
-        var editableConfiguration = sourceConfiguration.CreateEditableCopy();
+        using var session = PreviewSessionLoader.Load(
+            new PreviewSessionSourceOptions(
+                commandLine.ConfigPath,
+                commandLine.DatabasePath,
+                commandLine.OutputDirectory));
+        var sourceConfiguration = session.Configuration;
+        var editableConfiguration = session.EditableConfiguration;
         var scenario = PreviewScenarioCatalog.ResolveScenario(commandLine.Scenario);
         var viewport = PreviewScenarioCatalog.ResolveViewport(
             commandLine.ViewportWidth,
@@ -184,8 +190,13 @@ internal static class Program
     /// <param name="commandLine">The parsed command line.</param>
     private static void RunScreenshotExport(PreviewCommandLine commandLine)
     {
-        var sourceConfiguration = PreviewConfigLoader.Load(commandLine.ConfigPath);
-        var editableConfiguration = sourceConfiguration.CreateEditableCopy();
+        using var session = PreviewSessionLoader.Load(
+            new PreviewSessionSourceOptions(
+                commandLine.ConfigPath,
+                commandLine.DatabasePath,
+                commandLine.OutputDirectory));
+        var sourceConfiguration = session.Configuration;
+        var editableConfiguration = session.EditableConfiguration;
         var selectedLanguage = ResolvePreviewLanguage(editableConfiguration.Lang);
         Echoglossian.SelectedLanguage = selectedLanguage;
         var fontSelection = PreviewFontCatalog.Resolve(

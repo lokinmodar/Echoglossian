@@ -28,6 +28,11 @@ internal sealed class PreviewCommandLine
     internal string? ConfigPath { get; private set; }
 
     /// <summary>
+    ///     Gets the absolute or relative source database path.
+    /// </summary>
+    internal string? DatabasePath { get; private set; }
+
+    /// <summary>
     ///     Gets the requested overlay surface key.
     /// </summary>
     internal string? Scenario { get; private set; }
@@ -82,6 +87,9 @@ internal sealed class PreviewCommandLine
                     break;
                 case "--config":
                     commandLine.ConfigPath = GetValue(args, ref index, "--config");
+                    break;
+                case "--db":
+                    commandLine.DatabasePath = GetValue(args, ref index, "--db");
                     break;
                 case "--scenario":
                     commandLine.Scenario = GetValue(args, ref index, "--scenario");
