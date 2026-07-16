@@ -358,9 +358,10 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             return $"{visibleTitle}{stableSuffix}";
         }
 
-        return !string.IsNullOrWhiteSpace(resolvedTitle)
+        var defaultVisibleTitle = !string.IsNullOrWhiteSpace(resolvedTitle)
             ? resolvedTitle
-            : $"{defaultTitle}{stableSuffix}";
+            : defaultTitle;
+        return $"{defaultVisibleTitle}{stableSuffix}";
     }
 
     /// <summary>

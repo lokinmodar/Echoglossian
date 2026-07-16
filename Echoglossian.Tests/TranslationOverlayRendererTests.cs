@@ -94,4 +94,21 @@ public sealed class TranslationOverlayRendererTests
 
         Assert.Equal("Talk##overlay-42", actual);
     }
+
+    /// <summary>
+    /// Ensures the plain ImGui title path also preserves a stable hidden
+    /// identity suffix when the visible title changes.
+    /// </summary>
+    [Fact]
+    public void BuildWindowLabel_PlainImGuiUsesResolvedTitleWithStableSuffix()
+    {
+        var actual = TranslationOverlayRenderer.BuildWindowLabel(
+            TextPresentationBackendKind.PlainImGui,
+            defaultTitle: "Talk",
+            resolvedTitle: "Krile",
+            overlayId: 42,
+            useInlineRtlTitle: false);
+
+        Assert.Equal("Krile##overlay-42", actual);
+    }
 }
