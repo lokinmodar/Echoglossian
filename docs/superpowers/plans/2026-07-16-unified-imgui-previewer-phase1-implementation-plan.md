@@ -45,6 +45,7 @@
   - `internal sealed class PreviewSessionArtifacts : IDisposable`
   - `internal static class PreviewSessionLoader { internal static PreviewSessionArtifacts Load(PreviewSessionSourceOptions options); }`
   - `PreviewCommandLine.DatabasePath`
+  - `PreviewSessionArtifacts.Diagnostics`
 
 - [ ] **Step 1: Write the failing session snapshot tests**
 
@@ -57,7 +58,7 @@ public sealed class PreviewSessionLoaderTests
     {
         var tempRoot = Directory.CreateTempSubdirectory();
         var configPath = Path.Combine(tempRoot.FullName, "Echoglossian.json");
-        var dbPath = Path.Combine(tempRoot.FullName, "Echoglossian.sqlite3");
+        var dbPath = Path.Combine(tempRoot.FullName, "Echoglossian.db");
 
         File.WriteAllText(configPath, "{\"Lang\":28,\"FontSize\":24}");
         File.WriteAllText(dbPath, "preview-db");
@@ -83,7 +84,7 @@ public sealed class PreviewSessionLoaderTests
             new PreviewSessionSourceOptions(configPath, null, null));
 
         Assert.Null(session.ClonedDatabasePath);
-        Assert.Contains("default", string.Join(" ", session.Configuration.Diagnostics), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("database", string.Join(" ", session.Diagnostics), StringComparison.OrdinalIgnoreCase);
     }
 }
 ```
@@ -115,13 +116,15 @@ internal sealed class PreviewSessionArtifacts : IDisposable
         PreviewConfiguration configuration,
         Config editableConfiguration,
         string clonedConfigPath,
-        string? clonedDatabasePath)
+        string? clonedDatabasePath,
+        IReadOnlyList<string> diagnostics)
     {
         this.WorkingDirectory = workingDirectory;
         this.Configuration = configuration;
         this.EditableConfiguration = editableConfiguration;
         this.ClonedConfigPath = clonedConfigPath;
         this.ClonedDatabasePath = clonedDatabasePath;
+        this.Diagnostics = diagnostics;
     }
 
     internal string WorkingDirectory { get; }
@@ -129,6 +132,7 @@ internal sealed class PreviewSessionArtifacts : IDisposable
     internal Config EditableConfiguration { get; }
     internal string ClonedConfigPath { get; }
     internal string? ClonedDatabasePath { get; }
+    internal IReadOnlyList<string> Diagnostics { get; }
 
     public void Dispose()
     {
@@ -142,10 +146,17 @@ internal sealed class PreviewSessionArtifacts : IDisposable
 // Echoglossian.Previewer/Session/PreviewSessionLoader.cs
 internal static class PreviewSessionLoader
 {
+    internal static string GetDefaultDatabasePath()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        return Path.Combine(appData, "XIVLauncher", "pluginConfigs", "Echoglossian", "Echoglossian.db");
+    }
+
     internal static PreviewSessionArtifacts Load(PreviewSessionSourceOptions options)
     {
         var sourceConfiguration = PreviewConfigLoader.Load(options.ConfigPath);
         var editableConfiguration = sourceConfiguration.CreateEditableCopy();
+        var diagnostics = sourceConfiguration.Diagnostics.ToList();
         var workingDirectory = Path.Combine(
             Path.GetTempPath(),
             "Echoglossian.Previewer",
@@ -153,13 +164,20 @@ internal static class PreviewSessionLoader
         Directory.CreateDirectory(workingDirectory);
 
         var clonedConfigPath = Path.Combine(workingDirectory, "Echoglossian.json");
-        File.WriteAllText(clonedConfigPath, JsonSerializer.Serialize(editableConfiguration));
+        File.WriteAllText(clonedConfigPath, JsonConvert.SerializeObject(editableConfiguration, Formatting.Indented));
 
         string? clonedDatabasePath = null;
-        if (!string.IsNullOrWhiteSpace(options.DatabasePath) && File.Exists(options.DatabasePath))
+        var databasePath = string.IsNullOrWhiteSpace(options.DatabasePath)
+            ? GetDefaultDatabasePath()
+            : Path.GetFullPath(options.DatabasePath);
+        if (File.Exists(databasePath))
         {
-            clonedDatabasePath = Path.Combine(workingDirectory, Path.GetFileName(options.DatabasePath));
-            File.Copy(options.DatabasePath, clonedDatabasePath, overwrite: true);
+            clonedDatabasePath = Path.Combine(workingDirectory, Path.GetFileName(databasePath));
+            File.Copy(databasePath, clonedDatabasePath, overwrite: true);
+        }
+        else
+        {
+            diagnostics.Add("Preview database file was not found; DB-backed windows will be unavailable.");
         }
 
         return new PreviewSessionArtifacts(
@@ -167,7 +185,8 @@ internal static class PreviewSessionLoader
             sourceConfiguration,
             editableConfiguration,
             clonedConfigPath,
-            clonedDatabasePath);
+            clonedDatabasePath,
+            diagnostics);
     }
 }
 ```
@@ -414,6 +433,7 @@ git commit -m "feat: extract preview-safe config window renderer"
   - `internal sealed class PreviewPluginWindowHost : IDisposable`
   - `DbEditorWindow.LastWindowBounds`
   - `TranslatorMetricsWindow.LastWindowBounds`
+  - `PreviewPluginWindowHost.TryGetCrop(PreviewCaptureTarget target): Rectangle?`
 
 - [ ] **Step 1: Write failing state tests for unified shell behavior**
 
@@ -483,9 +503,11 @@ internal sealed class PreviewWorkbenchState
 internal sealed class PreviewPluginWindowHost : IDisposable
 {
     private readonly PluginConfigWindowRenderer configWindowRenderer;
+    private readonly EchoglossianDbContext? dbContext;
     private readonly DbEditorWindow? dbEditorWindow;
     private readonly TranslatorMetricsWindow translatorMetricsWindow;
     private readonly PluginConfigWindowContext configWindowContext;
+    private RectangleF? configWindowBounds;
 
     internal PreviewPluginWindowHost(
         PluginConfigWindowRenderer configWindowRenderer,
@@ -495,17 +517,31 @@ internal sealed class PreviewPluginWindowHost : IDisposable
     {
         this.configWindowRenderer = configWindowRenderer;
         this.configWindowContext = configWindowContext;
+        this.dbContext = dbContext;
         this.dbEditorWindow = dbContext is null ? null : new DbEditorWindow(dbContext);
         this.translatorMetricsWindow = new TranslatorMetricsWindow(
             configuration,
             table => this.dbEditorWindow?.OpenAndSelectTable(table),
-            () => Task.FromResult(VisibleDialogueRetranslationResult.NotApplicable("Preview mode")));
+            () => Task.FromResult(
+                new VisibleDialogueRetranslationResult(
+                    false,
+                    false,
+                    null,
+                    "Preview",
+                    "Preview mode does not retranslate live dialogue.")));
     }
 
     internal void Draw(PreviewWorkbenchState state)
     {
         var configOpen = state.ConfigWindowOpen;
         this.configWindowRenderer.Draw(this.configWindowContext, ref configOpen);
+        this.configWindowBounds = configOpen
+            ? new RectangleF(
+                ImGui.GetWindowPos().X,
+                ImGui.GetWindowPos().Y,
+                ImGui.GetWindowSize().X,
+                ImGui.GetWindowSize().Y)
+            : null;
         state.ConfigWindowOpen = configOpen;
 
         if (this.dbEditorWindow is not null)
@@ -520,7 +556,29 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         state.TranslatorMetricsWindowOpen = this.translatorMetricsWindow.IsOpen;
     }
 
-    public void Dispose() => this.dbEditorWindow?.Dispose();
+    internal Rectangle? TryGetCrop(PreviewCaptureTarget target)
+    {
+        var bounds = target switch
+        {
+            PreviewCaptureTarget.ConfigWindow => this.configWindowBounds,
+            PreviewCaptureTarget.DbManagerWindow => this.dbEditorWindow?.LastWindowBounds,
+            PreviewCaptureTarget.TranslatorMetricsWindow => this.translatorMetricsWindow.LastWindowBounds,
+            _ => null,
+        };
+
+        if (bounds is not { Width: > 0, Height: > 0 })
+        {
+            return null;
+        }
+
+        return Rectangle.FromLTRB(
+            (int)MathF.Floor(bounds.Value.Left),
+            (int)MathF.Floor(bounds.Value.Top),
+            (int)MathF.Ceiling(bounds.Value.Right),
+            (int)MathF.Ceiling(bounds.Value.Bottom));
+    }
+
+    public void Dispose() => this.dbContext?.Dispose();
 }
 ```
 
