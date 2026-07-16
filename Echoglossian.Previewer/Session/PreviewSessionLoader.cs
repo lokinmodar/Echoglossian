@@ -5,6 +5,8 @@
 
 using Echoglossian.Previewer.Configuration;
 
+using Microsoft.Data.Sqlite;
+
 using Newtonsoft.Json;
 
 namespace Echoglossian.Previewer.Session;
@@ -61,7 +63,7 @@ internal static class PreviewSessionLoader
             clonedDatabasePath = Path.Combine(
                 workingDirectory,
                 Path.GetFileName(databasePath));
-            File.Copy(databasePath, clonedDatabasePath, overwrite: true);
+            CloneDatabase(databasePath, clonedDatabasePath);
         }
         else
         {
@@ -76,5 +78,21 @@ internal static class PreviewSessionLoader
             clonedConfigPath,
             clonedDatabasePath,
             diagnostics);
+    }
+
+    /// <summary>
+    /// Creates a consistent SQLite snapshot, including transactions committed to a live WAL file.
+    /// </summary>
+    /// <param name="sourceDatabasePath">The live SQLite database source path.</param>
+    /// <param name="destinationDatabasePath">The preview-owned SQLite snapshot path.</param>
+    private static void CloneDatabase(string sourceDatabasePath, string destinationDatabasePath)
+    {
+        using var sourceConnection = new SqliteConnection(
+            $"Data Source={sourceDatabasePath};Mode=ReadOnly;Pooling=False");
+        using var destinationConnection = new SqliteConnection(
+            $"Data Source={destinationDatabasePath};Mode=ReadWriteCreate;Pooling=False");
+        sourceConnection.Open();
+        destinationConnection.Open();
+        sourceConnection.BackupDatabase(destinationConnection);
     }
 }

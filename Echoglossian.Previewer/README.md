@@ -47,8 +47,9 @@ By default, the previewer attempts to read:
 ```
 
 The file is opened read-only with sharing enabled, cloned into a preview-owned
-session workspace, and never saved back. The previewer also copies the optional
-database source into that workspace before later preview phases can use it. If
+session workspace, and never saved back. The previewer also creates a WAL-aware
+SQLite snapshot of the optional database source in that workspace before later
+preview phases can use it. If
 either source is missing, the previewer retains an isolated default or omits the
 database and records a non-secret session diagnostic. To use other sources:
 
@@ -59,7 +60,8 @@ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Deb
 
 The default database source is
 `%APPDATA%\XIVLauncher\pluginConfigs\Echoglossian\Echoglossian.db`.
-The previewer does not open or modify the live database after copying it.
+The previewer reads but does not modify the live database while creating its
+snapshot.
 
 ## CLI Options
 
@@ -68,8 +70,8 @@ The previewer does not open or modify the live database after copying it.
   then exits.
 - `--config <path>`: loads an absolute or relative Echoglossian config JSON
   read-only.
-- `--db <path>`: copies an absolute or relative Echoglossian database into the
-  preview-owned session workspace.
+- `--db <path>`: creates a WAL-aware snapshot of an absolute or relative
+  Echoglossian database in the preview-owned session workspace.
 - `--scenario <surface-key>`: selects a scenario; defaults to `talk`.
 - `--viewport <width>x<height>`: selects the logical preview viewport; defaults
   to `1920x1080`.

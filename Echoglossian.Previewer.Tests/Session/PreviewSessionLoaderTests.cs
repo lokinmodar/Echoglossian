@@ -5,6 +5,8 @@
 
 using Echoglossian.Previewer.Session;
 
+using Microsoft.Data.Sqlite;
+
 using Xunit;
 
 namespace Echoglossian.Previewer.Tests.Session;
@@ -18,23 +20,31 @@ public sealed class PreviewSessionLoaderTests
     /// Ensures config and database sources are cloned into preview-owned session storage.
     /// </summary>
     [Fact]
-    public void Load_ClonesConfigAndDatabaseIntoSessionWorkspace()
+    public void Load_ClonesCommittedWalDataIntoSessionWorkspace()
     {
         var tempRoot = Directory.CreateTempSubdirectory();
-        var configPath = Path.Combine(tempRoot.FullName, "Echoglossian.json");
-        var databasePath = Path.Combine(tempRoot.FullName, "Echoglossian.db");
+        try
+        {
+            var configPath = Path.Combine(tempRoot.FullName, "Echoglossian.json");
+            var databasePath = Path.Combine(tempRoot.FullName, "Echoglossian.db");
+            File.WriteAllText(configPath, "{\"Lang\":28,\"FontSize\":24}");
 
-        File.WriteAllText(configPath, "{\"Lang\":28,\"FontSize\":24}");
-        File.WriteAllText(databasePath, "preview-db");
-
-        using var session = PreviewSessionLoader.Load(
-            new PreviewSessionSourceOptions(configPath, databasePath, null));
-
-        Assert.NotEqual(configPath, session.ClonedConfigPath);
-        Assert.NotEqual(databasePath, session.ClonedDatabasePath);
-        Assert.True(File.Exists(session.ClonedConfigPath));
-        Assert.True(File.Exists(session.ClonedDatabasePath));
-        Assert.Equal(28, session.EditableConfiguration.Lang);
+            using (var sourceConnection = this.CreateWalDatabase(databasePath))
+            using (var session = PreviewSessionLoader.Load(
+                new PreviewSessionSourceOptions(configPath, databasePath, null)))
+            {
+                Assert.NotEqual(configPath, session.ClonedConfigPath);
+                Assert.NotEqual(databasePath, session.ClonedDatabasePath);
+                Assert.True(File.Exists(session.ClonedConfigPath));
+                Assert.True(File.Exists(session.ClonedDatabasePath));
+                Assert.Equal(28, session.EditableConfiguration.Lang);
+                Assert.Equal("uncheckpointed", this.ReadStoredValue(session.ClonedDatabasePath!));
+            }
+        }
+        finally
+        {
+            tempRoot.Delete(recursive: true);
+        }
     }
 
     /// <summary>
@@ -44,17 +54,58 @@ public sealed class PreviewSessionLoaderTests
     public void Load_AllowsMissingDatabaseWithoutTouchingLiveSources()
     {
         var tempRoot = Directory.CreateTempSubdirectory();
-        var configPath = Path.Combine(tempRoot.FullName, "Echoglossian.json");
-        var databasePath = Path.Combine(tempRoot.FullName, "missing.db");
-        File.WriteAllText(configPath, "{\"Lang\":28}");
+        try
+        {
+            var configPath = Path.Combine(tempRoot.FullName, "Echoglossian.json");
+            var databasePath = Path.Combine(tempRoot.FullName, "missing.db");
+            File.WriteAllText(configPath, "{\"Lang\":28}");
 
-        using var session = PreviewSessionLoader.Load(
-            new PreviewSessionSourceOptions(configPath, databasePath, null));
+            using (var session = PreviewSessionLoader.Load(
+                new PreviewSessionSourceOptions(configPath, databasePath, null)))
+            {
+                Assert.Null(session.ClonedDatabasePath);
+                Assert.Contains(
+                    "database",
+                    string.Join(" ", session.Diagnostics),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        finally
+        {
+            tempRoot.Delete(recursive: true);
+        }
+    }
 
-        Assert.Null(session.ClonedDatabasePath);
-        Assert.Contains(
-            "database",
-            string.Join(" ", session.Diagnostics),
-            StringComparison.OrdinalIgnoreCase);
+    /// <summary>
+    /// Creates a WAL-mode database with a committed row that remains outside the main database file.
+    /// </summary>
+    /// <param name="databasePath">The SQLite database file to create.</param>
+    /// <returns>An open source connection that keeps the WAL file live.</returns>
+    private SqliteConnection CreateWalDatabase(string databasePath)
+    {
+        var connection = new SqliteConnection($"Data Source={databasePath};Pooling=False");
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "PRAGMA journal_mode=WAL; CREATE TABLE SessionData (Value TEXT NOT NULL); PRAGMA wal_checkpoint(TRUNCATE); INSERT INTO SessionData (Value) VALUES ('uncheckpointed');";
+            command.ExecuteNonQuery();
+        }
+
+        return connection;
+    }
+
+    /// <summary>
+    /// Reads the test value from a cloned database.
+    /// </summary>
+    /// <param name="databasePath">The cloned SQLite database file.</param>
+    /// <returns>The stored test value.</returns>
+    private string? ReadStoredValue(string databasePath)
+    {
+        using var connection = new SqliteConnection($"Data Source={databasePath};Mode=ReadOnly;Pooling=False");
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Value FROM SessionData LIMIT 1;";
+        return command.ExecuteScalar() as string;
     }
 }
