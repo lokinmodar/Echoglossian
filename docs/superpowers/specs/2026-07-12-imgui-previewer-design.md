@@ -403,6 +403,44 @@ When implementation eventually starts, validation should include:
 - at least one in-plugin visual comparison is performed for the same config and
   overlay scenario
 
+## Phase A Delivered State
+
+Phase A delivered the development-only overlay preview foundation described by
+this spec:
+
+- `Echoglossian.Previewer` and `Echoglossian.Previewer.Tests` remain outside
+  `Echoglossian.sln`.
+- Veldrid, SDL2, preview native binaries, and screenshot tooling are isolated to
+  the preview projects.
+- The main plugin project excludes previewer sources and resources from SDK item
+  discovery and has no Veldrid package references.
+- The standalone Windows host uses the dev Dalamud ImGui binding from
+  `%APPDATA%\XIVLauncher\addon\Hooks\dev`, with optional `DalamudLibPath`
+  override.
+- The shared translation overlay renderer is callable from both the plugin and
+  previewer.
+- The previewer loads `Echoglossian.json` read-only, clones it for preview use,
+  and falls back to defaults with redacted diagnostics.
+- Font selection, logical viewport inputs, overlay layout, wrapping, placement,
+  `PlainImGui`, and `RtlTexture` rendering paths are exercised in the previewer.
+- The interactive shell covers the 12 currently registered runtime translation
+  overlay surfaces.
+- Full-frame, selected-surface, and batch PNG export are implemented with a
+  sidecar manifest.
+
+The fidelity boundary is explicit: plugin ImGui renderer code, config, fonts,
+viewport inputs, layout, and RTL rasterization are shared. Native FFXIV UI,
+native addon lifecycle, game compositor color management, real addon geometry,
+animation, z-order, and occlusion are not reproduced.
+
+Automated validation can prove build isolation, process launch, rendering
+mechanics, and screenshot capture. It cannot prove 1:1 game fidelity. Before
+merge or use as a fidelity baseline, a developer must compare at least one
+`PlainImGui` scenario and one `RtlTexture` scenario in-game against preview
+screenshots using the same `Echoglossian.json`, logical viewport, text, font
+size, and simulated addon bounds. Differences caused by real addon geometry or
+game compositor behavior must be recorded separately from renderer regressions.
+
 ## Deliverables
 
 - revised, post-merge preview architecture

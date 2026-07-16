@@ -445,11 +445,11 @@
 - Modify: `docs/superpowers/specs/2026-07-12-imgui-previewer-design.md`
 - Modify: `docs/superpowers/plans/2026-07-15-issue-215-imgui-previewer-foundation-overlay-plan.md`
 
-- [ ] Document prerequisites, the dev Dalamud binding path, independent restore/build/run commands, config auto-detection, all CLI options, interactive controls, screenshot output, presentation modes, and troubleshooting for missing `cimgui.dll` or bindings.
+- [x] Document prerequisites, the dev Dalamud binding path, independent restore/build/run commands, config auto-detection, all CLI options, interactive controls, screenshot output, presentation modes, and troubleshooting for missing `cimgui.dll` or bindings.
 
-- [ ] Document the fidelity boundary precisely: plugin ImGui code, config, fonts, viewport inputs, layout, and RTL rasterization are shared; native game UI, game compositor color management, and real addon geometry are not reproduced.
+- [x] Document the fidelity boundary precisely: plugin ImGui code, config, fonts, viewport inputs, layout, and RTL rasterization are shared; native game UI, game compositor color management, and real addon geometry are not reproduced.
 
-- [ ] Run production validation from a clean command sequence:
+- [x] Run production validation from a clean command sequence:
 
   ```powershell
   dotnet restore Echoglossian.sln
@@ -461,7 +461,7 @@
 
   Expected: plugin build has 0 errors and the full existing test suite passes. Existing warnings may remain but no new preview-related warning may appear in the production build.
 
-- [ ] Run preview validation independently:
+- [x] Run preview validation independently:
 
   ```powershell
   dotnet restore Echoglossian.Previewer\Echoglossian.Previewer.csproj
@@ -477,11 +477,11 @@
 
 - [ ] Compare one `PlainImGui` scenario and one `RtlTexture` scenario in-game against preview screenshots using the same `Echoglossian.json`, logical viewport, text, font size, and simulated addon bounds. Record differences caused by real addon geometry or game compositor separately from renderer regressions.
 
-- [ ] If FFXIV is unavailable during automated implementation, mark only this manual comparison checkbox as pending in the plan and GitHub issue. Do not claim 1:1 validation until the comparison is completed.
+- [x] If FFXIV is unavailable during automated implementation, mark only this manual comparison checkbox as pending in the plan and GitHub issue. Do not claim 1:1 validation until the comparison is completed.
 
-- [ ] Review `git diff --check`, `git status --short`, generated XML changes, package references, solution membership, and ignored screenshot output. Confirm the plugin artifact contains no Veldrid assemblies, preview executable, or preview native binary.
+- [x] Review `git diff --check`, `git status --short`, generated XML changes, package references, solution membership, and ignored screenshot output. Confirm the plugin artifact contains no Veldrid assemblies, preview executable, or preview native binary.
 
-- [ ] Commit final documentation and validation notes:
+- [x] Commit final documentation and validation notes:
 
   ```powershell
   git add Echoglossian.Previewer\README.md docs\superpowers\specs\2026-07-12-imgui-previewer-design.md docs\superpowers\plans\2026-07-15-issue-215-imgui-previewer-foundation-overlay-plan.md Echoglossian.xml
@@ -501,3 +501,20 @@ Phase A is complete only when:
 - the manual in-game comparison is either recorded as passed or explicitly left as the only pending fidelity gate
 
 Configuration UI, translator metrics/debugger, ActionDetail/ItemDetail, and DB editor preview extraction remain tracked by issue #215 for subsequent plans.
+
+## Task 8 Completion Notes
+
+Delivered documentation now lives in `Echoglossian.Previewer/README.md`, and
+the design spec records the Phase A delivered state and fidelity boundary.
+
+Automated validation covers production restore/build/test, independent
+previewer restore/build/test, binding smoke, host smoke, deterministic batch
+screenshot export, diff hygiene, solution membership, package reference
+isolation, and plugin artifact inspection.
+
+The only pending fidelity gate is manual in-game comparison. FFXIV/game runtime
+inspection was not available to this automated implementation pass, so 1:1
+visual fidelity is not claimed. A developer must compare one `PlainImGui`
+scenario and one `RtlTexture` scenario in-game against preview screenshots using
+the same config, viewport, text, font size, and addon bounds before treating the
+previewer as a visual baseline.
