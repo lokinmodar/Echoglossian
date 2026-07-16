@@ -4,7 +4,9 @@
 // </copyright>
 
 using Echoglossian.Previewer.Configuration;
+using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
+using Echoglossian.UIOverlays.TranslationOverlay;
 
 using Xunit;
 
@@ -49,5 +51,54 @@ public sealed class BatchScreenshotRunnerTests
         var label = BatchScreenshotRunner.GetManifestConfigSourceLabel(configuration);
 
         Assert.Equal("defaults", label);
+    }
+
+    /// <summary>
+    /// Ensures screenshot batches fail fast when requests target mixed output directories.
+    /// </summary>
+    [Fact]
+    public void ResolveSharedOutputDirectory_MixedDirectories_ThrowsArgumentException()
+    {
+        var requests = new[]
+        {
+            CreateRequest(@"C:\captures\a"),
+            CreateRequest(@"C:\captures\b"),
+        };
+
+        var exception = Assert.Throws<ArgumentException>(
+            () => BatchScreenshotRunner.ResolveSharedOutputDirectory(requests));
+
+        Assert.Contains("same output directory", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Ensures screenshot manifest entries do not expose absolute png paths.
+    /// </summary>
+    [Fact]
+    public void GetManifestPngPathLabel_AbsolutePath_UsesFileNameOnly()
+    {
+        var label = BatchScreenshotRunner.GetManifestPngPathLabel(
+            @"C:\Users\lokin\Desktop\captures\full-talk-1920x1080.png");
+
+        Assert.Equal("full-talk-1920x1080.png", label);
+        Assert.DoesNotContain("lokin", label, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(@"\", label, StringComparison.Ordinal);
+    }
+
+    private static ScreenshotRequest CreateRequest(string outputDirectory)
+    {
+        return new ScreenshotRequest(
+            ScreenshotMode.Full,
+            new PreviewScenario(
+                "talk",
+                "Talk",
+                TranslationOverlaySurfaceId.Talk,
+                new PreviewAddonBounds(0f, 0f, 400f, 180f),
+                "Translated text",
+                "Speaker",
+                Visible: true,
+                ShowsSimulatedAddonBounds: false),
+            new PreviewViewportPreset("1080p", 1920, 1080),
+            outputDirectory);
     }
 }

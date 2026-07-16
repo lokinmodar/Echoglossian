@@ -60,7 +60,7 @@ internal sealed class BatchScreenshotRunner
             return;
         }
 
-        var outputDirectory = requests[0].OutputDirectory;
+        var outputDirectory = ResolveSharedOutputDirectory(requests);
         Directory.CreateDirectory(outputDirectory);
         var entries = new List<ScreenshotManifestEntry>();
 
@@ -101,6 +101,53 @@ internal sealed class BatchScreenshotRunner
 
         var fileName = Path.GetFileName(sourceConfiguration.SourcePath);
         return string.IsNullOrWhiteSpace(fileName) ? "config" : fileName;
+    }
+
+    /// <summary>
+    /// Resolves the batch output directory and rejects mixed destinations so
+    /// the manifest cannot silently describe files written elsewhere.
+    /// </summary>
+    /// <param name="requests">The screenshot requests to validate.</param>
+    /// <returns>The normalized shared output directory.</returns>
+    internal static string ResolveSharedOutputDirectory(
+        IReadOnlyList<ScreenshotRequest> requests)
+    {
+        ArgumentNullException.ThrowIfNull(requests);
+        if (requests.Count == 0)
+        {
+            throw new ArgumentException(
+                "At least one screenshot request is required.",
+                nameof(requests));
+        }
+
+        var outputDirectory = Path.GetFullPath(requests[0].OutputDirectory);
+        for (var index = 1; index < requests.Count; index++)
+        {
+            var candidateDirectory = Path.GetFullPath(requests[index].OutputDirectory);
+            if (!string.Equals(
+                outputDirectory,
+                candidateDirectory,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(
+                    "All screenshot requests must use the same output directory.",
+                    nameof(requests));
+            }
+        }
+
+        return outputDirectory;
+    }
+
+    /// <summary>
+    /// Resolves the manifest-safe png label without exposing local directories.
+    /// </summary>
+    /// <param name="pngPath">The captured screenshot path.</param>
+    /// <returns>A redacted screenshot file label.</returns>
+    internal static string GetManifestPngPathLabel(string pngPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(pngPath);
+        var fileName = Path.GetFileName(pngPath);
+        return string.IsNullOrWhiteSpace(fileName) ? "screenshot.png" : fileName;
     }
 
     private CapturedScreenshot Capture(ScreenshotRequest request)
@@ -202,7 +249,7 @@ internal sealed class BatchScreenshotRunner
             request.Viewport.Height,
             request.Mode.ToString(),
             capture.RenderResult.PresentationMode.ToString(),
-            capture.PngPath);
+            GetManifestPngPathLabel(capture.PngPath));
     }
 
     private static TranslationOverlayRenderResult DrawCaptureFrame(
