@@ -6,6 +6,7 @@
 using Echoglossian.UIOverlays.TranslationOverlay;
 
 using System.Drawing.Imaging;
+using System.Numerics;
 
 using Veldrid;
 
@@ -36,6 +37,30 @@ internal static class VeldridScreenshotCapture
         float logicalMargin,
         float framebufferScale)
     {
+        return CalculateSurfaceCrop(
+            result,
+            logicalViewportWidth,
+            logicalViewportHeight,
+            logicalMargin,
+            new Vector2(framebufferScale, framebufferScale));
+    }
+
+    /// <summary>
+    /// Calculates a clamped selected-surface crop in physical framebuffer pixels.
+    /// </summary>
+    /// <param name="result">The exact overlay render result.</param>
+    /// <param name="logicalViewportWidth">The logical viewport width.</param>
+    /// <param name="logicalViewportHeight">The logical viewport height.</param>
+    /// <param name="logicalMargin">The logical crop margin.</param>
+    /// <param name="framebufferScale">The logical-to-physical framebuffer scale.</param>
+    /// <returns>The clamped physical crop rectangle.</returns>
+    internal static DrawingRectangle CalculateSurfaceCrop(
+        TranslationOverlayRenderResult result,
+        int logicalViewportWidth,
+        int logicalViewportHeight,
+        float logicalMargin,
+        Vector2 framebufferScale)
+    {
         ArgumentNullException.ThrowIfNull(result);
 
         if (!result.WasDrawn ||
@@ -43,18 +68,18 @@ internal static class VeldridScreenshotCapture
             result.Size.Y <= 0f ||
             logicalViewportWidth <= 0 ||
             logicalViewportHeight <= 0 ||
-            framebufferScale <= 0f)
+            framebufferScale.X <= 0f ||
+            framebufferScale.Y <= 0f)
         {
             return DrawingRectangle.Empty;
         }
 
-        var scale = framebufferScale;
-        var left = (result.Position.X - logicalMargin) * scale;
-        var top = (result.Position.Y - logicalMargin) * scale;
-        var right = (result.Position.X + result.Size.X + logicalMargin) * scale;
-        var bottom = (result.Position.Y + result.Size.Y + logicalMargin) * scale;
-        var maxRight = logicalViewportWidth * scale;
-        var maxBottom = logicalViewportHeight * scale;
+        var left = (result.Position.X - logicalMargin) * framebufferScale.X;
+        var top = (result.Position.Y - logicalMargin) * framebufferScale.Y;
+        var right = (result.Position.X + result.Size.X + logicalMargin) * framebufferScale.X;
+        var bottom = (result.Position.Y + result.Size.Y + logicalMargin) * framebufferScale.Y;
+        var maxRight = logicalViewportWidth * framebufferScale.X;
+        var maxBottom = logicalViewportHeight * framebufferScale.Y;
 
         var x = Math.Clamp((int)Math.Floor(left), 0, (int)Math.Ceiling(maxRight));
         var y = Math.Clamp((int)Math.Floor(top), 0, (int)Math.Ceiling(maxBottom));

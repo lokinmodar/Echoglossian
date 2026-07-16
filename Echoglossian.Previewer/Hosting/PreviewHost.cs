@@ -10,6 +10,8 @@ using Echoglossian.Previewer.Screenshots;
 
 using DrawingRectangle = System.Drawing.Rectangle;
 
+using System.Numerics;
+
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -137,6 +139,20 @@ internal sealed unsafe class PreviewHost : IDisposable
             colorTarget,
             path,
             crop);
+    }
+
+    /// <summary>
+    /// Gets the current physical swapchain framebuffer size in pixels.
+    /// </summary>
+    internal Vector2 FramebufferSize
+    {
+        get
+        {
+            this.ThrowIfDisposed();
+            return new Vector2(
+                this.graphicsDevice.MainSwapchain.Framebuffer.Width,
+                this.graphicsDevice.MainSwapchain.Framebuffer.Height);
+        }
     }
 
     /// <summary>

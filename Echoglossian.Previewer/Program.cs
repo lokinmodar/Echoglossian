@@ -12,8 +12,10 @@ using Echoglossian.Previewer.Hosting;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.UI;
+using Echoglossian.UIOverlays.TranslationOverlay;
 
 using System.Drawing;
+using System.Numerics;
 
 namespace Echoglossian.Previewer;
 
@@ -164,12 +166,11 @@ internal static class Program
                 Rectangle? crop = null;
                 if (request.Mode == ScreenshotMode.Surface)
                 {
-                    crop = VeldridScreenshotCapture.CalculateSurfaceCrop(
+                    crop = CalculateInteractiveSurfaceCrop(
+                        request,
                         shell.LastRenderResult,
-                        request.Viewport.Width,
-                        request.Viewport.Height,
-                        request.SurfaceMargin,
-                        framebufferScale: 1f);
+                        ImGui.GetIO().DisplaySize,
+                        host.FramebufferSize);
                 }
 
                 host.CapturePng(outputPath, crop);
@@ -229,6 +230,40 @@ internal static class Program
         return string.IsNullOrWhiteSpace(outputDirectory)
             ? ScreenshotFileName.CreateDefaultOutputDirectory(DateTimeOffset.UtcNow)
             : outputDirectory;
+    }
+
+    internal static Rectangle? CalculateInteractiveSurfaceCrop(
+        ScreenshotRequest request,
+        TranslationOverlayRenderResult renderResult,
+        Vector2 displaySize,
+        Vector2 framebufferSize)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(renderResult);
+        if (request.Mode != ScreenshotMode.Surface)
+        {
+            return null;
+        }
+
+        if (displaySize.X <= 0f ||
+            displaySize.Y <= 0f ||
+            framebufferSize.X <= 0f ||
+            framebufferSize.Y <= 0f)
+        {
+            return Rectangle.Empty;
+        }
+
+        var displayWidth = checked((int)MathF.Ceiling(displaySize.X));
+        var displayHeight = checked((int)MathF.Ceiling(displaySize.Y));
+        var framebufferScale = new Vector2(
+            framebufferSize.X / displaySize.X,
+            framebufferSize.Y / displaySize.Y);
+        return VeldridScreenshotCapture.CalculateSurfaceCrop(
+            renderResult,
+            displayWidth,
+            displayHeight,
+            request.SurfaceMargin,
+            framebufferScale);
     }
 
     private static ScreenshotMode ParseScreenshotMode(string? value)

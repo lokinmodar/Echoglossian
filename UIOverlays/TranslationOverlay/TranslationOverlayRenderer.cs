@@ -395,7 +395,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                     ? 0f
                     : ImGui.CalcTextSize(line).X),
                 lines.Sum(line => string.IsNullOrEmpty(line)
-                    ? ImGui.GetTextLineHeight()
+                    ? ImGui.GetStyle().ItemSpacing.Y
                     : ImGui.CalcTextSize(line).Y));
         return measured * fontScale;
     }

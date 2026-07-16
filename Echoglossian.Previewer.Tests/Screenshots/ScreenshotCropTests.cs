@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Previewer.Screenshots;
+using Echoglossian.Previewer.Scenarios;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -85,6 +86,76 @@ public sealed class ScreenshotCropTests
             framebufferScale: 1.5f);
 
         Assert.Equal(new Rectangle(3, 18, 174, 99), crop);
+    }
+
+    /// <summary>
+    /// Ensures interactive surface crops clamp against the active host display
+    /// bounds instead of the scenario's logical viewport dimensions.
+    /// </summary>
+    [Fact]
+    public void CalculateInteractiveSurfaceCrop_UsesDisplayBoundsInsteadOfScenarioViewport()
+    {
+        var request = new ScreenshotRequest(
+            ScreenshotMode.Surface,
+            new PreviewScenario(
+                "talk",
+                "Talk",
+                TranslationOverlaySurfaceId.Talk,
+                new PreviewAddonBounds(0f, 0f, 10f, 10f),
+                "body",
+                "title",
+                true,
+                false),
+            new PreviewViewportPreset("scenario", 640, 360),
+            OutputDirectory: "artifacts");
+        var result = new TranslationOverlayRenderResult(
+            true,
+            new Vector2(700f, 100f),
+            new Vector2(100f, 100f),
+            TextPresentationBackendKind.PlainImGui);
+
+        var crop = Program.CalculateInteractiveSurfaceCrop(
+            request,
+            result,
+            new Vector2(1400f, 900f),
+            new Vector2(1400f, 900f));
+
+        Assert.Equal(new Rectangle(692, 92, 116, 116), crop);
+    }
+
+    /// <summary>
+    /// Ensures interactive surface crops scale into physical framebuffer pixels
+    /// when the host display uses a HiDPI backing target.
+    /// </summary>
+    [Fact]
+    public void CalculateInteractiveSurfaceCrop_UsesFramebufferScaleForHiDpiHosts()
+    {
+        var request = new ScreenshotRequest(
+            ScreenshotMode.Surface,
+            new PreviewScenario(
+                "talk",
+                "Talk",
+                TranslationOverlaySurfaceId.Talk,
+                new PreviewAddonBounds(0f, 0f, 10f, 10f),
+                "body",
+                "title",
+                true,
+                false),
+            new PreviewViewportPreset("scenario", 640, 360),
+            OutputDirectory: "artifacts");
+        var result = new TranslationOverlayRenderResult(
+            true,
+            new Vector2(10f, 20f),
+            new Vector2(100f, 50f),
+            TextPresentationBackendKind.PlainImGui);
+
+        var crop = Program.CalculateInteractiveSurfaceCrop(
+            request,
+            result,
+            new Vector2(1400f, 900f),
+            new Vector2(2800f, 1800f));
+
+        Assert.Equal(new Rectangle(4, 24, 232, 132), crop);
     }
 
     /// <summary>
