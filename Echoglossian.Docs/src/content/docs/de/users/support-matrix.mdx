@@ -1,0 +1,73 @@
+---
+title: Support-Matrix
+description: Öffentliches Inventar der aktuell dokumentierten Übersetzungsflächen und Modusfamilien.
+---
+
+Diese Seite ist die öffentliche Version des aktuellen Inventars der Übersetzungsflächen. Sie dokumentiert ausschließlich reales Runtime-Verhalten.
+
+## Modusfamilien
+
+| Modusfamilie | Modi | Verwendet von |
+| --- | --- | --- |
+| Quest-/native-window-Familie | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal-Familienflächen und DB-first game windows |
+| Overlay-Familie | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, Untertitel, MiniTalk, CutSceneSelectString und Toast-Familienflächen |
+
+## Dialog- und Overlay-Flächen
+
+| Fläche | Toggle | Status |
+| --- | --- | --- |
+| Talk | `TranslateTalk` | Aktiviert |
+| BattleTalk | `TranslateBattleTalk` | Aktiviert |
+| TalkSubtitle | `TranslateTalkSubtitle` | Aktiviert |
+| MiniTalk | `TranslateMiniTalk` | Aktiviert |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Aktiviert |
+
+## Quest- und Journal-Flächen
+
+| Fläche | Toggle | Status |
+| --- | --- | --- |
+| Journal | `TranslateJournal` | Aktiviert |
+| JournalDetail | `TranslateJournalDetail` | Aktiviert |
+| ToDoList | `TranslateToDoList` | Aktiviert |
+| ScenarioTree | `TranslateScenarioTree` | Aktiviert |
+| JournalAccept | `TranslateJournalAccept` | Aktiviert |
+| JournalResult | `TranslateJournalResult` | Aktiviert |
+| RecommendList | `TranslateRecommendList` | Aktiviert |
+| AreaMap | `TranslateAreaMap` | Aktiviert |
+
+## Toast-Flächen
+
+| Fläche | Toggle | Status |
+| --- | --- | --- |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Aktiviert |
+| Error toast | `TranslateErrorToast` | Aktiviert |
+| Area toast | `TranslateAreaToast` | Aktiviert |
+| Class / Job change toast | `TranslateClassChangeToast` | Aktiviert |
+| Text gimmick hint | `TranslateTextGimmickHint` | Aktiviert |
+| Quest toast | `TranslateQuestToast` | Aktiviert |
+
+## Game-window-Flächen
+
+| Fläche | Toggle | Status |
+| --- | --- | --- |
+| Character window | `TranslateCharacterWindow` | Aktiviert |
+| Main Command | `TranslateMainCommandWindow` | Aktiviert |
+| Action Menu | `TranslateActionMenuWindow` | Aktiviert |
+| HUD windows | `TranslateHudWindow` | Aktiviert |
+| Operation Guide | `TranslateOperationGuideWindow` | Aktiviert |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Aktiviert |
+
+## Versteckte oder vorübergehend eingeschränkte Flächen
+
+| Fläche | Toggle | Öffentlicher Status |
+| --- | --- | --- |
+| Action / item detail tooltips | `TranslateTooltips` | Für den Release vorübergehend deaktiviert |
+| Yes/No dialog | `TranslateYesNoScreen` | Implementiert, aber in der aktuellen UI verborgen |
+| SelectString dialog | `TranslateSelectString` | Implementiert, aber in der aktuellen UI verborgen |
+| SelectOk dialog | `TranslateSelectOk` | Implementiert, aber in der aktuellen UI verborgen |
+
+## Betriebshinweise
+
+- Einige Sprachen benötigen heruntergeladene Font-Assets, bevor die Übersetzung sicher aktiviert werden kann.
+- Overlay-only-Sprachen werden von native replacement-Modi weg normalisiert, wenn native Darstellung unsicher wäre.
+- Eine Fläche kann in Konfiguration oder Code existieren und in einem Release trotzdem bewusst verborgen oder deaktiviert sein.

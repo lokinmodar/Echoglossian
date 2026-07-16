@@ -1,0 +1,41 @@
+---
+title: Oversættelsestilstande
+description: Forstå overlay-, native- og swap-visning, før du aktiverer flader.
+---
+
+Echoglossian behandler capture, oversættelse, overlay-rendering og native mutation som separate stadier. Visningstilstanden afgør, hvilke stadier der må berøre det aktive game UI.
+
+## Kun overlay-oversættelse (`Overlay Translation Only`)
+
+Brug overlay-tilstand, når du vil have oversat tekst uden at mutere den native addon.
+
+- Kildeteksten bliver fanget.
+- Oversættelsen kører normalt.
+- Det oversatte resultat rendres kun i overlayet.
+- Den native addon forbliver skrivebeskyttet.
+
+Dette er den sikreste tilstand til tætte eller ustabile flader.
+
+## Native UI-oversættelse (`Native UI Translation`)
+
+Brug native-tilstand, når du vil have den oversatte tekst skrevet ind i understøttede native flader.
+
+- Capture og oversættelse sker stadig først.
+- Det oversatte resultat kan skrives ind i den aktive addon.
+- Layoutkvaliteten afhænger af, hvor godt den konkrete flade understøtter native udskiftning.
+
+## Native UI-oversættelse med originalt overlay (`Native UI Translation With Original Overlay`)
+
+Swap-tilstand beholder den oversatte tekst i det native UI og bruger overlayet til at vise originalteksten.
+
+Dette er nyttigt, når du vil have UI'et oversat, men stadig har brug for den oprindelige ordlyd tæt på som reference.
+
+## Sådan vælger du
+
+Start med overlay-tilstand, hvis:
+
+- du tester en ny motor
+- du tester et nyt sprog
+- du arbejder med en tæt flade som journaler eller lange dialoger
+
+Gå kun videre til native eller swap, når målfladen opfører sig godt nok i din opsætning.

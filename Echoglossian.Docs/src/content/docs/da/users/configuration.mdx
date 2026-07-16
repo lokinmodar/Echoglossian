@@ -1,0 +1,42 @@
+---
+title: Konfiguration
+description: Vælg sprog, vælg en motor, og konfigurer plugin'et sikkert.
+---
+
+## Kerneindstillinger
+
+Den mindste nyttige konfiguration er:
+
+- et kildesprog
+- et målsprog
+- en oversættelsesmotor, der understøtter det par
+- en gyldig provider-konfiguration, når motoren kræver legitimationsoplysninger eller et endpoint
+
+## Motorkonfiguration
+
+Forskellige motorer viser forskellige felter, men de offentlige kategorier er stabile:
+
+- provider-legitimationsfelter såsom en API-nøgle
+- modelvalg for LLM-baserede motorer
+- valgfrit tilpasset endpoint eller lokal runtime-URL
+- prompt-relaterede valgmuligheder for prompt-bevidste motorer
+
+Hvis en motor ikke er tilgængelig for det valgte målsprog, så skift enten motor eller målsprog, før du prøver at aktivere global oversættelse.
+
+## Flade-toggles
+
+Når den globale oversætter er sund, så aktivér kun de flader, du vil have:
+
+- dialog- og overlayflader
+- quest- og journalflader
+- toast-flader
+- game-window-flader
+
+Hver familie bevarer sine egne toggles på fladeniveau, også efter at global oversættelse er aktiveret.
+
+## Sikker konfigurationspraksis
+
+- Skift én gruppe af indstillinger ad gangen.
+- Bekræft provider-forbindelse, før du aktiverer mange flader.
+- Foretræk overlay-visning først, når du tester et nyt sprog eller en ny provider.
+- Hold skærmbilleder og eksporterede indstillinger fri for rigtige provider-secrets.

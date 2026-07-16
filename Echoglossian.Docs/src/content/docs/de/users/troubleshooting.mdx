@@ -1,0 +1,44 @@
+---
+title: Fehlerbehebung und FAQ
+description: Häufige Probleme bei Einrichtung, Provider und Flächenabdeckung.
+---
+
+## Die Übersetzung bleibt nicht aktiviert
+
+Prüfe zuerst Folgendes:
+
+- Zielsprache und Engine passen zusammen
+- die Provider-Konfiguration ist vollständig
+- alle erforderlichen heruntergeladenen Font-Assets sind vorhanden
+
+Wenn eine dieser Prüfungen fehlschlägt, kann sich die globale Übersetzung selbst wieder deaktivieren.
+
+## Der Engine-Picker zeigt nicht den Provider an, den ich erwartet habe
+
+Die Sichtbarkeit von Engines hängt von der ausgewählten Zielsprache ab. Ändere die Zielsprache oder wechsle zu einer Engine-Familie mit breiterer Abdeckung.
+
+## Das Overlay funktioniert, aber nativer Text sieht falsch aus
+
+Das bedeutet normalerweise, dass die Übersetzungspipeline gesund ist und das Problem beim nativen Layout dieser konkreten Fläche liegt. Schalte die Fläche zunächst wieder auf Overlay-only zurück und entscheide dann, ob sich native Darstellung dort überhaupt lohnt.
+
+## Eine bestimmte Fläche wird nicht übersetzt
+
+Prüfe alle drei Ebenen:
+
+- globale Übersetzung ist aktiv
+- das Toggle für die Flächenfamilie ist aktiviert
+- das Toggle für die konkrete Fläche ist aktiviert
+
+Vergleiche die Fläche anschließend mit der [Support-Matrix](../support-matrix/).
+
+## Was sollte ich teilen, wenn ich ein Problem melde
+
+Nützliche Informationen:
+
+- Plugin-Version
+- Quell- und Zielsprache
+- ausgewählte Engine
+- Name der Zielfläche
+- ob du Overlay-, Native- oder Swap-Modus verwendet hast
+
+Gib im Bericht keine echten Provider-Schlüssel oder Secrets an.

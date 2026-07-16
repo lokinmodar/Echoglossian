@@ -1,0 +1,36 @@
+---
+title: Echoglossian dokumentazioa
+description: Konfigurazio, erabilera, arkitektura eta ekarpenetarako gida landuak.
+template: splash
+hero:
+  title: Echoglossian dokumentazioa
+  tagline: Pluginaren erabiltzaileentzako konfigurazio-gida publikoak eta laguntzaileentzako erreferentzia tekniko publikoa, pluginaren build eta release flow-etik bereizita.
+  actions:
+    - text: Erabiltzaile-gidak
+      link: ./users/
+      icon: right-arrow
+    - text: Dokumentazio teknikoa
+      link: ./technical/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Esparru publikoa
+
+Gune honek dokumentazio landua baino ez du argitaratzen.
+
+- Pluginaren erabilera, konfigurazioa eta arazoen konponketa hemen argitaratzen dira.
+- Uneko arkitektura, runtime fluxua eta laguntzaileentzako gidak hemen argitaratzen dira.
+- Barne handoff-ak, release oharrak, planak eta backlog materiala repositoryko `docs/` zuhaitzean geratzen dira eta ez dira gune honetan argitaratzen.
+
+## Hasi hemen
+
+<CardGrid stagger>
+  <Card title="Pluginaren erabiltzaile-dokumentazioa" icon="seti:gear" href="./users/">
+    Instalazioa, lehen exekuzioa, provider konfigurazioa, aurkezpen moduak, laguntza-estaldura eta arazoen konponketa.
+  </Card>
+  <Card title="Dokumentazio teknikoa" icon="seti:code" href="./technical/">
+    Runtime arkitektura, itzulpen pipeline-a, persistencia-mugak, diagnostikoa eta garapen workflow-a.
+  </Card>
+</CardGrid>

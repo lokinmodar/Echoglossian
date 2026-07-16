@@ -1,0 +1,73 @@
+---
+title: Πίνακας υποστήριξης
+description: Δημόσιο αποθετήριο των επί του παρόντος τεκμηριωμένων επιφανειών μετάφρασης και οικογενειών λειτουργίας.
+---
+
+Αυτή η σελίδα είναι η δημόσια έκδοση του τρέχοντος αποθέματος επιφανειών μετάφρασης. Τεκμηριώνει μόνο πραγματική συμπεριφορά runtime.
+
+## Οικογένειες λειτουργίας
+
+| Οικογένεια λειτουργίας | Λειτουργίες | Χρησιμοποιείται από |
+| --- | --- | --- |
+| Οικογένεια quest / native-window | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Επιφάνειες οικογένειας Journal και DB-first game windows |
+| Οικογένεια overlay | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, υπότιτλοι, MiniTalk, CutSceneSelectString και επιφάνειες οικογένειας toast |
+
+## Επιφάνειες διαλόγου και overlay
+
+| Επιφάνεια | Toggle | Κατάσταση |
+| --- | --- | --- |
+| Talk | `TranslateTalk` | Ενεργό |
+| BattleTalk | `TranslateBattleTalk` | Ενεργό |
+| TalkSubtitle | `TranslateTalkSubtitle` | Ενεργό |
+| MiniTalk | `TranslateMiniTalk` | Ενεργό |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Ενεργό |
+
+## Επιφάνειες quest και journal
+
+| Επιφάνεια | Toggle | Κατάσταση |
+| --- | --- | --- |
+| Journal | `TranslateJournal` | Ενεργό |
+| JournalDetail | `TranslateJournalDetail` | Ενεργό |
+| ToDoList | `TranslateToDoList` | Ενεργό |
+| ScenarioTree | `TranslateScenarioTree` | Ενεργό |
+| JournalAccept | `TranslateJournalAccept` | Ενεργό |
+| JournalResult | `TranslateJournalResult` | Ενεργό |
+| RecommendList | `TranslateRecommendList` | Ενεργό |
+| AreaMap | `TranslateAreaMap` | Ενεργό |
+
+## Επιφάνειες toast
+
+| Επιφάνεια | Toggle | Κατάσταση |
+| --- | --- | --- |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Ενεργό |
+| Error toast | `TranslateErrorToast` | Ενεργό |
+| Area toast | `TranslateAreaToast` | Ενεργό |
+| Class / Job change toast | `TranslateClassChangeToast` | Ενεργό |
+| Text gimmick hint | `TranslateTextGimmickHint` | Ενεργό |
+| Quest toast | `TranslateQuestToast` | Ενεργό |
+
+## Επιφάνειες game-window
+
+| Επιφάνεια | Toggle | Κατάσταση |
+| --- | --- | --- |
+| Character window | `TranslateCharacterWindow` | Ενεργό |
+| Main Command | `TranslateMainCommandWindow` | Ενεργό |
+| Action Menu | `TranslateActionMenuWindow` | Ενεργό |
+| HUD windows | `TranslateHudWindow` | Ενεργό |
+| Operation Guide | `TranslateOperationGuideWindow` | Ενεργό |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Ενεργό |
+
+## Κρυφές ή προσωρινά περιορισμένες επιφάνειες
+
+| Επιφάνεια | Toggle | Δημόσια κατάσταση |
+| --- | --- | --- |
+| Action / item detail tooltips | `TranslateTooltips` | Προσωρινά απενεργοποιημένο για release |
+| Yes/No dialog | `TranslateYesNoScreen` | Υλοποιημένο αλλά κρυμμένο στο τρέχον UI |
+| SelectString dialog | `TranslateSelectString` | Υλοποιημένο αλλά κρυμμένο στο τρέχον UI |
+| SelectOk dialog | `TranslateSelectOk` | Υλοποιημένο αλλά κρυμμένο στο τρέχον UI |
+
+## Λειτουργικές σημειώσεις
+
+- Ορισμένες γλώσσες απαιτούν κατεβασμένα font assets πριν η μετάφραση μπορέσει να ενεργοποιηθεί με ασφάλεια.
+- Οι overlay-only γλώσσες εξομαλύνονται μακριά από native replacement λειτουργίες όταν η native εμφάνιση θα ήταν μη ασφαλής.
+- Μια επιφάνεια μπορεί να υπάρχει στη ρύθμιση ή στον κώδικα αλλά να παραμένει σκόπιμα κρυφή ή απενεργοποιημένη σε release.
