@@ -7,6 +7,8 @@ namespace Echoglossian;
 
 public partial class Echoglossian
 {
+  private readonly PluginConfigWindowRenderer configWindowRenderer = new();
+
   private readonly VisibleStorySurfaceRetranslationDispatcher
       visibleStorySurfaceRetranslationDispatcher = new();
 

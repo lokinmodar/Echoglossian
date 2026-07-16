@@ -444,6 +444,12 @@ public partial class Echoglossian
         config,
         config.Version);
 
+    if (PluginConfigSaveScope.TrySave(config))
+    {
+      activeInstance?.OnConfigurationSaved(config);
+      return;
+    }
+
     try
     {
       PluginInterface.SavePluginConfig(config);

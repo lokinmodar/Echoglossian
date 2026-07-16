@@ -3,356 +3,33 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.PluginUI.Components;
-using Echoglossian.PluginUI.Helpers;
-using Echoglossian.PluginUI.Tabs;
-
 namespace Echoglossian;
 
 public partial class Echoglossian
 {
   public static bool LangToRemoveDiacritics;
 
-  public bool SaveConfigValue;
-
   /// <summary>
-  ///     Draws the Echoglossian configuration UI.
+  /// Draws the Echoglossian configuration UI through the shared renderer.
   /// </summary>
   private void EchoglossianConfigUi()
   {
-    this.SaveConfigValue = false;
-    LanguageDropdownHelper.Initialize(this.languagesDictionary);
-
-    ImGui.SetNextWindowSizeConstraints(
-        new Vector2(900, 900),
-        new Vector2(1920, 1080));
-    ImGui.Begin(
-        $"{Resources.ConfigWindowTitle} - Plugin Version: {this.configuration.PluginVersion}",
-        ref this.config);
-
-    this.DrawTranslationStatusHeader();
-    ImGui.Spacing();
-    ImGui.BeginGroup();
-
-    if (ImGui.BeginTabBar(
-            "TabBar",
-            ImGuiTabBarFlags.NoCloseWithMiddleMouseButton))
-    {
-      if (ImGui.BeginTabItem(Resources.ConfigTab7Name))
-      {
-        this.SaveConfigValue |= this.DrawTranslationSetupTab();
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab0Name))
-      {
-        this.SaveConfigValue |= OverlayTab.Draw(this.configuration);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
-      {
-        this.SaveConfigValue |=
-            TroubleshootingTab.Draw(this.configuration);
-        ImGui.EndTabItem();
-      }
-
-      if (ImGui.BeginTabItem(Resources.ConfigTabAbout))
-      {
-        this.SaveConfigValue |= AboutTab.Draw(
-            this.configuration,
-            this.logo.Handle);
-        ImGui.EndTabItem();
-      }
-
-      ImGui.EndTabBar();
-    }
-
-    ImGui.EndGroup();
-
-    PluginConfigWindowFooter.DrawFooter(
-        ref this.config,
-        ref this.SaveConfigValue,
+    var context = new PluginConfigWindowContext(
+        this.configuration,
+        this.languagesDictionary,
+        this.logo.Handle,
         this.pixImage.Handle,
-        this.cryptoImage.Handle);
+        this.cryptoImage.Handle,
+        this.RebuildTranslationServiceSafely,
+        this.configuration.PluginVersion);
 
-    this.SaveConfigValue |=
-        PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
-            this.configuration);
-
-    ImGui.End();
-
-    if (this.SaveConfigValue)
-    {
-      SaveConfig(this.configuration);
-      this.SaveConfigValue = false;
-    }
+    this.configWindowRenderer.Draw(context, ref this.config);
   }
 
   /// <summary>
-  /// Draws the compact translation status line that stays outside the tab
-  /// content.
+  /// Disables every toast-translation category and saves the configuration.
   /// </summary>
-  private void DrawTranslationStatusHeader()
-  {
-    var blockReason = TranslationActivationGuard.GetBlockReason(
-        this.configuration,
-        SelectedLanguage);
-    var translationBlockedByMissingAssets =
-        blockReason == TranslationActivationGuard.BlockReason
-            .MissingRequiredAssets;
-    var translationBlockedByEngineConfiguration =
-        blockReason == TranslationActivationGuard.BlockReason
-            .EngineConfigurationIncomplete;
-
-    if (translationBlockedByMissingAssets)
-    {
-      ImGui.TextColored(
-          new Vector4(255, 165, 0, 255),
-          Resources.TranslationBlockedByMissingAssetsStatusText);
-      return;
-    }
-
-    if (translationBlockedByEngineConfiguration)
-    {
-      ImGui.TextColored(
-          new Vector4(255, 165, 0, 255),
-          Resources.TranslationBlockedByEngineConfigurationText);
-      return;
-    }
-
-    if (this.configuration.Translate)
-    {
-      ImGui.TextColored(
-          new Vector4(0, 255, 0, 255),
-          Resources.TranslationEnabled);
-      return;
-    }
-
-    ImGui.TextColored(
-        new Vector4(255, 255, 0, 255),
-        Resources.TranslationDisabled);
-  }
-
-  /// <summary>
-  /// Draws the first configuration tab that combines language selection, engine
-  /// configuration, activation, and the legacy general settings.
-  /// </summary>
-  /// <returns><c>true</c> when the configuration changed.</returns>
-  private bool DrawTranslationSetupTab()
-  {
-    var changed = false;
-
-    using var scrollingChild = ImRaii.Child(
-        "TranslationSetupSettings",
-        new Vector2(-1, -100),
-        false,
-        ImGuiWindowFlags.NoBackground);
-
-    if (!scrollingChild)
-    {
-      return false;
-    }
-
-    this.DrawTranslationSetupSectionHeader(Resources.LanguageSelectLabelText);
-    changed |= this.DrawTranslationLanguageSelectionSection();
-    this.DrawTranslationSetupSectionBreak();
-
-    this.DrawTranslationSetupSectionHeader(Resources.TranslationEngineChoose);
-    changed |= TranslationEnginesTab.Draw(
-        this.configuration,
-        LanguageInt,
-        LangDict,
-        this.RebuildTranslationServiceSafely);
-
-    this.DrawTranslationSetupSectionBreak();
-    this.DrawTranslationSetupSectionHeader(Resources.EnableTranslation);
-    changed |= this.DrawTranslationActivationSection();
-
-    this.DrawTranslationSetupSectionBreak();
-    this.DrawTranslationSetupSectionHeader(Resources.ConfigTabGeneralName);
-    changed |= GeneralTab.Draw(this.configuration);
-
-    return changed;
-  }
-
-  /// <summary>
-  /// Draws the compact heading used to visually separate groups inside the
-  /// translation setup tab.
-  /// </summary>
-  /// <param name="title">The section title to render.</param>
-  private void DrawTranslationSetupSectionHeader(string title)
-  {
-    ImGui.TextDisabled(title);
-    ImGui.Separator();
-    ImGui.Spacing();
-  }
-
-  /// <summary>
-  /// Draws extra vertical spacing between setup-tab option groups so the first
-  /// configuration page reads less densely.
-  /// </summary>
-  private void DrawTranslationSetupSectionBreak()
-  {
-    ImGui.Spacing();
-    ImGui.Spacing();
-    ImGui.Spacing();
-  }
-
-  /// <summary>
-  /// Draws the language-selection section and applies the related runtime side
-  /// effects when the target language changes.
-  /// </summary>
-  /// <returns><c>true</c> when the configuration changed.</returns>
-  private bool DrawTranslationLanguageSelectionSection()
-  {
-    var changed = false;
-
-    UINewFontHandler.GeneralFontHandle.Push();
-
-    LangToRemoveDiacritics = this.configuration.Lang is 24 or 25 or 44 or 60
-        or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
-
-    if (LanguageDropdownHelper.DrawLanguageDropdown(
-            ref this.configuration.Lang,
-            Resources.LanguageSelectLabelText))
-    {
-      LanguageInt = this.configuration.Lang;
-      SpecialFontFileName = LangDict[this.configuration.Lang].FontName;
-      SelectedLanguage =
-          this.languagesDictionary[this.configuration.Lang];
-      LanguagePresentationPolicy.ApplyLanguageFlags(this.configuration);
-
-      if (TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
-              this.configuration,
-              this.configuration.Version,
-              LangDict[LanguageInt].SupportedEngines))
-      {
-        this.RebuildTranslationServiceSafely();
-        changed = true;
-      }
-
-      changed = true;
-      PluginRuntimeLog.Debug(
-          "Language selected: " +
-          LangDict[this.configuration.Lang].LanguageName);
-      PluginRuntimeLog.Debug(
-          "Language font: " + LangDict[this.configuration.Lang].FontName);
-
-      AssetsManager.RefreshPluginAssetsState(SelectedLanguage);
-      this.configuration.PluginAssetsDownloaded =
-          AssetsManager.PluginAssetsDownloaded;
-      MountFontPaths();
-      if (!this.configuration.PluginAssetsDownloaded &&
-          AssetsManager.RequiresDownloadedAssets(SelectedLanguage))
-      {
-        AssetsManager.PluginAssetsChecker(SelectedLanguage);
-        PluginAssetRequirementUiHelper.RequestForSelectedLanguage();
-      }
-      else
-      {
-        PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync();
-      }
-    }
-
-    UINewFontHandler.GeneralFontHandle.Pop();
-
-    ImGui.SameLine();
-    ImGui.Text(Resources.HoverTooltipIndicator);
-    if (ImGui.IsItemHovered())
-    {
-      ImGui.SetTooltip(Resources.LanguageSelectionTooltip);
-    }
-
-    if (this.configuration.UnsupportedLanguage)
-    {
-      ImGui.Text(Resources.LanguageNotSupportedText);
-    }
-
-    if (this.configuration.OverlayOnlyLanguage)
-    {
-      ImGui.Text(Resources.LanguageOnlySupportedUsingOverlay);
-    }
-
-    return changed;
-  }
-
-  /// <summary>
-  /// Draws the translation activation section and blocks activation while the
-  /// selected language or engine is not ready.
-  /// </summary>
-  /// <returns><c>true</c> when the configuration changed.</returns>
-  private bool DrawTranslationActivationSection()
-  {
-    var changed = false;
-
-    var blockReason = TranslationActivationGuard.GetBlockReason(
-        this.configuration,
-        SelectedLanguage);
-    var translationBlockedByMissingAssets =
-        blockReason == TranslationActivationGuard.BlockReason
-            .MissingRequiredAssets;
-    var translationBlockedByEngineConfiguration =
-        blockReason == TranslationActivationGuard.BlockReason
-            .EngineConfigurationIncomplete;
-    var translationShouldBeBlocked =
-        blockReason != TranslationActivationGuard.BlockReason.None;
-
-    if (translationShouldBeBlocked)
-    {
-      changed |= AssignIfChanged(ref this.configuration.Translate, false);
-    }
-
-    if (!this.configuration.UnsupportedLanguage)
-    {
-      if (translationBlockedByMissingAssets ||
-          translationBlockedByEngineConfiguration)
-      {
-        ImGui.BeginDisabled();
-      }
-
-      if (ImGui.Checkbox(
-              Resources.EnableTranslation,
-              ref this.configuration.Translate))
-      {
-        changed = true;
-      }
-
-      if (translationBlockedByMissingAssets ||
-          translationBlockedByEngineConfiguration)
-      {
-        ImGui.EndDisabled();
-      }
-
-      if ((translationBlockedByMissingAssets ||
-              translationBlockedByEngineConfiguration) &&
-          ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-      {
-        ImGui.SetTooltip(
-            translationBlockedByMissingAssets
-                ? Resources.TranslationRequiresDownloadedAssetsText
-                : Resources.TranslationBlockedByEngineConfigurationText);
-      }
-    }
-
-    if (translationBlockedByMissingAssets)
-    {
-      ImGui.SameLine();
-      ImGui.TextColored(
-          new Vector4(255, 165, 0, 255),
-          Resources.TranslationBlockedByMissingAssetsStatusText);
-      changed |= PluginAssetRequirementUiHelper.DrawInlineWarning(
-          this.configuration);
-    }
-    else if (translationBlockedByEngineConfiguration)
-    {
-      ImGui.TextWrapped(
-          Resources.TranslationBlockedByEngineConfigurationText);
-    }
-
-    return changed;
-  }
-
+  /// <returns><see langword="true" /> after the settings are disabled.</returns>
   private bool DisableAllToastTranslations()
   {
     this.configuration.TranslateAreaToast = false;
@@ -364,5 +41,3 @@ public partial class Echoglossian
     return true;
   }
 }
-
-
