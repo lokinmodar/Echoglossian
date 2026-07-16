@@ -6,6 +6,7 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
 
+using Echoglossian.ImageGeneration;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -21,6 +22,65 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class RtlTexturePresentationServiceTests
 {
+    /// <summary>
+    /// Ensures a layout-aware texture factory receives the measured layout and
+    /// every resolved raster input from the presentation request.
+    /// </summary>
+    [Fact]
+    public void TryRender_LayoutAwareFactory_ReceivesMeasuredLayoutAndCompleteRequest()
+    {
+        TextImageRenderer.TextRasterLayout? capturedLayout = null;
+        TextureCreationRequest? capturedRequest = null;
+        var configuration = new Config
+        {
+            FontSize = 27,
+            TexturePresentationLineHeightScale = 1.1f,
+        };
+        var request = CreateRequest(
+            2,
+            "ar",
+            "layout-aware texture request",
+            fontScale: 1.25f,
+            textColor: new Vector4(0.2f, 0.4f, 0.6f, 0.8f));
+
+        using var service = new RtlTexturePresentationService(
+            configuration,
+            (_, layout, creationRequest, _) =>
+            {
+                capturedLayout = layout;
+                capturedRequest = creationRequest;
+                return Task.FromResult<IDalamudTextureWrap>(
+                    new FakeTextureWrap(layout.Width, layout.Height));
+            });
+
+        var renderedBlock = WaitForRenderedBlock(service, request);
+        renderedBlock.Texture!.Dispose();
+
+        var actualRequest = Assert.IsType<TextureCreationRequest>(capturedRequest);
+        var actualLayout = Assert.IsType<TextImageRenderer.TextRasterLayout>(capturedLayout);
+        using var expectedRenderer = new TextImageRenderer(
+            actualRequest.FontPath,
+            actualRequest.FontSize,
+            System.Drawing.FontStyle.Regular,
+            actualRequest.LineHeightScale,
+            actualRequest.RightToLeft);
+        var expectedLayout = expectedRenderer.CreateTextLayout(
+            actualRequest.Text,
+            actualRequest.MaxWidth);
+
+        Assert.Equal(request.Text, actualRequest.Text);
+        Assert.InRange(
+            actualRequest.FontSize,
+            (configuration.FontSize * request.FontScale) - 0.001f,
+            (configuration.FontSize * request.FontScale) + 0.001f);
+        Assert.Equal((int?)Math.Ceiling(request.MaxWidth), actualRequest.MaxWidth);
+        Assert.Equal(1.1f, actualRequest.LineHeightScale);
+        Assert.True(actualRequest.RightToLeft);
+        Assert.Equal(expectedLayout.Width, actualLayout.Width);
+        Assert.Equal(expectedLayout.Height, actualLayout.Height);
+        Assert.Equal(expectedLayout.Lines, actualLayout.Lines);
+    }
+
     /// <summary>
     /// Ensures an LTR texture request is scheduled once without blocking the
     /// caller and becomes available after the controlled upload completes.

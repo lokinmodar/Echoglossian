@@ -3571,6 +3571,12 @@
             <param name="input">The translated payload.</param>
             <returns>A dictionary mapping indices to translated strings.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.CreateLanguagesDictionary">
+            <summary>
+            Creates the default language metadata dictionary.
+            </summary>
+            <returns>The default language metadata dictionary.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TickAcceptedQuestPrefetch">
             <summary>
                 Ticks the accepted-quest prefetch runtime so active quests can be
@@ -6602,105 +6608,11 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.DrawTranslationWindow(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.String)">
             <summary>
-            Draws the translation window.
+            Draws the translation window through the shared renderer.
             </summary>
             <param name="overlay">Overlay to be drawn.</param>
             <param name="config">Overlay configurations.</param>
             <param name="customTitle">Custom overlay title.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ResolveOverlayRenderWidthLimit(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Single,System.Single,System.Single)">
-            <summary>
-            Resolves the maximum window width available for one overlay render pass
-            before the content is rasterized or measured.
-            </summary>
-            <param name="config">The overlay configuration being drawn.</param>
-            <param name="baseWidth">The overlay width derived from addon geometry.</param>
-            <param name="minWidth">The minimum allowed width.</param>
-            <param name="maxWidth">The maximum allowed width.</param>
-            <returns>The width limit to use for content generation.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.MeasureOverlayTextWidth(System.String,System.String[],System.Boolean,System.Single,System.Single)">
-            <summary>
-            Measures the width of the overlay text using the same font family and
-            effective scale that will be used during rendering.
-            </summary>
-            <param name="overlayText">The full overlay text content.</param>
-            <param name="overlayTextLines">The split overlay lines.</param>
-            <param name="shouldUseGeneralFont">
-            Whether the general/original font path should be used.
-            </param>
-            <param name="effectiveFontScale">
-            The sanitized font scale that will be used for rendering.
-            </param>
-            <param name="horizontalPadding">
-            The horizontal window padding that must be added to the text width.
-            </param>
-            <returns>The measured overlay width including horizontal padding.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TraceOverlayRenderOnce(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String,System.Numerics.Vector2,System.Single,System.Single)">
-            <summary>
-            Logs CutSceneSelectString overlay renders once per content version.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ShouldUseGeneralOverlayFont(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
-            <summary>
-                Determines whether the current overlay surface should render using
-                the game's general font because it is showing original text in swap
-                mode.
-            </summary>
-            <param name="config">The overlay configuration being drawn.</param>
-            <returns>
-                <see langword="true" /> when the overlay should use the original-text
-                font path; otherwise, <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetEffectiveOverlayFontScale(System.Single)">
-            <summary>
-            Normalizes the overlay font scale to the supported render range.
-            </summary>
-            <param name="configuredFontScale">The configured overlay font scale.</param>
-            <returns>The effective positive font scale to use for measurement and render.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.IsToastLikeOverlaySurface(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
-            <summary>
-                Gets whether the specified surface behaves like one of the toast-style
-                overlays for diagnostics and layout tracing.
-            </summary>
-            <param name="surfaceId">The overlay surface identifier.</param>
-            <returns>
-                <see langword="true" /> when the overlay belongs to the toast/gimmick
-                family; otherwise, <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ShouldCenterOverlayText(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
-            <summary>
-                Gets whether overlay text should be centered for the specified
-                surface.
-            </summary>
-            <param name="surfaceId">The overlay surface identifier.</param>
-            <returns>
-                <see langword="true" /> when text should be centered; otherwise,
-                <see langword="false" />.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawOverlayLine(System.String,System.Boolean,System.Boolean)">
-            <summary>
-                Draws one overlay text line, centering it horizontally when enabled.
-            </summary>
-            <param name="line">The line to draw.</param>
-            <param name="centerAligned">
-                Whether to center-align the line in the available content region.
-            </param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawRenderedTextBlock(Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock,System.Boolean)">
-            <summary>
-            Draws one rendered block, aligning rasterized RTL content to the right
-            edge by default.
-            </summary>
-            <param name="block">The measured block to draw.</param>
-            <param name="centerAligned">
-            Whether the caller normally centers content in the available region.
-            </param>
         </member>
         <member name="M:Echoglossian.Echoglossian.SyncWideTextToastOverlayBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
@@ -24825,6 +24737,51 @@
                 profile is configured; otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.UiFontFileNames">
+            <summary>
+            Defines the common font files used by the plugin and standalone previewer.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.BaseFontFileName">
+            <summary>
+            Gets the primary Latin font file name.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.SymbolsFontFileName">
+            <summary>
+            Gets the symbol font file name.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.DummyFontFileName">
+            <summary>
+            Gets the font used to initialize language-specific font stacks.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Helpers.UiFontFileNames.LanguageComboFontFileName">
+            <summary>
+            Gets the font used for the language-selection control.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.Helpers.UiFontFileNames.ComplementaryFontFileNames">
+            <summary>
+            Gets the complementary Japanese variable-font file names.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.UiFontFileNames.ResolveComplementaryPaths(System.String)">
+            <summary>
+            Resolves the complementary Japanese variable-font paths in merge order.
+            </summary>
+            <param name="rootDirectory">The root containing the <c>Font</c> directory.</param>
+            <returns>The resolved complementary font paths.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.UiFontFileNames.ResolvePath(System.String,System.String)">
+            <summary>
+            Resolves one font file below a plugin or previewer root directory.
+            </summary>
+            <param name="rootDirectory">The root containing the <c>Font</c> directory.</param>
+            <param name="fileName">The font file name.</param>
+            <returns>The absolute or relative font path.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.Helpers.UIWarningHelpers">
             <summary>
                 Utility methods for drawing UI warnings.
@@ -24887,6 +24844,67 @@
                 The first applicable visible retranslation result, or a non-applicable
                 result when no visible story surface is currently available.
             </returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime">
+            <summary>
+            Bridges shared UI renderers to the plugin's Dalamud-managed font handles.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime.#ctor(Echoglossian.PluginUI.Helpers.UINewFontHandler)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime"/> class.
+            </summary>
+            <param name="fontHandler">The plugin-managed font handles.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime.Push(Echoglossian.PluginUI.Runtime.UiFontKind)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime.Dispose">
+            <summary>
+            Marks the runtime unavailable for future font pushes.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime.FontPopScope">
+            <summary>
+            Restores the previous ImGui font stack entry exactly once.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime.FontPopScope.#ctor(Dalamud.Interface.ManagedFontAtlas.IFontHandle)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime.FontPopScope"/> class.
+            </summary>
+            <param name="handle">The pushed font handle.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime.FontPopScope.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.PluginUI.Runtime.IUiFontRuntime">
+            <summary>
+            Provides the active UI font stack to shared ImGui renderers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Runtime.IUiFontRuntime.Push(Echoglossian.PluginUI.Runtime.UiFontKind)">
+            <summary>
+            Pushes the requested font and returns a scope that restores the prior
+            ImGui font state when disposed.
+            </summary>
+            <param name="fontKind">The font family to push.</param>
+            <returns>A scope that restores the prior font state.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Runtime.UiFontKind">
+            <summary>
+            Identifies the font family used by a plugin UI rendering operation.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Runtime.UiFontKind.General">
+            <summary>
+            Uses the general font that contains original-language glyphs.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.PluginUI.Runtime.UiFontKind.Language">
+            <summary>
+            Uses the target-language font.
+            </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.AboutTab">
             <summary>
@@ -30799,7 +30817,7 @@
             <param name="configuration">The live plugin configuration.</param>
             <param name="textureProvider">The texture provider used to upload images.</param>
         </member>
-        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime})">
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime},System.Func{Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.String})">
             <summary>
             Initializes a testable instance with an injected texture creation seam.
             </summary>
@@ -30823,8 +30841,9 @@
             The maximum number of failed-key cooldown entries to retain.
             </param>
             <param name="getUtcNow">The clock used for retry cooldowns.</param>
+            <param name="resolveFontPath">The optional font resolver.</param>
         </member>
-        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.ImageGeneration.TextImageRenderer,Echoglossian.ImageGeneration.TextImageRenderer.TextRasterLayout,Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime})">
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.ImageGeneration.TextImageRenderer,Echoglossian.ImageGeneration.TextImageRenderer.TextRasterLayout,Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime},System.Func{Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.String})">
             <summary>
             Initializes a texture presentation service with a layout-aware creation
             operation.
@@ -30849,6 +30868,7 @@
             The maximum number of failed-key cooldown entries to retain.
             </param>
             <param name="getUtcNow">The clock used for retry cooldowns.</param>
+            <param name="resolveFontPath">The optional font resolver.</param>
         </member>
         <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.TryRender(Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest)">
             <summary>
@@ -31394,6 +31414,300 @@
             <param name="request">The presentation request.</param>
             <returns>The resolved backend kind.</returns>
         </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest">
+            <summary>
+            Describes the ImGui-independent inputs required to place one overlay.
+            </summary>
+            <param name="ViewportPosition">The upper-left viewport position.</param>
+            <param name="ViewportSize">The viewport dimensions.</param>
+            <param name="AddonPosition">The source addon position.</param>
+            <param name="AddonSize">The source addon dimensions.</param>
+            <param name="PreviousWindowSize">The window dimensions from the prior render.</param>
+            <param name="MeasuredTextSize">The measured body text dimensions.</param>
+            <param name="MeasuredTitleSize">The measured title dimensions.</param>
+            <param name="HorizontalPadding">The total horizontal window padding.</param>
+            <param name="WindowConfig">The surface-specific window configuration.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.#ctor(System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Single,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
+            <summary>
+            Describes the ImGui-independent inputs required to place one overlay.
+            </summary>
+            <param name="ViewportPosition">The upper-left viewport position.</param>
+            <param name="ViewportSize">The viewport dimensions.</param>
+            <param name="AddonPosition">The source addon position.</param>
+            <param name="AddonSize">The source addon dimensions.</param>
+            <param name="PreviousWindowSize">The window dimensions from the prior render.</param>
+            <param name="MeasuredTextSize">The measured body text dimensions.</param>
+            <param name="MeasuredTitleSize">The measured title dimensions.</param>
+            <param name="HorizontalPadding">The total horizontal window padding.</param>
+            <param name="WindowConfig">The surface-specific window configuration.</param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.ViewportPosition">
+            <summary>The upper-left viewport position.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.ViewportSize">
+            <summary>The viewport dimensions.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.AddonPosition">
+            <summary>The source addon position.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.AddonSize">
+            <summary>The source addon dimensions.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.PreviousWindowSize">
+            <summary>The window dimensions from the prior render.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.MeasuredTextSize">
+            <summary>The measured body text dimensions.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.MeasuredTitleSize">
+            <summary>The measured title dimensions.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.HorizontalPadding">
+            <summary>The total horizontal window padding.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest.WindowConfig">
+            <summary>The surface-specific window configuration.</summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutResult">
+            <summary>
+            Reports the requested ImGui geometry for one overlay render pass.
+            </summary>
+            <param name="RequestedPosition">The clamped upper-left window position.</param>
+            <param name="RequestedSize">The requested window dimensions.</param>
+            <param name="ContentWrapWidth">The available width for wrapped content.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutResult.#ctor(System.Numerics.Vector2,System.Numerics.Vector2,System.Single)">
+            <summary>
+            Reports the requested ImGui geometry for one overlay render pass.
+            </summary>
+            <param name="RequestedPosition">The clamped upper-left window position.</param>
+            <param name="RequestedSize">The requested window dimensions.</param>
+            <param name="ContentWrapWidth">The available width for wrapped content.</param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutResult.RequestedPosition">
+            <summary>The clamped upper-left window position.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutResult.RequestedSize">
+            <summary>The requested window dimensions.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutResult.ContentWrapWidth">
+            <summary>The available width for wrapped content.</summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutCalculator">
+            <summary>
+            Calculates translation overlay geometry without reading active ImGui state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutCalculator.Calculate(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayLayoutRequest)">
+            <summary>
+            Calculates the requested position, width constraints, and content wrap
+            width for one overlay render pass.
+            </summary>
+            <param name="request">The geometry and measured-content inputs.</param>
+            <returns>The calculated overlay geometry.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer">
+            <summary>
+            Renders translation overlays through the active ImGui runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.#ctor(Echoglossian.Config,Echoglossian.PluginUI.Runtime.IUiFontRuntime,Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer"/> class.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <param name="fontRuntime">The runtime font stack provider.</param>
+            <param name="rtlTexturePresentationService">The raster-text backend.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.Draw(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest)">
+            <summary>
+            Draws one visible translation overlay.
+            </summary>
+            <param name="request">The overlay render request.</param>
+            <returns>The actual rendered bounds and presentation backend.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.Draw(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,System.String)">
+            <summary>
+            Draws one visible translation overlay with an optional runtime title.
+            </summary>
+            <param name="request">The overlay render request.</param>
+            <param name="customTitle">The caller-provided title, if any.</param>
+            <returns>The actual rendered bounds and presentation backend.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ShouldUseInlineRtlTitle(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.Boolean,System.String,System.Boolean)">
+            <summary>
+            Gets whether the renderer should replace the normal title bar with an
+            inline RTL title block.
+            </summary>
+            <param name="backendKind">The selected presentation backend.</param>
+            <param name="forceShowTitle">Whether the surface requires a visible title.</param>
+            <param name="resolvedTitle">The resolved window title.</param>
+            <param name="hasTitleBlock">Whether the RTL title texture is ready.</param>
+            <returns><see langword="true"/> when the inline RTL title path is ready.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.BuildWindowLabel(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.String,System.String,System.Int32,System.Boolean)">
+            <summary>
+            Builds the ImGui window label while preserving stable overlay identity.
+            </summary>
+            <param name="backendKind">The selected presentation backend.</param>
+            <param name="defaultTitle">The default surface title.</param>
+            <param name="resolvedTitle">The resolved surface or speaker title.</param>
+            <param name="overlayId">The stable overlay identity suffix.</param>
+            <param name="useInlineRtlTitle">Whether the title is rendered inline.</param>
+            <returns>The ImGui window label.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.Dispose">
+            <summary>
+            Disposes the renderer without disposing externally owned text and font runtimes.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.MeasureOverlayTextSize(System.String,System.String[],System.Boolean,System.Single)">
+            <summary>
+            Measures plain ImGui text using the same font and scale used for drawing.
+            </summary>
+            <param name="text">The complete text value.</param>
+            <param name="lines">The logical lines in the text.</param>
+            <param name="shouldUseGeneralFont">Whether to use the general font.</param>
+            <param name="fontScale">The effective font scale.</param>
+            <returns>The measured text dimensions.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ResolveMeasurementWrapWidth(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Single,System.Single)">
+            <summary>
+            Preserves the legacy maximum-width measurement path for expanding and
+            auto-sized overlays.
+            </summary>
+            <param name="request">The current render request.</param>
+            <param name="config">The overlay configuration.</param>
+            <param name="horizontalPadding">The total horizontal window padding.</param>
+            <param name="finalWrapWidth">The final calculated content wrap width.</param>
+            <returns>The width available while measuring or rasterizing text.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ShouldUseGeneralOverlayFont(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
+            <summary>
+            Determines whether the surface displays original text in swap mode.
+            </summary>
+            <param name="config">The overlay configuration being drawn.</param>
+            <returns><see langword="true" /> when the general font is required.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.SplitOverlayTextLines(System.String)">
+            <summary>
+            Splits overlay text while retaining empty lines as spacing markers.
+            </summary>
+            <param name="text">The text to split.</param>
+            <returns>The individual text lines.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.DrawOverlayLine(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Draws one plain ImGui text line with optional horizontal alignment.
+            </summary>
+            <param name="line">The text line to draw.</param>
+            <param name="centerAligned">Whether to center the line.</param>
+            <param name="rightAligned">Whether to right-align the line.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.DrawRenderedTextBlock(Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock,System.Boolean)">
+            <summary>
+            Draws a texture-backed text block with its requested horizontal alignment.
+            </summary>
+            <param name="block">The texture-backed text block to draw.</param>
+            <param name="centerAligned">Whether to center a non-RTL block.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ShouldCenterOverlayText(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
+            <summary>
+            Determines whether a surface centers its displayed text.
+            </summary>
+            <param name="surfaceId">The overlay surface identifier.</param>
+            <returns><see langword="true" /> when text is centered.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.GetEffectiveOverlayFontScale(System.Single)">
+            <summary>
+            Normalizes configured font scales to the supported render range.
+            </summary>
+            <param name="configuredFontScale">The configured scale.</param>
+            <returns>The effective positive font scale.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.NotDrawn(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind)">
+            <summary>
+            Creates a result for a skipped render pass.
+            </summary>
+            <param name="presentationMode">The resolved or default presentation mode.</param>
+            <returns>A not-drawn result.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest">
+            <summary>
+            Describes one translation overlay render pass.
+            </summary>
+            <param name="Overlay">The visible overlay state.</param>
+            <param name="WindowConfig">The surface-specific window configuration.</param>
+            <param name="ViewportPosition">The upper-left viewport position.</param>
+            <param name="ViewportSize">The viewport dimensions.</param>
+            <param name="AddonPosition">The source addon position.</param>
+            <param name="AddonSize">The source addon dimensions.</param>
+            <param name="IsPreview">Whether the request comes from the standalone previewer.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.#ctor(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean)">
+            <summary>
+            Describes one translation overlay render pass.
+            </summary>
+            <param name="Overlay">The visible overlay state.</param>
+            <param name="WindowConfig">The surface-specific window configuration.</param>
+            <param name="ViewportPosition">The upper-left viewport position.</param>
+            <param name="ViewportSize">The viewport dimensions.</param>
+            <param name="AddonPosition">The source addon position.</param>
+            <param name="AddonSize">The source addon dimensions.</param>
+            <param name="IsPreview">Whether the request comes from the standalone previewer.</param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.Overlay">
+            <summary>The visible overlay state.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.WindowConfig">
+            <summary>The surface-specific window configuration.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.ViewportPosition">
+            <summary>The upper-left viewport position.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.ViewportSize">
+            <summary>The viewport dimensions.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.AddonPosition">
+            <summary>The source addon position.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.AddonSize">
+            <summary>The source addon dimensions.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.IsPreview">
+            <summary>Whether the request comes from the standalone previewer.</summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult">
+            <summary>
+            Reports the exact bounds and text backend used by a render pass.
+            </summary>
+            <param name="WasDrawn">Whether a window was rendered.</param>
+            <param name="Position">The rendered window position.</param>
+            <param name="Size">The rendered window size.</param>
+            <param name="PresentationMode">The text backend used for the render.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult.#ctor(System.Boolean,System.Numerics.Vector2,System.Numerics.Vector2,Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind)">
+            <summary>
+            Reports the exact bounds and text backend used by a render pass.
+            </summary>
+            <param name="WasDrawn">Whether a window was rendered.</param>
+            <param name="Position">The rendered window position.</param>
+            <param name="Size">The rendered window size.</param>
+            <param name="PresentationMode">The text backend used for the render.</param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult.WasDrawn">
+            <summary>Whether a window was rendered.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult.Position">
+            <summary>The rendered window position.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult.Size">
+            <summary>The rendered window size.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult.PresentationMode">
+            <summary>The text backend used for the render.</summary>
+        </member>
         <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId">
             <summary>
                 Identifies one overlay surface using a stable internal key that does not
@@ -31441,6 +31755,17 @@
         </member>
         <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.ItemDetail">
             <summary>ItemDetail overlay.</summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.ForSurface(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
+            <summary>
+            Resolves the existing configuration factory for the specified overlay surface.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="surfaceId">The overlay surface to configure.</param>
+            <returns>The surface-specific window configuration.</returns>
+            <exception cref="T:System.NotSupportedException">
+            The requested surface is currently rendered through the tooltip path.
+            </exception>
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTalk(Echoglossian.Config)">
             <summary>

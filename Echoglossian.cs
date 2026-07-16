@@ -6,6 +6,7 @@
 using Echoglossian.Cache;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.PluginUI.Runtime;
 
 namespace Echoglossian;
 
@@ -125,6 +126,8 @@ public partial class Echoglossian : IDalamudPlugin
   private QueuedTranslationBroker queuedTranslationBroker;
   private readonly HoverTooltipManager hoverTooltipManager;
   private readonly RtlTexturePresentationService rtlTexturePresentationService;
+  private readonly TranslationOverlayRenderer translationOverlayRenderer;
+  private readonly DalamudUiFontRuntime uiFontRuntime;
 
   private readonly IDalamudTextureWrap pixImage;
   private readonly IDalamudTextureWrap cryptoImage;
@@ -254,16 +257,13 @@ public partial class Echoglossian : IDalamudPlugin
             "NotoSerifTibetan-Regular.ttf",
         ];
 
-    ComplementaryFont3FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-3.ttf";
-    ComplementaryFont4FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-4.ttf";
-    ComplementaryFont5FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-5.ttf";
-    ComplementaryFont6FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-6.ttf";
-    ComplementaryFont7FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-7.ttf";
+    var complementaryFontPaths = UiFontFileNames.ResolveComplementaryPaths(
+        PluginInterface.AssemblyLocation.DirectoryName!);
+    ComplementaryFont3FilePath = complementaryFontPaths[0];
+    ComplementaryFont4FilePath = complementaryFontPaths[1];
+    ComplementaryFont5FilePath = complementaryFontPaths[2];
+    ComplementaryFont6FilePath = complementaryFontPaths[3];
+    ComplementaryFont7FilePath = complementaryFontPaths[4];
 
     this.configuration.PluginVersion =
         ResolvePluginVersion() ?? this.configuration.PluginVersion;
@@ -346,6 +346,11 @@ public partial class Echoglossian : IDalamudPlugin
     this.rtlTexturePresentationService = new RtlTexturePresentationService(
         this.configuration,
         TextureProvider);
+    this.uiFontRuntime = new DalamudUiFontRuntime(UINewFontHandler);
+    this.translationOverlayRenderer = new TranslationOverlayRenderer(
+        this.configuration,
+        this.uiFontRuntime,
+        this.rtlTexturePresentationService);
 
     this.RebuildTranslationServiceSafely();
 
@@ -551,6 +556,8 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterToastGuiSupportedToastRuntime();
       this.UnregisterToastGuiCaptureRuntime();
       this.queuedTranslationBroker.Dispose();
+      this.translationOverlayRenderer.Dispose();
+      this.uiFontRuntime.Dispose();
       this.rtlTexturePresentationService.Dispose();
 
       PluginInterface.UiBuilder.OpenMainUi -= this.ConfigWindow;

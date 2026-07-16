@@ -355,6 +355,12 @@
     <None Remove="Echoglossian.Docs\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Echoglossian.Previewer\**;Echoglossian.Previewer.Tests\**" />
+    <EmbeddedResource Remove="Echoglossian.Previewer\**;Echoglossian.Previewer.Tests\**" />
+    <None Remove="Echoglossian.Previewer\**;Echoglossian.Previewer.Tests\**" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
@@ -362,6 +368,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Echoglossian.Tests" />
+    <InternalsVisibleTo Include="Echoglossian.Previewer" />
+    <InternalsVisibleTo Include="Echoglossian.Previewer.Tests" />
   </ItemGroup>
 
 </Project>
