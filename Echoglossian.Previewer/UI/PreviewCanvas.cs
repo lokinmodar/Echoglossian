@@ -129,22 +129,130 @@ internal sealed class PreviewCanvas : IDisposable
     /// <param name="state">The current preview shell state.</param>
     private void UpdateOverlay(PreviewShellState state)
     {
-        this.overlay.Display = state.Visible;
-        if (!string.Equals(this.lastBodyText, state.BodyText, StringComparison.Ordinal))
+        (this.lastBodyText, this.lastTitle) = ApplyOverlayState(
+            this.overlay,
+            state,
+            this.lastBodyText,
+            this.lastTitle);
+    }
+
+    /// <summary>
+    /// Applies preview shell state to a persistent overlay while honoring the
+    /// runtime overlay synchronization contract.
+    /// </summary>
+    /// <param name="overlay">The persistent overlay state to update.</param>
+    /// <param name="state">The current preview shell state.</param>
+    /// <param name="lastBodyText">The previously applied body text.</param>
+    /// <param name="lastTitle">The previously applied title text.</param>
+    /// <returns>The last applied body and title strings.</returns>
+    internal static (string LastBodyText, string LastTitle) ApplyOverlayState(
+        TranslationOverlay overlay,
+        PreviewShellState state,
+        string lastBodyText,
+        string lastTitle)
+    {
+        ArgumentNullException.ThrowIfNull(overlay);
+        ArgumentNullException.ThrowIfNull(state);
+
+        if (overlay.IsDisposed)
         {
-            this.overlay.CurrentTextId++;
-            this.lastBodyText = state.BodyText;
+            return (lastBodyText, lastTitle);
         }
 
-        if (!string.Equals(this.lastTitle, state.Title, StringComparison.Ordinal))
+        if (!TryEnterOverlaySemaphore(overlay.NameSemaphore))
         {
-            this.overlay.CurrentNameId++;
-            this.lastTitle = state.Title;
+            return (lastBodyText, lastTitle);
         }
 
-        this.overlay.CurrentText = state.BodyText;
-        this.overlay.CurrentName = state.Title;
-        this.overlay.OriginalName = state.Title;
+        try
+        {
+            if (overlay.IsDisposed)
+            {
+                return (lastBodyText, lastTitle);
+            }
+
+            if (!string.Equals(lastTitle, state.Title, StringComparison.Ordinal))
+            {
+                overlay.CurrentNameId++;
+                lastTitle = state.Title;
+            }
+
+            overlay.CurrentName = state.Title;
+            overlay.OriginalName = state.Title;
+        }
+        finally
+        {
+            TryReleaseOverlaySemaphore(overlay.NameSemaphore);
+        }
+
+        if (!TryEnterOverlaySemaphore(overlay.Semaphore))
+        {
+            return (lastBodyText, lastTitle);
+        }
+
+        try
+        {
+            if (overlay.IsDisposed)
+            {
+                return (lastBodyText, lastTitle);
+            }
+
+            overlay.Display = state.Visible;
+            if (!string.Equals(lastBodyText, state.BodyText, StringComparison.Ordinal))
+            {
+                overlay.CurrentTextId++;
+                lastBodyText = state.BodyText;
+            }
+
+            overlay.CurrentText = state.BodyText;
+        }
+        finally
+        {
+            TryReleaseOverlaySemaphore(overlay.Semaphore);
+        }
+
+        return (lastBodyText, lastTitle);
+    }
+
+    /// <summary>
+    /// Attempts to enter an overlay semaphore without surfacing disposal races
+    /// during preview shutdown.
+    /// </summary>
+    /// <param name="semaphore">The semaphore to enter.</param>
+    /// <returns>
+    /// <see langword="true" /> when the semaphore was entered successfully;
+    /// otherwise, <see langword="false" />.
+    /// </returns>
+    private static bool TryEnterOverlaySemaphore(SemaphoreSlim semaphore)
+    {
+        try
+        {
+            semaphore.Wait();
+            return true;
+        }
+        catch (ObjectDisposedException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Releases an overlay semaphore without surfacing disposal races during
+    /// preview shutdown.
+    /// </summary>
+    /// <param name="semaphore">The semaphore to release.</param>
+    private static void TryReleaseOverlaySemaphore(SemaphoreSlim semaphore)
+    {
+        try
+        {
+            semaphore.Release();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        catch (SemaphoreFullException)
+        {
+        }
     }
 
     private static void DrawAddonGuide(

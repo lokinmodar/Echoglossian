@@ -71,7 +71,7 @@ internal sealed class BatchScreenshotRunner
         }
 
         var manifest = new ScreenshotManifest(
-            this.sourceConfiguration.SourcePath,
+            GetManifestConfigSourceLabel(this.sourceConfiguration),
             this.fontSelection.FontPaths.Select(Path.GetFileName).ToArray()!,
             this.fontSelection.FontSize,
             entries);
@@ -81,6 +81,26 @@ internal sealed class BatchScreenshotRunner
             JsonSerializer.Serialize(
                 manifest,
                 new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    /// <summary>
+    /// Resolves the manifest-safe configuration source label without exposing
+    /// local profile or directory information.
+    /// </summary>
+    /// <param name="sourceConfiguration">The loaded preview configuration.</param>
+    /// <returns>A redacted configuration source label.</returns>
+    internal static string GetManifestConfigSourceLabel(
+        PreviewConfiguration sourceConfiguration)
+    {
+        ArgumentNullException.ThrowIfNull(sourceConfiguration);
+
+        if (!sourceConfiguration.Loaded)
+        {
+            return "defaults";
+        }
+
+        var fileName = Path.GetFileName(sourceConfiguration.SourcePath);
+        return string.IsNullOrWhiteSpace(fileName) ? "config" : fileName;
     }
 
     private CapturedScreenshot Capture(ScreenshotRequest request)

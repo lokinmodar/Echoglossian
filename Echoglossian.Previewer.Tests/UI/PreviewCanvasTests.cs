@@ -4,8 +4,10 @@
 // </copyright>
 
 using Echoglossian.Previewer.UI;
+using Echoglossian.UIOverlays.TranslationOverlay;
 
 using System.Numerics;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -55,5 +57,87 @@ public sealed class PreviewCanvasTests
                 availableHeight: 700f,
                 logicalWidth,
                 logicalHeight));
+    }
+
+    /// <summary>
+    /// Ensures preview title updates respect the shared name semaphore contract.
+    /// </summary>
+    [Fact]
+    public async Task ApplyOverlayState_WaitsForNameSemaphoreBeforeUpdatingTitle()
+    {
+        using var overlay = new TranslationOverlay();
+        var state = new PreviewShellState
+        {
+            Visible = true,
+            Title = "Duty Finder",
+            BodyText = "Preview body",
+        };
+        (string LastBodyText, string LastTitle)? updateResult = null;
+
+        await overlay.NameSemaphore.WaitAsync();
+        var updateTask = Task.Run(
+            () => updateResult = PreviewCanvas.ApplyOverlayState(
+                overlay,
+                state,
+                string.Empty,
+                string.Empty));
+        try
+        {
+            await Task.Delay(100);
+            Assert.False(updateTask.IsCompleted);
+            Assert.Equal(string.Empty, overlay.CurrentName);
+            Assert.Equal(string.Empty, overlay.OriginalName);
+        }
+        finally
+        {
+            overlay.NameSemaphore.Release();
+        }
+
+        await updateTask.WaitAsync(TimeSpan.FromSeconds(1));
+        Assert.Equal("Duty Finder", overlay.CurrentName);
+        Assert.Equal("Duty Finder", overlay.OriginalName);
+        Assert.Equal("Preview body", overlay.CurrentText);
+        Assert.Equal(("Preview body", "Duty Finder"), updateResult);
+    }
+
+    /// <summary>
+    /// Ensures preview body updates respect the shared text semaphore contract.
+    /// </summary>
+    [Fact]
+    public async Task ApplyOverlayState_WaitsForTextSemaphoreBeforeUpdatingBody()
+    {
+        using var overlay = new TranslationOverlay();
+        var state = new PreviewShellState
+        {
+            Visible = true,
+            Title = "Quest Tracker",
+            BodyText = "Translated objective",
+        };
+        (string LastBodyText, string LastTitle)? updateResult = null;
+
+        await overlay.Semaphore.WaitAsync();
+        var updateTask = Task.Run(
+            () => updateResult = PreviewCanvas.ApplyOverlayState(
+                overlay,
+                state,
+                string.Empty,
+                string.Empty));
+        try
+        {
+            await Task.Delay(100);
+            Assert.False(updateTask.IsCompleted);
+            Assert.Equal("Quest Tracker", overlay.CurrentName);
+            Assert.Equal("Quest Tracker", overlay.OriginalName);
+            Assert.Equal(string.Empty, overlay.CurrentText);
+        }
+        finally
+        {
+            overlay.Semaphore.Release();
+        }
+
+        await updateTask.WaitAsync(TimeSpan.FromSeconds(1));
+        Assert.Equal("Translated objective", overlay.CurrentText);
+        Assert.True(overlay.Display);
+        Assert.Equal(("Translated objective", "Quest Tracker"), updateResult);
     }
 }
