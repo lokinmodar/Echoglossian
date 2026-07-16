@@ -348,8 +348,11 @@
 
   <ItemGroup>
     <Compile Remove="Echoglossian.Tests\**" />
+    <Compile Remove="Echoglossian.Docs\**" />
     <EmbeddedResource Remove="Echoglossian.Tests\**" />
+    <EmbeddedResource Remove="Echoglossian.Docs\**" />
     <None Remove="Echoglossian.Tests\**" />
+    <None Remove="Echoglossian.Docs\**" />
   </ItemGroup>
 
   <ItemGroup>

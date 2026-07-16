@@ -1,0 +1,35 @@
+---
+title: Capture, Translation, and Presentation Pipeline
+description: How supported surfaces move from source text capture to translated output.
+---
+
+Every supported surface follows the same broad sequence even when the exact hooks differ.
+
+1. Capture source text from a supported surface.
+2. Resolve translation reuse and persistence scope.
+3. Translate through the shared engine-selection and translator pipeline.
+4. Publish the result through overlay, native, or swap presentation.
+
+## Stage Boundaries
+
+### Capture
+
+Source text may come from:
+
+- `AtkValue` payloads before refresh
+- visible addon text nodes
+- callback payloads such as quest toast `SeString`
+
+### Translation
+
+`TranslationService` coordinates the shared translation flow. Concrete translators stay engine-specific and should only own provider-specific request and response handling.
+
+### Presentation
+
+- Overlay mode renders translated text outside the native UI.
+- Native mode may write translated text into supported nodes or payloads.
+- Swap mode keeps translated native text and uses the overlay for the original text.
+
+### Persistence and Reuse
+
+Dialogue and toast entities use persisted history plus in-memory suppression to avoid repeated work. A late completion must not overwrite newer visible state after its captured scope has become stale.

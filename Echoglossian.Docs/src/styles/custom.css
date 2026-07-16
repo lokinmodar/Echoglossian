@@ -1,0 +1,33 @@
+:root {
+  --sl-color-accent-low: #102725;
+  --sl-color-accent: #2f7f78;
+  --sl-color-accent-high: #d7f4ef;
+  --sl-color-white: #f6f1e8;
+  --sl-color-gray-1: #ebe4d9;
+  --sl-color-gray-2: #d6ccbc;
+  --sl-color-gray-3: #b8ac98;
+  --sl-color-gray-4: #8f826f;
+  --sl-color-gray-5: #5c5347;
+  --sl-color-gray-6: #3b372f;
+  --sl-color-black: #171612;
+  --sl-font: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgb(47 127 120 / 0.2), transparent 30%),
+    radial-gradient(circle at top right, rgb(186 116 54 / 0.18), transparent 32%),
+    linear-gradient(180deg, #1f1c17 0%, #171612 100%);
+}
+
+.hero {
+  border-bottom: 1px solid rgb(246 241 232 / 0.12);
+}
+
+.hero .tagline {
+  max-width: 48rem;
+}
+
+.card {
+  border-color: rgb(246 241 232 / 0.12);
+}

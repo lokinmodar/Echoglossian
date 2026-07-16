@@ -1,0 +1,26 @@
+---
+title: Architecture Overview
+description: Current high-level runtime boundaries for capture, translation, overlays, native mutation, and persistence.
+---
+
+The current plugin architecture keeps capture, translation, overlay rendering, native mutation, and persistence as separate concerns.
+
+## Primary Runtime Areas
+
+- `NativeUI/AddonHandlers/...` for addon-specific capture and presentation behavior
+- `NativeUI/Handlers/...` for shared native helpers and runtime coordination
+- `UIOverlays/TranslationOverlay/...` for overlay state and rendering
+- `Translators/TranslationService` for shared translation flow
+- `LanguagesHandling/...` for language metadata and engine availability
+- `DBHelpers/...` and EF-backed message entities for persisted translation history
+
+## Architectural Rules
+
+- New work should reuse the shared translation pipeline rather than creating a parallel queue.
+- Overlay-only mode must leave the native game UI read-only.
+- Native and swap modes may mutate native UI only on surfaces that explicitly support it.
+- The database remains the source of truth. In-memory caches are there to suppress repeated work, not redefine persistence semantics.
+
+## Documentation Boundary
+
+This public site describes the architecture at a contributor level. It does not publish internal handoffs or issue-specific scratch notes from the repository `docs/` tree.
