@@ -52,6 +52,9 @@ jobs:
       - name: Validate locale mapping
         run: npm run test:locales
 
+      - name: Validate internal doc links
+        run: npm run test:links
+
       - name: Check locale configuration
         run: npm run check:locales
 

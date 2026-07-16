@@ -11,6 +11,7 @@
     "check": "astro check",
     "build": "astro build",
     "preview": "astro preview",
+    "test:links": "node --test ./scripts/check-base-links.test.mjs",
     "test:locales": "node --test ./scripts/check-locales.test.mjs",
     "check:locales": "node ./scripts/check-locales.mjs"
   },
