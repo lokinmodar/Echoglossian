@@ -277,7 +277,7 @@ internal sealed class BatchScreenshotRunner
     }
 
     private sealed record ScreenshotManifest(
-        string ConfigSourcePath,
+        string ConfigSourceLabel,
         IReadOnlyList<string?> FontFileNames,
         int FontSize,
         IReadOnlyList<ScreenshotManifestEntry> Entries);

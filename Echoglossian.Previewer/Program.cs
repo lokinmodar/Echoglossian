@@ -286,8 +286,35 @@ internal static class Program
     internal static LanguageInfo ResolvePreviewLanguage(int languageId)
     {
         var languages = Echoglossian.CreateLanguagesDictionary();
-        return languages.TryGetValue(languageId, out var language)
-            ? language
-            : languages[28];
+        return ResolvePreviewLanguage(languages, languageId);
+    }
+
+    internal static LanguageInfo ResolvePreviewLanguage(
+        IReadOnlyDictionary<int, LanguageInfo> languages,
+        int languageId)
+    {
+        ArgumentNullException.ThrowIfNull(languages);
+        if (languages.TryGetValue(languageId, out var language))
+        {
+            return language;
+        }
+
+        if (languages.TryGetValue(28, out var englishLanguage))
+        {
+            return englishLanguage;
+        }
+
+        KeyValuePair<int, LanguageInfo>? fallbackLanguage = null;
+        foreach (var candidate in languages)
+        {
+            if (fallbackLanguage == null ||
+                candidate.Key < fallbackLanguage.Value.Key)
+            {
+                fallbackLanguage = candidate;
+            }
+        }
+
+        return fallbackLanguage?.Value ?? throw new InvalidOperationException(
+            "Preview language dictionary is empty.");
     }
 }

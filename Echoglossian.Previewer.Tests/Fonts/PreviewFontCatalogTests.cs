@@ -143,6 +143,25 @@ public sealed class PreviewFontCatalogTests
     }
 
     /// <summary>
+    /// Ensures preview language resolution falls back safely even if the
+    /// historical English key is missing from the dictionary.
+    /// </summary>
+    [Fact]
+    public void ResolvePreviewLanguage_MissingConfiguredIdAndEnglish_FallsBackToLowestKey()
+    {
+        var languages = new Dictionary<int, LanguageInfo>
+        {
+            [99] = new LanguageInfo("zz", "Zulu Test", "z.ttf", string.Empty, []),
+            [7] = new LanguageInfo("aa", "A Test", "a.ttf", string.Empty, []),
+        };
+
+        var language = Program.ResolvePreviewLanguage(languages, languageId: 12345);
+
+        Assert.Equal("aa", language.Code);
+        Assert.Equal("a.ttf", language.FontName);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The absolute repository root path.</returns>

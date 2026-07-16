@@ -85,6 +85,28 @@ public sealed class BatchScreenshotRunnerTests
         Assert.DoesNotContain(@"\", label, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Ensures the manifest record name reflects that config source values are
+    /// redacted labels rather than absolute paths.
+    /// </summary>
+    [Fact]
+    public void ScreenshotManifest_RecordUsesConfigSourceLabelName()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "Echoglossian.Previewer",
+            "Screenshots",
+            "BatchScreenshotRunner.cs"));
+
+        Assert.Contains("string ConfigSourceLabel", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("string ConfigSourcePath", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Gets the repository root discovered from the test output directory.
+    /// </summary>
+    private string RepositoryRoot => FindRepositoryRoot();
+
     private static ScreenshotRequest CreateRequest(string outputDirectory)
     {
         return new ScreenshotRequest(
@@ -100,5 +122,28 @@ public sealed class BatchScreenshotRunnerTests
                 ShowsSimulatedAddonBounds: false),
             new PreviewViewportPreset("1080p", 1920, 1080),
             outputDirectory);
+    }
+
+    /// <summary>
+    /// Finds the repository root by walking upward from the test output
+    /// directory until the solution file is found.
+    /// </summary>
+    /// <returns>The absolute repository-root path.</returns>
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory != null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Echoglossian.sln")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            "Could not locate the Echoglossian repository root.");
     }
 }
