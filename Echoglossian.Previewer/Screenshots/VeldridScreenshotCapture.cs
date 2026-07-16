@@ -18,6 +18,8 @@ namespace Echoglossian.Previewer.Screenshots;
 /// </summary>
 internal static class VeldridScreenshotCapture
 {
+    private sealed record ReadbackFormatInfo(int BytesPerPixel, bool IsBgra);
+
     /// <summary>
     /// Calculates a clamped selected-surface crop in physical framebuffer pixels.
     /// </summary>
@@ -100,6 +102,7 @@ internal static class VeldridScreenshotCapture
             throw new InvalidOperationException("The requested screenshot crop is empty.");
         }
 
+        var readbackFormat = ResolveReadbackFormat(source.Format);
         using var staging = graphicsDevice.ResourceFactory.CreateTexture(
             TextureDescription.Texture2D(
                 source.Width,
@@ -118,7 +121,7 @@ internal static class VeldridScreenshotCapture
         var mapped = graphicsDevice.Map(staging, MapMode.Read);
         try
         {
-            var pixels = ReadPixels(mapped, source.Format, targetCrop);
+            var pixels = ReadPixels(mapped, readbackFormat, targetCrop);
             WritePng(path, targetCrop.Width, targetCrop.Height, pixels);
         }
         finally
@@ -127,9 +130,23 @@ internal static class VeldridScreenshotCapture
         }
     }
 
+    /// <summary>
+    /// Gets whether the screenshot path supports direct readback for the
+    /// provided texture format.
+    /// </summary>
+    /// <param name="format">The source texture format.</param>
+    /// <returns><see langword="true"/> when the format is supported.</returns>
+    internal static bool SupportsReadbackFormat(Veldrid.PixelFormat format)
+    {
+        return format is Veldrid.PixelFormat.R8_G8_B8_A8_UNorm
+            or Veldrid.PixelFormat.R8_G8_B8_A8_UNorm_SRgb
+            or Veldrid.PixelFormat.B8_G8_R8_A8_UNorm
+            or Veldrid.PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
+    }
+
     private static unsafe byte[] ReadPixels(
         MappedResource mapped,
-        Veldrid.PixelFormat format,
+        ReadbackFormatInfo format,
         DrawingRectangle crop)
     {
         var pixels = new byte[checked(crop.Width * crop.Height * 4)];
@@ -138,12 +155,12 @@ internal static class VeldridScreenshotCapture
         var destinationOffset = 0;
         for (var y = 0; y < crop.Height; y++)
         {
-            var sourceRow = sourceBase + ((crop.Y + y) * rowPitch) + (crop.X * 4);
+            var sourceRow = sourceBase + ((crop.Y + y) * rowPitch) +
+                (crop.X * format.BytesPerPixel);
             for (var x = 0; x < crop.Width; x++)
             {
-                var sourceOffset = x * 4;
-                if (format is Veldrid.PixelFormat.B8_G8_R8_A8_UNorm or
-                    Veldrid.PixelFormat.B8_G8_R8_A8_UNorm_SRgb)
+                var sourceOffset = x * format.BytesPerPixel;
+                if (format.IsBgra)
                 {
                     pixels[destinationOffset++] = sourceRow[sourceOffset + 2];
                     pixels[destinationOffset++] = sourceRow[sourceOffset + 1];
@@ -161,6 +178,19 @@ internal static class VeldridScreenshotCapture
         }
 
         return pixels;
+    }
+
+    private static ReadbackFormatInfo ResolveReadbackFormat(Veldrid.PixelFormat format)
+    {
+        return format switch
+        {
+            Veldrid.PixelFormat.R8_G8_B8_A8_UNorm => new ReadbackFormatInfo(4, false),
+            Veldrid.PixelFormat.R8_G8_B8_A8_UNorm_SRgb => new ReadbackFormatInfo(4, false),
+            Veldrid.PixelFormat.B8_G8_R8_A8_UNorm => new ReadbackFormatInfo(4, true),
+            Veldrid.PixelFormat.B8_G8_R8_A8_UNorm_SRgb => new ReadbackFormatInfo(4, true),
+            _ => throw new InvalidOperationException(
+                $"Unsupported screenshot readback format: {format}."),
+        };
     }
 
     private static unsafe void WritePng(

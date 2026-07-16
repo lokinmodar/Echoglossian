@@ -10,6 +10,8 @@ using Echoglossian.UIOverlays.TranslationOverlay;
 using System.Drawing;
 using System.Numerics;
 
+using VeldridPixelFormat = Veldrid.PixelFormat;
+
 using Xunit;
 
 namespace Echoglossian.Previewer.Tests.Screenshots;
@@ -83,5 +85,22 @@ public sealed class ScreenshotCropTests
             framebufferScale: 1.5f);
 
         Assert.Equal(new Rectangle(3, 18, 174, 99), crop);
+    }
+
+    /// <summary>
+    /// Ensures screenshot readback accepts only the supported 32-bit formats.
+    /// </summary>
+    [Theory]
+    [InlineData(VeldridPixelFormat.R8_G8_B8_A8_UNorm, true)]
+    [InlineData(VeldridPixelFormat.R8_G8_B8_A8_UNorm_SRgb, true)]
+    [InlineData(VeldridPixelFormat.B8_G8_R8_A8_UNorm, true)]
+    [InlineData(VeldridPixelFormat.B8_G8_R8_A8_UNorm_SRgb, true)]
+    [InlineData(VeldridPixelFormat.R16_G16_B16_A16_Float, false)]
+    [InlineData(VeldridPixelFormat.R10_G10_B10_A2_UNorm, false)]
+    public void SupportsReadbackFormat_RecognizesSupportedFormats(
+        VeldridPixelFormat format,
+        bool expected)
+    {
+        Assert.Equal(expected, VeldridScreenshotCapture.SupportsReadbackFormat(format));
     }
 }
