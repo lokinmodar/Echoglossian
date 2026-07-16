@@ -6,6 +6,9 @@
 using Dalamud.Bindings.ImGui;
 
 using Echoglossian.Previewer.Rendering;
+using Echoglossian.Previewer.Screenshots;
+
+using DrawingRectangle = System.Drawing.Rectangle;
 
 using Veldrid;
 using Veldrid.Sdl2;
@@ -82,6 +85,17 @@ internal sealed unsafe class PreviewHost : IDisposable
     /// <param name="draw">The ImGui draw callback.</param>
     internal void RunFrame(Action draw)
     {
+        this.RunFrame(draw, beforePresent: null);
+    }
+
+    /// <summary>
+    ///     Draws exactly one ImGui frame and optionally captures it before
+    ///     swapchain presentation.
+    /// </summary>
+    /// <param name="draw">The ImGui draw callback.</param>
+    /// <param name="beforePresent">An optional callback invoked before presentation.</param>
+    internal void RunFrame(Action draw, Action? beforePresent)
+    {
         ArgumentNullException.ThrowIfNull(draw);
         this.ThrowIfDisposed();
 
@@ -102,8 +116,80 @@ internal sealed unsafe class PreviewHost : IDisposable
         this.commandList.End();
 
         this.graphicsDevice.SubmitCommands(this.commandList);
+        this.graphicsDevice.WaitForIdle();
+        beforePresent?.Invoke();
         this.graphicsDevice.SwapBuffers(this.graphicsDevice.MainSwapchain);
         this.graphicsDevice.WaitForIdle();
+    }
+
+    /// <summary>
+    ///     Captures the currently rendered frame to a PNG file.
+    /// </summary>
+    /// <param name="path">The destination PNG path.</param>
+    /// <param name="crop">An optional physical pixel crop rectangle.</param>
+    internal void CapturePng(string path, DrawingRectangle? crop = null)
+    {
+        this.ThrowIfDisposed();
+        var colorTarget = this.graphicsDevice.MainSwapchain.Framebuffer.ColorTargets[0].Target;
+        VeldridScreenshotCapture.CapturePng(
+            this.graphicsDevice,
+            this.commandList,
+            colorTarget,
+            path,
+            crop);
+    }
+
+    /// <summary>
+    ///     Renders one frame into an offscreen target and captures it as PNG.
+    /// </summary>
+    /// <param name="draw">The ImGui draw callback.</param>
+    /// <param name="path">The destination PNG path.</param>
+    /// <param name="crop">An optional physical pixel crop rectangle.</param>
+    internal void CaptureFramePng(
+        Action draw,
+        string path,
+        Func<DrawingRectangle?>? cropProvider = null)
+    {
+        ArgumentNullException.ThrowIfNull(draw);
+        this.ThrowIfDisposed();
+
+        var snapshot = this.window.PumpEvents();
+        this.imGuiRenderer.Update(
+            this.GetDeltaSeconds(),
+            snapshot,
+            this.window.Width,
+            this.window.Height,
+            this.window.Focused);
+
+        draw();
+        var crop = cropProvider?.Invoke();
+
+        var outputDescription = this.graphicsDevice.MainSwapchain.Framebuffer.OutputDescription;
+        using var colorTarget = this.graphicsDevice.ResourceFactory.CreateTexture(
+            TextureDescription.Texture2D(
+                checked((uint)this.window.Width),
+                checked((uint)this.window.Height),
+                mipLevels: 1,
+                arrayLayers: 1,
+                outputDescription.ColorAttachments[0].Format,
+                TextureUsage.RenderTarget | TextureUsage.Sampled));
+        using var framebuffer = this.graphicsDevice.ResourceFactory.CreateFramebuffer(
+            new FramebufferDescription(null, colorTarget));
+
+        this.commandList.Begin();
+        this.commandList.SetFramebuffer(framebuffer);
+        this.commandList.ClearColorTarget(0, RgbaFloat.Black);
+        this.imGuiRenderer.Render(this.commandList);
+        this.commandList.End();
+
+        this.graphicsDevice.SubmitCommands(this.commandList);
+        this.graphicsDevice.WaitForIdle();
+        VeldridScreenshotCapture.CapturePng(
+            this.graphicsDevice,
+            this.commandList,
+            colorTarget,
+            path,
+            crop);
     }
 
     /// <summary>
@@ -112,12 +198,22 @@ internal sealed unsafe class PreviewHost : IDisposable
     /// <param name="draw">The ImGui draw callback.</param>
     internal void Run(Action draw)
     {
+        this.Run(draw, beforePresent: null);
+    }
+
+    /// <summary>
+    ///     Runs frames until the standalone preview window is closed.
+    /// </summary>
+    /// <param name="draw">The ImGui draw callback.</param>
+    /// <param name="beforePresent">An optional callback invoked before each frame is presented.</param>
+    internal void Run(Action draw, Action? beforePresent)
+    {
         ArgumentNullException.ThrowIfNull(draw);
         this.ThrowIfDisposed();
 
         while (this.window.Exists)
         {
-            this.RunFrame(draw);
+            this.RunFrame(draw, beforePresent);
         }
     }
 

@@ -8,6 +8,7 @@ using Dalamud.Bindings.ImGui;
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Scenarios;
+using Echoglossian.Previewer.Screenshots;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -25,6 +26,8 @@ internal sealed class PreviewShell
     private readonly PreviewFontSelection fontSelection;
     private readonly PreviewCanvas canvas;
     private readonly PreviewShellState state;
+    private ScreenshotMode? pendingScreenshotMode;
+    private string lastScreenshotPath = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
         false,
         Vector2.Zero,
@@ -91,6 +94,45 @@ internal sealed class PreviewShell
         ImGui.End();
     }
 
+    /// <summary>
+    /// Consumes a screenshot request made by the interactive controls.
+    /// </summary>
+    /// <param name="outputDirectory">The screenshot output directory.</param>
+    /// <param name="request">The consumed request.</param>
+    /// <returns><see langword="true"/> when a request was pending.</returns>
+    internal bool TryConsumeScreenshotRequest(
+        string outputDirectory,
+        out ScreenshotRequest request)
+    {
+        if (this.pendingScreenshotMode is not { } mode)
+        {
+            request = null!;
+            return false;
+        }
+
+        this.pendingScreenshotMode = null;
+        request = new ScreenshotRequest(
+            mode,
+            this.state.CreateScenarioSnapshot(),
+            this.state.Viewport,
+            outputDirectory);
+        return true;
+    }
+
+    /// <summary>
+    /// Gets the most recent overlay render result.
+    /// </summary>
+    internal TranslationOverlayRenderResult LastRenderResult => this.lastRenderResult;
+
+    /// <summary>
+    /// Records the latest interactive screenshot output path.
+    /// </summary>
+    /// <param name="path">The saved PNG path.</param>
+    internal void SetLastScreenshotPath(string path)
+    {
+        this.lastScreenshotPath = path;
+    }
+
     private void DrawControls()
     {
         ImGui.TextUnformatted("Scenario");
@@ -117,10 +159,20 @@ internal sealed class PreviewShell
 
         ImGui.Separator();
         ImGui.TextUnformatted("Screenshot actions");
-        ImGui.BeginDisabled();
-        ImGui.Button("Task 7: full screenshot");
-        ImGui.Button("Task 7: surface screenshot");
-        ImGui.EndDisabled();
+        if (ImGui.Button("Save full screenshot"))
+        {
+            this.pendingScreenshotMode = ScreenshotMode.Full;
+        }
+
+        if (ImGui.Button("Save surface screenshot"))
+        {
+            this.pendingScreenshotMode = ScreenshotMode.Surface;
+        }
+
+        if (!string.IsNullOrEmpty(this.lastScreenshotPath))
+        {
+            ImGui.TextWrapped($"Last screenshot: {this.lastScreenshotPath}");
+        }
 
         ImGui.Separator();
         this.DrawFidelitySummary();
@@ -274,5 +326,22 @@ internal sealed class PreviewShellState
         this.AddonY = scenario.AddonBounds.Y;
         this.AddonWidth = scenario.AddonBounds.Width;
         this.AddonHeight = scenario.AddonBounds.Height;
+    }
+
+    /// <summary>
+    /// Creates a scenario record from the current interactive state.
+    /// </summary>
+    /// <returns>The current scenario snapshot.</returns>
+    internal PreviewScenario CreateScenarioSnapshot()
+    {
+        return new PreviewScenario(
+            this.Key,
+            this.DisplayName,
+            this.SurfaceId,
+            this.AddonBounds,
+            this.BodyText,
+            this.Title,
+            this.Visible,
+            this.ShowSimulatedAddonBounds);
     }
 }
