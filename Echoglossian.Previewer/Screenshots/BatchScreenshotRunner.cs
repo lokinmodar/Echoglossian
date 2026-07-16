@@ -112,7 +112,7 @@ internal sealed class BatchScreenshotRunner
             this.editableConfiguration,
             fontRuntime,
             this.fontSelection);
-        var canvas = new PreviewCanvas(composition.Renderer);
+        using var canvas = new PreviewCanvas(composition.Renderer);
         var state = PreviewShellState.FromScenario(request.Scenario, request.Viewport);
         state.ShowSimulatedAddonBounds = false;
         var renderResult = new TranslationOverlayRenderResult(

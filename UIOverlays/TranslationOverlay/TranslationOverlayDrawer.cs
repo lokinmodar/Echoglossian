@@ -581,7 +581,7 @@ namespace Echoglossian
           new TranslationOverlayRenderRequest(
               overlay,
               config,
-              viewport.Pos,
+              Vector2.Zero,
               viewport.Size,
               overlay.Position,
               overlay.Dimensions,

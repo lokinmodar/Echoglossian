@@ -19,7 +19,7 @@ namespace Echoglossian.Previewer.UI;
 /// <summary>
 /// Draws the interactive previewer shell around the shared overlay renderer.
 /// </summary>
-internal sealed class PreviewShell
+internal sealed class PreviewShell : IDisposable
 {
     private readonly PreviewConfiguration sourceConfiguration;
     private readonly Config editableConfiguration;
@@ -33,6 +33,7 @@ internal sealed class PreviewShell
         Vector2.Zero,
         Vector2.Zero,
         TextPresentationBackendKind.PlainImGui);
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PreviewShell" /> class.
@@ -123,6 +124,18 @@ internal sealed class PreviewShell
     /// Gets the most recent overlay render result.
     /// </summary>
     internal TranslationOverlayRenderResult LastRenderResult => this.lastRenderResult;
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (this.disposed)
+        {
+            return;
+        }
+
+        this.canvas.Dispose();
+        this.disposed = true;
+    }
 
     /// <summary>
     /// Records the latest interactive screenshot output path.

@@ -62,11 +62,19 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             return NotDrawn();
         }
 
+        string overlayText;
+        bool shouldDraw;
         overlay.Semaphore.Wait();
-        var overlayText = overlay.CurrentText;
-        var shouldDraw = !string.IsNullOrEmpty(overlayText) &&
+        try
+        {
+            overlayText = overlay.CurrentText;
+            shouldDraw = !string.IsNullOrEmpty(overlayText) &&
                          overlayText != Resources.WaitingForTranslation;
-        overlay.Semaphore.Release();
+        }
+        finally
+        {
+            overlay.Semaphore.Release();
+        }
         if (!shouldDraw)
         {
             return NotDrawn();

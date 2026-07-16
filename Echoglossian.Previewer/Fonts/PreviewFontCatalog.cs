@@ -35,6 +35,9 @@ public static class PreviewFontCatalog
             UiFontFileNames.ResolvePath(resolvedRoot, UiFontFileNames.SymbolsFontFileName),
             UiFontFileNames.ResolvePath(resolvedRoot, UiFontFileNames.BaseFontFileName),
         };
+        var generalRasterFontPath = UiFontFileNames.ResolvePath(
+            resolvedRoot,
+            UiFontFileNames.BaseFontFileName);
 
         generalFontPaths.AddRange(
             UiFontFileNames.ResolveComplementaryPaths(resolvedRoot));
@@ -62,6 +65,7 @@ public static class PreviewFontCatalog
             selectedLanguage,
             fontSize,
             specialFontPath,
+            generalRasterFontPath,
             generalFontPaths,
             languageFontPaths);
     }
@@ -78,18 +82,21 @@ public sealed class PreviewFontSelection
     /// <param name="selectedLanguage">The selected language.</param>
     /// <param name="fontSize">The configured font size.</param>
     /// <param name="specialFontPath">The language-specific font path.</param>
+    /// <param name="generalRasterFontPath">The plugin general raster font path.</param>
     /// <param name="generalFontPaths">The plugin general font stack in merge order.</param>
     /// <param name="languageFontPaths">The plugin language font stack in merge order.</param>
     internal PreviewFontSelection(
         LanguageInfo selectedLanguage,
         int fontSize,
         string specialFontPath,
+        string generalRasterFontPath,
         IReadOnlyList<string> generalFontPaths,
         IReadOnlyList<string> languageFontPaths)
     {
         this.SelectedLanguage = selectedLanguage;
         this.FontSize = fontSize;
         this.SpecialFontPath = specialFontPath;
+        this.GeneralRasterFontPath = generalRasterFontPath;
         this.GeneralFontPaths = generalFontPaths;
         this.LanguageFontPaths = languageFontPaths;
     }
@@ -108,6 +115,11 @@ public sealed class PreviewFontSelection
     /// Gets the selected language-specific font path.
     /// </summary>
     public string SpecialFontPath { get; }
+
+    /// <summary>
+    /// Gets the plugin general font path used for rasterized original text.
+    /// </summary>
+    public string GeneralRasterFontPath { get; }
 
     /// <summary>
     /// Gets the complete plugin font stack for output validation.
@@ -140,6 +152,6 @@ public sealed class PreviewFontSelection
             return this.SpecialFontPath;
         }
 
-        return this.GeneralFontPaths.FirstOrDefault() ?? this.SpecialFontPath;
+        return this.GeneralRasterFontPath;
     }
 }

@@ -15,9 +15,13 @@ namespace Echoglossian.Previewer.UI;
 /// <summary>
 /// Draws the preview canvas and routes overlay drawing through the shared renderer.
 /// </summary>
-internal sealed class PreviewCanvas
+internal sealed class PreviewCanvas : IDisposable
 {
     private readonly TranslationOverlayRenderer renderer;
+    private readonly TranslationOverlay overlay = new();
+    private string lastBodyText = string.Empty;
+    private string lastTitle = string.Empty;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PreviewCanvas" /> class.
@@ -91,28 +95,53 @@ internal sealed class PreviewCanvas
             DrawAddonGuide(drawList, viewportPosition, layout.Scale, state);
         }
 
-        var overlay = new TranslationOverlay
+        this.UpdateOverlay(state);
+        var scaledBounds = ScaleBounds(state.AddonBounds, viewportPosition, layout.Scale);
+        var request = new TranslationOverlayRenderRequest(
+            this.overlay,
+            TranslationWindowConfig.ForSurface(configuration, state.SurfaceId),
+            viewportPosition,
+            layout.Size,
+            scaledBounds.Position,
+            scaledBounds.Size,
+            IsPreview: true);
+        return this.renderer.Draw(request, state.Title);
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (this.disposed)
         {
-            Display = state.Visible,
-            CurrentText = state.BodyText,
-            CurrentName = state.Title,
-            OriginalName = state.Title,
-            CurrentTextId = 1,
-            CurrentNameId = 1,
-        };
-        using (overlay)
-        {
-            var scaledBounds = ScaleBounds(state.AddonBounds, viewportPosition, layout.Scale);
-            var request = new TranslationOverlayRenderRequest(
-                overlay,
-                TranslationWindowConfig.ForSurface(configuration, state.SurfaceId),
-                viewportPosition,
-                layout.Size,
-                scaledBounds.Position,
-                scaledBounds.Size,
-                IsPreview: true);
-            return this.renderer.Draw(request, state.Title);
+            return;
         }
+
+        this.overlay.Dispose();
+        this.disposed = true;
+    }
+
+    /// <summary>
+    /// Updates the persistent preview overlay with the current shell state.
+    /// </summary>
+    /// <param name="state">The current preview shell state.</param>
+    private void UpdateOverlay(PreviewShellState state)
+    {
+        this.overlay.Display = state.Visible;
+        if (!string.Equals(this.lastBodyText, state.BodyText, StringComparison.Ordinal))
+        {
+            this.overlay.CurrentTextId++;
+            this.lastBodyText = state.BodyText;
+        }
+
+        if (!string.Equals(this.lastTitle, state.Title, StringComparison.Ordinal))
+        {
+            this.overlay.CurrentNameId++;
+            this.lastTitle = state.Title;
+        }
+
+        this.overlay.CurrentText = state.BodyText;
+        this.overlay.CurrentName = state.Title;
+        this.overlay.OriginalName = state.Title;
     }
 
     private static void DrawAddonGuide(

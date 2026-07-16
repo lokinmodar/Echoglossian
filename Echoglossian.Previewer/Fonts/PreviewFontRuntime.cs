@@ -16,6 +16,8 @@ namespace Echoglossian.Previewer.Fonts;
 /// </summary>
 internal sealed unsafe class PreviewFontRuntime : IUiFontRuntime
 {
+    private const ushort BasicLatinStart = 0x0020;
+    private const ushort Latin1SupplementEnd = 0x00FF;
     private readonly ImFontPtr generalFont;
     private readonly ImFontPtr languageFont;
 
@@ -189,12 +191,13 @@ internal sealed unsafe class PreviewFontRuntime : IUiFontRuntime
     /// <param name="text">The scenario text.</param>
     /// <param name="exclusiveCharacters">The selected language character set.</param>
     /// <returns>Null-terminated ImGui glyph ranges.</returns>
-    private static ushort[] BuildGlyphRanges(
+    internal static ushort[] BuildGlyphRanges(
         string? title,
         string? text,
         string? exclusiveCharacters)
     {
         var characters = new SortedSet<ushort>();
+        AddRange(characters, BasicLatinStart, Latin1SupplementEnd);
         AddCharacters(characters, title);
         AddCharacters(characters, text);
         AddCharacters(characters, exclusiveCharacters);
@@ -208,6 +211,20 @@ internal sealed unsafe class PreviewFontRuntime : IUiFontRuntime
         }
 
         return ranges;
+    }
+
+    /// <summary>
+    /// Adds an inclusive UTF-16 code-unit range.
+    /// </summary>
+    /// <param name="characters">The target character set.</param>
+    /// <param name="start">The first character to include.</param>
+    /// <param name="end">The last character to include.</param>
+    private static void AddRange(ISet<ushort> characters, ushort start, ushort end)
+    {
+        for (var character = start; character <= end; character++)
+        {
+            characters.Add(character);
+        }
     }
 
     /// <summary>

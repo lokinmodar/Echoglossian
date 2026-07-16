@@ -7,6 +7,10 @@ using Echoglossian.LanguagesHandling;
 using Echoglossian.Previewer;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.UIOverlays.TextPresentation;
+using Echoglossian.UIOverlays.TranslationOverlay;
+
+using System.Numerics;
 
 using Xunit;
 
@@ -62,6 +66,56 @@ public sealed class PreviewFontCatalogTests
         Assert.Equal(31, selection.FontSize);
         Assert.EndsWith(Path.Combine("Font", fontFileName), selection.SpecialFontPath);
         Assert.All(selection.FontPaths, path => Assert.True(File.Exists(path), path));
+    }
+
+    /// <summary>
+    /// Ensures rasterized general/original text uses the plugin base font.
+    /// </summary>
+    [Fact]
+    public void ResolveRasterFontPath_GeneralText_UsesPluginBaseFont()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var language = new LanguageInfo(
+            "ar",
+            "Arabic",
+            "NotoSansArabic-Medium.ttf",
+            string.Empty,
+            new List<int>());
+        var selection = PreviewFontCatalog.Resolve(language, 18, repositoryRoot);
+        var request = new TextLayoutRequest(
+            "Original text",
+            2,
+            "ar",
+            480f,
+            1f,
+            ShouldUseGeneralFont: true,
+            Vector4.One,
+            Vector4.Zero,
+            TranslationOverlaySurfaceId.Talk,
+            CenterAligned: false);
+
+        var fontPath = selection.ResolveRasterFontPath(request);
+
+        Assert.Equal(selection.GeneralRasterFontPath, fontPath);
+        Assert.EndsWith(
+            Path.Combine("Font", UiFontFileNames.BaseFontFileName),
+            fontPath);
+    }
+
+    /// <summary>
+    /// Ensures the preview font atlas always includes editable Latin text.
+    /// </summary>
+    [Fact]
+    public void BuildGlyphRanges_IncludesDefaultLatinRange()
+    {
+        var ranges = PreviewFontRuntime.BuildGlyphRanges(
+            title: string.Empty,
+            text: string.Empty,
+            exclusiveCharacters: string.Empty);
+
+        Assert.Contains((ushort)'x', ranges);
+        Assert.Contains((ushort)'é', ranges);
+        Assert.Equal(0, ranges[^1]);
     }
 
     /// <summary>

@@ -131,7 +131,7 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
-        var shell = new PreviewShell(
+        using var shell = new PreviewShell(
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
