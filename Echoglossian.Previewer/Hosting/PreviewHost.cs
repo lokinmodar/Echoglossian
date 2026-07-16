@@ -107,6 +107,31 @@ internal sealed unsafe class PreviewHost : IDisposable
     }
 
     /// <summary>
+    ///     Runs frames until the standalone preview window is closed.
+    /// </summary>
+    /// <param name="draw">The ImGui draw callback.</param>
+    internal void Run(Action draw)
+    {
+        ArgumentNullException.ThrowIfNull(draw);
+        this.ThrowIfDisposed();
+
+        while (this.window.Exists)
+        {
+            this.RunFrame(draw);
+        }
+    }
+
+    /// <summary>
+    ///     Rebuilds the backend font texture after preview fonts are added to
+    ///     the active ImGui atlas.
+    /// </summary>
+    internal void RecreateFontDeviceTexture()
+    {
+        this.ThrowIfDisposed();
+        this.imGuiRenderer.RecreateFontDeviceTexture();
+    }
+
+    /// <summary>
     ///     Creates a text texture factory bound to this host's Veldrid device
     ///     and ImGui texture registry.
     /// </summary>

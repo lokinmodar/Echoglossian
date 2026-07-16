@@ -160,7 +160,14 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 measuredTitleSize,
                 horizontalPadding,
                 config));
-        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(layout.RequestedPosition);
+        if (request.IsPreview)
+        {
+            ImGui.SetNextWindowPos(layout.RequestedPosition);
+        }
+        else
+        {
+            ImGuiHelpers.SetNextWindowPosRelativeMainViewport(layout.RequestedPosition);
+        }
         var maxHeight = Math.Max(180f, request.ViewportSize.Y - 80f);
         if (config.AutoSizeToTextWithMaxWidth || config.UseFixedWindowSize)
         {

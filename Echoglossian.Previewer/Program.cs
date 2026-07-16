@@ -5,7 +5,12 @@
 
 using Dalamud.Bindings.ImGui;
 
+using Echoglossian.LanguagesHandling;
+using Echoglossian.Previewer.Configuration;
+using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
+using Echoglossian.Previewer.Scenarios;
+using Echoglossian.Previewer.UI;
 
 namespace Echoglossian.Previewer;
 
@@ -33,6 +38,11 @@ internal static class Program
             if (commandLine.HostSmoke)
             {
                 RunHostSmoke();
+            }
+
+            if (!commandLine.BindingSmoke && !commandLine.HostSmoke)
+            {
+                RunInteractivePreview(commandLine);
             }
 
             return 0;
@@ -78,5 +88,79 @@ internal static class Program
 
         host.RunFrame(
             static () => ImGui.TextUnformatted("Echoglossian preview host"));
+    }
+
+    /// <summary>
+    ///     Runs the interactive preview shell.
+    /// </summary>
+    /// <param name="commandLine">The parsed command line.</param>
+    private static void RunInteractivePreview(PreviewCommandLine commandLine)
+    {
+        var sourceConfiguration = PreviewConfigLoader.Load(commandLine.ConfigPath);
+        var editableConfiguration = sourceConfiguration.CreateEditableCopy();
+        var scenario = PreviewScenarioCatalog.ResolveScenario(commandLine.Scenario);
+        var viewport = PreviewScenarioCatalog.ResolveViewport(
+            commandLine.ViewportWidth,
+            commandLine.ViewportHeight);
+        var selectedLanguage = ResolvePreviewLanguage(editableConfiguration.Lang);
+        Echoglossian.SelectedLanguage = selectedLanguage;
+        var fontSelection = PreviewFontCatalog.Resolve(
+            selectedLanguage,
+            editableConfiguration.FontSize);
+
+        using PreviewHost host = new(
+            new PreviewHostOptions
+            {
+                Width = 1400,
+                Height = 900,
+                Title = "Echoglossian Overlay Previewer",
+            });
+        var fontRuntime = new PreviewFontRuntime(
+            fontSelection,
+            scenario.Title,
+            scenario.TranslatedText,
+            host.RecreateFontDeviceTexture);
+        using var composition = new PreviewOverlayRendererFactory(host).Create(
+            editableConfiguration,
+            fontRuntime);
+        var shell = new PreviewShell(
+            sourceConfiguration,
+            editableConfiguration,
+            fontSelection,
+            composition.Renderer,
+            scenario,
+            viewport);
+
+        host.Run(shell.Draw);
+    }
+
+    /// <summary>
+    ///     Resolves preview language metadata without constructing the live plugin.
+    /// </summary>
+    /// <param name="languageId">The configured language identifier.</param>
+    /// <returns>The language metadata used by font and RTL preview paths.</returns>
+    private static LanguageInfo ResolvePreviewLanguage(int languageId)
+    {
+        return languageId switch
+        {
+            2 => new LanguageInfo(
+                "ar",
+                "Arabic",
+                "NotoSansArabic-Medium.ttf",
+                string.Empty,
+                new List<int> { 0, 1 }),
+            42 => new LanguageInfo(
+                "he",
+                "Hebrew",
+                "NotoSansHebrew-Medium.ttf",
+                string.Empty,
+                new List<int>()),
+            _ => new LanguageInfo(
+                "en",
+                "English",
+                "NotoSans-Medium.ttf",
+                string.Empty,
+                new List<int>()),
+        };
     }
 }
