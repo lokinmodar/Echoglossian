@@ -1,0 +1,43 @@
+---
+title: Translator Architecture
+description: Shared translation pipeline plus provider-specific adapters.
+---
+
+Echoglossian has one shared translation pipeline and many engine adapters.
+
+## Shared Responsibilities
+
+The shared runtime owns:
+
+- translator selection
+- request orchestration
+- cache reuse boundaries
+- persistence handoff
+- overlay and native publication downstream of translation
+
+## Engine-Specific Responsibilities
+
+Each engine adapter should own only:
+
+- provider client setup
+- request payload shape
+- response parsing
+- model catalog behavior
+- engine-specific configuration UI
+
+## Current Engine Families
+
+- vendor translation engines such as Google, DeepL, Microsoft, Amazon, and Yandex variants
+- OpenAI-style chat-completions engines such as OpenAI, OpenRouter, DeepSeek, and LM Studio
+- Gemini `generateContent`
+- Ollama local generation
+- Claude Messages API
+
+## Safe Rule For Engine Work
+
+When adding or modifying an engine:
+
+1. reuse `TranslationService` and `ITranslator`
+2. update language support and factory wiring in the same change
+3. keep provider-specific logic narrow
+4. validate build and tests immediately after the engine-wide change
