@@ -356,6 +356,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Echoglossian.Mock\**;Echoglossian.Mock.Tests\**" />
+    <EmbeddedResource Remove="Echoglossian.Mock\**;Echoglossian.Mock.Tests\**" />
+    <None Remove="Echoglossian.Mock\**;Echoglossian.Mock.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Echoglossian.Previewer\**;Echoglossian.Previewer.Tests\**" />
     <EmbeddedResource Remove="Echoglossian.Previewer\**;Echoglossian.Previewer.Tests\**" />
     <None Remove="Echoglossian.Previewer\**;Echoglossian.Previewer.Tests\**" />
@@ -368,6 +374,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Echoglossian.Tests" />
+    <InternalsVisibleTo Include="Echoglossian.Mock.Tests" />
     <InternalsVisibleTo Include="Echoglossian.Previewer" />
     <InternalsVisibleTo Include="Echoglossian.Previewer.Tests" />
   </ItemGroup>
