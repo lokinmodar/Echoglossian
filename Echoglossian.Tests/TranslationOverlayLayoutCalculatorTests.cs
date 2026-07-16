@@ -120,6 +120,29 @@ public class TranslationOverlayLayoutCalculatorTests
     }
 
     /// <summary>
+    /// Ensures disabled titles do not inflate the requested window height.
+    /// </summary>
+    [Fact]
+    public void Calculate_TitleDisabled_IgnoresMeasuredTitleHeight()
+    {
+        var request = CreateRequest(
+            TranslationOverlaySurfaceId.Talk,
+            previousWindowSize: new Vector2(300f, 60f),
+            measuredTextSize: new Vector2(220f, 40f),
+            configure: config => config with
+            {
+                ForceShowTitle = false,
+            }) with
+        {
+            MeasuredTitleSize = new Vector2(160f, 48f),
+        };
+
+        var result = TranslationOverlayLayoutCalculator.Calculate(request);
+
+        Assert.Equal(60f, result.RequestedSize.Y);
+    }
+
+    /// <summary>
     /// Creates a deterministic pure-layout request for one overlay surface.
     /// </summary>
     private static TranslationOverlayLayoutRequest CreateRequest(

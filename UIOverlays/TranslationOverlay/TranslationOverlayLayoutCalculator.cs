@@ -84,11 +84,13 @@ internal static class TranslationOverlayLayoutCalculator
 
         var width = Math.Clamp(desiredWidth, minWidth, maxWidth);
         var maxHeight = Math.Max(180f, viewportHeight - 80f);
+        var measuredContentHeight = request.MeasuredTextSize.Y +
+            (config.ForceShowTitle ? request.MeasuredTitleSize.Y : 0f);
         var requestedHeight = Math.Min(
             maxHeight,
             Math.Max(
                 request.PreviousWindowSize.Y,
-                request.MeasuredTextSize.Y + request.MeasuredTitleSize.Y));
+                measuredContentHeight));
         var requestedPosition = config.CenterOnAddon
             ? new Vector2(
                 request.AddonPosition.X + (request.AddonSize.X * 0.5f) -
