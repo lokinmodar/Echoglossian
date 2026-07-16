@@ -210,9 +210,11 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                         ImGuiWindowFlags.NoMouseInputs |
                         ImGuiWindowFlags.NoScrollbar |
                         ImGuiWindowFlags.AlwaysAutoResize;
-            var useInlineRtlTitle = backendKind == TextPresentationBackendKind.RtlTexture &&
-                                    config.ForceShowTitle &&
-                                    !string.IsNullOrWhiteSpace(resolvedTitle);
+            var useInlineRtlTitle = ShouldUseInlineRtlTitle(
+                backendKind,
+                config.ForceShowTitle,
+                resolvedTitle,
+                titleBlock != null);
             if (useInlineRtlTitle || !config.ForceShowTitle ||
                 string.IsNullOrWhiteSpace(resolvedTitle))
             {
@@ -307,6 +309,27 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Gets whether the renderer should replace the normal title bar with an
+    /// inline RTL title block.
+    /// </summary>
+    /// <param name="backendKind">The selected presentation backend.</param>
+    /// <param name="forceShowTitle">Whether the surface requires a visible title.</param>
+    /// <param name="resolvedTitle">The resolved window title.</param>
+    /// <param name="hasTitleBlock">Whether the RTL title texture is ready.</param>
+    /// <returns><see langword="true"/> when the inline RTL title path is ready.</returns>
+    internal static bool ShouldUseInlineRtlTitle(
+        TextPresentationBackendKind backendKind,
+        bool forceShowTitle,
+        string? resolvedTitle,
+        bool hasTitleBlock)
+    {
+        return backendKind == TextPresentationBackendKind.RtlTexture &&
+               forceShowTitle &&
+               hasTitleBlock &&
+               !string.IsNullOrWhiteSpace(resolvedTitle);
     }
 
     /// <summary>

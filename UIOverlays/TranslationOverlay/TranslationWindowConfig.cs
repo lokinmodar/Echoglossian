@@ -86,6 +86,8 @@ internal record TranslationWindowConfig(
       Config config,
       TranslationOverlaySurfaceId surfaceId)
   {
+    ArgumentNullException.ThrowIfNull(config);
+
     return surfaceId switch
     {
       TranslationOverlaySurfaceId.Talk => FromConfigForTalk(config),

@@ -31535,6 +31535,17 @@
             <param name="customTitle">The caller-provided title, if any.</param>
             <returns>The actual rendered bounds and presentation backend.</returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ShouldUseInlineRtlTitle(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.Boolean,System.String,System.Boolean)">
+            <summary>
+            Gets whether the renderer should replace the normal title bar with an
+            inline RTL title block.
+            </summary>
+            <param name="backendKind">The selected presentation backend.</param>
+            <param name="forceShowTitle">Whether the surface requires a visible title.</param>
+            <param name="resolvedTitle">The resolved window title.</param>
+            <param name="hasTitleBlock">Whether the RTL title texture is ready.</param>
+            <returns><see langword="true"/> when the inline RTL title path is ready.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.Dispose">
             <summary>
             Disposes the renderer without disposing externally owned text and font runtimes.

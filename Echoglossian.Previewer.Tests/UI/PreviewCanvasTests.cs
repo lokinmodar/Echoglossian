@@ -34,4 +34,26 @@ public sealed class PreviewCanvasTests
         Assert.Equal(68.75f, layout.Offset.Y, precision: 3);
         Assert.Equal(1000f / 1920f, layout.Scale, precision: 6);
     }
+
+    /// <summary>
+    /// Ensures invalid logical viewport dimensions fail fast.
+    /// </summary>
+    /// <param name="logicalWidth">The invalid logical width.</param>
+    /// <param name="logicalHeight">The invalid logical height.</param>
+    [Theory]
+    [InlineData(0, 1080)]
+    [InlineData(1920, 0)]
+    [InlineData(-1, 1080)]
+    [InlineData(1920, -1)]
+    public void CalculateScaledViewport_InvalidLogicalDimensions_Throws(
+        int logicalWidth,
+        int logicalHeight)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => PreviewCanvas.CalculateScaledViewport(
+                availableWidth: 1000f,
+                availableHeight: 700f,
+                logicalWidth,
+                logicalHeight));
+    }
 }

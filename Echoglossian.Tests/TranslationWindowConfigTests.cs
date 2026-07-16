@@ -54,6 +54,18 @@ public class TranslationWindowConfigTests
     }
 
     /// <summary>
+    /// Ensures callers get an immediate argument error for a missing config.
+    /// </summary>
+    [Fact]
+    public void ForSurface_NullConfig_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => TranslationWindowConfig.ForSurface(
+                null!,
+                TranslationOverlaySurfaceId.Talk));
+    }
+
+    /// <summary>
     /// Gets the existing factory expected for each runtime overlay surface.
     /// </summary>
     public static IEnumerable<object[]> ActiveSurfaceFactories()

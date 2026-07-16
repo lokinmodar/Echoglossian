@@ -46,6 +46,9 @@ internal sealed class PreviewCanvas : IDisposable
         int logicalWidth,
         int logicalHeight)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(logicalWidth);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(logicalHeight);
+
         var safeWidth = Math.Max(availableWidth, 1f);
         var safeHeight = Math.Max(availableHeight, 1f);
         var scale = Math.Min(safeWidth / logicalWidth, safeHeight / logicalHeight);
