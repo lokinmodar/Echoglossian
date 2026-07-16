@@ -24,6 +24,7 @@ internal sealed class VeldridTextTextureFactory
 {
     private readonly Func<VeldridTextTextureUpload, IDalamudTextureWrap>
         createTexture;
+    private readonly Action<TextureCreationRequest>? observeRequest;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="VeldridTextTextureFactory" />
@@ -47,11 +48,14 @@ internal sealed class VeldridTextTextureFactory
     ///     Initializes a testable factory with a texture creation operation.
     /// </summary>
     /// <param name="createTexture">The operation that creates one texture wrap.</param>
+    /// <param name="observeRequest">The optional test hook for resolved requests.</param>
     internal VeldridTextTextureFactory(
-        Func<VeldridTextTextureUpload, IDalamudTextureWrap> createTexture)
+        Func<VeldridTextTextureUpload, IDalamudTextureWrap> createTexture,
+        Action<TextureCreationRequest>? observeRequest = null)
     {
         this.createTexture = createTexture ??
             throw new ArgumentNullException(nameof(createTexture));
+        this.observeRequest = observeRequest;
     }
 
     /// <summary>
@@ -73,6 +77,7 @@ internal sealed class VeldridTextTextureFactory
         ArgumentNullException.ThrowIfNull(layout);
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
+        this.observeRequest?.Invoke(request);
 
         using Bitmap bitmap = renderer.RenderTextLayout(
             layout,

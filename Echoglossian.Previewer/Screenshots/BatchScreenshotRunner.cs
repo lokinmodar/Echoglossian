@@ -110,7 +110,8 @@ internal sealed class BatchScreenshotRunner
             host.RecreateFontDeviceTexture);
         using var composition = new PreviewOverlayRendererFactory(host).Create(
             this.editableConfiguration,
-            fontRuntime);
+            fontRuntime,
+            this.fontSelection);
         var canvas = new PreviewCanvas(composition.Renderer);
         var state = PreviewShellState.FromScenario(request.Scenario, request.Viewport);
         state.ShowSimulatedAddonBounds = false;
@@ -120,11 +121,15 @@ internal sealed class BatchScreenshotRunner
             Vector2.Zero,
             TextPresentationBackendKind.PlainImGui);
 
-        Action draw = () => renderResult = DrawCaptureFrame(
-            canvas,
-            state,
-            this.editableConfiguration,
-            request.Viewport);
+        Action draw = () =>
+        {
+            composition.BeginDrawFrame();
+            renderResult = DrawCaptureFrame(
+                canvas,
+                state,
+                this.editableConfiguration,
+                request.Viewport);
+        };
         var stopwatch = Stopwatch.StartNew();
         while (!renderResult.WasDrawn && stopwatch.Elapsed < TimeSpan.FromSeconds(5))
         {

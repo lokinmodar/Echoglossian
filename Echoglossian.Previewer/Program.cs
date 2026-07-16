@@ -129,7 +129,8 @@ internal static class Program
             host.RecreateFontDeviceTexture);
         using var composition = new PreviewOverlayRendererFactory(host).Create(
             editableConfiguration,
-            fontRuntime);
+            fontRuntime,
+            fontSelection);
         var shell = new PreviewShell(
             sourceConfiguration,
             editableConfiguration,
@@ -140,7 +141,11 @@ internal static class Program
 
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
         host.Run(
-            shell.Draw,
+            () =>
+            {
+                composition.BeginDrawFrame();
+                shell.Draw();
+            },
             () =>
             {
                 if (!shell.TryConsumeScreenshotRequest(
@@ -245,26 +250,9 @@ internal static class Program
     /// <returns>The language metadata used by font and RTL preview paths.</returns>
     internal static LanguageInfo ResolvePreviewLanguage(int languageId)
     {
-        return languageId switch
-        {
-            2 => new LanguageInfo(
-                "ar",
-                "Arabic",
-                "NotoSansArabic-Medium.ttf",
-                string.Empty,
-                new List<int> { 0, 1 }),
-            42 => new LanguageInfo(
-                "he",
-                "Hebrew",
-                "NotoSansHebrew-Medium.ttf",
-                string.Empty,
-                new List<int>()),
-            _ => new LanguageInfo(
-                "en",
-                "English",
-                "NotoSans-Medium.ttf",
-                string.Empty,
-                new List<int>()),
-        };
+        var languages = Echoglossian.CreateLanguagesDictionary();
+        return languages.TryGetValue(languageId, out var language)
+            ? language
+            : languages[28];
     }
 }

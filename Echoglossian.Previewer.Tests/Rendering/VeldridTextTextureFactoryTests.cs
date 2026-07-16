@@ -10,7 +10,9 @@ using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
 
+using Echoglossian.LanguagesHandling;
 using Echoglossian.PluginUI.Runtime;
+using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
 using Echoglossian.Previewer.Rendering;
 using Echoglossian.UIOverlays.TextPresentation;
@@ -121,6 +123,16 @@ public sealed class VeldridTextTextureFactoryTests
     {
         var uploadCount = 0;
         VeldridTextTextureUpload? capturedUpload = null;
+        TextureCreationRequest? capturedRequest = null;
+        var fontSelection = PreviewFontCatalog.Resolve(
+            new LanguageInfo(
+                "ar",
+                "Arabic",
+                "NotoSansArabic-Medium.ttf",
+                string.Empty,
+                new List<int>()),
+            18,
+            FindRepositoryRoot());
         var rendererFactory = new PreviewOverlayRendererFactory(
             () => new VeldridTextTextureFactory(
                 upload =>
@@ -128,10 +140,12 @@ public sealed class VeldridTextTextureFactoryTests
                     Interlocked.Increment(ref uploadCount);
                     capturedUpload = upload;
                     return new FakeTextureWrap(upload.Width, upload.Height);
-                }));
+                },
+                request => capturedRequest = request));
         using var composition = rendererFactory.Create(
-            new Config(),
-            new FakeUiFontRuntime());
+            new Config { FontSize = fontSelection.FontSize },
+            new FakeUiFontRuntime(),
+            fontSelection);
         var request = new TextLayoutRequest(
             "\u0645\u0631\u062d\u0628\u0627",
             2,
@@ -153,6 +167,8 @@ public sealed class VeldridTextTextureFactoryTests
         var upload = Assert.IsType<VeldridTextTextureUpload>(capturedUpload);
         Assert.True(upload.Width > 0);
         Assert.True(upload.Height > 0);
+        Assert.NotNull(capturedRequest);
+        Assert.Equal(fontSelection.SpecialFontPath, capturedRequest.FontPath);
     }
 
     /// <summary>
@@ -168,9 +184,35 @@ public sealed class VeldridTextTextureFactoryTests
     {
         RenderedTextBlock? renderedBlock = null;
         Assert.True(SpinWait.SpinUntil(
-            () => (renderedBlock = service.TryRender(request)) != null,
+            () =>
+            {
+                service.BeginDrawFrame();
+                renderedBlock = service.TryRender(request);
+                return renderedBlock != null;
+            },
             TimeSpan.FromSeconds(5)));
         return renderedBlock!;
+    }
+
+    /// <summary>
+    /// Finds the repository root from the test output directory.
+    /// </summary>
+    /// <returns>The absolute repository root path.</returns>
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Echoglossian.sln")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the Echoglossian repository root.");
     }
 
     /// <summary>

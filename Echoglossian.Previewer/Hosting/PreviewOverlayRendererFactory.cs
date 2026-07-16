@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Runtime;
+using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Rendering;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
@@ -45,18 +46,22 @@ internal sealed class PreviewOverlayRendererFactory
     /// </summary>
     /// <param name="configuration">The preview configuration.</param>
     /// <param name="fontRuntime">The preview ImGui font runtime.</param>
+    /// <param name="fontSelection">The resolved preview font selection.</param>
     /// <returns>The renderer and its owned RTL texture service.</returns>
     internal PreviewOverlayRendererComposition Create(
         Config configuration,
-        IUiFontRuntime fontRuntime)
+        IUiFontRuntime fontRuntime,
+        PreviewFontSelection fontSelection)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(fontRuntime);
+        ArgumentNullException.ThrowIfNull(fontSelection);
 
         var textTextureFactory = this.createTextTextureFactory();
         var rtlTexturePresentationService = new RtlTexturePresentationService(
             configuration,
-            textTextureFactory.CreateTextureAsync);
+            textTextureFactory.CreateTextureAsync,
+            resolveFontPath: fontSelection.ResolveRasterFontPath);
         var renderer = new TranslationOverlayRenderer(
             configuration,
             fontRuntime,
@@ -97,6 +102,14 @@ internal sealed class PreviewOverlayRendererComposition : IDisposable
     /// Gets the preview-backed RTL texture presentation service.
     /// </summary>
     internal RtlTexturePresentationService RtlTexturePresentationService { get; }
+
+    /// <summary>
+    /// Begins one preview draw frame for owned frame-lifecycle services.
+    /// </summary>
+    internal void BeginDrawFrame()
+    {
+        this.RtlTexturePresentationService.BeginDrawFrame();
+    }
 
     /// <inheritdoc/>
     public void Dispose()

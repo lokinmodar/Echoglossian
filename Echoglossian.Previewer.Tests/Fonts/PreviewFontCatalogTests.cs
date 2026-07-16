@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.LanguagesHandling;
+using Echoglossian.Previewer;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.PluginUI.Helpers;
 
@@ -61,6 +62,30 @@ public sealed class PreviewFontCatalogTests
         Assert.Equal(31, selection.FontSize);
         Assert.EndsWith(Path.Combine("Font", fontFileName), selection.SpecialFontPath);
         Assert.All(selection.FontPaths, path => Assert.True(File.Exists(path), path));
+    }
+
+    /// <summary>
+    /// Ensures preview language resolution uses the plugin's complete language
+    /// dictionary instead of a small preview-only subset.
+    /// </summary>
+    /// <param name="languageId">The configured plugin language identifier.</param>
+    /// <param name="languageCode">The expected language code.</param>
+    /// <param name="fontFileName">The expected selected plugin font file.</param>
+    [Theory]
+    [InlineData(2, "ar", "NotoSansArabic-Medium.ttf")]
+    [InlineData(21, "zh-CN", "NotoSansCJKsc-Regular.otf")]
+    [InlineData(22, "zh-TW", "NotoSansCJKtc-Regular.otf")]
+    [InlineData(50, "ja", "NotoSansCJKjp-Regular.otf")]
+    [InlineData(56, "ko", "NotoSansCJKkr-Regular.otf")]
+    public void ResolvePreviewLanguage_UsesPluginLanguageDictionary(
+        int languageId,
+        string languageCode,
+        string fontFileName)
+    {
+        var language = Program.ResolvePreviewLanguage(languageId);
+
+        Assert.Equal(languageCode, language.Code);
+        Assert.Equal(fontFileName, language.FontName);
     }
 
     /// <summary>

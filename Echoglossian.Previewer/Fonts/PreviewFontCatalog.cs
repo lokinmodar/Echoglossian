@@ -5,6 +5,7 @@
 
 using Echoglossian.LanguagesHandling;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.UIOverlays.TextPresentation;
 
 namespace Echoglossian.Previewer.Fonts;
 
@@ -125,4 +126,20 @@ public sealed class PreviewFontSelection
     /// Gets the plugin language-specific font stack in merge order.
     /// </summary>
     public IReadOnlyList<string> LanguageFontPaths { get; }
+
+    /// <summary>
+    /// Resolves the font file used by standalone texture rasterization.
+    /// </summary>
+    /// <param name="request">The texture layout request.</param>
+    /// <returns>The font file path matching the preview font catalog.</returns>
+    internal string ResolveRasterFontPath(TextLayoutRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (!request.ShouldUseGeneralFont)
+        {
+            return this.SpecialFontPath;
+        }
+
+        return this.GeneralFontPaths.FirstOrDefault() ?? this.SpecialFontPath;
+    }
 }

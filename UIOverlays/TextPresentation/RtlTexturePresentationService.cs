@@ -46,6 +46,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
       TextureCreationRequest,
       CancellationToken,
       Task<IDalamudTextureWrap>> createTextureAsync;
+  private readonly Func<TextLayoutRequest, string>? resolveFontPath;
   private readonly int adaptiveWidthCacheCapacity;
   private readonly int maxConcurrentTextureCreations;
   private readonly int pendingTextureCapacity;
@@ -107,6 +108,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// The maximum number of failed-key cooldown entries to retain.
   /// </param>
   /// <param name="getUtcNow">The clock used for retry cooldowns.</param>
+  /// <param name="resolveFontPath">The optional font resolver.</param>
   internal RtlTexturePresentationService(
       Config configuration,
       Func<
@@ -119,7 +121,8 @@ internal sealed class RtlTexturePresentationService : IDisposable
       int maxConcurrentTextureCreations =
           DefaultMaxConcurrentTextureCreations,
       int retryStateCapacity = DefaultRetryStateCapacity,
-      Func<DateTime>? getUtcNow = null)
+      Func<DateTime>? getUtcNow = null,
+      Func<TextLayoutRequest, string>? resolveFontPath = null)
     : this(
         configuration,
         (_, _, request, cancellationToken) => createTextureAsync(
@@ -130,7 +133,8 @@ internal sealed class RtlTexturePresentationService : IDisposable
         pendingTextureCapacity,
         maxConcurrentTextureCreations,
         retryStateCapacity,
-        getUtcNow)
+        getUtcNow,
+        resolveFontPath)
   {
   }
 
@@ -158,6 +162,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// The maximum number of failed-key cooldown entries to retain.
   /// </param>
   /// <param name="getUtcNow">The clock used for retry cooldowns.</param>
+  /// <param name="resolveFontPath">The optional font resolver.</param>
   internal RtlTexturePresentationService(
       Config configuration,
       Func<
@@ -172,10 +177,12 @@ internal sealed class RtlTexturePresentationService : IDisposable
       int maxConcurrentTextureCreations =
           DefaultMaxConcurrentTextureCreations,
       int retryStateCapacity = DefaultRetryStateCapacity,
-      Func<DateTime>? getUtcNow = null)
+      Func<DateTime>? getUtcNow = null,
+      Func<TextLayoutRequest, string>? resolveFontPath = null)
   {
     this.configuration = configuration;
     this.createTextureAsync = createTextureAsync;
+    this.resolveFontPath = resolveFontPath;
     this.adaptiveWidthCacheCapacity = Math.Max(
         1,
         adaptiveWidthCacheCapacity);
@@ -845,6 +852,12 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// <returns>The resolved font path.</returns>
   private string ResolveFontPath(TextLayoutRequest request)
   {
+    var injectedFontPath = this.resolveFontPath?.Invoke(request);
+    if (!string.IsNullOrWhiteSpace(injectedFontPath))
+    {
+      return injectedFontPath;
+    }
+
     if (!request.ShouldUseGeneralFont &&
         !string.IsNullOrWhiteSpace(SpecialFontFilePath))
     {

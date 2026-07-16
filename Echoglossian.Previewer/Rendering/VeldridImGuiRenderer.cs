@@ -468,7 +468,7 @@ internal sealed unsafe class VeldridImGuiRenderer : IDisposable
         io.AddFocusEvent(focused);
         Vector2 mousePosition = snapshot.MousePosition;
         io.AddMousePosEvent(mousePosition.X, mousePosition.Y);
-        io.AddMouseWheelEvent(snapshot.WheelDelta, 0);
+        io.AddMouseWheelEvent(0, snapshot.WheelDelta);
 
         io.AddMouseButtonEvent(0, snapshot.IsMouseDown(MouseButton.Left));
         io.AddMouseButtonEvent(1, snapshot.IsMouseDown(MouseButton.Right));

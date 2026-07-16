@@ -3571,6 +3571,12 @@
             <param name="input">The translated payload.</param>
             <returns>A dictionary mapping indices to translated strings.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.CreateLanguagesDictionary">
+            <summary>
+            Creates the default language metadata dictionary.
+            </summary>
+            <returns>The default language metadata dictionary.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TickAcceptedQuestPrefetch">
             <summary>
                 Ticks the accepted-quest prefetch runtime so active quests can be
@@ -30811,7 +30817,7 @@
             <param name="configuration">The live plugin configuration.</param>
             <param name="textureProvider">The texture provider used to upload images.</param>
         </member>
-        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime})">
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime},System.Func{Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.String})">
             <summary>
             Initializes a testable instance with an injected texture creation seam.
             </summary>
@@ -30835,8 +30841,9 @@
             The maximum number of failed-key cooldown entries to retain.
             </param>
             <param name="getUtcNow">The clock used for retry cooldowns.</param>
+            <param name="resolveFontPath">The optional font resolver.</param>
         </member>
-        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.ImageGeneration.TextImageRenderer,Echoglossian.ImageGeneration.TextImageRenderer.TextRasterLayout,Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime})">
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.#ctor(Echoglossian.Config,System.Func{Echoglossian.ImageGeneration.TextImageRenderer,Echoglossian.ImageGeneration.TextImageRenderer.TextRasterLayout,Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest,System.Threading.CancellationToken,System.Threading.Tasks.Task{Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap}},System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Func{System.DateTime},System.Func{Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.String})">
             <summary>
             Initializes a texture presentation service with a layout-aware creation
             operation.
@@ -30861,6 +30868,7 @@
             The maximum number of failed-key cooldown entries to retain.
             </param>
             <param name="getUtcNow">The clock used for retry cooldowns.</param>
+            <param name="resolveFontPath">The optional font resolver.</param>
         </member>
         <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.TryRender(Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest)">
             <summary>

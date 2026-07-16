@@ -10,8 +10,16 @@ namespace Echoglossian;
 /// </summary>
 public partial class Echoglossian
 {
-    private readonly Dictionary<int, LanguageInfo> languagesDictionary = new()
+    private readonly Dictionary<int, LanguageInfo> languagesDictionary = CreateLanguagesDictionary();
+
+    /// <summary>
+    /// Creates the default language metadata dictionary.
+    /// </summary>
+    /// <returns>The default language metadata dictionary.</returns>
+    internal static Dictionary<int, LanguageInfo> CreateLanguagesDictionary()
     {
+        return new Dictionary<int, LanguageInfo>
+        {
         [0] = new LanguageInfo(
             @"af",
             @"Afrikaans",
@@ -1164,5 +1172,6 @@ public partial class Echoglossian
             "NotoSansCanadianAboriginal-Regular.ttf",
             string.Empty,
             new List<int>()),
-    };
+        };
+    }
 }
