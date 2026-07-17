@@ -117,33 +117,17 @@ public static class TranslationEnginesTab
         using var suppressedRefreshRequests = !runtimeActionsAvailable
             ? LiveModelRefreshCoordinator.SuppressRequests()
             : null;
-        if (!runtimeActionsAvailable)
-        {
-            ImGui.BeginDisabled();
-        }
+        var engine = (Echoglossian.TransEngines)config.ChosenTransEngine;
+        changed |= DrawEngineConfiguration(config, promptManager, engine);
 
-        Echoglossian.TransEngines engine;
-        try
-        {
-            engine = (Echoglossian.TransEngines)config.ChosenTransEngine;
-            changed |= DrawEngineConfiguration(config, promptManager, engine);
-
-            ImGui.EndGroup();
-            ImGui.Separator();
-            ImGui.Spacing();
-            changed |= DrawDialogueOverrideSection(
-                config,
-                promptManager,
-                engine,
-                rebuildTranslationService);
-        }
-        finally
-        {
-            if (!runtimeActionsAvailable)
-            {
-                ImGui.EndDisabled();
-            }
-        }
+        ImGui.EndGroup();
+        ImGui.Separator();
+        ImGui.Spacing();
+        changed |= DrawDialogueOverrideSection(
+            config,
+            promptManager,
+            engine,
+            rebuildTranslationService);
 
         ImGui.Separator();
         ImGui.Spacing();

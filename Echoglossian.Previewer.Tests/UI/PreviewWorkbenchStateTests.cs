@@ -5,6 +5,7 @@
 
 using Echoglossian.DBManagerUI;
 using Echoglossian.EFCoreSqlite;
+using Echoglossian.Helpers;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.UI;
 
@@ -111,6 +112,68 @@ public sealed class PreviewWorkbenchStateTests
             "Resources.PreviewImageryUnavailableText",
             metricsSource,
             StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures preview runtime suppression does not disable the entire engine
+    /// configuration surface while still keeping passive live refresh requests
+    /// centrally suppressed.
+    /// </summary>
+    [Fact]
+    public void TranslationEnginesTab_PreviewRuntimeLeavesEngineFieldsEditable()
+    {
+        var translationEnginesSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "Tabs",
+            "TranslationEnginesTab.cs"));
+
+        Assert.Contains(
+            "LiveModelRefreshCoordinator.SuppressRequests()",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "if (!runtimeActionsAvailable)" + Environment.NewLine +
+            "        {" + Environment.NewLine +
+            "            ImGui.BeginDisabled();" + Environment.NewLine +
+            "        }",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures sensitive provider credential labels are rendered through a
+    /// password-masked input path rather than plain text.
+    /// </summary>
+    [Fact]
+    public void FieldValidationHelper_MasksSensitiveCredentialLabels()
+    {
+        var resolveInputFlags = typeof(FieldValidationHelper).GetMethod(
+            "ResolveInputFlags",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(resolveInputFlags);
+
+        var chatGptFlags = resolveInputFlags.Invoke(
+            null,
+            [global::Echoglossian.Properties.Resources.ChatGptApiKey]);
+        var awsSecretFlags = resolveInputFlags.Invoke(
+            null,
+            [global::Echoglossian.Properties.Resources.AWSSecretKey]);
+        var geminiFlags = resolveInputFlags.Invoke(
+            null,
+            [global::Echoglossian.Properties.Resources.GeminiAPIKey]);
+        var nonSensitiveFlags = resolveInputFlags.Invoke(
+            null,
+            [global::Echoglossian.Properties.Resources.ModelEndpoint]);
+        Assert.NotNull(chatGptFlags);
+        Assert.NotNull(awsSecretFlags);
+        Assert.NotNull(geminiFlags);
+        Assert.NotNull(nonSensitiveFlags);
+
+        Assert.Equal("Password", chatGptFlags.ToString());
+        Assert.Equal("Password", awsSecretFlags.ToString());
+        Assert.Equal("Password", geminiFlags.ToString());
+        Assert.Equal("None", nonSensitiveFlags.ToString());
     }
 
     /// <summary>
