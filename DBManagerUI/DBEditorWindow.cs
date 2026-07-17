@@ -8,7 +8,7 @@ namespace Echoglossian.DBManagerUI
   /// <summary>
   /// Main DB editor window orchestrating components.
   /// </summary>
-  public class DbEditorWindow
+  public class DbEditorWindow : IDisposable
   {
     private readonly EchoglossianDbContext dbContext;
     private readonly Action<Notification> addNotification;
@@ -100,6 +100,14 @@ namespace Echoglossian.DBManagerUI
         onDelete: this.OnDeleteEdit);
 
       this.InitializeTableNames();
+    }
+
+    /// <summary>
+    /// Disposes the editor-owned database context.
+    /// </summary>
+    public void Dispose()
+    {
+      this.dbContext.Dispose();
     }
 
     /// <summary>

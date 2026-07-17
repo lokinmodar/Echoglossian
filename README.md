@@ -59,6 +59,30 @@ Localized versions of that document:
 - [Simplified Chinese](docs/translation-surface-support-matrix.zh-CN.md)
 - [Traditional Chinese (Taiwan)](docs/translation-surface-support-matrix.zh-TW.md)
 
+## Local Validation
+
+Run the local plugin test rails with:
+
+```powershell
+.\scripts\validate-local-tests.ps1
+```
+
+This keeps plugin validation local-only and does not rely on GitHub Actions.
+The DalaMock runner and startup smoke tests require resolvable local FFXIV
+game data. They check `EXD_DATA_DIR`, then `%AppData%\XIVLauncher\launcherConfigV3.json`,
+then standard Windows install paths for the game's `sqpack` directory.
+
+## DalaMock Runner
+
+Launch the local mock host with:
+
+```powershell
+dotnet run --project .\Echoglossian.Mock\Echoglossian.Mock.csproj -c Debug
+```
+
+`Echoglossian.Mock` is a local DalaMock runner for startup and wiring checks.
+It complements `Echoglossian.Tests`; it does not replace the existing unit-test rail.
+
 ## Official Repo AI Disclosure
 
 For work intended for the official Dalamud plugin repository, AI usage beyond

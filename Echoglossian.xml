@@ -3195,6 +3195,11 @@
                 builds while <c>ActionDetail</c> and <c>ItemDetail</c> remain unstable.
             </summary>
         </member>
+        <member name="P:Echoglossian.Echoglossian.StartupAudit">
+            <summary>
+            Gets the startup audit state used by local mock lifecycle assertions.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.Dispose">
             <inheritdoc />
         </member>
@@ -7381,6 +7386,11 @@
             </summary>
             <param name="dbContext">EF Core DbContext.</param>
             <param name="addNotification">The host notification callback.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Dispose">
+            <summary>
+            Disposes the editor-owned database context.
+            </summary>
         </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Draw">
             <summary>
@@ -24314,6 +24324,51 @@
         <member name="P:Echoglossian.QuestTodoProgressSnapshot.CacheKey">
             <summary>
                 Gets a stable key for the live todo progress snapshot.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginRuntime.Startup.PluginStartupAudit">
+            <summary>
+            Records startup and shutdown milestones so local mock tests can assert the plugin lifecycle without changing the public plugin surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginRuntime.Startup.PluginStartupAudit.Mark(Echoglossian.PluginRuntime.Startup.PluginStartupStage)">
+            <summary>
+            Records a completed stage.
+            </summary>
+            <param name="stage">The stage to record.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntime.Startup.PluginStartupAudit.CaptureSnapshot">
+            <summary>
+            Captures the current startup state.
+            </summary>
+            <returns>A stable snapshot of the completed stages.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginRuntime.Startup.PluginStartupSnapshot">
+            <summary>
+            Captures a stable view of the plugin startup audit at a point in time.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginRuntime.Startup.PluginStartupSnapshot.#ctor(System.Collections.Generic.IEnumerable{Echoglossian.PluginRuntime.Startup.PluginStartupStage})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.PluginRuntime.Startup.PluginStartupSnapshot"/> class.
+            </summary>
+            <param name="completedStages">The completed stages.</param>
+        </member>
+        <member name="P:Echoglossian.PluginRuntime.Startup.PluginStartupSnapshot.CompletedStages">
+            <summary>
+            Gets the completed startup stages.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginRuntime.Startup.PluginStartupSnapshot.HasStage(Echoglossian.PluginRuntime.Startup.PluginStartupStage)">
+            <summary>
+            Returns a value indicating whether the snapshot contains the requested stage.
+            </summary>
+            <param name="stage">The stage to check.</param>
+            <returns><see langword="true"/> when the stage has been recorded; otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginRuntime.Startup.PluginStartupStage">
+            <summary>
+            Identifies the startup and shutdown milestones that the plugin can expose to local mock tests.
             </summary>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.LanguageDropdownHelper">
