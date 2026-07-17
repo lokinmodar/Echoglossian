@@ -174,6 +174,27 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures JournalDetail native reflow stays localized to the quest addon
+    /// namespace instead of drifting back into shared helper space.
+    /// </summary>
+    [Fact]
+    public void JournalDetailNativeReflow_HelperLivesInQuestNamespace()
+    {
+        var assembly = typeof(JournalDetailHandler).Assembly;
+        var localizedHelperType = assembly.GetType(
+            "Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper");
+        var retiredSharedHelperTypeName = string.Concat(
+            "Echoglossian.NativeUI.Helpers.",
+            "NativeText",
+            "FlowReflowHelper");
+        var sharedHelperType = assembly.GetType(
+            retiredSharedHelperTypeName);
+
+        Assert.NotNull(localizedHelperType);
+        Assert.Null(sharedHelperType);
+    }
+
+    /// <summary>
     /// Creates the minimal dependency bundle required to construct quest
     /// handlers for lifecycle tests.
     /// </summary>
