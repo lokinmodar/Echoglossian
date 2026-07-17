@@ -5,6 +5,7 @@
 
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.Scenarios;
+using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -156,6 +157,81 @@ public sealed class ScreenshotCropTests
             new Vector2(2800f, 1800f));
 
         Assert.Equal(new Rectangle(4, 24, 232, 132), crop);
+    }
+
+    /// <summary>
+    /// Ensures logical plugin-window bounds scale into physical framebuffer
+    /// pixels before interactive capture.
+    /// </summary>
+    [Fact]
+    public void CalculateInteractiveWindowCrop_UsesFramebufferScaleForHiDpiHosts()
+    {
+        var crop = Program.CalculateInteractiveWindowCrop(
+            new Rectangle(100, 50, 400, 200),
+            new Vector2(1400f, 900f),
+            new Vector2(2800f, 1800f));
+
+        Assert.Equal(new Rectangle(200, 100, 800, 400), crop);
+    }
+
+    /// <summary>
+    /// Ensures deterministic batch window captures use physical framebuffer
+    /// pixels when the preview host uses HiDPI scaling.
+    /// </summary>
+    [Fact]
+    public void CalculateBatchWindowCrop_UsesFramebufferScaleForHiDpiHosts()
+    {
+        var crop = BatchScreenshotRunner.CalculateWindowCrop(
+            new Rectangle(100, 50, 400, 200),
+            new Vector2(1400f, 900f),
+            new Vector2(2800f, 1800f));
+
+        Assert.Equal(new Rectangle(200, 100, 800, 400), crop);
+    }
+
+    /// <summary>
+    /// Ensures batch plugin-window captures scale against the offscreen source
+    /// texture rather than an independently scaled swapchain framebuffer.
+    /// </summary>
+    [Fact]
+    public void CalculateOffscreenWindowCrop_UsesOffscreenTextureSizeForHiDpiHosts()
+    {
+        var crop = BatchScreenshotRunner.CalculateOffscreenWindowCrop(
+            new Rectangle(100, 50, 400, 200),
+            new Vector2(1400f, 900f),
+            new Vector2(1400f, 900f));
+
+        Assert.Equal(new Rectangle(100, 50, 400, 200), crop);
+    }
+
+    /// <summary>
+    /// Ensures a requested crop outside its source texture is rejected rather
+    /// than silently intersected with the available pixels.
+    /// </summary>
+    [Fact]
+    public void ValidateCrop_CropExceedsSource_ThrowsInvalidOperationException()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => VeldridScreenshotCapture.ValidateCrop(
+                new Rectangle(80, 20, 30, 40),
+                sourceWidth: 100,
+                sourceHeight: 100));
+
+        Assert.Contains("exceeds", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Ensures missing plugin-window bounds cannot fall through to full-frame capture.
+    /// </summary>
+    [Fact]
+    public void RequireWindowCrop_MissingBounds_ThrowsInvalidOperationException()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => BatchScreenshotRunner.RequireWindowCrop(
+                null,
+                PreviewCaptureTarget.ConfigWindow));
+
+        Assert.Contains("ConfigWindow", exception.Message, StringComparison.Ordinal);
     }
 
     /// <summary>

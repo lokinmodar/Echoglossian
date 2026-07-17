@@ -17,7 +17,14 @@ public static class PluginConfigWindowFooter
   /// <param name="config">The window open/close flag.</param>
   /// <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
   /// <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
-  public static void DrawFooter(ref bool config, ref bool saveConfigValue, ImTextureID pixImageHandle, ImTextureID cryptoImageHandle)
+  /// <param name="cryptoImageHandle">The ImGui texture handle for the crypto QR image.</param>
+  /// <param name="imagesAvailable">Whether host-provided imagery is available.</param>
+  public static void DrawFooter(
+      ref bool config,
+      ref bool saveConfigValue,
+      ImTextureID pixImageHandle,
+      ImTextureID cryptoImageHandle,
+      bool imagesAvailable)
   {
     var windowSize = ImGui.GetWindowContentRegionMax();
 
@@ -81,16 +88,26 @@ public static class PluginConfigWindowFooter
     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.60f, 1.0f, 0.60f, 0.95f)); // brighter on hover
     ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.45f, 0.87f, 0.45f, 1.00f)); // slightly deeper for active
 
+    if (!imagesAvailable)
+    {
+      ImGui.BeginDisabled();
+    }
+
     if (ImGui.Button(Resources.SendCryptoButton))
     {
       ImGui.OpenPopup(Resources.CryptoQrWindowLabel);
+    }
+
+    if (!imagesAvailable)
+    {
+      ImGui.EndDisabled();
     }
 
     // Always center this window when appearing
     var centerbtn = ImGui.GetMainViewport().GetCenter();
     ImGui.SetNextWindowPos(centerbtn, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
 
-    if (ImGui.BeginPopupModal(Resources.CryptoQrWindowLabel))
+    if (imagesAvailable && ImGui.BeginPopupModal(Resources.CryptoQrWindowLabel))
     {
       ImGui.Text(Resources.CryptoQRCodeInstructionsText);
       ImGui.Image(cryptoImageHandle, new Vector2(450, 512));
@@ -115,16 +132,26 @@ public static class PluginConfigWindowFooter
     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.18f, 0.26f, 0.45f, 1.0f)); // lighter blue on hover
     ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.10f, 0.23f, 0.42f, 1.0f)); // accent/active blue
 
+    if (!imagesAvailable)
+    {
+      ImGui.BeginDisabled();
+    }
+
     if (ImGui.Button(Resources.SendPixButton))
     {
       ImGui.OpenPopup(Resources.PixQrWindowLabel);
+    }
+
+    if (!imagesAvailable)
+    {
+      ImGui.EndDisabled();
     }
 
     // Pix QR Popup
     var center = ImGui.GetMainViewport().GetCenter();
     ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
 
-    if (ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
+    if (imagesAvailable && ImGui.BeginPopupModal(Resources.PixQrWindowLabel))
     {
       ImGui.Text(Resources.QRCodeInstructionsText);
       ImGui.Image(pixImageHandle, new Vector2(512, 512));
@@ -140,6 +167,11 @@ public static class PluginConfigWindowFooter
 
     ImGui.PopStyleColor(3);
     ImGui.PopID();
+
+    if (!imagesAvailable)
+    {
+      ImGui.TextDisabled(Resources.PreviewImageryUnavailableText);
+    }
 
     ImGui.EndGroup();
   }

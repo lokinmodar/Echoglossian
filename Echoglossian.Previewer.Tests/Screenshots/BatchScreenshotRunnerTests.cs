@@ -6,7 +6,10 @@
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
+using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TranslationOverlay;
+
+using System.Text.Json;
 
 using Xunit;
 
@@ -100,6 +103,405 @@ public sealed class BatchScreenshotRunnerTests
 
         Assert.Contains("string ConfigSourceLabel", source, StringComparison.Ordinal);
         Assert.DoesNotContain("string ConfigSourcePath", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures the real manifest serializer writes plugin-window targets as stable JSON strings.
+    /// </summary>
+    [Fact]
+    public void SerializeManifest_PluginWindowTarget_WritesCaptureTargetString()
+    {
+        var manifest = new BatchScreenshotRunner.ScreenshotManifest(
+            "defaults",
+            [],
+            20,
+            [
+                new BatchScreenshotRunner.ScreenshotManifestEntry(
+                    "talk",
+                    "Talk",
+                    1920,
+                    1080,
+                    "Full",
+                    PreviewCaptureTarget.DbManagerWindow,
+                    "PlainImGui",
+                    "full-talk-dbmanagerwindow-1920x1080.png"),
+            ]);
+
+        var json = BatchScreenshotRunner.SerializeManifest(manifest);
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal(
+            "DbManagerWindow",
+            document.RootElement
+                .GetProperty("Entries")[0]
+                .GetProperty("CaptureTarget")
+                .GetString());
+    }
+
+    /// <summary>
+    /// Ensures plugin-window captures explicitly mark overlay-specific
+    /// manifest metadata as not applicable.
+    /// </summary>
+    [Fact]
+    public void GetManifestTargetMetadata_PluginWindow_UsesNotApplicableValues()
+    {
+        var metadata = BatchScreenshotRunner.GetManifestTargetMetadata(
+            PreviewCaptureTarget.DbManagerWindow,
+            "Talk",
+            "PlainImGui");
+
+        Assert.Equal("NotApplicable", metadata.SurfaceKey);
+        Assert.Equal("NotApplicable", metadata.PresentationMode);
+    }
+
+    /// <summary>
+    /// Ensures a failed staged capture leaves the destination's existing files
+    /// untouched and removes its private staging directory.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_StagedCaptureFailure_PreservesDestination()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            Directory.CreateDirectory(destination);
+            var unrelatedPath = Path.Combine(destination, "notes.txt");
+            File.WriteAllText(unrelatedPath, "keep");
+
+            Assert.Throws<IOException>(() =>
+                BatchScreenshotRunner.WriteOutputsAtomically(
+                    destination,
+                    stagingDirectory =>
+                    {
+                        File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "partial");
+                        throw new IOException("second capture failed");
+                    }));
+
+            Assert.Equal("keep", File.ReadAllText(unrelatedPath));
+            Assert.DoesNotContain(
+                Directory.EnumerateFileSystemEntries(destination),
+                path => Path.GetFileName(path).StartsWith(".echoglossian-previewer-", StringComparison.Ordinal));
+            Assert.DoesNotContain(Directory.EnumerateFiles(destination), path => path.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures a failed publication restores files from an earlier successful
+    /// batch instead of leaving a partially replaced destination.
+    /// </summary>
+    [Fact]
+    public void PublishStagedOutputs_LaterMoveFailure_RestoresExistingOutputs()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            var stagingDirectory = Path.Combine(tempDirectory.FullName, "staging");
+            Directory.CreateDirectory(destination);
+            Directory.CreateDirectory(stagingDirectory);
+            File.WriteAllText(Path.Combine(destination, "first.png"), "old-first");
+            File.WriteAllText(Path.Combine(destination, "manifest.json"), "old-manifest");
+            File.WriteAllText(Path.Combine(destination, "notes.txt"), "keep");
+            File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+            File.WriteAllText(Path.Combine(stagingDirectory, "manifest.json"), "new-manifest");
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                BatchScreenshotRunner.PublishStagedOutputs(
+                    stagingDirectory,
+                    destination,
+                    (source, target) =>
+                    {
+                        if (string.Equals(
+                                source,
+                                Path.Combine(stagingDirectory, "manifest.json"),
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("manifest publish failed");
+                        }
+
+                        File.Move(source, target);
+                    }));
+
+            Assert.Contains(destination, exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal("old-first", File.ReadAllText(Path.Combine(destination, "first.png")));
+            Assert.Equal("old-manifest", File.ReadAllText(Path.Combine(destination, "manifest.json")));
+            Assert.Equal("keep", File.ReadAllText(Path.Combine(destination, "notes.txt")));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures an incomplete rollback preserves the only remaining prior output
+    /// in a recovery directory instead of deleting it during staging cleanup.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_RestoreFailure_PreservesRecoveryDirectory()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            Directory.CreateDirectory(destination);
+            File.WriteAllText(Path.Combine(destination, "first.png"), "old-first");
+            File.WriteAllText(Path.Combine(destination, "manifest.json"), "old-manifest");
+
+            var exception = Assert.Throws<BatchScreenshotRunner.BatchPublicationException>(
+                () => BatchScreenshotRunner.WriteOutputsAtomically(
+                    destination,
+                    stagingDirectory =>
+                    {
+                        File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+                        File.WriteAllText(Path.Combine(stagingDirectory, "manifest.json"), "new-manifest");
+                    },
+                    (source, target) =>
+                    {
+                        if (source.EndsWith(
+                                Path.Combine("rollback", "first.png"),
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("first restore failed");
+                        }
+
+                        if (string.Equals(
+                                Path.GetFileName(source),
+                                "manifest.json",
+                                StringComparison.OrdinalIgnoreCase) &&
+                            !source.Contains(
+                                Path.DirectorySeparatorChar + "rollback" + Path.DirectorySeparatorChar,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("manifest publish failed");
+                        }
+
+                        File.Move(source, target);
+                    }));
+
+            Assert.True(exception.RollbackIncomplete);
+            Assert.Contains(destination, exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.True(Directory.Exists(exception.RecoveryDirectory));
+            Assert.Equal(
+                "old-first",
+                File.ReadAllText(Path.Combine(exception.RecoveryDirectory, "rollback", "first.png")));
+            Assert.Equal("old-manifest", File.ReadAllText(Path.Combine(destination, "manifest.json")));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures a rollback cleanup failure is reported and retains the private
+    /// staging directory for recovery instead of silently leaving new output.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_PublishedCleanupFailure_PreservesRecoveryDirectory()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            Directory.CreateDirectory(destination);
+            File.WriteAllText(Path.Combine(destination, "first.png"), "old-first");
+            var firstDeleteAttempt = true;
+
+            var exception = Assert.Throws<BatchScreenshotRunner.BatchPublicationException>(
+                () => BatchScreenshotRunner.WriteOutputsAtomically(
+                    destination,
+                    stagingDirectory =>
+                    {
+                        File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+                        File.WriteAllText(Path.Combine(stagingDirectory, "second.png"), "new-second");
+                    },
+                    (source, target) =>
+                    {
+                        if (string.Equals(
+                                Path.GetFileName(source),
+                                "second.png",
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("second publish failed");
+                        }
+
+                        File.Move(source, target);
+                    },
+                    path =>
+                    {
+                        if (firstDeleteAttempt && string.Equals(
+                                Path.GetFileName(path),
+                                "first.png",
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            firstDeleteAttempt = false;
+                            throw new IOException("published cleanup failed");
+                        }
+
+                        File.Delete(path);
+                    }));
+
+            Assert.True(exception.RollbackIncomplete);
+            Assert.True(Directory.Exists(exception.RecoveryDirectory));
+            Assert.Equal("old-first", File.ReadAllText(Path.Combine(destination, "first.png")));
+            Assert.Equal(
+                "new-second",
+                File.ReadAllText(Path.Combine(exception.RecoveryDirectory, "second.png")));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures output-directory setup failures are reported with the same
+    /// contextual screenshot failure messaging as later publication failures.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_OutputDirectorySetupFailure_ReturnsContextualInvalidOperationException()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var occupiedPath = Path.Combine(tempDirectory.FullName, "captures");
+            File.WriteAllText(occupiedPath, "not-a-directory");
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => BatchScreenshotRunner.WriteOutputsAtomically(
+                    occupiedPath,
+                    _ => { }));
+
+            Assert.Contains("Screenshot", exception.Message, StringComparison.Ordinal);
+            Assert.Contains(occupiedPath, exception.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures rollback-directory setup failures are wrapped in the same
+    /// contextual publication error instead of escaping as raw IO exceptions.
+    /// </summary>
+    [Fact]
+    public void PublishStagedOutputs_RollbackDirectorySetupFailure_ReturnsContextualInvalidOperationException()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            var stagingDirectory = Path.Combine(tempDirectory.FullName, "staging");
+            Directory.CreateDirectory(destination);
+            Directory.CreateDirectory(stagingDirectory);
+            File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+            File.WriteAllText(Path.Combine(stagingDirectory, "rollback"), "occupied");
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => BatchScreenshotRunner.PublishStagedOutputs(
+                    stagingDirectory,
+                    destination));
+
+            Assert.Contains("Screenshot publication", exception.Message, StringComparison.Ordinal);
+            Assert.Contains(destination, exception.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures output failures name the affected path instead of exposing only
+    /// an unqualified inner exception.
+    /// </summary>
+    [Fact]
+    public void CreateOutputFailureMessage_ManifestWrite_IncludesOutputPath()
+    {
+        const string outputPath = @"C:\captures\manifest.json";
+
+        var message = BatchScreenshotRunner.CreateOutputFailureMessage(
+            "Manifest write",
+            outputPath,
+            new IOException("disk full"));
+
+        Assert.Contains("Manifest write", message, StringComparison.Ordinal);
+        Assert.Contains(outputPath, message, StringComparison.Ordinal);
+        Assert.Contains("disk full", message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures plugin-window captures rely on stable window bounds rather than overlay draw success.
+    /// </summary>
+    [Theory]
+    [InlineData((int)PreviewCaptureTarget.ConfigWindow)]
+    [InlineData((int)PreviewCaptureTarget.DbManagerWindow)]
+    [InlineData((int)PreviewCaptureTarget.TranslatorMetricsWindow)]
+    public void IsCaptureReady_PluginWindowWithStableBounds_DoesNotRequireOverlayDraw(
+        int targetValue)
+    {
+        var ready = BatchScreenshotRunner.IsCaptureReady(
+            (PreviewCaptureTarget)targetValue,
+            overlayWasDrawn: false,
+            hasStableWindowBounds: true);
+
+        Assert.True(ready);
+    }
+
+    /// <summary>
+    /// Ensures overlay captures continue to require an overlay draw.
+    /// </summary>
+    [Fact]
+    public void IsCaptureReady_OverlaySurfaceWithoutDraw_IsNotReady()
+    {
+        var ready = BatchScreenshotRunner.IsCaptureReady(
+            PreviewCaptureTarget.OverlaySurface,
+            overlayWasDrawn: false,
+            hasStableWindowBounds: true);
+
+        Assert.False(ready);
+    }
+
+    /// <summary>
+    /// Ensures deterministic plugin-window captures do not render the overlay
+    /// scenario behind the requested plugin window.
+    /// </summary>
+    [Fact]
+    public void Capture_PluginWindowTarget_SuppressesOverlayDrawing()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "Echoglossian.Previewer",
+            "Screenshots",
+            "BatchScreenshotRunner.cs"));
+
+        Assert.Contains(
+            "if (!PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget))",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures batch capture failures use shared contextual reporting without
+    /// deleting pre-existing destination files before staging cleanup.
+    /// </summary>
+    [Fact]
+    public void Run_ExpectedCaptureFailure_UsesSharedFailureMessage()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "Echoglossian.Previewer",
+            "Screenshots",
+            "BatchScreenshotRunner.cs"));
+
+        Assert.Contains("Program.CreateScreenshotFailureMessage(", source, StringComparison.Ordinal);
     }
 
     /// <summary>

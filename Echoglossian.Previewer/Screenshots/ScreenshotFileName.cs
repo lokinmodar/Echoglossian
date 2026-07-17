@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Previewer.Scenarios;
+using Echoglossian.Previewer.UI;
 
 namespace Echoglossian.Previewer.Screenshots;
 
@@ -32,17 +33,24 @@ internal static class ScreenshotFileName
     /// <param name="mode">The screenshot mode.</param>
     /// <param name="scenarioKey">The scenario key.</param>
     /// <param name="viewport">The logical viewport.</param>
+    /// <param name="captureTarget">The requested capture target.</param>
     /// <returns>A Windows-safe PNG file name.</returns>
     internal static string CreatePngName(
         ScreenshotMode mode,
         string scenarioKey,
-        PreviewViewportPreset viewport)
+        PreviewViewportPreset viewport,
+        PreviewCaptureTarget captureTarget = PreviewCaptureTarget.FullFrame)
     {
         ArgumentNullException.ThrowIfNull(viewport);
 
         var modePart = Sanitize(mode.ToString().ToLowerInvariant());
         var scenarioPart = Sanitize(scenarioKey);
-        return $"{modePart}-{scenarioPart}-{viewport.Width}x{viewport.Height}.png";
+        var targetPart = captureTarget is PreviewCaptureTarget.ConfigWindow or
+            PreviewCaptureTarget.DbManagerWindow or
+            PreviewCaptureTarget.TranslatorMetricsWindow
+            ? $"-{Sanitize(captureTarget.ToString())}"
+            : string.Empty;
+        return $"{modePart}-{scenarioPart}{targetPart}-{viewport.Width}x{viewport.Height}.png";
     }
 
     /// <summary>

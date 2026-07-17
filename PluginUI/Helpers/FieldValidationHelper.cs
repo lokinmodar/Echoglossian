@@ -11,6 +11,18 @@ namespace Echoglossian.Helpers;
 public static class FieldValidationHelper
 {
   private static readonly Dictionary<string, bool> FieldTouched = new();
+  private static readonly HashSet<string> SensitiveFieldLabels =
+  [
+      Resources.APIKey,
+      Resources.ChatGptApiKey,
+      Resources.AWSAccessKey,
+      Resources.AWSSecretKey,
+      Resources.DeeplTranslatorApiKey,
+      Resources.GeminiAPIKey,
+      Resources.MicrosoftTranslatorAPIKey,
+      Resources.OptionalApiKeyLabel,
+      Resources.YandexCloudApiKey,
+  ];
 
   /// <summary>
   /// Displays a warning message if the field value is null or whitespace.
@@ -36,7 +48,11 @@ public static class FieldValidationHelper
       FieldTouched[label] = false;
     }
 
-    bool changed = ImGui.InputText(label, ref value, maxLength);
+    bool changed = ImGui.InputText(
+        label,
+        ref value,
+        maxLength,
+        ResolveInputFlags(label));
 
     if (ImGui.IsItemActive() || changed)
     {
@@ -119,5 +135,12 @@ public static class FieldValidationHelper
   private static string FormatRequiredFieldMessage(string label)
   {
     return string.Format(Resources.RequiredFieldMessageFormat, label);
+  }
+
+  private static ImGuiInputTextFlags ResolveInputFlags(string label)
+  {
+    return SensitiveFieldLabels.Contains(label)
+        ? ImGuiInputTextFlags.Password
+        : ImGuiInputTextFlags.None;
   }
 }

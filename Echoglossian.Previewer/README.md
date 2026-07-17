@@ -46,17 +46,37 @@ By default, the previewer attempts to read:
 %APPDATA%\XIVLauncher\pluginConfigs\Echoglossian.json
 ```
 
-The file is opened read-only with sharing enabled, cloned into preview-owned
-state, and never saved back. If the file is missing or malformed, the previewer
-uses a new default `Config` and shows a non-secret diagnostic. To use another
-configuration:
+The file is opened read-only with sharing enabled, cloned into a preview-owned
+session workspace, and never saved back. The previewer also creates a WAL-aware
+SQLite snapshot of the optional database source in that workspace before later
+preview phases can use it. If
+either source is missing, or if the optional database snapshot cannot be
+created, the previewer retains an isolated default or omits the database and
+records a non-secret session diagnostic. To use other sources:
 
 ```powershell
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --config .\sample\Echoglossian.json
+dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --db .\sample\Echoglossian.db
 ```
 
-Do not point the previewer at a live source database. Phase A does not open the
-plugin DB.
+The default database source is
+`%APPDATA%\XIVLauncher\pluginConfigs\Echoglossian\Echoglossian.db`.
+The previewer reads but does not modify the live database while creating its
+snapshot.
+
+## Unified Workbench
+
+The interactive shell hosts the real plugin code for these surfaces alongside
+the overlay scenarios:
+
+- `Config`
+- `DB Manager`
+- `Translator Metrics / Debugger`
+
+Use the window toggles to open each surface. DB Manager is disabled when the
+session has no database snapshot. Preview edits and saves affect only the
+cloned session files; they are never written back automatically to either live
+source. There is no export-back flow in Phase 1.
 
 ## CLI Options
 
@@ -65,11 +85,16 @@ plugin DB.
   then exits.
 - `--config <path>`: loads an absolute or relative Echoglossian config JSON
   read-only.
+- `--db <path>`: creates a WAL-aware snapshot of an absolute or relative
+  Echoglossian database in the preview-owned session workspace.
 - `--scenario <surface-key>`: selects a scenario; defaults to `talk`.
 - `--viewport <width>x<height>`: selects the logical preview viewport; defaults
   to `1920x1080`.
 - `--screenshot <full|surface|batch>`: exports screenshots instead of opening
   the interactive shell.
+- `--capture-target <config-window|db-manager-window|translator-metrics-window>`:
+  exports one real plugin window with `--screenshot full` after its fixed bounds
+  remain stable across consecutive frames.
 - `--output <directory>`: writes screenshots to a specific directory; defaults
   to `artifacts\previewer\screenshots\<timestamp>`.
 
@@ -92,7 +117,8 @@ Controls include:
 - Optional simulated addon bounds guide.
 - Editable title and body text.
 - Editable addon bounds input values.
-- Full-frame and selected-surface screenshot buttons.
+- Full-frame, selected overlay surface, Config, DB Manager, and Translator
+  Metrics window screenshot buttons.
 - Fidelity summary with config source, font file and size, logical viewport,
   selected presentation mode, and whether simulated addon bounds are shown.
 
@@ -107,12 +133,17 @@ Examples:
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot full --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\full
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot surface --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\surface
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot batch --viewport 1920x1080 --output artifacts\previewer\screenshots\batch
+dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot full --capture-target config-window --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\config-window
 ```
 
-Batch mode with a single viewport writes 12 PNG files plus `manifest.json`.
-Batch mode without `--viewport` runs all built-in viewports. The manifest records
-scenario key, surface key, viewport, screenshot mode, presentation mode, config
-source path, font file names, font size, and PNG path. Screenshot output is
+Batch mode with a single viewport writes 12 overlay PNG files plus
+`manifest.json`. Batch mode without `--viewport` runs all built-in viewports.
+Use `--capture-target` or the interactive shell's target-specific buttons to
+capture Config, DB Manager, or Translator Metrics windows. Each window uses a
+fixed layout and must report stable non-empty bounds before capture; missing
+bounds fail without writing a misleading target-specific image. The manifest records scenario key, surface
+key, viewport, screenshot mode, capture target, presentation mode, config
+source label, font file names, font size, and PNG path. Screenshot output is
 under `artifacts/` and ignored by git.
 
 ## Presentation Modes

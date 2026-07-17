@@ -103,6 +103,47 @@ public sealed class PreviewFontCatalogTests
     }
 
     /// <summary>
+    /// Ensures preview startup configures downloaded-font asset state and
+    /// reports a missing selected language font.
+    /// </summary>
+    [Fact]
+    public void InitializePreviewAssets_MissingDownloadedLanguageFont_ReportsDiagnostic()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        var originalAssetsPath = global::Echoglossian.AssetsManager.AssetsPath;
+        var originalAssetFiles = global::Echoglossian.AssetsManager.AssetFiles;
+        var configuration = new Config();
+        var language = new LanguageInfo(
+            "ja",
+            "Japanese",
+            "NotoSansCJKjp-Regular.otf",
+            string.Empty,
+            []);
+
+        try
+        {
+            var diagnostics = PreviewFontCatalog.InitializePreviewAssets(
+                language,
+                configuration,
+                tempDirectory.FullName);
+
+            Assert.Equal(Path.Combine(tempDirectory.FullName, "Font"), global::Echoglossian.AssetsManager.AssetsPath);
+            Assert.Contains("NotoSansCJKjp-Regular.otf", global::Echoglossian.AssetsManager.AssetFiles);
+            Assert.False(configuration.PluginAssetsDownloaded);
+            Assert.Contains(
+                diagnostics,
+                diagnostic => diagnostic.Contains("NotoSansCJKjp-Regular.otf", StringComparison.Ordinal) &&
+                    diagnostic.Contains("unavailable", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            global::Echoglossian.AssetsManager.AssetsPath = originalAssetsPath;
+            global::Echoglossian.AssetsManager.AssetFiles = originalAssetFiles;
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Ensures the preview font atlas always includes editable Latin text.
     /// </summary>
     [Fact]
@@ -159,6 +200,60 @@ public sealed class PreviewFontCatalogTests
 
         Assert.Equal("aa", language.Code);
         Assert.Equal("a.ttf", language.FontName);
+    }
+
+    /// <summary>
+    /// Ensures startup language resolution repairs an unknown configured identifier.
+    /// </summary>
+    [Fact]
+    public void NormalizePreviewLanguage_UnknownConfiguredId_WritesFallbackKey()
+    {
+        var languages = new Dictionary<int, LanguageInfo>
+        {
+            [28] = new LanguageInfo("en", "English", "en.ttf", string.Empty, []),
+            [7] = new LanguageInfo("aa", "A Test", "a.ttf", string.Empty, []),
+        };
+        var configuration = new Config { Lang = 12345 };
+
+        var language = Program.NormalizePreviewLanguage(languages, configuration);
+
+        Assert.Equal(28, configuration.Lang);
+        Assert.Same(languages[28], language);
+    }
+
+    /// <summary>
+    /// Ensures startup language resolution preserves a valid configured identifier.
+    /// </summary>
+    [Fact]
+    public void NormalizePreviewLanguage_KnownConfiguredId_PreservesKey()
+    {
+        var languages = new Dictionary<int, LanguageInfo>
+        {
+            [28] = new LanguageInfo("en", "English", "en.ttf", string.Empty, []),
+            [7] = new LanguageInfo("aa", "A Test", "a.ttf", string.Empty, []),
+        };
+        var configuration = new Config { Lang = 7 };
+
+        var language = Program.NormalizePreviewLanguage(languages, configuration);
+
+        Assert.Equal(7, configuration.Lang);
+        Assert.Same(languages[7], language);
+    }
+
+    /// <summary>
+    /// Ensures preview startup applies the same engine support and language presentation flags as the plugin.
+    /// </summary>
+    [Fact]
+    public void InitializePreviewLanguageRuntime_AppliesSupportAndPresentationFlags()
+    {
+        var configuration = new Config { Lang = 21 };
+
+        var (languages, selectedLanguage) = Program.InitializePreviewLanguageRuntime(configuration);
+
+        Assert.Same(languages[21], selectedLanguage);
+        Assert.Contains(2, selectedLanguage.SupportedEngines!);
+        Assert.True(configuration.OverlayOnlyLanguage);
+        Assert.False(configuration.UnsupportedLanguage);
     }
 
     /// <summary>

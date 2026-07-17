@@ -8,9 +8,10 @@ namespace Echoglossian.DBManagerUI
   /// <summary>
   /// Main DB editor window orchestrating components.
   /// </summary>
-  public class DbEditorWindow
+  public class DbEditorWindow : IDisposable
   {
     private readonly EchoglossianDbContext dbContext;
+    private readonly Action<Notification> addNotification;
     private readonly DbMetadataCache metadata;
     private readonly DbSetAccessor setAccessor;
     private readonly CsvExporter csvExporter;
@@ -33,12 +34,33 @@ namespace Echoglossian.DBManagerUI
     public bool IsOpen = false;
 
     /// <summary>
+    /// Gets the bounds captured during the most recent successful draw.
+    /// </summary>
+    internal RectangleF? LastWindowBounds { get; private set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="DbEditorWindow"/> class.
     /// </summary>
     /// <param name="dbContext">EF Core DbContext.</param>
     public DbEditorWindow(EchoglossianDbContext dbContext)
+      : this(
+        dbContext,
+        static notification => NotificationManager.AddNotification(notification))
     {
-      this.dbContext = dbContext;
+    }
+
+    /// <summary>
+    /// Initializes a host-adapted instance of the <see cref="DbEditorWindow"/> class.
+    /// </summary>
+    /// <param name="dbContext">EF Core DbContext.</param>
+    /// <param name="addNotification">The host notification callback.</param>
+    internal DbEditorWindow(
+      EchoglossianDbContext dbContext,
+      Action<Notification> addNotification)
+    {
+      this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+      this.addNotification = addNotification ??
+        throw new ArgumentNullException(nameof(addNotification));
       this.metadata = new DbMetadataCache();
       this.setAccessor = new DbSetAccessor();
       this.csvExporter = new CsvExporter();
@@ -81,6 +103,14 @@ namespace Echoglossian.DBManagerUI
     }
 
     /// <summary>
+    /// Disposes the editor-owned database context.
+    /// </summary>
+    public void Dispose()
+    {
+      this.dbContext.Dispose();
+    }
+
+    /// <summary>
     /// Draws the window and its components.
     /// </summary>
     public void Draw()
@@ -97,6 +127,7 @@ namespace Echoglossian.DBManagerUI
 
       if (!ImGui.Begin(Resources.EchoglossianDBEditor, ref this.IsOpen, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar))
       {
+        this.CaptureWindowBounds();
         ImGui.End();
         return;
       }
@@ -146,7 +177,20 @@ namespace Echoglossian.DBManagerUI
 
       this.editModal.Draw();
 
+      this.CaptureWindowBounds();
       ImGui.End();
+    }
+
+    /// <summary>
+    /// Captures the current DB manager window bounds for screenshot cropping.
+    /// </summary>
+    private void CaptureWindowBounds()
+    {
+      this.LastWindowBounds = new RectangleF(
+        ImGui.GetWindowPos().X,
+        ImGui.GetWindowPos().Y,
+        ImGui.GetWindowSize().X,
+        ImGui.GetWindowSize().Y);
     }
 
     /// <summary>
@@ -237,7 +281,7 @@ namespace Echoglossian.DBManagerUI
         if (this.currentRows.Count == 0)
         {
           PluginRuntimeLog.Debug($"[DbEditorWindow] No records found in {this.selectedTable}.");
-          NotificationManager.AddNotification(new Notification
+          this.addNotification(new Notification
           {
             Content = Resources.NoRecordsFoundInThisTable,
             Title = Resources.Name,
@@ -247,7 +291,7 @@ namespace Echoglossian.DBManagerUI
         else
         {
           PluginRuntimeLog.Debug($"[DbEditorWindow] Loaded {this.currentRows.Count} row(s) from {this.selectedTable} page {this.page} size {this.pageSize}");
-          NotificationManager.AddNotification(new Notification
+          this.addNotification(new Notification
           {
             Content = this.SafeFormat(Resources.LoadedNRecords, this.currentRows.Count),
             Title = Resources.Name,
@@ -283,7 +327,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.Update(updatedEntity);
         this.dbContext.SaveChanges();
         PluginRuntimeLog.Debug("[DbEditorWindow] Record saved.");
-        NotificationManager.AddNotification(new Notification
+        this.addNotification(new Notification
         {
           Content = Resources.RecordSaved,
           Title = Resources.Name,
@@ -309,7 +353,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.Remove(entity);
         this.dbContext.SaveChanges();
         PluginRuntimeLog.Debug("[DbEditorWindow] Record deleted.");
-        NotificationManager.AddNotification(new Notification
+        this.addNotification(new Notification
         {
           Content = Resources.RecordDeleted,
           Title = Resources.Name,
@@ -350,7 +394,7 @@ namespace Echoglossian.DBManagerUI
         this.dbContext.SaveChanges();
 
         PluginRuntimeLog.Debug($"[DbEditorWindow] Deleted {toDelete.Count} record(s).");
-        NotificationManager.AddNotification(new Notification
+        this.addNotification(new Notification
         {
           Content = this.SafeFormat(Resources.DeletedNRecords, toDelete.Count),
           Title = Resources.Name,
@@ -390,7 +434,7 @@ namespace Echoglossian.DBManagerUI
         string csv = this.csvExporter.BuildCsv(rows, this.metadata.CurrentScalarProps);
         ImGui.SetClipboardText(csv);
         PluginRuntimeLog.Debug($"[DbEditorWindow] CSV copied to clipboard ({rows.Count} row(s)).");
-        NotificationManager.AddNotification(new Notification
+        this.addNotification(new Notification
         {
           Content = this.SafeFormat(Resources.CopiedNRecordsToClipboard, rows.Count),
           Title = Resources.Name,

@@ -24,10 +24,15 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewConfiguration sourceConfiguration;
     private readonly Config editableConfiguration;
     private readonly PreviewFontSelection fontSelection;
+    private readonly IReadOnlyList<string> sessionDiagnostics;
     private readonly PreviewCanvas canvas;
+    private readonly PreviewPluginWindowHost pluginWindowHost;
+    private readonly PreviewWorkbenchState workbenchState;
     private readonly PreviewShellState state;
-    private ScreenshotMode? pendingScreenshotMode;
-    private string lastScreenshotPath = string.Empty;
+    private readonly int appliedLanguageId;
+    private readonly int appliedFontSize;
+    private PreviewCaptureRequest? pendingScreenshotRequest;
+    private string screenshotStatus = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
         false,
         Vector2.Zero,
@@ -41,14 +46,18 @@ internal sealed class PreviewShell : IDisposable
     /// <param name="sourceConfiguration">The read-only source configuration.</param>
     /// <param name="editableConfiguration">The preview-owned editable configuration.</param>
     /// <param name="fontSelection">The resolved preview font selection.</param>
+    /// <param name="sessionDiagnostics">The configuration and database session diagnostics.</param>
     /// <param name="renderer">The shared overlay renderer.</param>
+    /// <param name="pluginWindowHost">The real plugin-window host.</param>
     /// <param name="scenario">The initial scenario.</param>
     /// <param name="viewport">The initial logical viewport.</param>
     internal PreviewShell(
         PreviewConfiguration sourceConfiguration,
         Config editableConfiguration,
         PreviewFontSelection fontSelection,
+        IReadOnlyList<string> sessionDiagnostics,
         TranslationOverlayRenderer renderer,
+        PreviewPluginWindowHost pluginWindowHost,
         PreviewScenario scenario,
         PreviewViewportPreset viewport)
     {
@@ -58,7 +67,14 @@ internal sealed class PreviewShell : IDisposable
             throw new ArgumentNullException(nameof(editableConfiguration));
         this.fontSelection = fontSelection ??
             throw new ArgumentNullException(nameof(fontSelection));
+        this.sessionDiagnostics = sessionDiagnostics ??
+            throw new ArgumentNullException(nameof(sessionDiagnostics));
+        this.appliedLanguageId = editableConfiguration.Lang;
+        this.appliedFontSize = fontSelection.FontSize;
         this.canvas = new PreviewCanvas(renderer);
+        this.pluginWindowHost = pluginWindowHost ??
+            throw new ArgumentNullException(nameof(pluginWindowHost));
+        this.workbenchState = PreviewWorkbenchState.CreateDefault(viewport);
         this.state = PreviewShellState.FromScenario(
             scenario ?? throw new ArgumentNullException(nameof(scenario)),
             viewport ?? throw new ArgumentNullException(nameof(viewport)));
@@ -86,13 +102,24 @@ internal sealed class PreviewShell : IDisposable
 
         var canvasSize = ImGui.GetContentRegionAvail();
         ImGui.BeginChild("PreviewCanvas", canvasSize, true);
-        this.lastRenderResult = this.canvas.Draw(
-            this.state,
-            this.editableConfiguration,
-            ImGui.GetContentRegionAvail());
+        var scenarioVisible = this.state.Visible;
+        try
+        {
+            this.state.Visible = scenarioVisible && this.workbenchState.OverlayVisible;
+            this.lastRenderResult = this.canvas.Draw(
+                this.state,
+                this.editableConfiguration,
+                ImGui.GetContentRegionAvail());
+        }
+        finally
+        {
+            this.state.Visible = scenarioVisible;
+        }
+
         ImGui.EndChild();
 
         ImGui.End();
+        this.pluginWindowHost.Draw(this.workbenchState);
     }
 
     /// <summary>
@@ -105,18 +132,43 @@ internal sealed class PreviewShell : IDisposable
         string outputDirectory,
         out ScreenshotRequest request)
     {
-        if (this.pendingScreenshotMode is not { } mode)
+        if (this.pendingScreenshotRequest is not { } pendingRequest)
         {
             request = null!;
             return false;
         }
 
-        this.pendingScreenshotMode = null;
+        if (PreviewPluginWindowHost.IsPluginWindowTarget(
+                pendingRequest.CaptureTarget))
+        {
+            if (this.pluginWindowHost.CaptureFailed)
+            {
+                this.pendingScreenshotRequest = null;
+                this.pluginWindowHost.EndCapture();
+                this.screenshotStatus =
+                    $"Screenshot failed: {pendingRequest.CaptureTarget} " +
+                    "did not produce stable bounds.";
+                request = null!;
+                return false;
+            }
+
+            if (this.pluginWindowHost.TryGetStableCrop(
+                    pendingRequest.CaptureTarget) is null)
+            {
+                request = null!;
+                return false;
+            }
+
+            this.pluginWindowHost.EndCapture();
+        }
+
+        this.pendingScreenshotRequest = null;
         request = new ScreenshotRequest(
-            mode,
+            pendingRequest.Mode,
             this.state.CreateScenarioSnapshot(),
             this.state.Viewport,
-            outputDirectory);
+            outputDirectory,
+            pendingRequest.CaptureTarget);
         return true;
     }
 
@@ -124,6 +176,25 @@ internal sealed class PreviewShell : IDisposable
     /// Gets the most recent overlay render result.
     /// </summary>
     internal TranslationOverlayRenderResult LastRenderResult => this.lastRenderResult;
+
+    /// <summary>
+    /// Gets a warning when mutable config no longer matches the applied startup runtime.
+    /// </summary>
+    /// <param name="configuration">The current preview-owned configuration.</param>
+    /// <param name="appliedLanguageId">The language identifier applied at startup.</param>
+    /// <param name="appliedFontSize">The font size applied at startup.</param>
+    /// <returns>A restart warning when runtime values are stale; otherwise, <see langword="null" />.</returns>
+    internal static string? GetRuntimeRestartWarning(
+        Config configuration,
+        int appliedLanguageId,
+        int appliedFontSize)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        return configuration.Lang != appliedLanguageId ||
+            configuration.FontSize != appliedFontSize
+            ? "Restart the previewer to apply config language or font size changes."
+            : null;
+    }
 
     /// <inheritdoc/>
     public void Dispose()
@@ -143,11 +214,52 @@ internal sealed class PreviewShell : IDisposable
     /// <param name="path">The saved PNG path.</param>
     internal void SetLastScreenshotPath(string path)
     {
-        this.lastScreenshotPath = path;
+        this.screenshotStatus = $"Last screenshot: {path}";
+    }
+
+    /// <summary>
+    /// Records an interactive screenshot failure without claiming output was written.
+    /// </summary>
+    /// <param name="message">The capture failure message.</param>
+    internal void SetLastScreenshotFailure(string message)
+    {
+        this.screenshotStatus = $"Screenshot failed: {message}";
     }
 
     private void DrawControls()
     {
+        ImGui.TextUnformatted("Workbench");
+        this.DrawToggle(
+            "Overlay visible",
+            this.workbenchState.OverlayVisible,
+            value => this.workbenchState.OverlayVisible = value);
+        this.DrawToggle(
+            "Config",
+            this.workbenchState.ConfigWindowOpen,
+            value => this.workbenchState.ConfigWindowOpen = value);
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.BeginDisabled();
+        }
+
+        this.DrawToggle(
+            "DB Manager",
+            this.workbenchState.DbManagerWindowOpen,
+            value => this.workbenchState.DbManagerWindowOpen = value);
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.EndDisabled();
+            ImGui.TextDisabled("DB snapshot unavailable");
+        }
+
+        this.DrawToggle(
+            "Translator Metrics / Debugger",
+            this.workbenchState.TranslatorMetricsWindowOpen,
+            value => this.workbenchState.TranslatorMetricsWindowOpen = value);
+
+        ImGui.Separator();
         ImGui.TextUnformatted("Scenario");
         this.DrawScenarioCombo();
         this.DrawViewportCombo();
@@ -174,21 +286,89 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted("Screenshot actions");
         if (ImGui.Button("Save full screenshot"))
         {
-            this.pendingScreenshotMode = ScreenshotMode.Full;
+            this.QueueScreenshot(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.FullFrame);
         }
 
         if (ImGui.Button("Save surface screenshot"))
         {
-            this.pendingScreenshotMode = ScreenshotMode.Surface;
+            this.QueueScreenshot(
+                ScreenshotMode.Surface,
+                PreviewCaptureTarget.OverlaySurface);
         }
 
-        if (!string.IsNullOrEmpty(this.lastScreenshotPath))
+        if (ImGui.Button("Save config window screenshot"))
         {
-            ImGui.TextWrapped($"Last screenshot: {this.lastScreenshotPath}");
+            this.QueueScreenshot(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.ConfigWindow);
+        }
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.BeginDisabled();
+        }
+
+        if (ImGui.Button("Save DB Manager window screenshot"))
+        {
+            this.QueueScreenshot(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.DbManagerWindow);
+        }
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.EndDisabled();
+        }
+
+        if (ImGui.Button("Save Translator Metrics window screenshot"))
+        {
+            this.QueueScreenshot(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.TranslatorMetricsWindow);
+        }
+
+        if (!string.IsNullOrEmpty(this.screenshotStatus))
+        {
+            ImGui.TextWrapped(this.screenshotStatus);
         }
 
         ImGui.Separator();
         this.DrawFidelitySummary();
+    }
+
+    /// <summary>
+    /// Queues a screenshot and starts deterministic plugin-window stabilization when needed.
+    /// </summary>
+    /// <param name="mode">The screenshot mode.</param>
+    /// <param name="target">The requested capture target.</param>
+    private void QueueScreenshot(
+        ScreenshotMode mode,
+        PreviewCaptureTarget target)
+    {
+        this.pluginWindowHost.EndCapture();
+        if (PreviewPluginWindowHost.IsPluginWindowTarget(target))
+        {
+            switch (target)
+            {
+                case PreviewCaptureTarget.ConfigWindow:
+                    this.workbenchState.ConfigWindowOpen = true;
+                    break;
+                case PreviewCaptureTarget.DbManagerWindow:
+                    this.workbenchState.DbManagerWindowOpen = true;
+                    break;
+                case PreviewCaptureTarget.TranslatorMetricsWindow:
+                    this.workbenchState.TranslatorMetricsWindowOpen = true;
+                    break;
+            }
+
+            this.pluginWindowHost.BeginCapture(target);
+            this.screenshotStatus =
+                $"Waiting for stable {target} bounds before capture.";
+        }
+
+        this.pendingScreenshotRequest = new PreviewCaptureRequest(mode, target);
     }
 
     private void DrawScenarioCombo()
@@ -223,6 +403,7 @@ internal sealed class PreviewShell : IDisposable
                 if (ImGui.Selectable(preset.Key, selected))
                 {
                     this.state.Viewport = preset;
+                    this.workbenchState.Viewport = preset;
                 }
 
                 if (selected)
@@ -247,9 +428,32 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted($"Presentation mode: {this.lastRenderResult.PresentationMode}");
         ImGui.TextUnformatted(
             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");
-        foreach (var diagnostic in this.sourceConfiguration.Diagnostics)
+        var restartWarning = GetRuntimeRestartWarning(
+            this.editableConfiguration,
+            this.appliedLanguageId,
+            this.appliedFontSize);
+        if (restartWarning is not null)
+        {
+            ImGui.TextWrapped(restartWarning);
+        }
+
+        foreach (var diagnostic in this.sessionDiagnostics)
         {
             ImGui.TextWrapped(diagnostic);
+        }
+    }
+
+    /// <summary>
+    /// Draws a property-backed workbench toggle.
+    /// </summary>
+    /// <param name="label">The toggle label.</param>
+    /// <param name="value">The current value.</param>
+    /// <param name="update">Applies a changed value.</param>
+    private void DrawToggle(string label, bool value, Action<bool> update)
+    {
+        if (ImGui.Checkbox(label, ref value))
+        {
+            update(value);
         }
     }
 }

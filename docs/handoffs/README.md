@@ -41,6 +41,7 @@ Example:
 - [LLM Post-Release Follow-Up (`#148`, `#174`, `#176`)](./llm-post-release-followup-148-174-176.md)
 - [LLM Translation Rework](./llm-translation-rework.md)
 - [Open Regression Cluster](./open-regression-cluster.md)
+- [Unified ImGui Previewer Next Step](./unified-imgui-previewer-next-step.md)
 
 ## Shared repo rules worth repeating
 

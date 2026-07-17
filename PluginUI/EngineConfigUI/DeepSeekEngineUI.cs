@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Components;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.DeepSeek;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -12,7 +13,10 @@ public static class DeepSeekEngineUI
 {
     private const string LiveModelRefreshScope = "DeepSeek";
 
-    public static bool Draw(Config config, PromptTemplateManager promptManager)
+    public static bool Draw(
+        Config config,
+        PromptTemplateManager promptManager,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
 
@@ -61,7 +65,9 @@ public static class DeepSeekEngineUI
         if (config.UseLiveDeepSeekModelList)
         {
             ImGui.SameLine();
-            if (ImGui.Button(Resources.Reload))
+            if (PreviewRuntimeActionUiHelper.DrawButton(
+                    Resources.Reload,
+                    runtimeActionsAvailable))
             {
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,

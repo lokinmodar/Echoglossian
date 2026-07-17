@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Components;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.OpenAI;
 using Echoglossian.Translators.OpenRouter;
 
@@ -13,7 +14,10 @@ public static class OpenRouterEngineUI
 {
     private const string LiveModelRefreshScope = "OpenRouter";
 
-    public static bool Draw(Config config, PromptTemplateManager promptManager)
+    public static bool Draw(
+        Config config,
+        PromptTemplateManager promptManager,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
 
@@ -63,7 +67,9 @@ public static class OpenRouterEngineUI
         if (config.UseLiveOpenRouterModelList)
         {
             ImGui.SameLine();
-            if (ImGui.Button(Resources.Reload))
+            if (PreviewRuntimeActionUiHelper.DrawButton(
+                    Resources.Reload,
+                    runtimeActionsAvailable))
             {
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,

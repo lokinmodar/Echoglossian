@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Components;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.OpenAI;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -24,7 +25,10 @@ public static class ChatGPTEngineUI
     /// <param name="config">The active plugin configuration.</param>
     /// <param name="promptManager">The prompt-template manager.</param>
     /// <returns><see langword="true" /> when the UI changed the config.</returns>
-    public static bool Draw(Config config, PromptTemplateManager promptManager)
+    public static bool Draw(
+        Config config,
+        PromptTemplateManager promptManager,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
         var settings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
@@ -39,7 +43,9 @@ public static class ChatGPTEngineUI
         ImGui.Spacing();
 
         if (config.OpenAiProviderVariant == OpenAiProviderVariant.OfficialOpenAI &&
-            ImGui.Button(Resources.ChatGPTAPIKeyLink))
+            PreviewRuntimeActionUiHelper.DrawButton(
+                Resources.ChatGPTAPIKeyLink,
+                runtimeActionsAvailable))
         {
             Process.Start(
                 new ProcessStartInfo
@@ -59,7 +65,10 @@ public static class ChatGPTEngineUI
 
         changed |= DrawApiKeyField(config, settings.Variant);
         changed |= DrawBaseUrlField(config, settings.Variant);
-        changed |= DrawLiveModelControls(config, settings);
+        changed |= DrawLiveModelControls(
+            config,
+            settings,
+            runtimeActionsAvailable);
         changed |= DrawModelSelection(config, settings);
 
         var temp = config.ChatGptTemperature;
@@ -222,7 +231,8 @@ public static class ChatGPTEngineUI
     /// <returns><see langword="true" /> when the controls changed the config.</returns>
     private static bool DrawLiveModelControls(
         Config config,
-        OpenAiProviderVariantHelper.OpenAiProviderSettings settings)
+        OpenAiProviderVariantHelper.OpenAiProviderSettings settings,
+        bool runtimeActionsAvailable)
     {
         var changed = false;
         var useLiveModels = settings.Variant == OpenAiProviderVariant.CustomOpenAICompatible
@@ -250,7 +260,9 @@ public static class ChatGPTEngineUI
         if (useLiveModels)
         {
             ImGui.SameLine();
-            if (ImGui.Button(Resources.Reload))
+            if (PreviewRuntimeActionUiHelper.DrawButton(
+                    Resources.Reload,
+                    runtimeActionsAvailable))
             {
                 ForceLiveModelRefresh(config, settings.Variant);
             }

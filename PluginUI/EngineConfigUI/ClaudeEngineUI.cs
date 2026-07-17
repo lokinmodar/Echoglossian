@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Components;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Claude;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -21,14 +22,19 @@ public static class ClaudeEngineUI
     /// <param name="config">The active plugin configuration.</param>
     /// <param name="promptManager">The shared prompt template manager.</param>
     /// <returns><see langword="true"/> when any setting changed.</returns>
-    public static bool Draw(Config config, PromptTemplateManager promptManager)
+    public static bool Draw(
+        Config config,
+        PromptTemplateManager promptManager,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
 
         ImGui.TextWrapped(Resources.SettingsForClaudeText);
         ImGui.Spacing();
 
-        if (ImGui.Button(Resources.OpenAnthropicApiKeys))
+        if (PreviewRuntimeActionUiHelper.DrawButton(
+                Resources.OpenAnthropicApiKeys,
+                runtimeActionsAvailable))
         {
             Process.Start(
                 new ProcessStartInfo
@@ -75,7 +81,9 @@ public static class ClaudeEngineUI
         if (config.UseLiveClaudeModelList)
         {
             ImGui.SameLine();
-            if (ImGui.Button(Resources.Reload))
+            if (PreviewRuntimeActionUiHelper.DrawButton(
+                    Resources.Reload,
+                    runtimeActionsAvailable))
             {
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
