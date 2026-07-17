@@ -8,6 +8,7 @@ using Dalamud.Bindings.ImGui;
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
+using Echoglossian.Previewer.PluginWindows;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TextPresentation;
@@ -29,7 +30,7 @@ internal sealed class BatchScreenshotRunner
     private readonly PreviewConfiguration sourceConfiguration;
     private readonly Config editableConfiguration;
     private readonly PreviewFontSelection fontSelection;
-    private readonly Func<PreviewPluginWindowHost>? pluginWindowHostFactory;
+    private readonly Func<IPluginWindowPreviewBackend>? pluginWindowBackendFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BatchScreenshotRunner"/> class.
@@ -37,12 +38,12 @@ internal sealed class BatchScreenshotRunner
     /// <param name="sourceConfiguration">The loaded preview configuration source.</param>
     /// <param name="editableConfiguration">The isolated editable preview configuration.</param>
     /// <param name="fontSelection">The resolved preview fonts.</param>
-    /// <param name="pluginWindowHostFactory">Creates preview-owned plugin windows when needed.</param>
+    /// <param name="pluginWindowBackendFactory">Creates preview-owned plugin-window backends when needed.</param>
     internal BatchScreenshotRunner(
         PreviewConfiguration sourceConfiguration,
         Config editableConfiguration,
         PreviewFontSelection fontSelection,
-        Func<PreviewPluginWindowHost>? pluginWindowHostFactory = null)
+        Func<IPluginWindowPreviewBackend>? pluginWindowBackendFactory = null)
     {
         this.sourceConfiguration = sourceConfiguration ??
             throw new ArgumentNullException(nameof(sourceConfiguration));
@@ -50,7 +51,7 @@ internal sealed class BatchScreenshotRunner
             throw new ArgumentNullException(nameof(editableConfiguration));
         this.fontSelection = fontSelection ??
             throw new ArgumentNullException(nameof(fontSelection));
-        this.pluginWindowHostFactory = pluginWindowHostFactory;
+        this.pluginWindowBackendFactory = pluginWindowBackendFactory;
     }
 
     /// <summary>
@@ -394,10 +395,10 @@ internal sealed class BatchScreenshotRunner
                 Title = "Echoglossian Screenshot Capture",
                 StartHidden = true,
             });
-        using var pluginWindowHost = this.CreatePluginWindowHost(request.CaptureTarget);
-        if (pluginWindowHost is not null)
+        using var pluginWindowBackend = this.CreatePluginWindowBackend(request.CaptureTarget);
+        if (pluginWindowBackend is not null)
         {
-            pluginWindowHost.BeginCapture(request.CaptureTarget);
+            pluginWindowBackend.BeginCapture(request.CaptureTarget);
         }
 
         var fontRuntime = new PreviewFontRuntime(
@@ -436,21 +437,21 @@ internal sealed class BatchScreenshotRunner
                     request.Viewport);
             }
 
-            pluginWindowHost?.Draw(workbenchState);
+            pluginWindowBackend?.Draw(workbenchState);
         };
         var stopwatch = Stopwatch.StartNew();
         while (!IsCaptureReady(
                 request.CaptureTarget,
                 renderResult.WasDrawn,
-                IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)) &&
+                IsCaptureTargetReady(request.CaptureTarget, pluginWindowBackend)) &&
             stopwatch.Elapsed < TimeSpan.FromSeconds(5) &&
-            pluginWindowHost?.CaptureFailed != true)
+            pluginWindowBackend?.CaptureFailed != true)
         {
             host.RunFrame(draw);
             if (!IsCaptureReady(
                     request.CaptureTarget,
                     renderResult.WasDrawn,
-                    IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)))
+                    IsCaptureTargetReady(request.CaptureTarget, pluginWindowBackend)))
             {
                 Thread.Sleep(25);
             }
@@ -466,7 +467,7 @@ internal sealed class BatchScreenshotRunner
         if (!IsCaptureReady(
                 request.CaptureTarget,
                 renderResult.WasDrawn,
-                IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)))
+                IsCaptureTargetReady(request.CaptureTarget, pluginWindowBackend)))
         {
             throw new InvalidOperationException(
                 $"Preview screenshot target did not produce stable bounds: " +
@@ -479,7 +480,7 @@ internal sealed class BatchScreenshotRunner
             sourceTextureSize => this.CalculateCrop(
                 request,
                 renderResult,
-                pluginWindowHost,
+                pluginWindowBackend,
                 ImGui.GetIO().DisplaySize,
                 sourceTextureSize));
 
@@ -491,14 +492,14 @@ internal sealed class BatchScreenshotRunner
     /// </summary>
     /// <param name="request">The screenshot request.</param>
     /// <param name="renderResult">The overlay draw result.</param>
-    /// <param name="pluginWindowHost">The optional real plugin-window host.</param>
+    /// <param name="pluginWindowBackend">The optional plugin-window preview backend.</param>
     /// <param name="displaySize">The logical ImGui display dimensions.</param>
     /// <param name="sourceTextureSize">The physical offscreen capture texture dimensions.</param>
     /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
     private Rectangle? CalculateCrop(
         ScreenshotRequest request,
         TranslationOverlayRenderResult renderResult,
-        PreviewPluginWindowHost? pluginWindowHost,
+        IPluginWindowPreviewBackend? pluginWindowBackend,
         Vector2 displaySize,
         Vector2 sourceTextureSize)
     {
@@ -511,15 +512,15 @@ internal sealed class BatchScreenshotRunner
                 request.SurfaceMargin,
                 framebufferScale: 1f),
             PreviewCaptureTarget.ConfigWindow => CalculateWindowCrop(
-                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
+                pluginWindowBackend?.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
                 displaySize,
                 sourceTextureSize),
             PreviewCaptureTarget.DbManagerWindow => CalculateWindowCrop(
-                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
+                pluginWindowBackend?.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
                 displaySize,
                 sourceTextureSize),
             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateWindowCrop(
-                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                pluginWindowBackend?.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
                 displaySize,
                 sourceTextureSize),
             _ => null,
@@ -604,8 +605,8 @@ internal sealed class BatchScreenshotRunner
     /// Creates real plugin windows only for a plugin-window screenshot target.
     /// </summary>
     /// <param name="target">The requested capture target.</param>
-    /// <returns>The plugin-window host, or <see langword="null" /> when unnecessary.</returns>
-    private PreviewPluginWindowHost? CreatePluginWindowHost(PreviewCaptureTarget target)
+    /// <returns>The plugin-window preview backend, or <see langword="null" /> when unnecessary.</returns>
+    private IPluginWindowPreviewBackend? CreatePluginWindowBackend(PreviewCaptureTarget target)
     {
         if (target is not (PreviewCaptureTarget.ConfigWindow or
             PreviewCaptureTarget.DbManagerWindow or
@@ -614,22 +615,22 @@ internal sealed class BatchScreenshotRunner
             return null;
         }
 
-        return this.pluginWindowHostFactory?.Invoke() ?? throw new InvalidOperationException(
-            "Plugin-window screenshot capture requires a preview window host.");
+        return this.pluginWindowBackendFactory?.Invoke() ?? throw new InvalidOperationException(
+            "Plugin-window screenshot capture requires a preview window backend.");
     }
 
     /// <summary>
     /// Determines whether the requested target is ready for capture.
     /// </summary>
     /// <param name="target">The requested capture target.</param>
-    /// <param name="pluginWindowHost">The optional plugin-window host.</param>
+    /// <param name="pluginWindowBackend">The optional plugin-window preview backend.</param>
     /// <returns><see langword="true" /> when no stabilization is needed or stable bounds exist.</returns>
     private static bool IsCaptureTargetReady(
         PreviewCaptureTarget target,
-        PreviewPluginWindowHost? pluginWindowHost)
+        IPluginWindowPreviewBackend? pluginWindowBackend)
     {
         return !PreviewPluginWindowHost.IsPluginWindowTarget(target) ||
-            pluginWindowHost?.TryGetStableCrop(target) is not null;
+            pluginWindowBackend?.TryGetStableCrop(target) is not null;
     }
 
     /// <summary>

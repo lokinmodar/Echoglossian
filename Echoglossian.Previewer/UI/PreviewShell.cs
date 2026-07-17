@@ -27,7 +27,7 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewFontSelection fontSelection;
     private readonly IReadOnlyList<string> sessionDiagnostics;
     private readonly PreviewCanvas canvas;
-    private readonly PreviewPluginWindowHost pluginWindowHost;
+    private readonly IPluginWindowPreviewBackend pluginWindowBackend;
     private readonly PreviewWorkbenchState workbenchState;
     private readonly PreviewShellState state;
     private readonly int appliedLanguageId;
@@ -55,7 +55,7 @@ internal sealed class PreviewShell : IDisposable
     /// <param name="fontSelection">The resolved preview font selection.</param>
     /// <param name="sessionDiagnostics">The configuration and database session diagnostics.</param>
     /// <param name="renderer">The shared overlay renderer.</param>
-    /// <param name="pluginWindowHost">The real plugin-window host.</param>
+    /// <param name="pluginWindowBackend">The plugin-window preview backend.</param>
     /// <param name="scenario">The initial scenario.</param>
     /// <param name="viewport">The initial logical viewport.</param>
     internal PreviewShell(
@@ -64,7 +64,7 @@ internal sealed class PreviewShell : IDisposable
         PreviewFontSelection fontSelection,
         IReadOnlyList<string> sessionDiagnostics,
         TranslationOverlayRenderer renderer,
-        PreviewPluginWindowHost pluginWindowHost,
+        IPluginWindowPreviewBackend pluginWindowBackend,
         PreviewScenario scenario,
         PreviewViewportPreset viewport)
     {
@@ -79,8 +79,8 @@ internal sealed class PreviewShell : IDisposable
         this.appliedLanguageId = editableConfiguration.Lang;
         this.appliedFontSize = fontSelection.FontSize;
         this.canvas = new PreviewCanvas(renderer);
-        this.pluginWindowHost = pluginWindowHost ??
-            throw new ArgumentNullException(nameof(pluginWindowHost));
+        this.pluginWindowBackend = pluginWindowBackend ??
+            throw new ArgumentNullException(nameof(pluginWindowBackend));
         this.workbenchState = PreviewWorkbenchState.CreateDefault(viewport);
         this.state = PreviewShellState.FromScenario(
             scenario ?? throw new ArgumentNullException(nameof(scenario)),
@@ -126,7 +126,7 @@ internal sealed class PreviewShell : IDisposable
         ImGui.EndChild();
 
         ImGui.End();
-        this.pluginWindowHost.Draw(this.workbenchState);
+        this.pluginWindowBackend.Draw(this.workbenchState);
     }
 
     /// <summary>
@@ -158,10 +158,10 @@ internal sealed class PreviewShell : IDisposable
         if (PreviewPluginWindowHost.IsPluginWindowTarget(
                 pendingRequest.CaptureTarget))
         {
-            if (this.pluginWindowHost.CaptureFailed)
+            if (this.pluginWindowBackend.CaptureFailed)
             {
                 this.pendingScreenshotRequest = null;
-                this.pluginWindowHost.EndCapture();
+                this.pluginWindowBackend.EndCapture();
                 this.screenshotStatus =
                     $"Screenshot failed: {pendingRequest.CaptureTarget} " +
                     "did not produce stable bounds.";
@@ -169,14 +169,14 @@ internal sealed class PreviewShell : IDisposable
                 return false;
             }
 
-            if (this.pluginWindowHost.TryGetStableCrop(
+            if (this.pluginWindowBackend.TryGetStableCrop(
                     pendingRequest.CaptureTarget) is null)
             {
                 request = null!;
                 return false;
             }
 
-            this.pluginWindowHost.EndCapture();
+            this.pluginWindowBackend.EndCapture();
         }
 
         this.pendingScreenshotRequest = null;
@@ -255,7 +255,7 @@ internal sealed class PreviewShell : IDisposable
             this.workbenchState.ConfigWindowOpen,
             value => this.workbenchState.ConfigWindowOpen = value);
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.BeginDisabled();
         }
@@ -265,7 +265,7 @@ internal sealed class PreviewShell : IDisposable
             this.workbenchState.DbManagerWindowOpen,
             value => this.workbenchState.DbManagerWindowOpen = value);
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.EndDisabled();
             ImGui.TextDisabled("DB snapshot unavailable");
@@ -322,7 +322,7 @@ internal sealed class PreviewShell : IDisposable
                 PreviewCaptureTarget.ConfigWindow);
         }
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.BeginDisabled();
         }
@@ -334,7 +334,7 @@ internal sealed class PreviewShell : IDisposable
                 PreviewCaptureTarget.DbManagerWindow);
         }
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.EndDisabled();
         }
@@ -364,7 +364,7 @@ internal sealed class PreviewShell : IDisposable
         ScreenshotMode mode,
         PreviewCaptureTarget target)
     {
-        this.pluginWindowHost.EndCapture();
+        this.pluginWindowBackend.EndCapture();
         if (PreviewPluginWindowHost.IsPluginWindowTarget(target))
         {
             switch (target)
@@ -380,7 +380,7 @@ internal sealed class PreviewShell : IDisposable
                     break;
             }
 
-            this.pluginWindowHost.BeginCapture(target);
+            this.pluginWindowBackend.BeginCapture(target);
             this.screenshotStatus =
                 $"Waiting for stable {target} bounds before capture.";
         }

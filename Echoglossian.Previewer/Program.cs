@@ -158,7 +158,7 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
-        using var pluginWindowHost = CreatePreviewPluginWindowHost(
+        using var pluginWindowBackend = CreateStandalonePluginWindowPreviewBackend(
             editableConfiguration,
             languages,
             session.ClonedDatabasePath);
@@ -168,11 +168,10 @@ internal static class Program
             fontSelection,
             session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
             composition.Renderer,
-            pluginWindowHost,
+            pluginWindowBackend,
             scenario,
             viewport);
-        shell.SetPluginWindowBackendStatus(
-            CreatePluginWindowBackendStatus(commandLine.PluginWindowBackendMode));
+        shell.SetPluginWindowBackendStatus(pluginWindowBackend.Status);
         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
 
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
@@ -203,7 +202,7 @@ internal static class Program
                     var crop = CalculateInteractiveCrop(
                         request,
                         shell.LastRenderResult,
-                        pluginWindowHost,
+                        pluginWindowBackend,
                         ImGui.GetIO().DisplaySize,
                         host.FramebufferSize);
 
@@ -285,7 +284,7 @@ internal static class Program
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
-            () => CreatePreviewPluginWindowHost(
+            () => CreateStandalonePluginWindowPreviewBackend(
                 editableConfiguration,
                 languages,
                 session.ClonedDatabasePath));
@@ -329,8 +328,8 @@ internal static class Program
     /// <param name="configuration">The preview-owned editable configuration.</param>
     /// <param name="languages">The available preview languages.</param>
     /// <param name="databasePath">The optional preview database snapshot.</param>
-    /// <returns>The preview-owned plugin-window host.</returns>
-    private static PreviewPluginWindowHost CreatePreviewPluginWindowHost(
+    /// <returns>The standalone plugin-window preview backend.</returns>
+    private static IPluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
         Config configuration,
         IReadOnlyDictionary<int, LanguageInfo> languages,
         string? databasePath)
@@ -338,30 +337,11 @@ internal static class Program
         var configWindowContext = CreatePreviewPluginWindowContext(
             configuration,
             languages);
-        return new PreviewPluginWindowHost(
+        return StandalonePluginWindowPreviewBackend.Create(new PreviewPluginWindowHost(
             new PluginConfigWindowRenderer(),
             configWindowContext,
             CreatePreviewDbContext(databasePath),
-            configuration);
-    }
-
-    /// <summary>
-    ///     Creates the shell-visible backend status for the current standalone host.
-    /// </summary>
-    /// <param name="requestedMode">The backend requested from the command line.</param>
-    /// <returns>The current standalone backend status.</returns>
-    private static PluginWindowBackendStatus CreatePluginWindowBackendStatus(
-        PluginWindowPreviewBackendMode requestedMode)
-    {
-        var hostedRequested = requestedMode != PluginWindowPreviewBackendMode.Standalone;
-        return new PluginWindowBackendStatus(
-            requestedMode,
-            PluginWindowPreviewBackendMode.Standalone,
-            hostedRequested,
-            HostedAvailable: false,
-            hostedRequested
-                ? "Backend selection is not initialized."
-                : null);
+            configuration));
     }
 
     /// <summary>
@@ -694,14 +674,14 @@ internal static class Program
     /// </summary>
     /// <param name="request">The interactive screenshot request.</param>
     /// <param name="renderResult">The latest overlay draw result.</param>
-    /// <param name="pluginWindowHost">The real plugin-window host.</param>
+    /// <param name="pluginWindowBackend">The plugin-window preview backend.</param>
     /// <param name="displaySize">The logical ImGui display dimensions.</param>
     /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
     /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
     private static Rectangle? CalculateInteractiveCrop(
         ScreenshotRequest request,
         TranslationOverlayRenderResult renderResult,
-        PreviewPluginWindowHost pluginWindowHost,
+        IPluginWindowPreviewBackend pluginWindowBackend,
         Vector2 displaySize,
         Vector2 framebufferSize)
     {
@@ -713,15 +693,15 @@ internal static class Program
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.ConfigWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
+                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.DbManagerWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
+                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
                 displaySize,
                 framebufferSize),
             _ => null,

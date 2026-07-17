@@ -32,7 +32,16 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         RequiredCaptureStableFrames,
         MaximumCaptureObservationFrames);
     private RectangleF? configWindowBounds;
+    private readonly bool? dbManagerAvailableForTests;
     private bool disposed;
+
+    private PreviewPluginWindowHost(bool dbManagerAvailable)
+    {
+        this.configWindowRenderer = null!;
+        this.configWindowContext = null!;
+        this.translatorMetricsWindow = null!;
+        this.dbManagerAvailableForTests = dbManagerAvailable;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PreviewPluginWindowHost" /> class.
@@ -71,7 +80,18 @@ internal sealed class PreviewPluginWindowHost : IDisposable
     /// <summary>
     /// Gets a value indicating whether a database snapshot is available.
     /// </summary>
-    internal bool DbManagerAvailable => this.dbEditorWindow is not null;
+    internal bool DbManagerAvailable =>
+        this.dbManagerAvailableForTests ?? this.dbEditorWindow is not null;
+
+    /// <summary>
+    /// Creates a host for status-focused tests without runtime window dependencies.
+    /// </summary>
+    /// <param name="dbManagerAvailable">Whether the database manager is available.</param>
+    /// <returns>A test-only preview plugin-window host.</returns>
+    internal static PreviewPluginWindowHost CreateForTests(bool dbManagerAvailable)
+    {
+        return new PreviewPluginWindowHost(dbManagerAvailable);
+    }
 
     /// <summary>
     /// Gets a value indicating whether the active target failed to stabilize.
