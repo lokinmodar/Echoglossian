@@ -28,7 +28,7 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewPluginWindowHost pluginWindowHost;
     private readonly PreviewWorkbenchState workbenchState;
     private readonly PreviewShellState state;
-    private ScreenshotMode? pendingScreenshotMode;
+    private PreviewCaptureRequest? pendingScreenshotRequest;
     private string lastScreenshotPath = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
         false,
@@ -125,18 +125,19 @@ internal sealed class PreviewShell : IDisposable
         string outputDirectory,
         out ScreenshotRequest request)
     {
-        if (this.pendingScreenshotMode is not { } mode)
+        if (this.pendingScreenshotRequest is not { } pendingRequest)
         {
             request = null!;
             return false;
         }
 
-        this.pendingScreenshotMode = null;
+        this.pendingScreenshotRequest = null;
         request = new ScreenshotRequest(
-            mode,
+            pendingRequest.Mode,
             this.state.CreateScenarioSnapshot(),
             this.state.Viewport,
-            outputDirectory);
+            outputDirectory,
+            pendingRequest.CaptureTarget);
         return true;
     }
 
@@ -226,12 +227,50 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted("Screenshot actions");
         if (ImGui.Button("Save full screenshot"))
         {
-            this.pendingScreenshotMode = ScreenshotMode.Full;
+            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.FullFrame);
         }
 
         if (ImGui.Button("Save surface screenshot"))
         {
-            this.pendingScreenshotMode = ScreenshotMode.Surface;
+            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+                ScreenshotMode.Surface,
+                PreviewCaptureTarget.OverlaySurface);
+        }
+
+        if (ImGui.Button("Save config window screenshot"))
+        {
+            this.workbenchState.ConfigWindowOpen = true;
+            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.ConfigWindow);
+        }
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.BeginDisabled();
+        }
+
+        if (ImGui.Button("Save DB Manager window screenshot"))
+        {
+            this.workbenchState.DbManagerWindowOpen = true;
+            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.DbManagerWindow);
+        }
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.EndDisabled();
+        }
+
+        if (ImGui.Button("Save Translator Metrics window screenshot"))
+        {
+            this.workbenchState.TranslatorMetricsWindowOpen = true;
+            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+                ScreenshotMode.Full,
+                PreviewCaptureTarget.TranslatorMetricsWindow);
         }
 
         if (!string.IsNullOrEmpty(this.lastScreenshotPath))

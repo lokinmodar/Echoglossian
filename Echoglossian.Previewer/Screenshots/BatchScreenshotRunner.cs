@@ -28,6 +28,7 @@ internal sealed class BatchScreenshotRunner
     private readonly PreviewConfiguration sourceConfiguration;
     private readonly Config editableConfiguration;
     private readonly PreviewFontSelection fontSelection;
+    private readonly Func<PreviewPluginWindowHost>? pluginWindowHostFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BatchScreenshotRunner"/> class.
@@ -35,10 +36,12 @@ internal sealed class BatchScreenshotRunner
     /// <param name="sourceConfiguration">The loaded preview configuration source.</param>
     /// <param name="editableConfiguration">The isolated editable preview configuration.</param>
     /// <param name="fontSelection">The resolved preview fonts.</param>
+    /// <param name="pluginWindowHostFactory">Creates preview-owned plugin windows when needed.</param>
     internal BatchScreenshotRunner(
         PreviewConfiguration sourceConfiguration,
         Config editableConfiguration,
-        PreviewFontSelection fontSelection)
+        PreviewFontSelection fontSelection,
+        Func<PreviewPluginWindowHost>? pluginWindowHostFactory = null)
     {
         this.sourceConfiguration = sourceConfiguration ??
             throw new ArgumentNullException(nameof(sourceConfiguration));
@@ -46,6 +49,7 @@ internal sealed class BatchScreenshotRunner
             throw new ArgumentNullException(nameof(editableConfiguration));
         this.fontSelection = fontSelection ??
             throw new ArgumentNullException(nameof(fontSelection));
+        this.pluginWindowHostFactory = pluginWindowHostFactory;
     }
 
     /// <summary>
@@ -159,6 +163,7 @@ internal sealed class BatchScreenshotRunner
                 Title = "Echoglossian Screenshot Capture",
                 StartHidden = true,
             });
+        using var pluginWindowHost = this.CreatePluginWindowHost(request.CaptureTarget);
         var fontRuntime = new PreviewFontRuntime(
             this.fontSelection,
             string.Join(
@@ -175,6 +180,8 @@ internal sealed class BatchScreenshotRunner
         using var canvas = new PreviewCanvas(composition.Renderer);
         var state = PreviewShellState.FromScenario(request.Scenario, request.Viewport);
         state.ShowSimulatedAddonBounds = false;
+        var workbenchState = PreviewWorkbenchState.CreateDefault(request.Scenario, request.Viewport);
+        SetWindowCaptureTarget(workbenchState, request.CaptureTarget);
         var renderResult = new TranslationOverlayRenderResult(
             false,
             Vector2.Zero,
@@ -189,6 +196,7 @@ internal sealed class BatchScreenshotRunner
                 state,
                 this.editableConfiguration,
                 request.Viewport);
+            pluginWindowHost?.Draw(workbenchState);
         };
         var stopwatch = Stopwatch.StartNew();
         while (!renderResult.WasDrawn && stopwatch.Elapsed < TimeSpan.FromSeconds(5))
@@ -209,26 +217,72 @@ internal sealed class BatchScreenshotRunner
         host.CaptureFramePng(
             draw,
             outputPath,
-            () => this.CalculateCrop(request, renderResult));
+            () => this.CalculateCrop(request, renderResult, pluginWindowHost));
 
         return new CapturedScreenshot(outputPath, renderResult);
     }
 
+    /// <summary>
+    /// Resolves the physical crop for the requested preview target.
+    /// </summary>
+    /// <param name="request">The screenshot request.</param>
+    /// <param name="renderResult">The overlay draw result.</param>
+    /// <param name="pluginWindowHost">The optional real plugin-window host.</param>
+    /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
     private Rectangle? CalculateCrop(
         ScreenshotRequest request,
-        TranslationOverlayRenderResult renderResult)
+        TranslationOverlayRenderResult renderResult,
+        PreviewPluginWindowHost? pluginWindowHost)
     {
-        if (request.Mode != ScreenshotMode.Surface)
+        return request.CaptureTarget switch
+        {
+            PreviewCaptureTarget.OverlaySurface => VeldridScreenshotCapture.CalculateSurfaceCrop(
+                renderResult,
+                request.Viewport.Width,
+                request.Viewport.Height,
+                request.SurfaceMargin,
+                framebufferScale: 1f),
+            PreviewCaptureTarget.ConfigWindow => pluginWindowHost?.TryGetCrop(
+                PreviewCaptureTarget.ConfigWindow),
+            PreviewCaptureTarget.DbManagerWindow => pluginWindowHost?.TryGetCrop(
+                PreviewCaptureTarget.DbManagerWindow),
+            PreviewCaptureTarget.TranslatorMetricsWindow => pluginWindowHost?.TryGetCrop(
+                PreviewCaptureTarget.TranslatorMetricsWindow),
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// Creates real plugin windows only for a plugin-window screenshot target.
+    /// </summary>
+    /// <param name="target">The requested capture target.</param>
+    /// <returns>The plugin-window host, or <see langword="null" /> when unnecessary.</returns>
+    private PreviewPluginWindowHost? CreatePluginWindowHost(PreviewCaptureTarget target)
+    {
+        if (target is not (PreviewCaptureTarget.ConfigWindow or
+            PreviewCaptureTarget.DbManagerWindow or
+            PreviewCaptureTarget.TranslatorMetricsWindow))
         {
             return null;
         }
 
-        return VeldridScreenshotCapture.CalculateSurfaceCrop(
-            renderResult,
-            request.Viewport.Width,
-            request.Viewport.Height,
-            request.SurfaceMargin,
-            framebufferScale: 1f);
+        return this.pluginWindowHostFactory?.Invoke() ?? throw new InvalidOperationException(
+            "Plugin-window screenshot capture requires a preview window host.");
+    }
+
+    /// <summary>
+    /// Opens only the plugin window requested by a deterministic capture.
+    /// </summary>
+    /// <param name="state">The preview-owned workbench state.</param>
+    /// <param name="target">The requested capture target.</param>
+    private static void SetWindowCaptureTarget(
+        PreviewWorkbenchState state,
+        PreviewCaptureTarget target)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        state.ConfigWindowOpen = target == PreviewCaptureTarget.ConfigWindow;
+        state.DbManagerWindowOpen = target == PreviewCaptureTarget.DbManagerWindow;
+        state.TranslatorMetricsWindowOpen = target == PreviewCaptureTarget.TranslatorMetricsWindow;
     }
 
     private ScreenshotManifestEntry CreateManifestEntry(
@@ -241,6 +295,7 @@ internal sealed class BatchScreenshotRunner
             request.Viewport.Width,
             request.Viewport.Height,
             request.Mode.ToString(),
+            request.CaptureTarget.ToString(),
             capture.RenderResult.PresentationMode.ToString(),
             GetManifestPngPathLabel(capture.PngPath));
     }
@@ -288,6 +343,7 @@ internal sealed class BatchScreenshotRunner
         int ViewportWidth,
         int ViewportHeight,
         string ScreenshotMode,
+        string CaptureTarget,
         string PresentationMode,
         string PngPath);
 

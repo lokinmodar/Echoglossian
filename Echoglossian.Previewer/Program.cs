@@ -154,24 +154,10 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
-        var placeholderTextureHandle = new ImTextureID(unchecked((nint)(-1)));
-        var configWindowContext = new PluginConfigWindowContext(
+        using var pluginWindowHost = CreatePreviewPluginWindowHost(
             editableConfiguration,
             languages,
-            placeholderTextureHandle,
-            placeholderTextureHandle,
-            placeholderTextureHandle,
-            static () => { },
-            editableConfiguration.PluginVersion)
-        {
-            PushGeneralFont = static () => NoOpDisposable.Instance,
-            ApplyLanguageRuntimeChanges = static (_, _) => { },
-        };
-        using var pluginWindowHost = new PreviewPluginWindowHost(
-            new PluginConfigWindowRenderer(),
-            configWindowContext,
-            CreatePreviewDbContext(session.ClonedDatabasePath),
-            editableConfiguration);
+            session.ClonedDatabasePath);
         using var shell = new PreviewShell(
             sourceConfiguration,
             editableConfiguration,
@@ -205,15 +191,12 @@ internal static class Program
                         request.Mode,
                         request.Scenario.Key,
                         request.Viewport));
-                Rectangle? crop = null;
-                if (request.Mode == ScreenshotMode.Surface)
-                {
-                    crop = CalculateInteractiveSurfaceCrop(
-                        request,
-                        shell.LastRenderResult,
-                        ImGui.GetIO().DisplaySize,
-                        host.FramebufferSize);
-                }
+                var crop = CalculateInteractiveCrop(
+                    request,
+                    shell.LastRenderResult,
+                    pluginWindowHost,
+                    ImGui.GetIO().DisplaySize,
+                    host.FramebufferSize);
 
                 host.CapturePng(outputPath, crop);
                 shell.SetLastScreenshotPath(outputPath);
@@ -233,7 +216,8 @@ internal static class Program
                 commandLine.OutputDirectory));
         var sourceConfiguration = session.Configuration;
         var editableConfiguration = session.EditableConfiguration;
-        var selectedLanguage = ResolvePreviewLanguage(editableConfiguration.Lang);
+        var languages = Echoglossian.CreateLanguagesDictionary();
+        var selectedLanguage = ResolvePreviewLanguage(languages, editableConfiguration.Lang);
         Echoglossian.SelectedLanguage = selectedLanguage;
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
@@ -260,14 +244,19 @@ internal static class Program
                     mode,
                     scenario,
                     viewport,
-                    outputDirectory));
+                    outputDirectory,
+                    GetCaptureTarget(mode)));
             }
         }
 
         var runner = new BatchScreenshotRunner(
             sourceConfiguration,
             editableConfiguration,
-            fontSelection);
+            fontSelection,
+            () => CreatePreviewPluginWindowHost(
+                editableConfiguration,
+                languages,
+                session.ClonedDatabasePath));
         runner.Run(requests);
         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
     }
@@ -298,6 +287,38 @@ internal static class Program
     }
 
     /// <summary>
+    /// Creates real plugin windows over preview-owned configuration and database state.
+    /// </summary>
+    /// <param name="configuration">The preview-owned editable configuration.</param>
+    /// <param name="languages">The available preview languages.</param>
+    /// <param name="databasePath">The optional preview database snapshot.</param>
+    /// <returns>The preview-owned plugin-window host.</returns>
+    private static PreviewPluginWindowHost CreatePreviewPluginWindowHost(
+        Config configuration,
+        IReadOnlyDictionary<int, LanguageInfo> languages,
+        string? databasePath)
+    {
+        var placeholderTextureHandle = new ImTextureID(unchecked((nint)(-1)));
+        var configWindowContext = new PluginConfigWindowContext(
+            configuration,
+            languages,
+            placeholderTextureHandle,
+            placeholderTextureHandle,
+            placeholderTextureHandle,
+            static () => { },
+            configuration.PluginVersion)
+        {
+            PushGeneralFont = static () => NoOpDisposable.Instance,
+            ApplyLanguageRuntimeChanges = static (_, _) => { },
+        };
+        return new PreviewPluginWindowHost(
+            new PluginConfigWindowRenderer(),
+            configWindowContext,
+            CreatePreviewDbContext(databasePath),
+            configuration);
+    }
+
+    /// <summary>
     /// Persists config-window edits only to the preview-owned config clone.
     /// </summary>
     /// <param name="configPath">The preview-owned config path.</param>
@@ -317,7 +338,8 @@ internal static class Program
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(renderResult);
-        if (request.Mode != ScreenshotMode.Surface)
+        if (request.Mode != ScreenshotMode.Surface &&
+            request.CaptureTarget != PreviewCaptureTarget.OverlaySurface)
         {
             return null;
         }
@@ -393,6 +415,51 @@ internal static class Program
 
         return fallbackLanguage?.Value ?? throw new InvalidOperationException(
             "Preview language dictionary is empty.");
+    }
+
+    /// <summary>
+    /// Resolves an interactive screenshot crop from its explicit capture target.
+    /// </summary>
+    /// <param name="request">The interactive screenshot request.</param>
+    /// <param name="renderResult">The latest overlay draw result.</param>
+    /// <param name="pluginWindowHost">The real plugin-window host.</param>
+    /// <param name="displaySize">The logical ImGui display dimensions.</param>
+    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+    /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
+    private static Rectangle? CalculateInteractiveCrop(
+        ScreenshotRequest request,
+        TranslationOverlayRenderResult renderResult,
+        PreviewPluginWindowHost pluginWindowHost,
+        Vector2 displaySize,
+        Vector2 framebufferSize)
+    {
+        return request.CaptureTarget switch
+        {
+            PreviewCaptureTarget.OverlaySurface => CalculateInteractiveSurfaceCrop(
+                request,
+                renderResult,
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.ConfigWindow => pluginWindowHost.TryGetCrop(
+                PreviewCaptureTarget.ConfigWindow),
+            PreviewCaptureTarget.DbManagerWindow => pluginWindowHost.TryGetCrop(
+                PreviewCaptureTarget.DbManagerWindow),
+            PreviewCaptureTarget.TranslatorMetricsWindow => pluginWindowHost.TryGetCrop(
+                PreviewCaptureTarget.TranslatorMetricsWindow),
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// Maps command-line screenshot modes to their default capture targets.
+    /// </summary>
+    /// <param name="mode">The selected screenshot mode.</param>
+    /// <returns>The matching capture target.</returns>
+    private static PreviewCaptureTarget GetCaptureTarget(ScreenshotMode mode)
+    {
+        return mode == ScreenshotMode.Surface
+            ? PreviewCaptureTarget.OverlaySurface
+            : PreviewCaptureTarget.FullFrame;
     }
 
     /// <summary>
