@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System;
 using DalaMock.Core.Configuration;
 using DalaMock.Core.Mocks;
 using DalaMock.Core.Plugin;
@@ -28,11 +29,26 @@ internal static class Program
             builder => { },
             [],
             false);
-        var pluginLoader = mockContainer.GetPluginLoader();
-        var mockPlugin = pluginLoader.AddPlugin(typeof(global::Echoglossian.Echoglossian));
+        try
+        {
+            var pluginLoader = mockContainer.GetPluginLoader();
+            var mockPlugin = pluginLoader.AddPlugin(typeof(global::Echoglossian.Echoglossian));
 
-        await pluginLoader.StartPlugin(mockPlugin);
+            await pluginLoader.StartPlugin(mockPlugin);
 
-        mockContainer.GetMockUi().Run();
+            mockContainer.GetMockUi().Run();
+        }
+        finally
+        {
+            switch (mockContainer)
+            {
+                case IAsyncDisposable asyncDisposable:
+                    await asyncDisposable.DisposeAsync();
+                    break;
+                case IDisposable disposable:
+                    disposable.Dispose();
+                    break;
+            }
+        }
     }
 }

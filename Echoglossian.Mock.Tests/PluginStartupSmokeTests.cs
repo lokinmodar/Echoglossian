@@ -8,6 +8,7 @@ using Echoglossian.PluginRuntime.Startup;
 using FluentAssertions;
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -18,6 +19,60 @@ namespace Echoglossian.Mock.Tests;
 /// </summary>
 public class PluginStartupSmokeTests
 {
+    [Fact]
+    public void TryReadLauncherGamePath_reads_the_game_path_from_valid_launcher_json()
+    {
+        var stateRoot = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Echoglossian.Mock.Tests", Guid.NewGuid().ToString("N")));
+        stateRoot.Create();
+
+        try
+        {
+            var launcherDirectory = stateRoot.CreateSubdirectory("XIVLauncher");
+            var launcherConfigPath = Path.Combine(launcherDirectory.FullName, "launcherConfigV3.json");
+            const string expectedGamePath = @"D:\Games\Final Fantasy XIV";
+
+            File.WriteAllText(
+                launcherConfigPath,
+                JsonSerializer.Serialize(new
+                {
+                    GamePath = expectedGamePath,
+                }));
+
+            TestBoot.TryReadLauncherGamePath(launcherConfigPath).Should().Be(expectedGamePath);
+        }
+        finally
+        {
+            if (stateRoot.Exists)
+            {
+                stateRoot.Delete(true);
+            }
+        }
+    }
+
+    [Fact]
+    public void TryReadLauncherGamePath_returns_null_for_malformed_launcher_json()
+    {
+        var stateRoot = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Echoglossian.Mock.Tests", Guid.NewGuid().ToString("N")));
+        stateRoot.Create();
+
+        try
+        {
+            var launcherDirectory = stateRoot.CreateSubdirectory("XIVLauncher");
+            var launcherConfigPath = Path.Combine(launcherDirectory.FullName, "launcherConfigV3.json");
+
+            File.WriteAllText(launcherConfigPath, "{ not-valid-json");
+
+            TestBoot.TryReadLauncherGamePath(launcherConfigPath).Should().BeNull();
+        }
+        finally
+        {
+            if (stateRoot.Exists)
+            {
+                stateRoot.Delete(true);
+            }
+        }
+    }
+
     [Fact]
     public void StartedPlugin_exposes_deterministic_cleanup()
     {

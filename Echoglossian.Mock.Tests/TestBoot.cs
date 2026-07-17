@@ -142,18 +142,45 @@ internal sealed class TestBoot
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var launcherConfigPath = Path.Combine(appDataPath, "XIVLauncher", "launcherConfigV3.json");
+        return TryReadLauncherGamePath(launcherConfigPath);
+    }
+
+    /// <summary>
+    /// Reads the local XIVLauncher game path from a specific config file path
+    /// when it is available and readable.
+    /// </summary>
+    /// <param name="launcherConfigPath">The launcher config file path to inspect.</param>
+    /// <returns>The configured XIVLauncher game path, or <see langword="null"/> when it is unavailable.</returns>
+    internal static string? TryReadLauncherGamePath(string launcherConfigPath)
+    {
         if (!File.Exists(launcherConfigPath))
         {
             return null;
         }
 
-        using var launcherConfigDocument = JsonDocument.Parse(File.ReadAllText(launcherConfigPath));
-        if (!launcherConfigDocument.RootElement.TryGetProperty("GamePath", out var gamePathElement))
+        try
+        {
+            using var launcherConfigStream = File.OpenRead(launcherConfigPath);
+            using var launcherConfigDocument = JsonDocument.Parse(launcherConfigStream);
+            if (!launcherConfigDocument.RootElement.TryGetProperty("GamePath", out var gamePathElement))
+            {
+                return null;
+            }
+
+            return gamePathElement.GetString();
+        }
+        catch (IOException)
         {
             return null;
         }
-
-        return gamePathElement.GetString();
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 }
 

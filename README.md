@@ -68,6 +68,9 @@ Run the local plugin test rails with:
 ```
 
 This keeps plugin validation local-only and does not rely on GitHub Actions.
+The DalaMock runner and startup smoke tests require resolvable local FFXIV
+game data. They check `EXD_DATA_DIR`, then `%AppData%\XIVLauncher\launcherConfigV3.json`,
+then standard Windows install paths for the game's `sqpack` directory.
 
 ## DalaMock Runner
 
