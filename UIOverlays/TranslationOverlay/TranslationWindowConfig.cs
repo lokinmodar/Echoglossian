@@ -74,6 +74,42 @@ internal record TranslationWindowConfig(
     float MaxWidthViewportFraction = 0.0f)
 {
   /// <summary>
+  /// Resolves the existing configuration factory for the specified overlay surface.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <param name="surfaceId">The overlay surface to configure.</param>
+  /// <returns>The surface-specific window configuration.</returns>
+  /// <exception cref="NotSupportedException">
+  /// The requested surface is currently rendered through the tooltip path.
+  /// </exception>
+  public static TranslationWindowConfig ForSurface(
+      Config config,
+      TranslationOverlaySurfaceId surfaceId)
+  {
+    ArgumentNullException.ThrowIfNull(config);
+
+    return surfaceId switch
+    {
+      TranslationOverlaySurfaceId.Talk => FromConfigForTalk(config),
+      TranslationOverlaySurfaceId.BattleTalk => FromConfigForBattleTalk(config),
+      TranslationOverlaySurfaceId.TalkSubtitle => FromConfigTalkSubtitle(config),
+      TranslationOverlaySurfaceId.MiniTalk => FromConfigForMiniTalk(config),
+      TranslationOverlaySurfaceId.CutSceneSelectString => FromConfigForCutSceneSelectString(config),
+      TranslationOverlaySurfaceId.TextGimmickHint => FromConfigForTextGimmickHint(config),
+      TranslationOverlaySurfaceId.WideTextToast => FromConfigForWideTextToast(config),
+      TranslationOverlaySurfaceId.ErrorToast => FromConfigForErrorToast(config),
+      TranslationOverlaySurfaceId.AreaToast => FromConfigForAreaToast(config),
+      TranslationOverlaySurfaceId.ClassChangeToast => FromConfigForClassChangeToast(config),
+      TranslationOverlaySurfaceId.QuestToast => FromConfigForQuestToast(config),
+      TranslationOverlaySurfaceId.ChatBubble => FromConfigForChatBubble(config),
+      TranslationOverlaySurfaceId.ActionDetail or TranslationOverlaySurfaceId.ItemDetail =>
+          throw new NotSupportedException(
+              $"The {surfaceId} surface is rendered through the tooltip path."),
+      _ => throw new ArgumentOutOfRangeException(nameof(surfaceId), surfaceId, null),
+    };
+  }
+
+  /// <summary>
   /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for talk translations.
   /// </summary>
   /// <param name="config"></param>

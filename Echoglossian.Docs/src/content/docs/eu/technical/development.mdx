@@ -1,0 +1,49 @@
+---
+title: Build, test eta ekarpena
+description: Balidazio lokala eta ekarpen-itxaropenak pluginarentzat eta GitHub Pages docs guneentzat.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDevelopmentWorkflowDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Ekarpenak balidatzeko workflow-a"
+  definition={buildDevelopmentWorkflowDiagram('eu')}
+/>
+
+## Gune honetarako repository arauak
+
+- `Echoglossian.Docs/` nahita ez da `Echoglossian.sln`-en parte.
+- Pluginaren erroko proiektuak docs zuhaitza esplizituki baztertzen du `Compile`, `EmbeddedResource` eta `None`-tik.
+- Docs deployment flow-a pluginaren eta D17ren release flow-etik bereizita dago.
+
+## Balidazio lokala
+
+Pluginaren balidazioa:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Docs gunearen balidazioa:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd ci
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Ekarpen-itxaropenak
+
+- mantendu aldaketak estu
+- gorde uneko jokabidea, aldaketak portaera bera helburu ez badu behintzat
+- berrerabili pluginaren arkitektura partekatua bide paraleloak sortu beharrean
+- mantendu docs publikoak curated eta audientziaz bereiziak, barne oharrak bere horretan argitaratu ordez
+
+## Release muga
+
+Dokumentazio gune publiko honek ez du nahita azaltzen external manifest bidalketarako release-maintainer flow pribatua. Workflow hori repositoryaren barne dokumentazioan geratzen da.

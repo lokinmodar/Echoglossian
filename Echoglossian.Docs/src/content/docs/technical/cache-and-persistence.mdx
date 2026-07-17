@@ -1,0 +1,38 @@
+---
+title: Cache and Persistence
+description: Why the database stays authoritative and what caches are allowed to do.
+---
+
+import MermaidDiagram from '../../../components/diagrams/MermaidDiagram.astro';
+import { buildCacheAndPersistenceDiagram } from '../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+The database is the source of truth for persisted translation history. Memory caches are there to reduce repeated work, not to redefine semantics.
+
+<MermaidDiagram
+  label="Persistence authority and cache scope"
+  definition={buildCacheAndPersistenceDiagram('root')}
+/>
+
+## Persistence Shape
+
+Different surface families persist to different entity sets, for example:
+
+- dialogue-family entities such as `TalkMessage`, `BattleTalkMessage`, and `MiniTalkMessage`
+- toast-family entities such as `ToastMessage`
+- dedicated entities such as `TextGimmickHintMessage`
+
+## What Caches Are Allowed To Do
+
+- suppress repeated translations for the same visible source
+- reuse prior results when the effective translation scope still matches
+- avoid hot-path retry spam when a provider fails
+
+## What Caches Must Not Do
+
+- become a second source of truth
+- change DB lookup semantics
+- outlive the scope rules that protect the currently visible surface
+
+## Scope Discipline
+
+Source identity, target language, effective engine, and reuse policy need to stay bound to the operation that started the request. If that scope changes, older completions must not replace the newer visible state.

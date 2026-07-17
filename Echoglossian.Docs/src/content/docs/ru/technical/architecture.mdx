@@ -1,0 +1,34 @@
+---
+title: Обзор архитектуры
+description: Текущие высокоуровневые границы runtime для capture, перевода, overlays, native mutation и persistence.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Текущая архитектура плагина держит capture, перевод, overlay rendering, native mutation и persistence как отдельные зоны ответственности.
+
+<MermaidDiagram
+  label="Границы архитектуры runtime"
+  definition={buildArchitectureDiagram('ru')}
+/>
+
+## Основные области runtime
+
+- `NativeUI/AddonHandlers/...` для поведения capture и представления, специфичного для addon
+- `NativeUI/Handlers/...` для общих native helper-ов и координации runtime
+- `UIOverlays/TranslationOverlay/...` для состояния overlay и rendering
+- `Translators/TranslationService` для общего потока перевода
+- `LanguagesHandling/...` для метаданных языка и доступности engine
+- `DBHelpers/...` и EF-backed сущности сообщений для persisted истории переводов
+
+## Архитектурные правила
+
+- Новая работа должна переиспользовать общий pipeline перевода вместо создания параллельной очереди.
+- Режим overlay-only должен оставлять native game UI только для чтения.
+- Режимы native и swap могут мутировать native UI только на surfaces, которые явно это поддерживают.
+- База данных остаётся источником истины. In-memory cache нужны для подавления повторной работы, а не для изменения semantics persistence.
+
+## Граница документации
+
+Этот публичный сайт описывает архитектуру на уровне участника. Он не публикует внутренние handoff и scratch-заметки по отдельным issues из дерева `docs/` репозитория.

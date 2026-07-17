@@ -1,0 +1,51 @@
+---
+title: Arquitetura do tradutor
+description: Pipeline de tradução partilhado mais adaptadores específicos de provider.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildTranslatorArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+O Echoglossian tem um pipeline de tradução partilhado e muitos adaptadores de engine.
+
+<MermaidDiagram
+  label="Limites entre runtime partilhado e adaptadores de engine"
+  definition={buildTranslatorArchitectureDiagram('pt')}
+/>
+
+## Responsabilidades partilhadas
+
+O runtime partilhado trata de:
+
+- seleção do tradutor
+- orquestração de requests
+- limites de reutilização de cache
+- passagem para persistência
+- publicação overlay e native após a tradução
+
+## Responsabilidades específicas de engine
+
+Cada adaptador de engine deve tratar apenas de:
+
+- configuração do client do provider
+- forma do request payload
+- parsing da response
+- comportamento do catálogo de modelos
+- configuration UI específica do engine
+
+## Famílias de engine atuais
+
+- vendor translation engines como Google, DeepL, Microsoft, Amazon e variantes Yandex
+- OpenAI-style chat-completions engines como OpenAI, OpenRouter, DeepSeek e LM Studio
+- Gemini `generateContent`
+- Ollama local generation
+- Claude Messages API
+
+## Regra segura para trabalho em engines
+
+Ao adicionar ou modificar um engine:
+
+1. reutilize `TranslationService` e `ITranslator`
+2. atualize language support e factory wiring na mesma alteração
+3. mantenha estreita a lógica provider-specific
+4. valide build e tests logo após a alteração abrangente de engine

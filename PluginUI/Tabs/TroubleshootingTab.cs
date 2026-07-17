@@ -12,8 +12,23 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class TroubleshootingTab
 {
-    public static bool Draw(Config config)
+    /// <summary>
+    /// Draws the troubleshooting controls when their runtime services are
+    /// available, or disabled controls when hosted by the standalone previewer.
+    /// </summary>
+    /// <param name="config">The configuration being displayed.</param>
+    /// <param name="runtimeActionsAvailable">
+    /// Whether asset and notification-backed runtime actions are available.
+    /// </param>
+    /// <returns><see langword="true" /> when the configuration changed.</returns>
+    public static bool Draw(Config config, bool runtimeActionsAvailable = true)
     {
+        if (!runtimeActionsAvailable)
+        {
+            DrawUnavailableControls(config);
+            return false;
+        }
+
         var changed = false;
 
         AssetsManager.RefreshPluginAssetsState(Echoglossian.SelectedLanguage);
@@ -73,5 +88,30 @@ public static class TroubleshootingTab
         }
 
         return changed;
+    }
+
+    /// <summary>
+    /// Draws visual-only troubleshooting controls without reading or mutating
+    /// plugin runtime asset or notification state.
+    /// </summary>
+    /// <param name="config">The preview-owned configuration being displayed.</param>
+    private static void DrawUnavailableControls(Config config)
+    {
+        ImGui.BeginGroup();
+        ImGui.TextWrapped(Resources.PluginAssetsNotDownloadedText);
+        ImGui.BeginDisabled();
+        ImGui.Button(Resources.DownloadPluginAssetsButtonText);
+        ImGui.EndDisabled();
+        ImGui.EndGroup();
+
+        ImGui.Spacing();
+
+        ImGui.BeginGroup();
+        ImGui.TextWrapped(Resources.ResetSettingsMessageText);
+        ResetConfigButtonHelper.Draw(
+            config,
+            static () => { },
+            runtimeActionsAvailable: false);
+        ImGui.EndGroup();
     }
 }

@@ -1,177 +1,119 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-07-15
+Snapshot date: 2026-07-16
 
 This document is the operational snapshot for open issues in
 [`lokinmodar/Echoglossian`](https://github.com/lokinmodar/Echoglossian/issues).
 GitHub remains the source of truth for issue state and comments. Published
 release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 
-## Current Release Gate
+## Published Release
 
-- Candidate release: [`v4.2601.0715.1114`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0715.1114)
+- Release: [`v4.2601.0715.1114`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0715.1114)
 - Product commit: `b584115640c5b9b9bda53001652007a710d892b3`
 - Official submission: [`goatcorp/DalamudPluginsD17#9026`](https://github.com/goatcorp/DalamudPluginsD17/pull/9026)
-- Current status: open, mergeable, validation checks passing, review required
-- Closure rule: do not post the prepared closure comments or close release-bound
-  issues until the D17 PR is merged and the version is available in the
-  official feed
-- Open issue count at this snapshot: 27
-- Expected open count after the approved closure batch: 21
+- D17 status: approved and merged on 2026-07-16
+- D17 merge commit: `c18449a14f89ff94184516bd3f9e4229bd66c8fb`
+- Validation: manifest lint and official build checks passed
+- Open issues in the previous snapshot: 27
+- Independently closed before this release pass: #215 through PR #223
+- Release-pass closures: 6
+- Open issues after the post-publication pass: 20
 
-## Close After Official Publication
+## Closed After Publication
 
-These issues have a direct implementation and validation trail in
-`v4.2601.0715.1114`. Close them only after the release gate above is satisfied.
+The release-bound closure comments were posted and these issues were closed on
+2026-07-16.
 
-| Issue | Resolution in this release | Closure evidence |
-| --- | --- | --- |
-| [#139 Arabic Translation Support](https://github.com/lokinmodar/Echoglossian/issues/139) | Phase A texture-backed presentation supports Arabic and other RTL or complex-script languages in plugin-owned overlays and hover tooltips. It includes shaping, bidi ordering, right alignment, adaptive sizing, line-height control, and bounded memory caches. | Release implementation and RTL layout/cache tests. Native FFXIV UI RTL remains separate Phase B research and is not required for the plugin-owned presentation requested by this issue. |
-| [#174 Retranslate saved texts](https://github.com/lokinmodar/Echoglossian/issues/174) | Translation reuse is canonically scoped by client source language, target language, and engine policy. Language changes invalidate runtime caches, restore defaults, and permit explicit retranslation instead of reusing incompatible rows. | Persistence, reuse-scope, cache invalidation, and retranslation tests. |
-| [#189 MSQ bar and mission windows untranslated](https://github.com/lokinmodar/Echoglossian/issues/189) | Quest-family handlers now use source-scoped state and incremental application for `ScenarioTree`, `RecommendList`, `JournalAccept`, `JournalDetail`, and `ToDoList`. | Quest runtime, lifecycle, and partial-application tests. |
-| [#204 OpenRouter not translating](https://github.com/lokinmodar/Echoglossian/issues/204) | Shared prompt expansion no longer expands placeholder-like text introduced by a previous replacement. | Commit `36c3565` and translator contract tests cover the reported prompt corruption path. |
-| [#207 ToDoList not translating](https://github.com/lokinmodar/Echoglossian/issues/207) | `ToDoList` no longer waits for every quest translation before applying already-resolved entries. | `ToDoListRuntimeAvailabilityTests` and source-scoped runtime tests. |
+| Issue | Published resolution |
+| --- | --- |
+| [#12 Current known issues](https://github.com/lokinmodar/Echoglossian/issues/12) | Obsolete version-specific tracker closed administratively. Current status now lives in focused issues, this backlog, and the changelog. |
+| [#139 Arabic Translation Support](https://github.com/lokinmodar/Echoglossian/issues/139) | Plugin-owned overlays and hover tooltips support Arabic and other RTL or complex-script languages through texture-backed shaping, bidi ordering, right alignment, adaptive sizing, and bounded caches. Native FFXIV UI RTL remains separate Phase B research. |
+| [#174 Retranslate saved texts](https://github.com/lokinmodar/Echoglossian/issues/174) | Translation reuse and persistence are scoped by client source language, target language, and engine policy. Language changes invalidate incompatible runtime state and permit explicit retranslation. |
+| [#189 MSQ bar and mission windows untranslated](https://github.com/lokinmodar/Echoglossian/issues/189) | Quest-family handlers use source-scoped state and incremental application across `ScenarioTree`, `RecommendList`, `JournalAccept`, `JournalDetail`, and `ToDoList`. |
+| [#204 OpenRouter not translating](https://github.com/lokinmodar/Echoglossian/issues/204) | Shared prompt expansion performs one safe placeholder pass and no longer reinterprets placeholder-like content introduced by an earlier replacement. |
+| [#207 ToDoList not translating](https://github.com/lokinmodar/Echoglossian/issues/207) | `ToDoList` applies available translations without waiting for every visible quest and scopes runtime state to the current source and target languages. |
 
-### Prepared Closure Comments
+Issue #181 was intentionally excluded from this closure batch. Its original
+read-only flag corruption is fixed, but the native translated-text reflow front
+remains open in draft PR
+[#193](https://github.com/lokinmodar/Echoglossian/pull/193).
 
-#### #139
+## Other Closure Since The Previous Snapshot
 
-> Implemented in official release `v4.2601.0715.1114`, published through
-> `goatcorp/DalamudPluginsD17#9026`. Plugin-owned overlays and hover tooltips now
-> support Arabic and other RTL/complex scripts through texture-backed shaping,
-> bidi ordering, right alignment, adaptive sizing, and bounded caches. Native
-> FFXIV UI RTL remains separate Phase B research. If Arabic still fails on this
-> version, please open a focused report with the affected surface, display mode,
-> translation engine, font configuration, screenshot, and log.
+| Issue | Resolution |
+| --- | --- |
+| [#215 Dev-only ImGui preview host](https://github.com/lokinmodar/Echoglossian/issues/215) | Closed automatically by merged PR [#223](https://github.com/lokinmodar/Echoglossian/pull/223), which added the isolated standalone previewer, shared overlay rendering, font and RTL preview support, and screenshot export. |
 
-#### #174
+## Awaiting Retest
 
-> Fixed in official release `v4.2601.0715.1114`, published through
-> `goatcorp/DalamudPluginsD17#9026`. Translation reuse and persistence are now
-> scoped by client source language, target language, and engine policy. Language
-> changes invalidate runtime caches and restore default text, and the explicit
-> retranslation path no longer reuses incompatible saved results. Please open a
-> focused report with reproduction steps and DB diagnostics if a stale row still
-> survives these scope changes.
+Retest requests for the official release were posted on 2026-07-16. These
+issues remain open until the exact reported symptom is validated.
 
-#### #189
-
-> Fixed in official release `v4.2601.0715.1114`, published through
-> `goatcorp/DalamudPluginsD17#9026`. The quest window and tracker family now uses
-> source-scoped runtime state and applies completed translations incrementally
-> across `ScenarioTree`, `RecommendList`, `JournalAccept`, `JournalDetail`, and
-> `ToDoList`. Please open a focused report naming the exact surface if one remains
-> untranslated on this version.
-
-#### #204
-
-> Fixed in official release `v4.2601.0715.1114`, published through
-> `goatcorp/DalamudPluginsD17#9026`. Shared prompt expansion now performs a single
-> safe placeholder pass and does not reinterpret placeholder-like content added
-> by an earlier replacement. This path is covered by translator contract tests,
-> including OpenRouter-compatible prompts. Please attach a current log and prompt
-> template in a new issue if the provider still returns the reported fixed text.
-
-#### #207
-
-> Fixed in official release `v4.2601.0715.1114`, published through
-> `goatcorp/DalamudPluginsD17#9026`. `ToDoList` now applies each available
-> translation without waiting for every visible quest to finish, and its runtime
-> state is scoped to the current client and target languages. Remaining dynamic
-> progression or slot-reuse symptoms should be reported as a focused current
-> repro rather than keeping this original all-or-nothing report open.
-
-## Administrative Closure
-
-### [#12 Current known issues](https://github.com/lokinmodar/Echoglossian/issues/12)
-
-This is an obsolete version-specific tracker. Its maintainer comment already
-states that the old tracker should be closed, but the issue remains open. Close
-it with the release batch so current status is not duplicated across an issue,
-the changelog, and this backlog.
-
-Prepared comment:
-
-> Closing this obsolete version-specific tracker. Published fixes and release
-> history are maintained in `CHANGELOG.md`; active triage is maintained in
-> `docs/github-issue-backlog.md` and in focused GitHub issues. The current release
-> line is `v4.2601.0715.1114`, published through
-> `goatcorp/DalamudPluginsD17#9026`.
-
-## Retest Before Closure
-
-The release contains adjacent hardening, but the available reports do not prove
-that their exact symptom is resolved. Request a retest after publication and do
-not auto-close them.
-
-| Issue | Why it remains open | Prepared retest request |
-| --- | --- | --- |
-| [#167 Overlay-only dialogue glitches](https://github.com/lokinmodar/Echoglossian/issues/167) | The release enforces read-only native ownership in overlay-only mode, but the report has no detailed addon or current-version reproduction. | `v4.2601.0715.1114` hardens overlay-only lifecycle behavior. Please retest and provide the exact surface (`Talk`, `BattleTalk`, or other), display mode, screenshot, and log if it still reproduces. |
-| [#175 Overlay problem](https://github.com/lokinmodar/Echoglossian/issues/175) | The original report has no diagnostics and only a configuration/reload workaround. | Please retest on `v4.2601.0715.1114` with a saved display mode. If the overlay is still absent, attach the relevant configuration fields, affected addon, and startup/runtime log. |
-| [#203 Echoglossian not translating](https://github.com/lokinmodar/Echoglossian/issues/203) | Comments report different behavior for Google, Yandex, Gemini, and DeepL. This is not one validated root cause. | Please retest each affected engine separately on `v4.2601.0715.1114` and report source language, target language, engine, surface, and the matching log excerpt. |
+| Issue | Required evidence |
+| --- | --- |
+| [#167 Overlay-only dialogue glitches](https://github.com/lokinmodar/Echoglossian/issues/167) | Retest the exact `Talk`, `BattleTalk`, or other surface and provide display mode, screenshot, and log if native text still changes or glitches. |
+| [#175 Overlay problem](https://github.com/lokinmodar/Echoglossian/issues/175) | Retest with the display mode saved and provide relevant configuration, affected addon, and startup/runtime log if the overlay remains absent. |
+| [#203 Echoglossian not translating](https://github.com/lokinmodar/Echoglossian/issues/203) | Retest Google, Yandex, Gemini, and DeepL separately with client language, target language, surface, and matching log excerpt. |
 
 ## Mixed Issues To Narrow
 
-These issues aggregate independent symptoms. Keep them open after publication,
-record which portions were addressed, and ask for separate current reproductions
-for what remains.
+Release-scope comments were posted on 2026-07-16. These issues combine multiple
+root causes and should remain open only while fresh focused reports are being
+collected.
 
 ### [#171 DeepSeek, mission text, layout, and tracker progression](https://github.com/lokinmodar/Echoglossian/issues/171)
 
-The new release addresses source-scoped tracker state, partial translation
-application, and several layout/ownership paths. It does not prove resolution
-of DeepSeek authentication/runtime errors, selection-dialog clipping, or the
-latest dynamic progression report. After publication, comment with the shipped
-coverage and request one focused issue per remaining symptom.
+The release addresses source-scoped tracker state, partial translation
+application, and several layout and native-ownership paths. DeepSeek
+authentication/runtime errors, selection-dialog clipping, and the latest
+dynamic progression symptom still require separate current reproductions.
 
 ### [#172 Google layout and untranslated quest/FATE text](https://github.com/lokinmodar/Echoglossian/issues/172)
 
-The new release addresses quest slot reuse, stale source scoping, incremental
-tracker application, and read-only `JournalDetail` formatting. It does not prove
-resolution of untranslated FATE text or selection-dialog clipping. Keep the
-umbrella open only while collecting fresh reports, then split or close it once
-the remaining symptoms have focused issues.
+The release addresses quest slot reuse, stale source scoping, incremental
+tracker application, and read-only `JournalDetail` formatting. Untranslated
+FATE text and selection-dialog clipping still require focused current
+reproductions.
 
-## Must Remain Open
+## Active And Planned Work
 
 | Issue | Current reason |
 | --- | --- |
 | [#15 Move Description translation](https://github.com/lokinmodar/Echoglossian/issues/15) | Structured `ActionDetail` and `ItemDetail` native tooltip translation remains disabled for release safety. ActionMenu hover work does not complete this request. |
 | [#68 Specific in-game addons](https://github.com/lokinmodar/Echoglossian/issues/68) | Rolling coverage tracker still includes unsupported or incomplete addons such as selection dialogs, chat bubbles, and production native tooltips. |
-| [#103 Interactible WorldObjects](https://github.com/lokinmodar/Echoglossian/issues/103) | No delivered implementation in this release. |
-| [#104 Unending Journey](https://github.com/lokinmodar/Echoglossian/issues/104) | No delivered implementation in this release. |
-| [#148 Structured LLM input/output](https://github.com/lokinmodar/Echoglossian/issues/148) | Foundation work exists, but the requested cross-provider glossary and metadata contract is not complete. |
+| [#103 Interactible WorldObjects](https://github.com/lokinmodar/Echoglossian/issues/103) | No delivered implementation. |
+| [#104 Unending Journey](https://github.com/lokinmodar/Echoglossian/issues/104) | No delivered implementation. |
+| [#148 Structured LLM input/output](https://github.com/lokinmodar/Echoglossian/issues/148) | Foundation work exists, but the requested cross-provider glossary and metadata contract is incomplete. |
 | [#173 CharacterPanelRefined incompatibility](https://github.com/lokinmodar/Echoglossian/issues/173) | Originating user report remains unverified against the compatibility work requested by #179. |
-| [#176 Local LLM latency](https://github.com/lokinmodar/Echoglossian/issues/176) | The reported approximately one-second overhead has no release acceptance evidence and still needs profiling. |
+| [#176 Local LLM latency](https://github.com/lokinmodar/Echoglossian/issues/176) | The reported approximately one-second overhead still needs focused profiling and acceptance evidence. |
 | [#179 CharacterPanelRefined analysis](https://github.com/lokinmodar/Echoglossian/issues/179) | Explicit compatibility engineering task remains incomplete. |
-| [#181 TextNode flags and native `JournalDetail` reflow](https://github.com/lokinmodar/Echoglossian/issues/181) | The read-only corruption is fixed, but draft PR #193 remains open for the narrower native translated-text reflow. Keep this issue open until long native translations reflow and restore correctly in-game. |
+| [#181 TextNode flags and native `JournalDetail` reflow](https://github.com/lokinmodar/Echoglossian/issues/181) | The read-only corruption is fixed. Draft PR #193 remains open for the narrower native translated-text reflow and requires long-text in-game acceptance. |
 | [#192 Configuration screenshots](https://github.com/lokinmodar/Echoglossian/issues/192) | Documentation and UI enhancement has not been implemented. |
-| [#206 `{targetLanguage}` preview](https://github.com/lokinmodar/Echoglossian/issues/206) | Confirmed current defect: the prompt editor preview state still initializes the target language as `Japanese`. This must not be closed with #204. |
-| [#209 Dialogue context controls](https://github.com/lokinmodar/Echoglossian/issues/209) | User-facing disable/limit controls for local LLM context are not implemented. |
-| [#212 DeepL `TooManyRequests`](https://github.com/lokinmodar/Echoglossian/issues/212) | The supplied log indicates provider rate limiting. Backoff, classification, and user-facing behavior still need focused triage. |
-| [#214 First dialogue speaker context](https://github.com/lokinmodar/Echoglossian/issues/214) | New correctness report created after the previous release; no specific implementation in this release. |
-| [#215 Dev-only ImGui preview host](https://github.com/lokinmodar/Echoglossian/issues/215) | Explicitly deferred developer tooling. |
-| [#217 Diacritics fallback metadata](https://github.com/lokinmodar/Echoglossian/issues/217) | Canonical future task for opt-in native replacement fallback. Issue #208 is already closed in favor of this issue; the comment in #217 that calls #208 open is stale. |
+| [#206 `{targetLanguage}` preview](https://github.com/lokinmodar/Echoglossian/issues/206) | Confirmed current defect: the prompt editor preview state initializes the target language as `Japanese`. This was not fixed by #204. |
+| [#209 Dialogue context controls](https://github.com/lokinmodar/Echoglossian/issues/209) | User-facing disable or limit controls for local LLM context are not implemented. |
+| [#212 DeepL `TooManyRequests`](https://github.com/lokinmodar/Echoglossian/issues/212) | The supplied log indicates provider rate limiting. Backoff, classification, and user-facing behavior need focused triage. |
+| [#214 First dialogue speaker context](https://github.com/lokinmodar/Echoglossian/issues/214) | First-line speaker context correctness remains unresolved. |
+| [#217 Diacritics fallback metadata](https://github.com/lokinmodar/Echoglossian/issues/217) | Canonical future task for opt-in native replacement fallback. Issue #208 is already closed in favor of this issue. |
 
 ## Complete Open-Issue Inventory
 
-This table is the countable audit of all 27 open issues at the snapshot date.
+This table is the countable audit of all 20 open issues at the snapshot date.
 
 | Decision | Issues | Count |
 | --- | --- | ---: |
-| Close after official publication | #139, #174, #189, #204, #207 | 5 |
-| Administrative close with release batch | #12 | 1 |
-| Request retest before closure | #167, #175, #203 | 3 |
+| Awaiting reporter retest | #167, #175, #203 | 3 |
 | Keep open and narrow | #171, #172 | 2 |
-| Keep open as active or planned work | #15, #68, #103, #104, #148, #173, #176, #179, #181, #192, #206, #209, #212, #214, #215, #217 | 16 |
-| **Total open at snapshot** |  | **27** |
+| Active or planned work | #15, #68, #103, #104, #148, #173, #176, #179, #181, #192, #206, #209, #212, #214, #217 | 15 |
+| **Total open at snapshot** |  | **20** |
 
-## Post-Publication Checklist
+## Next Actions
 
-1. Confirm `goatcorp/DalamudPluginsD17#9026` is merged.
-2. Confirm `v4.2601.0715.1114` is available in the official Dalamud feed.
-3. Post the prepared comments and close #12, #139, #174, #189, #204, and #207.
-4. Post retest requests on #167, #175, and #203 without closing them.
-5. Comment on #171 and #172 with the delivered scope and request focused
-   reproductions for residual symptoms.
-6. Re-run the open-issue audit and update this snapshot and its counts.
+1. Monitor reporter responses on #167, #175, and #203 and close only after the
+   exact symptom is validated or a focused replacement issue exists.
+2. Split remaining current symptoms from #171 and #172 into focused issues.
+3. Complete native `JournalDetail` reflow in PR #193 before closing #181.
+4. Prioritize confirmed direct defects #206 and #214 ahead of broad enhancement
+   work.
+5. Re-run the open-issue audit whenever issue state or release acceptance
+   changes.

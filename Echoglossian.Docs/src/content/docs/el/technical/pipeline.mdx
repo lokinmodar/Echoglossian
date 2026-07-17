@@ -1,0 +1,43 @@
+---
+title: Pipeline capture, μετάφρασης και παρουσίασης
+description: Πώς οι υποστηριζόμενες surfaces πηγαίνουν από capture του source text σε μεταφρασμένο output.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Κάθε υποστηριζόμενη surface ακολουθεί την ίδια γενική ακολουθία ακόμη κι όταν τα ακριβή hooks διαφέρουν.
+
+<MermaidDiagram
+  label="Ροή από capture σε παρουσίαση"
+  definition={buildPipelineDiagram('el')}
+/>
+
+1. Capture source text από υποστηριζόμενη surface.
+2. Επίλυση reuse μετάφρασης και persistence scope.
+3. Μετάφραση μέσω του κοινού pipeline επιλογής engine και translator.
+4. Δημοσίευση αποτελέσματος μέσω overlay, native ή swap presentation.
+
+## Όρια σταδίων
+
+### Capture
+
+Το source text μπορεί να έρθει από:
+
+- payloads `AtkValue` πριν από refresh
+- ορατούς text nodes του addon
+- callback payloads όπως quest toast `SeString`
+
+### Μετάφραση
+
+Το `TranslationService` συντονίζει την κοινή ροή μετάφρασης. Οι concrete translators παραμένουν engine-specific και πρέπει να κατέχουν μόνο provider-specific request και response handling.
+
+### Παρουσίαση
+
+- Το overlay mode κάνει render το μεταφρασμένο κείμενο έξω από το native UI.
+- Το native mode μπορεί να γράψει μεταφρασμένο κείμενο σε υποστηριζόμενους nodes ή payloads.
+- Το swap mode κρατά μεταφρασμένο native text και χρησιμοποιεί το overlay για το original text.
+
+### Persistence και reuse
+
+Οι οντότητες διαλόγου και toast χρησιμοποιούν persisted history μαζί με in-memory suppression για να αποφεύγουν επαναλήψεις. Μια late completion δεν πρέπει να αντικαθιστά νεότερο visible state όταν το capture scope της έχει πια παλιώσει.

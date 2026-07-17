@@ -1,0 +1,73 @@
+---
+title: Laguntza-matrizea
+description: Une honetan dokumentatutako itzulpen-azaleren eta modu-familien inbentario publikoa.
+---
+
+Orrialde hau egungo itzulpen-azaleren inbentarioaren bertsio publikoa da. Runtime portaera erreala bakarrik dokumentatzen du.
+
+## Modu-familiak
+
+| Modu-familia | Moduak | Honek erabiltzen du |
+| --- | --- | --- |
+| Quest / native-window familia | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal familiako azalerak eta DB-first game windows |
+| Overlay familia | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, azpitituluak, MiniTalk, CutSceneSelectString eta toast familiako azalerak |
+
+## Elkarrizketa eta overlay azalerak
+
+| Azalera | Toggle | Egoera |
+| --- | --- | --- |
+| Talk | `TranslateTalk` | Gaituta |
+| BattleTalk | `TranslateBattleTalk` | Gaituta |
+| TalkSubtitle | `TranslateTalkSubtitle` | Gaituta |
+| MiniTalk | `TranslateMiniTalk` | Gaituta |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Gaituta |
+
+## Quest eta journal azalerak
+
+| Azalera | Toggle | Egoera |
+| --- | --- | --- |
+| Journal | `TranslateJournal` | Gaituta |
+| JournalDetail | `TranslateJournalDetail` | Gaituta |
+| ToDoList | `TranslateToDoList` | Gaituta |
+| ScenarioTree | `TranslateScenarioTree` | Gaituta |
+| JournalAccept | `TranslateJournalAccept` | Gaituta |
+| JournalResult | `TranslateJournalResult` | Gaituta |
+| RecommendList | `TranslateRecommendList` | Gaituta |
+| AreaMap | `TranslateAreaMap` | Gaituta |
+
+## Toast azalerak
+
+| Azalera | Toggle | Egoera |
+| --- | --- | --- |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Gaituta |
+| Error toast | `TranslateErrorToast` | Gaituta |
+| Area toast | `TranslateAreaToast` | Gaituta |
+| Class / Job change toast | `TranslateClassChangeToast` | Gaituta |
+| Text gimmick hint | `TranslateTextGimmickHint` | Gaituta |
+| Quest toast | `TranslateQuestToast` | Gaituta |
+
+## Game-window azalerak
+
+| Azalera | Toggle | Egoera |
+| --- | --- | --- |
+| Character window | `TranslateCharacterWindow` | Gaituta |
+| Main Command | `TranslateMainCommandWindow` | Gaituta |
+| Action Menu | `TranslateActionMenuWindow` | Gaituta |
+| HUD windows | `TranslateHudWindow` | Gaituta |
+| Operation Guide | `TranslateOperationGuideWindow` | Gaituta |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Gaituta |
+
+## Ezkutuko edo aldi baterako mugatutako azalerak
+
+| Azalera | Toggle | Egoera publikoa |
+| --- | --- | --- |
+| Action / item detail tooltips | `TranslateTooltips` | Release-rako aldi baterako desgaituta |
+| Yes/No dialog | `TranslateYesNoScreen` | Inplementatuta baina uneko UI-an ezkutatuta |
+| SelectString dialog | `TranslateSelectString` | Inplementatuta baina uneko UI-an ezkutatuta |
+| SelectOk dialog | `TranslateSelectOk` | Inplementatuta baina uneko UI-an ezkutatuta |
+
+## Eragiketa-oharrak
+
+- Hizkuntza batzuek deskargatutako font assets behar dituzte itzulpena segurtasunez aktibatu aurretik.
+- Overlay-only hizkuntzak native replacement moduetatik urruntzen dira native bistaratzea arriskutsua litzatekeenean.
+- Azalera bat konfigurazioan edo kodean existi daiteke eta hala ere release batean nahita ezkutatuta edo desgaituta egon.

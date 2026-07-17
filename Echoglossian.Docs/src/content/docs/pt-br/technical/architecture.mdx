@@ -1,0 +1,34 @@
+---
+title: Visão geral da arquitetura
+description: Limites atuais de runtime de alto nível para captura, tradução, overlays, native mutation e persistência.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+A arquitetura atual do plugin mantém captura, tradução, renderização overlay, native mutation e persistência como responsabilidades separadas.
+
+<MermaidDiagram
+  label="Limites da arquitetura de runtime"
+  definition={buildArchitectureDiagram('pt-br')}
+/>
+
+## Áreas principais do runtime
+
+- `NativeUI/AddonHandlers/...` para comportamento de captura e apresentação específico por addon
+- `NativeUI/Handlers/...` para helpers native compartilhados e coordenação de runtime
+- `UIOverlays/TranslationOverlay/...` para estado e renderização do overlay
+- `Translators/TranslationService` para o fluxo de tradução compartilhado
+- `LanguagesHandling/...` para metadados de idioma e disponibilidade de engine
+- `DBHelpers/...` e entidades de mensagens com suporte de EF para histórico persistido de tradução
+
+## Regras de arquitetura
+
+- Trabalho novo deve reutilizar o pipeline de tradução compartilhado em vez de criar uma fila paralela.
+- O modo overlay-only precisa deixar a native game UI somente leitura.
+- Os modos native e swap só podem mutar a native UI em surfaces que ofereçam esse suporte explicitamente.
+- O banco de dados continua sendo a fonte de verdade. Os caches em memória servem para suprimir trabalho repetido, não para redefinir a semântica de persistência.
+
+## Limite da documentação
+
+Este site público descreve a arquitetura no nível de contribuidores. Ele não publica handoffs internos nem notas de scratch específicas de issues da árvore `docs/` do repositório.

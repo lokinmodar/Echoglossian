@@ -1,0 +1,46 @@
+---
+title: Native UI et overlays
+description: Comment la présentation native et la présentation overlay restent séparées.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildNativeUiAndOverlaysDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Le runtime distingue la traduction de la présentation. Cette séparation maintient les correctifs de surface étroits.
+
+<MermaidDiagram
+  label="Responsabilité des modes de présentation"
+  definition={buildNativeUiAndOverlaysDiagram('fr')}
+/>
+
+## Responsabilité de l’overlay
+
+L’état de l’overlay est géré par la couche overlay, pas par des handlers individuels qui possèdent leur propre renderer :
+
+- `UIOverlays/TranslationOverlay/OverlayConfigs.cs`
+- `UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs`
+
+Les handlers publient le contenu et synchronisent les bounds, mais l’overlay lui-même reste une responsabilité séparée.
+
+## Règles de mutation native
+
+- Le mode overlay-only ne doit pas muter les nœuds ni les payloads native.
+- Le mode native peut écrire le texte traduit dans des surfaces native prises en charge.
+- Le mode swap conserve le texte native traduit et publie l’original via l’overlay.
+
+## Réalité actuelle du layout native
+
+Certaines surfaces peuvent muter proprement des payloads plus tôt. D’autres dépendent encore d’une mutation plus tardive de nœuds de texte visibles et de helpers de reflow explicites.
+
+Exemples :
+
+- `TalkSubtitle` peut injecter plus tôt le texte de remplacement via des payloads `AtkValue`.
+- `BattleTalk`, `MiniTalk` et plusieurs surfaces de la famille toast reposent encore sur une mutation tardive de nœud de texte native plus une logique de reflow partagée.
+
+Lorsque le visuel est faux, classez d’abord le problème :
+
+- problème de capture
+- problème de cache ou de persistance
+- problème de publication overlay
+- problème de mutation native
+- problème de wrapper ou de reflow de fond manquant

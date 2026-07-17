@@ -1,0 +1,34 @@
+---
+title: Arkitekturaren ikuspegi orokorra
+description: Capture, itzulpena, overlayak, native mutation eta persistence-rako uneko runtime muga nagusiak.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Pluginaren uneko arkitekturak capture, itzulpena, overlay rendering-a, native mutation eta persistence ardura bereizi gisa mantentzen ditu.
+
+<MermaidDiagram
+  label="Runtime arkitekturaren mugak"
+  definition={buildArchitectureDiagram('eu')}
+/>
+
+## Runtime eremu nagusiak
+
+- `NativeUI/AddonHandlers/...` addon bakoitzeko capture eta aurkezpen jokabiderako
+- `NativeUI/Handlers/...` native laguntzaile partekatuetarako eta runtime koordinaziorako
+- `UIOverlays/TranslationOverlay/...` overlay egoerarako eta rendering-erako
+- `Translators/TranslationService` itzulpen-fluxu partekaturako
+- `LanguagesHandling/...` hizkuntza metadata eta engine erabilgarritasunerako
+- `DBHelpers/...` eta EF bidezko mezu-entitateak persisted itzulpen-historiarako
+
+## Arkitektura arauak
+
+- Lan berriak itzulpen pipeline partekatua berrerabili behar du, ez ilara paralelo bat sortu.
+- Overlay-only moduak native game UI irakurtzeko soilik utzi behar du.
+- Native eta swap moduek native UI bakarrik mutatu dezakete hori berariaz onartzen duten surfacesetan.
+- Datu-basea egiaren iturria da. In-memory cacheak errepikatutako lana kentzeko dira, ez persistence semantics berridazteko.
+
+## Dokumentazio muga
+
+Gune publiko honek arkitektura ekarpen-egileen mailan deskribatzen du. Ez ditu repositoryko `docs/` zuhaitzeko barne handoff-ak edo issueei lotutako scratch oharrak argitaratzen.

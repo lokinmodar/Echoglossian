@@ -20,6 +20,7 @@ public sealed class TranslatorMetricsWindow
   private readonly Action<string> openDbEditorForTable;
   private readonly Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
       retranslateVisibleDialogueAsync;
+  private readonly bool runtimeActionsAvailable;
   private readonly InspectionTableView visibleStorySurfaceInspectionTable;
   private Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>?
       activeRetranslationTask;
@@ -39,15 +40,20 @@ public sealed class TranslatorMetricsWindow
   ///     Delegate used to explicitly retranslate the currently visible
   ///     story-facing text and persist the refreshed result.
   /// </param>
+  /// <param name="runtimeActionsAvailable">
+  ///     Whether runtime-owned actions are available to the hosted window.
+  /// </param>
   public TranslatorMetricsWindow(
       Config config,
       Action<string> openDbEditorForTable,
       Func<Task<NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult>>
-          retranslateVisibleDialogueAsync)
+          retranslateVisibleDialogueAsync,
+      bool runtimeActionsAvailable = true)
   {
     this.config = config;
     this.openDbEditorForTable = openDbEditorForTable;
     this.retranslateVisibleDialogueAsync = retranslateVisibleDialogueAsync;
+    this.runtimeActionsAvailable = runtimeActionsAvailable;
     this.visibleStorySurfaceInspectionTable = new InspectionTableView(
         tableId: "visibleStorySurfaceInspection",
         getColumns: VisibleStorySurfaceInspectionModelBuilder.BuildColumns,
@@ -61,6 +67,11 @@ public sealed class TranslatorMetricsWindow
   ///     Gets or sets a value indicating whether the metrics window is open.
   /// </summary>
   public bool IsOpen { get; set; }
+
+  /// <summary>
+  ///     Gets the bounds captured during the most recent successful draw.
+  /// </summary>
+  internal RectangleF? LastWindowBounds { get; private set; }
 
   /// <summary>
   ///     Draws the translator metrics window.
@@ -80,6 +91,7 @@ public sealed class TranslatorMetricsWindow
             ImGuiWindowFlags.NoCollapse))
     {
       this.IsOpen = isOpen;
+      this.CaptureWindowBounds();
       ImGui.End();
       return;
     }
@@ -155,6 +167,7 @@ public sealed class TranslatorMetricsWindow
       ImGui.Spacing();
       ImGui.TextWrapped(
           Resources.TranslatorDebuggerNoMetricsRecorded);
+      this.CaptureWindowBounds();
       ImGui.End();
       return;
     }
@@ -314,7 +327,20 @@ public sealed class TranslatorMetricsWindow
       }
     }
 
+    this.CaptureWindowBounds();
     ImGui.End();
+  }
+
+  /// <summary>
+  ///     Captures the current metrics window bounds for screenshot cropping.
+  /// </summary>
+  private void CaptureWindowBounds()
+  {
+    this.LastWindowBounds = new RectangleF(
+        ImGui.GetWindowPos().X,
+        ImGui.GetWindowPos().Y,
+        ImGui.GetWindowSize().X,
+        ImGui.GetWindowSize().Y);
   }
 
   /// <summary>
@@ -560,6 +586,7 @@ public sealed class TranslatorMetricsWindow
             snapshot.LastLoadObservedAtUtc?.ToString("u", CultureInfo.InvariantCulture) ??
             "-"));
 
+    ImGui.BeginDisabled(!this.runtimeActionsAvailable);
     if (ImGui.Button(
             Resources.TranslatorDebuggerReloadDialogueGlossary))
     {
@@ -567,11 +594,24 @@ public sealed class TranslatorMetricsWindow
           this.config.DialogueGlossaryFilePath);
     }
 
+    if (!this.runtimeActionsAvailable &&
+        ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+    {
+      ImGui.SetTooltip(Resources.PreviewImageryUnavailableText);
+    }
+
     ImGui.SameLine();
     if (ImGui.Button(
             Resources.TranslatorDebuggerClearDialogueGlossary))
     {
       StructuredDialogueGlossaryStore.Clear();
+    }
+
+    ImGui.EndDisabled();
+    if (!this.runtimeActionsAvailable &&
+        ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+    {
+      ImGui.SetTooltip(Resources.PreviewImageryUnavailableText);
     }
 
     if (!string.IsNullOrWhiteSpace(snapshot.LastLoadFailureDetail))

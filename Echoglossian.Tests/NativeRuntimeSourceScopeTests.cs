@@ -258,6 +258,62 @@ public class NativeRuntimeSourceScopeTests
     }
 
     /// <summary>
+    ///     Ensures layout-only restoration can still reset plugin-owned geometry
+    ///     after the game repaints the original text into the same field.
+    /// </summary>
+    [Fact]
+    public void NativeMutation_LayoutOnlyRestore_IgnoresGameRepaint()
+    {
+        var restoredText = string.Empty;
+        var writeCount = 0;
+
+        var restored = NativeMutationOwnership.TryRestore(
+            "New game-owned source",
+            "Plugin replacement",
+            "Old game source",
+            restoreText: false,
+            restoredValue =>
+            {
+                writeCount++;
+                restoredText = restoredValue;
+            });
+
+        Assert.True(restored);
+        Assert.Equal(1, writeCount);
+        Assert.Equal("Old game source", restoredText);
+    }
+
+    /// <summary>
+    ///     Ensures geometry cleanup can still run after the game repaints a new
+    ///     source into a field that used to contain plugin-owned replacement
+    ///     text.
+    /// </summary>
+    [Fact]
+    public void NativeMutation_TextRestore_FallsBackToLayoutCleanupAfterGameRepaint()
+    {
+        var restoredText = string.Empty;
+        var textRestoreCount = 0;
+        var layoutRestoreCount = 0;
+
+        var restored = NativeMutationOwnership.TryRestoreWithLayoutFallback(
+            "New game-owned source",
+            "Plugin replacement",
+            "Old game source",
+            restoreText: true,
+            restoredValue =>
+            {
+                textRestoreCount++;
+                restoredText = restoredValue;
+            },
+            () => layoutRestoreCount++);
+
+        Assert.True(restored);
+        Assert.Equal(0, textRestoreCount);
+        Assert.Equal(1, layoutRestoreCount);
+        Assert.Equal(string.Empty, restoredText);
+    }
+
+    /// <summary>
     ///     Ensures DB-first restoration uses the replacement recorded for the
     ///     same stable node key rather than another node's equal translation.
     /// </summary>

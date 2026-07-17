@@ -1,0 +1,51 @@
+---
+title: Oversætterarkitektur
+description: Delt oversættelsespipeline plus provider-specifikke adaptere.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildTranslatorArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Echoglossian har én delt oversættelsespipeline og mange engine-adaptere.
+
+<MermaidDiagram
+  label="Grænser mellem delt runtime og engine-adaptere"
+  definition={buildTranslatorArchitectureDiagram('da')}
+/>
+
+## Delte ansvarsområder
+
+Den delte runtime ejer:
+
+- valg af oversætter
+- request-orkestrering
+- grænser for cache-genbrug
+- persistensoverdragelse
+- overlay- og native-publicering downstream for oversættelse
+
+## Engine-specifikke ansvarsområder
+
+Hver engine-adapter bør kun eje:
+
+- opsætning af provider-klient
+- formen på request-payload
+- response-parsing
+- modelkatalogadfærd
+- engine-specifik konfigurations-UI
+
+## Aktuelle engine-familier
+
+- vendor-oversættelsesengines som Google, DeepL, Microsoft, Amazon og Yandex-varianter
+- OpenAI-lignende chat-completions-engines som OpenAI, OpenRouter, DeepSeek og LM Studio
+- Gemini `generateContent`
+- Ollama lokal generation
+- Claude Messages API
+
+## Sikker regel for engine-arbejde
+
+Når du tilføjer eller ændrer en engine:
+
+1. genbrug `TranslationService` og `ITranslator`
+2. opdater sprogunderstøttelse og factory-wiring i den samme ændring
+3. hold provider-specifik logik smal
+4. valider build og tests straks efter den engine-brede ændring

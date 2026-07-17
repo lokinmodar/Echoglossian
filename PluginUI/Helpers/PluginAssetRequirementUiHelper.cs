@@ -37,8 +37,11 @@ public static class PluginAssetRequirementUiHelper
   /// language requires missing downloaded assets.
   /// </summary>
   /// <param name="config">The plugin configuration to update.</param>
+  /// <param name="runtimeActionsAvailable">Whether asset management actions are available.</param>
   /// <returns><c>true</c> when the UI changed configuration state.</returns>
-  public static bool DrawInlineWarning(Config config)
+  public static bool DrawInlineWarning(
+      Config config,
+      bool runtimeActionsAvailable = true)
   {
     if (!AssetsManager.HasMissingRequiredAssets(Echoglossian.SelectedLanguage))
     {
@@ -46,9 +49,17 @@ public static class PluginAssetRequirementUiHelper
     }
 
     ImGui.TextWrapped(Resources.TranslationRequiresDownloadedAssetsText);
+    ImGui.BeginDisabled(!runtimeActionsAvailable);
     if (ImGui.Button(Resources.ManageLanguageAssetsButtonText))
     {
       RequestForSelectedLanguage();
+    }
+
+    ImGui.EndDisabled();
+    if (!runtimeActionsAvailable &&
+        ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+    {
+      ImGui.SetTooltip(Resources.PreviewImageryUnavailableText);
     }
 
     config.PluginAssetsDownloaded = false;

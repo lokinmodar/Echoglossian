@@ -2859,6 +2859,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Preview imagery is unavailable in the standalone previewer..
+        /// </summary>
+        public static string PreviewImageryUnavailableText
+        {
+            get
+            {
+                return ResourceManager.GetString("PreviewImageryUnavailableText", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a PromptInput.
         /// </summary>
         public static string PromptInput

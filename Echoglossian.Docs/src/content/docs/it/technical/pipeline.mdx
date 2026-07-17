@@ -1,0 +1,43 @@
+---
+title: Pipeline di acquisizione, traduzione e presentazione
+description: Come le superfici supportate passano dall’acquisizione del testo sorgente all’output tradotto.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Ogni superficie supportata segue la stessa sequenza generale, anche quando gli hook esatti sono diversi.
+
+<MermaidDiagram
+  label="Flusso dall’acquisizione alla presentazione"
+  definition={buildPipelineDiagram('it')}
+/>
+
+1. Acquisire il testo sorgente da una superficie supportata.
+2. Risolvere il riuso della traduzione e lo scope di persistenza.
+3. Tradurre tramite la pipeline condivisa di selezione dell’engine e dei traduttori.
+4. Pubblicare il risultato tramite presentazione overlay, native o swap.
+
+## Confini delle fasi
+
+### Acquisizione
+
+Il testo sorgente può arrivare da:
+
+- payload `AtkValue` prima del refresh
+- nodi di testo visibili dell’addon
+- payload di callback come quest toast `SeString`
+
+### Traduzione
+
+`TranslationService` coordina il flusso di traduzione condiviso. I traduttori concreti restano specifici per engine e dovrebbero possedere solo gestione di request e response specifica del provider.
+
+### Presentazione
+
+- La modalità overlay rende il testo tradotto fuori dalla native UI.
+- La modalità native può scrivere testo tradotto in nodi o payload supportati.
+- La modalità swap mantiene testo native tradotto e usa l’overlay per il testo originale.
+
+### Persistenza e riuso
+
+Le entità di dialogo e toast usano storico persistito più soppressione in memoria per evitare lavoro ripetuto. Una completion tardiva non deve sovrascrivere uno stato visibile più nuovo quando il suo scope di acquisizione è diventato obsoleto.

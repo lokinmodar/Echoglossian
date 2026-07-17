@@ -1,0 +1,42 @@
+---
+title: Configuration
+description: Choose languages, select an engine, and configure the plugin safely.
+---
+
+## Core Settings
+
+The minimum useful configuration is:
+
+- a source language
+- a target language
+- a translation engine that supports that pair
+- a valid provider configuration when the engine requires credentials or an endpoint
+
+## Engine Configuration
+
+Different engines expose different fields, but the public categories are stable:
+
+- vendor credential fields such as an API key
+- model selection for LLM-backed engines
+- optional custom endpoint or local runtime URL
+- prompt-related options for prompt-aware engines
+
+If an engine is unavailable for the chosen target language, switch either the engine or the target language before trying to activate translation globally.
+
+## Surface Toggles
+
+After the global translator is healthy, enable only the surfaces you want:
+
+- dialogue and overlay surfaces
+- quest and journal surfaces
+- toast surfaces
+- game-window surfaces
+
+Each family keeps its own surface-level toggles even after global translation is enabled.
+
+## Safe Configuration Habits
+
+- Change one group of settings at a time.
+- Verify provider connectivity before enabling many surfaces.
+- Prefer overlay presentation first when testing a new language or new provider.
+- Keep screenshots and exported settings free of real provider secrets.

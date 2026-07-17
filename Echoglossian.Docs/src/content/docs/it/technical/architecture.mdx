@@ -1,0 +1,34 @@
+---
+title: Panoramica dell’architettura
+description: Confini di runtime attuali di alto livello per acquisizione, traduzione, overlay, mutazione native e persistenza.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+L’architettura attuale del plugin mantiene acquisizione, traduzione, rendering overlay, mutazione native e persistenza come responsabilità separate.
+
+<MermaidDiagram
+  label="Confini dell’architettura di runtime"
+  definition={buildArchitectureDiagram('it')}
+/>
+
+## Aree principali di runtime
+
+- `NativeUI/AddonHandlers/...` per il comportamento di acquisizione e presentazione specifico dell’addon
+- `NativeUI/Handlers/...` per helper native condivisi e coordinamento del runtime
+- `UIOverlays/TranslationOverlay/...` per stato e rendering dell’overlay
+- `Translators/TranslationService` per il flusso di traduzione condiviso
+- `LanguagesHandling/...` per metadati di lingua e disponibilità degli engine
+- `DBHelpers/...` ed entità di messaggi supportate da EF per lo storico persistito delle traduzioni
+
+## Regole architetturali
+
+- Il nuovo lavoro deve riutilizzare la pipeline di traduzione condivisa invece di creare una coda parallela.
+- La modalità overlay-only deve lasciare la native game UI in sola lettura.
+- Le modalità native e swap possono mutare la native UI solo sulle superfici che lo supportano esplicitamente.
+- Il database resta la fonte di verità. Le cache in memoria servono a sopprimere lavoro ripetuto, non a ridefinire la semantica di persistenza.
+
+## Confine della documentazione
+
+Questo sito pubblico descrive l’architettura a livello di contributore. Non pubblica handoff interni né note di scratch specifiche per issue dall’albero `docs/` del repository.

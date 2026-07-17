@@ -1,0 +1,41 @@
+---
+title: Übersetzungsmodi
+description: Verstehe Overlay-, Native- und Swap-Darstellung, bevor du Flächen aktivierst.
+---
+
+Echoglossian behandelt Capture, Übersetzung, Overlay-Rendering und Native-Mutation als getrennte Stufen. Der Darstellungsmodus entscheidet, welche Stufen die laufende Spiel-UI berühren dürfen.
+
+## Nur Overlay-Übersetzung (`Overlay Translation Only`)
+
+Verwende den Overlay-Modus, wenn du übersetzten Text willst, ohne das native Addon zu verändern.
+
+- Der Quelltext wird erfasst.
+- Die Übersetzung läuft normal.
+- Das übersetzte Ergebnis wird nur im Overlay gerendert.
+- Das native Addon bleibt schreibgeschützt.
+
+Das ist der sicherste Modus für dichte oder instabile Flächen.
+
+## Native-UI-Übersetzung (`Native UI Translation`)
+
+Verwende den Native-Modus, wenn der übersetzte Text in unterstützte native Flächen geschrieben werden soll.
+
+- Capture und Übersetzung passieren weiterhin zuerst.
+- Das übersetzte Ergebnis kann in das laufende Addon geschrieben werden.
+- Die Layoutqualität hängt davon ab, wie gut die konkrete Fläche native Ersetzung unterstützt.
+
+## Native-UI-Übersetzung mit Original-Overlay (`Native UI Translation With Original Overlay`)
+
+Der Swap-Modus behält den übersetzten Text in der nativen UI und verwendet das Overlay, um den Originaltext anzuzeigen.
+
+Das ist nützlich, wenn du die UI übersetzt sehen willst, aber den ursprünglichen Wortlaut trotzdem in der Nähe als Referenz brauchst.
+
+## So triffst du die Wahl
+
+Beginne mit dem Overlay-Modus, wenn:
+
+- du eine neue Engine testest
+- du eine neue Sprache testest
+- du mit einer dichten Fläche wie Journalen oder langen Dialogen arbeitest
+
+Wechsle erst dann zu Native oder Swap, wenn sich die Zielfläche in deiner Konfiguration stabil genug verhält.

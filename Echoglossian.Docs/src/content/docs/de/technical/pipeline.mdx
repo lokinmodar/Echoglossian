@@ -1,0 +1,43 @@
+---
+title: Capture-, Übersetzungs- und Präsentationspipeline
+description: Wie unterstützte Flächen von der Erfassung des Quelltexts bis zur übersetzten Ausgabe laufen.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Jede unterstützte Fläche folgt derselben groben Sequenz, auch wenn sich die genauen Hooks unterscheiden.
+
+<MermaidDiagram
+  label="Ablauf von Capture bis Präsentation"
+  definition={buildPipelineDiagram('de')}
+/>
+
+1. Quelltext von einer unterstützten Fläche erfassen.
+2. Wiederverwendung der Übersetzung und Persistenz-Scope auflösen.
+3. Durch die gemeinsame Pipeline für Engine-Auswahl und Übersetzer übersetzen.
+4. Das Ergebnis über Overlay-, native- oder Swap-Präsentation veröffentlichen.
+
+## Stufengrenzen
+
+### Capture
+
+Quelltext kann kommen aus:
+
+- `AtkValue`-Payloads vor dem Refresh
+- sichtbaren Addon-Textknoten
+- Callback-Payloads wie quest toast `SeString`
+
+### Übersetzung
+
+`TranslationService` koordiniert den gemeinsamen Übersetzungsfluss. Konkrete Übersetzer bleiben enginespezifisch und sollten nur provider-spezifische Request- und Response-Verarbeitung besitzen.
+
+### Präsentation
+
+- Der Overlay-Modus rendert übersetzten Text außerhalb der nativen UI.
+- Der native-Modus darf übersetzten Text in unterstützte Knoten oder Payloads schreiben.
+- Der Swap-Modus behält übersetzten nativen Text und nutzt das Overlay für den Originaltext.
+
+### Persistenz und Wiederverwendung
+
+Dialog- und Toast-Entitäten nutzen persistierte Historie plus In-Memory-Unterdrückung, um Wiederholungen zu vermeiden. Ein später Abschluss darf keinen neueren sichtbaren Zustand überschreiben, nachdem sein Capture-Scope veraltet ist.

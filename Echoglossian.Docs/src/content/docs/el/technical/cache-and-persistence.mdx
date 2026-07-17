@@ -1,0 +1,38 @@
+---
+title: Cache και persistence
+description: Γιατί η βάση δεδομένων παραμένει authoritative και τι επιτρέπεται να κάνουν οι cache.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildCacheAndPersistenceDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Η βάση δεδομένων είναι η πηγή αλήθειας για το persisted ιστορικό μετάφρασης. Οι memory cache υπάρχουν για να μειώνουν επαναλήψεις, όχι για να αλλάζουν semantics.
+
+<MermaidDiagram
+  label="Αρμοδιότητα persistence και scope cache"
+  definition={buildCacheAndPersistenceDiagram('el')}
+/>
+
+## Μορφή persistence
+
+Διαφορετικές οικογένειες surface αποθηκεύουν σε διαφορετικά σύνολα οντοτήτων, για παράδειγμα:
+
+- οντότητες οικογένειας διαλόγου όπως `TalkMessage`, `BattleTalkMessage` και `MiniTalkMessage`
+- οντότητες οικογένειας toast όπως `ToastMessage`
+- ειδικές οντότητες όπως `TextGimmickHintMessage`
+
+## Τι επιτρέπεται να κάνουν οι cache
+
+- να καταστέλλουν επαναλαμβανόμενες μεταφράσεις για την ίδια visible source
+- να επαναχρησιμοποιούν προηγούμενα αποτελέσματα όταν το effective translation scope ταιριάζει ακόμη
+- να αποφεύγουν hot-path retry spam όταν αποτυγχάνει κάποιος provider
+
+## Τι δεν πρέπει να κάνουν οι cache
+
+- να γίνουν δεύτερη πηγή αλήθειας
+- να αλλάξουν semantics αναζήτησης στη DB
+- να ξεπερνούν τους scope κανόνες που προστατεύουν την τρέχουσα visible surface
+
+## Πειθαρχία scope
+
+Η ταυτότητα της πηγής, η γλώσσα στόχου, το effective engine και η πολιτική reuse πρέπει να μένουν δεμένα με την operation που ξεκίνησε το request. Αν αλλάξει αυτό το scope, παλαιότερα completions δεν πρέπει να αντικαθιστούν νεότερο visible state.

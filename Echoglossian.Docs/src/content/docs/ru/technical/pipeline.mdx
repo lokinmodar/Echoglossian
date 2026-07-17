@@ -1,0 +1,43 @@
+---
+title: Pipeline capture, перевода и представления
+description: Как поддерживаемые surfaces переходят от capture source text к переведённому output.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Каждая поддерживаемая surface следует одной и той же общей последовательности, даже если точные hooks различаются.
+
+<MermaidDiagram
+  label="Поток от capture к представлению"
+  definition={buildPipelineDiagram('ru')}
+/>
+
+1. Захватить source text с поддерживаемой surface.
+2. Разрешить reuse перевода и scope persistence.
+3. Перевести через общий pipeline выбора engine и translator.
+4. Опубликовать результат через overlay, native или swap presentation.
+
+## Границы стадий
+
+### Capture
+
+Source text может приходить из:
+
+- payload `AtkValue` до refresh
+- видимых text node addon
+- callback payload, таких как quest toast `SeString`
+
+### Перевод
+
+`TranslationService` координирует общий поток перевода. Конкретные translators остаются engine-specific и должны владеть только provider-specific request и response handling.
+
+### Представление
+
+- Режим overlay рендерит переведённый текст вне native UI.
+- Режим native может записывать переведённый текст в поддерживаемые nodes или payloads.
+- Режим swap сохраняет переведённый native text и использует overlay для original text.
+
+### Persistence и reuse
+
+Сущности диалога и toast используют persisted history плюс in-memory suppression, чтобы избегать повторной работы. Поздняя completion не должна перезаписывать более новый visible state, если её scope capture уже устарел.

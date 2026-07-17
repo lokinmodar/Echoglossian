@@ -1,0 +1,51 @@
+---
+title: Itzultzailearen arkitektura
+description: Itzulpen pipeline partekatua gehi provider-specific adapterrak.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildTranslatorArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Echoglossianek itzulpen pipeline partekatu bakarra eta engine adapter asko ditu.
+
+<MermaidDiagram
+  label="runtime partekatuaren eta engine egokigailuen arteko mugak"
+  definition={buildTranslatorArchitectureDiagram('eu')}
+/>
+
+## Ardura partekatuak
+
+Runtime partekatuak honakoak kudeatzen ditu:
+
+- itzultzaile-hautaketa
+- request orkestrazioa
+- cache reuse mugak
+- persistence-ra ematea
+- overlay eta native publication itzulpenaren ondoren
+
+## Engine-specific ardurak
+
+Engine adapter bakoitzak honako hauek bakarrik kudeatu behar ditu:
+
+- provider client konfigurazioa
+- request payload forma
+- response analisia
+- modelo katalogoaren jokabidea
+- engine-specific configuration UI
+
+## Egungo engine familiak
+
+- vendor translation engineak, hala nola Google, DeepL, Microsoft, Amazon eta Yandex aldaerak
+- OpenAI estiloko chat-completions engineak, hala nola OpenAI, OpenRouter, DeepSeek eta LM Studio
+- Gemini `generateContent`
+- Ollama local generation
+- Claude Messages API
+
+## Engine lanean aritzeko arau segurua
+
+Engine bat gehitzean edo aldatzean:
+
+1. berrerabili `TranslationService` eta `ITranslator`
+2. eguneratu language support eta factory wiring aldaketa berean
+3. mantendu provider-specific logika estua
+4. balidatu build eta testak berehala engine mailako aldaketaren ondoren

@@ -1,0 +1,46 @@
+---
+title: Native UI и overlays
+description: Как native presentation и overlay presentation остаются разделёнными.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildNativeUiAndOverlaysDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Runtime различает перевод и presentation. Это разделение и удерживает fixes по surface узкими.
+
+<MermaidDiagram
+  label="Ответственность режимов представления"
+  definition={buildNativeUiAndOverlaysDiagram('ru')}
+/>
+
+## Ответственность overlay
+
+Состояние overlay управляется через overlay layer, а не через individual handlers с собственным renderer:
+
+- `UIOverlays/TranslationOverlay/OverlayConfigs.cs`
+- `UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs`
+
+Handlers публикуют контент и синхронизируют bounds, но сам overlay остаётся отдельной ответственностью.
+
+## Правила native mutation
+
+- Режим overlay-only не должен мутировать native nodes или payloads.
+- Режим native может записывать переведённый текст в поддерживаемые native surfaces.
+- Режим swap сохраняет переведённый native text и публикует original через overlay.
+
+## Текущая реальность native layout
+
+Некоторые surfaces могут чисто мутировать более ранние payload. Другие всё ещё зависят от поздней mutation видимых text node и явных helper-ов reflow.
+
+Примеры:
+
+- `TalkSubtitle` может раньше внедрять replacement text через payload `AtkValue`.
+- `BattleTalk`, `MiniTalk` и несколько surfaces семейства toast всё ещё зависят от поздней native text-node mutation плюс общей логики reflow.
+
+Когда визуал выглядит неправильно, сначала классифицируйте проблему:
+
+- проблема capture
+- проблема cache или persistence
+- проблема публикации overlay
+- проблема native mutation
+- проблема отсутствующего wrapper или background reflow

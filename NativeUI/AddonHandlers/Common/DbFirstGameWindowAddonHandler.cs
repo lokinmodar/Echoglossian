@@ -4265,6 +4265,91 @@ internal static class NativeMutationOwnership
         restore(originalText);
         return true;
     }
+
+    /// <summary>
+    ///     Performs one guarded restore mutation, or restores layout-only state
+    ///     immediately when the caller is not writing text back into the game.
+    /// </summary>
+    /// <param name="liveText">The current live field text.</param>
+    /// <param name="replacementText">The exact plugin-applied replacement.</param>
+    /// <param name="originalText">The original game-owned text.</param>
+    /// <param name="restoreText">
+    ///     Whether the restore path will write text back into the live field.
+    /// </param>
+    /// <param name="restore">The native restore mutation.</param>
+    /// <returns>True when the restore mutation ran.</returns>
+    public static bool TryRestore(
+        string? liveText,
+        string? replacementText,
+        string originalText,
+        bool restoreText,
+        Action<string> restore)
+    {
+        ArgumentNullException.ThrowIfNull(restore);
+
+        if (!restoreText)
+        {
+            restore(originalText);
+            return true;
+        }
+
+        return TryRestore(
+            liveText,
+            replacementText,
+            originalText,
+            restore);
+    }
+
+    /// <summary>
+    ///     Performs one guarded text restore and falls back to layout-only
+    ///     cleanup when the live field has already been repainted by the game.
+    /// </summary>
+    /// <param name="liveText">The current live field text.</param>
+    /// <param name="replacementText">The exact plugin-applied replacement.</param>
+    /// <param name="originalText">The original game-owned text.</param>
+    /// <param name="restoreText">
+    ///     Whether the restore path is expected to write text back into the
+    ///     live field.
+    /// </param>
+    /// <param name="restore">
+    ///     The restore mutation to run when the plugin still owns the live
+    ///     text, or when the caller is intentionally restoring without
+    ///     touching live text ownership.
+    /// </param>
+    /// <param name="restoreLayoutOnly">
+    ///     The layout-only cleanup to run when the live field no longer
+    ///     contains the plugin-applied replacement.
+    /// </param>
+    /// <returns>True when one restore or layout cleanup mutation ran.</returns>
+    public static bool TryRestoreWithLayoutFallback(
+        string? liveText,
+        string? replacementText,
+        string originalText,
+        bool restoreText,
+        Action<string> restore,
+        Action restoreLayoutOnly)
+    {
+        ArgumentNullException.ThrowIfNull(restore);
+        ArgumentNullException.ThrowIfNull(restoreLayoutOnly);
+
+        if (!restoreText)
+        {
+            restore(originalText);
+            return true;
+        }
+
+        if (TryRestore(
+                liveText,
+                replacementText,
+                originalText,
+                restore))
+        {
+            return true;
+        }
+
+        restoreLayoutOnly();
+        return true;
+    }
 }
 
 /// <summary>

@@ -1,0 +1,42 @@
+---
+title: Konfiguration
+description: Wähle Sprachen, wähle eine Engine und konfiguriere das Plugin sicher.
+---
+
+## Kerneinstellungen
+
+Die kleinste sinnvolle Konfiguration besteht aus:
+
+- einer Quellsprache
+- einer Zielsprache
+- einer Übersetzungs-Engine, die dieses Paar unterstützt
+- einer gültigen Provider-Konfiguration, wenn die Engine Zugangsdaten oder ein Endpoint benötigt
+
+## Engine-Konfiguration
+
+Verschiedene Engines zeigen unterschiedliche Felder an, aber die öffentlichen Kategorien sind stabil:
+
+- Provider-Zugangsdatenfelder wie ein API-Schlüssel
+- Modellauswahl für LLM-basierte Engines
+- optionales benutzerdefiniertes Endpoint oder lokale Runtime-URL
+- Prompt-bezogene Optionen für promptbewusste Engines
+
+Wenn eine Engine für die gewählte Zielsprache nicht verfügbar ist, wechsle die Engine oder die Zielsprache, bevor du die globale Übersetzung aktivierst.
+
+## Flächen-Toggles
+
+Wenn der globale Übersetzer gesund ist, aktiviere nur die Flächen, die du brauchst:
+
+- Dialog- und Overlay-Flächen
+- Quest- und Journal-Flächen
+- Toast-Flächen
+- Game-window-Flächen
+
+Jede Familie behält ihre eigenen Toggles auf Flächenebene, auch nachdem die globale Übersetzung aktiviert wurde.
+
+## Sichere Konfigurationsgewohnheiten
+
+- Ändere immer nur eine Einstellungsgruppe zur Zeit.
+- Prüfe die Provider-Konnektivität, bevor du viele Flächen aktivierst.
+- Bevorzuge beim Testen einer neuen Sprache oder eines neuen Providers zunächst die Overlay-Darstellung.
+- Halte Screenshots und exportierte Einstellungen frei von echten Provider-Secrets.

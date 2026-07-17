@@ -6,6 +6,8 @@
 using Echoglossian.Cache;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.PluginRuntime.Startup;
+using Echoglossian.PluginUI.Runtime;
 
 namespace Echoglossian;
 
@@ -125,6 +127,9 @@ public partial class Echoglossian : IDalamudPlugin
   private QueuedTranslationBroker queuedTranslationBroker;
   private readonly HoverTooltipManager hoverTooltipManager;
   private readonly RtlTexturePresentationService rtlTexturePresentationService;
+  private readonly PluginStartupAudit startupAudit = new();
+  private readonly TranslationOverlayRenderer translationOverlayRenderer;
+  private readonly DalamudUiFontRuntime uiFontRuntime;
 
   private readonly IDalamudTextureWrap pixImage;
   private readonly IDalamudTextureWrap cryptoImage;
@@ -219,6 +224,8 @@ public partial class Echoglossian : IDalamudPlugin
         });
 #endif
 
+    this.startupAudit.Mark(PluginStartupStage.CommandHandlersRegistered);
+
     Sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
     LangDict = this.languagesDictionary;
@@ -254,16 +261,13 @@ public partial class Echoglossian : IDalamudPlugin
             "NotoSerifTibetan-Regular.ttf",
         ];
 
-    ComplementaryFont3FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-3.ttf";
-    ComplementaryFont4FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-4.ttf";
-    ComplementaryFont5FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-5.ttf";
-    ComplementaryFont6FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-6.ttf";
-    ComplementaryFont7FilePath =
-        $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}NotoSansJP-VF-7.ttf";
+    var complementaryFontPaths = UiFontFileNames.ResolveComplementaryPaths(
+        PluginInterface.AssemblyLocation.DirectoryName!);
+    ComplementaryFont3FilePath = complementaryFontPaths[0];
+    ComplementaryFont4FilePath = complementaryFontPaths[1];
+    ComplementaryFont5FilePath = complementaryFontPaths[2];
+    ComplementaryFont6FilePath = complementaryFontPaths[3];
+    ComplementaryFont7FilePath = complementaryFontPaths[4];
 
     this.configuration.PluginVersion =
         ResolvePluginVersion() ?? this.configuration.PluginVersion;
@@ -346,6 +350,11 @@ public partial class Echoglossian : IDalamudPlugin
     this.rtlTexturePresentationService = new RtlTexturePresentationService(
         this.configuration,
         TextureProvider);
+    this.uiFontRuntime = new DalamudUiFontRuntime(UINewFontHandler);
+    this.translationOverlayRenderer = new TranslationOverlayRenderer(
+        this.configuration,
+        this.uiFontRuntime,
+        this.rtlTexturePresentationService);
 
     this.RebuildTranslationServiceSafely();
 
@@ -358,6 +367,7 @@ public partial class Echoglossian : IDalamudPlugin
         UINewFontHandler,
         this.rtlTexturePresentationService);
     this.RegisterStructuredTooltipLifecycleHandlers();
+    this.startupAudit.Mark(PluginStartupStage.RuntimeServicesBuilt);
 
     this.atkTextNodeBufferWrapper = new AtkTextNodeBufferWrapper();
 
@@ -373,8 +383,10 @@ public partial class Echoglossian : IDalamudPlugin
     ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
     ItemTooltipCacheManager.Preload(ConfigDirectory);
     this.RefreshStructuredDialogueGlossaryRuntime();
+    this.startupAudit.Mark(PluginStartupStage.RuntimeCachesPreloaded);
 
     FrameworkInterface.Update += this.Tick;
+    this.startupAudit.Mark(PluginStartupStage.FrameworkUpdateRegistered);
 
     this.questToastRuntime = this.CreateQuestToastRuntime();
     this.RegisterQuestToastRuntime();
@@ -384,8 +396,10 @@ public partial class Echoglossian : IDalamudPlugin
     this.RegisterToastGuiCaptureRuntime();
 
     this.EgloAddonHandler();
+    this.startupAudit.Mark(PluginStartupStage.AddonHandlersRegistered);
 
     this.RegisterOverlays();
+    this.startupAudit.Mark(PluginStartupStage.OverlaysRegistered);
 
     this.dbEditorWindow = new DbEditorWindow(new EchoglossianDbContext(ConfigDirectory));
     this.translatorMetricsWindow = new TranslatorMetricsWindow(
@@ -397,6 +411,7 @@ public partial class Echoglossian : IDalamudPlugin
     PluginInterface.UiBuilder.Draw += this.DrawTranslatorMetricsWindow;
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
+    this.startupAudit.Mark(PluginStartupStage.PluginUiRegistered);
     activeInstance = this;
     this.structuredDialogueGlossaryRuntimeSignature =
         this.ComputeStructuredDialogueGlossaryRuntimeSignature();
@@ -405,6 +420,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.addonHandlerRegistrationSignature =
         this.ComputeAddonHandlerRegistrationSignature();
     this.runtimeConfigurationReady = true;
+    this.startupAudit.Mark(PluginStartupStage.StartupComplete);
     this.TryShowTranslationActivationBlockedNotification();
   }
 
@@ -464,6 +480,11 @@ public partial class Echoglossian : IDalamudPlugin
   [PluginService]
   public static ITextureProvider TextureProvider { get; set; } = null!;
 
+  /// <summary>
+  /// Gets the startup audit state used by local mock lifecycle assertions.
+  /// </summary>
+  internal PluginStartupAudit StartupAudit => this.startupAudit;
+
   public string Name => Resources.Name;
 
   public static string ScriptCharList { get; set; }
@@ -509,6 +530,8 @@ public partial class Echoglossian : IDalamudPlugin
   /// <param name="disposing">Indicates whether the method was called from managed code.</param>
   protected virtual void Dispose(bool disposing)
   {
+    this.startupAudit.Mark(PluginStartupStage.DisposeStarted);
+
     if (this.registeredAddonHandlers != null)
     {
       foreach (var (_, handler) in this.registeredAddonHandlers)
@@ -551,7 +574,10 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterToastGuiSupportedToastRuntime();
       this.UnregisterToastGuiCaptureRuntime();
       this.queuedTranslationBroker.Dispose();
+      this.translationOverlayRenderer.Dispose();
+      this.uiFontRuntime.Dispose();
       this.rtlTexturePresentationService.Dispose();
+      this.startupAudit.Mark(PluginStartupStage.RuntimeServicesDisposed);
 
       PluginInterface.UiBuilder.OpenMainUi -= this.ConfigWindow;
       PluginInterface.UiBuilder.OpenConfigUi -= this.ConfigWindow;
@@ -559,6 +585,9 @@ public partial class Echoglossian : IDalamudPlugin
     PluginInterface.UiBuilder.Draw -= this.BuildUi;
     PluginInterface.UiBuilder.Draw -= this.DrawDbEditorWindow;
     PluginInterface.UiBuilder.Draw -= this.DrawTranslatorMetricsWindow;
+    this.dbEditorWindow?.Dispose();
+    this.dbEditorWindow = null;
+    this.startupAudit.Mark(PluginStartupStage.PluginUiUnregistered);
 
     this.pixImage?.Dispose();
     this.choiceImage?.Dispose();
@@ -590,6 +619,7 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     FrameworkInterface.Update -= this.Tick;
+    this.startupAudit.Mark(PluginStartupStage.FrameworkUpdateUnregistered);
 
     this.GlyphRangeConfigText?.Free();
     this.GlyphRangeMainText = null;
@@ -607,6 +637,8 @@ public partial class Echoglossian : IDalamudPlugin
     {
       activeInstance = null;
     }
+
+    this.startupAudit.Mark(PluginStartupStage.DisposeComplete);
   }
 
 }
