@@ -119,13 +119,10 @@ internal static class VeldridScreenshotCapture
             0,
             checked((int)source.Width),
             checked((int)source.Height));
-        targetCrop = DrawingRectangle.Intersect(
+        ValidateCrop(
             targetCrop,
-            new DrawingRectangle(0, 0, checked((int)source.Width), checked((int)source.Height)));
-        if (targetCrop.Width <= 0 || targetCrop.Height <= 0)
-        {
-            throw new InvalidOperationException("The requested screenshot crop is empty.");
-        }
+            checked((int)source.Width),
+            checked((int)source.Height));
 
         var readbackFormat = ResolveReadbackFormat(source.Format);
         using var staging = graphicsDevice.ResourceFactory.CreateTexture(
@@ -167,6 +164,37 @@ internal static class VeldridScreenshotCapture
             or Veldrid.PixelFormat.R8_G8_B8_A8_UNorm_SRgb
             or Veldrid.PixelFormat.B8_G8_R8_A8_UNorm
             or Veldrid.PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
+    }
+
+    /// <summary>
+    /// Validates that a requested crop is a non-empty subset of its source texture.
+    /// </summary>
+    /// <param name="crop">The requested physical pixel crop.</param>
+    /// <param name="sourceWidth">The source texture width in physical pixels.</param>
+    /// <param name="sourceHeight">The source texture height in physical pixels.</param>
+    /// <exception cref="InvalidOperationException">The crop is empty or outside the source texture.</exception>
+    internal static void ValidateCrop(
+        DrawingRectangle crop,
+        int sourceWidth,
+        int sourceHeight)
+    {
+        if (crop.Width <= 0 || crop.Height <= 0)
+        {
+            throw new InvalidOperationException("The requested screenshot crop is empty.");
+        }
+
+        var cropRight = (long)crop.X + crop.Width;
+        var cropBottom = (long)crop.Y + crop.Height;
+        if (sourceWidth <= 0 ||
+            sourceHeight <= 0 ||
+            crop.X < 0 ||
+            crop.Y < 0 ||
+            cropRight > sourceWidth ||
+            cropBottom > sourceHeight)
+        {
+            throw new InvalidOperationException(
+                "The requested screenshot crop exceeds the source texture bounds.");
+        }
     }
 
     private static unsafe byte[] ReadPixels(

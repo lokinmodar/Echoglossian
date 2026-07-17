@@ -190,6 +190,37 @@ public sealed class ScreenshotCropTests
     }
 
     /// <summary>
+    /// Ensures batch plugin-window captures scale against the offscreen source
+    /// texture rather than an independently scaled swapchain framebuffer.
+    /// </summary>
+    [Fact]
+    public void CalculateOffscreenWindowCrop_UsesOffscreenTextureSizeForHiDpiHosts()
+    {
+        var crop = BatchScreenshotRunner.CalculateOffscreenWindowCrop(
+            new Rectangle(100, 50, 400, 200),
+            new Vector2(1400f, 900f),
+            new Vector2(1400f, 900f));
+
+        Assert.Equal(new Rectangle(100, 50, 400, 200), crop);
+    }
+
+    /// <summary>
+    /// Ensures a requested crop outside its source texture is rejected rather
+    /// than silently intersected with the available pixels.
+    /// </summary>
+    [Fact]
+    public void ValidateCrop_CropExceedsSource_ThrowsInvalidOperationException()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => VeldridScreenshotCapture.ValidateCrop(
+                new Rectangle(80, 20, 30, 40),
+                sourceWidth: 100,
+                sourceHeight: 100));
+
+        Assert.Contains("exceeds", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// Ensures missing plugin-window bounds cannot fall through to full-frame capture.
     /// </summary>
     [Fact]

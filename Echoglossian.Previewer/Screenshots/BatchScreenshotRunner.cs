@@ -71,7 +71,22 @@ internal sealed class BatchScreenshotRunner
 
         foreach (var request in requests)
         {
-            var capture = this.Capture(request);
+            var outputPath = GetOutputPath(request);
+            CapturedScreenshot capture;
+            try
+            {
+                capture = this.Capture(request, outputPath);
+            }
+            catch (Exception exception) when (Program.IsExpectedInteractiveScreenshotFailure(exception))
+            {
+                throw new InvalidOperationException(
+                    Program.HandleScreenshotFailure(
+                        request.CaptureTarget,
+                        outputPath,
+                        exception),
+                    exception);
+            }
+
             entries.Add(this.CreateManifestEntry(request, capture));
         }
 
@@ -146,15 +161,14 @@ internal sealed class BatchScreenshotRunner
         return string.IsNullOrWhiteSpace(fileName) ? "screenshot.png" : fileName;
     }
 
-    private CapturedScreenshot Capture(ScreenshotRequest request)
+    /// <summary>
+    /// Captures one deterministic screenshot request to its resolved output path.
+    /// </summary>
+    /// <param name="request">The request to capture.</param>
+    /// <param name="outputPath">The absolute or relative destination PNG path.</param>
+    /// <returns>The capture metadata used by the manifest.</returns>
+    private CapturedScreenshot Capture(ScreenshotRequest request, string outputPath)
     {
-        var outputPath = Path.Combine(
-            request.OutputDirectory,
-            ScreenshotFileName.CreatePngName(
-                request.Mode == ScreenshotMode.Batch ? ScreenshotMode.Full : request.Mode,
-                request.Scenario.Key,
-                request.Viewport,
-                request.CaptureTarget));
         var captureLayoutSize = PreviewPluginWindowHost.GetCaptureLayoutSize(
             request.CaptureTarget);
         using PreviewHost host = new(
@@ -198,11 +212,15 @@ internal sealed class BatchScreenshotRunner
         Action draw = () =>
         {
             composition.BeginDrawFrame();
-            renderResult = DrawCaptureFrame(
-                canvas,
-                state,
-                this.editableConfiguration,
-                request.Viewport);
+            if (!PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget))
+            {
+                renderResult = DrawCaptureFrame(
+                    canvas,
+                    state,
+                    this.editableConfiguration,
+                    request.Viewport);
+            }
+
             pluginWindowHost?.Draw(workbenchState);
         };
         var stopwatch = Stopwatch.StartNew();
@@ -243,12 +261,12 @@ internal sealed class BatchScreenshotRunner
         host.CaptureFramePng(
             draw,
             outputPath,
-            () => this.CalculateCrop(
+            sourceTextureSize => this.CalculateCrop(
                 request,
                 renderResult,
                 pluginWindowHost,
                 ImGui.GetIO().DisplaySize,
-                host.FramebufferSize));
+                sourceTextureSize));
 
         return new CapturedScreenshot(outputPath, renderResult);
     }
@@ -260,14 +278,14 @@ internal sealed class BatchScreenshotRunner
     /// <param name="renderResult">The overlay draw result.</param>
     /// <param name="pluginWindowHost">The optional real plugin-window host.</param>
     /// <param name="displaySize">The logical ImGui display dimensions.</param>
-    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+    /// <param name="sourceTextureSize">The physical offscreen capture texture dimensions.</param>
     /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
     private Rectangle? CalculateCrop(
         ScreenshotRequest request,
         TranslationOverlayRenderResult renderResult,
         PreviewPluginWindowHost? pluginWindowHost,
         Vector2 displaySize,
-        Vector2 framebufferSize)
+        Vector2 sourceTextureSize)
     {
         var crop = request.CaptureTarget switch
         {
@@ -280,15 +298,15 @@ internal sealed class BatchScreenshotRunner
             PreviewCaptureTarget.ConfigWindow => CalculateWindowCrop(
                 pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
                 displaySize,
-                framebufferSize),
+                sourceTextureSize),
             PreviewCaptureTarget.DbManagerWindow => CalculateWindowCrop(
                 pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
                 displaySize,
-                framebufferSize),
+                sourceTextureSize),
             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateWindowCrop(
                 pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
                 displaySize,
-                framebufferSize),
+                sourceTextureSize),
             _ => null,
         };
 
@@ -298,21 +316,40 @@ internal sealed class BatchScreenshotRunner
     }
 
     /// <summary>
-    /// Converts a logical plugin-window crop into physical batch framebuffer pixels.
+    /// Converts a logical plugin-window crop into physical batch capture-source pixels.
     /// </summary>
     /// <param name="logicalCrop">The plugin window crop in logical ImGui coordinates.</param>
     /// <param name="displaySize">The logical ImGui display dimensions.</param>
-    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+    /// <param name="framebufferSize">The physical capture-source dimensions.</param>
     /// <returns>The physical crop, or <see langword="null" /> when no window bounds are available.</returns>
     internal static Rectangle? CalculateWindowCrop(
         Rectangle? logicalCrop,
         Vector2 displaySize,
         Vector2 framebufferSize)
     {
-        return Program.CalculateInteractiveWindowCrop(
+        return CalculateOffscreenWindowCrop(
             logicalCrop,
             displaySize,
             framebufferSize);
+    }
+
+    /// <summary>
+    /// Converts logical plugin-window bounds using the actual offscreen texture
+    /// that will be read back by deterministic batch capture.
+    /// </summary>
+    /// <param name="logicalCrop">The plugin window crop in logical ImGui coordinates.</param>
+    /// <param name="displaySize">The logical ImGui display dimensions.</param>
+    /// <param name="sourceTextureSize">The physical offscreen texture dimensions.</param>
+    /// <returns>The physical crop, or <see langword="null" /> when no window bounds are available.</returns>
+    internal static Rectangle? CalculateOffscreenWindowCrop(
+        Rectangle? logicalCrop,
+        Vector2 displaySize,
+        Vector2 sourceTextureSize)
+    {
+        return Program.CalculateInteractiveWindowCrop(
+            logicalCrop,
+            displaySize,
+            sourceTextureSize);
     }
 
     /// <summary>
@@ -425,6 +462,22 @@ internal sealed class BatchScreenshotRunner
             request.CaptureTarget,
             capture.RenderResult.PresentationMode.ToString(),
             GetManifestPngPathLabel(capture.PngPath));
+    }
+
+    /// <summary>
+    /// Resolves the deterministic PNG destination for one screenshot request.
+    /// </summary>
+    /// <param name="request">The request whose output path is needed.</param>
+    /// <returns>The destination PNG path.</returns>
+    private static string GetOutputPath(ScreenshotRequest request)
+    {
+        return Path.Combine(
+            request.OutputDirectory,
+            ScreenshotFileName.CreatePngName(
+                request.Mode == ScreenshotMode.Batch ? ScreenshotMode.Full : request.Mode,
+                request.Scenario.Key,
+                request.Viewport,
+                request.CaptureTarget));
     }
 
     private static TranslationOverlayRenderResult DrawCaptureFrame(

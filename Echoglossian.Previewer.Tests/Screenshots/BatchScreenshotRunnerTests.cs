@@ -171,6 +171,41 @@ public sealed class BatchScreenshotRunnerTests
     }
 
     /// <summary>
+    /// Ensures deterministic plugin-window captures do not render the overlay
+    /// scenario behind the requested plugin window.
+    /// </summary>
+    [Fact]
+    public void Capture_PluginWindowTarget_SuppressesOverlayDrawing()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "Echoglossian.Previewer",
+            "Screenshots",
+            "BatchScreenshotRunner.cs"));
+
+        Assert.Contains(
+            "if (!PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget))",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures batch capture failures use the shared cleanup and contextual
+    /// reporting path used by interactive capture.
+    /// </summary>
+    [Fact]
+    public void Run_ExpectedCaptureFailure_UsesSharedFailureHandling()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "Echoglossian.Previewer",
+            "Screenshots",
+            "BatchScreenshotRunner.cs"));
+
+        Assert.Contains("Program.HandleScreenshotFailure(", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Gets the repository root discovered from the test output directory.
     /// </summary>
     private string RepositoryRoot => FindRepositoryRoot();

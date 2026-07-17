@@ -47,6 +47,35 @@ public sealed class InteractiveScreenshotCaptureTests
     }
 
     /// <summary>
+    /// Ensures the shared failure helper removes partial output and returns
+    /// target and path context for both interactive and batch capture paths.
+    /// </summary>
+    [Fact]
+    public void HandleScreenshotFailure_IOException_DeletesPartialOutputAndReturnsContext()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var outputPath = Path.Combine(tempDirectory.FullName, "partial.png");
+            File.WriteAllText(outputPath, "partial");
+
+            var message = Program.HandleScreenshotFailure(
+                PreviewCaptureTarget.ConfigWindow,
+                outputPath,
+                new IOException("save failed"));
+
+            Assert.False(File.Exists(outputPath));
+            Assert.Contains("ConfigWindow", message, StringComparison.Ordinal);
+            Assert.Contains(outputPath, message, StringComparison.Ordinal);
+            Assert.Contains("save failed", message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Ensures graphics readback failures are handled as expected capture failures.
     /// </summary>
     [Fact]

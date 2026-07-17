@@ -18,6 +18,7 @@ using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json;
@@ -294,7 +295,12 @@ internal static class Program
         }
 
         var options = new DbContextOptionsBuilder<EchoglossianDbContext>()
-            .UseSqlite($"Data Source={databasePath};Pooling=False")
+            .UseSqlite(
+                new SqliteConnectionStringBuilder
+                {
+                    DataSource = databasePath,
+                    Pooling = false,
+                }.ToString())
             .Options;
         return new EchoglossianDbContext(options);
     }
@@ -497,9 +503,25 @@ internal static class Program
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
         ArgumentNullException.ThrowIfNull(exception);
         ArgumentNullException.ThrowIfNull(reportFailure);
+        reportFailure(HandleScreenshotFailure(captureTarget, outputPath, exception));
+    }
+
+    /// <summary>
+    /// Removes partial screenshot output and returns contextual capture failure text.
+    /// </summary>
+    /// <param name="captureTarget">The requested screenshot target.</param>
+    /// <param name="outputPath">The requested output path.</param>
+    /// <param name="exception">The expected capture exception.</param>
+    /// <returns>The contextual failure message.</returns>
+    internal static string HandleScreenshotFailure(
+        PreviewCaptureTarget captureTarget,
+        string outputPath,
+        Exception exception)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(exception);
         TryDeleteScreenshotFile(outputPath);
-        reportFailure(
-            $"{captureTarget} capture to {outputPath} failed: {exception.Message}");
+        return $"{captureTarget} capture to {outputPath} failed: {exception.Message}";
     }
 
     /// <summary>

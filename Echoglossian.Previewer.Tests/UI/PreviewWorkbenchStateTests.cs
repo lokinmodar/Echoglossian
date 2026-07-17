@@ -235,4 +235,26 @@ public sealed class PreviewWorkbenchStateTests
         Assert.Equal(default, context.PixTextureHandle);
         Assert.Equal(default, context.CryptoTextureHandle);
     }
+
+    /// <summary>
+    /// Ensures preview database paths containing semicolons remain a single
+    /// SQLite data-source value rather than being interpreted as connection options.
+    /// </summary>
+    [Fact]
+    public void CreatePreviewDbContext_SemicolonInPath_PreservesFullDataSource()
+    {
+        const string databasePath = @"C:\preview;session\Echoglossian.db";
+        var createContext = typeof(Program).GetMethod(
+            "CreatePreviewDbContext",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(createContext);
+
+        using var context = Assert.IsType<EchoglossianDbContext>(
+            createContext.Invoke(null, [databasePath]));
+        var builder = new SqliteConnectionStringBuilder(
+            context.Database.GetDbConnection().ConnectionString);
+
+        Assert.Equal(databasePath, builder.DataSource);
+        Assert.False(builder.Pooling);
+    }
 }
