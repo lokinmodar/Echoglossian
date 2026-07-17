@@ -89,16 +89,27 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         {
             this.dbEditorWindow.IsOpen = state.DbManagerWindowOpen;
             this.dbEditorWindow.Draw();
-            state.DbManagerWindowOpen = this.dbEditorWindow.IsOpen;
         }
-        else
-        {
-            state.DbManagerWindowOpen = false;
-        }
+
+        SynchronizeDbManagerState(state, this.dbEditorWindow);
 
         this.translatorMetricsWindow.IsOpen = state.TranslatorMetricsWindowOpen;
         this.translatorMetricsWindow.Draw();
         state.TranslatorMetricsWindowOpen = this.translatorMetricsWindow.IsOpen;
+        SynchronizeDbManagerState(state, this.dbEditorWindow);
+    }
+
+    /// <summary>
+    /// Copies the real DB window state after dependent windows may have opened it.
+    /// </summary>
+    /// <param name="state">The shared workbench state.</param>
+    /// <param name="dbEditorWindow">The optional real DB editor window.</param>
+    internal static void SynchronizeDbManagerState(
+        PreviewWorkbenchState state,
+        DbEditorWindow? dbEditorWindow)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        state.DbManagerWindowOpen = dbEditorWindow?.IsOpen ?? false;
     }
 
     /// <summary>

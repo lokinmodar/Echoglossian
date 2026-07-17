@@ -59,4 +59,29 @@ public sealed class PreviewWorkbenchStateTests
 
         Assert.Equal(1, notificationCount);
     }
+
+    /// <summary>
+    /// Ensures a DB window opened by another plugin window is copied back to workbench state.
+    /// </summary>
+    [Fact]
+    public void SynchronizeDbManagerState_AfterMetricsOpen_PreservesOpenRequest()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+        var options = new DbContextOptionsBuilder<EchoglossianDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        using var dbContext = new EchoglossianDbContext(options);
+        var window = new DbEditorWindow(dbContext, static _ => { })
+        {
+            IsOpen = true,
+        };
+        var state = PreviewWorkbenchState.CreateDefault(
+            PreviewScenarioCatalog.Defaults[0],
+            PreviewScenarioCatalog.ViewportPresets[1]);
+
+        PreviewPluginWindowHost.SynchronizeDbManagerState(state, window);
+
+        Assert.True(state.DbManagerWindowOpen);
+    }
 }
