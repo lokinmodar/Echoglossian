@@ -398,14 +398,20 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return;
     }
 
-    NativeMutationOwnership.TryRestore(
+    NativeMutationOwnership.TryRestoreWithLayoutFallback(
         this.ReadTextNode(textNode),
         replacementText,
         originalText,
+        restoreText,
         restoredText => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
             snapshot,
             restoredText,
             restoreText,
+            restorePositions: false),
+        () => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+            snapshot,
+            originalText,
+            restoreText: false,
             restorePositions: false));
   }
 
@@ -600,7 +606,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           textNode,
           replacementText,
           allowWidthGrowth: true,
-          additionalWrapWidth: this.ResolveMiniTalkAdditionalWrapWidth(textNode));
+          additionalWrapWidth: this.ResolveMiniTalkAdditionalWrapWidth(
+              addon,
+              textNode));
       if (layoutSnapshot != null)
       {
         lock (this.stateGate)
@@ -880,7 +888,9 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
   /// </summary>
   /// <param name="textNode">The live MiniTalk text node.</param>
   /// <returns>The additional wrap width suggested by the current bubble layout.</returns>
-  private unsafe ushort ResolveMiniTalkAdditionalWrapWidth(AtkTextNode* textNode)
+  private unsafe ushort ResolveMiniTalkAdditionalWrapWidth(
+      AtkUnitBase* addon,
+      AtkTextNode* textNode)
   {
     if (textNode == null)
     {
@@ -888,19 +898,40 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     }
 
     var parentNode = textNode->AtkResNode.ParentNode;
+    var currentWidth = textNode->GetWidth();
+    var preferredWrapWidth = currentWidth;
+    if (NativeTextNodeLayoutHelper.TryResolveContainerNodes(
+            addon,
+            textNode,
+            out var containerNode,
+            out var backgroundNode))
+    {
+      preferredWrapWidth = NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(
+          textNode,
+          containerNode,
+          backgroundNode != null
+              ? &backgroundNode->AtkResNode
+              : null);
+    }
+
     var leftPadding = Math.Max(0, (int)textNode->AtkResNode.GetXShort());
     if (parentNode == null)
     {
-      return (ushort)Math.Min(ushort.MaxValue, leftPadding);
+      return MiniTalkWrapWidthHelper.ResolveAdditionalWrapWidth(
+          currentWidth,
+          preferredWrapWidth,
+          leftPadding,
+          0);
     }
 
-    var currentWidth = textNode->GetWidth();
     var rightPadding = Math.Max(
         0,
         parentNode->GetWidth() - leftPadding - currentWidth);
-    return (ushort)Math.Min(
-        ushort.MaxValue,
-        Math.Max(leftPadding, rightPadding));
+    return MiniTalkWrapWidthHelper.ResolveAdditionalWrapWidth(
+        currentWidth,
+        preferredWrapWidth,
+        leftPadding,
+        rightPadding);
   }
 
   /// <summary>
@@ -1233,12 +1264,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       return string.Empty;
     }
 
-    var replacementText = this.NormalizeForReplacement(text);
-    return string.Join(
-        " ",
-        replacementText.Split(
-            ['\r', '\n', '\t', ' '],
-            StringSplitOptions.RemoveEmptyEntries));
+    return NativeTextComparisonNormalizationHelper.NormalizeForComparison(
+        this.NormalizeForReplacement(text));
   }
 
   /// <summary>
