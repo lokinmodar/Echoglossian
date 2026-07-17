@@ -1,0 +1,36 @@
+---
+title: Echoglossian-dokumentation
+description: Kuraterede vejledninger til opsætning, brug, arkitektur og bidrag.
+template: splash
+hero:
+  title: Echoglossian-dokumentation
+  tagline: Offentlige opsætningsvejledninger for plugin-brugere og offentlig teknisk reference for bidragydere, holdt adskilt fra plugin-build- og releaseflowet.
+  actions:
+    - text: Brugervejledninger
+      link: ./users/
+      icon: right-arrow
+    - text: Teknisk dokumentation
+      link: ./technical/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Offentligt omfang
+
+Dette site udgiver kun kurateret dokumentation.
+
+- Brug af plugin'et, opsætning, konfiguration og fejlfinding ligger her.
+- Nuværende arkitektur, runtime-flow og vejledning til bidragydere ligger her.
+- Interne handoffs, release-noter, planer og backlogmateriale bliver i repositoryets `docs/`-træ og udgives ikke på dette site.
+
+## Start her
+
+<CardGrid stagger>
+  <Card title="Plugin-brugerdokumentation" icon="seti:gear" href="./users/">
+    Installation, første kørsel, provider-opsætning, visningstilstande, supportdækning og fejlfinding.
+  </Card>
+  <Card title="Teknisk dokumentation" icon="seti:code" href="./technical/">
+    Runtime-arkitektur, oversættelsespipeline, persistensgrænser, diagnostik og udviklingsworkflow.
+  </Card>
+</CardGrid>

@@ -1,0 +1,43 @@
+---
+title: Pipeline de capture, traduction et présentation
+description: Comment les surfaces prises en charge passent de la capture du texte source à la sortie traduite.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Chaque surface prise en charge suit la même séquence générale, même si les hooks exacts diffèrent.
+
+<MermaidDiagram
+  label="Flux de la capture à la présentation"
+  definition={buildPipelineDiagram('fr')}
+/>
+
+1. Capturer le texte source depuis une surface prise en charge.
+2. Résoudre la réutilisation de traduction et le scope de persistance.
+3. Traduire à travers le pipeline partagé de sélection d’engine et de traducteur.
+4. Publier le résultat via une présentation overlay, native ou swap.
+
+## Frontières des étapes
+
+### Capture
+
+Le texte source peut venir :
+
+- de payloads `AtkValue` avant le refresh
+- de nœuds de texte visibles d’addon
+- de payloads de callback comme le quest toast `SeString`
+
+### Traduction
+
+`TranslationService` coordonne le flux de traduction partagé. Les traducteurs concrets restent spécifiques à l’engine et ne devraient posséder que la gestion des requests et responses propre au provider.
+
+### Présentation
+
+- Le mode overlay rend le texte traduit en dehors de la native UI.
+- Le mode native peut écrire le texte traduit dans des nœuds ou payloads pris en charge.
+- Le mode swap conserve le texte native traduit et utilise l’overlay pour le texte d’origine.
+
+### Persistance et réutilisation
+
+Les entités de dialogue et de toast utilisent l’historique persisté plus une suppression en mémoire pour éviter le travail répété. Une completion tardive ne doit pas écraser un état visible plus récent lorsque son scope de capture est devenu obsolète.

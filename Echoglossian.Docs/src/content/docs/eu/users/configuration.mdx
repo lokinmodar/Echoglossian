@@ -1,0 +1,42 @@
+---
+title: Konfigurazioa
+description: Aukeratu hizkuntzak, hautatu motor bat eta konfiguratu plugina segurtasunez.
+---
+
+## Oinarrizko ezarpenak
+
+Gutxieneko konfigurazio erabilgarria hau da:
+
+- jatorrizko hizkuntza bat
+- helburuko hizkuntza bat
+- bikote hori onartzen duen itzulpen-motor bat
+- provider konfigurazio baliodun bat, motorrak kredentzialak edo endpoint bat eskatzen baditu
+
+## Motorraren konfigurazioa
+
+Motor desberdinek eremu desberdinak erakusten dituzte, baina kategoria publikoak egonkorrak dira:
+
+- provider kredentzialen eremuak, adibidez API key bat
+- LLM-n oinarritutako motorretarako modelo-hautaketa
+- aukerako custom endpoint bat edo tokiko runtime URL bat
+- prompt-aware motorrentzako prompt-arekin lotutako aukerak
+
+Motor bat ez badago eskuragarri aukeratutako helburuko hizkuntzarako, aldatu motorra edo helburuko hizkuntza itzulpen globala aktibatzen saiatu aurretik.
+
+## Azalera-toggles
+
+Itzultzaile globala osasuntsu dagoenean, gaitu nahi dituzun azalerak bakarrik:
+
+- elkarrizketa eta overlay azalerak
+- quest eta journal azalerak
+- toast azalerak
+- game-window azalerak
+
+Familia bakoitzak bere azalera-mailako toggle-ak mantentzen ditu, itzulpen globala aktibatu ondoren ere.
+
+## Konfigurazio-ohitura seguruak
+
+- Aldatu ezarpen talde bat aldi berean.
+- Egiaztatu provider konektibitatea azalera asko gaitu aurretik.
+- Lehenetsi overlay aurkezpena hizkuntza edo provider berri bat probatzen duzunean.
+- Mantendu screenshot-ak eta esportatutako ezarpenak benetako provider secrets-ik gabe.

@@ -1,0 +1,38 @@
+---
+title: Cache et persistance
+description: Pourquoi la base de données reste autoritative et ce que les caches peuvent faire.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildCacheAndPersistenceDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+La base de données est la source de vérité pour l’historique de traduction persisté. Les caches mémoire sont là pour réduire le travail répété, pas pour redéfinir la sémantique.
+
+<MermaidDiagram
+  label="Autorité de persistance et scope du cache"
+  definition={buildCacheAndPersistenceDiagram('fr')}
+/>
+
+## Forme de persistance
+
+Différentes familles de surfaces persistent dans différents ensembles d’entités, par exemple :
+
+- des entités de famille dialogue comme `TalkMessage`, `BattleTalkMessage` et `MiniTalkMessage`
+- des entités de famille toast comme `ToastMessage`
+- des entités dédiées comme `TextGimmickHintMessage`
+
+## Ce que les caches peuvent faire
+
+- supprimer les traductions répétées pour la même source visible
+- réutiliser des résultats antérieurs lorsque le scope effectif de traduction correspond toujours
+- éviter le retry spam en hot path lorsqu’un provider échoue
+
+## Ce que les caches ne doivent pas faire
+
+- devenir une seconde source de vérité
+- changer la sémantique de lookup en DB
+- survivre aux règles de scope qui protègent la surface actuellement visible
+
+## Discipline du scope
+
+L’identité de la source, la langue cible, l’engine effectif et la politique de réutilisation doivent rester liés à l’opération qui a démarré la request. Si ce scope change, des completions plus anciennes ne doivent pas remplacer l’état visible plus récent.

@@ -1,0 +1,47 @@
+---
+title: Διαγνωστικά
+description: Δημόσια τεκμηριωμένα εργαλεία για διερεύνηση addon και επικύρωση.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDiagnosticsDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Ταξινόμηση σταδίων διερεύνησης"
+  definition={buildDiagnosticsDiagram('el')}
+/>
+
+## Διερεύνηση addon
+
+Χρησιμοποίησε την προτιμώμενη εντολή addon probe του repo όταν διερευνάς συμπεριφορά native UI:
+
+```text
+/egloaddonprobe <addon>
+```
+
+Αυτό είναι το πρώτο εργαλείο στο οποίο πρέπει να στραφείς όταν μια συγκεκριμένη οικογένεια addon συμπεριφέρεται διαφορετικά από το αναμενόμενο.
+
+## Επικύρωση build και test
+
+Τυπική επικύρωση plugin:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Επικύρωση site docs:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Αρχές διάγνωσης
+
+- προτίμησε lifecycle helpers και στοχευμένα probes αντί για hot-path debug spam
+- αφαίρεσε προσωρινό investigation logging μόλις κατανοηθεί το πρόβλημα
+- ταξινόμησε runtime issues ανά στάδιο πριν αλλάξεις κώδικα

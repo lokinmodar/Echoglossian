@@ -1,0 +1,38 @@
+---
+title: Cache und Persistenz
+description: Warum die Datenbank autoritativ bleibt und was Caches tun dürfen.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildCacheAndPersistenceDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Die Datenbank ist die Quelle der Wahrheit für persistierte Übersetzungshistorie. Speichercaches reduzieren Wiederholungen, definieren aber keine Semantik neu.
+
+<MermaidDiagram
+  label="Persistenzautorität und Cache-Scope"
+  definition={buildCacheAndPersistenceDiagram('de')}
+/>
+
+## Persistenzform
+
+Verschiedene Flächenfamilien persistieren in unterschiedliche Entitätssätze, zum Beispiel:
+
+- Dialogfamilien-Entitäten wie `TalkMessage`, `BattleTalkMessage` und `MiniTalkMessage`
+- Toastfamilien-Entitäten wie `ToastMessage`
+- dedizierte Entitäten wie `TextGimmickHintMessage`
+
+## Was Caches tun dürfen
+
+- wiederholte Übersetzungen für dieselbe sichtbare Quelle unterdrücken
+- frühere Ergebnisse wiederverwenden, wenn der effektive Übersetzungs-Scope noch passt
+- Hot-Path-Retry-Spam vermeiden, wenn ein Provider fehlschlägt
+
+## Was Caches nicht tun dürfen
+
+- zu einer zweiten Quelle der Wahrheit werden
+- DB-Lookup-Semantik verändern
+- die Scope-Regeln überleben, die die aktuell sichtbare Fläche schützen
+
+## Scope-Disziplin
+
+Quellidentität, Zielsprache, effektive Engine und Wiederverwendungsrichtlinie müssen an die Operation gebunden bleiben, die den Request gestartet hat. Wenn sich dieser Scope ändert, dürfen ältere Abschlüsse keinen neueren sichtbaren Zustand ersetzen.

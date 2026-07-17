@@ -1,0 +1,44 @@
+---
+title: Fejlfinding og FAQ
+description: Almindelige problemer med opsætning, provider og fladedækning.
+---
+
+## Oversættelse forbliver ikke aktiveret
+
+Kontrollér disse først:
+
+- målsprog og motor passer sammen
+- provider-konfigurationen er fuldført
+- eventuelle nødvendige downloadede font-assets er til stede
+
+Hvis en af disse kontroller fejler, kan global oversættelse slå sig selv fra igen.
+
+## Motorvælgeren viser ikke den provider, jeg forventede
+
+Motorens synlighed afhænger af det valgte målsprog. Skift målsprog, eller vælg en motorfamilie med bredere dækning.
+
+## Overlayet virker, men native tekst ser forkert ud
+
+Det betyder normalt, at oversættelsespipelinen er sund, og at problemet er native layout på den konkrete flade. Skift først den flade tilbage til overlay-only-tilstand, og afgør derefter, om native visning stadig er værd at bruge dér.
+
+## En bestemt flade bliver ikke oversat
+
+Bekræft alle tre scopes:
+
+- global oversættelse er aktiv
+- togglen for fladefamilien er aktiveret
+- togglen for den konkrete flade er aktiveret
+
+Sammenlign derefter fladen med [Supportmatrixen](../support-matrix/).
+
+## Hvad skal jeg dele, når jeg rapporterer et problem
+
+Nyttige oplysninger:
+
+- plugin-version
+- kilde- og målsprog
+- valgt motor
+- navn på målfladen
+- om du brugte overlay-, native- eller swap-tilstand
+
+Medtag ikke rigtige provider-nøgler eller secrets i rapporten.

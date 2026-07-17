@@ -1,0 +1,18 @@
+---
+title: Техническая документация
+description: Архитектура, pipeline, persistence, диагностика и руководство по вкладу.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+Используйте этот раздел, если вам нужна публичная документация для участников по текущему runtime плагина и по сайту документации.
+
+<CardGrid stagger>
+  <Card title="Обзор архитектуры" href="./architecture/" />
+  <Card title="Pipeline capture, перевода и представления" href="./pipeline/" />
+  <Card title="Архитектура переводчика" href="./translator-architecture/" />
+  <Card title="Native UI и overlays" href="./native-ui-and-overlays/" />
+  <Card title="Cache и persistence" href="./cache-and-persistence/" />
+  <Card title="Диагностика" href="./diagnostics/" />
+  <Card title="Build, test и вклад" href="./development/" />
+</CardGrid>

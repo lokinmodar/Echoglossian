@@ -1,0 +1,47 @@
+---
+title: Diagnostik
+description: Offentligt dokumenterede værktøjer til addon-undersøgelse og validering.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDiagnosticsDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Klassifikation af undersøgelsesstadier"
+  definition={buildDiagnosticsDiagram('da')}
+/>
+
+## Addon-undersøgelse
+
+Brug repositoryets foretrukne addon-probe-kommando, når du undersøger native UI-adfærd:
+
+```text
+/egloaddonprobe <addon>
+```
+
+Det er det første værktøj, du bør række ud efter, når en specifik addon-familie opfører sig anderledes end forventet.
+
+## Build- og testvalidering
+
+Standard plugin-validering:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Validering af docs-site:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Diagnostiske principper
+
+- foretræk lifecycle-hjælpere og fokuserede probes frem for hot-path-debugspam
+- fjern midlertidig undersøgelseslogning, når problemet er forstået
+- klassificér runtime-problemer efter trin, før du ændrer kode

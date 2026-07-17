@@ -1,0 +1,44 @@
+---
+title: Arazoen konponketa eta FAQ
+description: Konfigurazio, provider eta azalera-estaldurako arazo arruntak.
+---
+
+## Itzulpena ez da aktibo mantentzen
+
+Begiratu lehenik hauek:
+
+- helburuko hizkuntza eta motorra bat datoz
+- provider konfigurazioa osatuta dago
+- beharrezko deskargatutako font assets-ak presente daude
+
+Egiaztapen horietako batek huts egiten badu, itzulpen globala berriro desaktiba daiteke.
+
+## Motor hautatzaileak ez du espero nuen provider-a erakusten
+
+Motorraren ikusgarritasuna aukeratutako helburuko hizkuntzaren araberakoa da. Aldatu helburuko hizkuntza edo pasa estaldura zabalagoa duen motor familia batera.
+
+## Overlay-ak funtzionatzen du, baina native testuak itxura txarra du
+
+Normalean horrek esan nahi du itzulpen pipeline-a osasuntsu dagoela eta arazoa azalera horren native layout-a dela. Lehenik itzuli azalera hori overlay-only modura, eta gero erabaki ea native aurkezpenak oraindik merezi duen han.
+
+## Azalera jakin bat ez da itzultzen
+
+Egiaztatu hiru scope-ak:
+
+- itzulpen globala aktibo dago
+- azalera familiaren toggle-a gaituta dago
+- azalera zehatzaren toggle-a gaituta dago
+
+Ondoren alderatu azalera [Laguntza-matrizearekin](../support-matrix/).
+
+## Zer partekatu behar dut arazo bat salatzean
+
+Informazio erabilgarria:
+
+- plugin bertsioa
+- jatorrizko eta helburuko hizkuntzak
+- aukeratutako motorra
+- helburuko azalera-izena
+- overlay, native edo swap modua erabiltzen ari zinen ala ez
+
+Ez sartu benetako provider keys edo secrets txostenean.

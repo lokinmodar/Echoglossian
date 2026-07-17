@@ -3,6 +3,14 @@ title: Build, Test, and Contributing
 description: Local validation and contribution expectations for the plugin and the GitHub Pages docs site.
 ---
 
+import MermaidDiagram from '../../../components/diagrams/MermaidDiagram.astro';
+import { buildDevelopmentWorkflowDiagram } from '../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Contribution validation workflow"
+  definition={buildDevelopmentWorkflowDiagram('root')}
+/>
+
 ## Repository Rules For This Site
 
 - `Echoglossian.Docs/` is intentionally not part of `Echoglossian.sln`.

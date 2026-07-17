@@ -1,0 +1,36 @@
+---
+title: Τεκμηρίωση Echoglossian
+description: Επιμελημένοι οδηγοί για εγκατάσταση, χρήση, αρχιτεκτονική και συνεισφορά.
+template: splash
+hero:
+  title: Τεκμηρίωση Echoglossian
+  tagline: Δημόσιοι οδηγοί ρύθμισης για χρήστες του plugin και δημόσια τεχνική αναφορά για συνεισφέροντες, απομονωμένοι από το build και το release flow του plugin.
+  actions:
+    - text: Οδηγοί χρηστών
+      link: ./users/
+      icon: right-arrow
+    - text: Τεχνική τεκμηρίωση
+      link: ./technical/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Δημόσιο πεδίο
+
+Αυτός ο ιστότοπος δημοσιεύει μόνο επιμελημένη τεκμηρίωση.
+
+- Η χρήση, η εγκατάσταση, η ρύθμιση και η αντιμετώπιση προβλημάτων του plugin δημοσιεύονται εδώ.
+- Η τρέχουσα αρχιτεκτονική, η ροή runtime και η καθοδήγηση για συνεισφέροντες δημοσιεύονται εδώ.
+- Εσωτερικά handoffs, σημειώσεις release, σχέδια και υλικό backlog παραμένουν στο δέντρο `docs/` του repository και δεν δημοσιεύονται από αυτόν τον ιστότοπο.
+
+## Ξεκινήστε εδώ
+
+<CardGrid stagger>
+  <Card title="Τεκμηρίωση χρηστών plugin" icon="seti:gear" href="./users/">
+    Εγκατάσταση, πρώτη εκτέλεση, ρύθμιση provider, τρόποι παρουσίασης, κάλυψη υποστήριξης και αντιμετώπιση προβλημάτων.
+  </Card>
+  <Card title="Τεχνική τεκμηρίωση" icon="seti:code" href="./technical/">
+    Αρχιτεκτονική runtime, pipeline μετάφρασης, όρια persistence, διαγνωστικά και workflow ανάπτυξης.
+  </Card>
+</CardGrid>

@@ -1,0 +1,42 @@
+---
+title: Configuração
+description: Escolha idiomas, selecione um motor e configure o plugin em segurança.
+---
+
+## Definições base
+
+A configuração mínima útil é:
+
+- um idioma de origem;
+- um idioma de destino;
+- um motor de tradução que suporte esse par;
+- uma configuração válida do provider quando o motor exige credenciais ou um endpoint.
+
+## Configuração do motor
+
+Motores diferentes expõem campos diferentes, mas as categorias públicas são estáveis:
+
+- campos de credenciais do vendor, como uma chave de API;
+- seleção de modelo para motores baseados em LLM;
+- endpoint personalizado opcional ou URL de runtime local;
+- opções relacionadas com prompt para motores sensíveis a prompt.
+
+Se um motor não estiver disponível para o idioma de destino escolhido, mude o motor ou o idioma de destino antes de tentar ativar a tradução global.
+
+## Toggles de superfície
+
+Depois de o tradutor global estar saudável, ative apenas as superfícies que pretende:
+
+- superfícies de diálogo e overlay;
+- superfícies de quest e journal;
+- superfícies toast;
+- superfícies de game window.
+
+Cada família mantém os seus próprios toggles ao nível da superfície mesmo depois de a tradução global estar ativada.
+
+## Hábitos seguros de configuração
+
+- Altere um grupo de definições de cada vez.
+- Verifique a conectividade do provider antes de ativar muitas superfícies.
+- Prefira primeiro a apresentação overlay ao testar um novo idioma ou um novo provider.
+- Mantenha capturas de ecrã e definições exportadas sem segredos reais de provider.

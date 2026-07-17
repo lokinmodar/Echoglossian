@@ -1,0 +1,43 @@
+---
+title: Capture-, oversættelses- og præsentationspipeline
+description: Hvordan understøttede overflader bevæger sig fra capture af kildetekst til oversat output.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Hver understøttet overflade følger den samme brede sekvens, selv når de præcise hooks er forskellige.
+
+<MermaidDiagram
+  label="Flow fra capture til præsentation"
+  definition={buildPipelineDiagram('da')}
+/>
+
+1. Indfang kildetekst fra en understøttet overflade.
+2. Afgør genbrug af oversættelse og persistensens scope.
+3. Oversæt gennem den delte pipeline for engine-valg og oversættere.
+4. Publicér resultatet gennem overlay-, native- eller swap-præsentation.
+
+## Tringrænser
+
+### Capture
+
+Kildetekst kan komme fra:
+
+- `AtkValue`-payloads før refresh
+- synlige addon-tekstnoder
+- callback-payloads som quest-toast `SeString`
+
+### Oversættelse
+
+`TranslationService` koordinerer det delte oversættelsesflow. Konkrete oversættere forbliver engine-specifikke og bør kun eje provider-specifik request- og response-håndtering.
+
+### Præsentation
+
+- Overlay-tilstand renderer oversat tekst uden for den native UI.
+- Native-tilstand kan skrive oversat tekst ind i understøttede noder eller payloads.
+- Swap-tilstand bevarer oversat native tekst og bruger overlayet til originalteksten.
+
+### Persistens og genbrug
+
+Dialog- og toast-entiteter bruger vedvarende historik plus in-memory-undertrykkelse for at undgå gentaget arbejde. En sen fuldførelse må ikke overskrive nyere synlig tilstand, når dens capture-scope er blevet forældet.

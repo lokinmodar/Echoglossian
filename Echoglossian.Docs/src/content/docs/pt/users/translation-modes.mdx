@@ -1,0 +1,41 @@
+---
+title: Modos de tradução
+description: Compreenda as apresentações overlay, native e swap antes de ativar superfícies.
+---
+
+O Echoglossian trata captura, tradução, renderização overlay e mutação native como fases separadas. O modo de apresentação decide que fases podem tocar na UI live do jogo.
+
+## Overlay Translation Only
+
+Use o modo overlay quando quiser texto traduzido sem mutar o addon nativo.
+
+- O texto de origem é capturado.
+- A tradução decorre normalmente.
+- O resultado traduzido é renderizado apenas no overlay.
+- O addon nativo permanece em modo só de leitura.
+
+Este é o modo mais seguro para superfícies densas ou instáveis.
+
+## Native UI Translation
+
+Use o modo native quando quiser que o texto traduzido seja escrito em superfícies nativas suportadas.
+
+- A captura e a tradução continuam a acontecer primeiro.
+- O resultado traduzido pode ser escrito no addon live.
+- A qualidade do layout depende de quão bem essa superfície específica suporta substituição native.
+
+## Native UI Translation With Original Overlay
+
+O modo swap mantém o texto traduzido na UI native e usa o overlay para mostrar o texto original.
+
+Isto é útil quando pretende a UI traduzida, mas ainda precisa da formulação original por perto como referência.
+
+## Como escolher
+
+Comece com o modo overlay se:
+
+- está a testar um novo motor;
+- está a testar um novo idioma;
+- está a trabalhar com uma superfície densa como journals ou diálogos longos.
+
+Passe para o modo native ou swap apenas depois de a superfície de destino se comportar suficientemente bem para a sua configuração.

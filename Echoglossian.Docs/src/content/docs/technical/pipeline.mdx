@@ -3,7 +3,15 @@ title: Capture, Translation, and Presentation Pipeline
 description: How supported surfaces move from source text capture to translated output.
 ---
 
+import MermaidDiagram from '../../../components/diagrams/MermaidDiagram.astro';
+import { buildPipelineDiagram } from '../../../components/diagrams/technicalDiagramBuilders.mjs';
+
 Every supported surface follows the same broad sequence even when the exact hooks differ.
+
+<MermaidDiagram
+  label="Capture-to-presentation flow"
+  definition={buildPipelineDiagram('root')}
+/>
 
 1. Capture source text from a supported surface.
 2. Resolve translation reuse and persistence scope.

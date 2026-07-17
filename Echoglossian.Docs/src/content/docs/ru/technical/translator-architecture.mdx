@@ -1,0 +1,51 @@
+---
+title: Архитектура переводчика
+description: Общий pipeline перевода плюс provider-specific adapters.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildTranslatorArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+У Echoglossian один общий pipeline перевода и много adapter-ов engine.
+
+<MermaidDiagram
+  label="Границы между общим runtime и адаптерами engine"
+  definition={buildTranslatorArchitectureDiagram('ru')}
+/>
+
+## Общие обязанности
+
+Общий runtime отвечает за:
+
+- выбор переводчика
+- оркестрацию requests
+- границы reuse cache
+- передачу в persistence
+- overlay и native publication после перевода
+
+## Обязанности, специфичные для engine
+
+Каждый adapter engine должен отвечать только за:
+
+- настройку client provider
+- форму request payload
+- разбор response
+- поведение каталога моделей
+- configuration UI, специфичную для engine
+
+## Текущие семейства engine
+
+- vendor translation engines, такие как Google, DeepL, Microsoft, Amazon и варианты Yandex
+- OpenAI-style chat-completions engines, такие как OpenAI, OpenRouter, DeepSeek и LM Studio
+- Gemini `generateContent`
+- Ollama local generation
+- Claude Messages API
+
+## Безопасное правило для работы с engine
+
+При добавлении или изменении engine:
+
+1. переиспользуйте `TranslationService` и `ITranslator`
+2. обновляйте language support и factory wiring в том же изменении
+3. держите provider-specific логику узкой
+4. валидируйте build и tests сразу после широкого изменения по engine

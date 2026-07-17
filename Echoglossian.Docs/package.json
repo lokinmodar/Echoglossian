@@ -13,12 +13,16 @@
     "preview": "astro preview",
     "test:links": "node --test ./scripts/check-base-links.test.mjs",
     "test:locales": "node --test ./scripts/check-locales.test.mjs",
-    "check:locales": "node ./scripts/check-locales.mjs"
+    "test:diagrams": "node --test ./scripts/technical-diagram-builders.test.mjs",
+    "test:coverage": "node --test ./scripts/check-docs-coverage.test.mjs",
+    "check:locales": "node ./scripts/check-locales.mjs",
+    "check:coverage": "node ./scripts/check-docs-coverage.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
     "@astrojs/starlight": "^0.41.3",
     "astro": "^7.0.9",
+    "mermaid": "11.16.0",
     "typescript": "^6.0.3"
   }
 }

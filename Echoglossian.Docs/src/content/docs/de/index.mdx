@@ -1,0 +1,36 @@
+---
+title: Echoglossian-Dokumentation
+description: Kuratierte Anleitungen zu Einrichtung, Nutzung, Architektur und Mitarbeit.
+template: splash
+hero:
+  title: Echoglossian-Dokumentation
+  tagline: Öffentliche Einrichtungsanleitungen für Plugin-Nutzer und öffentliche technische Referenz für Mitwirkende, getrennt vom Plugin-Build- und Release-Flow.
+  actions:
+    - text: Benutzerdokumentation
+      link: ./users/
+      icon: right-arrow
+    - text: Technische Dokumentation
+      link: ./technical/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Öffentlicher Umfang
+
+Diese Site veröffentlicht ausschließlich kuratierte Dokumentation.
+
+- Nutzung, Einrichtung, Konfiguration und Fehlerbehebung des Plugins werden hier veröffentlicht.
+- Aktuelle Architektur, Runtime-Ablauf und Hinweise für Mitwirkende werden hier veröffentlicht.
+- Interne Handoffs, Release-Notizen, Pläne und Backlog-Material bleiben im `docs/`-Baum des Repositorys und werden auf dieser Site nicht veröffentlicht.
+
+## Hier beginnen
+
+<CardGrid stagger>
+  <Card title="Plugin-Benutzerdokumentation" icon="seti:gear" href="./users/">
+    Installation, erster Start, Provider-Einrichtung, Darstellungsmodi, Support-Abdeckung und Fehlerbehebung.
+  </Card>
+  <Card title="Technische Dokumentation" icon="seti:code" href="./technical/">
+    Runtime-Architektur, Übersetzungspipeline, Persistenzgrenzen, Diagnostik und Entwicklungsworkflow.
+  </Card>
+</CardGrid>

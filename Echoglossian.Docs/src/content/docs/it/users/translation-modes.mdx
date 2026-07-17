@@ -1,0 +1,41 @@
+---
+title: Modalità di traduzione
+description: Comprendi le presentazioni overlay, native e swap prima di abilitare le superfici.
+---
+
+Echoglossian tratta acquisizione, traduzione, rendering overlay e mutazione native come fasi separate. La modalità di presentazione decide quali fasi possono toccare l’UI live del gioco.
+
+## Overlay Translation Only
+
+Usa la modalità overlay se vuoi testo tradotto senza mutare l’addon nativo.
+
+- Il testo sorgente viene acquisito.
+- La traduzione viene eseguita normalmente.
+- Il risultato tradotto viene renderizzato solo nell’overlay.
+- L’addon nativo resta in sola lettura.
+
+Questa è la modalità più sicura per superfici dense o instabili.
+
+## Native UI Translation
+
+Usa la modalità native se vuoi che il testo tradotto venga scritto nelle superfici native supportate.
+
+- Acquisizione e traduzione avvengono comunque per prime.
+- Il risultato tradotto può essere scritto nell’addon live.
+- La qualità del layout dipende da quanto bene quella specifica superficie supporta la sostituzione native.
+
+## Native UI Translation With Original Overlay
+
+La modalità swap mantiene il testo tradotto nell’UI native e usa l’overlay per mostrare il testo originale.
+
+È utile se vuoi l’UI tradotta ma hai comunque bisogno del testo originale vicino come riferimento.
+
+## Come scegliere
+
+Inizia con la modalità overlay se:
+
+- stai testando un nuovo motore;
+- stai testando una nuova lingua;
+- stai lavorando con una superficie densa come journal o dialoghi lunghi.
+
+Passa alla modalità native o swap solo dopo che la superficie di destinazione si comporta abbastanza bene per la tua configurazione.

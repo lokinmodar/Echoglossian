@@ -3,7 +3,15 @@ title: Architecture Overview
 description: Current high-level runtime boundaries for capture, translation, overlays, native mutation, and persistence.
 ---
 
+import MermaidDiagram from '../../../components/diagrams/MermaidDiagram.astro';
+import { buildArchitectureDiagram } from '../../../components/diagrams/technicalDiagramBuilders.mjs';
+
 The current plugin architecture keeps capture, translation, overlay rendering, native mutation, and persistence as separate concerns.
+
+<MermaidDiagram
+  label="Runtime architecture boundaries"
+  definition={buildArchitectureDiagram('root')}
+/>
 
 ## Primary Runtime Areas
 

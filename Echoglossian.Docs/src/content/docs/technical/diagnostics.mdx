@@ -3,6 +3,14 @@ title: Diagnostics
 description: Publicly documented addon investigation and validation tools.
 ---
 
+import MermaidDiagram from '../../../components/diagrams/MermaidDiagram.astro';
+import { buildDiagnosticsDiagram } from '../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Investigation stage classifier"
+  definition={buildDiagnosticsDiagram('root')}
+/>
+
 ## Addon Investigation
 
 Use the repo's preferred addon probe command when investigating native UI behavior:

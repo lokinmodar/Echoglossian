@@ -1,0 +1,38 @@
+---
+title: Cache и persistence
+description: Почему база данных остаётся authoritative и что разрешено делать cache.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildCacheAndPersistenceDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+База данных — источник истины для persisted истории переводов. Memory cache нужны, чтобы уменьшать повторную работу, а не переопределять semantics.
+
+<MermaidDiagram
+  label="Авторитет persistence и scope cache"
+  definition={buildCacheAndPersistenceDiagram('ru')}
+/>
+
+## Форма persistence
+
+Разные семейства surfaces сохраняются в разные наборы сущностей, например:
+
+- сущности семейства dialogue, такие как `TalkMessage`, `BattleTalkMessage` и `MiniTalkMessage`
+- сущности семейства toast, такие как `ToastMessage`
+- выделенные сущности, такие как `TextGimmickHintMessage`
+
+## Что cache могут делать
+
+- подавлять повторные переводы для одного и того же visible source
+- reuse-ить прежние результаты, когда effective translation scope всё ещё совпадает
+- избегать hot-path retry spam, когда provider отказывает
+
+## Что cache не должны делать
+
+- становиться вторым источником истины
+- менять semantics lookup в DB
+- переживать scope rules, которые защищают текущую visible surface
+
+## Дисциплина scope
+
+Идентичность source, target language, effective engine и policy reuse должны оставаться привязанными к operation, которая запустила request. Если этот scope меняется, более старые completion не должны заменять более новый visible state.

@@ -31,3 +31,31 @@ body {
 .card {
   border-color: rgb(246 241 232 / 0.12);
 }
+
+.technical-diagram {
+  margin: 1.5rem 0;
+  padding: 1rem 1rem 0.75rem;
+  border: 1px solid rgb(246 241 232 / 0.12);
+  border-radius: 0.75rem;
+  background: rgb(23 22 18 / 0.45);
+}
+
+.technical-diagram figcaption {
+  margin-bottom: 0.75rem;
+  color: var(--sl-color-gray-2);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.technical-diagram pre.mermaid {
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  border: 0;
+  background: transparent;
+}
+
+.technical-diagram pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}

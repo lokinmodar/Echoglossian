@@ -1,0 +1,34 @@
+---
+title: Architekturüberblick
+description: Aktuelle Runtime-Grenzen auf hoher Ebene für Capture, Übersetzung, Overlays, native Mutation und Persistenz.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Die aktuelle Pluginarchitektur hält Capture, Übersetzung, Overlay-Rendering, native Mutation und Persistenz als getrennte Verantwortlichkeiten.
+
+<MermaidDiagram
+  label="Grenzen der Runtime-Architektur"
+  definition={buildArchitectureDiagram('de')}
+/>
+
+## Primäre Runtime-Bereiche
+
+- `NativeUI/AddonHandlers/...` für addonspezifisches Capture- und Präsentationsverhalten
+- `NativeUI/Handlers/...` für gemeinsame native-Helfer und Runtime-Koordination
+- `UIOverlays/TranslationOverlay/...` für Overlay-Zustand und Rendering
+- `Translators/TranslationService` für den gemeinsamen Übersetzungsfluss
+- `LanguagesHandling/...` für Sprachmetadaten und Engine-Verfügbarkeit
+- `DBHelpers/...` und EF-gestützte Nachrichtenentitäten für persistierte Übersetzungshistorie
+
+## Architekturregeln
+
+- Neue Arbeit soll die gemeinsame Übersetzungspipeline wiederverwenden, statt eine parallele Queue einzuführen.
+- Der Overlay-only-Modus muss die native game UI schreibgeschützt lassen.
+- Native- und Swap-Modi dürfen native UI nur auf Flächen mutieren, die das ausdrücklich unterstützen.
+- Die Datenbank bleibt die Quelle der Wahrheit. In-Memory-Caches dienen dazu, Wiederholungen zu unterdrücken, nicht Persistenzsemantik neu zu definieren.
+
+## Dokumentationsgrenze
+
+Diese öffentliche Seite beschreibt die Architektur auf Mitwirkendenebene. Sie veröffentlicht keine internen Handoffs oder issuespezifischen Scratch-Notizen aus dem `docs/`-Baum des Repositorys.

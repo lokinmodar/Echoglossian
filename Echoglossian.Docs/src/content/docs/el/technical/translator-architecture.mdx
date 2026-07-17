@@ -1,0 +1,51 @@
+---
+title: Αρχιτεκτονική μεταφραστή
+description: Κοινό pipeline μετάφρασης μαζί με provider-specific adapters.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildTranslatorArchitectureDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Το Echoglossian έχει ένα κοινό pipeline μετάφρασης και πολλούς adapters engine.
+
+<MermaidDiagram
+  label="Όρια μεταξύ κοινού runtime και προσαρμογέων engine"
+  definition={buildTranslatorArchitectureDiagram('el')}
+/>
+
+## Κοινές ευθύνες
+
+Το κοινό runtime κατέχει:
+
+- επιλογή μεταφραστή
+- ενορχήστρωση requests
+- όρια reuse cache
+- παράδοση στην persistence
+- overlay και native publication μετά τη μετάφραση
+
+## Engine-specific ευθύνες
+
+Κάθε adapter engine πρέπει να κατέχει μόνο:
+
+- ρύθμιση client του provider
+- σχήμα request payload
+- parsing της response
+- συμπεριφορά catalog μοντέλων
+- engine-specific configuration UI
+
+## Τρέχουσες οικογένειες engine
+
+- vendor translation engines όπως Google, DeepL, Microsoft, Amazon και παραλλαγές Yandex
+- OpenAI-style chat-completions engines όπως OpenAI, OpenRouter, DeepSeek και LM Studio
+- Gemini `generateContent`
+- Ollama local generation
+- Claude Messages API
+
+## Ασφαλής κανόνας για engine work
+
+Όταν προσθέτεις ή αλλάζεις engine:
+
+1. επαναχρησιμοποίησε `TranslationService` και `ITranslator`
+2. ενημέρωσε language support και factory wiring στην ίδια αλλαγή
+3. κράτησε στενή την provider-specific λογική
+4. επικύρωσε build και tests αμέσως μετά την ευρύτερη αλλαγή engine

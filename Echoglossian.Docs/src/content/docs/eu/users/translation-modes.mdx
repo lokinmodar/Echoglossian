@@ -1,0 +1,41 @@
+---
+title: Itzulpen moduak
+description: Ulertu overlay, native eta swap aurkezpena azalera berriak gaitu aurretik.
+---
+
+Echoglossianek capture, itzulpena, overlay rendering eta native mutation etapa bereizi gisa tratatzen ditu. Aurkezpen moduak erabakitzen du zein etapak ukitu dezaketen jokoaren UI bizia.
+
+## Overlay itzulpena bakarrik (`Overlay Translation Only`)
+
+Erabili overlay modua itzulitako testua nahi duzunean native addon-a mutatu gabe.
+
+- Jatorrizko testua harrapatzen da.
+- Itzulpena normaltasunez exekutatzen da.
+- Itzulitako emaitza overlay-an bakarrik renderizatzen da.
+- Native addon-a irakurtzeko soilik geratzen da.
+
+Hau da azalera trinko edo ezegonkorretarako modurik seguruena.
+
+## Native UI itzulpena (`Native UI Translation`)
+
+Erabili native modua itzulitako testua native azalera bateragarrietan idatzita nahi duzunean.
+
+- Capture eta itzulpena lehenengo gertatzen dira oraindik.
+- Itzulitako emaitza addon bizian idatz daiteke.
+- Layout kalitatea azalera zehatz horrek native replacement onartzen duen neurriaren araberakoa da.
+
+## Native UI itzulpena jatorrizko overlayarekin (`Native UI Translation With Original Overlay`)
+
+Swap moduak itzulitako testua native UI-an mantentzen du eta overlay-a erabiltzen du jatorrizko testua erakusteko.
+
+Hau erabilgarria da UI-a itzulita nahi duzunean baina jatorrizko testua hurbil edukitzea behar duzunean erreferentzia gisa.
+
+## Nola aukeratu
+
+Hasi overlay moduarekin baldin eta:
+
+- motor berri bat probatzen ari bazara
+- hizkuntza berri bat probatzen ari bazara
+- journal edo elkarrizketa luzeak bezalako azalera trinko batekin ari bazara
+
+Joan native edo swap modura soilik helburuko azalera zure konfiguraziorako nahikoa ondo portatzen denean.

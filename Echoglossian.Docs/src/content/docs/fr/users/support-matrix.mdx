@@ -1,0 +1,73 @@
+---
+title: Matrice de support
+description: Inventaire public des surfaces de traduction actuellement documentées et des familles de modes.
+---
+
+Cette page est la version publique de l’inventaire actuel des surfaces de traduction. Elle documente uniquement le comportement réel à l’exécution.
+
+## Familles de modes
+
+| Famille de modes | Modes | Utilisé par |
+| --- | --- | --- |
+| Famille quêtes / fenêtres natives | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Surfaces de la famille Journal et game windows DB-first |
+| Famille overlay | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, subtitles, MiniTalk, CutSceneSelectString et surfaces de la famille toast |
+
+## Surfaces de dialogue et d’overlay
+
+| Surface | Toggle | Statut |
+| --- | --- | --- |
+| Talk | `TranslateTalk` | Activé |
+| BattleTalk | `TranslateBattleTalk` | Activé |
+| TalkSubtitle | `TranslateTalkSubtitle` | Activé |
+| MiniTalk | `TranslateMiniTalk` | Activé |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Activé |
+
+## Surfaces de quête et de journal
+
+| Surface | Toggle | Statut |
+| --- | --- | --- |
+| Journal | `TranslateJournal` | Activé |
+| JournalDetail | `TranslateJournalDetail` | Activé |
+| ToDoList | `TranslateToDoList` | Activé |
+| ScenarioTree | `TranslateScenarioTree` | Activé |
+| JournalAccept | `TranslateJournalAccept` | Activé |
+| JournalResult | `TranslateJournalResult` | Activé |
+| RecommendList | `TranslateRecommendList` | Activé |
+| AreaMap | `TranslateAreaMap` | Activé |
+
+## Surfaces de toast
+
+| Surface | Toggle | Statut |
+| --- | --- | --- |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Activé |
+| Error toast | `TranslateErrorToast` | Activé |
+| Area toast | `TranslateAreaToast` | Activé |
+| Class / Job change toast | `TranslateClassChangeToast` | Activé |
+| Text gimmick hint | `TranslateTextGimmickHint` | Activé |
+| Quest toast | `TranslateQuestToast` | Activé |
+
+## Surfaces de game window
+
+| Surface | Toggle | Statut |
+| --- | --- | --- |
+| Character window | `TranslateCharacterWindow` | Activé |
+| Main Command | `TranslateMainCommandWindow` | Activé |
+| Action Menu | `TranslateActionMenuWindow` | Activé |
+| HUD windows | `TranslateHudWindow` | Activé |
+| Operation Guide | `TranslateOperationGuideWindow` | Activé |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Activé |
+
+## Surfaces masquées ou temporairement restreintes
+
+| Surface | Toggle | Statut public |
+| --- | --- | --- |
+| Action / item detail tooltips | `TranslateTooltips` | Temporairement désactivé pour la release |
+| Yes/No dialog | `TranslateYesNoScreen` | Implémenté mais masqué dans l’UI actuelle |
+| SelectString dialog | `TranslateSelectString` | Implémenté mais masqué dans l’UI actuelle |
+| SelectOk dialog | `TranslateSelectOk` | Implémenté mais masqué dans l’UI actuelle |
+
+## Notes d’exploitation
+
+- Certaines langues exigent des ressources de police téléchargées avant que la traduction puisse s’activer en toute sécurité.
+- Les langues overlay-only sont normalisées en dehors des modes de remplacement natif lorsque l’affichage natif serait dangereux.
+- Une surface peut exister dans la configuration ou le code tout en restant intentionnellement masquée ou désactivée dans une release.

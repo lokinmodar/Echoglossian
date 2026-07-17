@@ -14,6 +14,17 @@ import {
 export default defineConfig({
   site: siteUrl,
   base: siteBase,
+  markdown: {
+    syntaxHighlight: {
+      type: 'shiki',
+      excludeLangs: ['math', 'mermaid'],
+    },
+  },
+  vite: {
+    build: {
+      chunkSizeWarningLimit: 700,
+    },
+  },
   integrations: [
     starlight({
       title: docsTitle,

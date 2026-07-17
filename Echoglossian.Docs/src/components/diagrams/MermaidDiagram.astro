@@ -1,0 +1,49 @@
+---
+interface Props {
+  definition: string;
+  label: string;
+}
+
+const { definition, label } = Astro.props;
+---
+
+<figure class="technical-diagram">
+  <figcaption>{label}</figcaption>
+  <pre class="mermaid">{definition}</pre>
+</figure>
+
+<script>
+  let mermaidInitialized = false;
+  let mermaidModulePromise;
+
+  async function getMermaid() {
+    mermaidModulePromise ??= import('mermaid').then((module) => {
+      const mermaid = module.default;
+
+      if (!mermaidInitialized) {
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'strict',
+        });
+
+        mermaidInitialized = true;
+      }
+
+      return mermaid;
+    });
+
+    return mermaidModulePromise;
+  }
+
+  const nodes = Array.from(document.querySelectorAll<HTMLElement>('pre.mermaid:not([data-mermaid-ready])'));
+
+  if (nodes.length > 0) {
+    for (const node of nodes) {
+      node.dataset.mermaidReady = 'true';
+    }
+
+    const mermaid = await getMermaid();
+
+    await mermaid.run({ nodes });
+  }
+</script>

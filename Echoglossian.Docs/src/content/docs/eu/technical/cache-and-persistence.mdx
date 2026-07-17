@@ -1,0 +1,38 @@
+---
+title: Cache eta persistence
+description: Zergatik datu-baseak authoritative izaten jarraitzen duen eta cacheek zer egin dezaketen.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildCacheAndPersistenceDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+Datu-basea egiaren iturria da persisted itzulpen-historiarako. Memory cacheak errepikatutako lana murrizteko dira, ez semantics berridazteko.
+
+<MermaidDiagram
+  label="Persistence agintea eta cache scope-a"
+  definition={buildCacheAndPersistenceDiagram('eu')}
+/>
+
+## Persistence forma
+
+Surface familia desberdinek entitate multzo desberdinetan gordetzen dute, adibidez:
+
+- dialogue familiako entitateak, hala nola `TalkMessage`, `BattleTalkMessage` eta `MiniTalkMessage`
+- toast familiako entitateak, hala nola `ToastMessage`
+- entitate dedikatuak, hala nola `TextGimmickHintMessage`
+
+## Cacheek egin dezaketena
+
+- ikusgai dagoen source berarentzat errepikatutako itzulpenak ezkutatu
+- aurreko emaitzak berrerabili effective translation scope-ak oraindik bat egiten duenean
+- provider batek huts egiten duenean hot-path retry spam saihestu
+
+## Cacheek egin behar ez dutena
+
+- bigarren egiaren iturri bihurtu
+- DB lookup semantics aldatu
+- une horretan ikusgai dagoen surfacea babesten duten scope arauak gainditu
+
+## Scope diziplina
+
+Source identitatea, target language, effective engine eta reuse policy-a request-a hasi zuen operation-ari lotuta mantendu behar dira. Scope hori aldatzen bada, completion zaharragoek ez dute visible state berriagoa ordezkatu behar.

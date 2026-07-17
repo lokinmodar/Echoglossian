@@ -1,0 +1,49 @@
+---
+title: Build, Test und Beiträge
+description: Lokale Validierung und Beitragserwartungen für das Plugin und die GitHub-Pages-Dokumentationsseite.
+---
+
+import MermaidDiagram from '../../../../components/diagrams/MermaidDiagram.astro';
+import { buildDevelopmentWorkflowDiagram } from '../../../../components/diagrams/technicalDiagramBuilders.mjs';
+
+<MermaidDiagram
+  label="Validierungsworkflow für Beiträge"
+  definition={buildDevelopmentWorkflowDiagram('de')}
+/>
+
+## Repository-Regeln für diese Site
+
+- `Echoglossian.Docs/` ist absichtlich nicht Teil von `Echoglossian.sln`.
+- Das Root-Plugin-Projekt schließt den Docs-Baum ausdrücklich aus `Compile`, `EmbeddedResource` und `None` aus.
+- Der Docs-Deployment-Flow ist vom Plugin- und D17-Release-Flow getrennt.
+
+## Lokale Validierung
+
+Plugin-Validierung:
+
+```powershell
+dotnet build .\Echoglossian.sln -c Debug --no-restore
+dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+```
+
+Validierung der Docs-Site:
+
+```powershell
+Set-Location .\Echoglossian.Docs
+npm.cmd ci
+npm.cmd run test:locales
+npm.cmd run check:locales
+npm.cmd run check
+npm.cmd run build
+```
+
+## Erwartungen an Beiträge
+
+- Änderungen schmal halten
+- aktuelles Verhalten bewahren, sofern die Änderung nicht ausdrücklich Verhalten adressiert
+- gemeinsame Pluginarchitektur wiederverwenden, statt parallele Pfade einzuführen
+- öffentliche Docs kuratiert und zielgruppenspezifisch halten, statt interne Notizen unverändert zu veröffentlichen
+
+## Release-Grenze
+
+Diese öffentliche Dokumentationsseite beschreibt absichtlich nicht den privaten Release-Maintainer-Flow für externe Manifest-Einreichung. Dieser Workflow bleibt in repositoryinterner Dokumentation.

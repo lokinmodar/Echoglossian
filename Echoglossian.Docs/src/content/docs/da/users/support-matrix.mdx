@@ -1,0 +1,73 @@
+---
+title: Supportmatrix
+description: Offentlig oversigt over aktuelt dokumenterede oversættelsesflader og tilstandsfamilier.
+---
+
+Denne side er den offentlige version af den aktuelle oversigt over oversættelsesflader. Den dokumenterer kun reel runtime-adfærd.
+
+## Tilstandsfamilier
+
+| Tilstandsfamilie | Tilstande | Bruges af |
+| --- | --- | --- |
+| Quest-/native-window-familie | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal-familieflader og DB-first game windows |
+| Overlay-familie | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, undertekster, MiniTalk, CutSceneSelectString og toast-familieflader |
+
+## Dialog- og overlayflader
+
+| Flade | Toggle | Status |
+| --- | --- | --- |
+| Talk | `TranslateTalk` | Aktiveret |
+| BattleTalk | `TranslateBattleTalk` | Aktiveret |
+| TalkSubtitle | `TranslateTalkSubtitle` | Aktiveret |
+| MiniTalk | `TranslateMiniTalk` | Aktiveret |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Aktiveret |
+
+## Quest- og journalflader
+
+| Flade | Toggle | Status |
+| --- | --- | --- |
+| Journal | `TranslateJournal` | Aktiveret |
+| JournalDetail | `TranslateJournalDetail` | Aktiveret |
+| ToDoList | `TranslateToDoList` | Aktiveret |
+| ScenarioTree | `TranslateScenarioTree` | Aktiveret |
+| JournalAccept | `TranslateJournalAccept` | Aktiveret |
+| JournalResult | `TranslateJournalResult` | Aktiveret |
+| RecommendList | `TranslateRecommendList` | Aktiveret |
+| AreaMap | `TranslateAreaMap` | Aktiveret |
+
+## Toast-flader
+
+| Flade | Toggle | Status |
+| --- | --- | --- |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Aktiveret |
+| Error toast | `TranslateErrorToast` | Aktiveret |
+| Area toast | `TranslateAreaToast` | Aktiveret |
+| Class / Job change toast | `TranslateClassChangeToast` | Aktiveret |
+| Text gimmick hint | `TranslateTextGimmickHint` | Aktiveret |
+| Quest toast | `TranslateQuestToast` | Aktiveret |
+
+## Game-window-flader
+
+| Flade | Toggle | Status |
+| --- | --- | --- |
+| Character window | `TranslateCharacterWindow` | Aktiveret |
+| Main Command | `TranslateMainCommandWindow` | Aktiveret |
+| Action Menu | `TranslateActionMenuWindow` | Aktiveret |
+| HUD windows | `TranslateHudWindow` | Aktiveret |
+| Operation Guide | `TranslateOperationGuideWindow` | Aktiveret |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Aktiveret |
+
+## Skjulte eller midlertidigt begrænsede flader
+
+| Flade | Toggle | Offentlig status |
+| --- | --- | --- |
+| Action / item detail tooltips | `TranslateTooltips` | Midlertidigt deaktiveret til release |
+| Yes/No dialog | `TranslateYesNoScreen` | Implementeret, men skjult i nuværende UI |
+| SelectString dialog | `TranslateSelectString` | Implementeret, men skjult i nuværende UI |
+| SelectOk dialog | `TranslateSelectOk` | Implementeret, men skjult i nuværende UI |
+
+## Driftsnoter
+
+- Nogle sprog kræver downloadede font-assets, før oversættelse kan aktiveres sikkert.
+- Overlay-only-sprog normaliseres væk fra native replacement-tilstande, når native visning ville være usikker.
+- En flade kan eksistere i konfiguration eller kode, men stadig være bevidst skjult eller deaktiveret i en release.
