@@ -207,6 +207,7 @@ internal static class Program
                     IsExpectedInteractiveScreenshotFailure(exception))
                 {
                     HandleInteractiveScreenshotFailure(
+                        request.CaptureTarget,
                         outputPath,
                         exception,
                         shell.SetLastScreenshotFailure);
@@ -483,10 +484,12 @@ internal static class Program
     /// <summary>
     /// Removes partial interactive output and reports a capture failure without interrupting the preview host.
     /// </summary>
+    /// <param name="captureTarget">The requested screenshot target.</param>
     /// <param name="outputPath">The requested output path.</param>
     /// <param name="exception">The expected capture exception.</param>
     /// <param name="reportFailure">The status callback used to report the failure.</param>
     internal static void HandleInteractiveScreenshotFailure(
+        PreviewCaptureTarget captureTarget,
         string outputPath,
         Exception exception,
         Action<string> reportFailure)
@@ -495,7 +498,8 @@ internal static class Program
         ArgumentNullException.ThrowIfNull(exception);
         ArgumentNullException.ThrowIfNull(reportFailure);
         TryDeleteScreenshotFile(outputPath);
-        reportFailure(exception.Message);
+        reportFailure(
+            $"{captureTarget} capture to {outputPath} failed: {exception.Message}");
     }
 
     /// <summary>
@@ -509,7 +513,10 @@ internal static class Program
             File.Delete(outputPath);
         }
         catch (Exception exception) when (
-            exception is IOException or UnauthorizedAccessException)
+            exception is IOException or
+            UnauthorizedAccessException or
+            ArgumentException or
+            NotSupportedException)
         {
         }
     }

@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Previewer;
+using Echoglossian.Previewer.UI;
 
 using Xunit;
 
@@ -28,12 +29,16 @@ public sealed class InteractiveScreenshotCaptureTests
             string? reportedMessage = null;
 
             Program.HandleInteractiveScreenshotFailure(
+                PreviewCaptureTarget.ConfigWindow,
                 outputPath,
                 new IOException("save failed"),
                 message => reportedMessage = message);
 
             Assert.False(File.Exists(outputPath));
-            Assert.Equal("save failed", reportedMessage);
+            Assert.NotNull(reportedMessage);
+            Assert.Contains("ConfigWindow", reportedMessage, StringComparison.Ordinal);
+            Assert.Contains(outputPath, reportedMessage, StringComparison.Ordinal);
+            Assert.Contains("save failed", reportedMessage, StringComparison.Ordinal);
         }
         finally
         {
