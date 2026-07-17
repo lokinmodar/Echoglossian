@@ -22,7 +22,7 @@ internal static class PluginWindowPreviewBackendFactory
     internal static async Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
         CreateAsync(
             PluginWindowPreviewBackendMode requestedMode,
-            Func<Task<DalaMockHostedPluginWindowPreviewBackend>> createHostedBackend,
+            Func<Task<IPluginWindowPreviewBackend>> createHostedBackend,
             Func<IPluginWindowPreviewBackend> createStandaloneBackend)
     {
         ArgumentNullException.ThrowIfNull(createHostedBackend);
@@ -37,6 +37,12 @@ internal static class PluginWindowPreviewBackendFactory
         try
         {
             var hostedBackend = await createHostedBackend();
+            if (requestedMode == PluginWindowPreviewBackendMode.Auto)
+            {
+                var backend = new AutoFallbackBackend(hostedBackend, createStandaloneBackend);
+                return (backend, backend.Status);
+            }
+
             return (hostedBackend, hostedBackend.Status);
         }
         catch (Exception exception) when (requestedMode == PluginWindowPreviewBackendMode.Auto)
@@ -112,5 +118,96 @@ internal static class PluginWindowPreviewBackendFactory
         public System.Drawing.Rectangle? TryGetStableCrop(UI.PreviewCaptureTarget target) => this.inner.TryGetStableCrop(target);
 
         public void Dispose() => this.inner.Dispose();
+    }
+
+    private sealed class AutoFallbackBackend : IPluginWindowPreviewBackend
+    {
+        private readonly Func<IPluginWindowPreviewBackend> createStandaloneBackend;
+        private IPluginWindowPreviewBackend activeBackend;
+        private bool hostedActive = true;
+        private PluginWindowBackendStatus status = new(
+            PluginWindowPreviewBackendMode.Auto,
+            PluginWindowPreviewBackendMode.DalaMockHosted,
+            HostedRequested: true,
+            HostedAvailable: true,
+            FallbackReason: null);
+
+        internal AutoFallbackBackend(
+            IPluginWindowPreviewBackend hostedBackend,
+            Func<IPluginWindowPreviewBackend> createStandaloneBackend)
+        {
+            this.activeBackend = hostedBackend ?? throw new ArgumentNullException(nameof(hostedBackend));
+            this.createStandaloneBackend = createStandaloneBackend ??
+                throw new ArgumentNullException(nameof(createStandaloneBackend));
+        }
+
+        public PluginWindowBackendStatus Status => this.status;
+
+        public bool DbManagerAvailable => this.Execute(backend => backend.DbManagerAvailable);
+
+        public bool CaptureFailed => this.Execute(backend => backend.CaptureFailed);
+
+        public void Draw(UI.PreviewWorkbenchState state) => this.Execute(backend => backend.Draw(state));
+
+        public void BeginCapture(UI.PreviewCaptureTarget target) => this.Execute(backend => backend.BeginCapture(target));
+
+        public void EndCapture() => this.Execute(backend => backend.EndCapture());
+
+        public System.Drawing.Rectangle? TryGetStableCrop(UI.PreviewCaptureTarget target) =>
+            this.Execute(backend => backend.TryGetStableCrop(target));
+
+        public void Dispose() => this.activeBackend.Dispose();
+
+        private T Execute<T>(Func<IPluginWindowPreviewBackend, T> operation)
+        {
+            try
+            {
+                return operation(this.activeBackend);
+            }
+            catch (Exception exception) when (this.hostedActive)
+            {
+                this.FallBackToStandalone(exception);
+                return operation(this.activeBackend);
+            }
+        }
+
+        private void Execute(Action<IPluginWindowPreviewBackend> operation)
+        {
+            try
+            {
+                operation(this.activeBackend);
+            }
+            catch (Exception exception) when (this.hostedActive)
+            {
+                this.FallBackToStandalone(exception);
+                operation(this.activeBackend);
+            }
+        }
+
+        private void FallBackToStandalone(Exception exception)
+        {
+            var hostedBackend = this.activeBackend;
+            var standaloneBackend = this.createStandaloneBackend();
+            this.activeBackend = standaloneBackend;
+            this.hostedActive = false;
+            this.status = new PluginWindowBackendStatus(
+                PluginWindowPreviewBackendMode.Auto,
+                PluginWindowPreviewBackendMode.Standalone,
+                HostedRequested: true,
+                HostedAvailable: false,
+                FallbackReason: CreateFallbackReason(exception));
+
+            try
+            {
+                hostedBackend.Dispose();
+            }
+            catch (Exception disposeException)
+            {
+                this.status = this.status with
+                {
+                    FallbackReason = $"{this.status.FallbackReason} Hosted cleanup failed: {disposeException.Message}",
+                };
+            }
+        }
     }
 }

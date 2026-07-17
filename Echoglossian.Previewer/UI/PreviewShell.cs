@@ -435,6 +435,7 @@ internal sealed class PreviewShell : IDisposable
 
     private void DrawFidelitySummary()
     {
+        this.pluginWindowBackendStatus = this.pluginWindowBackend.Status;
         ImGui.TextUnformatted("Fidelity summary");
         ImGui.TextWrapped(
             $"Config source: {this.sourceConfiguration.SourceLabel}");

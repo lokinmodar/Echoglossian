@@ -283,16 +283,28 @@ internal static class Program
         }
 
         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+        IPluginWindowPreviewBackend? pluginWindowBackend = null;
         var runner = new BatchScreenshotRunner(
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
-            () => CreatePluginWindowPreviewBackendAsync(
-                commandLine.PluginWindowBackendMode,
-                editableConfiguration,
-                languages,
-                session).GetAwaiter().GetResult().Backend);
+            () =>
+            {
+                pluginWindowBackend = CreatePluginWindowPreviewBackendAsync(
+                    commandLine.PluginWindowBackendMode,
+                    editableConfiguration,
+                    languages,
+                    session).GetAwaiter().GetResult().Backend;
+                return pluginWindowBackend;
+            });
         runner.Run(requests);
+        if (pluginWindowBackend?.Status is { FallbackReason: not null } backendStatus)
+        {
+            Console.WriteLine(
+                $"Plugin window backend: requested={backendStatus.RequestedMode}, " +
+                $"effective={backendStatus.EffectiveMode}. Fallback: {backendStatus.FallbackReason}");
+        }
+
         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
     }
 
@@ -363,7 +375,7 @@ internal static class Program
     {
         return PluginWindowPreviewBackendFactory.CreateAsync(
             requestedMode,
-            () => CreateDalaMockHostedPluginWindowPreviewBackendAsync(session),
+            async () => await CreateDalaMockHostedPluginWindowPreviewBackendAsync(session),
             () => CreateStandalonePluginWindowPreviewBackend(
                 configuration,
                 languages,
