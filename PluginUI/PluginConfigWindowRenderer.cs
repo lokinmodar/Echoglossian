@@ -201,7 +201,8 @@ public sealed class PluginConfigWindowRenderer
         this.DrawTranslationSetupSectionBreak();
         this.DrawTranslationSetupSectionHeader(Resources.EnableTranslation);
         changed |= this.DrawTranslationActivationSection(
-            context.Configuration);
+            context.Configuration,
+            context.RuntimeActionsAvailable);
 
         this.DrawTranslationSetupSectionBreak();
         this.DrawTranslationSetupSectionHeader(Resources.ConfigTabGeneralName);
@@ -300,8 +301,11 @@ public sealed class PluginConfigWindowRenderer
     /// ready.
     /// </summary>
     /// <param name="config">The configuration being edited.</param>
+    /// <param name="runtimeActionsAvailable">Whether asset management actions are available.</param>
     /// <returns><see langword="true" /> when the configuration changed.</returns>
-    private bool DrawTranslationActivationSection(Config config)
+    private bool DrawTranslationActivationSection(
+        Config config,
+        bool runtimeActionsAvailable)
     {
         var changed = false;
 
@@ -358,7 +362,9 @@ public sealed class PluginConfigWindowRenderer
             ImGui.TextColored(
                 new Vector4(255, 165, 0, 255),
                 Resources.TranslationBlockedByMissingAssetsStatusText);
-            changed |= PluginAssetRequirementUiHelper.DrawInlineWarning(config);
+            changed |= PluginAssetRequirementUiHelper.DrawInlineWarning(
+                config,
+                runtimeActionsAvailable);
         }
         else if (translationBlockedByEngineConfiguration)
         {

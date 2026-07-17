@@ -204,7 +204,11 @@ internal static class Program
                         ImGui.GetIO().DisplaySize,
                         host.FramebufferSize);
 
-                    host.CapturePng(outputPath, crop);
+                    CaptureInteractiveScreenshot(
+                        outputPath,
+                        temporaryOutputPath => host.CapturePng(
+                            temporaryOutputPath,
+                            crop));
                     shell.SetLastScreenshotPath(outputPath);
                 }
                 catch (Exception exception) when (
@@ -500,7 +504,7 @@ internal static class Program
     }
 
     /// <summary>
-    /// Removes partial interactive output and reports a capture failure without interrupting the preview host.
+    /// Reports an interactive capture failure without interrupting the preview host.
     /// </summary>
     /// <param name="captureTarget">The requested screenshot target.</param>
     /// <param name="outputPath">The requested output path.</param>
@@ -515,7 +519,32 @@ internal static class Program
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
         ArgumentNullException.ThrowIfNull(exception);
         ArgumentNullException.ThrowIfNull(reportFailure);
-        reportFailure(HandleScreenshotFailure(captureTarget, outputPath, exception));
+        reportFailure(CreateScreenshotFailureMessage(captureTarget, outputPath, exception));
+    }
+
+    /// <summary>
+    /// Captures an interactive screenshot to a private path before replacing
+    /// its requested output path.
+    /// </summary>
+    /// <param name="outputPath">The requested published output path.</param>
+    /// <param name="capturePng">Writes the PNG to the supplied private path.</param>
+    internal static void CaptureInteractiveScreenshot(
+        string outputPath,
+        Action<string> capturePng)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(capturePng);
+
+        var temporaryOutputPath = CreateInteractiveTemporaryOutputPath(outputPath);
+        try
+        {
+            capturePng(temporaryOutputPath);
+            File.Move(temporaryOutputPath, outputPath, overwrite: true);
+        }
+        finally
+        {
+            TryDeleteScreenshotFile(temporaryOutputPath);
+        }
     }
 
     /// <summary>
@@ -570,6 +599,25 @@ internal static class Program
             NotSupportedException)
         {
         }
+    }
+
+    /// <summary>
+    /// Creates a same-directory private output path for interactive capture.
+    /// </summary>
+    /// <param name="outputPath">The requested published output path.</param>
+    /// <returns>A unique temporary capture path on the same file system.</returns>
+    private static string CreateInteractiveTemporaryOutputPath(string outputPath)
+    {
+        var fullOutputPath = Path.GetFullPath(outputPath);
+        var directory = Path.GetDirectoryName(fullOutputPath) ??
+            throw new ArgumentException(
+                "Interactive screenshot output path must include a directory.",
+                nameof(outputPath));
+        var fileName = Path.GetFileNameWithoutExtension(fullOutputPath);
+        var extension = Path.GetExtension(fullOutputPath);
+        return Path.Combine(
+            directory,
+            $".{fileName}.{Guid.NewGuid():N}.tmp{extension}");
     }
 
     /// <summary>

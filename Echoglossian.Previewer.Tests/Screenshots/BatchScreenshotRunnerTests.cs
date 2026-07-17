@@ -299,6 +299,68 @@ public sealed class BatchScreenshotRunnerTests
     }
 
     /// <summary>
+    /// Ensures a rollback cleanup failure is reported and retains the private
+    /// staging directory for recovery instead of silently leaving new output.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_PublishedCleanupFailure_PreservesRecoveryDirectory()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            Directory.CreateDirectory(destination);
+            File.WriteAllText(Path.Combine(destination, "first.png"), "old-first");
+            var firstDeleteAttempt = true;
+
+            var exception = Assert.Throws<BatchScreenshotRunner.BatchPublicationException>(
+                () => BatchScreenshotRunner.WriteOutputsAtomically(
+                    destination,
+                    stagingDirectory =>
+                    {
+                        File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+                        File.WriteAllText(Path.Combine(stagingDirectory, "second.png"), "new-second");
+                    },
+                    (source, target) =>
+                    {
+                        if (string.Equals(
+                                Path.GetFileName(source),
+                                "second.png",
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("second publish failed");
+                        }
+
+                        File.Move(source, target);
+                    },
+                    path =>
+                    {
+                        if (firstDeleteAttempt && string.Equals(
+                                Path.GetFileName(path),
+                                "first.png",
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            firstDeleteAttempt = false;
+                            throw new IOException("published cleanup failed");
+                        }
+
+                        File.Delete(path);
+                    }));
+
+            Assert.True(exception.RollbackIncomplete);
+            Assert.True(Directory.Exists(exception.RecoveryDirectory));
+            Assert.Equal("old-first", File.ReadAllText(Path.Combine(destination, "first.png")));
+            Assert.Equal(
+                "new-second",
+                File.ReadAllText(Path.Combine(exception.RecoveryDirectory, "second.png")));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Ensures output failures name the affected path instead of exposing only
     /// an unqualified inner exception.
     /// </summary>

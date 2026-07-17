@@ -23,6 +23,44 @@ namespace Echoglossian.Previewer.Tests.UI;
 public sealed class PreviewWorkbenchStateTests
 {
     /// <summary>
+    /// Gets the repository root discovered from the test output directory.
+    /// </summary>
+    private string RepositoryRoot => FindRepositoryRoot();
+
+    /// <summary>
+    /// Ensures the config renderer propagates preview runtime availability to
+    /// the missing-assets management warning.
+    /// </summary>
+    [Fact]
+    public void PluginConfigWindowRenderer_PropagatesRuntimeAvailabilityToMissingAssetsWarning()
+    {
+        var rendererSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "PluginConfigWindowRenderer.cs"));
+        var helperSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "Helpers",
+            "PluginAssetRequirementUiHelper.cs"));
+
+        Assert.Contains(
+            "this.DrawTranslationActivationSection(",
+            rendererSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "context.RuntimeActionsAvailable);",
+            rendererSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "bool runtimeActionsAvailable",
+            helperSource,
+            StringComparison.Ordinal);
+        Assert.Contains("ImGui.BeginDisabled(!runtimeActionsAvailable)", helperSource, StringComparison.Ordinal);
+        Assert.Contains("Resources.PreviewImageryUnavailableText", helperSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures a new workbench starts with only the overlay visible.
     /// </summary>
     [Fact]
@@ -280,5 +318,28 @@ public sealed class PreviewWorkbenchStateTests
 
         Assert.Equal(databasePath, builder.DataSource);
         Assert.False(builder.Pooling);
+    }
+
+    /// <summary>
+    /// Finds the repository root by walking upward from the test output
+    /// directory until the solution file is found.
+    /// </summary>
+    /// <returns>The absolute repository-root path.</returns>
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Echoglossian.sln")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            "Could not locate the Echoglossian repository root.");
     }
 }

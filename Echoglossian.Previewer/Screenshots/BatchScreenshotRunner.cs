@@ -125,7 +125,8 @@ internal sealed class BatchScreenshotRunner
     internal static void WriteOutputsAtomically(
         string outputDirectory,
         Action<string> writeStagedOutputs,
-        Action<string, string>? moveFile = null)
+        Action<string, string>? moveFile = null,
+        Action<string>? deleteFile = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
         ArgumentNullException.ThrowIfNull(writeStagedOutputs);
@@ -139,7 +140,7 @@ internal sealed class BatchScreenshotRunner
         try
         {
             writeStagedOutputs(stagingDirectory);
-            PublishStagedOutputs(stagingDirectory, outputDirectory, moveFile);
+            PublishStagedOutputs(stagingDirectory, outputDirectory, moveFile, deleteFile);
         }
         catch (BatchPublicationException exception) when (
             exception.RollbackIncomplete)
@@ -166,7 +167,8 @@ internal sealed class BatchScreenshotRunner
     internal static void PublishStagedOutputs(
         string stagingDirectory,
         string outputDirectory,
-        Action<string, string>? moveFile = null)
+        Action<string, string>? moveFile = null,
+        Action<string>? deleteFile = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(stagingDirectory);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
@@ -180,6 +182,7 @@ internal sealed class BatchScreenshotRunner
         var rollbackDirectory = Path.Combine(stagingDirectory, "rollback");
         Directory.CreateDirectory(rollbackDirectory);
         var move = moveFile ?? File.Move;
+        var delete = deleteFile ?? File.Delete;
         var backups = new List<(string BackupPath, string DestinationPath)>();
         var publishedPaths = new List<string>();
 
@@ -207,22 +210,30 @@ internal sealed class BatchScreenshotRunner
         }
         catch (Exception exception)
         {
+            var rollbackIncomplete = false;
             foreach (var publishedPath in publishedPaths)
             {
-                TryDeleteFile(publishedPath);
+                if (!TryDeleteFile(delete, publishedPath))
+                {
+                    rollbackIncomplete = true;
+                }
             }
 
             var unrecoveredBackups = new List<string>();
             foreach (var backup in backups.AsEnumerable().Reverse())
             {
-                TryDeleteFile(backup.DestinationPath);
+                if (!TryDeleteFile(delete, backup.DestinationPath))
+                {
+                    rollbackIncomplete = true;
+                }
+
                 if (!TryMoveFile(move, backup.BackupPath, backup.DestinationPath))
                 {
                     unrecoveredBackups.Add(backup.BackupPath);
                 }
             }
 
-            if (unrecoveredBackups.Count > 0)
+            if (rollbackIncomplete || unrecoveredBackups.Count > 0)
             {
                 throw new BatchPublicationException(
                     outputDirectory,
@@ -669,15 +680,17 @@ internal sealed class BatchScreenshotRunner
     /// publication exception.
     /// </summary>
     /// <param name="path">The output path to remove.</param>
-    private static void TryDeleteFile(string path)
+    private static bool TryDeleteFile(Action<string> deleteFile, string path)
     {
         try
         {
-            File.Delete(path);
+            deleteFile(path);
+            return !File.Exists(path);
         }
         catch (Exception exception) when (
             exception is IOException or UnauthorizedAccessException)
         {
+            return false;
         }
     }
 

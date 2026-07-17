@@ -16,16 +16,42 @@ namespace Echoglossian.Previewer.Tests.Screenshots;
 public sealed class InteractiveScreenshotCaptureTests
 {
     /// <summary>
-    /// Ensures expected image-save failures remove partial output and report the failure.
+    /// Ensures an expected pre-write capture failure preserves an earlier
+    /// published screenshot at the requested output path.
     /// </summary>
     [Fact]
-    public void HandleInteractiveScreenshotFailure_IOException_DeletesPartialOutputAndReportsFailure()
+    public void CaptureInteractiveScreenshot_PreWriteFailure_PreservesExistingOutput()
     {
         var tempDirectory = Directory.CreateTempSubdirectory();
         try
         {
-            var outputPath = Path.Combine(tempDirectory.FullName, "partial.png");
-            File.WriteAllText(outputPath, "partial");
+            var outputPath = Path.Combine(tempDirectory.FullName, "capture.png");
+            File.WriteAllText(outputPath, "previous-success");
+
+            Assert.Throws<IOException>(() => Program.CaptureInteractiveScreenshot(
+                outputPath,
+                _ => throw new IOException("readback failed")));
+
+            Assert.Equal("previous-success", File.ReadAllText(outputPath));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures expected image-save failures report the failure without deleting
+    /// an earlier published screenshot.
+    /// </summary>
+    [Fact]
+    public void HandleInteractiveScreenshotFailure_IOException_PreservesPublishedOutputAndReportsFailure()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var outputPath = Path.Combine(tempDirectory.FullName, "published.png");
+            File.WriteAllText(outputPath, "previous-success");
             string? reportedMessage = null;
 
             Program.HandleInteractiveScreenshotFailure(
@@ -34,7 +60,7 @@ public sealed class InteractiveScreenshotCaptureTests
                 new IOException("save failed"),
                 message => reportedMessage = message);
 
-            Assert.False(File.Exists(outputPath));
+            Assert.Equal("previous-success", File.ReadAllText(outputPath));
             Assert.NotNull(reportedMessage);
             Assert.Contains("ConfigWindow", reportedMessage, StringComparison.Ordinal);
             Assert.Contains(outputPath, reportedMessage, StringComparison.Ordinal);
