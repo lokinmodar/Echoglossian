@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Previewer.PluginWindows;
 using Echoglossian.Previewer.UI;
 
 namespace Echoglossian.Previewer.Hosting;
@@ -12,6 +13,11 @@ namespace Echoglossian.Previewer.Hosting;
 /// </summary>
 internal sealed class PreviewCommandLine
 {
+    /// <summary>
+    ///     Gets the requested plugin-window preview backend mode.
+    /// </summary>
+    internal PluginWindowPreviewBackendMode PluginWindowBackendMode { get; private set; }
+
     /// <summary>
     ///     Gets a value indicating whether the native ImGui binding probe was
     ///     requested.
@@ -117,6 +123,10 @@ internal sealed class PreviewCommandLine
                     break;
                 case "--output":
                     commandLine.OutputDirectory = GetValue(args, ref index, "--output");
+                    break;
+                case "--plugin-window-backend":
+                    commandLine.PluginWindowBackendMode = ParsePluginWindowBackendMode(
+                        GetValue(args, ref index, "--plugin-window-backend"));
                     break;
                 default:
                     throw new ArgumentException(
@@ -224,6 +234,25 @@ internal sealed class PreviewCommandLine
             _ => throw new ArgumentException(
                 "Previewer capture target must be config-window, " +
                 "db-manager-window, or translator-metrics-window."),
+        };
+    }
+
+    /// <summary>
+    ///     Parses a requested plugin-window preview backend mode.
+    /// </summary>
+    /// <param name="rawValue">The raw command-line value.</param>
+    /// <returns>The matching backend mode.</returns>
+    /// <exception cref="ArgumentException">Thrown when the value is unsupported.</exception>
+    internal static PluginWindowPreviewBackendMode ParsePluginWindowBackendMode(string? rawValue)
+    {
+        return rawValue?.Trim().ToLowerInvariant() switch
+        {
+            null or "" => PluginWindowPreviewBackendMode.Auto,
+            "auto" => PluginWindowPreviewBackendMode.Auto,
+            "standalone" => PluginWindowPreviewBackendMode.Standalone,
+            "dalamock" => PluginWindowPreviewBackendMode.DalaMockHosted,
+            _ => throw new ArgumentException(
+                $"Preview plugin window backend '{rawValue}' is invalid. Use auto, standalone, or dalamock."),
         };
     }
 }

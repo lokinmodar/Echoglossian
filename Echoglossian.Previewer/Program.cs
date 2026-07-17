@@ -11,6 +11,7 @@ using Echoglossian.PluginUI;
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
+using Echoglossian.Previewer.PluginWindows;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.Session;
@@ -170,6 +171,8 @@ internal static class Program
             pluginWindowHost,
             scenario,
             viewport);
+        shell.SetPluginWindowBackendStatus(
+            CreatePluginWindowBackendStatus(commandLine.PluginWindowBackendMode));
         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
 
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
@@ -340,6 +343,25 @@ internal static class Program
             configWindowContext,
             CreatePreviewDbContext(databasePath),
             configuration);
+    }
+
+    /// <summary>
+    ///     Creates the shell-visible backend status for the current standalone host.
+    /// </summary>
+    /// <param name="requestedMode">The backend requested from the command line.</param>
+    /// <returns>The current standalone backend status.</returns>
+    private static PluginWindowBackendStatus CreatePluginWindowBackendStatus(
+        PluginWindowPreviewBackendMode requestedMode)
+    {
+        var hostedRequested = requestedMode != PluginWindowPreviewBackendMode.Standalone;
+        return new PluginWindowBackendStatus(
+            requestedMode,
+            PluginWindowPreviewBackendMode.Standalone,
+            hostedRequested,
+            HostedAvailable: false,
+            hostedRequested
+                ? "Backend selection is not initialized."
+                : null);
     }
 
     /// <summary>

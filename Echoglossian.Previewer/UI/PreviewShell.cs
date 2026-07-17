@@ -7,6 +7,7 @@ using Dalamud.Bindings.ImGui;
 
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
+using Echoglossian.Previewer.PluginWindows;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.UIOverlays.TextPresentation;
@@ -31,6 +32,12 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewShellState state;
     private readonly int appliedLanguageId;
     private readonly int appliedFontSize;
+    private PluginWindowBackendStatus pluginWindowBackendStatus = new(
+        PluginWindowPreviewBackendMode.Auto,
+        PluginWindowPreviewBackendMode.Standalone,
+        HostedRequested: true,
+        HostedAvailable: false,
+        FallbackReason: "Backend selection is not initialized.");
     private PreviewCaptureRequest? pendingScreenshotRequest;
     private string screenshotStatus = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
@@ -120,6 +127,16 @@ internal sealed class PreviewShell : IDisposable
 
         ImGui.End();
         this.pluginWindowHost.Draw(this.workbenchState);
+    }
+
+    /// <summary>
+    ///     Updates the plugin-window backend status shown in the fidelity summary.
+    /// </summary>
+    /// <param name="status">The current backend status.</param>
+    internal void SetPluginWindowBackendStatus(PluginWindowBackendStatus status)
+    {
+        this.pluginWindowBackendStatus = status ??
+            throw new ArgumentNullException(nameof(status));
     }
 
     /// <summary>
@@ -428,6 +445,15 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted($"Presentation mode: {this.lastRenderResult.PresentationMode}");
         ImGui.TextUnformatted(
             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");
+        ImGui.TextUnformatted(
+            $"Plugin window backend: requested={this.pluginWindowBackendStatus.RequestedMode}, effective={this.pluginWindowBackendStatus.EffectiveMode}");
+
+        if (!string.IsNullOrWhiteSpace(this.pluginWindowBackendStatus.FallbackReason))
+        {
+            ImGui.TextWrapped(
+                $"Plugin window backend fallback: {this.pluginWindowBackendStatus.FallbackReason}");
+        }
+
         var restartWarning = GetRuntimeRestartWarning(
             this.editableConfiguration,
             this.appliedLanguageId,
