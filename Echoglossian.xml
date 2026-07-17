@@ -24405,7 +24405,7 @@
             </param>
             <param name="label">The label used to identify the prompt editor instance.</param>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,System.Boolean)">
             <summary>
             Draws the OpenAI-family engine configuration UI.
             </summary>
@@ -24436,7 +24436,7 @@
             <param name="variant">The selected provider variant.</param>
             <returns><see langword="true" /> when the field changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.DrawLiveModelControls(Echoglossian.Config,Echoglossian.Translators.OpenAI.OpenAiProviderVariantHelper.OpenAiProviderSettings)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.DrawLiveModelControls(Echoglossian.Config,Echoglossian.Translators.OpenAI.OpenAiProviderVariantHelper.OpenAiProviderSettings,System.Boolean)">
             <summary>
             Draws the live model-fetch controls for the active provider.
             </summary>
@@ -24518,7 +24518,7 @@
                 UI for configuring the Anthropic Claude translation engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ClaudeEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ClaudeEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,System.Boolean)">
             <summary>
                 Draws the Claude configuration panel.
             </summary>
@@ -24659,7 +24659,7 @@
                 UI for configuring LM Studio translator engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,System.Boolean)">
             <summary>
                 Draws the LM Studio engine configuration panel.
             </summary>
@@ -24700,6 +24700,24 @@
             </summary>
             <param name="config">The plugin configuration to update.</param>
             <returns><c>true</c> when the configuration changed.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.PreviewRuntimeActionUiHelper">
+            <summary>
+            Draws preview-safe UI for actions that are unavailable in the standalone
+            preview runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.PreviewRuntimeActionUiHelper.DrawButton(System.String,System.Boolean)">
+            <summary>
+            Draws one action button that becomes unavailable in preview-only mode.
+            </summary>
+            <param name="label">The button label.</param>
+            <param name="runtimeActionsAvailable">
+            Whether live runtime-owned actions are available.
+            </param>
+            <returns>
+            <see langword="true" /> when the button was clicked while available.
+            </returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorStateManager">
             <summary>
@@ -25513,7 +25531,7 @@
             </param>
             <returns>True if any settings were changed; otherwise, false.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawEngineConfiguration(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawEngineConfiguration(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines,System.Boolean)">
             <summary>
                 Draws the settings UI for one specific translation engine.
             </summary>
@@ -25522,7 +25540,7 @@
             <param name="engine">The engine whose configuration should be shown.</param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueOverrideSection(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines,System.Action)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueOverrideSection(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines,System.Action,System.Boolean)">
             <summary>
                 Draws the first-pass operator-facing LLM-only routing override for
                 dialogue-family surfaces.

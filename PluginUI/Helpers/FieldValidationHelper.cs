@@ -20,6 +20,7 @@ public static class FieldValidationHelper
       Resources.DeeplTranslatorApiKey,
       Resources.GeminiAPIKey,
       Resources.MicrosoftTranslatorAPIKey,
+      Resources.OptionalApiKeyLabel,
       Resources.YandexCloudApiKey,
   ];
 

@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Components;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.LmStudio;
 using Echoglossian.Translators.OpenAI;
 
@@ -22,7 +23,10 @@ public static class LmStudioEngineUI
     /// <param name="config">Current plugin configuration.</param>
     /// <param name="promptManager">Prompt manager instance.</param>
     /// <returns>True if any settings changed.</returns>
-    public static bool Draw(Config config, PromptTemplateManager promptManager)
+    public static bool Draw(
+        Config config,
+        PromptTemplateManager promptManager,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
 
@@ -76,7 +80,9 @@ public static class LmStudioEngineUI
         if (config.UseLiveLmStudioModelList)
         {
             ImGui.SameLine();
-            if (ImGui.Button(Resources.Reload))
+            if (PreviewRuntimeActionUiHelper.DrawButton(
+                    Resources.Reload,
+                    runtimeActionsAvailable))
             {
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,

@@ -162,17 +162,22 @@ public sealed class PreviewWorkbenchStateTests
         var geminiFlags = resolveInputFlags.Invoke(
             null,
             [global::Echoglossian.Properties.Resources.GeminiAPIKey]);
+        var optionalApiKeyFlags = resolveInputFlags.Invoke(
+            null,
+            [global::Echoglossian.Properties.Resources.OptionalApiKeyLabel]);
         var nonSensitiveFlags = resolveInputFlags.Invoke(
             null,
             [global::Echoglossian.Properties.Resources.ModelEndpoint]);
         Assert.NotNull(chatGptFlags);
         Assert.NotNull(awsSecretFlags);
         Assert.NotNull(geminiFlags);
+        Assert.NotNull(optionalApiKeyFlags);
         Assert.NotNull(nonSensitiveFlags);
 
         Assert.Equal("Password", chatGptFlags.ToString());
         Assert.Equal("Password", awsSecretFlags.ToString());
         Assert.Equal("Password", geminiFlags.ToString());
+        Assert.Equal("Password", optionalApiKeyFlags.ToString());
         Assert.Equal("None", nonSensitiveFlags.ToString());
     }
 
@@ -188,6 +193,107 @@ public sealed class PreviewWorkbenchStateTests
                 "Scenario",
                 System.Reflection.BindingFlags.Instance |
                 System.Reflection.BindingFlags.NonPublic));
+    }
+
+    /// <summary>
+    /// Ensures preview runtime availability reaches engine renderers that own
+    /// provider links and explicit live-model refresh actions.
+    /// </summary>
+    [Fact]
+    public void PreviewRuntimeAvailability_PropagatesToEngineRenderers()
+    {
+        var translationEnginesSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "Tabs",
+            "TranslationEnginesTab.cs"));
+        var chatGptSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "ChatGptEngineUI.cs"));
+        var claudeSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "ClaudeEngineUI.cs"));
+        var deepLSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "DeepLEngineUI.cs"));
+        var geminiSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "GeminiEngineUI.cs"));
+        var deepSeekSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "DeepSeekEngineUI.cs"));
+        var lmStudioSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "LmStudioEngineUI.cs"));
+        var ollamaSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "OllamaEngineUI.cs"));
+        var openRouterSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "EngineConfigUI",
+            "OpenRouterEngineUI.cs"));
+
+        Assert.Contains(
+            "DrawEngineConfiguration(",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "runtimeActionsAvailable);",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", chatGptSource, StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", claudeSource, StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", deepLSource, StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", geminiSource, StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", deepSeekSource, StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", lmStudioSource, StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", ollamaSource, StringComparison.Ordinal);
+        Assert.Contains("bool runtimeActionsAvailable = true", openRouterSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures preview mode still lets operators edit the cloned glossary path
+    /// while only runtime-owned glossary actions stay disabled.
+    /// </summary>
+    [Fact]
+    public void DialogueGlossaryPath_RemainsEditableWhenRuntimeActionsUnavailable()
+    {
+        var translationEnginesSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "Tabs",
+            "TranslationEnginesTab.cs"));
+
+        Assert.Contains(
+            "ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ImGui.BeginDisabled(!glossaryActionsAvailable);",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+        Assert.True(
+            translationEnginesSource.IndexOf(
+                "changed |= FieldValidationHelper.ValidatedInputText(",
+                StringComparison.Ordinal) <
+            translationEnginesSource.IndexOf(
+                "ImGui.BeginDisabled(!glossaryActionsAvailable);",
+                StringComparison.Ordinal));
     }
 
     /// <summary>
