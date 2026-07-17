@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+
 namespace Echoglossian.Previewer.PluginWindows;
 
 /// <summary>
@@ -45,8 +47,8 @@ internal static class PluginWindowPreviewBackendFactory
                 PluginWindowPreviewBackendMode.Standalone,
                 HostedRequested: true,
                 HostedAvailable: false,
-                FallbackReason: exception.Message);
-            return (standaloneBackend, fallbackStatus);
+                FallbackReason: CreateFallbackReason(exception));
+            return (new StatusOverrideBackend(standaloneBackend, fallbackStatus), fallbackStatus);
         }
     }
 
@@ -72,5 +74,43 @@ internal static class PluginWindowPreviewBackendFactory
             },
             static () => StandalonePluginWindowPreviewBackend.CreateForTests(
                 dbManagerAvailable: true));
+    }
+
+    private static string CreateFallbackReason(Exception exception)
+    {
+        if (exception is ReflectionTypeLoadException typeLoadException &&
+            typeLoadException.LoaderExceptions.Length > 0)
+        {
+            return $"{exception.Message} {string.Join(" ", typeLoadException.LoaderExceptions.Select(loaderException => loaderException?.Message))}";
+        }
+
+        return exception.Message;
+    }
+
+    private sealed class StatusOverrideBackend : IPluginWindowPreviewBackend
+    {
+        private readonly IPluginWindowPreviewBackend inner;
+
+        internal StatusOverrideBackend(IPluginWindowPreviewBackend inner, PluginWindowBackendStatus status)
+        {
+            this.inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            this.Status = status ?? throw new ArgumentNullException(nameof(status));
+        }
+
+        public PluginWindowBackendStatus Status { get; }
+
+        public bool DbManagerAvailable => this.inner.DbManagerAvailable;
+
+        public bool CaptureFailed => this.inner.CaptureFailed;
+
+        public void Draw(UI.PreviewWorkbenchState state) => this.inner.Draw(state);
+
+        public void BeginCapture(UI.PreviewCaptureTarget target) => this.inner.BeginCapture(target);
+
+        public void EndCapture() => this.inner.EndCapture();
+
+        public System.Drawing.Rectangle? TryGetStableCrop(UI.PreviewCaptureTarget target) => this.inner.TryGetStableCrop(target);
+
+        public void Dispose() => this.inner.Dispose();
     }
 }

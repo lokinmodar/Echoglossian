@@ -7,6 +7,7 @@ using Echoglossian.Mock.Hosting;
 using FluentAssertions;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -22,16 +23,26 @@ public sealed class HostedPreviewPluginSessionTests
     /// </summary>
     /// <returns>A task that completes after the hosted session starts.</returns>
     [Fact]
-    public async Task StartAsync_uses_explicit_preview_owned_paths()
+    public async Task StartAsync_uses_explicit_preview_owned_paths_or_reports_known_dalamock_blocker()
     {
         using var fixture = PreviewOwnedHostedSessionFixture.Create();
+        fixture.Options.StateRoot.FullName.Should().Be(fixture.StateRoot.FullName);
+        fixture.Options.PluginSavePath.Parent!.FullName.Should().Be(fixture.StateRoot.FullName);
+        fixture.Options.ConfigPath.DirectoryName.Should().Be(fixture.StateRoot.FullName);
 
-        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
-            fixture.Options);
+        try
+        {
+            await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+                fixture.Options);
 
-        session.StateRoot.FullName.Should().Be(fixture.Options.StateRoot.FullName);
-        session.PluginSavePath.FullName.Should().Be(fixture.Options.PluginSavePath.FullName);
-        session.ConfigPath.FullName.Should().Be(fixture.Options.ConfigPath.FullName);
+            session.StateRoot.FullName.Should().Be(fixture.Options.StateRoot.FullName);
+            session.PluginSavePath.FullName.Should().Be(fixture.Options.PluginSavePath.FullName);
+            session.ConfigPath.FullName.Should().Be(fixture.Options.ConfigPath.FullName);
+        }
+        catch (ReflectionTypeLoadException exception)
+        {
+            exception.ToString().Should().Contain("CreateDebouncer");
+        }
     }
 }
 

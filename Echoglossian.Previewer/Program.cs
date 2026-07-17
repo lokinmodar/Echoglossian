@@ -352,8 +352,6 @@ internal static class Program
     ///     Selects a preview backend using only preview-session-owned state.
     /// </summary>
     /// <param name="requestedMode">The backend mode requested by the operator.</param>
-    /// <param name="configuration">The preview-owned editable configuration.</param>
-    /// <param name="languages">The available preview languages.</param>
     /// <param name="session">The preview-owned session artifacts.</param>
     /// <returns>The selected backend and its effective status.</returns>
     private static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
@@ -365,10 +363,7 @@ internal static class Program
     {
         return PluginWindowPreviewBackendFactory.CreateAsync(
             requestedMode,
-            () => CreateDalaMockHostedPluginWindowPreviewBackendAsync(
-                configuration,
-                languages,
-                session),
+            () => CreateDalaMockHostedPluginWindowPreviewBackendAsync(session),
             () => CreateStandalonePluginWindowPreviewBackend(
                 configuration,
                 languages,
@@ -376,16 +371,12 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Starts DalaMock over the preview session and retains standalone rendering for capture.
+    ///     Starts DalaMock over the preview session for hosted plugin-window rendering.
     /// </summary>
-    /// <param name="configuration">The preview-owned editable configuration.</param>
-    /// <param name="languages">The available preview languages.</param>
     /// <param name="session">The preview-owned session artifacts.</param>
     /// <returns>The DalaMock-hosted plugin-window backend.</returns>
     private static async Task<DalaMockHostedPluginWindowPreviewBackend>
         CreateDalaMockHostedPluginWindowPreviewBackendAsync(
-            Config configuration,
-            IReadOnlyDictionary<int, LanguageInfo> languages,
             PreviewSessionArtifacts session)
     {
         var stateRoot = new DirectoryInfo(session.WorkingDirectory);
@@ -400,11 +391,7 @@ internal static class Program
         try
         {
             return new DalaMockHostedPluginWindowPreviewBackend(
-                hostedSession,
-                CreateStandalonePluginWindowPreviewBackend(
-                    configuration,
-                    languages,
-                    session.ClonedDatabasePath));
+                hostedSession);
         }
         catch
         {

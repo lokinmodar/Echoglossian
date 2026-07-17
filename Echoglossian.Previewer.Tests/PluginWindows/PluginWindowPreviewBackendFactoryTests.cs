@@ -27,6 +27,7 @@ public sealed class PluginWindowPreviewBackendFactoryTests
 
         Assert.Equal(PluginWindowPreviewBackendMode.Standalone, result.Status.EffectiveMode);
         Assert.Contains("synthetic hosted failure", result.Status.FallbackReason);
+        Assert.Equal(result.Status, result.Backend.Status);
     }
 
     /// <summary>
@@ -42,5 +43,14 @@ public sealed class PluginWindowPreviewBackendFactoryTests
                 static () => throw new InvalidOperationException("synthetic hosted failure")));
 
         Assert.Contains("synthetic hosted failure", exception.Message);
+    }
+
+    /// <summary>
+    ///     Ensures the hosted backend resolves the production plugin members that own all preview windows.
+    /// </summary>
+    [Fact]
+    public void Hosted_backend_resolves_production_plugin_window_members_once()
+    {
+        DalaMockHostedPluginWindowPreviewBackend.ValidateHostedPluginWindowBridgeForTests();
     }
 }
