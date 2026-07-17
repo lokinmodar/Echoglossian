@@ -24834,18 +24834,49 @@
             otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="T:Echoglossian.PluginUI.PluginConfigSaveScope.PopWhenDisposed">
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ContainsScope(Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame,Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame)">
             <summary>
-            Removes the active save override when its scope ends.
+            Determines whether an immutable scope chain contains a specific frame.
+            </summary>
+            <param name="current">The current scope frame.</param>
+            <param name="target">The frame to find.</param>
+            <returns>
+            <see langword="true" /> when <paramref name="target" /> is present;
+            otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame">
+            <summary>
+            Represents one immutable save override in the current execution flow.
+            </summary>
+            <param name="SaveOverride">The callback that handles scoped saves.</param>
+            <param name="Parent">The next outer scope, if one exists.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame.#ctor(System.Action{Echoglossian.Config},Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame)">
+            <summary>
+            Represents one immutable save override in the current execution flow.
+            </summary>
+            <param name="SaveOverride">The callback that handles scoped saves.</param>
+            <param name="Parent">The next outer scope, if one exists.</param>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame.SaveOverride">
+            <summary>The callback that handles scoped saves.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame.Parent">
+            <summary>The next outer scope, if one exists.</summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken">
+            <summary>
+            Removes one save-override frame when its scope ends.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.PopWhenDisposed.#ctor(System.Collections.Generic.Stack{System.Action{Echoglossian.Config}})">
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken.#ctor(Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame)">
             <summary>
-            Initializes a new instance of the <see cref="T:Echoglossian.PluginUI.PluginConfigSaveScope.PopWhenDisposed" /> class.
+            Initializes a new instance of the <see cref="T:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken" /> class.
             </summary>
-            <param name="stack">The stack containing the active override.</param>
+            <param name="frame">The frame removed when this token is disposed.</param>
         </member>
-        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.PopWhenDisposed.Dispose">
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken.Dispose">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.PluginUI.PluginConfigWindowContext">

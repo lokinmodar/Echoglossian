@@ -11,7 +11,7 @@ namespace Echoglossian.PluginUI;
 /// </summary>
 public static class PluginConfigSaveScope
 {
-    private static readonly AsyncLocal<Stack<Action<Config>>> Scopes = new();
+    private static readonly AsyncLocal<ScopeFrame?> CurrentScope = new();
 
     /// <summary>
     /// Pushes a configuration-save override for the current execution context.
@@ -20,9 +20,9 @@ public static class PluginConfigSaveScope
     /// <returns>A scope that removes the override when disposed.</returns>
     public static IDisposable Push(Action<Config> saveOverride)
     {
-        var stack = Scopes.Value ??= new Stack<Action<Config>>();
-        stack.Push(saveOverride);
-        return new PopWhenDisposed(stack);
+        var frame = new ScopeFrame(saveOverride, CurrentScope.Value);
+        CurrentScope.Value = frame;
+        return new ScopeToken(frame);
     }
 
     /// <summary>
@@ -35,36 +35,78 @@ public static class PluginConfigSaveScope
     /// </returns>
     public static bool TrySave(Config config)
     {
-        var stack = Scopes.Value;
-        if (stack is not { Count: > 0 })
+        var scope = CurrentScope.Value;
+        if (scope is null)
         {
             return false;
         }
 
-        stack.Peek()(config);
+        scope.SaveOverride(config);
         return true;
     }
 
     /// <summary>
-    /// Removes the active save override when its scope ends.
+    /// Determines whether an immutable scope chain contains a specific frame.
     /// </summary>
-    private sealed class PopWhenDisposed : IDisposable
+    /// <param name="current">The current scope frame.</param>
+    /// <param name="target">The frame to find.</param>
+    /// <returns>
+    /// <see langword="true" /> when <paramref name="target" /> is present;
+    /// otherwise, <see langword="false" />.
+    /// </returns>
+    private static bool ContainsScope(ScopeFrame? current, ScopeFrame target)
     {
-        private readonly Stack<Action<Config>> stack;
+        for (var scope = current; scope is not null; scope = scope.Parent)
+        {
+            if (ReferenceEquals(scope, target))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Represents one immutable save override in the current execution flow.
+    /// </summary>
+    /// <param name="SaveOverride">The callback that handles scoped saves.</param>
+    /// <param name="Parent">The next outer scope, if one exists.</param>
+    private sealed record ScopeFrame(
+        Action<Config> SaveOverride,
+        ScopeFrame? Parent);
+
+    /// <summary>
+    /// Removes one save-override frame when its scope ends.
+    /// </summary>
+    private sealed class ScopeToken : IDisposable
+    {
+        private readonly ScopeFrame frame;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PopWhenDisposed" /> class.
+        /// Initializes a new instance of the <see cref="ScopeToken" /> class.
         /// </summary>
-        /// <param name="stack">The stack containing the active override.</param>
-        internal PopWhenDisposed(Stack<Action<Config>> stack)
+        /// <param name="frame">The frame removed when this token is disposed.</param>
+        internal ScopeToken(ScopeFrame frame)
         {
-            this.stack = stack;
+            this.frame = frame;
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
-            this.stack.Pop();
+            var current = CurrentScope.Value;
+            if (ReferenceEquals(current, this.frame))
+            {
+                CurrentScope.Value = this.frame.Parent;
+                return;
+            }
+
+            if (ContainsScope(current, this.frame))
+            {
+                throw new InvalidOperationException(
+                    "Plugin configuration save scopes must be disposed in reverse order.");
+            }
         }
     }
 }
