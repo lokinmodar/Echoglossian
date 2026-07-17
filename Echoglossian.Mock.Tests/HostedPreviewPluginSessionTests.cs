@@ -5,6 +5,7 @@
 
 using Echoglossian.Mock.Hosting;
 using FluentAssertions;
+using Microsoft.Data.Sqlite;
 using System;
 using System.IO;
 using System.Reflection;
@@ -18,6 +19,33 @@ namespace Echoglossian.Mock.Tests;
 /// </summary>
 public sealed class HostedPreviewPluginSessionTests
 {
+    /// <summary>
+    ///     Verifies that hosted startup seeds the database used by the production plugin configuration directory.
+    /// </summary>
+    /// <returns>A task that completes after hosted startup reaches its known blocker.</returns>
+    [Fact]
+    public async Task StartAsync_copies_supplied_database_to_effective_production_database_path()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(withDatabase: true);
+
+        try
+        {
+            await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+                fixture.Options);
+        }
+        catch (ReflectionTypeLoadException exception)
+        {
+            exception.ToString().Should().Contain("CreateDebouncer");
+        }
+
+        fixture.EffectiveDatabasePath.Should().NotBeNull();
+        using var connection = new SqliteConnection($"Data Source={fixture.EffectiveDatabasePath};Pooling=False");
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT value FROM preview_marker";
+        command.ExecuteScalar().Should().Be("preview database");
+    }
+
     /// <summary>
     /// Verifies that hosted startup uses only explicitly supplied preview paths.
     /// </summary>
@@ -51,15 +79,31 @@ public sealed class HostedPreviewPluginSessionTests
 /// </summary>
 internal sealed class PreviewOwnedHostedSessionFixture : IDisposable
 {
-    private PreviewOwnedHostedSessionFixture(DirectoryInfo stateRoot)
+    private PreviewOwnedHostedSessionFixture(DirectoryInfo stateRoot, bool withDatabase)
     {
         this.StateRoot = stateRoot;
         var pluginSavePath = stateRoot.CreateSubdirectory(".dalamock");
+        var databasePath = withDatabase
+            ? Path.Combine(stateRoot.FullName, "Echoglossian.preview.db")
+            : null;
+        if (databasePath is not null)
+        {
+            using var connection = new SqliteConnection($"Data Source={databasePath};Pooling=False");
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE preview_marker (value TEXT NOT NULL); INSERT INTO preview_marker VALUES ('preview database');";
+            command.ExecuteNonQuery();
+            this.EffectiveDatabasePath = Path.Combine(
+                pluginSavePath.FullName,
+                "Echoglossian",
+                "Echoglossian.db");
+        }
+
         this.Options = new HostedPreviewPluginOptions(
             stateRoot,
             pluginSavePath,
             new FileInfo(Path.Combine(stateRoot.FullName, "test.json")),
-            DatabasePath: null,
+            databasePath,
             CreateWindow: false);
     }
 
@@ -74,17 +118,22 @@ internal sealed class PreviewOwnedHostedSessionFixture : IDisposable
     public DirectoryInfo StateRoot { get; }
 
     /// <summary>
+    /// Gets the production plugin database path that DalaMock resolves from its plugin save path.
+    /// </summary>
+    public string? EffectiveDatabasePath { get; }
+
+    /// <summary>
     /// Creates an isolated fixture.
     /// </summary>
     /// <returns>The created fixture.</returns>
-    public static PreviewOwnedHostedSessionFixture Create()
+    public static PreviewOwnedHostedSessionFixture Create(bool withDatabase = false)
     {
         var stateRoot = new DirectoryInfo(Path.Combine(
             Path.GetTempPath(),
             "Echoglossian.Mock.Tests",
             Guid.NewGuid().ToString("N")));
         stateRoot.Create();
-        return new PreviewOwnedHostedSessionFixture(stateRoot);
+        return new PreviewOwnedHostedSessionFixture(stateRoot, withDatabase);
     }
 
     /// <inheritdoc/>

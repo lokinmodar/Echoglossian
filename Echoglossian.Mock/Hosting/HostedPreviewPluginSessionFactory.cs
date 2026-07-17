@@ -33,6 +33,7 @@ public static class HostedPreviewPluginSessionFactory
         cancellationToken.ThrowIfCancellationRequested();
         options.StateRoot.Create();
         options.PluginSavePath.Create();
+        var effectiveDatabasePath = PrepareHostedDatabase(options);
 
         var container = new MockContainer(
             new MockDalamudConfiguration
@@ -62,6 +63,8 @@ public static class HostedPreviewPluginSessionFactory
                 throw new InvalidOperationException("DalaMock did not build Echoglossian.");
             }
 
+            VerifyHostedDatabasePath(effectiveDatabasePath);
+
             return new HostedPreviewPluginSession(
                 container,
                 plugin,
@@ -73,6 +76,61 @@ public static class HostedPreviewPluginSessionFactory
         {
             await DisposeContainerAsync(container);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Copies the preview database to the path opened by the production plugin's database manager.
+    /// </summary>
+    /// <param name="options">The preview-owned hosted-session options.</param>
+    /// <returns>The expected production database path, or <see langword="null"/> when no database was supplied.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the supplied preview database is unavailable.</exception>
+    private static string? PrepareHostedDatabase(HostedPreviewPluginOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.DatabasePath))
+        {
+            return null;
+        }
+
+        var sourceDatabasePath = Path.GetFullPath(options.DatabasePath);
+        if (!File.Exists(sourceDatabasePath))
+        {
+            throw new InvalidOperationException(
+                $"The hosted preview database does not exist: {sourceDatabasePath}");
+        }
+
+        var destinationDirectory = Path.Combine(
+            options.PluginSavePath.FullName,
+            typeof(global::Echoglossian.Echoglossian).Assembly.GetName().Name!);
+        Directory.CreateDirectory(destinationDirectory);
+        var destinationDatabasePath = Path.Combine(destinationDirectory, "Echoglossian.db");
+        File.Copy(sourceDatabasePath, destinationDatabasePath, overwrite: true);
+        return destinationDatabasePath;
+    }
+
+    /// <summary>
+    /// Verifies that DalaMock resolved the production plugin configuration directory used for the seeded database.
+    /// </summary>
+    /// <param name="effectiveDatabasePath">The path seeded before hosted startup.</param>
+    /// <exception cref="InvalidOperationException">Thrown when DalaMock resolves a different plugin configuration directory.</exception>
+    private static void VerifyHostedDatabasePath(string? effectiveDatabasePath)
+    {
+        if (effectiveDatabasePath is null)
+        {
+            return;
+        }
+
+        var resolvedDatabasePath = Path.GetFullPath(Path.Combine(
+            global::Echoglossian.Echoglossian.ConfigDirectory,
+            "Echoglossian.db"));
+        if (!string.Equals(
+                effectiveDatabasePath,
+                resolvedDatabasePath,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"DalaMock resolved hosted plugin database path '{resolvedDatabasePath}', " +
+                $"but preview seeded '{effectiveDatabasePath}'.");
         }
     }
 
