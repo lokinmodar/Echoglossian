@@ -154,7 +154,8 @@ internal sealed class BatchScreenshotRunner
             ScreenshotFileName.CreatePngName(
                 request.Mode == ScreenshotMode.Batch ? ScreenshotMode.Full : request.Mode,
                 request.Scenario.Key,
-                request.Viewport));
+                request.Viewport,
+                request.CaptureTarget));
         using PreviewHost host = new(
             new PreviewHostOptions
             {

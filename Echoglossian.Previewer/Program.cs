@@ -190,7 +190,8 @@ internal static class Program
                     ScreenshotFileName.CreatePngName(
                         request.Mode,
                         request.Scenario.Key,
-                        request.Viewport));
+                        request.Viewport,
+                        request.CaptureTarget));
                 var crop = CalculateInteractiveCrop(
                     request,
                     shell.LastRenderResult,
