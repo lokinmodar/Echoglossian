@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Components;
+using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators.Gemini;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -12,7 +13,10 @@ public static class GeminiEngineUI
 {
     private const string LiveModelRefreshScope = "Gemini";
 
-    public static bool Draw(Config config, PromptTemplateManager promptManager)
+    public static bool Draw(
+        Config config,
+        PromptTemplateManager promptManager,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
 
@@ -50,7 +54,9 @@ public static class GeminiEngineUI
         if (config.UseLiveGeminiModelList)
         {
             ImGui.SameLine();
-            if (ImGui.Button(Resources.Reload))
+            if (PreviewRuntimeActionUiHelper.DrawButton(
+                    Resources.Reload,
+                    runtimeActionsAvailable))
             {
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,

@@ -160,11 +160,11 @@ internal sealed unsafe class PreviewHost : IDisposable
     /// </summary>
     /// <param name="draw">The ImGui draw callback.</param>
     /// <param name="path">The destination PNG path.</param>
-    /// <param name="crop">An optional physical pixel crop rectangle.</param>
+    /// <param name="cropProvider">An optional provider for a physical pixel crop rectangle.</param>
     internal void CaptureFramePng(
         Action draw,
         string path,
-        Func<DrawingRectangle?>? cropProvider = null)
+        Func<Vector2, DrawingRectangle?>? cropProvider = null)
     {
         ArgumentNullException.ThrowIfNull(draw);
         this.ThrowIfDisposed();
@@ -178,7 +178,6 @@ internal sealed unsafe class PreviewHost : IDisposable
             this.window.Focused);
 
         draw();
-        var crop = cropProvider?.Invoke();
 
         var outputDescription = this.graphicsDevice.MainSwapchain.Framebuffer.OutputDescription;
         using var colorTarget = this.graphicsDevice.ResourceFactory.CreateTexture(
@@ -191,6 +190,7 @@ internal sealed unsafe class PreviewHost : IDisposable
                 TextureUsage.RenderTarget | TextureUsage.Sampled));
         using var framebuffer = this.graphicsDevice.ResourceFactory.CreateFramebuffer(
             new FramebufferDescription(null, colorTarget));
+        var crop = cropProvider?.Invoke(new Vector2(colorTarget.Width, colorTarget.Height));
 
         this.commandList.Begin();
         this.commandList.SetFramebuffer(framebuffer);

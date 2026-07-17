@@ -6401,48 +6401,14 @@
         </member>
         <member name="M:Echoglossian.Echoglossian.EchoglossianConfigUi">
             <summary>
-                Draws the Echoglossian configuration UI.
+            Draws the Echoglossian configuration UI through the shared renderer.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationStatusHeader">
+        <member name="M:Echoglossian.Echoglossian.DisableAllToastTranslations">
             <summary>
-            Draws the compact translation status line that stays outside the tab
-            content.
+            Disables every toast-translation category and saves the configuration.
             </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationSetupTab">
-            <summary>
-            Draws the first configuration tab that combines language selection, engine
-            configuration, activation, and the legacy general settings.
-            </summary>
-            <returns><c>true</c> when the configuration changed.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationSetupSectionHeader(System.String)">
-            <summary>
-            Draws the compact heading used to visually separate groups inside the
-            translation setup tab.
-            </summary>
-            <param name="title">The section title to render.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationSetupSectionBreak">
-            <summary>
-            Draws extra vertical spacing between setup-tab option groups so the first
-            configuration page reads less densely.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationLanguageSelectionSection">
-            <summary>
-            Draws the language-selection section and applies the related runtime side
-            effects when the target language changes.
-            </summary>
-            <returns><c>true</c> when the configuration changed.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.DrawTranslationActivationSection">
-            <summary>
-            Draws the translation activation section and blocks activation while the
-            selected language or engine is not ready.
-            </summary>
-            <returns><c>true</c> when the configuration changed.</returns>
+            <returns><see langword="true" /> after the settings are disabled.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
@@ -7403,11 +7369,23 @@
             Controls whether the window is open and visible.
             </summary>
         </member>
+        <member name="P:Echoglossian.DBManagerUI.DbEditorWindow.LastWindowBounds">
+            <summary>
+            Gets the bounds captured during the most recent successful draw.
+            </summary>
+        </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.#ctor(Echoglossian.EFCoreSqlite.EchoglossianDbContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.DbEditorWindow"/> class.
             </summary>
             <param name="dbContext">EF Core DbContext.</param>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.#ctor(Echoglossian.EFCoreSqlite.EchoglossianDbContext,System.Action{Dalamud.Interface.ImGuiNotification.Notification})">
+            <summary>
+            Initializes a host-adapted instance of the <see cref="T:Echoglossian.DBManagerUI.DbEditorWindow"/> class.
+            </summary>
+            <param name="dbContext">EF Core DbContext.</param>
+            <param name="addNotification">The host notification callback.</param>
         </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Dispose">
             <summary>
@@ -7417,6 +7395,11 @@
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Draw">
             <summary>
             Draws the window and its components.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.CaptureWindowBounds">
+            <summary>
+            Captures the current DB manager window bounds for screenshot cropping.
             </summary>
         </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.OpenAndSelectTable(System.String)">
@@ -24447,13 +24430,15 @@
             Includes Save, Donation, Project Links, and Pix QR popup.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID)">
+        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID,System.Boolean)">
             <summary>
             Draws the footer section with buttons and Pix QR popup.
             </summary>
             <param name="config">The window open/close flag.</param>
             <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
             <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
+            <param name="cryptoImageHandle">The ImGui texture handle for the crypto QR image.</param>
+            <param name="imagesAvailable">Whether host-provided imagery is available.</param>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.PromptEditorUI">
             <summary>
@@ -24475,7 +24460,7 @@
             </param>
             <param name="label">The label used to identify the prompt editor instance.</param>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,System.Boolean)">
             <summary>
             Draws the OpenAI-family engine configuration UI.
             </summary>
@@ -24506,7 +24491,7 @@
             <param name="variant">The selected provider variant.</param>
             <returns><see langword="true" /> when the field changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.DrawLiveModelControls(Echoglossian.Config,Echoglossian.Translators.OpenAI.OpenAiProviderVariantHelper.OpenAiProviderSettings)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.DrawLiveModelControls(Echoglossian.Config,Echoglossian.Translators.OpenAI.OpenAiProviderVariantHelper.OpenAiProviderSettings,System.Boolean)">
             <summary>
             Draws the live model-fetch controls for the active provider.
             </summary>
@@ -24588,7 +24573,7 @@
                 UI for configuring the Anthropic Claude translation engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ClaudeEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ClaudeEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,System.Boolean)">
             <summary>
                 Draws the Claude configuration panel.
             </summary>
@@ -24625,6 +24610,13 @@
                 every frame.
             </summary>
         </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.SuppressRequests">
+            <summary>
+                Suppresses live refresh requests until the returned scope is
+                disposed.
+            </summary>
+            <returns>The disposable suppression scope.</returns>
+        </member>
         <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.Clear(System.String)">
             <summary>
                 Clears retained refresh state for the provided UI scope.
@@ -24649,12 +24641,26 @@
             <param name="signature">The current refresh signature.</param>
             <param name="refreshAsync">The refresh work to execute.</param>
         </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.ClearCore(System.String)">
+            <summary>
+                Clears retained refresh state without reacquiring the shared lock.
+            </summary>
+            <param name="scope">The stable scope key.</param>
+        </member>
         <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RunRefreshAsync(System.String,System.Func{System.Threading.Tasks.Task})">
             <summary>
                 Runs refresh work while releasing the scope lock afterward.
             </summary>
             <param name="scope">The stable scope key.</param>
             <param name="refreshAsync">The refresh work to execute.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RefreshSuppressionScope">
+            <summary>
+                Represents one live-refresh suppression scope.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RefreshSuppressionScope.Dispose">
+            <inheritdoc/>
         </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent">
             <summary>
@@ -24708,7 +24714,7 @@
                 UI for configuring LM Studio translator engine.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LmStudioEngineUI.Draw(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,System.Boolean)">
             <summary>
                 Draws the LM Studio engine configuration panel.
             </summary>
@@ -24733,12 +24739,13 @@
             selected language when it depends on unavailable downloaded assets.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Helpers.PluginAssetRequirementUiHelper.DrawInlineWarning(Echoglossian.Config)">
+        <member name="M:Echoglossian.PluginUI.Helpers.PluginAssetRequirementUiHelper.DrawInlineWarning(Echoglossian.Config,System.Boolean)">
             <summary>
             Draws inline warning UI and a management button when the selected
             language requires missing downloaded assets.
             </summary>
             <param name="config">The plugin configuration to update.</param>
+            <param name="runtimeActionsAvailable">Whether asset management actions are available.</param>
             <returns><c>true</c> when the UI changed configuration state.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Helpers.PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(Echoglossian.Config)">
@@ -24748,6 +24755,24 @@
             </summary>
             <param name="config">The plugin configuration to update.</param>
             <returns><c>true</c> when the configuration changed.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.Helpers.PreviewRuntimeActionUiHelper">
+            <summary>
+            Draws preview-safe UI for actions that are unavailable in the standalone
+            preview runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Helpers.PreviewRuntimeActionUiHelper.DrawButton(System.String,System.Boolean)">
+            <summary>
+            Draws one action button that becomes unavailable in preview-only mode.
+            </summary>
+            <param name="label">The button label.</param>
+            <param name="runtimeActionsAvailable">
+            Whether live runtime-owned actions are available.
+            </param>
+            <returns>
+            <see langword="true" /> when the button was clicked while available.
+            </returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.PromptEditorStateManager">
             <summary>
@@ -24804,7 +24829,7 @@
             <param name="type">The prompt type to resolve.</param>
             <returns>The built-in default prompt.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Helpers.ResetConfigButtonHelper.Draw(Echoglossian.Config,System.Action,System.String)">
+        <member name="M:Echoglossian.PluginUI.Helpers.ResetConfigButtonHelper.Draw(Echoglossian.Config,System.Action,System.String,System.Boolean)">
             <summary>
                 Draws a button that resets the plugin config to default values, with a
                 confirmation popup.
@@ -24814,6 +24839,9 @@
             <param name="buttonLabel">
                 Optional label for the button (defaults to "Reset
                 Settings to Default").
+            </param>
+            <param name="runtimeActionsAvailable">
+            Whether reset can call the live plugin save and notification services.
             </param>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.TranslationEngineConfigurationHelper">
@@ -24971,6 +24999,226 @@
                 result when no visible story surface is currently available.
             </returns>
         </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigSaveScope">
+            <summary>
+            Redirects configuration saves within the current asynchronous execution
+            context.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.Push(System.Action{Echoglossian.Config})">
+            <summary>
+            Pushes a configuration-save override for the current execution context.
+            </summary>
+            <param name="saveOverride">The callback that handles scoped saves.</param>
+            <returns>A scope that removes the override when disposed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.TrySave(Echoglossian.Config)">
+            <summary>
+            Attempts to handle a configuration save through the active override.
+            </summary>
+            <param name="config">The configuration being saved.</param>
+            <returns>
+            <see langword="true" /> when an active override handled the save;
+            otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ContainsScope(Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame,Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame)">
+            <summary>
+            Determines whether an immutable scope chain contains a specific frame.
+            </summary>
+            <param name="current">The current scope frame.</param>
+            <param name="target">The frame to find.</param>
+            <returns>
+            <see langword="true" /> when <paramref name="target" /> is present;
+            otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame">
+            <summary>
+            Represents one immutable save override in the current execution flow.
+            </summary>
+            <param name="SaveOverride">The callback that handles scoped saves.</param>
+            <param name="Parent">The next outer scope, if one exists.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame.#ctor(System.Action{Echoglossian.Config},Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame)">
+            <summary>
+            Represents one immutable save override in the current execution flow.
+            </summary>
+            <param name="SaveOverride">The callback that handles scoped saves.</param>
+            <param name="Parent">The next outer scope, if one exists.</param>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame.SaveOverride">
+            <summary>The callback that handles scoped saves.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame.Parent">
+            <summary>The next outer scope, if one exists.</summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken">
+            <summary>
+            Removes one save-override frame when its scope ends.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken.#ctor(Echoglossian.PluginUI.PluginConfigSaveScope.ScopeFrame)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken" /> class.
+            </summary>
+            <param name="frame">The frame removed when this token is disposed.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigSaveScope.ScopeToken.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigWindowContext">
+            <summary>
+            Provides the configuration and runtime-owned dependencies required to draw
+            the plugin configuration window.
+            </summary>
+            <param name="Configuration">The configuration edited by the window.</param>
+            <param name="Languages">The languages available for translation.</param>
+            <param name="LogoTextureHandle">The plugin logo texture handle.</param>
+            <param name="PixTextureHandle">The Pix QR-code texture handle.</param>
+            <param name="CryptoTextureHandle">The crypto QR-code texture handle.</param>
+            <param name="RebuildTranslationService">
+            Rebuilds translation services after engine settings change.
+            </param>
+            <param name="PluginVersion">The plugin version shown in the title.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowContext.#ctor(Echoglossian.Config,System.Collections.Generic.IReadOnlyDictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID,System.Action,System.String)">
+            <summary>
+            Provides the configuration and runtime-owned dependencies required to draw
+            the plugin configuration window.
+            </summary>
+            <param name="Configuration">The configuration edited by the window.</param>
+            <param name="Languages">The languages available for translation.</param>
+            <param name="LogoTextureHandle">The plugin logo texture handle.</param>
+            <param name="PixTextureHandle">The Pix QR-code texture handle.</param>
+            <param name="CryptoTextureHandle">The crypto QR-code texture handle.</param>
+            <param name="RebuildTranslationService">
+            Rebuilds translation services after engine settings change.
+            </param>
+            <param name="PluginVersion">The plugin version shown in the title.</param>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.Configuration">
+            <summary>The configuration edited by the window.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.Languages">
+            <summary>The languages available for translation.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.LogoTextureHandle">
+            <summary>The plugin logo texture handle.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PixTextureHandle">
+            <summary>The Pix QR-code texture handle.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.CryptoTextureHandle">
+            <summary>The crypto QR-code texture handle.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.RebuildTranslationService">
+            <summary>
+            Rebuilds translation services after engine settings change.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PluginVersion">
+            <summary>The plugin version shown in the title.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.ImagesAvailable">
+            <summary>
+            Gets a value indicating whether logo and QR imagery can be rendered.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.RuntimeActionsAvailable">
+            <summary>
+            Gets a value indicating whether actions that require initialized plugin
+            runtime services are available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PushGeneralFont">
+            <summary>
+            Gets the host-specific general-font push operation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.ApplyLanguageRuntimeChanges">
+            <summary>
+            Gets the host-specific language runtime update operation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowContext.ApplyLiveLanguageRuntimeChanges(Echoglossian.Config,Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Applies the existing live asset and font refresh behavior.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="language">The newly selected language.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.PluginConfigWindowRenderer">
+            <summary>
+            Draws the reusable Echoglossian configuration window.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowRenderer.LastWindowBounds">
+            <summary>
+            Gets the bounds captured during the most recent successful draw.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.Draw(Echoglossian.PluginUI.PluginConfigWindowContext,System.Boolean@)">
+            <summary>
+            Draws the configuration window and saves any changes through the active
+            configuration-save path.
+            </summary>
+            <param name="context">The state and runtime dependencies for the window.</param>
+            <param name="isOpen">The window open state.</param>
+            <returns><see langword="true" /> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationStatusHeader(Echoglossian.Config)">
+            <summary>
+            Draws the compact translation status line outside the tab content.
+            </summary>
+            <param name="config">The configuration being edited.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationSetupTab(Echoglossian.PluginUI.PluginConfigWindowContext,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
+            <summary>
+            Draws the combined language, engine, activation, and general settings
+            tab.
+            </summary>
+            <param name="context">The configuration-window context.</param>
+            <param name="languages">The mutable language dictionary used by existing tabs.</param>
+            <returns><see langword="true" /> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationSetupSectionHeader(System.String)">
+            <summary>
+            Draws the compact heading used to separate setup-tab option groups.
+            </summary>
+            <param name="title">The section title to render.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationSetupSectionBreak">
+            <summary>
+            Draws spacing between setup-tab option groups.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationLanguageSelectionSection(Echoglossian.PluginUI.PluginConfigWindowContext,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
+            <summary>
+            Draws language selection and applies its existing runtime side effects.
+            </summary>
+            <param name="context">The configuration-window context.</param>
+            <param name="languages">The available languages.</param>
+            <returns><see langword="true" /> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationActivationSection(Echoglossian.Config,System.Boolean)">
+            <summary>
+            Draws translation activation and blocks it while dependencies are not
+            ready.
+            </summary>
+            <param name="config">The configuration being edited.</param>
+            <param name="runtimeActionsAvailable">Whether asset management actions are available.</param>
+            <returns><see langword="true" /> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.AssignIfChanged``1(``0@,``0)">
+            <summary>
+            Assigns a value only when it differs from the current value.
+            </summary>
+            <typeparam name="T">The value type.</typeparam>
+            <param name="target">The value to update.</param>
+            <param name="newValue">The proposed replacement value.</param>
+            <returns><see langword="true" /> when the value changed.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.Runtime.DalamudUiFontRuntime">
             <summary>
             Bridges shared UI renderers to the plugin's Dalamud-managed font handles.
@@ -25037,12 +25285,13 @@
             Displays the "About Echoglossian" tab content with logo and disclaimer.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.AboutTab.Draw(Echoglossian.Config,Dalamud.Bindings.ImGui.ImTextureID)">
+        <member name="M:Echoglossian.PluginUI.Tabs.AboutTab.Draw(Echoglossian.Config,Dalamud.Bindings.ImGui.ImTextureID,System.Boolean)">
             <summary>
             Draws the About tab.
             </summary>
             <param name="config">The plugin config object.</param>
             <param name="logoHandle">The ImGui handle for the logo image.</param>
+            <param name="imagesAvailable">Whether host-provided imagery is available.</param>
             <returns>True if any changes were made (always false here).</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.GameWindowsTab">
@@ -25314,7 +25563,7 @@
                 per-engine configuration.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},System.Action)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},System.Action,System.Boolean)">
             <summary>
                 Draws the translation engine settings UI, allowing users to select and
                 configure translation engines.
@@ -25332,9 +25581,12 @@
                 The action to rebuild the translation
                 service when settings change.
             </param>
+            <param name="runtimeActionsAvailable">
+                Whether live runtime-owned actions are available.
+            </param>
             <returns>True if any settings were changed; otherwise, false.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawEngineConfiguration(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawEngineConfiguration(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines,System.Boolean)">
             <summary>
                 Draws the settings UI for one specific translation engine.
             </summary>
@@ -25343,7 +25595,7 @@
             <param name="engine">The engine whose configuration should be shown.</param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueOverrideSection(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines,System.Action)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueOverrideSection(Echoglossian.Config,Echoglossian.PluginUI.Helpers.PromptTemplateManager,Echoglossian.Echoglossian.TransEngines,System.Action,System.Boolean)">
             <summary>
                 Draws the first-pass operator-facing LLM-only routing override for
                 dialogue-family surfaces.
@@ -25357,12 +25609,15 @@
             </param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueGlossarySection(Echoglossian.Config)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueGlossarySection(Echoglossian.Config,System.Boolean)">
             <summary>
                 Draws the operator-facing structured dialogue glossary settings used
                 by issue 148.
             </summary>
             <param name="config">The active plugin configuration.</param>
+            <param name="runtimeActionsAvailable">
+                Whether live glossary actions are available.
+            </param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueGlossarySnapshot(Echoglossian.Translators.StructuredDialogueGlossaryStore.StructuredDialogueGlossarySnapshot)">
@@ -25416,6 +25671,24 @@
                 Fully self-contained using static Echoglossian methods.
             </summary>
         </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TroubleshootingTab.Draw(Echoglossian.Config,System.Boolean)">
+            <summary>
+            Draws the troubleshooting controls when their runtime services are
+            available, or disabled controls when hosted by the standalone previewer.
+            </summary>
+            <param name="config">The configuration being displayed.</param>
+            <param name="runtimeActionsAvailable">
+            Whether asset and notification-backed runtime actions are available.
+            </param>
+            <returns><see langword="true" /> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TroubleshootingTab.DrawUnavailableControls(Echoglossian.Config)">
+            <summary>
+            Draws visual-only troubleshooting controls without reading or mutating
+            plugin runtime asset or notification state.
+            </summary>
+            <param name="config">The preview-owned configuration being displayed.</param>
+        </member>
         <member name="T:Echoglossian.Helpers.FieldValidationHelper">
             <summary>
             Provides UI helpers to display field validation warnings.
@@ -25450,7 +25723,7 @@
                 operator inspection.
             </summary>
         </member>
-        <member name="M:Echoglossian.TranslatorMetricsWindow.#ctor(Echoglossian.Config,System.Action{System.String},System.Func{System.Threading.Tasks.Task{Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult}})">
+        <member name="M:Echoglossian.TranslatorMetricsWindow.#ctor(Echoglossian.Config,System.Action{System.String},System.Func{System.Threading.Tasks.Task{Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult}},System.Boolean)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.TranslatorMetricsWindow" />
                 class.
@@ -25463,15 +25736,28 @@
                 Delegate used to explicitly retranslate the currently visible
                 story-facing text and persist the refreshed result.
             </param>
+            <param name="runtimeActionsAvailable">
+                Whether runtime-owned actions are available to the hosted window.
+            </param>
         </member>
         <member name="P:Echoglossian.TranslatorMetricsWindow.IsOpen">
             <summary>
                 Gets or sets a value indicating whether the metrics window is open.
             </summary>
         </member>
+        <member name="P:Echoglossian.TranslatorMetricsWindow.LastWindowBounds">
+            <summary>
+                Gets the bounds captured during the most recent successful draw.
+            </summary>
+        </member>
         <member name="M:Echoglossian.TranslatorMetricsWindow.Draw">
             <summary>
                 Draws the translator metrics window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslatorMetricsWindow.CaptureWindowBounds">
+            <summary>
+                Captures the current metrics window bounds for screenshot cropping.
             </summary>
         </member>
         <member name="M:Echoglossian.TranslatorMetricsWindow.ResolveCompletedRetranslationTask">
@@ -26797,6 +27083,11 @@
         <member name="P:Echoglossian.Properties.Resources.Preview">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Preview.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PreviewImageryUnavailableText">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Preview imagery is unavailable in the standalone previewer..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PromptInput">

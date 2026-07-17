@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Previewer.Scenarios;
+using Echoglossian.Previewer.UI;
 
 namespace Echoglossian.Previewer.Screenshots;
 
@@ -14,10 +15,16 @@ namespace Echoglossian.Previewer.Screenshots;
 /// <param name="Scenario">The selected preview scenario.</param>
 /// <param name="Viewport">The logical viewport.</param>
 /// <param name="OutputDirectory">The destination directory.</param>
-/// <param name="SurfaceMargin">The logical margin for selected-surface crops.</param>
+/// <param name="CaptureTarget">The preview surface to crop into the screenshot.</param>
 internal sealed record ScreenshotRequest(
     ScreenshotMode Mode,
     PreviewScenario Scenario,
     PreviewViewportPreset Viewport,
     string OutputDirectory,
-    float SurfaceMargin = 8f);
+    PreviewCaptureTarget CaptureTarget = PreviewCaptureTarget.FullFrame)
+{
+    /// <summary>
+    /// Gets the logical margin for selected-surface crops.
+    /// </summary>
+    internal float SurfaceMargin { get; init; } = 8f;
+}

@@ -15,6 +15,22 @@ public static class LiveModelRefreshCoordinator
     private static readonly HashSet<string> InFlightScopes = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, string> RequestedSignatures = new(StringComparer.Ordinal);
     private static readonly object SyncLock = new();
+    private static int suppressionDepth;
+
+    /// <summary>
+    ///     Suppresses live refresh requests until the returned scope is
+    ///     disposed.
+    /// </summary>
+    /// <returns>The disposable suppression scope.</returns>
+    public static IDisposable SuppressRequests()
+    {
+        lock (SyncLock)
+        {
+            suppressionDepth++;
+        }
+
+        return new RefreshSuppressionScope();
+    }
 
     /// <summary>
     ///     Clears retained refresh state for the provided UI scope.
@@ -24,8 +40,7 @@ public static class LiveModelRefreshCoordinator
     {
         lock (SyncLock)
         {
-            InFlightScopes.Remove(scope);
-            RequestedSignatures.Remove(scope);
+            ClearCore(scope);
         }
     }
 
@@ -42,6 +57,12 @@ public static class LiveModelRefreshCoordinator
     {
         lock (SyncLock)
         {
+            if (suppressionDepth > 0)
+            {
+                ClearCore(scope);
+                return;
+            }
+
             RequestedSignatures[scope] = signature;
             if (!InFlightScopes.Add(scope))
             {
@@ -74,6 +95,12 @@ public static class LiveModelRefreshCoordinator
 
         lock (SyncLock)
         {
+            if (suppressionDepth > 0)
+            {
+                ClearCore(scope);
+                return;
+            }
+
             if (InFlightScopes.Contains(scope))
             {
                 RequestedSignatures[scope] = signature;
@@ -91,6 +118,16 @@ public static class LiveModelRefreshCoordinator
         }
 
         _ = RunRefreshAsync(scope, refreshAsync);
+    }
+
+    /// <summary>
+    ///     Clears retained refresh state without reacquiring the shared lock.
+    /// </summary>
+    /// <param name="scope">The stable scope key.</param>
+    private static void ClearCore(string scope)
+    {
+        InFlightScopes.Remove(scope);
+        RequestedSignatures.Remove(scope);
     }
 
     /// <summary>
@@ -136,6 +173,33 @@ public static class LiveModelRefreshCoordinator
             if (!shouldRerun)
             {
                 return;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Represents one live-refresh suppression scope.
+    /// </summary>
+    private sealed class RefreshSuppressionScope : IDisposable
+    {
+        private bool disposed;
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            lock (SyncLock)
+            {
+                if (this.disposed)
+                {
+                    return;
+                }
+
+                if (suppressionDepth > 0)
+                {
+                    suppressionDepth--;
+                }
+
+                this.disposed = true;
             }
         }
     }

@@ -5,6 +5,7 @@
 
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
+using Echoglossian.Previewer.UI;
 
 using Xunit;
 
@@ -45,6 +46,30 @@ public sealed class ScreenshotFileNameTests
             viewport);
 
         Assert.Equal("full-quest-toast-wide-rtl-1280x720.png", name);
+    }
+
+    /// <summary>
+    /// Ensures distinct plugin-window targets produce distinct deterministic names.
+    /// </summary>
+    [Fact]
+    public void CreatePngName_WindowTargets_IncludeCaptureTarget()
+    {
+        var viewport = new PreviewViewportPreset("1920x1080", 1920, 1080);
+
+        var configName = ScreenshotFileName.CreatePngName(
+            ScreenshotMode.Full,
+            "talk",
+            viewport,
+            PreviewCaptureTarget.ConfigWindow);
+        var dbManagerName = ScreenshotFileName.CreatePngName(
+            ScreenshotMode.Full,
+            "talk",
+            viewport,
+            PreviewCaptureTarget.DbManagerWindow);
+
+        Assert.Equal("full-talk-configwindow-1920x1080.png", configName);
+        Assert.Equal("full-talk-dbmanagerwindow-1920x1080.png", dbManagerName);
+        Assert.NotEqual(configName, dbManagerName);
     }
 
     /// <summary>

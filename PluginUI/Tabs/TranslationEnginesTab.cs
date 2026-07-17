@@ -33,12 +33,16 @@ public static class TranslationEnginesTab
     ///     The action to rebuild the translation
     ///     service when settings change.
     /// </param>
+    /// <param name="runtimeActionsAvailable">
+    ///     Whether live runtime-owned actions are available.
+    /// </param>
     /// <returns>True if any settings were changed; otherwise, false.</returns>
     public static bool Draw(
         Config config,
         int languageIndex,
         Dictionary<int, LanguageInfo> langDict,
-        Action rebuildTranslationService)
+        Action rebuildTranslationService,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
         var promptManager = new PromptTemplateManager(config);
@@ -110,8 +114,15 @@ public static class TranslationEnginesTab
         ImGui.Separator();
         ImGui.BeginGroup();
 
+        using var suppressedRefreshRequests = !runtimeActionsAvailable
+            ? LiveModelRefreshCoordinator.SuppressRequests()
+            : null;
         var engine = (Echoglossian.TransEngines)config.ChosenTransEngine;
-        changed |= DrawEngineConfiguration(config, promptManager, engine);
+        changed |= DrawEngineConfiguration(
+            config,
+            promptManager,
+            engine,
+            runtimeActionsAvailable);
 
         ImGui.EndGroup();
         ImGui.Separator();
@@ -120,10 +131,12 @@ public static class TranslationEnginesTab
             config,
             promptManager,
             engine,
-            rebuildTranslationService);
+            rebuildTranslationService,
+            runtimeActionsAvailable);
+
         ImGui.Separator();
         ImGui.Spacing();
-        changed |= DrawDialogueGlossarySection(config);
+        changed |= DrawDialogueGlossarySection(config, runtimeActionsAvailable);
 
         return changed;
     }
@@ -138,7 +151,8 @@ public static class TranslationEnginesTab
     private static bool DrawEngineConfiguration(
         Config config,
         PromptTemplateManager promptManager,
-        Echoglossian.TransEngines engine)
+        Echoglossian.TransEngines engine,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
         switch (engine)
@@ -147,10 +161,13 @@ public static class TranslationEnginesTab
                 changed |= GoogleEngineUI.Draw(config);
                 break;
             case Echoglossian.TransEngines.Deepl:
-                changed |= DeepLEngineUI.Draw(config);
+                changed |= DeepLEngineUI.Draw(config, runtimeActionsAvailable);
                 break;
             case Echoglossian.TransEngines.ChatGPT:
-                changed |= ChatGPTEngineUI.Draw(config, promptManager);
+                changed |= ChatGPTEngineUI.Draw(
+                    config,
+                    promptManager,
+                    runtimeActionsAvailable);
                 break;
             case Echoglossian.TransEngines.YandexCloud:
                 changed |= YandexCloudEngineUI.Draw(config, promptManager);
@@ -159,12 +176,18 @@ public static class TranslationEnginesTab
                 changed |= GTranslateEngineUI.Draw(config);
                 break;
             case Echoglossian.TransEngines.DeepSeek:
-                changed |= DeepSeekEngineUI.Draw(config, promptManager);
+                changed |= DeepSeekEngineUI.Draw(
+                    config,
+                    promptManager,
+                    runtimeActionsAvailable);
                 break;
             case Echoglossian.TransEngines.Ollama:
                 try
                 {
-                    changed |= OllamaEngineUI.Draw(config, promptManager);
+                    changed |= OllamaEngineUI.Draw(
+                        config,
+                        promptManager,
+                        runtimeActionsAvailable);
                 }
                 catch (Exception ex)
                 {
@@ -186,19 +209,31 @@ public static class TranslationEnginesTab
                 changed |= AmazonEngineUI.Draw(config, promptManager);
                 break;
             case Echoglossian.TransEngines.Gemini:
-                changed |= GeminiEngineUI.Draw(config, promptManager);
+                changed |= GeminiEngineUI.Draw(
+                    config,
+                    promptManager,
+                    runtimeActionsAvailable);
                 break;
             case Echoglossian.TransEngines.YandexPublic:
                 changed |= YandexPublicEngineUI.Draw(config);
                 break;
             case Echoglossian.TransEngines.OpenRouter:
-                changed |= OpenRouterEngineUI.Draw(config, promptManager);
+                changed |= OpenRouterEngineUI.Draw(
+                    config,
+                    promptManager,
+                    runtimeActionsAvailable);
                 break;
             case Echoglossian.TransEngines.LmStudio:
-                changed |= LmStudioEngineUI.Draw(config, promptManager);
+                changed |= LmStudioEngineUI.Draw(
+                    config,
+                    promptManager,
+                    runtimeActionsAvailable);
                 break;
             case Echoglossian.TransEngines.Claude:
-                changed |= ClaudeEngineUI.Draw(config, promptManager);
+                changed |= ClaudeEngineUI.Draw(
+                    config,
+                    promptManager,
+                    runtimeActionsAvailable);
                 break;
             default:
                 ImGui.Text(Resources.NoSettingsForEngine);
@@ -224,7 +259,8 @@ public static class TranslationEnginesTab
         Config config,
         PromptTemplateManager promptManager,
         Echoglossian.TransEngines primaryEngine,
-        Action rebuildTranslationService)
+        Action rebuildTranslationService,
+        bool runtimeActionsAvailable)
     {
         var changed = false;
         DrawSubsectionHeader(
@@ -296,7 +332,8 @@ public static class TranslationEnginesTab
                 changed |= DrawEngineConfiguration(
                     config,
                     promptManager,
-                    overrideEngine);
+                    overrideEngine,
+                    runtimeActionsAvailable);
             }
         }
 
@@ -310,8 +347,13 @@ public static class TranslationEnginesTab
     ///     by issue 148.
     /// </summary>
     /// <param name="config">The active plugin configuration.</param>
+    /// <param name="runtimeActionsAvailable">
+    ///     Whether live glossary actions are available.
+    /// </param>
     /// <returns><see langword="true" /> when the configuration changed.</returns>
-    private static bool DrawDialogueGlossarySection(Config config)
+    private static bool DrawDialogueGlossarySection(
+        Config config,
+        bool runtimeActionsAvailable)
     {
         var changed = false;
         var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
@@ -324,14 +366,19 @@ public static class TranslationEnginesTab
             Resources.EnableDialogueGlossaryInjectionLabel,
             ref config.EnableDialogueGlossaryInjection);
 
-        ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);
+        var glossaryActionsAvailable =
+            runtimeActionsAvailable &&
+            config.EnableDialogueGlossaryInjection;
         var glossaryPathLabel = Resources.DialogueGlossaryFilePathLabel;
+        ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);
         changed |= FieldValidationHelper.ValidatedInputText(
             glossaryPathLabel,
             ref config.DialogueGlossaryFilePath,
             1024,
             out _);
+        ImGui.EndDisabled();
 
+        ImGui.BeginDisabled(!glossaryActionsAvailable);
         if (ImGui.Button(
                 Resources.ReloadDialogueGlossaryButtonLabel))
         {
@@ -340,12 +387,25 @@ public static class TranslationEnginesTab
         }
 
         ImGui.EndDisabled();
+        if (!runtimeActionsAvailable &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(Resources.PreviewImageryUnavailableText);
+        }
 
         ImGui.SameLine();
+        ImGui.BeginDisabled(!runtimeActionsAvailable);
         if (ImGui.Button(
                 Resources.ClearDialogueGlossaryButtonLabel))
         {
             StructuredDialogueGlossaryStore.Clear();
+        }
+
+        ImGui.EndDisabled();
+        if (!runtimeActionsAvailable &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(Resources.PreviewImageryUnavailableText);
         }
 
         DrawDialogueGlossarySnapshot(snapshot);

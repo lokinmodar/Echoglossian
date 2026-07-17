@@ -5,14 +5,23 @@
 
 using Dalamud.Bindings.ImGui;
 
+using Echoglossian.EFCoreSqlite;
 using Echoglossian.LanguagesHandling;
+using Echoglossian.PluginUI;
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
+using Echoglossian.Previewer.Session;
 using Echoglossian.Previewer.UI;
+using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
+
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+
+using Newtonsoft.Json;
 
 using System.Drawing;
 using System.Numerics;
@@ -61,6 +70,11 @@ internal static class Program
             Console.Error.WriteLine(exception.Message);
             return 1;
         }
+        catch (InvalidOperationException exception)
+        {
+            Console.Error.WriteLine(exception.Message);
+            return 1;
+        }
     }
 
     /// <summary>
@@ -105,14 +119,24 @@ internal static class Program
     /// <param name="commandLine">The parsed command line.</param>
     private static void RunInteractivePreview(PreviewCommandLine commandLine)
     {
-        var sourceConfiguration = PreviewConfigLoader.Load(commandLine.ConfigPath);
-        var editableConfiguration = sourceConfiguration.CreateEditableCopy();
+        using var session = PreviewSessionLoader.Load(
+            new PreviewSessionSourceOptions(
+                commandLine.ConfigPath,
+                commandLine.DatabasePath,
+                commandLine.OutputDirectory));
+        var sourceConfiguration = session.Configuration;
+        var editableConfiguration = session.EditableConfiguration;
         var scenario = PreviewScenarioCatalog.ResolveScenario(commandLine.Scenario);
         var viewport = PreviewScenarioCatalog.ResolveViewport(
             commandLine.ViewportWidth,
             commandLine.ViewportHeight);
-        var selectedLanguage = ResolvePreviewLanguage(editableConfiguration.Lang);
+        var (languages, selectedLanguage) = InitializePreviewLanguageRuntime(
+            editableConfiguration);
+
         Echoglossian.SelectedLanguage = selectedLanguage;
+        var fontAssetDiagnostics = PreviewFontCatalog.InitializePreviewAssets(
+            selectedLanguage,
+            editableConfiguration);
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
             editableConfiguration.FontSize);
@@ -133,13 +157,20 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
+        using var pluginWindowHost = CreatePreviewPluginWindowHost(
+            editableConfiguration,
+            languages,
+            session.ClonedDatabasePath);
         using var shell = new PreviewShell(
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
+            session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
             composition.Renderer,
+            pluginWindowHost,
             scenario,
             viewport);
+        using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
 
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
         host.Run(
@@ -162,19 +193,33 @@ internal static class Program
                     ScreenshotFileName.CreatePngName(
                         request.Mode,
                         request.Scenario.Key,
-                        request.Viewport));
-                Rectangle? crop = null;
-                if (request.Mode == ScreenshotMode.Surface)
+                        request.Viewport,
+                        request.CaptureTarget));
+                try
                 {
-                    crop = CalculateInteractiveSurfaceCrop(
+                    var crop = CalculateInteractiveCrop(
                         request,
                         shell.LastRenderResult,
+                        pluginWindowHost,
                         ImGui.GetIO().DisplaySize,
                         host.FramebufferSize);
-                }
 
-                host.CapturePng(outputPath, crop);
-                shell.SetLastScreenshotPath(outputPath);
+                    CaptureInteractiveScreenshot(
+                        outputPath,
+                        temporaryOutputPath => host.CapturePng(
+                            temporaryOutputPath,
+                            crop));
+                    shell.SetLastScreenshotPath(outputPath);
+                }
+                catch (Exception exception) when (
+                    IsExpectedInteractiveScreenshotFailure(exception))
+                {
+                    HandleInteractiveScreenshotFailure(
+                        request.CaptureTarget,
+                        outputPath,
+                        exception,
+                        shell.SetLastScreenshotFailure);
+                }
             });
     }
 
@@ -184,10 +229,24 @@ internal static class Program
     /// <param name="commandLine">The parsed command line.</param>
     private static void RunScreenshotExport(PreviewCommandLine commandLine)
     {
-        var sourceConfiguration = PreviewConfigLoader.Load(commandLine.ConfigPath);
-        var editableConfiguration = sourceConfiguration.CreateEditableCopy();
-        var selectedLanguage = ResolvePreviewLanguage(editableConfiguration.Lang);
+        using var session = PreviewSessionLoader.Load(
+            new PreviewSessionSourceOptions(
+                commandLine.ConfigPath,
+                commandLine.DatabasePath,
+                commandLine.OutputDirectory));
+        var sourceConfiguration = session.Configuration;
+        var editableConfiguration = session.EditableConfiguration;
+        var (languages, selectedLanguage) = InitializePreviewLanguageRuntime(
+            editableConfiguration);
         Echoglossian.SelectedLanguage = selectedLanguage;
+        var fontAssetDiagnostics = PreviewFontCatalog.InitializePreviewAssets(
+            selectedLanguage,
+            editableConfiguration);
+        foreach (var diagnostic in fontAssetDiagnostics)
+        {
+            Console.Error.WriteLine(diagnostic);
+        }
+
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
             editableConfiguration.FontSize);
@@ -213,14 +272,20 @@ internal static class Program
                     mode,
                     scenario,
                     viewport,
-                    outputDirectory));
+                    outputDirectory,
+                    commandLine.CaptureTarget ?? GetCaptureTarget(mode)));
             }
         }
 
+        using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
         var runner = new BatchScreenshotRunner(
             sourceConfiguration,
             editableConfiguration,
-            fontSelection);
+            fontSelection,
+            () => CreatePreviewPluginWindowHost(
+                editableConfiguration,
+                languages,
+                session.ClonedDatabasePath));
         runner.Run(requests);
         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
     }
@@ -232,6 +297,91 @@ internal static class Program
             : outputDirectory;
     }
 
+    /// <summary>
+    /// Creates a context over the preview-owned database snapshot.
+    /// </summary>
+    /// <param name="databasePath">The optional snapshot path.</param>
+    /// <returns>The snapshot context, or <see langword="null" /> when unavailable.</returns>
+    private static EchoglossianDbContext? CreatePreviewDbContext(string? databasePath)
+    {
+        if (string.IsNullOrWhiteSpace(databasePath))
+        {
+            return null;
+        }
+
+        var options = new DbContextOptionsBuilder<EchoglossianDbContext>()
+            .UseSqlite(
+                new SqliteConnectionStringBuilder
+                {
+                    DataSource = databasePath,
+                    Pooling = false,
+                }.ToString())
+            .Options;
+        return new EchoglossianDbContext(options);
+    }
+
+    /// <summary>
+    /// Creates real plugin windows over preview-owned configuration and database state.
+    /// </summary>
+    /// <param name="configuration">The preview-owned editable configuration.</param>
+    /// <param name="languages">The available preview languages.</param>
+    /// <param name="databasePath">The optional preview database snapshot.</param>
+    /// <returns>The preview-owned plugin-window host.</returns>
+    private static PreviewPluginWindowHost CreatePreviewPluginWindowHost(
+        Config configuration,
+        IReadOnlyDictionary<int, LanguageInfo> languages,
+        string? databasePath)
+    {
+        var configWindowContext = CreatePreviewPluginWindowContext(
+            configuration,
+            languages);
+        return new PreviewPluginWindowHost(
+            new PluginConfigWindowRenderer(),
+            configWindowContext,
+            CreatePreviewDbContext(databasePath),
+            configuration);
+    }
+
+    /// <summary>
+    /// Creates config-window dependencies with explicit unavailable preview imagery.
+    /// </summary>
+    /// <param name="configuration">The preview-owned editable configuration.</param>
+    /// <param name="languages">The available preview languages.</param>
+    /// <returns>The preview-safe config-window context.</returns>
+    internal static PluginConfigWindowContext CreatePreviewPluginWindowContext(
+        Config configuration,
+        IReadOnlyDictionary<int, LanguageInfo> languages)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(languages);
+        return new PluginConfigWindowContext(
+            configuration,
+            languages,
+            default,
+            default,
+            default,
+            static () => { },
+            configuration.PluginVersion)
+        {
+            ImagesAvailable = false,
+            RuntimeActionsAvailable = false,
+            PushGeneralFont = static () => NoOpDisposable.Instance,
+            ApplyLanguageRuntimeChanges = static (_, _) => { },
+        };
+    }
+
+    /// <summary>
+    /// Persists config-window edits only to the preview-owned config clone.
+    /// </summary>
+    /// <param name="configPath">The preview-owned config path.</param>
+    /// <param name="configuration">The edited preview configuration.</param>
+    private static void SavePreviewConfiguration(string configPath, Config configuration)
+    {
+        File.WriteAllText(
+            configPath,
+            JsonConvert.SerializeObject(configuration, Formatting.Indented));
+    }
+
     internal static Rectangle? CalculateInteractiveSurfaceCrop(
         ScreenshotRequest request,
         TranslationOverlayRenderResult renderResult,
@@ -240,7 +390,8 @@ internal static class Program
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(renderResult);
-        if (request.Mode != ScreenshotMode.Surface)
+        if (request.Mode != ScreenshotMode.Surface &&
+            request.CaptureTarget != PreviewCaptureTarget.OverlaySurface)
         {
             return null;
         }
@@ -289,19 +440,217 @@ internal static class Program
         return ResolvePreviewLanguage(languages, languageId);
     }
 
+    /// <summary>
+    /// Resolves preview language metadata from a supplied language dictionary.
+    /// </summary>
+    /// <param name="languages">The available plugin languages.</param>
+    /// <param name="languageId">The configured language identifier.</param>
+    /// <returns>The configured or fallback language metadata.</returns>
     internal static LanguageInfo ResolvePreviewLanguage(
+        IReadOnlyDictionary<int, LanguageInfo> languages,
+        int languageId)
+    {
+        return ResolvePreviewLanguageEntry(languages, languageId).Value;
+    }
+
+    /// <summary>
+    /// Resolves preview language metadata and repairs an invalid configured identifier.
+    /// </summary>
+    /// <param name="languages">The available plugin languages.</param>
+    /// <param name="configuration">The preview-owned mutable configuration.</param>
+    /// <returns>The configured or fallback language metadata.</returns>
+    internal static LanguageInfo NormalizePreviewLanguage(
+        IReadOnlyDictionary<int, LanguageInfo> languages,
+        Config configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var selectedLanguage = ResolvePreviewLanguageEntry(
+            languages,
+            configuration.Lang);
+        configuration.Lang = selectedLanguage.Key;
+        return selectedLanguage.Value;
+    }
+
+    /// <summary>
+    /// Initializes preview language metadata and configuration flags using the plugin runtime policy.
+    /// </summary>
+    /// <param name="configuration">The preview-owned mutable configuration.</param>
+    /// <returns>The initialized language dictionary and selected language.</returns>
+    internal static (Dictionary<int, LanguageInfo> Languages, LanguageInfo SelectedLanguage)
+        InitializePreviewLanguageRuntime(Config configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var languages = Echoglossian.CreateLanguagesDictionary();
+        LanguageEngineSupport.ApplySupportTo(languages);
+        var selectedLanguage = NormalizePreviewLanguage(languages, configuration);
+        LanguagePresentationPolicy.ApplyLanguageFlags(configuration);
+        return (languages, selectedLanguage);
+    }
+
+    /// <summary>
+    /// Determines whether an interactive screenshot exception is expected during capture or output.
+    /// </summary>
+    /// <param name="exception">The capture exception to classify.</param>
+    /// <returns><see langword="true" /> when the failure can be reported without ending the preview session; otherwise, <see langword="false" />.</returns>
+    internal static bool IsExpectedInteractiveScreenshotFailure(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return exception is InvalidOperationException or
+            ArgumentException or
+            IOException or
+            UnauthorizedAccessException or
+            System.Runtime.InteropServices.ExternalException or
+            Veldrid.VeldridException;
+    }
+
+    /// <summary>
+    /// Reports an interactive capture failure without interrupting the preview host.
+    /// </summary>
+    /// <param name="captureTarget">The requested screenshot target.</param>
+    /// <param name="outputPath">The requested output path.</param>
+    /// <param name="exception">The expected capture exception.</param>
+    /// <param name="reportFailure">The status callback used to report the failure.</param>
+    internal static void HandleInteractiveScreenshotFailure(
+        PreviewCaptureTarget captureTarget,
+        string outputPath,
+        Exception exception,
+        Action<string> reportFailure)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(exception);
+        ArgumentNullException.ThrowIfNull(reportFailure);
+        reportFailure(CreateScreenshotFailureMessage(captureTarget, outputPath, exception));
+    }
+
+    /// <summary>
+    /// Captures an interactive screenshot to a private path before replacing
+    /// its requested output path.
+    /// </summary>
+    /// <param name="outputPath">The requested published output path.</param>
+    /// <param name="capturePng">Writes the PNG to the supplied private path.</param>
+    internal static void CaptureInteractiveScreenshot(
+        string outputPath,
+        Action<string> capturePng)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(capturePng);
+
+        var temporaryOutputPath = CreateInteractiveTemporaryOutputPath(outputPath);
+        try
+        {
+            capturePng(temporaryOutputPath);
+            File.Move(temporaryOutputPath, outputPath, overwrite: true);
+        }
+        finally
+        {
+            TryDeleteScreenshotFile(temporaryOutputPath);
+        }
+    }
+
+    /// <summary>
+    /// Removes partial screenshot output and returns contextual capture failure text.
+    /// </summary>
+    /// <param name="captureTarget">The requested screenshot target.</param>
+    /// <param name="outputPath">The requested output path.</param>
+    /// <param name="exception">The expected capture exception.</param>
+    /// <returns>The contextual failure message.</returns>
+    internal static string HandleScreenshotFailure(
+        PreviewCaptureTarget captureTarget,
+        string outputPath,
+        Exception exception)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(exception);
+        TryDeleteScreenshotFile(outputPath);
+        return CreateScreenshotFailureMessage(captureTarget, outputPath, exception);
+    }
+
+    /// <summary>
+    /// Creates contextual screenshot failure text without modifying an output path.
+    /// </summary>
+    /// <param name="captureTarget">The requested screenshot target.</param>
+    /// <param name="outputPath">The requested output path.</param>
+    /// <param name="exception">The capture exception.</param>
+    /// <returns>The contextual capture failure message.</returns>
+    internal static string CreateScreenshotFailureMessage(
+        PreviewCaptureTarget captureTarget,
+        string outputPath,
+        Exception exception)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(exception);
+        return $"{captureTarget} capture to {outputPath} failed: {exception.Message}";
+    }
+
+    /// <summary>
+    /// Deletes partial screenshot output without replacing the original capture failure.
+    /// </summary>
+    /// <param name="outputPath">The partial output file path.</param>
+    private static void TryDeleteScreenshotFile(string outputPath)
+    {
+        try
+        {
+            File.Delete(outputPath);
+        }
+        catch (Exception exception) when (
+            exception is IOException or
+            UnauthorizedAccessException or
+            ArgumentException or
+            NotSupportedException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Creates a same-directory private output path for interactive capture.
+    /// </summary>
+    /// <param name="outputPath">The requested published output path.</param>
+    /// <returns>A unique temporary capture path on the same file system.</returns>
+    private static string CreateInteractiveTemporaryOutputPath(string outputPath)
+    {
+        var fullOutputPath = Path.GetFullPath(outputPath);
+        var directory = Path.GetDirectoryName(fullOutputPath) ??
+            throw new ArgumentException(
+                "Interactive screenshot output path must include a directory.",
+                nameof(outputPath));
+        var fileName = Path.GetFileNameWithoutExtension(fullOutputPath);
+        var extension = Path.GetExtension(fullOutputPath);
+        return Path.Combine(
+            directory,
+            $".{fileName}.{Guid.NewGuid():N}.tmp{extension}");
+    }
+
+    /// <summary>
+    /// Installs preview-owned configuration persistence for renderer-side saves.
+    /// </summary>
+    /// <param name="clonedConfigPath">The session-owned configuration clone path.</param>
+    /// <returns>The save-scope lifetime.</returns>
+    internal static IDisposable PushPreviewConfigSaveScope(string clonedConfigPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(clonedConfigPath);
+        return PluginConfigSaveScope.Push(
+            config => SavePreviewConfiguration(clonedConfigPath, config));
+    }
+
+    /// <summary>
+    /// Resolves the configured language entry or the deterministic fallback entry.
+    /// </summary>
+    /// <param name="languages">The available plugin languages.</param>
+    /// <param name="languageId">The configured language identifier.</param>
+    /// <returns>The configured or fallback language entry.</returns>
+    private static KeyValuePair<int, LanguageInfo> ResolvePreviewLanguageEntry(
         IReadOnlyDictionary<int, LanguageInfo> languages,
         int languageId)
     {
         ArgumentNullException.ThrowIfNull(languages);
         if (languages.TryGetValue(languageId, out var language))
         {
-            return language;
+            return new KeyValuePair<int, LanguageInfo>(languageId, language);
         }
 
         if (languages.TryGetValue(28, out var englishLanguage))
         {
-            return englishLanguage;
+            return new KeyValuePair<int, LanguageInfo>(28, englishLanguage);
         }
 
         KeyValuePair<int, LanguageInfo>? fallbackLanguage = null;
@@ -314,7 +663,111 @@ internal static class Program
             }
         }
 
-        return fallbackLanguage?.Value ?? throw new InvalidOperationException(
+        return fallbackLanguage ?? throw new InvalidOperationException(
             "Preview language dictionary is empty.");
+    }
+
+    /// <summary>
+    /// Resolves an interactive screenshot crop from its explicit capture target.
+    /// </summary>
+    /// <param name="request">The interactive screenshot request.</param>
+    /// <param name="renderResult">The latest overlay draw result.</param>
+    /// <param name="pluginWindowHost">The real plugin-window host.</param>
+    /// <param name="displaySize">The logical ImGui display dimensions.</param>
+    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+    /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
+    private static Rectangle? CalculateInteractiveCrop(
+        ScreenshotRequest request,
+        TranslationOverlayRenderResult renderResult,
+        PreviewPluginWindowHost pluginWindowHost,
+        Vector2 displaySize,
+        Vector2 framebufferSize)
+    {
+        var crop = request.CaptureTarget switch
+        {
+            PreviewCaptureTarget.OverlaySurface => CalculateInteractiveSurfaceCrop(
+                request,
+                renderResult,
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.ConfigWindow => CalculateInteractiveWindowCrop(
+                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.DbManagerWindow => CalculateInteractiveWindowCrop(
+                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.TranslatorMetricsWindow => CalculateInteractiveWindowCrop(
+                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                displaySize,
+                framebufferSize),
+            _ => null,
+        };
+
+        return PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget)
+            ? BatchScreenshotRunner.RequireWindowCrop(crop, request.CaptureTarget)
+            : crop;
+    }
+
+    /// <summary>
+    /// Converts logical ImGui plugin-window bounds into physical framebuffer pixels.
+    /// </summary>
+    /// <param name="logicalCrop">The plugin window crop in logical ImGui coordinates.</param>
+    /// <param name="displaySize">The logical ImGui display dimensions.</param>
+    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+    /// <returns>The physical crop, or <see langword="null" /> when no window bounds are available.</returns>
+    internal static Rectangle? CalculateInteractiveWindowCrop(
+        Rectangle? logicalCrop,
+        Vector2 displaySize,
+        Vector2 framebufferSize)
+    {
+        if (logicalCrop is not { } crop)
+        {
+            return null;
+        }
+
+        if (displaySize.X <= 0f ||
+            displaySize.Y <= 0f ||
+            framebufferSize.X <= 0f ||
+            framebufferSize.Y <= 0f)
+        {
+            return Rectangle.Empty;
+        }
+
+        var framebufferScale = new Vector2(
+            framebufferSize.X / displaySize.X,
+            framebufferSize.Y / displaySize.Y);
+        return Rectangle.FromLTRB(
+            checked((int)MathF.Floor(crop.Left * framebufferScale.X)),
+            checked((int)MathF.Floor(crop.Top * framebufferScale.Y)),
+            checked((int)MathF.Ceiling(crop.Right * framebufferScale.X)),
+            checked((int)MathF.Ceiling(crop.Bottom * framebufferScale.Y)));
+    }
+
+    /// <summary>
+    /// Maps command-line screenshot modes to their default capture targets.
+    /// </summary>
+    /// <param name="mode">The selected screenshot mode.</param>
+    /// <returns>The matching capture target.</returns>
+    private static PreviewCaptureTarget GetCaptureTarget(ScreenshotMode mode)
+    {
+        return mode == ScreenshotMode.Surface
+            ? PreviewCaptureTarget.OverlaySurface
+            : PreviewCaptureTarget.FullFrame;
+    }
+
+    /// <summary>
+    /// Provides a no-op scope when the standalone default font is already active.
+    /// </summary>
+    private sealed class NoOpDisposable : IDisposable
+    {
+        /// <summary>Gets the shared no-op scope.</summary>
+        internal static NoOpDisposable Instance { get; } = new();
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+        }
     }
 }

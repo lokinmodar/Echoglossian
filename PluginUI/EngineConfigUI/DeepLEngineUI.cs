@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.PluginUI.Helpers;
+
 namespace Echoglossian.PluginUI.EngineConfigUI;
 
 /// <summary>
@@ -10,7 +12,7 @@ namespace Echoglossian.PluginUI.EngineConfigUI;
 /// </summary>
 public static class DeepLEngineUI
 {
-  public static bool Draw(Config config)
+  public static bool Draw(Config config, bool runtimeActionsAvailable = true)
   {
     bool changed = false;
 
@@ -20,7 +22,9 @@ public static class DeepLEngineUI
     changed |= ImGui.Checkbox(Resources.DeepLTransAPIKey, ref config.DeeplTranslatorUsingApiKey);
     if (config.DeeplTranslatorUsingApiKey)
     {
-      if (ImGui.Button(Resources.DeepLTranslatorAPIKeyLink))
+      if (PreviewRuntimeActionUiHelper.DrawButton(
+              Resources.DeepLTranslatorAPIKeyLink,
+              runtimeActionsAvailable))
       {
         Process.Start(new ProcessStartInfo
         {
