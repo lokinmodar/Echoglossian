@@ -74,9 +74,7 @@ internal sealed class PreviewShell : IDisposable
         this.canvas = new PreviewCanvas(renderer);
         this.pluginWindowHost = pluginWindowHost ??
             throw new ArgumentNullException(nameof(pluginWindowHost));
-        this.workbenchState = PreviewWorkbenchState.CreateDefault(
-            scenario,
-            viewport);
+        this.workbenchState = PreviewWorkbenchState.CreateDefault(viewport);
         this.state = PreviewShellState.FromScenario(
             scenario ?? throw new ArgumentNullException(nameof(scenario)),
             viewport ?? throw new ArgumentNullException(nameof(viewport)));

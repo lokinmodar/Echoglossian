@@ -12,9 +12,6 @@ namespace Echoglossian.Previewer.UI;
 /// </summary>
 internal sealed class PreviewWorkbenchState
 {
-    /// <summary>Gets the initial preview scenario.</summary>
-    internal PreviewScenario Scenario { get; private set; } = PreviewScenarioCatalog.Defaults[0];
-
     /// <summary>Gets or sets the active logical viewport.</summary>
     internal PreviewViewportPreset Viewport { get; set; } = PreviewScenarioCatalog.ViewportPresets[1];
 
@@ -36,19 +33,15 @@ internal sealed class PreviewWorkbenchState
     /// <summary>
     /// Creates the default state for one preview workbench session.
     /// </summary>
-    /// <param name="scenario">The initial overlay scenario.</param>
     /// <param name="viewport">The initial logical viewport.</param>
     /// <returns>The initialized workbench state.</returns>
     internal static PreviewWorkbenchState CreateDefault(
-        PreviewScenario scenario,
         PreviewViewportPreset viewport)
     {
-        ArgumentNullException.ThrowIfNull(scenario);
         ArgumentNullException.ThrowIfNull(viewport);
 
         return new PreviewWorkbenchState
         {
-            Scenario = scenario,
             Viewport = viewport,
             OverlayVisible = true,
         };

@@ -177,13 +177,26 @@ public sealed class PreviewWorkbenchStateTests
     }
 
     /// <summary>
+    /// Ensures the workbench keeps one authoritative scenario owner instead of
+    /// retaining a second scenario snapshot that can become stale.
+    /// </summary>
+    [Fact]
+    public void PreviewWorkbenchState_DoesNotExposeDuplicateScenarioState()
+    {
+        Assert.Null(
+            typeof(PreviewWorkbenchState).GetProperty(
+                "Scenario",
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic));
+    }
+
+    /// <summary>
     /// Ensures a new workbench starts with only the overlay visible.
     /// </summary>
     [Fact]
     public void CreateDefault_EnablesOverlayAndKeepsPluginWindowsClosed()
     {
         var state = PreviewWorkbenchState.CreateDefault(
-            PreviewScenarioCatalog.Defaults[0],
             PreviewScenarioCatalog.ViewportPresets[1]);
 
         Assert.True(state.OverlayVisible);
@@ -233,7 +246,6 @@ public sealed class PreviewWorkbenchStateTests
             IsOpen = true,
         };
         var state = PreviewWorkbenchState.CreateDefault(
-            PreviewScenarioCatalog.Defaults[0],
             PreviewScenarioCatalog.ViewportPresets[1]);
 
         PreviewPluginWindowHost.SynchronizeDbManagerState(state, window);

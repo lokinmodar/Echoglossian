@@ -416,7 +416,7 @@ internal sealed class BatchScreenshotRunner
         using var canvas = new PreviewCanvas(composition.Renderer);
         var state = PreviewShellState.FromScenario(request.Scenario, request.Viewport);
         state.ShowSimulatedAddonBounds = false;
-        var workbenchState = PreviewWorkbenchState.CreateDefault(request.Scenario, request.Viewport);
+        var workbenchState = PreviewWorkbenchState.CreateDefault(request.Viewport);
         SetWindowCaptureTarget(workbenchState, request.CaptureTarget);
         var renderResult = new TranslationOverlayRenderResult(
             false,
