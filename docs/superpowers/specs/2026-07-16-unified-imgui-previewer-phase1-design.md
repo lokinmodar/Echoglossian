@@ -426,6 +426,11 @@ be introduced later, but it should not pay that integration cost in advance.
 
 ## Phase 1 Deliverable
 
+Implemented Phase 1 behavior keeps the previewer outside the plugin solution
+and package, hosts all approved ImGui surfaces in the unified shell, and uses
+preview-owned config and DB snapshots. Window-target capture is available from
+the interactive shell; batch CLI export continues to cover overlay scenarios.
+
 Phase 1 is complete when all of the following are true:
 
 - `Echoglossian.Previewer` remains isolated from plugin packaging

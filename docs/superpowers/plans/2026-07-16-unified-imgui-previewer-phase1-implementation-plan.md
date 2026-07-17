@@ -1,6 +1,6 @@
 # Unified ImGui Previewer Phase 1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Status:** Complete and validated on `feature/dalamock-unified-previewer`.
 
 **Goal:** Expand `Echoglossian.Previewer` into one standalone preview workbench that hosts the real overlay, config window, DB manager, and translator metrics window from cloned config/DB snapshots without affecting plugin build or live user state.
 
@@ -47,7 +47,7 @@
   - `PreviewCommandLine.DatabasePath`
   - `PreviewSessionArtifacts.Diagnostics`
 
-- [ ] **Step 1: Write the failing session snapshot tests**
+- [x] **Step 1: Write the failing session snapshot tests**
 
 ```csharp
 // Echoglossian.Previewer.Tests/Session/PreviewSessionLoaderTests.cs
@@ -89,7 +89,7 @@ public sealed class PreviewSessionLoaderTests
 }
 ```
 
-- [ ] **Step 2: Run the new test target to verify it fails**
+- [x] **Step 2: Run the new test target to verify it fails**
 
 Run:
 
@@ -99,7 +99,7 @@ dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c 
 
 Expected: FAIL with missing `PreviewSessionLoader`, `PreviewSessionSourceOptions`, and `PreviewSessionArtifacts`.
 
-- [ ] **Step 3: Implement the preview session loader and CLI plumbing**
+- [x] **Step 3: Implement the preview session loader and CLI plumbing**
 
 ```csharp
 // Echoglossian.Previewer/Session/PreviewSessionSourceOptions.cs
@@ -212,7 +212,7 @@ var sourceConfiguration = session.Configuration;
 var editableConfiguration = session.EditableConfiguration;
 ```
 
-- [ ] **Step 4: Run the tests and a previewer smoke path**
+- [x] **Step 4: Run the tests and a previewer smoke path**
 
 Run:
 
@@ -226,7 +226,7 @@ Expected:
 - tests PASS
 - host smoke exits `0`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add Echoglossian.Previewer\Hosting\PreviewCommandLine.cs Echoglossian.Previewer\Program.cs Echoglossian.Previewer\Session Echoglossian.Previewer.Tests\Session Echoglossian.Previewer\README.md
@@ -256,7 +256,7 @@ git commit -m "feat: add preview session snapshot foundation"
   - `public sealed record PluginConfigWindowContext(...)`
   - `public sealed class PluginConfigWindowRenderer { public bool Draw(PluginConfigWindowContext context, ref bool isOpen); }`
 
-- [ ] **Step 1: Write failing tests for save redirection**
+- [x] **Step 1: Write failing tests for save redirection**
 
 ```csharp
 // Echoglossian.Tests/PluginConfigSaveScopeTests.cs
@@ -277,7 +277,7 @@ public sealed class PluginConfigSaveScopeTests
 }
 ```
 
-- [ ] **Step 2: Run the targeted tests to verify they fail**
+- [x] **Step 2: Run the targeted tests to verify they fail**
 
 Run:
 
@@ -287,7 +287,7 @@ dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --filter Fully
 
 Expected: FAIL with missing `PluginConfigSaveScope`.
 
-- [ ] **Step 3: Add the save scope and extract the config renderer**
+- [x] **Step 3: Add the save scope and extract the config renderer**
 
 ```csharp
 // PluginUI/PluginConfigSaveScope.cs
@@ -389,7 +389,7 @@ private void EchoglossianConfigUi()
 }
 ```
 
-- [ ] **Step 4: Run the tests and a main-project build**
+- [x] **Step 4: Run the tests and a main-project build**
 
 Run:
 
@@ -403,7 +403,7 @@ Expected:
 - solution build PASS
 - save scope tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add GeneralHelpers\Utils.cs PluginUI\PluginConfigSaveScope.cs PluginUI\PluginConfigWindowContext.cs PluginUI\PluginConfigWindowRenderer.cs PluginUI\PluginUI.cs PluginUI\PluginRuntimeUi.cs Echoglossian.Tests\PluginConfigSaveScopeTests.cs
@@ -435,7 +435,7 @@ git commit -m "feat: extract preview-safe config window renderer"
   - `TranslatorMetricsWindow.LastWindowBounds`
   - `PreviewPluginWindowHost.TryGetCrop(PreviewCaptureTarget target): Rectangle?`
 
-- [ ] **Step 1: Write failing state tests for unified shell behavior**
+- [x] **Step 1: Write failing state tests for unified shell behavior**
 
 ```csharp
 // Echoglossian.Previewer.Tests/UI/PreviewWorkbenchStateTests.cs
@@ -457,7 +457,7 @@ public sealed class PreviewWorkbenchStateTests
 }
 ```
 
-- [ ] **Step 2: Run the targeted tests to verify they fail**
+- [x] **Step 2: Run the targeted tests to verify they fail**
 
 Run:
 
@@ -467,7 +467,7 @@ dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c 
 
 Expected: FAIL with missing `PreviewWorkbenchState`.
 
-- [ ] **Step 3: Implement the workbench state and real plugin window host**
+- [x] **Step 3: Implement the workbench state and real plugin window host**
 
 ```csharp
 // Echoglossian.Previewer/UI/PreviewCaptureTarget.cs
@@ -594,7 +594,7 @@ this.LastWindowBounds = new RectangleF(
     ImGui.GetWindowSize().Y);
 ```
 
-- [ ] **Step 4: Run the shell tests and previewer interactive smoke**
+- [x] **Step 4: Run the shell tests and previewer interactive smoke**
 
 Run:
 
@@ -608,7 +608,7 @@ Expected:
 - tests PASS
 - previewer opens one unified shell with overlay controls plus window toggles
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add Echoglossian.Previewer\Program.cs Echoglossian.Previewer\UI\PreviewCaptureTarget.cs Echoglossian.Previewer\UI\PreviewWorkbenchState.cs Echoglossian.Previewer\UI\PreviewPluginWindowHost.cs Echoglossian.Previewer\UI\PreviewShell.cs Echoglossian.Previewer.Tests\UI\PreviewWorkbenchStateTests.cs DBManagerUI\DBEditorWindow.cs PluginUI\TranslatorMetricsWindow.cs
@@ -635,7 +635,7 @@ git commit -m "feat: host real plugin windows in unified preview workbench"
   - `ScreenshotRequest.CaptureTarget`
   - manifest entries that include `CaptureTarget`
 
-- [ ] **Step 1: Write the failing capture-target tests**
+- [x] **Step 1: Write the failing capture-target tests**
 
 ```csharp
 // Echoglossian.Previewer.Tests/Screenshots/PreviewCaptureRequestTests.cs
@@ -666,7 +666,7 @@ public sealed class PreviewCaptureRequestTests
 }
 ```
 
-- [ ] **Step 2: Run the target tests to verify they fail**
+- [x] **Step 2: Run the target tests to verify they fail**
 
 Run:
 
@@ -676,7 +676,7 @@ dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c 
 
 Expected: FAIL with missing `CaptureTarget`.
 
-- [ ] **Step 3: Implement capture-target plumbing and deterministic window capture**
+- [x] **Step 3: Implement capture-target plumbing and deterministic window capture**
 
 ```csharp
 // Echoglossian.Previewer/Screenshots/ScreenshotRequest.cs
@@ -737,7 +737,7 @@ private sealed record ScreenshotManifestEntry(
     string PngPath);
 ```
 
-- [ ] **Step 4: Run the screenshot tests and deterministic export validation**
+- [x] **Step 4: Run the screenshot tests and deterministic export validation**
 
 Run:
 
@@ -752,7 +752,7 @@ Expected:
 - manifest contains `CaptureTarget`
 - batch output writes PNGs plus `manifest.json`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add Echoglossian.Previewer\Program.cs Echoglossian.Previewer\Screenshots\PreviewCaptureRequest.cs Echoglossian.Previewer\Screenshots\ScreenshotRequest.cs Echoglossian.Previewer\Screenshots\BatchScreenshotRunner.cs Echoglossian.Previewer\UI\PreviewShell.cs Echoglossian.Previewer.Tests\Screenshots\PreviewCaptureRequestTests.cs
@@ -777,7 +777,7 @@ git commit -m "feat: add window-target capture to previewer"
   - updated operator documentation for session snapshots and window capture
   - updated isolation assertions if any new previewer directory needs exclusion
 
-- [ ] **Step 1: Add or tighten the failing isolation/documentation tests**
+- [x] **Step 1: Add or tighten the failing isolation/documentation tests**
 
 ```csharp
 // Echoglossian.Tests/PreviewerIsolationTests.cs
@@ -797,7 +797,7 @@ README additions required:
 - session snapshot safety rules
 ```
 
-- [ ] **Step 2: Run the baseline validation before editing docs**
+- [x] **Step 2: Run the baseline validation before editing docs**
 
 Run:
 
@@ -809,7 +809,7 @@ dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c 
 
 Expected: PASS on all three commands before final doc polishing.
 
-- [ ] **Step 3: Update the docs and any generated XML touched by the code changes**
+- [x] **Step 3: Update the docs and any generated XML touched by the code changes**
 
 ```markdown
 <!-- Echoglossian.Previewer/README.md -->
@@ -831,7 +831,7 @@ to live plugin files.
 git add Echoglossian.xml
 ```
 
-- [ ] **Step 4: Run the full final verification set**
+- [x] **Step 4: Run the full final verification set**
 
 Run:
 
@@ -850,7 +850,7 @@ Expected:
 - previewer smoke commands exit `0`
 - screenshot batch writes PNGs plus manifest
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add Echoglossian.Previewer\README.md Echoglossian.Tests\PreviewerIsolationTests.cs Echoglossian.xml docs\superpowers\specs\2026-07-16-unified-imgui-previewer-phase1-design.md docs\superpowers\plans\2026-07-16-unified-imgui-previewer-phase1-implementation-plan.md
@@ -872,12 +872,8 @@ git commit -m "docs: finalize unified previewer phase 1 plan and validation"
 - Type consistency:
   - `PreviewSessionSourceOptions`, `PreviewSessionArtifacts`, `PluginConfigWindowRenderer`, `PreviewWorkbenchState`, and `PreviewCaptureTarget` are introduced once and reused consistently across later tasks
 
-## Execution Handoff
+## Completion Record
 
-**Plan complete and saved to `docs/superpowers/plans/2026-07-16-unified-imgui-previewer-phase1-implementation-plan.md`. Two execution options:**
-
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
-
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
-
-**Which approach?**
+Tasks 1 through 5 were completed on the dedicated previewer branch. Final
+validation covers the main solution build and tests, previewer tests, binding
+and host smoke commands, and a deterministic overlay batch screenshot export.

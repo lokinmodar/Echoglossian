@@ -70,11 +70,19 @@ public class PreviewerIsolationTests
             this.RepositoryRoot,
             "Echoglossian.Previewer",
             "Echoglossian.Previewer.csproj");
+        var previewerTestsProjectPath = Path.Combine(
+            this.RepositoryRoot,
+            "Echoglossian.Previewer.Tests",
+            "Echoglossian.Previewer.Tests.csproj");
 
         Assert.DoesNotContain("Echoglossian.Previewer", solution);
+        Assert.DoesNotContain("Echoglossian.Previewer.Tests", solution);
         Assert.True(
             File.Exists(previewerProjectPath),
             "The standalone previewer project must exist.");
+        Assert.True(
+            File.Exists(previewerTestsProjectPath),
+            "The standalone previewer test project must exist.");
 
         var previewerProject = XDocument.Load(previewerProjectPath);
 

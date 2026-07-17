@@ -63,6 +63,20 @@ The default database source is
 The previewer reads but does not modify the live database while creating its
 snapshot.
 
+## Unified Workbench
+
+The interactive shell hosts the real plugin code for these surfaces alongside
+the overlay scenarios:
+
+- `Config`
+- `DB Manager`
+- `Translator Metrics / Debugger`
+
+Use the window toggles to open each surface. DB Manager is disabled when the
+session has no database snapshot. Preview edits and saves affect only the
+cloned session files; they are never written back automatically to either live
+source. There is no export-back flow in Phase 1.
+
 ## CLI Options
 
 - `--binding-smoke`: creates and destroys a Dalamud ImGui context, then exits.
@@ -99,7 +113,8 @@ Controls include:
 - Optional simulated addon bounds guide.
 - Editable title and body text.
 - Editable addon bounds input values.
-- Full-frame and selected-surface screenshot buttons.
+- Full-frame, selected overlay surface, Config, DB Manager, and Translator
+  Metrics window screenshot buttons.
 - Fidelity summary with config source, font file and size, logical viewport,
   selected presentation mode, and whether simulated addon bounds are shown.
 
@@ -116,9 +131,12 @@ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Deb
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot batch --viewport 1920x1080 --output artifacts\previewer\screenshots\batch
 ```
 
-Batch mode with a single viewport writes 12 PNG files plus `manifest.json`.
-Batch mode without `--viewport` runs all built-in viewports. The manifest records
-scenario key, surface key, viewport, screenshot mode, presentation mode, config
+Batch mode with a single viewport writes 12 overlay PNG files plus
+`manifest.json`. Batch mode without `--viewport` runs all built-in viewports.
+Use the interactive shell's target-specific buttons to capture Config, DB
+Manager, or Translator Metrics windows; each window is opened and cropped
+deterministically before capture. The manifest records scenario key, surface
+key, viewport, screenshot mode, capture target, presentation mode, config
 source path, font file names, font size, and PNG path. Screenshot output is
 under `artifacts/` and ignored by git.
 

@@ -7364,15 +7364,32 @@
             Controls whether the window is open and visible.
             </summary>
         </member>
+        <member name="P:Echoglossian.DBManagerUI.DbEditorWindow.LastWindowBounds">
+            <summary>
+            Gets the bounds captured during the most recent successful draw.
+            </summary>
+        </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.#ctor(Echoglossian.EFCoreSqlite.EchoglossianDbContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Echoglossian.DBManagerUI.DbEditorWindow"/> class.
             </summary>
             <param name="dbContext">EF Core DbContext.</param>
         </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.#ctor(Echoglossian.EFCoreSqlite.EchoglossianDbContext,System.Action{Dalamud.Interface.ImGuiNotification.Notification})">
+            <summary>
+            Initializes a host-adapted instance of the <see cref="T:Echoglossian.DBManagerUI.DbEditorWindow"/> class.
+            </summary>
+            <param name="dbContext">EF Core DbContext.</param>
+            <param name="addNotification">The host notification callback.</param>
+        </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Draw">
             <summary>
             Draws the window and its components.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.CaptureWindowBounds">
+            <summary>
+            Captures the current DB manager window bounds for screenshot cropping.
             </summary>
         </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.OpenAndSelectTable(System.String)">
@@ -24932,9 +24949,31 @@
         <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PluginVersion">
             <summary>The plugin version shown in the title.</summary>
         </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PushGeneralFont">
+            <summary>
+            Gets the host-specific general-font push operation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.ApplyLanguageRuntimeChanges">
+            <summary>
+            Gets the host-specific language runtime update operation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowContext.ApplyLiveLanguageRuntimeChanges(Echoglossian.Config,Echoglossian.LanguagesHandling.LanguageInfo)">
+            <summary>
+            Applies the existing live asset and font refresh behavior.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="language">The newly selected language.</param>
+        </member>
         <member name="T:Echoglossian.PluginUI.PluginConfigWindowRenderer">
             <summary>
             Draws the reusable Echoglossian configuration window.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowRenderer.LastWindowBounds">
+            <summary>
+            Gets the bounds captured during the most recent successful draw.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.Draw(Echoglossian.PluginUI.PluginConfigWindowContext,System.Boolean@)">
@@ -25495,9 +25534,19 @@
                 Gets or sets a value indicating whether the metrics window is open.
             </summary>
         </member>
+        <member name="P:Echoglossian.TranslatorMetricsWindow.LastWindowBounds">
+            <summary>
+                Gets the bounds captured during the most recent successful draw.
+            </summary>
+        </member>
         <member name="M:Echoglossian.TranslatorMetricsWindow.Draw">
             <summary>
                 Draws the translator metrics window.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslatorMetricsWindow.CaptureWindowBounds">
+            <summary>
+                Captures the current metrics window bounds for screenshot cropping.
             </summary>
         </member>
         <member name="M:Echoglossian.TranslatorMetricsWindow.ResolveCompletedRetranslationTask">
