@@ -3,10 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Mock.Hosting;
 using System;
-using DalaMock.Core.Configuration;
-using DalaMock.Core.Mocks;
-using DalaMock.Core.Plugin;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Echoglossian.Mock;
@@ -21,34 +20,18 @@ internal static class Program
     /// </summary>
     private static async Task Main()
     {
-        var mockContainer = new MockContainer(
-            new MockDalamudConfiguration
-            {
-                CreateWindow = true,
-            },
-            builder => { },
-            [],
-            false);
-        try
-        {
-            var pluginLoader = mockContainer.GetPluginLoader();
-            var mockPlugin = pluginLoader.AddPlugin(typeof(global::Echoglossian.Echoglossian));
+        var stateRoot = new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, ".dalamock"));
+        var pluginSavePath = stateRoot.CreateSubdirectory("plugin-save");
+        var configPath = new FileInfo(Path.Combine(stateRoot.FullName, "Echoglossian.json"));
 
-            await pluginLoader.StartPlugin(mockPlugin);
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            new HostedPreviewPluginOptions(
+                stateRoot,
+                pluginSavePath,
+                configPath,
+                DatabasePath: null,
+                CreateWindow: true));
 
-            mockContainer.GetMockUi().Run();
-        }
-        finally
-        {
-            switch (mockContainer)
-            {
-                case IAsyncDisposable asyncDisposable:
-                    await asyncDisposable.DisposeAsync();
-                    break;
-                case IDisposable disposable:
-                    disposable.Dispose();
-                    break;
-            }
-        }
+        session.Container.GetMockUi().Run();
     }
 }

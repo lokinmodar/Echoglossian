@@ -884,6 +884,13 @@
           "RestSharp": "[114.0.0, )",
           "System.Drawing.Common": "[10.0.7, )"
         }
+      },
+      "echoglossian.mock": {
+        "type": "Project",
+        "dependencies": {
+          "DalaMock.Core": "[6.1.7, )",
+          "Echoglossian": "[4.2601.717.8, )"
+        }
       }
     },
     "net10.0-windows7.0/win-x64": {

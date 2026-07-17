@@ -6,6 +6,7 @@
 using Autofac;
 using DalaMock.Core.Configuration;
 using DalaMock.Core.Plugin;
+using Echoglossian.Mock.Hosting;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Addon.Events;
 using Dalamud.Interface.ImGuiNotification;
@@ -34,6 +35,7 @@ internal sealed class TestBoot
     private readonly Func<DirectoryInfo> runStateRootFactory;
     private readonly Func<Func<Task>, Task> startPluginRunner;
     private readonly Func<MockContainer, global::Echoglossian.Echoglossian, DirectoryInfo, DirectoryInfo, FileInfo, Task> postStartValidation;
+    private readonly bool useHostedSessionFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestBoot"/> class.
@@ -55,6 +57,9 @@ internal sealed class TestBoot
         Func<Func<Task>, Task>? startPluginRunner,
         Func<MockContainer, global::Echoglossian.Echoglossian, DirectoryInfo, DirectoryInfo, FileInfo, Task>? postStartValidation)
     {
+        this.useHostedSessionFactory = runStateRootFactory is null &&
+            startPluginRunner is null &&
+            postStartValidation is null;
         this.runStateRootFactory = runStateRootFactory ?? this.CreateRunStateRoot;
         this.startPluginRunner = startPluginRunner ?? RunStartPluginAsync;
         this.postStartValidation = postStartValidation ?? NoOpPostStartValidationAsync;
@@ -74,6 +79,21 @@ internal sealed class TestBoot
 
         try
         {
+            if (this.useHostedSessionFactory)
+            {
+                var session = await HostedPreviewPluginSessionFactory.StartAsync(
+                    new HostedPreviewPluginOptions(
+                        stateRoot,
+                        pluginSavePath,
+                        configPath,
+                        DatabasePath: null,
+                        CreateWindow: false));
+                mockContainer = session.Container;
+                plugin = session.Plugin;
+                await this.postStartValidation(mockContainer, plugin, stateRoot, pluginSavePath, configPath);
+                return new StartedPlugin(mockContainer, plugin, stateRoot, pluginSavePath, configPath);
+            }
+
             mockContainer = new MockContainer(
                 new MockDalamudConfiguration
                 {
