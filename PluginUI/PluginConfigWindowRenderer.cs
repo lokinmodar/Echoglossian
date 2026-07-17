@@ -196,7 +196,8 @@ public sealed class PluginConfigWindowRenderer
             context.Configuration,
             context.Configuration.Lang,
             languages,
-            context.RebuildTranslationService);
+            context.RebuildTranslationService,
+            context.RuntimeActionsAvailable);
 
         this.DrawTranslationSetupSectionBreak();
         this.DrawTranslationSetupSectionHeader(Resources.EnableTranslation);

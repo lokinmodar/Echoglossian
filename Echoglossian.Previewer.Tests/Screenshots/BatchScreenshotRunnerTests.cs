@@ -361,6 +361,64 @@ public sealed class BatchScreenshotRunnerTests
     }
 
     /// <summary>
+    /// Ensures output-directory setup failures are reported with the same
+    /// contextual screenshot failure messaging as later publication failures.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_OutputDirectorySetupFailure_ReturnsContextualInvalidOperationException()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var occupiedPath = Path.Combine(tempDirectory.FullName, "captures");
+            File.WriteAllText(occupiedPath, "not-a-directory");
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => BatchScreenshotRunner.WriteOutputsAtomically(
+                    occupiedPath,
+                    _ => { }));
+
+            Assert.Contains("Screenshot", exception.Message, StringComparison.Ordinal);
+            Assert.Contains(occupiedPath, exception.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures rollback-directory setup failures are wrapped in the same
+    /// contextual publication error instead of escaping as raw IO exceptions.
+    /// </summary>
+    [Fact]
+    public void PublishStagedOutputs_RollbackDirectorySetupFailure_ReturnsContextualInvalidOperationException()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            var stagingDirectory = Path.Combine(tempDirectory.FullName, "staging");
+            Directory.CreateDirectory(destination);
+            Directory.CreateDirectory(stagingDirectory);
+            File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+            File.WriteAllText(Path.Combine(stagingDirectory, "rollback"), "occupied");
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => BatchScreenshotRunner.PublishStagedOutputs(
+                    stagingDirectory,
+                    destination));
+
+            Assert.Contains("Screenshot publication", exception.Message, StringComparison.Ordinal);
+            Assert.Contains(destination, exception.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Ensures output failures name the affected path instead of exposing only
     /// an unqualified inner exception.
     /// </summary>

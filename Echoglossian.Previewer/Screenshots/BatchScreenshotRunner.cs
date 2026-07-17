@@ -131,11 +131,28 @@ internal sealed class BatchScreenshotRunner
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
         ArgumentNullException.ThrowIfNull(writeStagedOutputs);
 
-        Directory.CreateDirectory(outputDirectory);
-        var stagingDirectory = Path.Combine(
-            outputDirectory,
-            $".echoglossian-previewer-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(stagingDirectory);
+        string stagingDirectory;
+        try
+        {
+            Directory.CreateDirectory(outputDirectory);
+            stagingDirectory = Path.Combine(
+                outputDirectory,
+                $".echoglossian-previewer-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(stagingDirectory);
+        }
+        catch (Exception exception) when (
+            exception is IOException or
+            UnauthorizedAccessException or
+            NotSupportedException)
+        {
+            throw new InvalidOperationException(
+                CreateOutputFailureMessage(
+                    "Screenshot output preparation",
+                    outputDirectory,
+                    exception),
+                exception);
+        }
+
         var preserveStagingDirectory = false;
         try
         {
@@ -172,15 +189,6 @@ internal sealed class BatchScreenshotRunner
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(stagingDirectory);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
-
-        var stagedFiles = Directory.EnumerateFiles(
-                stagingDirectory,
-                "*",
-                SearchOption.TopDirectoryOnly)
-            .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-        var rollbackDirectory = Path.Combine(stagingDirectory, "rollback");
-        Directory.CreateDirectory(rollbackDirectory);
         var move = moveFile ?? File.Move;
         var delete = deleteFile ?? File.Delete;
         var backups = new List<(string BackupPath, string DestinationPath)>();
@@ -188,6 +196,15 @@ internal sealed class BatchScreenshotRunner
 
         try
         {
+            var stagedFiles = Directory.EnumerateFiles(
+                    stagingDirectory,
+                    "*",
+                    SearchOption.TopDirectoryOnly)
+                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var rollbackDirectory = Path.Combine(stagingDirectory, "rollback");
+            Directory.CreateDirectory(rollbackDirectory);
+
             foreach (var stagedFile in stagedFiles)
             {
                 var destinationPath = Path.Combine(outputDirectory, Path.GetFileName(stagedFile));
@@ -210,6 +227,17 @@ internal sealed class BatchScreenshotRunner
         }
         catch (Exception exception)
         {
+            if (publishedPaths.Count == 0 &&
+                backups.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    CreateOutputFailureMessage(
+                        "Screenshot publication",
+                        outputDirectory,
+                        exception),
+                    exception);
+            }
+
             var rollbackIncomplete = false;
             foreach (var publishedPath in publishedPaths)
             {

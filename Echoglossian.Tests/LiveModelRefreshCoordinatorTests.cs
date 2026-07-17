@@ -16,6 +16,67 @@ namespace Echoglossian.Tests;
 public class LiveModelRefreshCoordinatorTests
 {
     /// <summary>
+    ///     Ensures preview suppression prevents passive render-time refresh
+    ///     requests from contacting live providers.
+    /// </summary>
+    [Fact]
+    public void SuppressRequests_RequestIfNeeded_DoesNotInvokeRefresh()
+    {
+        var scope = Guid.NewGuid().ToString("N");
+        var invocationCount = 0;
+
+        try
+        {
+            using var suppression = LiveModelRefreshCoordinator.SuppressRequests();
+            LiveModelRefreshCoordinator.RequestIfNeeded(
+                scope,
+                true,
+                "signature-a",
+                () =>
+                {
+                    Interlocked.Increment(ref invocationCount);
+                    return Task.CompletedTask;
+                });
+
+            Volatile.Read(ref invocationCount).Should().Be(0);
+        }
+        finally
+        {
+            LiveModelRefreshCoordinator.Clear(scope);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures preview suppression also blocks explicit live-model reload
+    ///     actions from triggering refresh work.
+    /// </summary>
+    [Fact]
+    public void SuppressRequests_ForceRefresh_DoesNotInvokeRefresh()
+    {
+        var scope = Guid.NewGuid().ToString("N");
+        var invocationCount = 0;
+
+        try
+        {
+            using var suppression = LiveModelRefreshCoordinator.SuppressRequests();
+            LiveModelRefreshCoordinator.ForceRefresh(
+                scope,
+                "signature-a",
+                () =>
+                {
+                    Interlocked.Increment(ref invocationCount);
+                    return Task.CompletedTask;
+                });
+
+            Volatile.Read(ref invocationCount).Should().Be(0);
+        }
+        finally
+        {
+            LiveModelRefreshCoordinator.Clear(scope);
+        }
+    }
+
+    /// <summary>
     ///     Ensures a forced refresh reruns once when the requested signature
     ///     changes during an in-flight refresh.
     /// </summary>

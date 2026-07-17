@@ -24555,6 +24555,13 @@
                 every frame.
             </summary>
         </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.SuppressRequests">
+            <summary>
+                Suppresses live refresh requests until the returned scope is
+                disposed.
+            </summary>
+            <returns>The disposable suppression scope.</returns>
+        </member>
         <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.Clear(System.String)">
             <summary>
                 Clears retained refresh state for the provided UI scope.
@@ -24579,12 +24586,26 @@
             <param name="signature">The current refresh signature.</param>
             <param name="refreshAsync">The refresh work to execute.</param>
         </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.ClearCore(System.String)">
+            <summary>
+                Clears retained refresh state without reacquiring the shared lock.
+            </summary>
+            <param name="scope">The stable scope key.</param>
+        </member>
         <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RunRefreshAsync(System.String,System.Func{System.Threading.Tasks.Task})">
             <summary>
                 Runs refresh work while releasing the scope lock afterward.
             </summary>
             <param name="scope">The stable scope key.</param>
             <param name="refreshAsync">The refresh work to execute.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RefreshSuppressionScope">
+            <summary>
+                Represents one live-refresh suppression scope.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshCoordinator.RefreshSuppressionScope.Dispose">
+            <inheritdoc/>
         </member>
         <member name="T:Echoglossian.PluginUI.EngineConfigUI.LiveModelRefreshSignatureComponent">
             <summary>
@@ -25469,7 +25490,7 @@
                 per-engine configuration.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},System.Action)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.Draw(Echoglossian.Config,System.Int32,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo},System.Action,System.Boolean)">
             <summary>
                 Draws the translation engine settings UI, allowing users to select and
                 configure translation engines.
@@ -25486,6 +25507,9 @@
             <param name="rebuildTranslationService">
                 The action to rebuild the translation
                 service when settings change.
+            </param>
+            <param name="runtimeActionsAvailable">
+                Whether live runtime-owned actions are available.
             </param>
             <returns>True if any settings were changed; otherwise, false.</returns>
         </member>
@@ -25512,12 +25536,15 @@
             </param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueGlossarySection(Echoglossian.Config)">
+        <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueGlossarySection(Echoglossian.Config,System.Boolean)">
             <summary>
                 Draws the operator-facing structured dialogue glossary settings used
                 by issue 148.
             </summary>
             <param name="config">The active plugin configuration.</param>
+            <param name="runtimeActionsAvailable">
+                Whether live glossary actions are available.
+            </param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.TranslationEnginesTab.DrawDialogueGlossarySnapshot(Echoglossian.Translators.StructuredDialogueGlossaryStore.StructuredDialogueGlossarySnapshot)">
@@ -25623,7 +25650,7 @@
                 operator inspection.
             </summary>
         </member>
-        <member name="M:Echoglossian.TranslatorMetricsWindow.#ctor(Echoglossian.Config,System.Action{System.String},System.Func{System.Threading.Tasks.Task{Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult}})">
+        <member name="M:Echoglossian.TranslatorMetricsWindow.#ctor(Echoglossian.Config,System.Action{System.String},System.Func{System.Threading.Tasks.Task{Echoglossian.NativeUI.AddonHandlers.Talk.VisibleDialogueRetranslationResult}},System.Boolean)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.TranslatorMetricsWindow" />
                 class.
@@ -25635,6 +25662,9 @@
             <param name="retranslateVisibleDialogueAsync">
                 Delegate used to explicitly retranslate the currently visible
                 story-facing text and persist the refreshed result.
+            </param>
+            <param name="runtimeActionsAvailable">
+                Whether runtime-owned actions are available to the hosted window.
             </param>
         </member>
         <member name="P:Echoglossian.TranslatorMetricsWindow.IsOpen">

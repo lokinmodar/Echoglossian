@@ -61,6 +61,59 @@ public sealed class PreviewWorkbenchStateTests
     }
 
     /// <summary>
+    /// Ensures preview runtime availability also reaches translation-engine
+    /// and translator-metrics actions that can otherwise contact live
+    /// providers or mutate shared glossary state.
+    /// </summary>
+    [Fact]
+    public void PreviewRuntimeAvailability_PropagatesToEngineAndMetricsActions()
+    {
+        var rendererSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "PluginConfigWindowRenderer.cs"));
+        var translationEnginesSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "Tabs",
+            "TranslationEnginesTab.cs"));
+        var metricsSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "PluginUI",
+            "TranslatorMetricsWindow.cs"));
+        var previewHostSource = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "Echoglossian.Previewer",
+            "UI",
+            "PreviewPluginWindowHost.cs"));
+
+        Assert.Contains(
+            "TranslationEnginesTab.Draw(",
+            rendererSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "context.RuntimeActionsAvailable);",
+            rendererSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "bool runtimeActionsAvailable",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "LiveModelRefreshCoordinator.SuppressRequests()",
+            translationEnginesSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "runtimeActionsAvailable: false",
+            previewHostSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Resources.PreviewImageryUnavailableText",
+            metricsSource,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures a new workbench starts with only the overlay visible.
     /// </summary>
     [Fact]

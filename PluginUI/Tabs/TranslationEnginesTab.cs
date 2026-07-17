@@ -33,12 +33,16 @@ public static class TranslationEnginesTab
     ///     The action to rebuild the translation
     ///     service when settings change.
     /// </param>
+    /// <param name="runtimeActionsAvailable">
+    ///     Whether live runtime-owned actions are available.
+    /// </param>
     /// <returns>True if any settings were changed; otherwise, false.</returns>
     public static bool Draw(
         Config config,
         int languageIndex,
         Dictionary<int, LanguageInfo> langDict,
-        Action rebuildTranslationService)
+        Action rebuildTranslationService,
+        bool runtimeActionsAvailable = true)
     {
         var changed = false;
         var promptManager = new PromptTemplateManager(config);
@@ -110,20 +114,40 @@ public static class TranslationEnginesTab
         ImGui.Separator();
         ImGui.BeginGroup();
 
-        var engine = (Echoglossian.TransEngines)config.ChosenTransEngine;
-        changed |= DrawEngineConfiguration(config, promptManager, engine);
+        using var suppressedRefreshRequests = !runtimeActionsAvailable
+            ? LiveModelRefreshCoordinator.SuppressRequests()
+            : null;
+        if (!runtimeActionsAvailable)
+        {
+            ImGui.BeginDisabled();
+        }
 
-        ImGui.EndGroup();
+        Echoglossian.TransEngines engine;
+        try
+        {
+            engine = (Echoglossian.TransEngines)config.ChosenTransEngine;
+            changed |= DrawEngineConfiguration(config, promptManager, engine);
+
+            ImGui.EndGroup();
+            ImGui.Separator();
+            ImGui.Spacing();
+            changed |= DrawDialogueOverrideSection(
+                config,
+                promptManager,
+                engine,
+                rebuildTranslationService);
+        }
+        finally
+        {
+            if (!runtimeActionsAvailable)
+            {
+                ImGui.EndDisabled();
+            }
+        }
+
         ImGui.Separator();
         ImGui.Spacing();
-        changed |= DrawDialogueOverrideSection(
-            config,
-            promptManager,
-            engine,
-            rebuildTranslationService);
-        ImGui.Separator();
-        ImGui.Spacing();
-        changed |= DrawDialogueGlossarySection(config);
+        changed |= DrawDialogueGlossarySection(config, runtimeActionsAvailable);
 
         return changed;
     }
@@ -310,8 +334,13 @@ public static class TranslationEnginesTab
     ///     by issue 148.
     /// </summary>
     /// <param name="config">The active plugin configuration.</param>
+    /// <param name="runtimeActionsAvailable">
+    ///     Whether live glossary actions are available.
+    /// </param>
     /// <returns><see langword="true" /> when the configuration changed.</returns>
-    private static bool DrawDialogueGlossarySection(Config config)
+    private static bool DrawDialogueGlossarySection(
+        Config config,
+        bool runtimeActionsAvailable)
     {
         var changed = false;
         var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
@@ -324,7 +353,10 @@ public static class TranslationEnginesTab
             Resources.EnableDialogueGlossaryInjectionLabel,
             ref config.EnableDialogueGlossaryInjection);
 
-        ImGui.BeginDisabled(!config.EnableDialogueGlossaryInjection);
+        var glossaryActionsAvailable =
+            runtimeActionsAvailable &&
+            config.EnableDialogueGlossaryInjection;
+        ImGui.BeginDisabled(!glossaryActionsAvailable);
         var glossaryPathLabel = Resources.DialogueGlossaryFilePathLabel;
         changed |= FieldValidationHelper.ValidatedInputText(
             glossaryPathLabel,
@@ -340,12 +372,25 @@ public static class TranslationEnginesTab
         }
 
         ImGui.EndDisabled();
+        if (!runtimeActionsAvailable &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(Resources.PreviewImageryUnavailableText);
+        }
 
         ImGui.SameLine();
+        ImGui.BeginDisabled(!runtimeActionsAvailable);
         if (ImGui.Button(
                 Resources.ClearDialogueGlossaryButtonLabel))
         {
             StructuredDialogueGlossaryStore.Clear();
+        }
+
+        ImGui.EndDisabled();
+        if (!runtimeActionsAvailable &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(Resources.PreviewImageryUnavailableText);
         }
 
         DrawDialogueGlossarySnapshot(snapshot);

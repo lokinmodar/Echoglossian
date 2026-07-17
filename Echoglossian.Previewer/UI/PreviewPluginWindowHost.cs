@@ -64,7 +64,8 @@ internal sealed class PreviewPluginWindowHost : IDisposable
                     false,
                     null,
                     "Preview",
-                    "Preview mode does not retranslate live dialogue.")));
+                    "Preview mode does not retranslate live dialogue.")),
+            runtimeActionsAvailable: false);
     }
 
     /// <summary>
