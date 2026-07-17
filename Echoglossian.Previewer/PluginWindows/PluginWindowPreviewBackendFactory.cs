@@ -1,0 +1,76 @@
+// <copyright file="PluginWindowPreviewBackendFactory.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+namespace Echoglossian.Previewer.PluginWindows;
+
+/// <summary>
+///     Selects a plugin-window preview backend while preserving explicit hosted-mode failures.
+/// </summary>
+internal static class PluginWindowPreviewBackendFactory
+{
+    /// <summary>
+    ///     Creates the requested plugin-window preview backend.
+    /// </summary>
+    /// <param name="requestedMode">The mode requested by the previewer operator.</param>
+    /// <param name="createHostedBackend">Starts the DalaMock-hosted backend.</param>
+    /// <param name="createStandaloneBackend">Creates the standalone backend.</param>
+    /// <returns>The selected backend and its visible effective status.</returns>
+    internal static async Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
+        CreateAsync(
+            PluginWindowPreviewBackendMode requestedMode,
+            Func<Task<DalaMockHostedPluginWindowPreviewBackend>> createHostedBackend,
+            Func<IPluginWindowPreviewBackend> createStandaloneBackend)
+    {
+        ArgumentNullException.ThrowIfNull(createHostedBackend);
+        ArgumentNullException.ThrowIfNull(createStandaloneBackend);
+
+        if (requestedMode == PluginWindowPreviewBackendMode.Standalone)
+        {
+            var backend = createStandaloneBackend();
+            return (backend, backend.Status);
+        }
+
+        try
+        {
+            var hostedBackend = await createHostedBackend();
+            return (hostedBackend, hostedBackend.Status);
+        }
+        catch (Exception exception) when (requestedMode == PluginWindowPreviewBackendMode.Auto)
+        {
+            var standaloneBackend = createStandaloneBackend();
+            var fallbackStatus = new PluginWindowBackendStatus(
+                PluginWindowPreviewBackendMode.Auto,
+                PluginWindowPreviewBackendMode.Standalone,
+                HostedRequested: true,
+                HostedAvailable: false,
+                FallbackReason: exception.Message);
+            return (standaloneBackend, fallbackStatus);
+        }
+    }
+
+    /// <summary>
+    ///     Creates a backend selection result from a hosted-startup test seam.
+    /// </summary>
+    /// <param name="requestedMode">The mode requested by the test.</param>
+    /// <param name="startHostedBackend">Starts the hosted backend or throws its failure.</param>
+    /// <returns>The selected backend and its visible effective status.</returns>
+    internal static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
+        CreateForTestsAsync(
+            PluginWindowPreviewBackendMode requestedMode,
+            Func<Task> startHostedBackend)
+    {
+        ArgumentNullException.ThrowIfNull(startHostedBackend);
+        return CreateAsync(
+            requestedMode,
+            async () =>
+            {
+                await startHostedBackend();
+                throw new InvalidOperationException(
+                    "The hosted test seam must throw before creating a backend.");
+            },
+            static () => StandalonePluginWindowPreviewBackend.CreateForTests(
+                dbManagerAvailable: true));
+    }
+}

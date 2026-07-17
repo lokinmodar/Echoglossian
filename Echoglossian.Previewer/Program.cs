@@ -7,6 +7,7 @@ using Dalamud.Bindings.ImGui;
 
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.LanguagesHandling;
+using Echoglossian.Mock.Hosting;
 using Echoglossian.PluginUI;
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
@@ -61,7 +62,7 @@ internal static class Program
             }
             else if (!commandLine.BindingSmoke && !commandLine.HostSmoke)
             {
-                RunInteractivePreview(commandLine);
+                RunInteractivePreviewAsync(commandLine).GetAwaiter().GetResult();
             }
 
             return 0;
@@ -118,7 +119,7 @@ internal static class Program
     ///     Runs the interactive preview shell.
     /// </summary>
     /// <param name="commandLine">The parsed command line.</param>
-    private static void RunInteractivePreview(PreviewCommandLine commandLine)
+    private static async Task RunInteractivePreviewAsync(PreviewCommandLine commandLine)
     {
         using var session = PreviewSessionLoader.Load(
             new PreviewSessionSourceOptions(
@@ -158,10 +159,12 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
-        using var pluginWindowBackend = CreateStandalonePluginWindowPreviewBackend(
+        var backendCreation = await CreatePluginWindowPreviewBackendAsync(
+            commandLine.PluginWindowBackendMode,
             editableConfiguration,
             languages,
-            session.ClonedDatabasePath);
+            session);
+        using var pluginWindowBackend = backendCreation.Backend;
         using var shell = new PreviewShell(
             sourceConfiguration,
             editableConfiguration,
@@ -171,7 +174,7 @@ internal static class Program
             pluginWindowBackend,
             scenario,
             viewport);
-        shell.SetPluginWindowBackendStatus(pluginWindowBackend.Status);
+        shell.SetPluginWindowBackendStatus(backendCreation.Status);
         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
 
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
@@ -284,10 +287,11 @@ internal static class Program
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
-            () => CreateStandalonePluginWindowPreviewBackend(
+            () => CreatePluginWindowPreviewBackendAsync(
+                commandLine.PluginWindowBackendMode,
                 editableConfiguration,
                 languages,
-                session.ClonedDatabasePath));
+                session).GetAwaiter().GetResult().Backend);
         runner.Run(requests);
         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
     }
@@ -329,7 +333,7 @@ internal static class Program
     /// <param name="languages">The available preview languages.</param>
     /// <param name="databasePath">The optional preview database snapshot.</param>
     /// <returns>The standalone plugin-window preview backend.</returns>
-    private static IPluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
+    private static StandalonePluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
         Config configuration,
         IReadOnlyDictionary<int, LanguageInfo> languages,
         string? databasePath)
@@ -342,6 +346,71 @@ internal static class Program
             configWindowContext,
             CreatePreviewDbContext(databasePath),
             configuration));
+    }
+
+    /// <summary>
+    ///     Selects a preview backend using only preview-session-owned state.
+    /// </summary>
+    /// <param name="requestedMode">The backend mode requested by the operator.</param>
+    /// <param name="configuration">The preview-owned editable configuration.</param>
+    /// <param name="languages">The available preview languages.</param>
+    /// <param name="session">The preview-owned session artifacts.</param>
+    /// <returns>The selected backend and its effective status.</returns>
+    private static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
+        CreatePluginWindowPreviewBackendAsync(
+            PluginWindowPreviewBackendMode requestedMode,
+            Config configuration,
+            IReadOnlyDictionary<int, LanguageInfo> languages,
+            PreviewSessionArtifacts session)
+    {
+        return PluginWindowPreviewBackendFactory.CreateAsync(
+            requestedMode,
+            () => CreateDalaMockHostedPluginWindowPreviewBackendAsync(
+                configuration,
+                languages,
+                session),
+            () => CreateStandalonePluginWindowPreviewBackend(
+                configuration,
+                languages,
+                session.ClonedDatabasePath));
+    }
+
+    /// <summary>
+    ///     Starts DalaMock over the preview session and retains standalone rendering for capture.
+    /// </summary>
+    /// <param name="configuration">The preview-owned editable configuration.</param>
+    /// <param name="languages">The available preview languages.</param>
+    /// <param name="session">The preview-owned session artifacts.</param>
+    /// <returns>The DalaMock-hosted plugin-window backend.</returns>
+    private static async Task<DalaMockHostedPluginWindowPreviewBackend>
+        CreateDalaMockHostedPluginWindowPreviewBackendAsync(
+            Config configuration,
+            IReadOnlyDictionary<int, LanguageInfo> languages,
+            PreviewSessionArtifacts session)
+    {
+        var stateRoot = new DirectoryInfo(session.WorkingDirectory);
+        var hostedSession = await HostedPreviewPluginSessionFactory.StartAsync(
+            new HostedPreviewPluginOptions(
+                stateRoot,
+                stateRoot.CreateSubdirectory(".dalamock"),
+                new FileInfo(session.ClonedConfigPath),
+                session.ClonedDatabasePath,
+                CreateWindow: false));
+
+        try
+        {
+            return new DalaMockHostedPluginWindowPreviewBackend(
+                hostedSession,
+                CreateStandalonePluginWindowPreviewBackend(
+                    configuration,
+                    languages,
+                    session.ClonedDatabasePath));
+        }
+        catch
+        {
+            hostedSession.Dispose();
+            throw;
+        }
     }
 
     /// <summary>
