@@ -440,14 +440,55 @@ internal static class Program
                 renderResult,
                 displaySize,
                 framebufferSize),
-            PreviewCaptureTarget.ConfigWindow => pluginWindowHost.TryGetCrop(
-                PreviewCaptureTarget.ConfigWindow),
-            PreviewCaptureTarget.DbManagerWindow => pluginWindowHost.TryGetCrop(
-                PreviewCaptureTarget.DbManagerWindow),
-            PreviewCaptureTarget.TranslatorMetricsWindow => pluginWindowHost.TryGetCrop(
-                PreviewCaptureTarget.TranslatorMetricsWindow),
+            PreviewCaptureTarget.ConfigWindow => CalculateInteractiveWindowCrop(
+                pluginWindowHost.TryGetCrop(PreviewCaptureTarget.ConfigWindow),
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.DbManagerWindow => CalculateInteractiveWindowCrop(
+                pluginWindowHost.TryGetCrop(PreviewCaptureTarget.DbManagerWindow),
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.TranslatorMetricsWindow => CalculateInteractiveWindowCrop(
+                pluginWindowHost.TryGetCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                displaySize,
+                framebufferSize),
             _ => null,
         };
+    }
+
+    /// <summary>
+    /// Converts logical ImGui plugin-window bounds into physical framebuffer pixels.
+    /// </summary>
+    /// <param name="logicalCrop">The plugin window crop in logical ImGui coordinates.</param>
+    /// <param name="displaySize">The logical ImGui display dimensions.</param>
+    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+    /// <returns>The physical crop, or <see langword="null" /> when no window bounds are available.</returns>
+    internal static Rectangle? CalculateInteractiveWindowCrop(
+        Rectangle? logicalCrop,
+        Vector2 displaySize,
+        Vector2 framebufferSize)
+    {
+        if (logicalCrop is not { } crop)
+        {
+            return null;
+        }
+
+        if (displaySize.X <= 0f ||
+            displaySize.Y <= 0f ||
+            framebufferSize.X <= 0f ||
+            framebufferSize.Y <= 0f)
+        {
+            return Rectangle.Empty;
+        }
+
+        var framebufferScale = new Vector2(
+            framebufferSize.X / displaySize.X,
+            framebufferSize.Y / displaySize.Y);
+        return Rectangle.FromLTRB(
+            checked((int)MathF.Floor(crop.Left * framebufferScale.X)),
+            checked((int)MathF.Floor(crop.Top * framebufferScale.Y)),
+            checked((int)MathF.Ceiling(crop.Right * framebufferScale.X)),
+            checked((int)MathF.Ceiling(crop.Bottom * framebufferScale.Y)));
     }
 
     /// <summary>

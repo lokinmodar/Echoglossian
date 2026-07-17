@@ -159,6 +159,21 @@ public sealed class ScreenshotCropTests
     }
 
     /// <summary>
+    /// Ensures logical plugin-window bounds scale into physical framebuffer
+    /// pixels before interactive capture.
+    /// </summary>
+    [Fact]
+    public void CalculateInteractiveWindowCrop_UsesFramebufferScaleForHiDpiHosts()
+    {
+        var crop = Program.CalculateInteractiveWindowCrop(
+            new Rectangle(100, 50, 400, 200),
+            new Vector2(1400f, 900f),
+            new Vector2(2800f, 1800f));
+
+        Assert.Equal(new Rectangle(200, 100, 800, 400), crop);
+    }
+
+    /// <summary>
     /// Ensures screenshot readback accepts only the supported 32-bit formats.
     /// </summary>
     [Theory]
