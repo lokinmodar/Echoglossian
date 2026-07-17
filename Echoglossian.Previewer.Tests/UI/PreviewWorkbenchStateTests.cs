@@ -254,6 +254,7 @@ public sealed class PreviewWorkbenchStateTests
             languages);
 
         Assert.False(context.ImagesAvailable);
+        Assert.False(context.RuntimeActionsAvailable);
         Assert.Equal(default, context.LogoTextureHandle);
         Assert.Equal(default, context.PixTextureHandle);
         Assert.Equal(default, context.CryptoTextureHandle);

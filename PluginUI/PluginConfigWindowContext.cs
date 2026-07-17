@@ -33,6 +33,12 @@ public sealed record PluginConfigWindowContext(
     public bool ImagesAvailable { get; init; } = true;
 
     /// <summary>
+    /// Gets a value indicating whether actions that require initialized plugin
+    /// runtime services are available.
+    /// </summary>
+    public bool RuntimeActionsAvailable { get; init; } = true;
+
+    /// <summary>
     /// Gets the host-specific general-font push operation.
     /// </summary>
     internal Func<IDisposable> PushGeneralFont { get; init; } =

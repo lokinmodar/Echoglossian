@@ -98,9 +98,21 @@ internal sealed class BatchScreenshotRunner
                     this.fontSelection.FontPaths.Select(Path.GetFileName).ToArray()!,
                     this.fontSelection.FontSize,
                     entries);
-                File.WriteAllText(
-                    Path.Combine(stagingDirectory, "manifest.json"),
-                    SerializeManifest(manifest));
+                var manifestPath = Path.Combine(stagingDirectory, "manifest.json");
+                try
+                {
+                    File.WriteAllText(manifestPath, SerializeManifest(manifest));
+                }
+                catch (Exception exception) when (
+                    exception is IOException or UnauthorizedAccessException)
+                {
+                    throw new InvalidOperationException(
+                        CreateOutputFailureMessage(
+                            "Manifest write",
+                            Path.Combine(outputDirectory, "manifest.json"),
+                            exception),
+                        exception);
+                }
             });
     }
 
@@ -112,7 +124,8 @@ internal sealed class BatchScreenshotRunner
     /// <param name="writeStagedOutputs">Writes all batch outputs into the supplied staging directory.</param>
     internal static void WriteOutputsAtomically(
         string outputDirectory,
-        Action<string> writeStagedOutputs)
+        Action<string> writeStagedOutputs,
+        Action<string, string>? moveFile = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
         ArgumentNullException.ThrowIfNull(writeStagedOutputs);
@@ -122,14 +135,24 @@ internal sealed class BatchScreenshotRunner
             outputDirectory,
             $".echoglossian-previewer-{Guid.NewGuid():N}");
         Directory.CreateDirectory(stagingDirectory);
+        var preserveStagingDirectory = false;
         try
         {
             writeStagedOutputs(stagingDirectory);
-            PublishStagedOutputs(stagingDirectory, outputDirectory);
+            PublishStagedOutputs(stagingDirectory, outputDirectory, moveFile);
+        }
+        catch (BatchPublicationException exception) when (
+            exception.RollbackIncomplete)
+        {
+            preserveStagingDirectory = true;
+            throw;
         }
         finally
         {
-            TryDeleteStagingDirectory(stagingDirectory);
+            if (!preserveStagingDirectory)
+            {
+                TryDeleteStagingDirectory(stagingDirectory);
+            }
         }
     }
 
@@ -182,21 +205,56 @@ internal sealed class BatchScreenshotRunner
                 publishedPaths.Add(destinationPath);
             }
         }
-        catch
+        catch (Exception exception)
         {
             foreach (var publishedPath in publishedPaths)
             {
                 TryDeleteFile(publishedPath);
             }
 
+            var unrecoveredBackups = new List<string>();
             foreach (var backup in backups.AsEnumerable().Reverse())
             {
                 TryDeleteFile(backup.DestinationPath);
-                TryMoveFile(move, backup.BackupPath, backup.DestinationPath);
+                if (!TryMoveFile(move, backup.BackupPath, backup.DestinationPath))
+                {
+                    unrecoveredBackups.Add(backup.BackupPath);
+                }
             }
 
-            throw;
+            if (unrecoveredBackups.Count > 0)
+            {
+                throw new BatchPublicationException(
+                    outputDirectory,
+                    stagingDirectory,
+                    exception);
+            }
+
+            throw new InvalidOperationException(
+                CreateOutputFailureMessage(
+                    "Screenshot publication",
+                    outputDirectory,
+                    exception),
+                exception);
         }
+    }
+
+    /// <summary>
+    /// Creates a path-qualified message for an output operation failure.
+    /// </summary>
+    /// <param name="operation">The output operation that failed.</param>
+    /// <param name="outputPath">The affected output path.</param>
+    /// <param name="exception">The underlying I/O failure.</param>
+    /// <returns>A contextual output failure message.</returns>
+    internal static string CreateOutputFailureMessage(
+        string operation,
+        string outputPath,
+        Exception exception)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(operation);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(exception);
+        return $"{operation} to {outputPath} failed: {exception.Message}";
     }
 
     /// <summary>
@@ -630,7 +688,7 @@ internal sealed class BatchScreenshotRunner
     /// <param name="moveFile">The file move operation used for publication.</param>
     /// <param name="sourcePath">The backup source path.</param>
     /// <param name="destinationPath">The original output path.</param>
-    private static void TryMoveFile(
+    private static bool TryMoveFile(
         Action<string, string> moveFile,
         string sourcePath,
         string destinationPath)
@@ -640,12 +698,51 @@ internal sealed class BatchScreenshotRunner
             if (File.Exists(sourcePath))
             {
                 moveFile(sourcePath, destinationPath);
+                return true;
             }
+
+            return false;
         }
         catch (Exception exception) when (
             exception is IOException or UnauthorizedAccessException)
         {
+            return false;
         }
+    }
+
+    /// <summary>
+    /// Represents a failed publication whose prior outputs could not all be
+    /// restored from the private staging directory.
+    /// </summary>
+    internal sealed class BatchPublicationException : InvalidOperationException
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BatchPublicationException"/> class.
+        /// </summary>
+        /// <param name="outputDirectory">The requested final output directory.</param>
+        /// <param name="recoveryDirectory">The preserved private backup directory.</param>
+        /// <param name="innerException">The original publication failure.</param>
+        internal BatchPublicationException(
+            string outputDirectory,
+            string recoveryDirectory,
+            Exception innerException)
+            : base(
+                $"Screenshot publication to {outputDirectory} failed and rollback is incomplete. " +
+                $"Previous outputs remain in {recoveryDirectory}.",
+                innerException)
+        {
+            this.RecoveryDirectory = recoveryDirectory;
+        }
+
+        /// <summary>
+        /// Gets the preserved directory that contains unrecovered backups.
+        /// </summary>
+        internal string RecoveryDirectory { get; }
+
+        /// <summary>
+        /// Gets a value indicating that at least one backup was not restored.
+        /// </summary>
+        internal bool RollbackIncomplete => true;
     }
 
     /// <summary>

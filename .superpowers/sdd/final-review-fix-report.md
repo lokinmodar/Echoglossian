@@ -306,3 +306,45 @@ DONE
 
 - Existing environment/package warnings remain: the Multilingual App Toolkit is unavailable and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 reports `NU1903`.
 - The pre-existing `.superpowers/sdd/task-5-report.md` edit was not modified or included in this work.
+
+---
+
+# Final Branch Review Fix Wave Round 6
+
+## What Changed
+
+- Added `RuntimeActionsAvailable` to `PluginConfigWindowContext`. Live configuration contexts retain the default `true`; standalone preview contexts set it to `false`.
+- Routed the troubleshooting tab, reset control, and missing-assets popup through that availability boundary. The previewer now displays disabled troubleshooting and reset controls without touching plugin asset management, font mounting, config reset notifications, or live save services.
+- Hardened staged screenshot publication. When a replacement fails and any backup cannot be restored, the staging directory is retained as the recovery location, the exception explicitly reports incomplete rollback and its output/recovery paths, and unconditional cleanup cannot delete the remaining backup.
+- Added path-qualified manifest-write and publication failure messages.
+
+## Tests Run
+
+1. `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore -p:VSTestMaxCpuCount=1 --filter "FullyQualifiedName~BatchScreenshotRunnerTests|FullyQualifiedName~PreviewWorkbenchStateTests"`
+   - Passed: 33 passed, 0 failed, 0 skipped.
+2. `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-build --no-restore -p:VSTestMaxCpuCount=1`
+   - Passed: 114 passed, 0 failed, 0 skipped.
+3. `dotnet build Echoglossian.sln -c Debug --no-restore`
+   - Passed: 0 errors.
+4. `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1`
+   - Passed: 627 passed, 0 failed, 0 skipped.
+
+The new focused tests were observed failing before implementation because the preview runtime-action flag, retained rollback exception, injectable atomic publication move path, and contextual output-message helper did not exist.
+
+## Files Changed
+
+- `PluginUI/PluginConfigWindowContext.cs`
+- `PluginUI/Tabs/TroubleshootingTab.cs`
+- `PluginUI/Helpers/ResetConfigButtonHelper.cs`
+- `PluginUI/PluginConfigWindowRenderer.cs`
+- `Echoglossian.Previewer/Program.cs`
+- `Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs`
+- `Echoglossian.Previewer.Tests/UI/PreviewWorkbenchStateTests.cs`
+- `Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerTests.cs`
+- `Echoglossian.xml` (generated XML documentation)
+- `.superpowers/sdd/final-review-fix-report.md`
+
+## Concerns
+
+- Existing environment/package warnings remain: the Multilingual App Toolkit is unavailable and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 reports `NU1903`.
+- The pre-existing `.superpowers/sdd/task-5-report.md` edit was not modified or included in this work.

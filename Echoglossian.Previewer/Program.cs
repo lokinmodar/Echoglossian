@@ -360,6 +360,7 @@ internal static class Program
             configuration.PluginVersion)
         {
             ImagesAvailable = false,
+            RuntimeActionsAvailable = false,
             PushGeneralFont = static () => NoOpDisposable.Instance,
             ApplyLanguageRuntimeChanges = static (_, _) => { },
         };

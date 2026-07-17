@@ -19,13 +19,26 @@ public static class ResetConfigButtonHelper
     ///     Optional label for the button (defaults to "Reset
     ///     Settings to Default").
     /// </param>
+    /// <param name="runtimeActionsAvailable">
+    /// Whether reset can call the live plugin save and notification services.
+    /// </param>
     public static void Draw(
         Config config,
         Action saveCallback,
-        string? buttonLabel = null)
+        string? buttonLabel = null,
+        bool runtimeActionsAvailable = true)
     {
         buttonLabel ??= Resources.ResetSettingsButtonText;
         var popupId = "ConfirmResetSettingsPopup##" + buttonLabel;
+
+        if (!runtimeActionsAvailable)
+        {
+            showResetPopup = false;
+            ImGui.BeginDisabled();
+            ImGui.Button(buttonLabel);
+            ImGui.EndDisabled();
+            return;
+        }
 
         ImGui.PushID(19);
         ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);

@@ -210,7 +210,7 @@ public sealed class BatchScreenshotRunnerTests
             File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
             File.WriteAllText(Path.Combine(stagingDirectory, "manifest.json"), "new-manifest");
 
-            Assert.Throws<IOException>(() =>
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 BatchScreenshotRunner.PublishStagedOutputs(
                     stagingDirectory,
                     destination,
@@ -227,6 +227,7 @@ public sealed class BatchScreenshotRunnerTests
                         File.Move(source, target);
                     }));
 
+            Assert.Contains(destination, exception.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Equal("old-first", File.ReadAllText(Path.Combine(destination, "first.png")));
             Assert.Equal("old-manifest", File.ReadAllText(Path.Combine(destination, "manifest.json")));
             Assert.Equal("keep", File.ReadAllText(Path.Combine(destination, "notes.txt")));
@@ -235,6 +236,85 @@ public sealed class BatchScreenshotRunnerTests
         {
             tempDirectory.Delete(recursive: true);
         }
+    }
+
+    /// <summary>
+    /// Ensures an incomplete rollback preserves the only remaining prior output
+    /// in a recovery directory instead of deleting it during staging cleanup.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_RestoreFailure_PreservesRecoveryDirectory()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            Directory.CreateDirectory(destination);
+            File.WriteAllText(Path.Combine(destination, "first.png"), "old-first");
+            File.WriteAllText(Path.Combine(destination, "manifest.json"), "old-manifest");
+
+            var exception = Assert.Throws<BatchScreenshotRunner.BatchPublicationException>(
+                () => BatchScreenshotRunner.WriteOutputsAtomically(
+                    destination,
+                    stagingDirectory =>
+                    {
+                        File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+                        File.WriteAllText(Path.Combine(stagingDirectory, "manifest.json"), "new-manifest");
+                    },
+                    (source, target) =>
+                    {
+                        if (source.EndsWith(
+                                Path.Combine("rollback", "first.png"),
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("first restore failed");
+                        }
+
+                        if (string.Equals(
+                                Path.GetFileName(source),
+                                "manifest.json",
+                                StringComparison.OrdinalIgnoreCase) &&
+                            !source.Contains(
+                                Path.DirectorySeparatorChar + "rollback" + Path.DirectorySeparatorChar,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("manifest publish failed");
+                        }
+
+                        File.Move(source, target);
+                    }));
+
+            Assert.True(exception.RollbackIncomplete);
+            Assert.Contains(destination, exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.True(Directory.Exists(exception.RecoveryDirectory));
+            Assert.Equal(
+                "old-first",
+                File.ReadAllText(Path.Combine(exception.RecoveryDirectory, "rollback", "first.png")));
+            Assert.Equal("old-manifest", File.ReadAllText(Path.Combine(destination, "manifest.json")));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures output failures name the affected path instead of exposing only
+    /// an unqualified inner exception.
+    /// </summary>
+    [Fact]
+    public void CreateOutputFailureMessage_ManifestWrite_IncludesOutputPath()
+    {
+        const string outputPath = @"C:\captures\manifest.json";
+
+        var message = BatchScreenshotRunner.CreateOutputFailureMessage(
+            "Manifest write",
+            outputPath,
+            new IOException("disk full"));
+
+        Assert.Contains("Manifest write", message, StringComparison.Ordinal);
+        Assert.Contains(outputPath, message, StringComparison.Ordinal);
+        Assert.Contains("disk full", message, StringComparison.Ordinal);
     }
 
     /// <summary>

@@ -65,7 +65,9 @@ public sealed class PluginConfigWindowRenderer
 
             if (ImGui.BeginTabItem(Resources.ConfigTab8Name))
             {
-                changed |= TroubleshootingTab.Draw(context.Configuration);
+                changed |= TroubleshootingTab.Draw(
+                    context.Configuration,
+                    context.RuntimeActionsAvailable);
                 ImGui.EndTabItem();
             }
 
@@ -90,8 +92,11 @@ public sealed class PluginConfigWindowRenderer
             context.CryptoTextureHandle,
             context.ImagesAvailable);
 
-        changed |= PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
-            context.Configuration);
+        if (context.RuntimeActionsAvailable)
+        {
+            changed |= PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
+                context.Configuration);
+        }
 
         this.LastWindowBounds = new RectangleF(
             ImGui.GetWindowPos().X,

@@ -24663,7 +24663,7 @@
             <param name="type">The prompt type to resolve.</param>
             <returns>The built-in default prompt.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Helpers.ResetConfigButtonHelper.Draw(Echoglossian.Config,System.Action,System.String)">
+        <member name="M:Echoglossian.PluginUI.Helpers.ResetConfigButtonHelper.Draw(Echoglossian.Config,System.Action,System.String,System.Boolean)">
             <summary>
                 Draws a button that resets the plugin config to default values, with a
                 confirmation popup.
@@ -24673,6 +24673,9 @@
             <param name="buttonLabel">
                 Optional label for the button (defaults to "Reset
                 Settings to Default").
+            </param>
+            <param name="runtimeActionsAvailable">
+            Whether reset can call the live plugin save and notification services.
             </param>
         </member>
         <member name="T:Echoglossian.PluginUI.Helpers.TranslationEngineConfigurationHelper">
@@ -24954,6 +24957,12 @@
         <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.ImagesAvailable">
             <summary>
             Gets a value indicating whether logo and QR imagery can be rendered.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.RuntimeActionsAvailable">
+            <summary>
+            Gets a value indicating whether actions that require initialized plugin
+            runtime services are available.
             </summary>
         </member>
         <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PushGeneralFont">
@@ -25488,6 +25497,24 @@
                 settings.
                 Fully self-contained using static Echoglossian methods.
             </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TroubleshootingTab.Draw(Echoglossian.Config,System.Boolean)">
+            <summary>
+            Draws the troubleshooting controls when their runtime services are
+            available, or disabled controls when hosted by the standalone previewer.
+            </summary>
+            <param name="config">The configuration being displayed.</param>
+            <param name="runtimeActionsAvailable">
+            Whether asset and notification-backed runtime actions are available.
+            </param>
+            <returns><see langword="true" /> when the configuration changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TroubleshootingTab.DrawUnavailableControls(Echoglossian.Config)">
+            <summary>
+            Draws visual-only troubleshooting controls without reading or mutating
+            plugin runtime asset or notification state.
+            </summary>
+            <param name="config">The preview-owned configuration being displayed.</param>
         </member>
         <member name="T:Echoglossian.Helpers.FieldValidationHelper">
             <summary>
