@@ -21,7 +21,11 @@ public partial class Echoglossian
         this.pixImage.Handle,
         this.cryptoImage.Handle,
         this.RebuildTranslationServiceSafely,
-        this.configuration.PluginVersion);
+        this.configuration.PluginVersion)
+    {
+      PushGeneralFont = () =>
+          this.uiFontRuntime.Push(PluginUI.Runtime.UiFontKind.General),
+    };
 
     this.configWindowRenderer.Draw(context, ref this.config);
   }

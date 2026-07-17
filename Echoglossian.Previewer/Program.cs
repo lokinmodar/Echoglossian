@@ -5,7 +5,9 @@
 
 using Dalamud.Bindings.ImGui;
 
+using Echoglossian.EFCoreSqlite;
 using Echoglossian.LanguagesHandling;
+using Echoglossian.PluginUI;
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
@@ -14,6 +16,10 @@ using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.Session;
 using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TranslationOverlay;
+
+using Microsoft.EntityFrameworkCore;
+
+using Newtonsoft.Json;
 
 using System.Drawing;
 using System.Numerics;
@@ -117,7 +123,16 @@ internal static class Program
         var viewport = PreviewScenarioCatalog.ResolveViewport(
             commandLine.ViewportWidth,
             commandLine.ViewportHeight);
-        var selectedLanguage = ResolvePreviewLanguage(editableConfiguration.Lang);
+        var languages = Echoglossian.CreateLanguagesDictionary();
+        var selectedLanguage = ResolvePreviewLanguage(
+            languages,
+            editableConfiguration.Lang);
+        if (!languages.ContainsKey(editableConfiguration.Lang))
+        {
+            editableConfiguration.Lang = languages.First(
+                candidate => ReferenceEquals(candidate.Value, selectedLanguage)).Key;
+        }
+
         Echoglossian.SelectedLanguage = selectedLanguage;
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
@@ -139,13 +154,34 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
+        var placeholderTextureHandle = new ImTextureID(unchecked((nint)(-1)));
+        var configWindowContext = new PluginConfigWindowContext(
+            editableConfiguration,
+            languages,
+            placeholderTextureHandle,
+            placeholderTextureHandle,
+            placeholderTextureHandle,
+            static () => { },
+            editableConfiguration.PluginVersion)
+        {
+            PushGeneralFont = static () => NoOpDisposable.Instance,
+            ApplyLanguageRuntimeChanges = static (_, _) => { },
+        };
+        using var pluginWindowHost = new PreviewPluginWindowHost(
+            new PluginConfigWindowRenderer(),
+            configWindowContext,
+            CreatePreviewDbContext(session.ClonedDatabasePath),
+            editableConfiguration);
         using var shell = new PreviewShell(
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
             composition.Renderer,
+            pluginWindowHost,
             scenario,
             viewport);
+        using var configSaveScope = PluginConfigSaveScope.Push(
+            config => SavePreviewConfiguration(session.ClonedConfigPath, config));
 
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
         host.Run(
@@ -243,6 +279,36 @@ internal static class Program
             : outputDirectory;
     }
 
+    /// <summary>
+    /// Creates a context over the preview-owned database snapshot.
+    /// </summary>
+    /// <param name="databasePath">The optional snapshot path.</param>
+    /// <returns>The snapshot context, or <see langword="null" /> when unavailable.</returns>
+    private static EchoglossianDbContext? CreatePreviewDbContext(string? databasePath)
+    {
+        if (string.IsNullOrWhiteSpace(databasePath))
+        {
+            return null;
+        }
+
+        var options = new DbContextOptionsBuilder<EchoglossianDbContext>()
+            .UseSqlite($"Data Source={databasePath};Pooling=False")
+            .Options;
+        return new EchoglossianDbContext(options);
+    }
+
+    /// <summary>
+    /// Persists config-window edits only to the preview-owned config clone.
+    /// </summary>
+    /// <param name="configPath">The preview-owned config path.</param>
+    /// <param name="configuration">The edited preview configuration.</param>
+    private static void SavePreviewConfiguration(string configPath, Config configuration)
+    {
+        File.WriteAllText(
+            configPath,
+            JsonConvert.SerializeObject(configuration, Formatting.Indented));
+    }
+
     internal static Rectangle? CalculateInteractiveSurfaceCrop(
         ScreenshotRequest request,
         TranslationOverlayRenderResult renderResult,
@@ -327,5 +393,19 @@ internal static class Program
 
         return fallbackLanguage?.Value ?? throw new InvalidOperationException(
             "Preview language dictionary is empty.");
+    }
+
+    /// <summary>
+    /// Provides a no-op scope when the standalone default font is already active.
+    /// </summary>
+    private sealed class NoOpDisposable : IDisposable
+    {
+        /// <summary>Gets the shared no-op scope.</summary>
+        internal static NoOpDisposable Instance { get; } = new();
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+        }
     }
 }

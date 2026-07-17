@@ -63,6 +63,11 @@ public sealed class TranslatorMetricsWindow
   public bool IsOpen { get; set; }
 
   /// <summary>
+  ///     Gets the bounds captured during the most recent successful draw.
+  /// </summary>
+  internal RectangleF? LastWindowBounds { get; private set; }
+
+  /// <summary>
   ///     Draws the translator metrics window.
   /// </summary>
   public void Draw()
@@ -80,6 +85,7 @@ public sealed class TranslatorMetricsWindow
             ImGuiWindowFlags.NoCollapse))
     {
       this.IsOpen = isOpen;
+      this.CaptureWindowBounds();
       ImGui.End();
       return;
     }
@@ -155,6 +161,7 @@ public sealed class TranslatorMetricsWindow
       ImGui.Spacing();
       ImGui.TextWrapped(
           Resources.TranslatorDebuggerNoMetricsRecorded);
+      this.CaptureWindowBounds();
       ImGui.End();
       return;
     }
@@ -314,7 +321,20 @@ public sealed class TranslatorMetricsWindow
       }
     }
 
+    this.CaptureWindowBounds();
     ImGui.End();
+  }
+
+  /// <summary>
+  ///     Captures the current metrics window bounds for screenshot cropping.
+  /// </summary>
+  private void CaptureWindowBounds()
+  {
+    this.LastWindowBounds = new RectangleF(
+        ImGui.GetWindowPos().X,
+        ImGui.GetWindowPos().Y,
+        ImGui.GetWindowSize().X,
+        ImGui.GetWindowSize().Y);
   }
 
   /// <summary>

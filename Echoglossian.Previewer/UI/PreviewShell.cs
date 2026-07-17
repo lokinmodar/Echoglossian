@@ -25,6 +25,8 @@ internal sealed class PreviewShell : IDisposable
     private readonly Config editableConfiguration;
     private readonly PreviewFontSelection fontSelection;
     private readonly PreviewCanvas canvas;
+    private readonly PreviewPluginWindowHost pluginWindowHost;
+    private readonly PreviewWorkbenchState workbenchState;
     private readonly PreviewShellState state;
     private ScreenshotMode? pendingScreenshotMode;
     private string lastScreenshotPath = string.Empty;
@@ -42,6 +44,7 @@ internal sealed class PreviewShell : IDisposable
     /// <param name="editableConfiguration">The preview-owned editable configuration.</param>
     /// <param name="fontSelection">The resolved preview font selection.</param>
     /// <param name="renderer">The shared overlay renderer.</param>
+    /// <param name="pluginWindowHost">The real plugin-window host.</param>
     /// <param name="scenario">The initial scenario.</param>
     /// <param name="viewport">The initial logical viewport.</param>
     internal PreviewShell(
@@ -49,6 +52,7 @@ internal sealed class PreviewShell : IDisposable
         Config editableConfiguration,
         PreviewFontSelection fontSelection,
         TranslationOverlayRenderer renderer,
+        PreviewPluginWindowHost pluginWindowHost,
         PreviewScenario scenario,
         PreviewViewportPreset viewport)
     {
@@ -59,6 +63,11 @@ internal sealed class PreviewShell : IDisposable
         this.fontSelection = fontSelection ??
             throw new ArgumentNullException(nameof(fontSelection));
         this.canvas = new PreviewCanvas(renderer);
+        this.pluginWindowHost = pluginWindowHost ??
+            throw new ArgumentNullException(nameof(pluginWindowHost));
+        this.workbenchState = PreviewWorkbenchState.CreateDefault(
+            scenario,
+            viewport);
         this.state = PreviewShellState.FromScenario(
             scenario ?? throw new ArgumentNullException(nameof(scenario)),
             viewport ?? throw new ArgumentNullException(nameof(viewport)));
@@ -86,13 +95,24 @@ internal sealed class PreviewShell : IDisposable
 
         var canvasSize = ImGui.GetContentRegionAvail();
         ImGui.BeginChild("PreviewCanvas", canvasSize, true);
-        this.lastRenderResult = this.canvas.Draw(
-            this.state,
-            this.editableConfiguration,
-            ImGui.GetContentRegionAvail());
+        var scenarioVisible = this.state.Visible;
+        try
+        {
+            this.state.Visible = scenarioVisible && this.workbenchState.OverlayVisible;
+            this.lastRenderResult = this.canvas.Draw(
+                this.state,
+                this.editableConfiguration,
+                ImGui.GetContentRegionAvail());
+        }
+        finally
+        {
+            this.state.Visible = scenarioVisible;
+        }
+
         ImGui.EndChild();
 
         ImGui.End();
+        this.pluginWindowHost.Draw(this.workbenchState);
     }
 
     /// <summary>
@@ -148,6 +168,38 @@ internal sealed class PreviewShell : IDisposable
 
     private void DrawControls()
     {
+        ImGui.TextUnformatted("Workbench");
+        this.DrawToggle(
+            "Overlay visible",
+            this.workbenchState.OverlayVisible,
+            value => this.workbenchState.OverlayVisible = value);
+        this.DrawToggle(
+            "Config",
+            this.workbenchState.ConfigWindowOpen,
+            value => this.workbenchState.ConfigWindowOpen = value);
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.BeginDisabled();
+        }
+
+        this.DrawToggle(
+            "DB Manager",
+            this.workbenchState.DbManagerWindowOpen,
+            value => this.workbenchState.DbManagerWindowOpen = value);
+
+        if (!this.pluginWindowHost.DbManagerAvailable)
+        {
+            ImGui.EndDisabled();
+            ImGui.TextDisabled("DB snapshot unavailable");
+        }
+
+        this.DrawToggle(
+            "Translator Metrics / Debugger",
+            this.workbenchState.TranslatorMetricsWindowOpen,
+            value => this.workbenchState.TranslatorMetricsWindowOpen = value);
+
+        ImGui.Separator();
         ImGui.TextUnformatted("Scenario");
         this.DrawScenarioCombo();
         this.DrawViewportCombo();
@@ -223,6 +275,7 @@ internal sealed class PreviewShell : IDisposable
                 if (ImGui.Selectable(preset.Key, selected))
                 {
                     this.state.Viewport = preset;
+                    this.workbenchState.Viewport = preset;
                 }
 
                 if (selected)
@@ -250,6 +303,20 @@ internal sealed class PreviewShell : IDisposable
         foreach (var diagnostic in this.sourceConfiguration.Diagnostics)
         {
             ImGui.TextWrapped(diagnostic);
+        }
+    }
+
+    /// <summary>
+    /// Draws a property-backed workbench toggle.
+    /// </summary>
+    /// <param name="label">The toggle label.</param>
+    /// <param name="value">The current value.</param>
+    /// <param name="update">Applies a changed value.</param>
+    private void DrawToggle(string label, bool value, Action<bool> update)
+    {
+        if (ImGui.Checkbox(label, ref value))
+        {
+            update(value);
         }
     }
 }

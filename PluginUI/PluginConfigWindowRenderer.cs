@@ -15,6 +15,11 @@ namespace Echoglossian.PluginUI;
 public sealed class PluginConfigWindowRenderer
 {
     /// <summary>
+    /// Gets the bounds captured during the most recent successful draw.
+    /// </summary>
+    internal RectangleF? LastWindowBounds { get; private set; }
+
+    /// <summary>
     /// Draws the configuration window and saves any changes through the active
     /// configuration-save path.
     /// </summary>
@@ -85,6 +90,12 @@ public sealed class PluginConfigWindowRenderer
 
         changed |= PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
             context.Configuration);
+
+        this.LastWindowBounds = new RectangleF(
+            ImGui.GetWindowPos().X,
+            ImGui.GetWindowPos().Y,
+            ImGui.GetWindowSize().X,
+            ImGui.GetWindowSize().Y);
 
         ImGui.End();
 
@@ -226,54 +237,36 @@ public sealed class PluginConfigWindowRenderer
         var config = context.Configuration;
         var changed = false;
 
-        Echoglossian.UINewFontHandler.GeneralFontHandle.Push();
-
-        Echoglossian.LangToRemoveDiacritics = config.Lang is 24 or 25 or 44 or 60
-            or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
-
-        if (LanguageDropdownHelper.DrawLanguageDropdown(
-                ref config.Lang,
-                Resources.LanguageSelectLabelText))
+        using (context.PushGeneralFont())
         {
-            Echoglossian.LanguageInt = config.Lang;
-            Echoglossian.SpecialFontFileName = languages[config.Lang].FontName;
-            Echoglossian.SelectedLanguage = languages[config.Lang];
-            LanguagePresentationPolicy.ApplyLanguageFlags(config);
+            Echoglossian.LangToRemoveDiacritics = config.Lang is 24 or 25 or 44 or 60
+                or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
 
-            if (TranslationEngineSelectionMigrationHelper
-                .NormalizeAndSyncSelection(
-                    config,
-                    config.Version,
-                    languages[config.Lang].SupportedEngines))
+            if (LanguageDropdownHelper.DrawLanguageDropdown(
+                    ref config.Lang,
+                    Resources.LanguageSelectLabelText))
             {
-                context.RebuildTranslationService();
+                Echoglossian.LanguageInt = config.Lang;
+                Echoglossian.SpecialFontFileName = languages[config.Lang].FontName;
+                Echoglossian.SelectedLanguage = languages[config.Lang];
+                LanguagePresentationPolicy.ApplyLanguageFlags(config);
+
+                if (TranslationEngineSelectionMigrationHelper
+                    .NormalizeAndSyncSelection(
+                        config,
+                        config.Version,
+                        languages[config.Lang].SupportedEngines))
+                {
+                    context.RebuildTranslationService();
+                    changed = true;
+                }
+
                 changed = true;
-            }
-
-            changed = true;
-            PluginRuntimeLog.Debug(
-                "Language selected: " + languages[config.Lang].LanguageName);
-            PluginRuntimeLog.Debug(
-                "Language font: " + languages[config.Lang].FontName);
-
-            AssetsManager.RefreshPluginAssetsState(
-                Echoglossian.SelectedLanguage);
-            config.PluginAssetsDownloaded = AssetsManager.PluginAssetsDownloaded;
-            Echoglossian.MountFontPaths();
-            if (!config.PluginAssetsDownloaded &&
-                AssetsManager.RequiresDownloadedAssets(
-                    Echoglossian.SelectedLanguage))
-            {
-                AssetsManager.PluginAssetsChecker(Echoglossian.SelectedLanguage);
-                PluginAssetRequirementUiHelper.RequestForSelectedLanguage();
-            }
-            else
-            {
-                Echoglossian.PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync();
+                context.ApplyLanguageRuntimeChanges(
+                    config,
+                    Echoglossian.SelectedLanguage);
             }
         }
-
-        Echoglossian.UINewFontHandler.GeneralFontHandle.Pop();
 
         ImGui.SameLine();
         ImGui.Text(Resources.HoverTooltipIndicator);
