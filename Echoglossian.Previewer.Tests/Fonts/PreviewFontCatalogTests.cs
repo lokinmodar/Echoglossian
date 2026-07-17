@@ -103,6 +103,47 @@ public sealed class PreviewFontCatalogTests
     }
 
     /// <summary>
+    /// Ensures preview startup configures downloaded-font asset state and
+    /// reports a missing selected language font.
+    /// </summary>
+    [Fact]
+    public void InitializePreviewAssets_MissingDownloadedLanguageFont_ReportsDiagnostic()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        var originalAssetsPath = global::Echoglossian.AssetsManager.AssetsPath;
+        var originalAssetFiles = global::Echoglossian.AssetsManager.AssetFiles;
+        var configuration = new Config();
+        var language = new LanguageInfo(
+            "ja",
+            "Japanese",
+            "NotoSansCJKjp-Regular.otf",
+            string.Empty,
+            []);
+
+        try
+        {
+            var diagnostics = PreviewFontCatalog.InitializePreviewAssets(
+                language,
+                configuration,
+                tempDirectory.FullName);
+
+            Assert.Equal(Path.Combine(tempDirectory.FullName, "Font"), global::Echoglossian.AssetsManager.AssetsPath);
+            Assert.Contains("NotoSansCJKjp-Regular.otf", global::Echoglossian.AssetsManager.AssetFiles);
+            Assert.False(configuration.PluginAssetsDownloaded);
+            Assert.Contains(
+                diagnostics,
+                diagnostic => diagnostic.Contains("NotoSansCJKjp-Regular.otf", StringComparison.Ordinal) &&
+                    diagnostic.Contains("unavailable", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            global::Echoglossian.AssetsManager.AssetsPath = originalAssetsPath;
+            global::Echoglossian.AssetsManager.AssetFiles = originalAssetFiles;
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Ensures the preview font atlas always includes editable Latin text.
     /// </summary>
     [Fact]

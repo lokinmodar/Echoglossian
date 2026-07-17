@@ -66,39 +66,137 @@ internal sealed class BatchScreenshotRunner
         }
 
         var outputDirectory = ResolveSharedOutputDirectory(requests);
+        WriteOutputsAtomically(
+            outputDirectory,
+            stagingDirectory =>
+            {
+                var entries = new List<ScreenshotManifestEntry>();
+                foreach (var request in requests)
+                {
+                    var stagedRequest = request with { OutputDirectory = stagingDirectory };
+                    var stagedOutputPath = GetOutputPath(stagedRequest);
+                    CapturedScreenshot capture;
+                    try
+                    {
+                        capture = this.Capture(stagedRequest, stagedOutputPath);
+                    }
+                    catch (Exception exception) when (Program.IsExpectedInteractiveScreenshotFailure(exception))
+                    {
+                        throw new InvalidOperationException(
+                            Program.CreateScreenshotFailureMessage(
+                                request.CaptureTarget,
+                                GetOutputPath(request),
+                                exception),
+                            exception);
+                    }
+
+                    entries.Add(this.CreateManifestEntry(request, capture));
+                }
+
+                var manifest = new ScreenshotManifest(
+                    GetManifestConfigSourceLabel(this.sourceConfiguration),
+                    this.fontSelection.FontPaths.Select(Path.GetFileName).ToArray()!,
+                    this.fontSelection.FontSize,
+                    entries);
+                File.WriteAllText(
+                    Path.Combine(stagingDirectory, "manifest.json"),
+                    SerializeManifest(manifest));
+            });
+    }
+
+    /// <summary>
+    /// Writes a complete batch to a private staging directory before publishing
+    /// it to the requested output directory.
+    /// </summary>
+    /// <param name="outputDirectory">The final screenshot output directory.</param>
+    /// <param name="writeStagedOutputs">Writes all batch outputs into the supplied staging directory.</param>
+    internal static void WriteOutputsAtomically(
+        string outputDirectory,
+        Action<string> writeStagedOutputs)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
+        ArgumentNullException.ThrowIfNull(writeStagedOutputs);
+
         Directory.CreateDirectory(outputDirectory);
-        var entries = new List<ScreenshotManifestEntry>();
-
-        foreach (var request in requests)
+        var stagingDirectory = Path.Combine(
+            outputDirectory,
+            $".echoglossian-previewer-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(stagingDirectory);
+        try
         {
-            var outputPath = GetOutputPath(request);
-            CapturedScreenshot capture;
-            try
-            {
-                capture = this.Capture(request, outputPath);
-            }
-            catch (Exception exception) when (Program.IsExpectedInteractiveScreenshotFailure(exception))
-            {
-                throw new InvalidOperationException(
-                    Program.HandleScreenshotFailure(
-                        request.CaptureTarget,
-                        outputPath,
-                        exception),
-                    exception);
-            }
-
-            entries.Add(this.CreateManifestEntry(request, capture));
+            writeStagedOutputs(stagingDirectory);
+            PublishStagedOutputs(stagingDirectory, outputDirectory);
         }
+        finally
+        {
+            TryDeleteStagingDirectory(stagingDirectory);
+        }
+    }
 
-        var manifest = new ScreenshotManifest(
-            GetManifestConfigSourceLabel(this.sourceConfiguration),
-            this.fontSelection.FontPaths.Select(Path.GetFileName).ToArray()!,
-            this.fontSelection.FontSize,
-            entries);
-        var manifestPath = Path.Combine(outputDirectory, "manifest.json");
-        File.WriteAllText(
-            manifestPath,
-            SerializeManifest(manifest));
+    /// <summary>
+    /// Publishes staged outputs while restoring prior generated outputs if a
+    /// later replacement fails.
+    /// </summary>
+    /// <param name="stagingDirectory">The private staging directory containing complete outputs.</param>
+    /// <param name="outputDirectory">The final screenshot output directory.</param>
+    /// <param name="moveFile">Moves one file and is injectable for failure testing.</param>
+    internal static void PublishStagedOutputs(
+        string stagingDirectory,
+        string outputDirectory,
+        Action<string, string>? moveFile = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(stagingDirectory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
+
+        var stagedFiles = Directory.EnumerateFiles(
+                stagingDirectory,
+                "*",
+                SearchOption.TopDirectoryOnly)
+            .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var rollbackDirectory = Path.Combine(stagingDirectory, "rollback");
+        Directory.CreateDirectory(rollbackDirectory);
+        var move = moveFile ?? File.Move;
+        var backups = new List<(string BackupPath, string DestinationPath)>();
+        var publishedPaths = new List<string>();
+
+        try
+        {
+            foreach (var stagedFile in stagedFiles)
+            {
+                var destinationPath = Path.Combine(outputDirectory, Path.GetFileName(stagedFile));
+                if (!File.Exists(destinationPath))
+                {
+                    continue;
+                }
+
+                var backupPath = Path.Combine(rollbackDirectory, Path.GetFileName(stagedFile));
+                move(destinationPath, backupPath);
+                backups.Add((backupPath, destinationPath));
+            }
+
+            foreach (var stagedFile in stagedFiles)
+            {
+                var destinationPath = Path.Combine(outputDirectory, Path.GetFileName(stagedFile));
+                move(stagedFile, destinationPath);
+                publishedPaths.Add(destinationPath);
+            }
+        }
+        catch
+        {
+            foreach (var publishedPath in publishedPaths)
+            {
+                TryDeleteFile(publishedPath);
+            }
+
+            foreach (var backup in backups.AsEnumerable().Reverse())
+            {
+                TryDeleteFile(backup.DestinationPath);
+                TryMoveFile(move, backup.BackupPath, backup.DestinationPath);
+            }
+
+            throw;
+        }
     }
 
     /// <summary>
@@ -159,6 +257,26 @@ internal sealed class BatchScreenshotRunner
         ArgumentException.ThrowIfNullOrWhiteSpace(pngPath);
         var fileName = Path.GetFileName(pngPath);
         return string.IsNullOrWhiteSpace(fileName) ? "screenshot.png" : fileName;
+    }
+
+    /// <summary>
+    /// Resolves target-specific manifest fields without representing an
+    /// unrendered overlay as a plugin-window capture surface.
+    /// </summary>
+    /// <param name="target">The captured target.</param>
+    /// <param name="overlaySurfaceKey">The rendered overlay surface identifier.</param>
+    /// <param name="presentationMode">The rendered overlay presentation mode.</param>
+    /// <returns>The manifest surface and presentation values for the target.</returns>
+    internal static (string SurfaceKey, string PresentationMode) GetManifestTargetMetadata(
+        PreviewCaptureTarget target,
+        string overlaySurfaceKey,
+        string presentationMode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(overlaySurfaceKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(presentationMode);
+        return PreviewPluginWindowHost.IsPluginWindowTarget(target)
+            ? ("NotApplicable", "NotApplicable")
+            : (overlaySurfaceKey, presentationMode);
     }
 
     /// <summary>
@@ -453,15 +571,81 @@ internal sealed class BatchScreenshotRunner
         ScreenshotRequest request,
         CapturedScreenshot capture)
     {
+        var metadata = GetManifestTargetMetadata(
+            request.CaptureTarget,
+            request.Scenario.SurfaceId.ToString(),
+            capture.RenderResult.PresentationMode.ToString());
         return new ScreenshotManifestEntry(
             request.Scenario.Key,
-            request.Scenario.SurfaceId.ToString(),
+            metadata.SurfaceKey,
             request.Viewport.Width,
             request.Viewport.Height,
             request.Mode.ToString(),
             request.CaptureTarget,
-            capture.RenderResult.PresentationMode.ToString(),
+            metadata.PresentationMode,
             GetManifestPngPathLabel(capture.PngPath));
+    }
+
+    /// <summary>
+    /// Deletes a private staging directory without replacing the capture or
+    /// manifest exception that caused cleanup.
+    /// </summary>
+    /// <param name="stagingDirectory">The private staging directory to remove.</param>
+    private static void TryDeleteStagingDirectory(string stagingDirectory)
+    {
+        try
+        {
+            if (Directory.Exists(stagingDirectory))
+            {
+                Directory.Delete(stagingDirectory, recursive: true);
+            }
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Deletes one partial published output without replacing its original
+    /// publication exception.
+    /// </summary>
+    /// <param name="path">The output path to remove.</param>
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Restores one backed-up output without replacing the original failed
+    /// publication exception.
+    /// </summary>
+    /// <param name="moveFile">The file move operation used for publication.</param>
+    /// <param name="sourcePath">The backup source path.</param>
+    /// <param name="destinationPath">The original output path.</param>
+    private static void TryMoveFile(
+        Action<string, string> moveFile,
+        string sourcePath,
+        string destinationPath)
+    {
+        try
+        {
+            if (File.Exists(sourcePath))
+            {
+                moveFile(sourcePath, destinationPath);
+            }
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+        }
     }
 
     /// <summary>

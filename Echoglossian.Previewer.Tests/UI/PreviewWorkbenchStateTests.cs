@@ -164,6 +164,29 @@ public sealed class PreviewWorkbenchStateTests
     }
 
     /// <summary>
+    /// Ensures plugin-window capture accepts only visible windows at their
+    /// fixed deterministic dimensions.
+    /// </summary>
+    [Theory]
+    [InlineData(true, 1000, 900, true)]
+    [InlineData(false, 1000, 900, false)]
+    [InlineData(true, 1000, 24, false)]
+    [InlineData(true, 999, 900, false)]
+    public void IsCaptureBoundsValid_RequiresVisibleExpectedBounds(
+        bool isVisible,
+        int width,
+        int height,
+        bool expected)
+    {
+        var valid = PreviewPluginWindowHost.IsCaptureBoundsValid(
+            PreviewCaptureTarget.ConfigWindow,
+            isVisible,
+            new Rectangle(0, 0, width, height));
+
+        Assert.Equal(expected, valid);
+    }
+
+    /// <summary>
     /// Ensures ending a capture releases layout while retaining completed bounds for consumption.
     /// </summary>
     [Fact]

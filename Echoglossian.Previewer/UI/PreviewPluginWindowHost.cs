@@ -160,7 +160,7 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         {
             this.captureStabilityTracker.Observe(
                 captureTarget,
-                this.TryGetCrop(captureTarget));
+                this.TryGetValidCaptureBounds(captureTarget));
         }
     }
 
@@ -213,9 +213,33 @@ internal sealed class PreviewPluginWindowHost : IDisposable
     {
         return this.captureStabilityTracker.TryGetStableBounds(
             target,
-            out var bounds)
+            out var bounds) &&
+            IsCaptureBoundsValid(target, this.IsCaptureTargetVisible(target), bounds)
             ? bounds
             : null;
+    }
+
+    /// <summary>
+    /// Determines whether observed bounds represent the visible target at its
+    /// deterministic capture dimensions.
+    /// </summary>
+    /// <param name="target">The plugin-window capture target.</param>
+    /// <param name="isVisible"><see langword="true" /> when the target window remains open and visible.</param>
+    /// <param name="bounds">The observed integer window bounds.</param>
+    /// <returns><see langword="true" /> when the bounds are valid for capture; otherwise, <see langword="false" />.</returns>
+    internal static bool IsCaptureBoundsValid(
+        PreviewCaptureTarget target,
+        bool isVisible,
+        Rectangle? bounds)
+    {
+        var expectedSize = GetCaptureLayoutSize(target);
+        return IsPluginWindowTarget(target) &&
+            isVisible &&
+            expectedSize.Width > 0 &&
+            expectedSize.Height > 0 &&
+            bounds is { } candidate &&
+            candidate.Width == expectedSize.Width &&
+            candidate.Height == expectedSize.Height;
     }
 
     /// <summary>
@@ -260,6 +284,37 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         var size = GetCaptureLayoutSize(target);
         ImGui.SetNextWindowPos(Vector2.Zero, ImGuiCond.Always);
         ImGui.SetNextWindowSize(new Vector2(size.Width, size.Height), ImGuiCond.Always);
+    }
+
+    /// <summary>
+    /// Gets current bounds only when the requested target remains visible at
+    /// its fixed capture dimensions.
+    /// </summary>
+    /// <param name="target">The requested plugin-window target.</param>
+    /// <returns>The valid capture bounds, or <see langword="null" /> when unavailable.</returns>
+    private Rectangle? TryGetValidCaptureBounds(PreviewCaptureTarget target)
+    {
+        var bounds = this.TryGetCrop(target);
+        return IsCaptureBoundsValid(target, this.IsCaptureTargetVisible(target), bounds)
+            ? bounds
+            : null;
+    }
+
+    /// <summary>
+    /// Determines whether the requested plugin window remains open after its
+    /// current frame has been drawn.
+    /// </summary>
+    /// <param name="target">The plugin-window target to inspect.</param>
+    /// <returns><see langword="true" /> when the target remains visible; otherwise, <see langword="false" />.</returns>
+    private bool IsCaptureTargetVisible(PreviewCaptureTarget target)
+    {
+        return target switch
+        {
+            PreviewCaptureTarget.ConfigWindow => this.configWindowBounds is not null,
+            PreviewCaptureTarget.DbManagerWindow => this.dbEditorWindow?.IsOpen == true,
+            PreviewCaptureTarget.TranslatorMetricsWindow => this.translatorMetricsWindow.IsOpen,
+            _ => false,
+        };
     }
 
     /// <summary>

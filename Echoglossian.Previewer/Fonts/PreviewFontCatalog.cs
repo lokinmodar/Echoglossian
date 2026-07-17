@@ -14,6 +14,56 @@ namespace Echoglossian.Previewer.Fonts;
 /// </summary>
 public static class PreviewFontCatalog
 {
+    private static readonly string[] DownloadedFontFileNames =
+    [
+        "NotoSansCJKhk-Regular.otf",
+        "NotoSansCJKjp-Regular.otf",
+        "NotoSansCJKkr-Regular.otf",
+        "NotoSansCJKsc-Regular.otf",
+        "NotoSansCJKtc-Regular.otf",
+        "NotoSansCanadianAboriginal-Regular.ttf",
+        "NotoSansEthiopic-Medium.ttf",
+        "NotoSansNKo-Regular.ttf",
+        "NotoSansOlChiki-Regular.ttf",
+        "NotoSansThaana-Medium.ttf",
+        "NotoSerifTibetan-Regular.ttf",
+    ];
+
+    /// <summary>
+    /// Configures the standalone process's downloaded-font asset catalog and
+    /// reports when the selected language font is unavailable.
+    /// </summary>
+    /// <param name="selectedLanguage">The language selected by the preview configuration.</param>
+    /// <param name="configuration">The preview-owned editable configuration.</param>
+    /// <param name="rootDirectory">The directory containing the previewer's <c>Font</c> directory.</param>
+    /// <returns>Non-secret diagnostics for unavailable selected font assets.</returns>
+    internal static IReadOnlyList<string> InitializePreviewAssets(
+        LanguageInfo selectedLanguage,
+        Config configuration,
+        string? rootDirectory = null)
+    {
+        ArgumentNullException.ThrowIfNull(selectedLanguage);
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        var resolvedRoot = Path.GetFullPath(rootDirectory ?? AppContext.BaseDirectory);
+        var assetsPath = Path.Combine(resolvedRoot, "Font");
+        global::Echoglossian.AssetsManager.AssetsPath = assetsPath;
+        global::Echoglossian.AssetsManager.AssetFiles = [.. DownloadedFontFileNames];
+        global::Echoglossian.AssetsManager.RefreshPluginAssetsState(selectedLanguage);
+        configuration.PluginAssetsDownloaded = global::Echoglossian.AssetsManager.PluginAssetsDownloaded;
+
+        if (!global::Echoglossian.AssetsManager.HasMissingRequiredAssets(selectedLanguage))
+        {
+            return [];
+        }
+
+        return
+        [
+            $"Preview selected language font is unavailable: {selectedLanguage.FontName}. " +
+            $"Expected it in {assetsPath}.",
+        ];
+    }
+
     /// <summary>
     /// Resolves the selected language font and common plugin font files.
     /// </summary>

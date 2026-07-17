@@ -134,6 +134,9 @@ internal static class Program
             editableConfiguration);
 
         Echoglossian.SelectedLanguage = selectedLanguage;
+        var fontAssetDiagnostics = PreviewFontCatalog.InitializePreviewAssets(
+            selectedLanguage,
+            editableConfiguration);
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
             editableConfiguration.FontSize);
@@ -162,7 +165,7 @@ internal static class Program
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
-            session.Diagnostics,
+            session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
             composition.Renderer,
             pluginWindowHost,
             scenario,
@@ -232,6 +235,14 @@ internal static class Program
         var (languages, selectedLanguage) = InitializePreviewLanguageRuntime(
             editableConfiguration);
         Echoglossian.SelectedLanguage = selectedLanguage;
+        var fontAssetDiagnostics = PreviewFontCatalog.InitializePreviewAssets(
+            selectedLanguage,
+            editableConfiguration);
+        foreach (var diagnostic in fontAssetDiagnostics)
+        {
+            Console.Error.WriteLine(diagnostic);
+        }
+
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
             editableConfiguration.FontSize);
@@ -521,6 +532,23 @@ internal static class Program
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
         ArgumentNullException.ThrowIfNull(exception);
         TryDeleteScreenshotFile(outputPath);
+        return CreateScreenshotFailureMessage(captureTarget, outputPath, exception);
+    }
+
+    /// <summary>
+    /// Creates contextual screenshot failure text without modifying an output path.
+    /// </summary>
+    /// <param name="captureTarget">The requested screenshot target.</param>
+    /// <param name="outputPath">The requested output path.</param>
+    /// <param name="exception">The capture exception.</param>
+    /// <returns>The contextual capture failure message.</returns>
+    internal static string CreateScreenshotFailureMessage(
+        PreviewCaptureTarget captureTarget,
+        string outputPath,
+        Exception exception)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(exception);
         return $"{captureTarget} capture to {outputPath} failed: {exception.Message}";
     }
 

@@ -268,3 +268,41 @@ DONE
 
 - Existing environment/package warnings remain: the Multilingual App Toolkit is unavailable and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 reports `NU1903`. No task-specific validation failures remain.
 - The pre-existing `.superpowers/sdd/task-5-report.md` edit was not modified or included in this work.
+
+---
+
+# Final Branch Review Fix Wave Round 5
+
+## What Changed
+
+- Plugin-window capture now accepts bounds only when the requested target remains open and its observed integer size exactly matches the target's fixed deterministic capture size. Closed, stale, and collapsed windows therefore cannot satisfy stabilization or be cropped after the tracker releases layout.
+- Preview startup now configures the standalone process's `AssetsManager.AssetsPath` and complete downloaded-font catalog before resolving fonts. The selected language's required asset state is refreshed into the preview config; unavailable downloaded fonts produce an explicit shell diagnostic for interactive preview and stderr diagnostic for exports.
+- Batch export now writes PNGs and the manifest to a per-run private staging directory. Nothing is published until every capture and manifest write succeeds. Publication backs up replacing outputs and restores them if a later move fails; staging cleanup preserves unrelated destination files on every failure path.
+- Plugin-window manifest entries now emit `NotApplicable` for overlay surface and presentation metadata because an overlay is intentionally not rendered for those targets.
+
+## Tests Run
+
+1. `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore -p:VSTestMaxCpuCount=1 --filter "FullyQualifiedName~PreviewWorkbenchStateTests|FullyQualifiedName~PreviewFontCatalogTests|FullyQualifiedName~BatchScreenshotRunnerTests"`
+   - Passed: 54 passed, 0 failed, 0 skipped.
+2. `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-build --no-restore -p:VSTestMaxCpuCount=1`
+   - Passed: 112 passed, 0 failed, 0 skipped.
+3. `dotnet build Echoglossian.sln -c Debug --no-restore`
+   - Passed: 0 errors.
+4. `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1`
+   - Passed: 627 passed, 0 failed, 0 skipped.
+
+## Files Changed
+
+- `Echoglossian.Previewer/UI/PreviewPluginWindowHost.cs`
+- `Echoglossian.Previewer/Fonts/PreviewFontCatalog.cs`
+- `Echoglossian.Previewer/Program.cs`
+- `Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs`
+- `Echoglossian.Previewer.Tests/UI/PreviewWorkbenchStateTests.cs`
+- `Echoglossian.Previewer.Tests/Fonts/PreviewFontCatalogTests.cs`
+- `Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerTests.cs`
+- `.superpowers/sdd/final-review-fix-report.md`
+
+## Concerns
+
+- Existing environment/package warnings remain: the Multilingual App Toolkit is unavailable and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 reports `NU1903`.
+- The pre-existing `.superpowers/sdd/task-5-report.md` edit was not modified or included in this work.

@@ -139,6 +139,105 @@ public sealed class BatchScreenshotRunnerTests
     }
 
     /// <summary>
+    /// Ensures plugin-window captures explicitly mark overlay-specific
+    /// manifest metadata as not applicable.
+    /// </summary>
+    [Fact]
+    public void GetManifestTargetMetadata_PluginWindow_UsesNotApplicableValues()
+    {
+        var metadata = BatchScreenshotRunner.GetManifestTargetMetadata(
+            PreviewCaptureTarget.DbManagerWindow,
+            "Talk",
+            "PlainImGui");
+
+        Assert.Equal("NotApplicable", metadata.SurfaceKey);
+        Assert.Equal("NotApplicable", metadata.PresentationMode);
+    }
+
+    /// <summary>
+    /// Ensures a failed staged capture leaves the destination's existing files
+    /// untouched and removes its private staging directory.
+    /// </summary>
+    [Fact]
+    public void WriteOutputsAtomically_StagedCaptureFailure_PreservesDestination()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            Directory.CreateDirectory(destination);
+            var unrelatedPath = Path.Combine(destination, "notes.txt");
+            File.WriteAllText(unrelatedPath, "keep");
+
+            Assert.Throws<IOException>(() =>
+                BatchScreenshotRunner.WriteOutputsAtomically(
+                    destination,
+                    stagingDirectory =>
+                    {
+                        File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "partial");
+                        throw new IOException("second capture failed");
+                    }));
+
+            Assert.Equal("keep", File.ReadAllText(unrelatedPath));
+            Assert.DoesNotContain(
+                Directory.EnumerateFileSystemEntries(destination),
+                path => Path.GetFileName(path).StartsWith(".echoglossian-previewer-", StringComparison.Ordinal));
+            Assert.DoesNotContain(Directory.EnumerateFiles(destination), path => path.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures a failed publication restores files from an earlier successful
+    /// batch instead of leaving a partially replaced destination.
+    /// </summary>
+    [Fact]
+    public void PublishStagedOutputs_LaterMoveFailure_RestoresExistingOutputs()
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory();
+        try
+        {
+            var destination = Path.Combine(tempDirectory.FullName, "captures");
+            var stagingDirectory = Path.Combine(tempDirectory.FullName, "staging");
+            Directory.CreateDirectory(destination);
+            Directory.CreateDirectory(stagingDirectory);
+            File.WriteAllText(Path.Combine(destination, "first.png"), "old-first");
+            File.WriteAllText(Path.Combine(destination, "manifest.json"), "old-manifest");
+            File.WriteAllText(Path.Combine(destination, "notes.txt"), "keep");
+            File.WriteAllText(Path.Combine(stagingDirectory, "first.png"), "new-first");
+            File.WriteAllText(Path.Combine(stagingDirectory, "manifest.json"), "new-manifest");
+
+            Assert.Throws<IOException>(() =>
+                BatchScreenshotRunner.PublishStagedOutputs(
+                    stagingDirectory,
+                    destination,
+                    (source, target) =>
+                    {
+                        if (string.Equals(
+                                source,
+                                Path.Combine(stagingDirectory, "manifest.json"),
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new IOException("manifest publish failed");
+                        }
+
+                        File.Move(source, target);
+                    }));
+
+            Assert.Equal("old-first", File.ReadAllText(Path.Combine(destination, "first.png")));
+            Assert.Equal("old-manifest", File.ReadAllText(Path.Combine(destination, "manifest.json")));
+            Assert.Equal("keep", File.ReadAllText(Path.Combine(destination, "notes.txt")));
+        }
+        finally
+        {
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Ensures plugin-window captures rely on stable window bounds rather than overlay draw success.
     /// </summary>
     [Theory]
@@ -190,11 +289,11 @@ public sealed class BatchScreenshotRunnerTests
     }
 
     /// <summary>
-    /// Ensures batch capture failures use the shared cleanup and contextual
-    /// reporting path used by interactive capture.
+    /// Ensures batch capture failures use shared contextual reporting without
+    /// deleting pre-existing destination files before staging cleanup.
     /// </summary>
     [Fact]
-    public void Run_ExpectedCaptureFailure_UsesSharedFailureHandling()
+    public void Run_ExpectedCaptureFailure_UsesSharedFailureMessage()
     {
         var source = File.ReadAllText(Path.Combine(
             this.RepositoryRoot,
@@ -202,7 +301,7 @@ public sealed class BatchScreenshotRunnerTests
             "Screenshots",
             "BatchScreenshotRunner.cs"));
 
-        Assert.Contains("Program.HandleScreenshotFailure(", source, StringComparison.Ordinal);
+        Assert.Contains("Program.CreateScreenshotFailureMessage(", source, StringComparison.Ordinal);
     }
 
     /// <summary>
