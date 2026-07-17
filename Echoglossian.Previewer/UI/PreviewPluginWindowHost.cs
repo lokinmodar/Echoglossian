@@ -32,7 +32,6 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         RequiredCaptureStableFrames,
         MaximumCaptureObservationFrames);
     private RectangleF? configWindowBounds;
-    private PreviewCaptureTarget captureTarget = PreviewCaptureTarget.FullFrame;
     private bool disposed;
 
     /// <summary>
@@ -97,8 +96,15 @@ internal sealed class PreviewPluginWindowHost : IDisposable
                 "DbManagerWindow capture requires an available preview database snapshot.");
         }
 
-        this.captureTarget = target;
         this.captureStabilityTracker.Begin(target);
+    }
+
+    /// <summary>
+    /// Ends capture stabilization and releases deterministic window layout.
+    /// </summary>
+    internal void EndCapture()
+    {
+        this.captureStabilityTracker.End();
     }
 
     /// <summary>
@@ -149,11 +155,12 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         state.TranslatorMetricsWindowOpen = this.translatorMetricsWindow.IsOpen;
         SynchronizeDbManagerState(state, this.dbEditorWindow);
 
-        if (IsPluginWindowTarget(this.captureTarget))
+        if (this.captureStabilityTracker.Target is { } captureTarget &&
+            IsPluginWindowTarget(captureTarget))
         {
             this.captureStabilityTracker.Observe(
-                this.captureTarget,
-                this.TryGetCrop(this.captureTarget));
+                captureTarget,
+                this.TryGetCrop(captureTarget));
         }
     }
 
@@ -245,7 +252,7 @@ internal sealed class PreviewPluginWindowHost : IDisposable
     /// <param name="target">The window about to be drawn.</param>
     private void ApplyCaptureLayout(PreviewCaptureTarget target)
     {
-        if (this.captureTarget != target)
+        if (this.captureStabilityTracker.Target != target)
         {
             return;
         }
@@ -264,7 +271,7 @@ internal sealed class PreviewPluginWindowHost : IDisposable
         PreviewCaptureTarget target,
         string windowName)
     {
-        if (this.captureTarget != target)
+        if (this.captureStabilityTracker.Target != target)
         {
             return;
         }
@@ -298,7 +305,9 @@ internal sealed class PreviewCaptureStabilityTracker
     private readonly int requiredStableFrames;
     private readonly int maximumObservationFrames;
     private PreviewCaptureTarget? target;
+    private PreviewCaptureTarget? completedTarget;
     private Rectangle? lastBounds;
+    private Rectangle? completedBounds;
     private int stableFrameCount;
     private int observationFrameCount;
 
@@ -334,12 +343,43 @@ internal sealed class PreviewCaptureStabilityTracker
         this.stableFrameCount < this.requiredStableFrames;
 
     /// <summary>
+    /// Gets the active plugin-window capture target.
+    /// </summary>
+    internal PreviewCaptureTarget? Target => this.target;
+
+    /// <summary>
     /// Resets tracking for a new plugin-window target.
     /// </summary>
     /// <param name="target">The plugin-window capture target.</param>
     internal void Begin(PreviewCaptureTarget target)
     {
         this.target = target;
+        this.completedTarget = null;
+        this.lastBounds = null;
+        this.completedBounds = null;
+        this.stableFrameCount = 0;
+        this.observationFrameCount = 0;
+    }
+
+    /// <summary>
+    /// Clears all active capture and stabilization state.
+    /// </summary>
+    internal void End()
+    {
+        if (this.target is { } activeTarget &&
+            this.stableFrameCount >= this.requiredStableFrames &&
+            this.lastBounds is { } stableBounds)
+        {
+            this.completedTarget = activeTarget;
+            this.completedBounds = stableBounds;
+        }
+        else
+        {
+            this.completedTarget = null;
+            this.completedBounds = null;
+        }
+
+        this.target = null;
         this.lastBounds = null;
         this.stableFrameCount = 0;
         this.observationFrameCount = 0;
@@ -390,6 +430,13 @@ internal sealed class PreviewCaptureStabilityTracker
             this.lastBounds is { } stableBounds)
         {
             bounds = stableBounds;
+            return true;
+        }
+
+        if (this.completedTarget == target &&
+            this.completedBounds is { } completedStableBounds)
+        {
+            bounds = completedStableBounds;
             return true;
         }
 

@@ -164,6 +164,60 @@ public sealed class PreviewWorkbenchStateTests
     }
 
     /// <summary>
+    /// Ensures ending a capture releases layout while retaining completed bounds for consumption.
+    /// </summary>
+    [Fact]
+    public void CaptureStabilityTracker_End_ReleasesLayoutAndRetainsCompletedBounds()
+    {
+        var tracker = new PreviewCaptureStabilityTracker(
+            requiredStableFrames: 2,
+            maximumObservationFrames: 3);
+        var bounds = new Rectangle(20, 30, 900, 800);
+        tracker.Begin(PreviewCaptureTarget.ConfigWindow);
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, bounds);
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, bounds);
+
+        tracker.End();
+
+        Assert.Null(tracker.Target);
+        Assert.False(tracker.CaptureFailed);
+        Assert.True(tracker.TryGetStableBounds(
+            PreviewCaptureTarget.ConfigWindow,
+            out var completedBounds));
+        Assert.Equal(bounds, completedBounds);
+    }
+
+    /// <summary>
+    /// Ensures language and font changes are identified as requiring a preview restart.
+    /// </summary>
+    [Theory]
+    [InlineData(28, 24, false)]
+    [InlineData(2, 24, true)]
+    [InlineData(28, 31, true)]
+    public void GetRuntimeRestartWarning_ReflectsAppliedRuntimeValues(
+        int languageId,
+        int fontSize,
+        bool warningExpected)
+    {
+        var configuration = new Config
+        {
+            Lang = languageId,
+            FontSize = fontSize,
+        };
+
+        var warning = PreviewShell.GetRuntimeRestartWarning(
+            configuration,
+            appliedLanguageId: 28,
+            appliedFontSize: 24);
+
+        Assert.Equal(warningExpected, warning is not null);
+        if (warningExpected)
+        {
+            Assert.Contains("restart", warning, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    /// <summary>
     /// Ensures preview config windows explicitly disable unavailable imagery.
     /// </summary>
     [Fact]

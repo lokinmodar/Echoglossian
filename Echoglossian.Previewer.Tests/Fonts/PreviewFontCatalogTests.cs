@@ -162,6 +162,44 @@ public sealed class PreviewFontCatalogTests
     }
 
     /// <summary>
+    /// Ensures startup language resolution repairs an unknown configured identifier.
+    /// </summary>
+    [Fact]
+    public void NormalizePreviewLanguage_UnknownConfiguredId_WritesFallbackKey()
+    {
+        var languages = new Dictionary<int, LanguageInfo>
+        {
+            [28] = new LanguageInfo("en", "English", "en.ttf", string.Empty, []),
+            [7] = new LanguageInfo("aa", "A Test", "a.ttf", string.Empty, []),
+        };
+        var configuration = new Config { Lang = 12345 };
+
+        var language = Program.NormalizePreviewLanguage(languages, configuration);
+
+        Assert.Equal(28, configuration.Lang);
+        Assert.Same(languages[28], language);
+    }
+
+    /// <summary>
+    /// Ensures startup language resolution preserves a valid configured identifier.
+    /// </summary>
+    [Fact]
+    public void NormalizePreviewLanguage_KnownConfiguredId_PreservesKey()
+    {
+        var languages = new Dictionary<int, LanguageInfo>
+        {
+            [28] = new LanguageInfo("en", "English", "en.ttf", string.Empty, []),
+            [7] = new LanguageInfo("aa", "A Test", "a.ttf", string.Empty, []),
+        };
+        var configuration = new Config { Lang = 7 };
+
+        var language = Program.NormalizePreviewLanguage(languages, configuration);
+
+        Assert.Equal(7, configuration.Lang);
+        Assert.Same(languages[7], language);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The absolute repository root path.</returns>

@@ -129,14 +129,9 @@ internal static class Program
             commandLine.ViewportWidth,
             commandLine.ViewportHeight);
         var languages = Echoglossian.CreateLanguagesDictionary();
-        var selectedLanguage = ResolvePreviewLanguage(
+        var selectedLanguage = NormalizePreviewLanguage(
             languages,
-            editableConfiguration.Lang);
-        if (!languages.ContainsKey(editableConfiguration.Lang))
-        {
-            editableConfiguration.Lang = languages.First(
-                candidate => ReferenceEquals(candidate.Value, selectedLanguage)).Key;
-        }
+            editableConfiguration);
 
         Echoglossian.SelectedLanguage = selectedLanguage;
         var fontSelection = PreviewFontCatalog.Resolve(
@@ -167,12 +162,12 @@ internal static class Program
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
+            session.Diagnostics,
             composition.Renderer,
             pluginWindowHost,
             scenario,
             viewport);
-        using var configSaveScope = PluginConfigSaveScope.Push(
-            config => SavePreviewConfiguration(session.ClonedConfigPath, config));
+        using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
 
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
         host.Run(
@@ -230,7 +225,7 @@ internal static class Program
         var sourceConfiguration = session.Configuration;
         var editableConfiguration = session.EditableConfiguration;
         var languages = Echoglossian.CreateLanguagesDictionary();
-        var selectedLanguage = ResolvePreviewLanguage(languages, editableConfiguration.Lang);
+        var selectedLanguage = NormalizePreviewLanguage(languages, editableConfiguration);
         Echoglossian.SelectedLanguage = selectedLanguage;
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
@@ -262,6 +257,7 @@ internal static class Program
             }
         }
 
+        using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
         var runner = new BatchScreenshotRunner(
             sourceConfiguration,
             editableConfiguration,
@@ -418,19 +414,68 @@ internal static class Program
         return ResolvePreviewLanguage(languages, languageId);
     }
 
+    /// <summary>
+    /// Resolves preview language metadata from a supplied language dictionary.
+    /// </summary>
+    /// <param name="languages">The available plugin languages.</param>
+    /// <param name="languageId">The configured language identifier.</param>
+    /// <returns>The configured or fallback language metadata.</returns>
     internal static LanguageInfo ResolvePreviewLanguage(
+        IReadOnlyDictionary<int, LanguageInfo> languages,
+        int languageId)
+    {
+        return ResolvePreviewLanguageEntry(languages, languageId).Value;
+    }
+
+    /// <summary>
+    /// Resolves preview language metadata and repairs an invalid configured identifier.
+    /// </summary>
+    /// <param name="languages">The available plugin languages.</param>
+    /// <param name="configuration">The preview-owned mutable configuration.</param>
+    /// <returns>The configured or fallback language metadata.</returns>
+    internal static LanguageInfo NormalizePreviewLanguage(
+        IReadOnlyDictionary<int, LanguageInfo> languages,
+        Config configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var selectedLanguage = ResolvePreviewLanguageEntry(
+            languages,
+            configuration.Lang);
+        configuration.Lang = selectedLanguage.Key;
+        return selectedLanguage.Value;
+    }
+
+    /// <summary>
+    /// Installs preview-owned configuration persistence for renderer-side saves.
+    /// </summary>
+    /// <param name="clonedConfigPath">The session-owned configuration clone path.</param>
+    /// <returns>The save-scope lifetime.</returns>
+    internal static IDisposable PushPreviewConfigSaveScope(string clonedConfigPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(clonedConfigPath);
+        return PluginConfigSaveScope.Push(
+            config => SavePreviewConfiguration(clonedConfigPath, config));
+    }
+
+    /// <summary>
+    /// Resolves the configured language entry or the deterministic fallback entry.
+    /// </summary>
+    /// <param name="languages">The available plugin languages.</param>
+    /// <param name="languageId">The configured language identifier.</param>
+    /// <returns>The configured or fallback language entry.</returns>
+    private static KeyValuePair<int, LanguageInfo> ResolvePreviewLanguageEntry(
         IReadOnlyDictionary<int, LanguageInfo> languages,
         int languageId)
     {
         ArgumentNullException.ThrowIfNull(languages);
         if (languages.TryGetValue(languageId, out var language))
         {
-            return language;
+            return new KeyValuePair<int, LanguageInfo>(languageId, language);
         }
 
         if (languages.TryGetValue(28, out var englishLanguage))
         {
-            return englishLanguage;
+            return new KeyValuePair<int, LanguageInfo>(28, englishLanguage);
         }
 
         KeyValuePair<int, LanguageInfo>? fallbackLanguage = null;
@@ -443,7 +488,7 @@ internal static class Program
             }
         }
 
-        return fallbackLanguage?.Value ?? throw new InvalidOperationException(
+        return fallbackLanguage ?? throw new InvalidOperationException(
             "Preview language dictionary is empty.");
     }
 

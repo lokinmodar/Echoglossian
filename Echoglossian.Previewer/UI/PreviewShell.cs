@@ -24,10 +24,13 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewConfiguration sourceConfiguration;
     private readonly Config editableConfiguration;
     private readonly PreviewFontSelection fontSelection;
+    private readonly IReadOnlyList<string> sessionDiagnostics;
     private readonly PreviewCanvas canvas;
     private readonly PreviewPluginWindowHost pluginWindowHost;
     private readonly PreviewWorkbenchState workbenchState;
     private readonly PreviewShellState state;
+    private readonly int appliedLanguageId;
+    private readonly int appliedFontSize;
     private PreviewCaptureRequest? pendingScreenshotRequest;
     private string screenshotStatus = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
@@ -43,6 +46,7 @@ internal sealed class PreviewShell : IDisposable
     /// <param name="sourceConfiguration">The read-only source configuration.</param>
     /// <param name="editableConfiguration">The preview-owned editable configuration.</param>
     /// <param name="fontSelection">The resolved preview font selection.</param>
+    /// <param name="sessionDiagnostics">The configuration and database session diagnostics.</param>
     /// <param name="renderer">The shared overlay renderer.</param>
     /// <param name="pluginWindowHost">The real plugin-window host.</param>
     /// <param name="scenario">The initial scenario.</param>
@@ -51,6 +55,7 @@ internal sealed class PreviewShell : IDisposable
         PreviewConfiguration sourceConfiguration,
         Config editableConfiguration,
         PreviewFontSelection fontSelection,
+        IReadOnlyList<string> sessionDiagnostics,
         TranslationOverlayRenderer renderer,
         PreviewPluginWindowHost pluginWindowHost,
         PreviewScenario scenario,
@@ -62,6 +67,10 @@ internal sealed class PreviewShell : IDisposable
             throw new ArgumentNullException(nameof(editableConfiguration));
         this.fontSelection = fontSelection ??
             throw new ArgumentNullException(nameof(fontSelection));
+        this.sessionDiagnostics = sessionDiagnostics ??
+            throw new ArgumentNullException(nameof(sessionDiagnostics));
+        this.appliedLanguageId = editableConfiguration.Lang;
+        this.appliedFontSize = fontSelection.FontSize;
         this.canvas = new PreviewCanvas(renderer);
         this.pluginWindowHost = pluginWindowHost ??
             throw new ArgumentNullException(nameof(pluginWindowHost));
@@ -137,6 +146,7 @@ internal sealed class PreviewShell : IDisposable
             if (this.pluginWindowHost.CaptureFailed)
             {
                 this.pendingScreenshotRequest = null;
+                this.pluginWindowHost.EndCapture();
                 this.screenshotStatus =
                     $"Screenshot failed: {pendingRequest.CaptureTarget} " +
                     "did not produce stable bounds.";
@@ -150,6 +160,8 @@ internal sealed class PreviewShell : IDisposable
                 request = null!;
                 return false;
             }
+
+            this.pluginWindowHost.EndCapture();
         }
 
         this.pendingScreenshotRequest = null;
@@ -166,6 +178,25 @@ internal sealed class PreviewShell : IDisposable
     /// Gets the most recent overlay render result.
     /// </summary>
     internal TranslationOverlayRenderResult LastRenderResult => this.lastRenderResult;
+
+    /// <summary>
+    /// Gets a warning when mutable config no longer matches the applied startup runtime.
+    /// </summary>
+    /// <param name="configuration">The current preview-owned configuration.</param>
+    /// <param name="appliedLanguageId">The language identifier applied at startup.</param>
+    /// <param name="appliedFontSize">The font size applied at startup.</param>
+    /// <returns>A restart warning when runtime values are stale; otherwise, <see langword="null" />.</returns>
+    internal static string? GetRuntimeRestartWarning(
+        Config configuration,
+        int appliedLanguageId,
+        int appliedFontSize)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        return configuration.Lang != appliedLanguageId ||
+            configuration.FontSize != appliedFontSize
+            ? "Restart the previewer to apply config language or font size changes."
+            : null;
+    }
 
     /// <inheritdoc/>
     public void Dispose()
@@ -318,6 +349,7 @@ internal sealed class PreviewShell : IDisposable
         ScreenshotMode mode,
         PreviewCaptureTarget target)
     {
+        this.pluginWindowHost.EndCapture();
         if (PreviewPluginWindowHost.IsPluginWindowTarget(target))
         {
             switch (target)
@@ -398,7 +430,16 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted($"Presentation mode: {this.lastRenderResult.PresentationMode}");
         ImGui.TextUnformatted(
             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");
-        foreach (var diagnostic in this.sourceConfiguration.Diagnostics)
+        var restartWarning = GetRuntimeRestartWarning(
+            this.editableConfiguration,
+            this.appliedLanguageId,
+            this.appliedFontSize);
+        if (restartWarning is not null)
+        {
+            ImGui.TextWrapped(restartWarning);
+        }
+
+        foreach (var diagnostic in this.sessionDiagnostics)
         {
             ImGui.TextWrapped(diagnostic);
         }

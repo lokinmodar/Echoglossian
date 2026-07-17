@@ -51,7 +51,9 @@ internal static class PreviewSessionLoader
 
         try
         {
-            var clonedConfigPath = Path.Combine(workingDirectory, "Echoglossian.json");
+            var clonedConfigPath = Path.Combine(
+                workingDirectory,
+                "Echoglossian.preview.json");
             File.WriteAllText(
                 clonedConfigPath,
                 JsonConvert.SerializeObject(editableConfiguration, Formatting.Indented));
@@ -64,7 +66,7 @@ internal static class PreviewSessionLoader
             {
                 var databaseCloneCandidate = Path.Combine(
                     workingDirectory,
-                    Path.GetFileName(databasePath));
+                    "Echoglossian.preview.db");
                 try
                 {
                     CloneDatabase(databasePath, databaseCloneCandidate);

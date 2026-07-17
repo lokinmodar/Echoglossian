@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.PluginUI;
 using Echoglossian.Previewer.Session;
 
 using Microsoft.Data.Sqlite;
@@ -102,6 +103,66 @@ public sealed class PreviewSessionLoaderTests
                 "database",
                 string.Join(" ", session.Diagnostics),
                 StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            tempRoot.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures config and database clones cannot collide when their source names match.
+    /// </summary>
+    [Fact]
+    public void Load_ConfigAndDatabaseWithMatchingNames_UsesDistinctClonePaths()
+    {
+        var tempRoot = Directory.CreateTempSubdirectory();
+        try
+        {
+            var configDirectory = Directory.CreateDirectory(
+                Path.Combine(tempRoot.FullName, "config"));
+            var databaseDirectory = Directory.CreateDirectory(
+                Path.Combine(tempRoot.FullName, "database"));
+            var configPath = Path.Combine(configDirectory.FullName, "Echoglossian.json");
+            var databasePath = Path.Combine(databaseDirectory.FullName, "Echoglossian.json");
+            File.WriteAllText(configPath, "{\"Lang\":28}");
+            using (var sourceConnection = this.CreateWalDatabase(databasePath))
+            using (var session = PreviewSessionLoader.Load(
+                new PreviewSessionSourceOptions(configPath, databasePath, null)))
+            {
+                Assert.NotEqual(session.ClonedConfigPath, session.ClonedDatabasePath);
+                Assert.True(File.Exists(session.ClonedConfigPath));
+                Assert.True(File.Exists(session.ClonedDatabasePath));
+                Assert.Equal("uncheckpointed", this.ReadStoredValue(session.ClonedDatabasePath!));
+            }
+        }
+        finally
+        {
+            tempRoot.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures the preview save scope writes only to the session-owned config clone.
+    /// </summary>
+    [Fact]
+    public void PushPreviewConfigSaveScope_RedirectsSavesToClone()
+    {
+        var tempRoot = Directory.CreateTempSubdirectory();
+        try
+        {
+            var sourcePath = Path.Combine(tempRoot.FullName, "source.json");
+            var clonePath = Path.Combine(tempRoot.FullName, "clone.json");
+            File.WriteAllText(sourcePath, "{\"Lang\":28}");
+            File.WriteAllText(clonePath, "{\"Lang\":28}");
+
+            using (Program.PushPreviewConfigSaveScope(clonePath))
+            {
+                Assert.True(PluginConfigSaveScope.TrySave(new Config { Lang = 7 }));
+            }
+
+            Assert.Contains("\"Lang\": 7", File.ReadAllText(clonePath), StringComparison.Ordinal);
+            Assert.Equal("{\"Lang\":28}", File.ReadAllText(sourcePath));
         }
         finally
         {
