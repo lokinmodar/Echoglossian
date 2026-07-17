@@ -25,6 +25,13 @@ public class PluginStartupSmokeTests
     }
 
     [Fact]
+    public void StartedPlugin_exposes_rail_owned_host_state_paths()
+    {
+        typeof(StartedPlugin).GetProperty("PluginSavePath").Should().NotBeNull();
+        typeof(StartedPlugin).GetProperty("ConfigPath").Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task StartPluginAsync_marks_expected_startup_stages()
     {
         using var started = await new TestBoot().StartPluginAsync();
@@ -60,34 +67,32 @@ public class PluginStartupSmokeTests
     [Fact]
     public async Task StartPluginAsync_keeps_host_state_out_of_the_test_working_directory()
     {
-        var legacyPluginSavePath = Path.Combine(Environment.CurrentDirectory, ".dalamock");
-        var legacyPluginConfigPath = Path.Combine(Environment.CurrentDirectory, "test.json");
-
-        DeleteLegacyHostState(legacyPluginSavePath, legacyPluginConfigPath);
-
         using var started = await new TestBoot().StartPluginAsync();
 
-        Directory.Exists(legacyPluginSavePath).Should().BeFalse();
-        File.Exists(legacyPluginConfigPath).Should().BeFalse();
+        var workingDirectoryPath = NormalizeDirectoryPath(Environment.CurrentDirectory);
+        var stateRootPath = NormalizeDirectoryPath(started.StateRoot.FullName);
+        var pluginSavePath = NormalizeDirectoryPath(started.PluginSavePath.FullName);
+        var configPath = Path.GetFullPath(started.ConfigPath.FullName);
 
-        DeleteLegacyHostState(legacyPluginSavePath, legacyPluginConfigPath);
+        stateRootPath.StartsWith(workingDirectoryPath, StringComparison.OrdinalIgnoreCase).Should().BeFalse();
+        pluginSavePath.StartsWith(stateRootPath, StringComparison.OrdinalIgnoreCase).Should().BeTrue();
+        configPath.StartsWith(stateRootPath, StringComparison.OrdinalIgnoreCase).Should().BeTrue();
+        started.PluginSavePath.Exists.Should().BeTrue();
+        started.ConfigPath.Directory.Should().NotBeNull();
+        NormalizeDirectoryPath(started.ConfigPath.Directory!.FullName)
+            .Should()
+            .Be(stateRootPath);
     }
 
     /// <summary>
-    /// Deletes any legacy host-state paths left under the current test working directory.
+    /// Normalizes a directory path to its fully-qualified trailing-separator form.
     /// </summary>
-    /// <param name="legacyPluginSavePath">The legacy plugin-save directory path.</param>
-    /// <param name="legacyPluginConfigPath">The legacy plugin configuration file path.</param>
-    private static void DeleteLegacyHostState(string legacyPluginSavePath, string legacyPluginConfigPath)
+    /// <param name="path">The directory path to normalize.</param>
+    /// <returns>The normalized directory path.</returns>
+    private static string NormalizeDirectoryPath(string path)
     {
-        if (Directory.Exists(legacyPluginSavePath))
-        {
-            Directory.Delete(legacyPluginSavePath, true);
-        }
-
-        if (File.Exists(legacyPluginConfigPath))
-        {
-            File.Delete(legacyPluginConfigPath);
-        }
+        return Path.GetFullPath(path)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
     }
 }

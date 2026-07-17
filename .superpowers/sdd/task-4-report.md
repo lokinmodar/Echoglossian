@@ -194,3 +194,32 @@ Observed after the fix:
 ### Review-fix concern
 
 - The rail now guarantees hermetic per-run local state, but immediate removal of the temp state root is best-effort because the SQLite DB file can still hold a handle briefly after teardown. This no longer affects repeatability because each run gets a fresh state root.
+
+## Rereview Micro-Fix (2026-07-17)
+
+### Finding addressed
+
+- Replaced the ambient `Environment.CurrentDirectory` cleanup pattern in `PluginStartupSmokeTests.StartPluginAsync_keeps_host_state_out_of_the_test_working_directory()` with assertions against the started rail's owned state paths.
+
+### Narrow fix applied
+
+- Added `StartedPlugin.PluginSavePath` and `StartedPlugin.ConfigPath` so the smoke tests can assert the DalaMock-owned save/config locations directly.
+- Updated the isolation test to verify:
+  - the per-run `StateRoot` is outside the test working directory,
+  - the rail-owned `.dalamock` save path lives under `StateRoot`,
+  - the rail-owned `test.json` config path resolves under `StateRoot`.
+- Removed the helper that deleted generic `.dalamock` / `test.json` names under `Environment.CurrentDirectory`.
+
+### Command and result
+
+```powershell
+dotnet test .\Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build
+```
+
+Result:
+
+- PASS (`5` tests)
+
+### Concern
+
+- This fix keeps the test hermetic without touching ambient working-directory files, but it still validates path ownership rather than forcing immediate physical deletion of the temporary state root, which remains best-effort by design after headless teardown.

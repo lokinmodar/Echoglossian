@@ -38,6 +38,7 @@ internal sealed class TestBoot
     {
         var stateRoot = this.CreateRunStateRoot();
         var pluginSavePath = this.CreateLocalPluginSavePath(stateRoot);
+        var configPath = new FileInfo(Path.Combine(stateRoot.FullName, "test.json"));
         var mockContainer = new MockContainer(
             new MockDalamudConfiguration
             {
@@ -53,7 +54,7 @@ internal sealed class TestBoot
         var mockPlugin = pluginLoader.AddPlugin(typeof(EchoglossianAsyncPluginAdapter));
         var pluginLoadSettings = new PluginLoadSettings(
             stateRoot,
-            new FileInfo(Path.Combine(stateRoot.FullName, "test.json")))
+            configPath)
         {
             AssemblyLocation = typeof(global::Echoglossian.Echoglossian).Assembly.Location,
         };
@@ -66,7 +67,7 @@ internal sealed class TestBoot
             throw new InvalidOperationException("DalaMock did not build Echoglossian.");
         }
 
-        return new StartedPlugin(mockContainer, adapter.Plugin, stateRoot);
+        return new StartedPlugin(mockContainer, adapter.Plugin, stateRoot, pluginSavePath, configPath);
     }
 
     /// <summary>

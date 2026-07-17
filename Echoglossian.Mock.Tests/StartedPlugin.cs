@@ -24,14 +24,20 @@ internal sealed class StartedPlugin : IDisposable
     /// <param name="container">The owning DalaMock container.</param>
     /// <param name="plugin">The started production plugin instance.</param>
     /// <param name="stateRoot">The isolated local state root used for this startup run.</param>
+    /// <param name="pluginSavePath">The rail-owned plugin save path used for this startup run.</param>
+    /// <param name="configPath">The rail-owned plugin config path used for this startup run.</param>
     public StartedPlugin(
         MockContainer container,
         global::Echoglossian.Echoglossian plugin,
-        DirectoryInfo stateRoot)
+        DirectoryInfo stateRoot,
+        DirectoryInfo pluginSavePath,
+        FileInfo configPath)
     {
         this.Container = container;
         this.Plugin = plugin;
         this.StateRoot = stateRoot;
+        this.PluginSavePath = pluginSavePath;
+        this.ConfigPath = configPath;
     }
 
     /// <summary>
@@ -48,6 +54,16 @@ internal sealed class StartedPlugin : IDisposable
     /// Gets the isolated local state root used for this startup run.
     /// </summary>
     public DirectoryInfo StateRoot { get; }
+
+    /// <summary>
+    /// Gets the rail-owned plugin save path used for this startup run.
+    /// </summary>
+    public DirectoryInfo PluginSavePath { get; }
+
+    /// <summary>
+    /// Gets the rail-owned plugin config path used for this startup run.
+    /// </summary>
+    public FileInfo ConfigPath { get; }
 
     /// <summary>
     /// Disposes the started plugin rail and removes its isolated local state.
