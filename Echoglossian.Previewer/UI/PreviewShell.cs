@@ -32,6 +32,8 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewShellState state;
     private readonly int appliedLanguageId;
     private readonly int appliedFontSize;
+    private PluginWindowPreviewBackendMode requestedPluginWindowBackendMode =
+        PluginWindowPreviewBackendMode.Auto;
     private PluginWindowBackendStatus pluginWindowBackendStatus = new(
         PluginWindowPreviewBackendMode.Auto,
         PluginWindowPreviewBackendMode.Standalone,
@@ -137,6 +139,7 @@ internal sealed class PreviewShell : IDisposable
     {
         this.pluginWindowBackendStatus = status ??
             throw new ArgumentNullException(nameof(status));
+        this.requestedPluginWindowBackendMode = status.RequestedMode;
     }
 
     /// <summary>
@@ -213,6 +216,21 @@ internal sealed class PreviewShell : IDisposable
             : null;
     }
 
+    /// <summary>
+    ///     Gets the restart warning when the selected backend differs from the active backend.
+    /// </summary>
+    /// <param name="requestedMode">The backend selected in the shell.</param>
+    /// <param name="effectiveMode">The backend currently running.</param>
+    /// <returns>The restart warning, or <see langword="null" /> when modes match.</returns>
+    internal static string? GetPluginWindowBackendRestartWarning(
+        PluginWindowPreviewBackendMode requestedMode,
+        PluginWindowPreviewBackendMode effectiveMode)
+    {
+        return requestedMode == effectiveMode
+            ? null
+            : $"Plugin window backend is running as {effectiveMode}. Requested mode was {requestedMode}.";
+    }
+
     /// <inheritdoc/>
     public void Dispose()
     {
@@ -280,6 +298,7 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted("Scenario");
         this.DrawScenarioCombo();
         this.DrawViewportCombo();
+        this.DrawPluginWindowBackendCombo();
         ImGui.Checkbox("Visible", ref this.state.Visible);
         ImGui.Checkbox("Show simulated addon bounds", ref this.state.ShowSimulatedAddonBounds);
 
@@ -433,6 +452,33 @@ internal sealed class PreviewShell : IDisposable
         }
     }
 
+    private void DrawPluginWindowBackendCombo()
+    {
+        if (ImGui.BeginCombo(
+                "Plugin window backend",
+                this.requestedPluginWindowBackendMode.ToString()))
+        {
+            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.Auto);
+            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.Standalone);
+            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.DalaMockHosted);
+            ImGui.EndCombo();
+        }
+    }
+
+    private void DrawBackendSelectable(PluginWindowPreviewBackendMode mode)
+    {
+        var selected = this.requestedPluginWindowBackendMode == mode;
+        if (ImGui.Selectable(mode.ToString(), selected))
+        {
+            this.requestedPluginWindowBackendMode = mode;
+        }
+
+        if (selected)
+        {
+            ImGui.SetItemDefaultFocus();
+        }
+    }
+
     private void DrawFidelitySummary()
     {
         this.pluginWindowBackendStatus = this.pluginWindowBackend.Status;
@@ -448,6 +494,16 @@ internal sealed class PreviewShell : IDisposable
             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");
         ImGui.TextUnformatted(
             $"Plugin window backend: requested={this.pluginWindowBackendStatus.RequestedMode}, effective={this.pluginWindowBackendStatus.EffectiveMode}");
+
+        var backendRestartWarning = GetPluginWindowBackendRestartWarning(
+            this.requestedPluginWindowBackendMode,
+            this.pluginWindowBackendStatus.EffectiveMode);
+        if (backendRestartWarning is not null)
+        {
+            ImGui.TextWrapped(backendRestartWarning);
+            ImGui.TextWrapped(
+                "Restart the previewer to apply plugin window backend changes.");
+        }
 
         if (!string.IsNullOrWhiteSpace(this.pluginWindowBackendStatus.FallbackReason))
         {

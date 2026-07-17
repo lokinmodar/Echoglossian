@@ -31,6 +31,7 @@ internal sealed class BatchScreenshotRunner
     private readonly Config editableConfiguration;
     private readonly PreviewFontSelection fontSelection;
     private readonly Func<IPluginWindowPreviewBackend>? pluginWindowBackendFactory;
+    private PluginWindowBackendStatus? pluginWindowBackendStatus;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BatchScreenshotRunner"/> class.
@@ -98,7 +99,12 @@ internal sealed class BatchScreenshotRunner
                     GetManifestConfigSourceLabel(this.sourceConfiguration),
                     this.fontSelection.FontPaths.Select(Path.GetFileName).ToArray()!,
                     this.fontSelection.FontSize,
-                    entries);
+                    entries,
+                    this.pluginWindowBackendStatus?.RequestedMode.ToString() ??
+                        PluginWindowPreviewBackendMode.Auto.ToString(),
+                    this.pluginWindowBackendStatus?.EffectiveMode.ToString() ??
+                        PluginWindowPreviewBackendMode.Standalone.ToString(),
+                    this.pluginWindowBackendStatus?.FallbackReason);
                 var manifestPath = Path.Combine(stagingDirectory, "manifest.json");
                 try
                 {
@@ -398,6 +404,7 @@ internal sealed class BatchScreenshotRunner
         using var pluginWindowBackend = this.CreatePluginWindowBackend(request.CaptureTarget);
         if (pluginWindowBackend is not null)
         {
+            this.pluginWindowBackendStatus = pluginWindowBackend.Status;
             pluginWindowBackend.BeginCapture(request.CaptureTarget);
         }
 
@@ -483,6 +490,11 @@ internal sealed class BatchScreenshotRunner
                 pluginWindowBackend,
                 ImGui.GetIO().DisplaySize,
                 sourceTextureSize));
+
+        if (pluginWindowBackend is not null)
+        {
+            this.pluginWindowBackendStatus = pluginWindowBackend.Status;
+        }
 
         return new CapturedScreenshot(outputPath, renderResult);
     }
@@ -599,6 +611,37 @@ internal sealed class BatchScreenshotRunner
         var options = new JsonSerializerOptions { WriteIndented = true };
         options.Converters.Add(new JsonStringEnumConverter());
         return JsonSerializer.Serialize(manifest, options);
+    }
+
+    /// <summary>
+    ///     Creates a plugin-window manifest for focused backend metadata tests.
+    /// </summary>
+    /// <param name="captureTarget">The requested plugin-window capture target.</param>
+    /// <param name="requestedBackend">The backend requested by the operator.</param>
+    /// <param name="effectiveBackend">The backend that rendered the window.</param>
+    /// <param name="fallbackReason">The optional fallback diagnostic.</param>
+    /// <returns>A manifest containing the supplied backend metadata.</returns>
+    internal static ScreenshotManifest CreateManifestForTests(
+        PreviewCaptureTarget captureTarget,
+        PluginWindowPreviewBackendMode requestedBackend,
+        PluginWindowPreviewBackendMode effectiveBackend,
+        string? fallbackReason)
+    {
+        if (!PreviewPluginWindowHost.IsPluginWindowTarget(captureTarget))
+        {
+            throw new ArgumentException(
+                "Backend manifest test data requires a plugin-window capture target.",
+                nameof(captureTarget));
+        }
+
+        return new ScreenshotManifest(
+            "tests",
+            [],
+            0,
+            [],
+            requestedBackend.ToString(),
+            effectiveBackend.ToString(),
+            fallbackReason);
     }
 
     /// <summary>
@@ -838,7 +881,10 @@ internal sealed class BatchScreenshotRunner
         string ConfigSourceLabel,
         IReadOnlyList<string?> FontFileNames,
         int FontSize,
-        IReadOnlyList<ScreenshotManifestEntry> Entries);
+        IReadOnlyList<ScreenshotManifestEntry> Entries,
+        string RequestedPluginWindowBackend,
+        string EffectivePluginWindowBackend,
+        string? PluginWindowBackendFallbackReason);
 
     internal sealed record ScreenshotManifestEntry(
         string ScenarioKey,

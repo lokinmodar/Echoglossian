@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Previewer.PluginWindows;
+using Echoglossian.Previewer.UI;
 
 using Xunit;
 
@@ -47,5 +48,20 @@ public sealed class PreviewShellBackendStatusTests
         Assert.True(status.HostedRequested);
         Assert.False(status.HostedAvailable);
         Assert.Equal("DalaMock initialization failed", status.FallbackReason);
+    }
+
+    /// <summary>
+    ///     Ensures a backend selection that differs from the active backend requires a restart.
+    /// </summary>
+    [Fact]
+    public void GetPluginWindowBackendRestartWarning_requested_mode_differs_from_effective_mode_reports_active_backend()
+    {
+        var warning = PreviewShell.GetPluginWindowBackendRestartWarning(
+            PluginWindowPreviewBackendMode.DalaMockHosted,
+            PluginWindowPreviewBackendMode.Standalone);
+
+        Assert.Equal(
+            "Plugin window backend is running as Standalone. Requested mode was DalaMockHosted.",
+            warning);
     }
 }

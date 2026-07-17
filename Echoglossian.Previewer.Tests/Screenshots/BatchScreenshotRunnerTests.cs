@@ -125,7 +125,10 @@ public sealed class BatchScreenshotRunnerTests
                     PreviewCaptureTarget.DbManagerWindow,
                     "PlainImGui",
                     "full-talk-dbmanagerwindow-1920x1080.png"),
-            ]);
+            ],
+            "Auto",
+            "Standalone",
+            null);
 
         var json = BatchScreenshotRunner.SerializeManifest(manifest);
         using var document = JsonDocument.Parse(json);
