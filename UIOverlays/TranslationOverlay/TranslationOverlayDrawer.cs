@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.UIOverlays.TranslationOverlay;
+
 namespace Echoglossian
 {
   public partial class Echoglossian
@@ -31,6 +33,10 @@ namespace Echoglossian
       }
 
       bool hasValidText = !string.IsNullOrWhiteSpace(translatedText);
+      var normalizedText = hasValidText
+          ? TranslationOverlayTextNormalizationHelper.NormalizeForDisplay(
+              translatedText)
+          : Resources.WaitingForTranslation;
 
       if (!this.TryEnterOverlaySemaphore(overlay.NameSemaphore))
       {
@@ -66,7 +72,7 @@ namespace Echoglossian
         }
 
         overlay.CurrentText =
-            hasValidText ? translatedText : Resources.WaitingForTranslation;
+            normalizedText;
         overlay.Display = hasValidText;
         overlay.CurrentTextId++;
       }
@@ -270,10 +276,13 @@ namespace Echoglossian
       }
 
       var paddingScale = 1.05f;
-      overlay.Position = new Vector2(textNode->ScreenX, textNode->ScreenY);
-      overlay.Dimensions = new Vector2(
-          Math.Max(1f, textNode->GetWidth() * addon->Scale * paddingScale),
-          Math.Max(1f, textNode->GetHeight() * addon->Scale * paddingScale));
+      var bounds = TranslationOverlayBoundsCalculator.CalculateTextBounds(
+          new Vector2(textNode->ScreenX, textNode->ScreenY),
+          new Vector2(textNode->GetWidth(), textNode->GetHeight()),
+          addon->Scale,
+          paddingScale);
+      overlay.Position = bounds.Position;
+      overlay.Dimensions = bounds.Dimensions;
     }
 
     /// <summary>
@@ -289,7 +298,9 @@ namespace Echoglossian
         return [];
       }
 
-      return text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+      return TranslationOverlayTextNormalizationHelper
+          .NormalizeForDisplay(text)
+          .Split('\n');
     }
 
     /// <summary>
@@ -309,7 +320,35 @@ namespace Echoglossian
       }
 
       var overlay = this.GetOrCreateMiniTalkBubbleOverlay(bubbleKey);
-      this.UpdateToastOverlayBounds(overlay, addon, textNode);
+      var paddingScale = 1.05f;
+      Vector2? visualNodePosition = null;
+      Vector2? visualNodeSize = null;
+
+      if (NativeTextNodeLayoutHelper.TryResolveContainerNodes(
+              addon,
+              textNode,
+              out var containerNode,
+              out var backgroundNode))
+      {
+        var visualNode = backgroundNode != null
+            ? &backgroundNode->AtkResNode
+            : containerNode;
+        if (visualNode != null)
+        {
+          visualNodePosition = new Vector2(visualNode->ScreenX, visualNode->ScreenY);
+          visualNodeSize = new Vector2(visualNode->GetWidth(), visualNode->GetHeight());
+        }
+      }
+
+      var bounds = TranslationOverlayBoundsCalculator.CalculateMiniTalkBounds(
+          new Vector2(textNode->ScreenX, textNode->ScreenY),
+          new Vector2(textNode->GetWidth(), textNode->GetHeight()),
+          addon->Scale,
+          paddingScale,
+          visualNodePosition,
+          visualNodeSize);
+      overlay.Position = bounds.Position;
+      overlay.Dimensions = bounds.Dimensions;
     }
 
     /// <summary>
