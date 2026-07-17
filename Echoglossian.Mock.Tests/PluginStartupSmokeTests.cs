@@ -5,9 +5,12 @@
 
 using Echoglossian.PluginRuntime.Startup;
 
+using DalaMock.Core.Plugin;
 using FluentAssertions;
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
@@ -137,6 +140,77 @@ public class PluginStartupSmokeTests
         NormalizeDirectoryPath(started.ConfigPath.Directory!.FullName)
             .Should()
             .Be(stateRootPath);
+    }
+
+    [Fact]
+    public async Task StartPluginAsync_cleans_up_host_state_when_start_plugin_throws()
+    {
+        var stateRoot = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Echoglossian.Mock.Tests", Guid.NewGuid().ToString("N")));
+        Func<Func<Task>, Task> startPluginFailure = _ => throw new InvalidOperationException("synthetic start failure");
+
+        var boot = CreateConfigurableTestBoot(
+            () => stateRoot,
+            startPluginFailure,
+            static (_, _, _, _, _) => Task.CompletedTask);
+
+        Func<Task> act = async () => await boot.StartPluginAsync();
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("synthetic start failure");
+        Directory.Exists(stateRoot.FullName).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task StartPluginAsync_cleans_up_host_state_when_post_start_validation_throws()
+    {
+        var stateRoot = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Echoglossian.Mock.Tests", Guid.NewGuid().ToString("N")));
+        Func<MockContainer, global::Echoglossian.Echoglossian, DirectoryInfo, DirectoryInfo, FileInfo, Task> postStartValidationFailure =
+            static (_, _, _, _, _) => throw new InvalidOperationException("synthetic validation failure");
+
+        var boot = CreateConfigurableTestBoot(
+            () => stateRoot,
+            static startPlugin => startPlugin(),
+            postStartValidationFailure);
+
+        Func<Task> act = async () => await boot.StartPluginAsync();
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("synthetic validation failure");
+        Directory.Exists(stateRoot.FullName).Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Creates a configurable <see cref="TestBoot"/> instance through its
+    /// non-public test seam constructor.
+    /// </summary>
+    /// <param name="stateRootFactory">Creates the isolated state root for the run under test.</param>
+    /// <param name="startPluginRunner">Runs or overrides the plugin-startup action.</param>
+    /// <param name="postStartValidation">Runs additional validation before the rail returns a started plugin.</param>
+    /// <returns>The configured <see cref="TestBoot"/> instance.</returns>
+    private static TestBoot CreateConfigurableTestBoot(
+        Func<DirectoryInfo> stateRootFactory,
+        Func<Func<Task>, Task> startPluginRunner,
+        Func<MockContainer, global::Echoglossian.Echoglossian, DirectoryInfo, DirectoryInfo, FileInfo, Task> postStartValidation)
+    {
+        var seamConstructor = typeof(TestBoot)
+            .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+            .SingleOrDefault(static constructor =>
+            {
+                var parameters = constructor.GetParameters();
+                return parameters.Length == 3
+                    && parameters[0].ParameterType == typeof(Func<DirectoryInfo>)
+                    && parameters[1].ParameterType == typeof(Func<Func<Task>, Task>)
+                    && parameters[2].ParameterType == typeof(Func<MockContainer, global::Echoglossian.Echoglossian, DirectoryInfo, DirectoryInfo, FileInfo, Task>);
+            });
+
+        seamConstructor.Should().NotBeNull("the startup cleanup path needs a deterministic test seam");
+
+        return (TestBoot)seamConstructor!.Invoke(
+            [
+                stateRootFactory,
+                startPluginRunner,
+                postStartValidation,
+            ]);
     }
 
     /// <summary>

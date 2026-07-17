@@ -585,6 +585,8 @@ public partial class Echoglossian : IDalamudPlugin
     PluginInterface.UiBuilder.Draw -= this.BuildUi;
     PluginInterface.UiBuilder.Draw -= this.DrawDbEditorWindow;
     PluginInterface.UiBuilder.Draw -= this.DrawTranslatorMetricsWindow;
+    this.dbEditorWindow?.Dispose();
+    this.dbEditorWindow = null;
     this.startupAudit.Mark(PluginStartupStage.PluginUiUnregistered);
 
     this.pixImage?.Dispose();

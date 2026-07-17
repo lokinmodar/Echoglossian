@@ -7409,6 +7409,11 @@
             </summary>
             <param name="dbContext">EF Core DbContext.</param>
         </member>
+        <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Dispose">
+            <summary>
+            Disposes the editor-owned database context.
+            </summary>
+        </member>
         <member name="M:Echoglossian.DBManagerUI.DbEditorWindow.Draw">
             <summary>
             Draws the window and its components.

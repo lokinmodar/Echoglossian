@@ -5,8 +5,10 @@
 
 using DalaMock.Core.Plugin;
 using Echoglossian.PluginRuntime.Startup;
+using Microsoft.Data.Sqlite;
 using System;
 using System.IO;
+using System.Threading;
 
 namespace Echoglossian.Mock.Tests;
 
@@ -84,6 +86,10 @@ internal sealed class StartedPlugin : IDisposable
         }
         finally
         {
+            SqliteConnection.ClearAllPools();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
             this.TryDeleteStateRoot();
         }
     }
@@ -116,18 +122,37 @@ internal sealed class StartedPlugin : IDisposable
     /// </summary>
     private void TryDeleteStateRoot()
     {
-        try
+        for (var attempt = 0; attempt < 10; attempt++)
         {
-            if (this.StateRoot.Exists)
+            try
             {
-                this.StateRoot.Delete(true);
+                if (this.StateRoot.Exists)
+                {
+                    this.StateRoot.Delete(true);
+                }
+
+                return;
             }
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
+            catch (IOException)
+            {
+                if (attempt == 9)
+                {
+                    return;
+                }
+
+                Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                this.StateRoot.Refresh();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                if (attempt == 9)
+                {
+                    return;
+                }
+
+                Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                this.StateRoot.Refresh();
+            }
         }
     }
 }
