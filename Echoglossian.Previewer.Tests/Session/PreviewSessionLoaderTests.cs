@@ -143,6 +143,55 @@ public sealed class PreviewSessionLoaderTests
     }
 
     /// <summary>
+    /// Ensures database snapshot connection strings preserve source paths containing semicolons.
+    /// </summary>
+    [Fact]
+    public void Load_DatabasePathContainingSemicolon_ClonesSnapshot()
+    {
+        var tempRoot = Directory.CreateTempSubdirectory();
+        try
+        {
+            var configPath = Path.Combine(tempRoot.FullName, "Echoglossian.json");
+            var databasePath = Path.Combine(tempRoot.FullName, "Echoglossian;preview.db");
+            File.WriteAllText(configPath, "{\"Lang\":28}");
+
+            using (var sourceConnection = this.CreateWalDatabase(databasePath))
+            using (var session = PreviewSessionLoader.Load(
+                new PreviewSessionSourceOptions(configPath, databasePath, null)))
+            {
+                Assert.NotNull(session.ClonedDatabasePath);
+                Assert.Equal("uncheckpointed", this.ReadStoredValue(session.ClonedDatabasePath!));
+            }
+        }
+        finally
+        {
+            tempRoot.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ensures expected temporary-directory cleanup failures do not escape disposal.
+    /// </summary>
+    [Fact]
+    public void TryDeleteWorkingDirectory_AccessFailure_DoesNotThrow()
+    {
+        var tempRoot = Directory.CreateTempSubdirectory();
+        try
+        {
+            var exception = Record.Exception(
+                () => PreviewSessionArtifacts.TryDeleteWorkingDirectory(
+                    tempRoot.FullName,
+                    static (_, _) => throw new UnauthorizedAccessException("locked")));
+
+            Assert.Null(exception);
+        }
+        finally
+        {
+            tempRoot.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Ensures the preview save scope writes only to the session-owned config clone.
     /// </summary>
     [Fact]
@@ -177,7 +226,11 @@ public sealed class PreviewSessionLoaderTests
     /// <returns>An open source connection that keeps the WAL file live.</returns>
     private SqliteConnection CreateWalDatabase(string databasePath)
     {
-        var connection = new SqliteConnection($"Data Source={databasePath};Pooling=False");
+        var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Pooling = false,
+        }.ToString());
         connection.Open();
 
         using (var command = connection.CreateCommand())
@@ -196,7 +249,12 @@ public sealed class PreviewSessionLoaderTests
     /// <returns>The stored test value.</returns>
     private string? ReadStoredValue(string databasePath)
     {
-        using var connection = new SqliteConnection($"Data Source={databasePath};Mode=ReadOnly;Pooling=False");
+        using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadOnly,
+            Pooling = false,
+        }.ToString());
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT Value FROM SessionData LIMIT 1;";

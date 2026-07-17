@@ -139,6 +139,38 @@ public sealed class BatchScreenshotRunnerTests
     }
 
     /// <summary>
+    /// Ensures plugin-window captures rely on stable window bounds rather than overlay draw success.
+    /// </summary>
+    [Theory]
+    [InlineData((int)PreviewCaptureTarget.ConfigWindow)]
+    [InlineData((int)PreviewCaptureTarget.DbManagerWindow)]
+    [InlineData((int)PreviewCaptureTarget.TranslatorMetricsWindow)]
+    public void IsCaptureReady_PluginWindowWithStableBounds_DoesNotRequireOverlayDraw(
+        int targetValue)
+    {
+        var ready = BatchScreenshotRunner.IsCaptureReady(
+            (PreviewCaptureTarget)targetValue,
+            overlayWasDrawn: false,
+            hasStableWindowBounds: true);
+
+        Assert.True(ready);
+    }
+
+    /// <summary>
+    /// Ensures overlay captures continue to require an overlay draw.
+    /// </summary>
+    [Fact]
+    public void IsCaptureReady_OverlaySurfaceWithoutDraw_IsNotReady()
+    {
+        var ready = BatchScreenshotRunner.IsCaptureReady(
+            PreviewCaptureTarget.OverlaySurface,
+            overlayWasDrawn: false,
+            hasStableWindowBounds: true);
+
+        Assert.False(ready);
+    }
+
+    /// <summary>
     /// Gets the repository root discovered from the test output directory.
     /// </summary>
     private string RepositoryRoot => FindRepositoryRoot();

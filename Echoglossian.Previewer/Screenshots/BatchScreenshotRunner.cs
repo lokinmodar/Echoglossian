@@ -206,26 +206,34 @@ internal sealed class BatchScreenshotRunner
             pluginWindowHost?.Draw(workbenchState);
         };
         var stopwatch = Stopwatch.StartNew();
-        while ((!renderResult.WasDrawn ||
-                !IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)) &&
+        while (!IsCaptureReady(
+                request.CaptureTarget,
+                renderResult.WasDrawn,
+                IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)) &&
             stopwatch.Elapsed < TimeSpan.FromSeconds(5) &&
             pluginWindowHost?.CaptureFailed != true)
         {
             host.RunFrame(draw);
-            if (!renderResult.WasDrawn ||
-                !IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost))
+            if (!IsCaptureReady(
+                    request.CaptureTarget,
+                    renderResult.WasDrawn,
+                    IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)))
             {
                 Thread.Sleep(25);
             }
         }
 
-        if (!renderResult.WasDrawn)
+        if (!PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget) &&
+            !renderResult.WasDrawn)
         {
             throw new InvalidOperationException(
                 $"Preview screenshot scenario did not render: {request.Scenario.Key}");
         }
 
-        if (!IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost))
+        if (!IsCaptureReady(
+                request.CaptureTarget,
+                renderResult.WasDrawn,
+                IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)))
         {
             throw new InvalidOperationException(
                 $"Preview screenshot target did not produce stable bounds: " +
@@ -370,6 +378,23 @@ internal sealed class BatchScreenshotRunner
     {
         return !PreviewPluginWindowHost.IsPluginWindowTarget(target) ||
             pluginWindowHost?.TryGetStableCrop(target) is not null;
+    }
+
+    /// <summary>
+    /// Determines whether a capture target has met its target-specific readiness condition.
+    /// </summary>
+    /// <param name="target">The requested capture target.</param>
+    /// <param name="overlayWasDrawn"><see langword="true" /> when the overlay rendered successfully.</param>
+    /// <param name="hasStableWindowBounds"><see langword="true" /> when the requested plugin window has stable bounds.</param>
+    /// <returns><see langword="true" /> when the target is ready to capture; otherwise, <see langword="false" />.</returns>
+    internal static bool IsCaptureReady(
+        PreviewCaptureTarget target,
+        bool overlayWasDrawn,
+        bool hasStableWindowBounds)
+    {
+        return PreviewPluginWindowHost.IsPluginWindowTarget(target)
+            ? hasStableWindowBounds
+            : overlayWasDrawn;
     }
 
     /// <summary>

@@ -15,6 +15,7 @@ using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.Session;
 using Echoglossian.Previewer.UI;
+using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
 using Microsoft.EntityFrameworkCore;
@@ -128,9 +129,7 @@ internal static class Program
         var viewport = PreviewScenarioCatalog.ResolveViewport(
             commandLine.ViewportWidth,
             commandLine.ViewportHeight);
-        var languages = Echoglossian.CreateLanguagesDictionary();
-        var selectedLanguage = NormalizePreviewLanguage(
-            languages,
+        var (languages, selectedLanguage) = InitializePreviewLanguageRuntime(
             editableConfiguration);
 
         Echoglossian.SelectedLanguage = selectedLanguage;
@@ -204,9 +203,13 @@ internal static class Program
                     host.CapturePng(outputPath, crop);
                     shell.SetLastScreenshotPath(outputPath);
                 }
-                catch (InvalidOperationException exception)
+                catch (Exception exception) when (
+                    IsExpectedInteractiveScreenshotFailure(exception))
                 {
-                    shell.SetLastScreenshotFailure(exception.Message);
+                    HandleInteractiveScreenshotFailure(
+                        outputPath,
+                        exception,
+                        shell.SetLastScreenshotFailure);
                 }
             });
     }
@@ -224,8 +227,8 @@ internal static class Program
                 commandLine.OutputDirectory));
         var sourceConfiguration = session.Configuration;
         var editableConfiguration = session.EditableConfiguration;
-        var languages = Echoglossian.CreateLanguagesDictionary();
-        var selectedLanguage = NormalizePreviewLanguage(languages, editableConfiguration);
+        var (languages, selectedLanguage) = InitializePreviewLanguageRuntime(
+            editableConfiguration);
         Echoglossian.SelectedLanguage = selectedLanguage;
         var fontSelection = PreviewFontCatalog.Resolve(
             selectedLanguage,
@@ -443,6 +446,72 @@ internal static class Program
             configuration.Lang);
         configuration.Lang = selectedLanguage.Key;
         return selectedLanguage.Value;
+    }
+
+    /// <summary>
+    /// Initializes preview language metadata and configuration flags using the plugin runtime policy.
+    /// </summary>
+    /// <param name="configuration">The preview-owned mutable configuration.</param>
+    /// <returns>The initialized language dictionary and selected language.</returns>
+    internal static (Dictionary<int, LanguageInfo> Languages, LanguageInfo SelectedLanguage)
+        InitializePreviewLanguageRuntime(Config configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var languages = Echoglossian.CreateLanguagesDictionary();
+        LanguageEngineSupport.ApplySupportTo(languages);
+        var selectedLanguage = NormalizePreviewLanguage(languages, configuration);
+        LanguagePresentationPolicy.ApplyLanguageFlags(configuration);
+        return (languages, selectedLanguage);
+    }
+
+    /// <summary>
+    /// Determines whether an interactive screenshot exception is expected during capture or output.
+    /// </summary>
+    /// <param name="exception">The capture exception to classify.</param>
+    /// <returns><see langword="true" /> when the failure can be reported without ending the preview session; otherwise, <see langword="false" />.</returns>
+    internal static bool IsExpectedInteractiveScreenshotFailure(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return exception is InvalidOperationException or
+            ArgumentException or
+            IOException or
+            UnauthorizedAccessException or
+            System.Runtime.InteropServices.ExternalException or
+            Veldrid.VeldridException;
+    }
+
+    /// <summary>
+    /// Removes partial interactive output and reports a capture failure without interrupting the preview host.
+    /// </summary>
+    /// <param name="outputPath">The requested output path.</param>
+    /// <param name="exception">The expected capture exception.</param>
+    /// <param name="reportFailure">The status callback used to report the failure.</param>
+    internal static void HandleInteractiveScreenshotFailure(
+        string outputPath,
+        Exception exception,
+        Action<string> reportFailure)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(exception);
+        ArgumentNullException.ThrowIfNull(reportFailure);
+        TryDeleteScreenshotFile(outputPath);
+        reportFailure(exception.Message);
+    }
+
+    /// <summary>
+    /// Deletes partial screenshot output without replacing the original capture failure.
+    /// </summary>
+    /// <param name="outputPath">The partial output file path.</param>
+    private static void TryDeleteScreenshotFile(string outputPath)
+    {
+        try
+        {
+            File.Delete(outputPath);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+        }
     }
 
     /// <summary>

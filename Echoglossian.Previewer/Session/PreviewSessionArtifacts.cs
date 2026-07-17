@@ -70,9 +70,30 @@ internal sealed class PreviewSessionArtifacts : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        if (Directory.Exists(this.WorkingDirectory))
+        TryDeleteWorkingDirectory(this.WorkingDirectory, Directory.Delete);
+    }
+
+    /// <summary>
+    /// Deletes a session workspace without allowing expected cleanup failures to escape disposal.
+    /// </summary>
+    /// <param name="workingDirectory">The session-owned working directory.</param>
+    /// <param name="deleteDirectory">Deletes a directory recursively.</param>
+    internal static void TryDeleteWorkingDirectory(
+        string workingDirectory,
+        Action<string, bool> deleteDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
+        ArgumentNullException.ThrowIfNull(deleteDirectory);
+        try
         {
-            Directory.Delete(this.WorkingDirectory, recursive: true);
+            if (Directory.Exists(workingDirectory))
+            {
+                deleteDirectory(workingDirectory, true);
+            }
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
         }
     }
 }

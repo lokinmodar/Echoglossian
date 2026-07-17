@@ -148,9 +148,19 @@ internal static class PreviewSessionLoader
     private static void CloneDatabase(string sourceDatabasePath, string destinationDatabasePath)
     {
         using var sourceConnection = new SqliteConnection(
-            $"Data Source={sourceDatabasePath};Mode=ReadOnly;Pooling=False");
+            new SqliteConnectionStringBuilder
+            {
+                DataSource = sourceDatabasePath,
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false,
+            }.ToString());
         using var destinationConnection = new SqliteConnection(
-            $"Data Source={destinationDatabasePath};Mode=ReadWriteCreate;Pooling=False");
+            new SqliteConnectionStringBuilder
+            {
+                DataSource = destinationDatabasePath,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Pooling = false,
+            }.ToString());
         sourceConnection.Open();
         destinationConnection.Open();
         sourceConnection.BackupDatabase(destinationConnection);

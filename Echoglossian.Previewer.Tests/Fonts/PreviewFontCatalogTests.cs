@@ -200,6 +200,22 @@ public sealed class PreviewFontCatalogTests
     }
 
     /// <summary>
+    /// Ensures preview startup applies the same engine support and language presentation flags as the plugin.
+    /// </summary>
+    [Fact]
+    public void InitializePreviewLanguageRuntime_AppliesSupportAndPresentationFlags()
+    {
+        var configuration = new Config { Lang = 21 };
+
+        var (languages, selectedLanguage) = Program.InitializePreviewLanguageRuntime(configuration);
+
+        Assert.Same(languages[21], selectedLanguage);
+        Assert.Contains(2, selectedLanguage.SupportedEngines!);
+        Assert.True(configuration.OverlayOnlyLanguage);
+        Assert.False(configuration.UnsupportedLanguage);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The absolute repository root path.</returns>
