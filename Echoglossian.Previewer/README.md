@@ -50,8 +50,9 @@ The file is opened read-only with sharing enabled, cloned into a preview-owned
 session workspace, and never saved back. The previewer also creates a WAL-aware
 SQLite snapshot of the optional database source in that workspace before later
 preview phases can use it. If
-either source is missing, the previewer retains an isolated default or omits the
-database and records a non-secret session diagnostic. To use other sources:
+either source is missing, or if the optional database snapshot cannot be
+created, the previewer retains an isolated default or omits the database and
+records a non-secret session diagnostic. To use other sources:
 
 ```powershell
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --config .\sample\Echoglossian.json
@@ -91,6 +92,9 @@ source. There is no export-back flow in Phase 1.
   to `1920x1080`.
 - `--screenshot <full|surface|batch>`: exports screenshots instead of opening
   the interactive shell.
+- `--capture-target <config-window|db-manager-window|translator-metrics-window>`:
+  exports one real plugin window with `--screenshot full` after its fixed bounds
+  remain stable across consecutive frames.
 - `--output <directory>`: writes screenshots to a specific directory; defaults
   to `artifacts\previewer\screenshots\<timestamp>`.
 
@@ -129,15 +133,17 @@ Examples:
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot full --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\full
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot surface --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\surface
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot batch --viewport 1920x1080 --output artifacts\previewer\screenshots\batch
+dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot full --capture-target config-window --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\config-window
 ```
 
 Batch mode with a single viewport writes 12 overlay PNG files plus
 `manifest.json`. Batch mode without `--viewport` runs all built-in viewports.
-Use the interactive shell's target-specific buttons to capture Config, DB
-Manager, or Translator Metrics windows; each window is opened and cropped
-deterministically before capture. The manifest records scenario key, surface
+Use `--capture-target` or the interactive shell's target-specific buttons to
+capture Config, DB Manager, or Translator Metrics windows. Each window uses a
+fixed layout and must report stable non-empty bounds before capture; missing
+bounds fail without writing a misleading target-specific image. The manifest records scenario key, surface
 key, viewport, screenshot mode, capture target, presentation mode, config
-source path, font file names, font size, and PNG path. Screenshot output is
+source label, font file names, font size, and PNG path. Screenshot output is
 under `artifacts/` and ignored by git.
 
 ## Presentation Modes

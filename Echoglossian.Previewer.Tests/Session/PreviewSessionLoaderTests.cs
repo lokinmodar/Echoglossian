@@ -77,6 +77,39 @@ public sealed class PreviewSessionLoaderTests
     }
 
     /// <summary>
+    /// Ensures a corrupt optional database is discarded without blocking config preview.
+    /// </summary>
+    [Fact]
+    public void Load_CorruptDatabase_ContinuesWithoutPartialClone()
+    {
+        var tempRoot = Directory.CreateTempSubdirectory();
+        try
+        {
+            var configPath = Path.Combine(tempRoot.FullName, "Echoglossian.json");
+            var databasePath = Path.Combine(tempRoot.FullName, "Echoglossian.db");
+            File.WriteAllText(configPath, "{\"Lang\":28}");
+            File.WriteAllText(databasePath, "not a sqlite database");
+
+            using var session = PreviewSessionLoader.Load(
+                new PreviewSessionSourceOptions(configPath, databasePath, null));
+
+            Assert.Equal(28, session.EditableConfiguration.Lang);
+            Assert.Null(session.ClonedDatabasePath);
+            Assert.False(File.Exists(Path.Combine(
+                session.WorkingDirectory,
+                "Echoglossian.db")));
+            Assert.Contains(
+                "database",
+                string.Join(" ", session.Diagnostics),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            tempRoot.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Creates a WAL-mode database with a committed row that remains outside the main database file.
     /// </summary>
     /// <param name="databasePath">The SQLite database file to create.</param>

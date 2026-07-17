@@ -5,6 +5,7 @@
 
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.Scenarios;
+using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -186,6 +187,20 @@ public sealed class ScreenshotCropTests
             new Vector2(2800f, 1800f));
 
         Assert.Equal(new Rectangle(200, 100, 800, 400), crop);
+    }
+
+    /// <summary>
+    /// Ensures missing plugin-window bounds cannot fall through to full-frame capture.
+    /// </summary>
+    [Fact]
+    public void RequireWindowCrop_MissingBounds_ThrowsInvalidOperationException()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => BatchScreenshotRunner.RequireWindowCrop(
+                null,
+                PreviewCaptureTarget.ConfigWindow));
+
+        Assert.Contains("ConfigWindow", exception.Message, StringComparison.Ordinal);
     }
 
     /// <summary>

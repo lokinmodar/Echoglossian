@@ -6,7 +6,10 @@
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
+using Echoglossian.Previewer.UI;
 using Echoglossian.UIOverlays.TranslationOverlay;
+
+using System.Text.Json;
 
 using Xunit;
 
@@ -100,6 +103,39 @@ public sealed class BatchScreenshotRunnerTests
 
         Assert.Contains("string ConfigSourceLabel", source, StringComparison.Ordinal);
         Assert.DoesNotContain("string ConfigSourcePath", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures the real manifest serializer writes plugin-window targets as stable JSON strings.
+    /// </summary>
+    [Fact]
+    public void SerializeManifest_PluginWindowTarget_WritesCaptureTargetString()
+    {
+        var manifest = new BatchScreenshotRunner.ScreenshotManifest(
+            "defaults",
+            [],
+            20,
+            [
+                new BatchScreenshotRunner.ScreenshotManifestEntry(
+                    "talk",
+                    "Talk",
+                    1920,
+                    1080,
+                    "Full",
+                    PreviewCaptureTarget.DbManagerWindow,
+                    "PlainImGui",
+                    "full-talk-dbmanagerwindow-1920x1080.png"),
+            ]);
+
+        var json = BatchScreenshotRunner.SerializeManifest(manifest);
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal(
+            "DbManagerWindow",
+            document.RootElement
+                .GetProperty("Entries")[0]
+                .GetProperty("CaptureTarget")
+                .GetString());
     }
 
     /// <summary>

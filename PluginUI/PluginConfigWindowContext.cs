@@ -28,6 +28,11 @@ public sealed record PluginConfigWindowContext(
     string PluginVersion)
 {
     /// <summary>
+    /// Gets a value indicating whether logo and QR imagery can be rendered.
+    /// </summary>
+    public bool ImagesAvailable { get; init; } = true;
+
+    /// <summary>
     /// Gets the host-specific general-font push operation.
     /// </summary>
     internal Func<IDisposable> PushGeneralFont { get; init; } =

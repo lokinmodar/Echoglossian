@@ -580,6 +580,9 @@
   <data name="Preview" xml:space="preserve">
     <value>Preview</value>
   </data>
+  <data name="PreviewImageryUnavailableText" xml:space="preserve">
+    <value>Preview imagery is unavailable in the standalone previewer.</value>
+  </data>
   <data name="PromptInput" xml:space="preserve">
     <value>PromptInput</value>
   </data>

@@ -24304,13 +24304,15 @@
             Includes Save, Donation, Project Links, and Pix QR popup.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID)">
+        <member name="M:Echoglossian.PluginUI.Components.PluginConfigWindowFooter.DrawFooter(System.Boolean@,System.Boolean@,Dalamud.Bindings.ImGui.ImTextureID,Dalamud.Bindings.ImGui.ImTextureID,System.Boolean)">
             <summary>
             Draws the footer section with buttons and Pix QR popup.
             </summary>
             <param name="config">The window open/close flag.</param>
             <param name="saveConfigValue">Reference to the SaveConfigValue flag.</param>
             <param name="pixImageHandle">The ImGui texture handle for the Pix QR image.</param>
+            <param name="cryptoImageHandle">The ImGui texture handle for the crypto QR image.</param>
+            <param name="imagesAvailable">Whether host-provided imagery is available.</param>
         </member>
         <member name="T:Echoglossian.PluginUI.Components.PromptEditorUI">
             <summary>
@@ -24949,6 +24951,11 @@
         <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PluginVersion">
             <summary>The plugin version shown in the title.</summary>
         </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.ImagesAvailable">
+            <summary>
+            Gets a value indicating whether logo and QR imagery can be rendered.
+            </summary>
+        </member>
         <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.PushGeneralFont">
             <summary>
             Gets the host-specific general-font push operation.
@@ -25102,12 +25109,13 @@
             Displays the "About Echoglossian" tab content with logo and disclaimer.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.AboutTab.Draw(Echoglossian.Config,Dalamud.Bindings.ImGui.ImTextureID)">
+        <member name="M:Echoglossian.PluginUI.Tabs.AboutTab.Draw(Echoglossian.Config,Dalamud.Bindings.ImGui.ImTextureID,System.Boolean)">
             <summary>
             Draws the About tab.
             </summary>
             <param name="config">The plugin config object.</param>
             <param name="logoHandle">The ImGui handle for the logo image.</param>
+            <param name="imagesAvailable">Whether host-provided imagery is available.</param>
             <returns>True if any changes were made (always false here).</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.GameWindowsTab">
@@ -26872,6 +26880,11 @@
         <member name="P:Echoglossian.Properties.Resources.Preview">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Preview.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.PreviewImageryUnavailableText">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Preview imagery is unavailable in the standalone previewer..
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.PromptInput">

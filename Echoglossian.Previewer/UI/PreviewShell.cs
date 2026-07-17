@@ -29,7 +29,7 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewWorkbenchState workbenchState;
     private readonly PreviewShellState state;
     private PreviewCaptureRequest? pendingScreenshotRequest;
-    private string lastScreenshotPath = string.Empty;
+    private string screenshotStatus = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
         false,
         Vector2.Zero,
@@ -131,6 +131,27 @@ internal sealed class PreviewShell : IDisposable
             return false;
         }
 
+        if (PreviewPluginWindowHost.IsPluginWindowTarget(
+                pendingRequest.CaptureTarget))
+        {
+            if (this.pluginWindowHost.CaptureFailed)
+            {
+                this.pendingScreenshotRequest = null;
+                this.screenshotStatus =
+                    $"Screenshot failed: {pendingRequest.CaptureTarget} " +
+                    "did not produce stable bounds.";
+                request = null!;
+                return false;
+            }
+
+            if (this.pluginWindowHost.TryGetStableCrop(
+                    pendingRequest.CaptureTarget) is null)
+            {
+                request = null!;
+                return false;
+            }
+        }
+
         this.pendingScreenshotRequest = null;
         request = new ScreenshotRequest(
             pendingRequest.Mode,
@@ -164,7 +185,16 @@ internal sealed class PreviewShell : IDisposable
     /// <param name="path">The saved PNG path.</param>
     internal void SetLastScreenshotPath(string path)
     {
-        this.lastScreenshotPath = path;
+        this.screenshotStatus = $"Last screenshot: {path}";
+    }
+
+    /// <summary>
+    /// Records an interactive screenshot failure without claiming output was written.
+    /// </summary>
+    /// <param name="message">The capture failure message.</param>
+    internal void SetLastScreenshotFailure(string message)
+    {
+        this.screenshotStatus = $"Screenshot failed: {message}";
     }
 
     private void DrawControls()
@@ -227,22 +257,21 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted("Screenshot actions");
         if (ImGui.Button("Save full screenshot"))
         {
-            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+            this.QueueScreenshot(
                 ScreenshotMode.Full,
                 PreviewCaptureTarget.FullFrame);
         }
 
         if (ImGui.Button("Save surface screenshot"))
         {
-            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+            this.QueueScreenshot(
                 ScreenshotMode.Surface,
                 PreviewCaptureTarget.OverlaySurface);
         }
 
         if (ImGui.Button("Save config window screenshot"))
         {
-            this.workbenchState.ConfigWindowOpen = true;
-            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+            this.QueueScreenshot(
                 ScreenshotMode.Full,
                 PreviewCaptureTarget.ConfigWindow);
         }
@@ -254,8 +283,7 @@ internal sealed class PreviewShell : IDisposable
 
         if (ImGui.Button("Save DB Manager window screenshot"))
         {
-            this.workbenchState.DbManagerWindowOpen = true;
-            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+            this.QueueScreenshot(
                 ScreenshotMode.Full,
                 PreviewCaptureTarget.DbManagerWindow);
         }
@@ -267,19 +295,50 @@ internal sealed class PreviewShell : IDisposable
 
         if (ImGui.Button("Save Translator Metrics window screenshot"))
         {
-            this.workbenchState.TranslatorMetricsWindowOpen = true;
-            this.pendingScreenshotRequest = new PreviewCaptureRequest(
+            this.QueueScreenshot(
                 ScreenshotMode.Full,
                 PreviewCaptureTarget.TranslatorMetricsWindow);
         }
 
-        if (!string.IsNullOrEmpty(this.lastScreenshotPath))
+        if (!string.IsNullOrEmpty(this.screenshotStatus))
         {
-            ImGui.TextWrapped($"Last screenshot: {this.lastScreenshotPath}");
+            ImGui.TextWrapped(this.screenshotStatus);
         }
 
         ImGui.Separator();
         this.DrawFidelitySummary();
+    }
+
+    /// <summary>
+    /// Queues a screenshot and starts deterministic plugin-window stabilization when needed.
+    /// </summary>
+    /// <param name="mode">The screenshot mode.</param>
+    /// <param name="target">The requested capture target.</param>
+    private void QueueScreenshot(
+        ScreenshotMode mode,
+        PreviewCaptureTarget target)
+    {
+        if (PreviewPluginWindowHost.IsPluginWindowTarget(target))
+        {
+            switch (target)
+            {
+                case PreviewCaptureTarget.ConfigWindow:
+                    this.workbenchState.ConfigWindowOpen = true;
+                    break;
+                case PreviewCaptureTarget.DbManagerWindow:
+                    this.workbenchState.DbManagerWindowOpen = true;
+                    break;
+                case PreviewCaptureTarget.TranslatorMetricsWindow:
+                    this.workbenchState.TranslatorMetricsWindowOpen = true;
+                    break;
+            }
+
+            this.pluginWindowHost.BeginCapture(target);
+            this.screenshotStatus =
+                $"Waiting for stable {target} bounds before capture.";
+        }
+
+        this.pendingScreenshotRequest = new PreviewCaptureRequest(mode, target);
     }
 
     private void DrawScenarioCombo()

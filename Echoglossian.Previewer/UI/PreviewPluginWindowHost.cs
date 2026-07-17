@@ -3,12 +3,16 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Bindings.ImGui;
+
 using Echoglossian.DBManagerUI;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.NativeUI.AddonHandlers.Talk;
 using Echoglossian.PluginUI;
+using Echoglossian.Properties;
 
 using System.Drawing;
+using System.Numerics;
 
 namespace Echoglossian.Previewer.UI;
 
@@ -17,12 +21,18 @@ namespace Echoglossian.Previewer.UI;
 /// </summary>
 internal sealed class PreviewPluginWindowHost : IDisposable
 {
+    private const int RequiredCaptureStableFrames = 3;
+    private const int MaximumCaptureObservationFrames = 180;
     private readonly PluginConfigWindowRenderer configWindowRenderer;
     private readonly EchoglossianDbContext? dbContext;
     private readonly DbEditorWindow? dbEditorWindow;
     private readonly TranslatorMetricsWindow translatorMetricsWindow;
     private readonly PluginConfigWindowContext configWindowContext;
+    private readonly PreviewCaptureStabilityTracker captureStabilityTracker = new(
+        RequiredCaptureStableFrames,
+        MaximumCaptureObservationFrames);
     private RectangleF? configWindowBounds;
+    private PreviewCaptureTarget captureTarget = PreviewCaptureTarget.FullFrame;
     private bool disposed;
 
     /// <summary>
@@ -64,6 +74,34 @@ internal sealed class PreviewPluginWindowHost : IDisposable
     internal bool DbManagerAvailable => this.dbEditorWindow is not null;
 
     /// <summary>
+    /// Gets a value indicating whether the active target failed to stabilize.
+    /// </summary>
+    internal bool CaptureFailed => this.captureStabilityTracker.CaptureFailed;
+
+    /// <summary>
+    /// Starts deterministic layout and stabilization for one plugin window.
+    /// </summary>
+    /// <param name="target">The requested plugin-window target.</param>
+    internal void BeginCapture(PreviewCaptureTarget target)
+    {
+        if (!IsPluginWindowTarget(target))
+        {
+            throw new ArgumentException(
+                "Capture stabilization requires a plugin-window target.",
+                nameof(target));
+        }
+
+        if (target == PreviewCaptureTarget.DbManagerWindow && !this.DbManagerAvailable)
+        {
+            throw new InvalidOperationException(
+                "DbManagerWindow capture requires an available preview database snapshot.");
+        }
+
+        this.captureTarget = target;
+        this.captureStabilityTracker.Begin(target);
+    }
+
+    /// <summary>
     /// Draws all plugin windows requested by the workbench state.
     /// </summary>
     /// <param name="state">The shared workbench state.</param>
@@ -73,8 +111,13 @@ internal sealed class PreviewPluginWindowHost : IDisposable
 
         if (state.ConfigWindowOpen)
         {
+            this.ApplyCaptureLayout(PreviewCaptureTarget.ConfigWindow);
             var configOpen = true;
             this.configWindowRenderer.Draw(this.configWindowContext, ref configOpen);
+            this.EnforceCaptureLayout(
+                PreviewCaptureTarget.ConfigWindow,
+                $"{Resources.ConfigWindowTitle} - Plugin Version: " +
+                this.configWindowContext.PluginVersion);
             this.configWindowBounds = configOpen
                 ? this.configWindowRenderer.LastWindowBounds
                 : null;
@@ -87,16 +130,31 @@ internal sealed class PreviewPluginWindowHost : IDisposable
 
         if (this.dbEditorWindow is not null)
         {
+            this.ApplyCaptureLayout(PreviewCaptureTarget.DbManagerWindow);
             this.dbEditorWindow.IsOpen = state.DbManagerWindowOpen;
             this.dbEditorWindow.Draw();
+            this.EnforceCaptureLayout(
+                PreviewCaptureTarget.DbManagerWindow,
+                Resources.EchoglossianDBEditor);
         }
 
         SynchronizeDbManagerState(state, this.dbEditorWindow);
 
         this.translatorMetricsWindow.IsOpen = state.TranslatorMetricsWindowOpen;
+        this.ApplyCaptureLayout(PreviewCaptureTarget.TranslatorMetricsWindow);
         this.translatorMetricsWindow.Draw();
+        this.EnforceCaptureLayout(
+            PreviewCaptureTarget.TranslatorMetricsWindow,
+            Resources.TranslatorDebuggerWindowTitle);
         state.TranslatorMetricsWindowOpen = this.translatorMetricsWindow.IsOpen;
         SynchronizeDbManagerState(state, this.dbEditorWindow);
+
+        if (IsPluginWindowTarget(this.captureTarget))
+        {
+            this.captureStabilityTracker.Observe(
+                this.captureTarget,
+                this.TryGetCrop(this.captureTarget));
+        }
     }
 
     /// <summary>
@@ -139,6 +197,86 @@ internal sealed class PreviewPluginWindowHost : IDisposable
             (int)MathF.Ceiling(bounds.Value.Bottom));
     }
 
+    /// <summary>
+    /// Gets stable integer capture bounds for a plugin window.
+    /// </summary>
+    /// <param name="target">The requested plugin-window target.</param>
+    /// <returns>The stable capture rectangle, or <see langword="null" /> while unavailable.</returns>
+    internal Rectangle? TryGetStableCrop(PreviewCaptureTarget target)
+    {
+        return this.captureStabilityTracker.TryGetStableBounds(
+            target,
+            out var bounds)
+            ? bounds
+            : null;
+    }
+
+    /// <summary>
+    /// Gets the deterministic logical size assigned to a plugin-window target.
+    /// </summary>
+    /// <param name="target">The requested capture target.</param>
+    /// <returns>The fixed logical window size.</returns>
+    internal static Size GetCaptureLayoutSize(PreviewCaptureTarget target)
+    {
+        return target switch
+        {
+            PreviewCaptureTarget.ConfigWindow => new Size(1000, 900),
+            PreviewCaptureTarget.DbManagerWindow => new Size(1200, 800),
+            PreviewCaptureTarget.TranslatorMetricsWindow => new Size(1100, 480),
+            _ => Size.Empty,
+        };
+    }
+
+    /// <summary>
+    /// Determines whether a capture target identifies a real plugin window.
+    /// </summary>
+    /// <param name="target">The capture target to inspect.</param>
+    /// <returns><see langword="true" /> for plugin-window targets; otherwise, <see langword="false" />.</returns>
+    internal static bool IsPluginWindowTarget(PreviewCaptureTarget target)
+    {
+        return target is PreviewCaptureTarget.ConfigWindow or
+            PreviewCaptureTarget.DbManagerWindow or
+            PreviewCaptureTarget.TranslatorMetricsWindow;
+    }
+
+    /// <summary>
+    /// Applies fixed position and size to the active capture target on every frame.
+    /// </summary>
+    /// <param name="target">The window about to be drawn.</param>
+    private void ApplyCaptureLayout(PreviewCaptureTarget target)
+    {
+        if (this.captureTarget != target)
+        {
+            return;
+        }
+
+        var size = GetCaptureLayoutSize(target);
+        ImGui.SetNextWindowPos(Vector2.Zero, ImGuiCond.Always);
+        ImGui.SetNextWindowSize(new Vector2(size.Width, size.Height), ImGuiCond.Always);
+    }
+
+    /// <summary>
+    /// Enforces fixed geometry after a hosted window's own first-use hints run.
+    /// </summary>
+    /// <param name="target">The window that was drawn.</param>
+    /// <param name="windowName">The exact ImGui window name.</param>
+    private void EnforceCaptureLayout(
+        PreviewCaptureTarget target,
+        string windowName)
+    {
+        if (this.captureTarget != target)
+        {
+            return;
+        }
+
+        var size = GetCaptureLayoutSize(target);
+        ImGui.SetWindowPos(windowName, Vector2.Zero, ImGuiCond.Always);
+        ImGui.SetWindowSize(
+            windowName,
+            new Vector2(size.Width, size.Height),
+            ImGuiCond.Always);
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {
@@ -149,5 +287,113 @@ internal sealed class PreviewPluginWindowHost : IDisposable
 
         this.dbContext?.Dispose();
         this.disposed = true;
+    }
+}
+
+/// <summary>
+/// Tracks consecutive non-empty plugin-window bounds for deterministic capture.
+/// </summary>
+internal sealed class PreviewCaptureStabilityTracker
+{
+    private readonly int requiredStableFrames;
+    private readonly int maximumObservationFrames;
+    private PreviewCaptureTarget? target;
+    private Rectangle? lastBounds;
+    private int stableFrameCount;
+    private int observationFrameCount;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PreviewCaptureStabilityTracker" /> class.
+    /// </summary>
+    /// <param name="requiredStableFrames">The consecutive matching bounds required.</param>
+    /// <param name="maximumObservationFrames">The maximum frames allowed before failure.</param>
+    internal PreviewCaptureStabilityTracker(
+        int requiredStableFrames,
+        int maximumObservationFrames)
+    {
+        if (requiredStableFrames <= 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(requiredStableFrames));
+        }
+
+        if (maximumObservationFrames < requiredStableFrames)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumObservationFrames));
+        }
+
+        this.requiredStableFrames = requiredStableFrames;
+        this.maximumObservationFrames = maximumObservationFrames;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the active capture exhausted its observation frames.
+    /// </summary>
+    internal bool CaptureFailed =>
+        this.target is not null &&
+        this.observationFrameCount >= this.maximumObservationFrames &&
+        this.stableFrameCount < this.requiredStableFrames;
+
+    /// <summary>
+    /// Resets tracking for a new plugin-window target.
+    /// </summary>
+    /// <param name="target">The plugin-window capture target.</param>
+    internal void Begin(PreviewCaptureTarget target)
+    {
+        this.target = target;
+        this.lastBounds = null;
+        this.stableFrameCount = 0;
+        this.observationFrameCount = 0;
+    }
+
+    /// <summary>
+    /// Observes one frame of bounds for the active target.
+    /// </summary>
+    /// <param name="target">The observed target.</param>
+    /// <param name="bounds">The current non-empty bounds, if available.</param>
+    internal void Observe(PreviewCaptureTarget target, Rectangle? bounds)
+    {
+        if (this.target != target || this.CaptureFailed)
+        {
+            return;
+        }
+
+        this.observationFrameCount++;
+        if (bounds is not { Width: > 0, Height: > 0 } currentBounds)
+        {
+            this.lastBounds = null;
+            this.stableFrameCount = 0;
+            return;
+        }
+
+        if (this.lastBounds == currentBounds)
+        {
+            this.stableFrameCount++;
+            return;
+        }
+
+        this.lastBounds = currentBounds;
+        this.stableFrameCount = 1;
+    }
+
+    /// <summary>
+    /// Gets stable bounds after enough consecutive matching observations.
+    /// </summary>
+    /// <param name="target">The requested capture target.</param>
+    /// <param name="bounds">The stable bounds when this method returns successfully.</param>
+    /// <returns><see langword="true" /> when stable bounds are ready; otherwise, <see langword="false" />.</returns>
+    internal bool TryGetStableBounds(
+        PreviewCaptureTarget target,
+        out Rectangle bounds)
+    {
+        if (this.target == target &&
+            this.stableFrameCount >= this.requiredStableFrames &&
+            this.lastBounds is { } stableBounds)
+        {
+            bounds = stableBounds;
+            return true;
+        }
+
+        bounds = Rectangle.Empty;
+        return false;
     }
 }

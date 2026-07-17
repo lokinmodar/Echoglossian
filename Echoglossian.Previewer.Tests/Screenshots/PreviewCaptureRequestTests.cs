@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Previewer.Hosting;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.UI;
@@ -32,16 +33,30 @@ public sealed class PreviewCaptureRequestTests
     }
 
     /// <summary>
-    /// Ensures window target names are deterministic manifest values.
+    /// Ensures the CLI parses a deterministic plugin-window export target.
     /// </summary>
     [Fact]
-    public void ManifestEntry_ContainsWindowTargetName()
+    public void Parse_ConfigWindowCaptureTarget_ReturnsTypedTarget()
     {
-        var entry = new
-        {
-            CaptureTarget = PreviewCaptureTarget.DbManagerWindow.ToString(),
-        };
+        var commandLine = PreviewCommandLine.Parse(
+            ["--screenshot", "full", "--capture-target", "config-window"]);
 
-        Assert.Equal("DbManagerWindow", entry.CaptureTarget);
+        Assert.Equal(PreviewCaptureTarget.ConfigWindow, commandLine.CaptureTarget);
+    }
+
+    /// <summary>
+    /// Ensures plugin-window targets cannot silently alter surface or batch semantics.
+    /// </summary>
+    [Theory]
+    [InlineData("surface")]
+    [InlineData("batch")]
+    public void Parse_PluginWindowTargetWithoutFullMode_ThrowsArgumentException(
+        string screenshotMode)
+    {
+        var exception = Assert.Throws<ArgumentException>(
+            () => PreviewCommandLine.Parse(
+                ["--screenshot", screenshotMode, "--capture-target", "config-window"]));
+
+        Assert.Contains("full", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -17,6 +17,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Echoglossian.Previewer.Screenshots;
 
@@ -82,9 +83,7 @@ internal sealed class BatchScreenshotRunner
         var manifestPath = Path.Combine(outputDirectory, "manifest.json");
         File.WriteAllText(
             manifestPath,
-            JsonSerializer.Serialize(
-                manifest,
-                new JsonSerializerOptions { WriteIndented = true }));
+            SerializeManifest(manifest));
     }
 
     /// <summary>
@@ -156,15 +155,22 @@ internal sealed class BatchScreenshotRunner
                 request.Scenario.Key,
                 request.Viewport,
                 request.CaptureTarget));
+        var captureLayoutSize = PreviewPluginWindowHost.GetCaptureLayoutSize(
+            request.CaptureTarget);
         using PreviewHost host = new(
             new PreviewHostOptions
             {
-                Width = request.Viewport.Width,
-                Height = request.Viewport.Height,
+                Width = Math.Max(request.Viewport.Width, captureLayoutSize.Width),
+                Height = Math.Max(request.Viewport.Height, captureLayoutSize.Height),
                 Title = "Echoglossian Screenshot Capture",
                 StartHidden = true,
             });
         using var pluginWindowHost = this.CreatePluginWindowHost(request.CaptureTarget);
+        if (pluginWindowHost is not null)
+        {
+            pluginWindowHost.BeginCapture(request.CaptureTarget);
+        }
+
         var fontRuntime = new PreviewFontRuntime(
             this.fontSelection,
             string.Join(
@@ -200,10 +206,14 @@ internal sealed class BatchScreenshotRunner
             pluginWindowHost?.Draw(workbenchState);
         };
         var stopwatch = Stopwatch.StartNew();
-        while (!renderResult.WasDrawn && stopwatch.Elapsed < TimeSpan.FromSeconds(5))
+        while ((!renderResult.WasDrawn ||
+                !IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)) &&
+            stopwatch.Elapsed < TimeSpan.FromSeconds(5) &&
+            pluginWindowHost?.CaptureFailed != true)
         {
             host.RunFrame(draw);
-            if (!renderResult.WasDrawn)
+            if (!renderResult.WasDrawn ||
+                !IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost))
             {
                 Thread.Sleep(25);
             }
@@ -213,6 +223,13 @@ internal sealed class BatchScreenshotRunner
         {
             throw new InvalidOperationException(
                 $"Preview screenshot scenario did not render: {request.Scenario.Key}");
+        }
+
+        if (!IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost))
+        {
+            throw new InvalidOperationException(
+                $"Preview screenshot target did not produce stable bounds: " +
+                request.CaptureTarget);
         }
 
         host.CaptureFramePng(
@@ -244,7 +261,7 @@ internal sealed class BatchScreenshotRunner
         Vector2 displaySize,
         Vector2 framebufferSize)
     {
-        return request.CaptureTarget switch
+        var crop = request.CaptureTarget switch
         {
             PreviewCaptureTarget.OverlaySurface => VeldridScreenshotCapture.CalculateSurfaceCrop(
                 renderResult,
@@ -253,19 +270,23 @@ internal sealed class BatchScreenshotRunner
                 request.SurfaceMargin,
                 framebufferScale: 1f),
             PreviewCaptureTarget.ConfigWindow => CalculateWindowCrop(
-                pluginWindowHost?.TryGetCrop(PreviewCaptureTarget.ConfigWindow),
+                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.DbManagerWindow => CalculateWindowCrop(
-                pluginWindowHost?.TryGetCrop(PreviewCaptureTarget.DbManagerWindow),
+                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateWindowCrop(
-                pluginWindowHost?.TryGetCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
                 displaySize,
                 framebufferSize),
             _ => null,
         };
+
+        return PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget)
+            ? RequireWindowCrop(crop, request.CaptureTarget)
+            : crop;
     }
 
     /// <summary>
@@ -287,6 +308,39 @@ internal sealed class BatchScreenshotRunner
     }
 
     /// <summary>
+    /// Requires a non-empty plugin-window crop instead of treating it as a full frame.
+    /// </summary>
+    /// <param name="crop">The resolved physical crop.</param>
+    /// <param name="target">The requested plugin-window target.</param>
+    /// <returns>The non-empty crop.</returns>
+    /// <exception cref="InvalidOperationException">The target has no usable bounds.</exception>
+    internal static Rectangle RequireWindowCrop(
+        Rectangle? crop,
+        PreviewCaptureTarget target)
+    {
+        if (crop is not { Width: > 0, Height: > 0 } validCrop)
+        {
+            throw new InvalidOperationException(
+                $"Preview screenshot target has no stable capture bounds: {target}");
+        }
+
+        return validCrop;
+    }
+
+    /// <summary>
+    /// Serializes the deterministic screenshot manifest.
+    /// </summary>
+    /// <param name="manifest">The manifest to serialize.</param>
+    /// <returns>The indented JSON manifest.</returns>
+    internal static string SerializeManifest(ScreenshotManifest manifest)
+    {
+        ArgumentNullException.ThrowIfNull(manifest);
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        options.Converters.Add(new JsonStringEnumConverter());
+        return JsonSerializer.Serialize(manifest, options);
+    }
+
+    /// <summary>
     /// Creates real plugin windows only for a plugin-window screenshot target.
     /// </summary>
     /// <param name="target">The requested capture target.</param>
@@ -302,6 +356,20 @@ internal sealed class BatchScreenshotRunner
 
         return this.pluginWindowHostFactory?.Invoke() ?? throw new InvalidOperationException(
             "Plugin-window screenshot capture requires a preview window host.");
+    }
+
+    /// <summary>
+    /// Determines whether the requested target is ready for capture.
+    /// </summary>
+    /// <param name="target">The requested capture target.</param>
+    /// <param name="pluginWindowHost">The optional plugin-window host.</param>
+    /// <returns><see langword="true" /> when no stabilization is needed or stable bounds exist.</returns>
+    private static bool IsCaptureTargetReady(
+        PreviewCaptureTarget target,
+        PreviewPluginWindowHost? pluginWindowHost)
+    {
+        return !PreviewPluginWindowHost.IsPluginWindowTarget(target) ||
+            pluginWindowHost?.TryGetStableCrop(target) is not null;
     }
 
     /// <summary>
@@ -329,7 +397,7 @@ internal sealed class BatchScreenshotRunner
             request.Viewport.Width,
             request.Viewport.Height,
             request.Mode.ToString(),
-            request.CaptureTarget.ToString(),
+            request.CaptureTarget,
             capture.RenderResult.PresentationMode.ToString(),
             GetManifestPngPathLabel(capture.PngPath));
     }
@@ -365,19 +433,19 @@ internal sealed class BatchScreenshotRunner
         }
     }
 
-    private sealed record ScreenshotManifest(
+    internal sealed record ScreenshotManifest(
         string ConfigSourceLabel,
         IReadOnlyList<string?> FontFileNames,
         int FontSize,
         IReadOnlyList<ScreenshotManifestEntry> Entries);
 
-    private sealed record ScreenshotManifestEntry(
+    internal sealed record ScreenshotManifestEntry(
         string ScenarioKey,
         string SurfaceKey,
         int ViewportWidth,
         int ViewportHeight,
         string ScreenshotMode,
-        string CaptureTarget,
+        PreviewCaptureTarget CaptureTarget,
         string PresentationMode,
         string PngPath);
 

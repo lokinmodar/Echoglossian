@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Previewer.UI;
+
 namespace Echoglossian.Previewer.Hosting;
 
 /// <summary>
@@ -51,6 +53,11 @@ internal sealed class PreviewCommandLine
     ///     Gets the requested screenshot mode.
     /// </summary>
     internal string? ScreenshotMode { get; private set; }
+
+    /// <summary>
+    ///     Gets the requested plugin-window screenshot target.
+    /// </summary>
+    internal PreviewCaptureTarget? CaptureTarget { get; private set; }
 
     /// <summary>
     ///     Gets the requested screenshot output directory.
@@ -104,6 +111,10 @@ internal sealed class PreviewCommandLine
                     commandLine.ScreenshotMode = ParseScreenshotMode(
                         GetValue(args, ref index, "--screenshot"));
                     break;
+                case "--capture-target":
+                    commandLine.CaptureTarget = ParseCaptureTarget(
+                        GetValue(args, ref index, "--capture-target"));
+                    break;
                 case "--output":
                     commandLine.OutputDirectory = GetValue(args, ref index, "--output");
                     break;
@@ -111,6 +122,13 @@ internal sealed class PreviewCommandLine
                     throw new ArgumentException(
                         $"Unknown previewer argument: {args[index]}");
             }
+        }
+
+        if (commandLine.CaptureTarget is not null &&
+            commandLine.ScreenshotMode != "full")
+        {
+            throw new ArgumentException(
+                "Previewer plugin-window capture targets require --screenshot full.");
         }
 
         return commandLine;
@@ -189,5 +207,23 @@ internal sealed class PreviewCommandLine
 
         throw new ArgumentException(
             "Previewer screenshot mode must be full, surface, or batch.");
+    }
+
+    /// <summary>
+    ///     Validates a deterministic plugin-window capture target.
+    /// </summary>
+    /// <param name="value">The requested capture target.</param>
+    /// <returns>The matching plugin-window target.</returns>
+    private static PreviewCaptureTarget ParseCaptureTarget(string value)
+    {
+        return value switch
+        {
+            "config-window" => PreviewCaptureTarget.ConfigWindow,
+            "db-manager-window" => PreviewCaptureTarget.DbManagerWindow,
+            "translator-metrics-window" => PreviewCaptureTarget.TranslatorMetricsWindow,
+            _ => throw new ArgumentException(
+                "Previewer capture target must be config-window, " +
+                "db-manager-window, or translator-metrics-window."),
+        };
     }
 }

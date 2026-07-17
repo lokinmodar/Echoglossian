@@ -68,6 +68,11 @@ internal static class Program
             Console.Error.WriteLine(exception.Message);
             return 1;
         }
+        catch (InvalidOperationException exception)
+        {
+            Console.Error.WriteLine(exception.Message);
+            return 1;
+        }
     }
 
     /// <summary>
@@ -192,15 +197,22 @@ internal static class Program
                         request.Scenario.Key,
                         request.Viewport,
                         request.CaptureTarget));
-                var crop = CalculateInteractiveCrop(
-                    request,
-                    shell.LastRenderResult,
-                    pluginWindowHost,
-                    ImGui.GetIO().DisplaySize,
-                    host.FramebufferSize);
+                try
+                {
+                    var crop = CalculateInteractiveCrop(
+                        request,
+                        shell.LastRenderResult,
+                        pluginWindowHost,
+                        ImGui.GetIO().DisplaySize,
+                        host.FramebufferSize);
 
-                host.CapturePng(outputPath, crop);
-                shell.SetLastScreenshotPath(outputPath);
+                    host.CapturePng(outputPath, crop);
+                    shell.SetLastScreenshotPath(outputPath);
+                }
+                catch (InvalidOperationException exception)
+                {
+                    shell.SetLastScreenshotFailure(exception.Message);
+                }
             });
     }
 
@@ -246,7 +258,7 @@ internal static class Program
                     scenario,
                     viewport,
                     outputDirectory,
-                    GetCaptureTarget(mode)));
+                    commandLine.CaptureTarget ?? GetCaptureTarget(mode)));
             }
         }
 
@@ -299,24 +311,41 @@ internal static class Program
         IReadOnlyDictionary<int, LanguageInfo> languages,
         string? databasePath)
     {
-        var placeholderTextureHandle = new ImTextureID(unchecked((nint)(-1)));
-        var configWindowContext = new PluginConfigWindowContext(
+        var configWindowContext = CreatePreviewPluginWindowContext(
             configuration,
-            languages,
-            placeholderTextureHandle,
-            placeholderTextureHandle,
-            placeholderTextureHandle,
-            static () => { },
-            configuration.PluginVersion)
-        {
-            PushGeneralFont = static () => NoOpDisposable.Instance,
-            ApplyLanguageRuntimeChanges = static (_, _) => { },
-        };
+            languages);
         return new PreviewPluginWindowHost(
             new PluginConfigWindowRenderer(),
             configWindowContext,
             CreatePreviewDbContext(databasePath),
             configuration);
+    }
+
+    /// <summary>
+    /// Creates config-window dependencies with explicit unavailable preview imagery.
+    /// </summary>
+    /// <param name="configuration">The preview-owned editable configuration.</param>
+    /// <param name="languages">The available preview languages.</param>
+    /// <returns>The preview-safe config-window context.</returns>
+    internal static PluginConfigWindowContext CreatePreviewPluginWindowContext(
+        Config configuration,
+        IReadOnlyDictionary<int, LanguageInfo> languages)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(languages);
+        return new PluginConfigWindowContext(
+            configuration,
+            languages,
+            default,
+            default,
+            default,
+            static () => { },
+            configuration.PluginVersion)
+        {
+            ImagesAvailable = false,
+            PushGeneralFont = static () => NoOpDisposable.Instance,
+            ApplyLanguageRuntimeChanges = static (_, _) => { },
+        };
     }
 
     /// <summary>
@@ -434,7 +463,7 @@ internal static class Program
         Vector2 displaySize,
         Vector2 framebufferSize)
     {
-        return request.CaptureTarget switch
+        var crop = request.CaptureTarget switch
         {
             PreviewCaptureTarget.OverlaySurface => CalculateInteractiveSurfaceCrop(
                 request,
@@ -442,19 +471,23 @@ internal static class Program
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.ConfigWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetCrop(PreviewCaptureTarget.ConfigWindow),
+                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.DbManagerWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetCrop(PreviewCaptureTarget.DbManagerWindow),
+                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
                 displaySize,
                 framebufferSize),
             _ => null,
         };
+
+        return PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget)
+            ? BatchScreenshotRunner.RequireWindowCrop(crop, request.CaptureTarget)
+            : crop;
     }
 
     /// <summary>

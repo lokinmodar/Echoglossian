@@ -49,35 +49,93 @@ internal static class PreviewSessionLoader
             Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(workingDirectory);
 
-        var clonedConfigPath = Path.Combine(workingDirectory, "Echoglossian.json");
-        File.WriteAllText(
-            clonedConfigPath,
-            JsonConvert.SerializeObject(editableConfiguration, Formatting.Indented));
-
-        string? clonedDatabasePath = null;
-        var databasePath = string.IsNullOrWhiteSpace(options.DatabasePath)
-            ? GetDefaultDatabasePath()
-            : Path.GetFullPath(options.DatabasePath);
-        if (File.Exists(databasePath))
+        try
         {
-            clonedDatabasePath = Path.Combine(
+            var clonedConfigPath = Path.Combine(workingDirectory, "Echoglossian.json");
+            File.WriteAllText(
+                clonedConfigPath,
+                JsonConvert.SerializeObject(editableConfiguration, Formatting.Indented));
+
+            string? clonedDatabasePath = null;
+            var databasePath = string.IsNullOrWhiteSpace(options.DatabasePath)
+                ? GetDefaultDatabasePath()
+                : Path.GetFullPath(options.DatabasePath);
+            if (File.Exists(databasePath))
+            {
+                var databaseCloneCandidate = Path.Combine(
+                    workingDirectory,
+                    Path.GetFileName(databasePath));
+                try
+                {
+                    CloneDatabase(databasePath, databaseCloneCandidate);
+                    clonedDatabasePath = databaseCloneCandidate;
+                }
+                catch (Exception exception) when (
+                    exception is SqliteException or
+                    IOException or
+                    UnauthorizedAccessException or
+                    InvalidOperationException)
+                {
+                    TryDeleteFile(databaseCloneCandidate);
+                    diagnostics.Add(
+                        "Preview database snapshot could not be created; " +
+                        "DB-backed windows will be unavailable.");
+                }
+            }
+            else
+            {
+                diagnostics.Add(
+                    "Preview database file was not found; DB-backed windows will be unavailable.");
+            }
+
+            return new PreviewSessionArtifacts(
                 workingDirectory,
-                Path.GetFileName(databasePath));
-            CloneDatabase(databasePath, clonedDatabasePath);
+                sourceConfiguration,
+                editableConfiguration,
+                clonedConfigPath,
+                clonedDatabasePath,
+                diagnostics);
         }
-        else
+        catch
         {
-            diagnostics.Add(
-                "Preview database file was not found; DB-backed windows will be unavailable.");
+            TryDeleteDirectory(workingDirectory);
+            throw;
         }
+    }
 
-        return new PreviewSessionArtifacts(
-            workingDirectory,
-            sourceConfiguration,
-            editableConfiguration,
-            clonedConfigPath,
-            clonedDatabasePath,
-            diagnostics);
+    /// <summary>
+    /// Deletes a partial optional database clone without replacing the clone failure.
+    /// </summary>
+    /// <param name="path">The partial clone path.</param>
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Deletes an incomplete session workspace without replacing the load failure.
+    /// </summary>
+    /// <param name="path">The session workspace path.</param>
+    private static void TryDeleteDirectory(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+        }
     }
 
     /// <summary>

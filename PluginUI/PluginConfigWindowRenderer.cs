@@ -73,7 +73,8 @@ public sealed class PluginConfigWindowRenderer
             {
                 changed |= AboutTab.Draw(
                     context.Configuration,
-                    context.LogoTextureHandle);
+                    context.LogoTextureHandle,
+                    context.ImagesAvailable);
                 ImGui.EndTabItem();
             }
 
@@ -86,7 +87,8 @@ public sealed class PluginConfigWindowRenderer
             ref isOpen,
             ref changed,
             context.PixTextureHandle,
-            context.CryptoTextureHandle);
+            context.CryptoTextureHandle,
+            context.ImagesAvailable);
 
         changed |= PluginAssetRequirementUiHelper.DrawMissingAssetsPopup(
             context.Configuration);

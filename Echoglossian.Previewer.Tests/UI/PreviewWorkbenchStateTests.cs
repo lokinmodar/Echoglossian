@@ -11,6 +11,8 @@ using Echoglossian.Previewer.UI;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
+using System.Drawing;
+
 using Xunit;
 
 namespace Echoglossian.Previewer.Tests.UI;
@@ -83,5 +85,100 @@ public sealed class PreviewWorkbenchStateTests
         PreviewPluginWindowHost.SynchronizeDbManagerState(state, window);
 
         Assert.True(state.DbManagerWindowOpen);
+    }
+
+    /// <summary>
+    /// Ensures capture bounds become ready only after consecutive stable frames.
+    /// </summary>
+    [Fact]
+    public void CaptureStabilityTracker_RequiresThreeConsecutiveStableBounds()
+    {
+        var tracker = new PreviewCaptureStabilityTracker(
+            requiredStableFrames: 3,
+            maximumObservationFrames: 6);
+        var bounds = new Rectangle(20, 30, 900, 800);
+        tracker.Begin(PreviewCaptureTarget.ConfigWindow);
+
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, bounds);
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, bounds);
+
+        Assert.False(tracker.TryGetStableBounds(
+            PreviewCaptureTarget.ConfigWindow,
+            out _));
+
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, bounds);
+
+        Assert.True(tracker.TryGetStableBounds(
+            PreviewCaptureTarget.ConfigWindow,
+            out var stableBounds));
+        Assert.Equal(bounds, stableBounds);
+    }
+
+    /// <summary>
+    /// Ensures changing bounds resets the consecutive-frame stabilization count.
+    /// </summary>
+    [Fact]
+    public void CaptureStabilityTracker_ChangedBounds_ResetsStability()
+    {
+        var tracker = new PreviewCaptureStabilityTracker(
+            requiredStableFrames: 2,
+            maximumObservationFrames: 5);
+        var firstBounds = new Rectangle(20, 30, 900, 800);
+        var changedBounds = new Rectangle(20, 30, 920, 800);
+        tracker.Begin(PreviewCaptureTarget.ConfigWindow);
+
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, firstBounds);
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, changedBounds);
+
+        Assert.False(tracker.TryGetStableBounds(
+            PreviewCaptureTarget.ConfigWindow,
+            out _));
+
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, changedBounds);
+
+        Assert.True(tracker.TryGetStableBounds(
+            PreviewCaptureTarget.ConfigWindow,
+            out var stableBounds));
+        Assert.Equal(changedBounds, stableBounds);
+    }
+
+    /// <summary>
+    /// Ensures repeatedly missing bounds produce an explicit failed capture state.
+    /// </summary>
+    [Fact]
+    public void CaptureStabilityTracker_MissingBounds_ReachesFailureLimit()
+    {
+        var tracker = new PreviewCaptureStabilityTracker(
+            requiredStableFrames: 2,
+            maximumObservationFrames: 3);
+        tracker.Begin(PreviewCaptureTarget.ConfigWindow);
+
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, null);
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, null);
+        tracker.Observe(PreviewCaptureTarget.ConfigWindow, null);
+
+        Assert.True(tracker.CaptureFailed);
+        Assert.False(tracker.TryGetStableBounds(
+            PreviewCaptureTarget.ConfigWindow,
+            out _));
+    }
+
+    /// <summary>
+    /// Ensures preview config windows explicitly disable unavailable imagery.
+    /// </summary>
+    [Fact]
+    public void CreatePreviewPluginWindowContext_UsesUnavailableImageryState()
+    {
+        var configuration = new Config { Lang = 28 };
+        var languages = global::Echoglossian.Echoglossian.CreateLanguagesDictionary();
+
+        var context = Program.CreatePreviewPluginWindowContext(
+            configuration,
+            languages);
+
+        Assert.False(context.ImagesAvailable);
+        Assert.Equal(default, context.LogoTextureHandle);
+        Assert.Equal(default, context.PixTextureHandle);
+        Assert.Equal(default, context.CryptoTextureHandle);
     }
 }
