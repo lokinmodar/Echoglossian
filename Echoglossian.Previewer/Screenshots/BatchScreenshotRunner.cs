@@ -217,7 +217,12 @@ internal sealed class BatchScreenshotRunner
         host.CaptureFramePng(
             draw,
             outputPath,
-            () => this.CalculateCrop(request, renderResult, pluginWindowHost));
+            () => this.CalculateCrop(
+                request,
+                renderResult,
+                pluginWindowHost,
+                ImGui.GetIO().DisplaySize,
+                host.FramebufferSize));
 
         return new CapturedScreenshot(outputPath, renderResult);
     }
@@ -228,11 +233,15 @@ internal sealed class BatchScreenshotRunner
     /// <param name="request">The screenshot request.</param>
     /// <param name="renderResult">The overlay draw result.</param>
     /// <param name="pluginWindowHost">The optional real plugin-window host.</param>
+    /// <param name="displaySize">The logical ImGui display dimensions.</param>
+    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
     /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
     private Rectangle? CalculateCrop(
         ScreenshotRequest request,
         TranslationOverlayRenderResult renderResult,
-        PreviewPluginWindowHost? pluginWindowHost)
+        PreviewPluginWindowHost? pluginWindowHost,
+        Vector2 displaySize,
+        Vector2 framebufferSize)
     {
         return request.CaptureTarget switch
         {
@@ -242,14 +251,38 @@ internal sealed class BatchScreenshotRunner
                 request.Viewport.Height,
                 request.SurfaceMargin,
                 framebufferScale: 1f),
-            PreviewCaptureTarget.ConfigWindow => pluginWindowHost?.TryGetCrop(
-                PreviewCaptureTarget.ConfigWindow),
-            PreviewCaptureTarget.DbManagerWindow => pluginWindowHost?.TryGetCrop(
-                PreviewCaptureTarget.DbManagerWindow),
-            PreviewCaptureTarget.TranslatorMetricsWindow => pluginWindowHost?.TryGetCrop(
-                PreviewCaptureTarget.TranslatorMetricsWindow),
+            PreviewCaptureTarget.ConfigWindow => CalculateWindowCrop(
+                pluginWindowHost?.TryGetCrop(PreviewCaptureTarget.ConfigWindow),
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.DbManagerWindow => CalculateWindowCrop(
+                pluginWindowHost?.TryGetCrop(PreviewCaptureTarget.DbManagerWindow),
+                displaySize,
+                framebufferSize),
+            PreviewCaptureTarget.TranslatorMetricsWindow => CalculateWindowCrop(
+                pluginWindowHost?.TryGetCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                displaySize,
+                framebufferSize),
             _ => null,
         };
+    }
+
+    /// <summary>
+    /// Converts a logical plugin-window crop into physical batch framebuffer pixels.
+    /// </summary>
+    /// <param name="logicalCrop">The plugin window crop in logical ImGui coordinates.</param>
+    /// <param name="displaySize">The logical ImGui display dimensions.</param>
+    /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+    /// <returns>The physical crop, or <see langword="null" /> when no window bounds are available.</returns>
+    internal static Rectangle? CalculateWindowCrop(
+        Rectangle? logicalCrop,
+        Vector2 displaySize,
+        Vector2 framebufferSize)
+    {
+        return Program.CalculateInteractiveWindowCrop(
+            logicalCrop,
+            displaySize,
+            framebufferSize);
     }
 
     /// <summary>

@@ -174,6 +174,21 @@ public sealed class ScreenshotCropTests
     }
 
     /// <summary>
+    /// Ensures deterministic batch window captures use physical framebuffer
+    /// pixels when the preview host uses HiDPI scaling.
+    /// </summary>
+    [Fact]
+    public void CalculateBatchWindowCrop_UsesFramebufferScaleForHiDpiHosts()
+    {
+        var crop = BatchScreenshotRunner.CalculateWindowCrop(
+            new Rectangle(100, 50, 400, 200),
+            new Vector2(1400f, 900f),
+            new Vector2(2800f, 1800f));
+
+        Assert.Equal(new Rectangle(200, 100, 800, 400), crop);
+    }
+
+    /// <summary>
     /// Ensures screenshot readback accepts only the supported 32-bit formats.
     /// </summary>
     [Theory]
