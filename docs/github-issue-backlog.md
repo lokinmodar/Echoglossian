@@ -1,13 +1,13 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-07-16
+Snapshot date: 2026-07-17
 
 This document is the operational snapshot for open issues in
 [`lokinmodar/Echoglossian`](https://github.com/lokinmodar/Echoglossian/issues).
 GitHub remains the source of truth for issue state and comments. Published
 release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 
-## Published Release
+## Published Release Baseline
 
 - Release: [`v4.2601.0715.1114`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0715.1114)
 - Product commit: `b584115640c5b9b9bda53001652007a710d892b3`
@@ -19,6 +19,17 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 - Independently closed before this release pass: #215 through PR #223
 - Release-pass closures: 6
 - Open issues after the post-publication pass: 20
+- Open issues at the current audit head: 20
+
+## Current `v4-series` Delta
+
+- Audit head: `origin/v4-series` at `ed9b0cdef68fb135ecf29eeb4ecafd1e6061b231`
+- Latest tagged runtime build on `v4-series`: `v4.2601.0717.0008` at `578bce65cc09deeb23571e0e58ed6306f871d859`
+- GitHub searches for open or closed issues updated on or after 2026-07-17 returned no results, so issue state and comments remain unchanged since the 2026-07-16 post-publication pass.
+- Merged PR [#225](https://github.com/lokinmodar/Echoglossian/pull/225) added the local DalaMock validation rail and did not change backlog state.
+- Merged PR [#226](https://github.com/lokinmodar/Echoglossian/pull/226) fixed the MiniTalk native bubble regression and SeString line-break normalization, which further narrows issue #172 without changing the open-issue count.
+- Merged PR [#227](https://github.com/lokinmodar/Echoglossian/pull/227) extends the already-closed previewer front from issue #215 with unified ImGui previewer Phase 1.
+- Merged PR [#228](https://github.com/lokinmodar/Echoglossian/pull/228) is docs-only and does not change backlog state.
 
 ## Closed After Publication
 
@@ -37,13 +48,15 @@ The release-bound closure comments were posted and these issues were closed on
 Issue #181 was intentionally excluded from this closure batch. Its original
 read-only flag corruption is fixed, but the native translated-text reflow front
 remains open in draft PR
-[#193](https://github.com/lokinmodar/Echoglossian/pull/193).
+[#193](https://github.com/lokinmodar/Echoglossian/pull/193), which is still
+based on `af6e1f7` and needs reconciliation onto current `v4-series` plus
+long-text in-game acceptance.
 
 ## Other Closure Since The Previous Snapshot
 
 | Issue | Resolution |
 | --- | --- |
-| [#215 Dev-only ImGui preview host](https://github.com/lokinmodar/Echoglossian/issues/215) | Closed automatically by merged PR [#223](https://github.com/lokinmodar/Echoglossian/pull/223), which added the isolated standalone previewer, shared overlay rendering, font and RTL preview support, and screenshot export. |
+| [#215 Dev-only ImGui preview host](https://github.com/lokinmodar/Echoglossian/issues/215) | Closed automatically by merged PR [#223](https://github.com/lokinmodar/Echoglossian/pull/223), which added the isolated standalone previewer, shared overlay rendering, font and RTL preview support, and screenshot export. Current `v4-series` later extended that closed front in PR [#227](https://github.com/lokinmodar/Echoglossian/pull/227) with unified ImGui previewer Phase 1 for the real Config, DB Manager, and Translator Metrics windows. |
 
 ## Awaiting Retest
 
@@ -72,9 +85,10 @@ dynamic progression symptom still require separate current reproductions.
 ### [#172 Google layout and untranslated quest/FATE text](https://github.com/lokinmodar/Echoglossian/issues/172)
 
 The release addresses quest slot reuse, stale source scoping, incremental
-tracker application, and read-only `JournalDetail` formatting. Untranslated
-FATE text and selection-dialog clipping still require focused current
-reproductions.
+tracker application, and read-only `JournalDetail` formatting. Current
+`v4-series` now also includes the MiniTalk native bubble-regression fix and
+SeString line-break normalization from PR #226. Untranslated FATE text and
+selection-dialog clipping still require focused current reproductions.
 
 ## Active And Planned Work
 
@@ -88,7 +102,7 @@ reproductions.
 | [#173 CharacterPanelRefined incompatibility](https://github.com/lokinmodar/Echoglossian/issues/173) | Originating user report remains unverified against the compatibility work requested by #179. |
 | [#176 Local LLM latency](https://github.com/lokinmodar/Echoglossian/issues/176) | The reported approximately one-second overhead still needs focused profiling and acceptance evidence. |
 | [#179 CharacterPanelRefined analysis](https://github.com/lokinmodar/Echoglossian/issues/179) | Explicit compatibility engineering task remains incomplete. |
-| [#181 TextNode flags and native `JournalDetail` reflow](https://github.com/lokinmodar/Echoglossian/issues/181) | The read-only corruption is fixed. Draft PR #193 remains open for the narrower native translated-text reflow and requires long-text in-game acceptance. |
+| [#181 TextNode flags and native `JournalDetail` reflow](https://github.com/lokinmodar/Echoglossian/issues/181) | The read-only corruption is fixed on `v4-series`. Draft PR #193 remains open on base `af6e1f7` for the narrower native translated-text reflow and still needs reconciliation with current `v4-series` plus long-text in-game acceptance. |
 | [#192 Configuration screenshots](https://github.com/lokinmodar/Echoglossian/issues/192) | Documentation and UI enhancement has not been implemented. |
 | [#206 `{targetLanguage}` preview](https://github.com/lokinmodar/Echoglossian/issues/206) | Confirmed current defect: the prompt editor preview state initializes the target language as `Japanese`. This was not fixed by #204. |
 | [#209 Dialogue context controls](https://github.com/lokinmodar/Echoglossian/issues/209) | User-facing disable or limit controls for local LLM context are not implemented. |
