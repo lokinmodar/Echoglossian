@@ -67,7 +67,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         overlay.Semaphore.Wait();
         try
         {
-            overlayText = overlay.CurrentText;
+            overlayText = TranslationOverlayTextNormalizationHelper.NormalizeForDisplay(
+                overlay.CurrentText);
             shouldDraw = !string.IsNullOrEmpty(overlayText) &&
                          overlayText != Resources.WaitingForTranslation;
         }
@@ -476,7 +477,9 @@ internal sealed class TranslationOverlayRenderer : IDisposable
     {
         return string.IsNullOrEmpty(text)
             ? []
-            : text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+            : TranslationOverlayTextNormalizationHelper
+                .NormalizeForDisplay(text)
+                .Split('\n');
     }
 
     /// <summary>

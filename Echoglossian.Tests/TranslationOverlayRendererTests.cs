@@ -111,4 +111,36 @@ public sealed class TranslationOverlayRendererTests
 
         Assert.Equal("Krile##overlay-42", actual);
     }
+
+    /// <summary>
+    /// Ensures raw SeString line-break payload markers become real overlay line
+    /// breaks instead of invalid glyph boxes.
+    /// </summary>
+    [Fact]
+    public void NormalizeOverlayText_RawSeStringLineBreaksBecomeNewLines()
+    {
+        const string rawText =
+            "N\u00e3o consigo \u0002\u0010\u0001\u0003ganhar nada... " +
+            "\u0002\u0010\u0001\u0003Estou \u0002\u0010\u0001\u0003come\u00e7ando.";
+
+        var actual = TranslationOverlayTextNormalizationHelper.NormalizeForDisplay(rawText);
+
+        Assert.Equal(
+            "N\u00e3o consigo \nganhar nada... \nEstou \ncome\u00e7ando.",
+            actual);
+    }
+
+    /// <summary>
+    /// Ensures carriage-return line endings and residual control bytes are
+    /// normalized before the overlay renderer measures or draws the text.
+    /// </summary>
+    [Fact]
+    public void NormalizeOverlayText_NormalizesCarriageReturnsAndDropsResidualControls()
+    {
+        const string rawText = "But... But... You said this\rwas your first time playing!\u0002";
+
+        var actual = TranslationOverlayTextNormalizationHelper.NormalizeForDisplay(rawText);
+
+        Assert.Equal("But... But... You said this\nwas your first time playing!", actual);
+    }
 }
