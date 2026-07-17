@@ -7,11 +7,33 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0715.1114`
+## Submitted Release `v4.2601.0717.0008`
+
+This package is prepared for submission and focuses on the urgent MiniTalk
+native-layout regression that resurfaced after the last release.
+
+Highlights:
+
+- restored MiniTalk plugin-owned bubble layout safely even when the game had
+  already repainted a new source line into the same live field, preventing
+  stale restoration from deforming later bubbles
+- normalized raw SeString line-break payload bytes and residual control-format
+  characters in both overlay rendering and MiniTalk native-text comparisons so
+  source overlays stop showing invalid glyph boxes and native reconciliation
+  stops treating wrapped text as a new untranslated line
+- aligned MiniTalk overlay bounds and native extra-wrap-width handling with the
+  resolved bubble container/background so original-text overlays wrap against
+  the visible balloon and recycled bubble instances keep stable native sizing
+
+## Published Release `v4.2601.0715.1114`
 
 This package delivers the first production-ready RTL presentation path and a
 broader stabilization of translated game-window, reference-text, and tooltip
 workflows.
+
+Published in `DalamudPluginsD17` via
+[PR #9026](https://github.com/goatcorp/DalamudPluginsD17/pull/9026) on
+2026-07-16.
 
 Highlights:
 
