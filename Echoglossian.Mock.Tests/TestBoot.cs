@@ -36,7 +36,8 @@ internal sealed class TestBoot
     /// <returns>The started plugin and its owning mock container.</returns>
     public async Task<StartedPlugin> StartPluginAsync()
     {
-        var pluginSavePath = this.CreateLocalPluginSavePath();
+        var stateRoot = this.CreateRunStateRoot();
+        var pluginSavePath = this.CreateLocalPluginSavePath(stateRoot);
         var mockContainer = new MockContainer(
             new MockDalamudConfiguration
             {
@@ -51,8 +52,8 @@ internal sealed class TestBoot
         var pluginLoader = mockContainer.GetPluginLoader();
         var mockPlugin = pluginLoader.AddPlugin(typeof(EchoglossianAsyncPluginAdapter));
         var pluginLoadSettings = new PluginLoadSettings(
-            new DirectoryInfo(Environment.CurrentDirectory),
-            new FileInfo(Path.Combine(Environment.CurrentDirectory, "test.json")))
+            stateRoot,
+            new FileInfo(Path.Combine(stateRoot.FullName, "test.json")))
         {
             AssemblyLocation = typeof(global::Echoglossian.Echoglossian).Assembly.Location,
         };
@@ -65,16 +66,32 @@ internal sealed class TestBoot
             throw new InvalidOperationException("DalaMock did not build Echoglossian.");
         }
 
-        return new StartedPlugin(mockContainer, adapter.Plugin);
+        return new StartedPlugin(mockContainer, adapter.Plugin, stateRoot);
     }
 
     /// <summary>
-    /// Creates the local plugin-save directory used by the DalaMock startup rail.
+    /// Creates an isolated local state root for a single DalaMock startup run.
     /// </summary>
-    /// <returns>The created plugin-save directory.</returns>
-    private DirectoryInfo CreateLocalPluginSavePath()
+    /// <returns>The created local state root.</returns>
+    private DirectoryInfo CreateRunStateRoot()
     {
-        var pluginSavePath = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, ".dalamock"));
+        var pluginSavePath = new DirectoryInfo(
+            Path.Combine(
+                Path.GetTempPath(),
+                "Echoglossian.Mock.Tests",
+                Guid.NewGuid().ToString("N")));
+        pluginSavePath.Create();
+        return pluginSavePath;
+    }
+
+    /// <summary>
+    /// Creates the plugin-save directory used by the DalaMock startup rail.
+    /// </summary>
+    /// <param name="stateRoot">The isolated local state root for the current run.</param>
+    /// <returns>The created plugin-save directory.</returns>
+    private DirectoryInfo CreateLocalPluginSavePath(DirectoryInfo stateRoot)
+    {
+        var pluginSavePath = new DirectoryInfo(Path.Combine(stateRoot.FullName, ".dalamock"));
         pluginSavePath.Create();
         return pluginSavePath;
     }

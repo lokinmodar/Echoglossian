@@ -6,6 +6,8 @@
 using Echoglossian.PluginRuntime.Startup;
 
 using FluentAssertions;
+using System;
+using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -17,9 +19,15 @@ namespace Echoglossian.Mock.Tests;
 public class PluginStartupSmokeTests
 {
     [Fact]
+    public void StartedPlugin_exposes_deterministic_cleanup()
+    {
+        typeof(StartedPlugin).GetInterfaces().Should().Contain(typeof(IDisposable));
+    }
+
+    [Fact]
     public async Task StartPluginAsync_marks_expected_startup_stages()
     {
-        var started = await new TestBoot().StartPluginAsync();
+        using var started = await new TestBoot().StartPluginAsync();
 
         var snapshot = started.Plugin.StartupAudit.CaptureSnapshot();
 
@@ -38,8 +46,7 @@ public class PluginStartupSmokeTests
     {
         var started = await new TestBoot().StartPluginAsync();
 
-        PrepareForHeadlessDispose(started.Plugin);
-        started.Plugin.Dispose();
+        started.Dispose();
 
         var snapshot = started.Plugin.StartupAudit.CaptureSnapshot();
 
@@ -50,29 +57,37 @@ public class PluginStartupSmokeTests
         snapshot.HasStage(PluginStartupStage.DisposeComplete).Should().BeTrue();
     }
 
-    /// <summary>
-    /// Replaces the registered addon-handler list with an empty instance so the
-    /// headless shutdown rail can validate plugin-level disposal without native
-    /// UI restoration that requires a live AtkStage.
-    /// </summary>
-    /// <param name="plugin">The started production plugin.</param>
-    /// <exception cref="System.InvalidOperationException">Thrown when the registered addon-handler field cannot be located or instantiated.</exception>
-    private static void PrepareForHeadlessDispose(global::Echoglossian.Echoglossian plugin)
+    [Fact]
+    public async Task StartPluginAsync_keeps_host_state_out_of_the_test_working_directory()
     {
-        var field = typeof(global::Echoglossian.Echoglossian).GetField(
-            "registeredAddonHandlers",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        if (field is null)
+        var legacyPluginSavePath = Path.Combine(Environment.CurrentDirectory, ".dalamock");
+        var legacyPluginConfigPath = Path.Combine(Environment.CurrentDirectory, "test.json");
+
+        DeleteLegacyHostState(legacyPluginSavePath, legacyPluginConfigPath);
+
+        using var started = await new TestBoot().StartPluginAsync();
+
+        Directory.Exists(legacyPluginSavePath).Should().BeFalse();
+        File.Exists(legacyPluginConfigPath).Should().BeFalse();
+
+        DeleteLegacyHostState(legacyPluginSavePath, legacyPluginConfigPath);
+    }
+
+    /// <summary>
+    /// Deletes any legacy host-state paths left under the current test working directory.
+    /// </summary>
+    /// <param name="legacyPluginSavePath">The legacy plugin-save directory path.</param>
+    /// <param name="legacyPluginConfigPath">The legacy plugin configuration file path.</param>
+    private static void DeleteLegacyHostState(string legacyPluginSavePath, string legacyPluginConfigPath)
+    {
+        if (Directory.Exists(legacyPluginSavePath))
         {
-            throw new System.InvalidOperationException("Unable to locate Echoglossian.registeredAddonHandlers for headless dispose preparation.");
+            Directory.Delete(legacyPluginSavePath, true);
         }
 
-        var emptyHandlers = System.Activator.CreateInstance(field.FieldType);
-        if (emptyHandlers is null)
+        if (File.Exists(legacyPluginConfigPath))
         {
-            throw new System.InvalidOperationException("Unable to create an empty registeredAddonHandlers list for headless dispose preparation.");
+            File.Delete(legacyPluginConfigPath);
         }
-
-        field.SetValue(plugin, emptyHandlers);
     }
 }
