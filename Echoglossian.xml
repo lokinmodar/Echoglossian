@@ -15733,7 +15733,8 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryApplyJournalDetailNativeBodyFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
                 Applies the translated JournalDetail native body flow using the
-                shared block-reflow helper when a flow snapshot is available.
+                JournalDetail-local block-reflow helper when a flow snapshot is
+                available.
             </summary>
             <param name="originalSnapshot">The original quest-detail snapshot.</param>
             <param name="descriptionNode">The live description text node.</param>
@@ -15746,12 +15747,15 @@
             </param>
             <param name="summaryNode">The live primary summary text node.</param>
             <param name="translatedSummarySections">The translated summary sections.</param>
-            <returns><c>true</c> when the shared reflow helper handled the body flow.</returns>
+            <returns>
+                <c>true</c> when the JournalDetail-local reflow helper handled the
+                body flow.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryRestoreJournalDetailOriginalBodyFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Restores the original JournalDetail body flow using the shared
-                reflow helper when a flow snapshot is available.
+                JournalDetail-local reflow helper when a flow snapshot is available.
             </summary>
             <param name="originalSnapshot">The original quest-detail snapshot.</param>
             <param name="descriptionNode">The live description text node.</param>
@@ -15759,7 +15763,10 @@
                 The live visible objective text nodes in order.
             </param>
             <param name="summaryNode">The live primary summary text node.</param>
-            <returns><c>true</c> when the shared reflow helper handled the restore.</returns>
+            <returns>
+                <c>true</c> when the JournalDetail-local reflow helper handled the
+                restore.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
             <summary>
@@ -15962,7 +15969,7 @@
             <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
             <returns>The ordered text-node addresses that belong to the body flow.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureJournalDetailNativeFlowContainers(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureJournalDetailNativeFlowContainers(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot})">
             <summary>
                 Captures the JournalDetail container state that should grow together
                 with the native body flow.
@@ -16215,7 +16222,7 @@
                 flow.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
             <summary>
                 Stores the original JournalDetail texts for a single visible quest
                 scope so mode changes can restore native UI state and drive swap
@@ -16422,6 +16429,317 @@
             <summary>
                 Restores state previously mutated by this handler.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper">
+            <summary>
+                Provides JournalDetail-local snapshot, reflow, and restore helpers for
+                the native quest-detail body flow when translated text grows beyond the
+                original English layout budget.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ResolveFlowWrapperNodeAddress(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Resolves the visual wrapper node address for one text node inside a
+                given flow root.
+            </summary>
+            <param name="flowRoot">The visual flow root that owns the blocks.</param>
+            <param name="textNode">The text node whose wrapper should be resolved.</param>
+            <returns>The resolved wrapper-node address.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CaptureOrderedFlowBlocks(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IEnumerable{System.IntPtr})">
+            <summary>
+                Captures the ordered flow-block snapshots for the supplied text nodes.
+            </summary>
+            <param name="flowRoot">The visual flow root that owns the blocks.</param>
+            <param name="textNodeAddresses">The text nodes that participate in the flow.</param>
+            <returns>The captured ordered flow blocks.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CaptureContainerSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Int16,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot})">
+            <summary>
+                Captures one container snapshot for a text flow.
+            </summary>
+            <param name="containerNode">The container node to snapshot.</param>
+            <param name="flowOriginY">
+                The vertical origin of the flow inside the container.
+            </param>
+            <param name="flowBlocks">The captured flow blocks.</param>
+            <returns>The captured container snapshot, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ApplyVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
+            <summary>
+                Applies translated text to an ordered native text flow and reflows
+                later blocks by cumulative height delta.
+            </summary>
+            <param name="flowBlocks">The ordered flow blocks.</param>
+            <param name="translatedTextsByTextNode">
+                The translated text keyed by text-node address.
+            </param>
+            <param name="applyText">
+                Delegate used to apply translated text with the desired presentation.
+            </param>
+            <param name="containerSnapshots">
+                The containers whose heights should grow with the flow.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.RestoreVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
+            <summary>
+                Restores an ordered native text flow to its original layout and text.
+            </summary>
+            <param name="flowBlocks">The ordered flow blocks.</param>
+            <param name="originalTextsByTextNode">
+                The original text keyed by text-node address.
+            </param>
+            <param name="restoreText">
+                Delegate used to restore the original text presentation.
+            </param>
+            <param name="containerSnapshots">
+                The container snapshots captured before native mutation.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ResolveWrapperNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Resolves the nearest visual wrapper node for a text node inside a
+                given flow root.
+            </summary>
+            <param name="flowRoot">The flow root owning the text flow.</param>
+            <param name="textNode">The text node being wrapped.</param>
+            <returns>The resolved wrapper node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CalculateNodeOffsetToAncestor(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Calculates the local offset between one node and one ancestor node.
+            </summary>
+            <param name="node">The descendant node.</param>
+            <param name="ancestorNode">The ancestor node.</param>
+            <returns>The accumulated local offset from the ancestor to the node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.IsDescendantOf(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Gets whether one node belongs to the subtree rooted at the supplied
+                ancestor node.
+            </summary>
+            <param name="node">The node to test.</param>
+            <param name="ancestorNode">The ancestor node.</param>
+            <returns><c>true</c> when the node belongs to the ancestor subtree.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CalculateVerticalLayoutPlan(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.UInt16},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
+            <summary>
+                Calculates the wrapper positions and container heights implied by one
+                measured vertical text flow.
+            </summary>
+            <param name="flowBlocks">The ordered original flow blocks.</param>
+            <param name="desiredWrapperHeights">
+                The desired wrapper heights keyed by text-node address after
+                translated measurement.
+            </param>
+            <param name="containerSnapshots">The captured container snapshots.</param>
+            <returns>The calculated layout plan.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ClampToShort(System.Single)">
+            <summary>
+                Clamps one local coordinate to the short range expected by native
+                node positioning helpers.
+            </summary>
+            <param name="value">The coordinate to clamp.</param>
+            <returns>The clamped coordinate.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowApplyDelegate">
+            <summary>
+                Applies one translated or restored text payload to a native text node
+                using its original presentation metadata.
+            </summary>
+            <param name="textNode">The target text node.</param>
+            <param name="originalWidth">The original text-node width.</param>
+            <param name="originalTextFlags">The original text flags.</param>
+            <param name="originalFontSize">The original font size.</param>
+            <param name="text">The text to render.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot">
+            <summary>
+                Captures one reflowable native text block.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The original wrapper X.</param>
+            <param name="WrapperY">The original wrapper Y.</param>
+            <param name="WrapperWidth">The original wrapper width.</param>
+            <param name="WrapperHeight">The original wrapper height.</param>
+            <param name="TextNodeAddress">The inner text-node address.</param>
+            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
+            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
+            <param name="TextWidth">The original text-node width.</param>
+            <param name="TextHeight">The original text-node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+            <param name="BottomPadding">
+                The original bottom padding between the text bottom and wrapper bottom.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.Int16)">
+            <summary>
+                Captures one reflowable native text block.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The original wrapper X.</param>
+            <param name="WrapperY">The original wrapper Y.</param>
+            <param name="WrapperWidth">The original wrapper width.</param>
+            <param name="WrapperHeight">The original wrapper height.</param>
+            <param name="TextNodeAddress">The inner text-node address.</param>
+            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
+            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
+            <param name="TextWidth">The original text-node width.</param>
+            <param name="TextHeight">The original text-node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+            <param name="BottomPadding">
+                The original bottom padding between the text bottom and wrapper bottom.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperNodeAddress">
+            <summary>The wrapper node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperX">
+            <summary>The original wrapper X.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperY">
+            <summary>The original wrapper Y.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperWidth">
+            <summary>The original wrapper width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperHeight">
+            <summary>The original wrapper height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextNodeAddress">
+            <summary>The inner text-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextOffsetX">
+            <summary>The original text offset X inside the wrapper.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextOffsetY">
+            <summary>The original text offset Y inside the wrapper.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextWidth">
+            <summary>The original text-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextHeight">
+            <summary>The original text-node height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextFlags">
+            <summary>The original text flags.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.FontSize">
+            <summary>The original font size.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.BottomPadding">
+            <summary>
+                The original bottom padding between the text bottom and wrapper bottom.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot">
+            <summary>
+                Captures one container that should grow together with a native text
+                flow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="FlowOriginY">The flow origin Y inside the container.</param>
+            <param name="Height">The original container height.</param>
+            <param name="BottomPadding">The original bottom padding below the flow.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.#ctor(System.IntPtr,System.Int16,System.UInt16,System.Int16)">
+            <summary>
+                Captures one container that should grow together with a native text
+                flow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="FlowOriginY">The flow origin Y inside the container.</param>
+            <param name="Height">The original container height.</param>
+            <param name="BottomPadding">The original bottom padding below the flow.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.ContainerNodeAddress">
+            <summary>The container node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.FlowOriginY">
+            <summary>The flow origin Y inside the container.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.Height">
+            <summary>The original container height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.BottomPadding">
+            <summary>The original bottom padding below the flow.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan">
+            <summary>
+                Captures the calculated reflow plan for one native vertical text flow.
+            </summary>
+            <param name="BlockPlans">The ordered wrapper position and size plans.</param>
+            <param name="ContainerPlans">The container height plans.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan.#ctor(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan})">
+            <summary>
+                Captures the calculated reflow plan for one native vertical text flow.
+            </summary>
+            <param name="BlockPlans">The ordered wrapper position and size plans.</param>
+            <param name="ContainerPlans">The container height plans.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan.BlockPlans">
+            <summary>The ordered wrapper position and size plans.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan.ContainerPlans">
+            <summary>The container height plans.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan">
+            <summary>
+                Captures the calculated position and height for one wrapper block after
+                translated reflow.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The wrapper X position.</param>
+            <param name="WrapperY">The wrapper Y position.</param>
+            <param name="WrapperHeight">The wrapper height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16)">
+            <summary>
+                Captures the calculated position and height for one wrapper block after
+                translated reflow.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The wrapper X position.</param>
+            <param name="WrapperY">The wrapper Y position.</param>
+            <param name="WrapperHeight">The wrapper height.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperNodeAddress">
+            <summary>The wrapper node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperX">
+            <summary>The wrapper X position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperY">
+            <summary>The wrapper Y position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperHeight">
+            <summary>The wrapper height.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan">
+            <summary>
+                Captures the calculated height for one container after native text
+                reflow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="Height">The calculated container height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan.#ctor(System.IntPtr,System.UInt16)">
+            <summary>
+                Captures the calculated height for one container after native text
+                reflow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="Height">The calculated container height.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan.ContainerNodeAddress">
+            <summary>The container node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan.Height">
+            <summary>The calculated container height.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler">
             <summary>
@@ -22916,317 +23234,6 @@
             </summary>
             <param name="text">The live or replacement text to normalize.</param>
             <returns>The normalized comparison text.</returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper">
-            <summary>
-                Provides shared snapshot, reflow, and restore helpers for native UI
-                text flows where translated text can grow beyond the original English
-                layout budget.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ResolveFlowWrapperNodeAddress(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-                Resolves the visual wrapper node address for one text node inside a
-                given flow root.
-            </summary>
-            <param name="flowRoot">The visual flow root that owns the blocks.</param>
-            <param name="textNode">The text node whose wrapper should be resolved.</param>
-            <returns>The resolved wrapper-node address.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.CaptureOrderedFlowBlocks(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IEnumerable{System.IntPtr})">
-            <summary>
-                Captures the ordered flow-block snapshots for the supplied text nodes.
-            </summary>
-            <param name="flowRoot">The visual flow root that owns the blocks.</param>
-            <param name="textNodeAddresses">The text nodes that participate in the flow.</param>
-            <returns>The captured ordered flow blocks.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.CaptureContainerSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Int16,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot})">
-            <summary>
-                Captures one container snapshot for a text flow.
-            </summary>
-            <param name="containerNode">The container node to snapshot.</param>
-            <param name="flowOriginY">
-                The vertical origin of the flow inside the container.
-            </param>
-            <param name="flowBlocks">The captured flow blocks.</param>
-            <returns>The captured container snapshot, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ApplyVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.Helpers.NativeTextFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot})">
-            <summary>
-                Applies translated text to an ordered native text flow and reflows
-                later blocks by cumulative height delta.
-            </summary>
-            <param name="flowBlocks">The ordered flow blocks.</param>
-            <param name="translatedTextsByTextNode">
-                The translated text keyed by text-node address.
-            </param>
-            <param name="applyText">
-                Delegate used to apply translated text with the desired presentation.
-            </param>
-            <param name="containerSnapshots">
-                The containers whose heights should grow with the flow.
-            </param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.RestoreVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.Helpers.NativeTextFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot})">
-            <summary>
-                Restores an ordered native text flow to its original layout and text.
-            </summary>
-            <param name="flowBlocks">The ordered flow blocks.</param>
-            <param name="originalTextsByTextNode">
-                The original text keyed by text-node address.
-            </param>
-            <param name="restoreText">
-                Delegate used to restore the original text presentation.
-            </param>
-            <param name="containerSnapshots">
-                The container snapshots captured before native mutation.
-            </param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ResolveWrapperNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
-            <summary>
-                Resolves the nearest visual wrapper node for a text node inside a
-                given flow root.
-            </summary>
-            <param name="flowRoot">The flow root owning the text flow.</param>
-            <param name="textNode">The text node being wrapped.</param>
-            <returns>The resolved wrapper node.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.CalculateNodeOffsetToAncestor(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
-            <summary>
-                Calculates the local offset between one node and one ancestor node.
-            </summary>
-            <param name="node">The descendant node.</param>
-            <param name="ancestorNode">The ancestor node.</param>
-            <returns>The accumulated local offset from the ancestor to the node.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.IsDescendantOf(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
-            <summary>
-                Gets whether one node belongs to the subtree rooted at the supplied
-                ancestor node.
-            </summary>
-            <param name="node">The node to test.</param>
-            <param name="ancestorNode">The ancestor node.</param>
-            <returns><c>true</c> when the node belongs to the ancestor subtree.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.CalculateVerticalLayoutPlan(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.UInt16},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot})">
-            <summary>
-                Calculates the wrapper positions and container heights implied by one
-                measured vertical text flow.
-            </summary>
-            <param name="flowBlocks">The ordered original flow blocks.</param>
-            <param name="desiredWrapperHeights">
-                The desired wrapper heights keyed by text-node address after
-                translated measurement.
-            </param>
-            <param name="containerSnapshots">The captured container snapshots.</param>
-            <returns>The calculated layout plan.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowReflowHelper.ClampToShort(System.Single)">
-            <summary>
-                Clamps one local coordinate to the short range expected by native
-                node positioning helpers.
-            </summary>
-            <param name="value">The coordinate to clamp.</param>
-            <returns>The clamped coordinate.</returns>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowApplyDelegate">
-            <summary>
-                Applies one translated or restored text payload to a native text node
-                using its original presentation metadata.
-            </summary>
-            <param name="textNode">The target text node.</param>
-            <param name="originalWidth">The original text-node width.</param>
-            <param name="originalTextFlags">The original text flags.</param>
-            <param name="originalFontSize">The original font size.</param>
-            <param name="text">The text to render.</param>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot">
-            <summary>
-                Captures one reflowable native text block.
-            </summary>
-            <param name="WrapperNodeAddress">The wrapper node address.</param>
-            <param name="WrapperX">The original wrapper X.</param>
-            <param name="WrapperY">The original wrapper Y.</param>
-            <param name="WrapperWidth">The original wrapper width.</param>
-            <param name="WrapperHeight">The original wrapper height.</param>
-            <param name="TextNodeAddress">The inner text-node address.</param>
-            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
-            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
-            <param name="TextWidth">The original text-node width.</param>
-            <param name="TextHeight">The original text-node height.</param>
-            <param name="TextFlags">The original text flags.</param>
-            <param name="FontSize">The original font size.</param>
-            <param name="BottomPadding">
-                The original bottom padding between the text bottom and wrapper bottom.
-            </param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.Int16)">
-            <summary>
-                Captures one reflowable native text block.
-            </summary>
-            <param name="WrapperNodeAddress">The wrapper node address.</param>
-            <param name="WrapperX">The original wrapper X.</param>
-            <param name="WrapperY">The original wrapper Y.</param>
-            <param name="WrapperWidth">The original wrapper width.</param>
-            <param name="WrapperHeight">The original wrapper height.</param>
-            <param name="TextNodeAddress">The inner text-node address.</param>
-            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
-            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
-            <param name="TextWidth">The original text-node width.</param>
-            <param name="TextHeight">The original text-node height.</param>
-            <param name="TextFlags">The original text flags.</param>
-            <param name="FontSize">The original font size.</param>
-            <param name="BottomPadding">
-                The original bottom padding between the text bottom and wrapper bottom.
-            </param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperNodeAddress">
-            <summary>The wrapper node address.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperX">
-            <summary>The original wrapper X.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperY">
-            <summary>The original wrapper Y.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperWidth">
-            <summary>The original wrapper width.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.WrapperHeight">
-            <summary>The original wrapper height.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextNodeAddress">
-            <summary>The inner text-node address.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextOffsetX">
-            <summary>The original text offset X inside the wrapper.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextOffsetY">
-            <summary>The original text offset Y inside the wrapper.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextWidth">
-            <summary>The original text-node width.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextHeight">
-            <summary>The original text-node height.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.TextFlags">
-            <summary>The original text flags.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.FontSize">
-            <summary>The original font size.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockSnapshot.BottomPadding">
-            <summary>
-                The original bottom padding between the text bottom and wrapper bottom.
-            </summary>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot">
-            <summary>
-                Captures one container that should grow together with a native text
-                flow.
-            </summary>
-            <param name="ContainerNodeAddress">The container node address.</param>
-            <param name="FlowOriginY">The flow origin Y inside the container.</param>
-            <param name="Height">The original container height.</param>
-            <param name="BottomPadding">The original bottom padding below the flow.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.#ctor(System.IntPtr,System.Int16,System.UInt16,System.Int16)">
-            <summary>
-                Captures one container that should grow together with a native text
-                flow.
-            </summary>
-            <param name="ContainerNodeAddress">The container node address.</param>
-            <param name="FlowOriginY">The flow origin Y inside the container.</param>
-            <param name="Height">The original container height.</param>
-            <param name="BottomPadding">The original bottom padding below the flow.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.ContainerNodeAddress">
-            <summary>The container node address.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.FlowOriginY">
-            <summary>The flow origin Y inside the container.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.Height">
-            <summary>The original container height.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerSnapshot.BottomPadding">
-            <summary>The original bottom padding below the flow.</summary>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowLayoutPlan">
-            <summary>
-                Captures the calculated reflow plan for one native vertical text flow.
-            </summary>
-            <param name="BlockPlans">The ordered wrapper position and size plans.</param>
-            <param name="ContainerPlans">The container height plans.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowLayoutPlan.#ctor(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowBlockLayoutPlan},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.NativeTextFlowContainerLayoutPlan})">
-            <summary>
-                Captures the calculated reflow plan for one native vertical text flow.
-            </summary>
-            <param name="BlockPlans">The ordered wrapper position and size plans.</param>
-            <param name="ContainerPlans">The container height plans.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowLayoutPlan.BlockPlans">
-            <summary>The ordered wrapper position and size plans.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowLayoutPlan.ContainerPlans">
-            <summary>The container height plans.</summary>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockLayoutPlan">
-            <summary>
-                Captures the calculated position and height for one wrapper block after
-                translated reflow.
-            </summary>
-            <param name="WrapperNodeAddress">The wrapper node address.</param>
-            <param name="WrapperX">The wrapper X position.</param>
-            <param name="WrapperY">The wrapper Y position.</param>
-            <param name="WrapperHeight">The wrapper height.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockLayoutPlan.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16)">
-            <summary>
-                Captures the calculated position and height for one wrapper block after
-                translated reflow.
-            </summary>
-            <param name="WrapperNodeAddress">The wrapper node address.</param>
-            <param name="WrapperX">The wrapper X position.</param>
-            <param name="WrapperY">The wrapper Y position.</param>
-            <param name="WrapperHeight">The wrapper height.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockLayoutPlan.WrapperNodeAddress">
-            <summary>The wrapper node address.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockLayoutPlan.WrapperX">
-            <summary>The wrapper X position.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockLayoutPlan.WrapperY">
-            <summary>The wrapper Y position.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowBlockLayoutPlan.WrapperHeight">
-            <summary>The wrapper height.</summary>
-        </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerLayoutPlan">
-            <summary>
-                Captures the calculated height for one container after native text
-                reflow.
-            </summary>
-            <param name="ContainerNodeAddress">The container node address.</param>
-            <param name="Height">The calculated container height.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerLayoutPlan.#ctor(System.IntPtr,System.UInt16)">
-            <summary>
-                Captures the calculated height for one container after native text
-                reflow.
-            </summary>
-            <param name="ContainerNodeAddress">The container node address.</param>
-            <param name="Height">The calculated container height.</param>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerLayoutPlan.ContainerNodeAddress">
-            <summary>The container node address.</summary>
-        </member>
-        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextFlowContainerLayoutPlan.Height">
-            <summary>The calculated container height.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper">
             <summary>

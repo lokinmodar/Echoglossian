@@ -561,7 +561,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             summaryNode,
             additionalSummaryNodeAddresses);
     var nativeFlowBlocks = flowRoot != null
-        ? NativeTextFlowReflowHelper.CaptureOrderedFlowBlocks(
+        ? JournalDetailNativeBodyFlowHelper.CaptureOrderedFlowBlocks(
             flowRoot,
             nativeFlowTextNodes)
         : [];
@@ -846,7 +846,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
   /// <summary>
   ///     Applies the translated JournalDetail native body flow using the
-  ///     shared block-reflow helper when a flow snapshot is available.
+  ///     JournalDetail-local block-reflow helper when a flow snapshot is
+  ///     available.
   /// </summary>
   /// <param name="originalSnapshot">The original quest-detail snapshot.</param>
   /// <param name="descriptionNode">The live description text node.</param>
@@ -859,7 +860,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </param>
   /// <param name="summaryNode">The live primary summary text node.</param>
   /// <param name="translatedSummarySections">The translated summary sections.</param>
-  /// <returns><c>true</c> when the shared reflow helper handled the body flow.</returns>
+  /// <returns>
+  ///     <c>true</c> when the JournalDetail-local reflow helper handled the
+  ///     body flow.
+  /// </returns>
   private unsafe bool TryApplyJournalDetailNativeBodyFlow(
       JournalDetailOriginalSnapshot originalSnapshot,
       AtkTextNode* descriptionNode,
@@ -882,7 +886,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         summaryNode,
         originalSnapshot.AdditionalSummaryNodeAddresses,
         translatedSummarySections);
-    NativeTextFlowReflowHelper.ApplyVerticalTextFlow(
+    JournalDetailNativeBodyFlowHelper.ApplyVerticalTextFlow(
         originalSnapshot.NativeFlowBlocks,
         translatedFlowTexts,
         this.ApplyJournalDetailNativeTextNodePresentation,
@@ -892,7 +896,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
   /// <summary>
   ///     Restores the original JournalDetail body flow using the shared
-  ///     reflow helper when a flow snapshot is available.
+  ///     JournalDetail-local reflow helper when a flow snapshot is available.
   /// </summary>
   /// <param name="originalSnapshot">The original quest-detail snapshot.</param>
   /// <param name="descriptionNode">The live description text node.</param>
@@ -900,7 +904,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   ///     The live visible objective text nodes in order.
   /// </param>
   /// <param name="summaryNode">The live primary summary text node.</param>
-  /// <returns><c>true</c> when the shared reflow helper handled the restore.</returns>
+  /// <returns>
+  ///     <c>true</c> when the JournalDetail-local reflow helper handled the
+  ///     restore.
+  /// </returns>
   private unsafe bool TryRestoreJournalDetailOriginalBodyFlow(
       JournalDetailOriginalSnapshot originalSnapshot,
       AtkTextNode* descriptionNode,
@@ -923,7 +930,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             .Prepend(originalSnapshot.SummaryText)
             .Where(static text => !string.IsNullOrWhiteSpace(text))
             .ToArray());
-    NativeTextFlowReflowHelper.RestoreVerticalTextFlow(
+    JournalDetailNativeBodyFlowHelper.RestoreVerticalTextFlow(
         originalSnapshot.NativeFlowBlocks,
         originalFlowTexts,
         this.RestoreJournalDetailTextNodePresentation,
@@ -1900,7 +1907,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
       var wrapperNodeAddress = flowRoot == null
           ? textNodeAddress
-          : NativeTextFlowReflowHelper.ResolveFlowWrapperNodeAddress(
+          : JournalDetailNativeBodyFlowHelper.ResolveFlowWrapperNodeAddress(
               flowRoot,
               textNode);
       if (wrapperRepresentativeNodes.TryGetValue(
@@ -1985,12 +1992,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="flowRoot">The JournalDetail body-flow root node.</param>
   /// <param name="flowBlocks">The captured ordered body-flow blocks.</param>
   /// <returns>The captured container snapshots.</returns>
-  private static unsafe List<NativeTextFlowContainerSnapshot>
+  private static unsafe List<JournalDetailNativeBodyFlowContainerSnapshot>
       CaptureJournalDetailNativeFlowContainers(
           AtkResNode* flowRoot,
-          IReadOnlyList<NativeTextFlowBlockSnapshot> flowBlocks)
+          IReadOnlyList<JournalDetailNativeBodyFlowBlockSnapshot> flowBlocks)
   {
-    List<NativeTextFlowContainerSnapshot> containerSnapshots = [];
+    List<JournalDetailNativeBodyFlowContainerSnapshot> containerSnapshots = [];
     if (flowRoot == null || flowBlocks.Count == 0)
     {
       return containerSnapshots;
@@ -1999,7 +2006,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     // JournalDetail keeps the outer viewport fixed and only grows the
     // internal scroll content root when the body text becomes more verbose.
     var flowContainerSnapshot =
-        NativeTextFlowReflowHelper.CaptureContainerSnapshot(
+        JournalDetailNativeBodyFlowHelper.CaptureContainerSnapshot(
             flowRoot,
             0,
             flowBlocks);
@@ -3215,8 +3222,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             0,
             null,
             Array.Empty<JournalDetailTextNodeLayout>(),
-            Array.Empty<NativeTextFlowBlockSnapshot>(),
-            Array.Empty<NativeTextFlowContainerSnapshot>());
+            Array.Empty<JournalDetailNativeBodyFlowBlockSnapshot>(),
+            Array.Empty<JournalDetailNativeBodyFlowContainerSnapshot>());
         this.RememberJournalDetailOriginalSnapshot(
             null,
             journalDetailScopeKey,
@@ -3876,8 +3883,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       byte SummaryNodeFontSize,
       JournalDetailTextNodeLayout? SummaryNodeLayout,
       IReadOnlyList<JournalDetailTextNodeLayout> AdditionalSummaryNodeLayouts,
-      IReadOnlyList<NativeTextFlowBlockSnapshot> NativeFlowBlocks,
-      IReadOnlyList<NativeTextFlowContainerSnapshot> NativeFlowContainerSnapshots);
+      IReadOnlyList<JournalDetailNativeBodyFlowBlockSnapshot> NativeFlowBlocks,
+      IReadOnlyList<JournalDetailNativeBodyFlowContainerSnapshot> NativeFlowContainerSnapshots);
 
   /// <summary>
   ///     Captures the original layout state for a JournalDetail body text

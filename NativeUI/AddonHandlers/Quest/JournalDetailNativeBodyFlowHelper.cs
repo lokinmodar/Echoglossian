@@ -1,16 +1,16 @@
-// <copyright file="NativeTextFlowReflowHelper.cs" company="lokinmodar">
+// <copyright file="JournalDetailNativeBodyFlowHelper.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-namespace Echoglossian.NativeUI.Helpers;
+namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
-///     Provides shared snapshot, reflow, and restore helpers for native UI
-///     text flows where translated text can grow beyond the original English
-///     layout budget.
+///     Provides JournalDetail-local snapshot, reflow, and restore helpers for
+///     the native quest-detail body flow when translated text grows beyond the
+///     original English layout budget.
 /// </summary>
-internal static unsafe class NativeTextFlowReflowHelper
+internal static unsafe class JournalDetailNativeBodyFlowHelper
 {
   /// <summary>
   ///     Resolves the visual wrapper node address for one text node inside a
@@ -32,12 +32,12 @@ internal static unsafe class NativeTextFlowReflowHelper
   /// <param name="flowRoot">The visual flow root that owns the blocks.</param>
   /// <param name="textNodeAddresses">The text nodes that participate in the flow.</param>
   /// <returns>The captured ordered flow blocks.</returns>
-  internal static IReadOnlyList<NativeTextFlowBlockSnapshot>
+  internal static IReadOnlyList<JournalDetailNativeBodyFlowBlockSnapshot>
       CaptureOrderedFlowBlocks(
           AtkResNode* flowRoot,
           IEnumerable<nint> textNodeAddresses)
   {
-    List<NativeTextFlowBlockSnapshot> blocks = [];
+    List<JournalDetailNativeBodyFlowBlockSnapshot> blocks = [];
 
     foreach (var textNodeAddress in textNodeAddresses)
     {
@@ -66,7 +66,7 @@ internal static unsafe class NativeTextFlowReflowHelper
                   wrapperHeight - (textOffsetY + textHeight)));
 
       blocks.Add(
-          new NativeTextFlowBlockSnapshot(
+          new JournalDetailNativeBodyFlowBlockSnapshot(
               (nint)wrapperNode,
               ClampToShort(wrapperNode->X),
               ClampToShort(wrapperNode->Y),
@@ -103,10 +103,10 @@ internal static unsafe class NativeTextFlowReflowHelper
   /// </param>
   /// <param name="flowBlocks">The captured flow blocks.</param>
   /// <returns>The captured container snapshot, or <see langword="null" />.</returns>
-  internal static NativeTextFlowContainerSnapshot? CaptureContainerSnapshot(
+  internal static JournalDetailNativeBodyFlowContainerSnapshot? CaptureContainerSnapshot(
       AtkResNode* containerNode,
       short flowOriginY,
-      IReadOnlyList<NativeTextFlowBlockSnapshot> flowBlocks)
+      IReadOnlyList<JournalDetailNativeBodyFlowBlockSnapshot> flowBlocks)
   {
     if (containerNode == null)
     {
@@ -122,7 +122,7 @@ internal static unsafe class NativeTextFlowReflowHelper
             0f,
             containerNode->GetHeight() - lastBottom));
 
-    return new NativeTextFlowContainerSnapshot(
+    return new JournalDetailNativeBodyFlowContainerSnapshot(
         (nint)containerNode,
         flowOriginY,
         containerNode->GetHeight(),
@@ -144,10 +144,10 @@ internal static unsafe class NativeTextFlowReflowHelper
   ///     The containers whose heights should grow with the flow.
   /// </param>
   internal static void ApplyVerticalTextFlow(
-      IReadOnlyList<NativeTextFlowBlockSnapshot> flowBlocks,
+      IReadOnlyList<JournalDetailNativeBodyFlowBlockSnapshot> flowBlocks,
       IReadOnlyDictionary<nint, string> translatedTextsByTextNode,
-      NativeTextFlowApplyDelegate applyText,
-      IReadOnlyList<NativeTextFlowContainerSnapshot> containerSnapshots)
+      JournalDetailNativeBodyFlowApplyDelegate applyText,
+      IReadOnlyList<JournalDetailNativeBodyFlowContainerSnapshot> containerSnapshots)
   {
     if (flowBlocks.Count == 0)
     {
@@ -245,10 +245,10 @@ internal static unsafe class NativeTextFlowReflowHelper
   ///     The container snapshots captured before native mutation.
   /// </param>
   internal static void RestoreVerticalTextFlow(
-      IReadOnlyList<NativeTextFlowBlockSnapshot> flowBlocks,
+      IReadOnlyList<JournalDetailNativeBodyFlowBlockSnapshot> flowBlocks,
       IReadOnlyDictionary<nint, string> originalTextsByTextNode,
-      NativeTextFlowApplyDelegate restoreText,
-      IReadOnlyList<NativeTextFlowContainerSnapshot> containerSnapshots)
+      JournalDetailNativeBodyFlowApplyDelegate restoreText,
+      IReadOnlyList<JournalDetailNativeBodyFlowContainerSnapshot> containerSnapshots)
   {
     foreach (var block in flowBlocks)
     {
@@ -385,12 +385,12 @@ internal static unsafe class NativeTextFlowReflowHelper
   /// </param>
   /// <param name="containerSnapshots">The captured container snapshots.</param>
   /// <returns>The calculated layout plan.</returns>
-  internal static NativeTextFlowLayoutPlan CalculateVerticalLayoutPlan(
-      IReadOnlyList<NativeTextFlowBlockSnapshot> flowBlocks,
+  internal static JournalDetailNativeBodyFlowLayoutPlan CalculateVerticalLayoutPlan(
+      IReadOnlyList<JournalDetailNativeBodyFlowBlockSnapshot> flowBlocks,
       IReadOnlyDictionary<nint, ushort> desiredWrapperHeights,
-      IReadOnlyList<NativeTextFlowContainerSnapshot> containerSnapshots)
+      IReadOnlyList<JournalDetailNativeBodyFlowContainerSnapshot> containerSnapshots)
   {
-    List<NativeTextFlowBlockLayoutPlan> blockPlans = [];
+    List<JournalDetailNativeBodyFlowBlockLayoutPlan> blockPlans = [];
     var cumulativeDelta = 0f;
     var finalBottom = 0f;
 
@@ -403,7 +403,7 @@ internal static unsafe class NativeTextFlowReflowHelper
           : block.WrapperHeight;
       var wrapperY = block.WrapperY + cumulativeDelta;
       blockPlans.Add(
-          new NativeTextFlowBlockLayoutPlan(
+          new JournalDetailNativeBodyFlowBlockLayoutPlan(
               block.WrapperNodeAddress,
               block.WrapperX,
               ClampToShort(wrapperY),
@@ -414,14 +414,14 @@ internal static unsafe class NativeTextFlowReflowHelper
       cumulativeDelta += wrapperHeight - block.WrapperHeight;
     }
 
-    List<NativeTextFlowContainerLayoutPlan> containerPlans = [];
+    List<JournalDetailNativeBodyFlowContainerLayoutPlan> containerPlans = [];
     foreach (var containerSnapshot in containerSnapshots)
     {
       var desiredHeight = Math.Max(
           containerSnapshot.Height,
           containerSnapshot.FlowOriginY + finalBottom + containerSnapshot.BottomPadding);
       containerPlans.Add(
-          new NativeTextFlowContainerLayoutPlan(
+          new JournalDetailNativeBodyFlowContainerLayoutPlan(
               containerSnapshot.ContainerNodeAddress,
               (ushort)Math.Clamp(
                   Math.Ceiling(desiredHeight),
@@ -429,7 +429,7 @@ internal static unsafe class NativeTextFlowReflowHelper
                   ushort.MaxValue)));
     }
 
-    return new NativeTextFlowLayoutPlan(
+    return new JournalDetailNativeBodyFlowLayoutPlan(
         blockPlans,
         containerPlans);
   }
@@ -459,7 +459,7 @@ internal static unsafe class NativeTextFlowReflowHelper
 /// <param name="originalTextFlags">The original text flags.</param>
 /// <param name="originalFontSize">The original font size.</param>
 /// <param name="text">The text to render.</param>
-internal unsafe delegate void NativeTextFlowApplyDelegate(
+internal unsafe delegate void JournalDetailNativeBodyFlowApplyDelegate(
     AtkTextNode* textNode,
     ushort originalWidth,
     TextFlags originalTextFlags,
@@ -484,7 +484,7 @@ internal unsafe delegate void NativeTextFlowApplyDelegate(
 /// <param name="BottomPadding">
 ///     The original bottom padding between the text bottom and wrapper bottom.
 /// </param>
-internal sealed record NativeTextFlowBlockSnapshot(
+internal sealed record JournalDetailNativeBodyFlowBlockSnapshot(
     nint WrapperNodeAddress,
     short WrapperX,
     short WrapperY,
@@ -507,7 +507,7 @@ internal sealed record NativeTextFlowBlockSnapshot(
 /// <param name="FlowOriginY">The flow origin Y inside the container.</param>
 /// <param name="Height">The original container height.</param>
 /// <param name="BottomPadding">The original bottom padding below the flow.</param>
-internal sealed record NativeTextFlowContainerSnapshot(
+internal sealed record JournalDetailNativeBodyFlowContainerSnapshot(
     nint ContainerNodeAddress,
     short FlowOriginY,
     ushort Height,
@@ -518,9 +518,9 @@ internal sealed record NativeTextFlowContainerSnapshot(
 /// </summary>
 /// <param name="BlockPlans">The ordered wrapper position and size plans.</param>
 /// <param name="ContainerPlans">The container height plans.</param>
-internal sealed record NativeTextFlowLayoutPlan(
-    IReadOnlyList<NativeTextFlowBlockLayoutPlan> BlockPlans,
-    IReadOnlyList<NativeTextFlowContainerLayoutPlan> ContainerPlans);
+internal sealed record JournalDetailNativeBodyFlowLayoutPlan(
+    IReadOnlyList<JournalDetailNativeBodyFlowBlockLayoutPlan> BlockPlans,
+    IReadOnlyList<JournalDetailNativeBodyFlowContainerLayoutPlan> ContainerPlans);
 
 /// <summary>
 ///     Captures the calculated position and height for one wrapper block after
@@ -530,7 +530,7 @@ internal sealed record NativeTextFlowLayoutPlan(
 /// <param name="WrapperX">The wrapper X position.</param>
 /// <param name="WrapperY">The wrapper Y position.</param>
 /// <param name="WrapperHeight">The wrapper height.</param>
-internal sealed record NativeTextFlowBlockLayoutPlan(
+internal sealed record JournalDetailNativeBodyFlowBlockLayoutPlan(
     nint WrapperNodeAddress,
     short WrapperX,
     short WrapperY,
@@ -542,6 +542,6 @@ internal sealed record NativeTextFlowBlockLayoutPlan(
 /// </summary>
 /// <param name="ContainerNodeAddress">The container node address.</param>
 /// <param name="Height">The calculated container height.</param>
-internal sealed record NativeTextFlowContainerLayoutPlan(
+internal sealed record JournalDetailNativeBodyFlowContainerLayoutPlan(
     nint ContainerNodeAddress,
     ushort Height);

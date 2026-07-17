@@ -1,9 +1,9 @@
-// <copyright file="NativeTextFlowReflowHelperTests.cs" company="lokinmodar">
+// <copyright file="JournalDetailNativeBodyFlowHelperTests.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.NativeUI.Helpers;
+using Echoglossian.NativeUI.AddonHandlers.Quest;
 
 using Xunit;
 
@@ -12,7 +12,7 @@ namespace Echoglossian.Tests;
 /// <summary>
 /// Covers deterministic JournalDetail-native reflow calculations.
 /// </summary>
-public class NativeTextFlowReflowHelperTests
+public class JournalDetailNativeBodyFlowHelperTests
 {
     /// <summary>
     /// Ensures unchanged translated heights keep the original block positions
@@ -33,14 +33,14 @@ public class NativeTextFlowReflowHelperTests
         };
         var containers = new[]
         {
-            new NativeTextFlowContainerSnapshot(
+            new JournalDetailNativeBodyFlowContainerSnapshot(
                 (nint)0x301,
                 4,
                 40,
                 6),
         };
 
-        var plan = NativeTextFlowReflowHelper.CalculateVerticalLayoutPlan(
+        var plan = JournalDetailNativeBodyFlowHelper.CalculateVerticalLayoutPlan(
             blocks,
             desiredWrapperHeights,
             containers);
@@ -84,10 +84,10 @@ public class NativeTextFlowReflowHelperTests
             [(nint)0x203] = 12,
         };
 
-        var plan = NativeTextFlowReflowHelper.CalculateVerticalLayoutPlan(
+        var plan = JournalDetailNativeBodyFlowHelper.CalculateVerticalLayoutPlan(
             blocks,
             desiredWrapperHeights,
-            Array.Empty<NativeTextFlowContainerSnapshot>());
+            Array.Empty<JournalDetailNativeBodyFlowContainerSnapshot>());
 
         Assert.Collection(
             plan.BlockPlans,
@@ -127,14 +127,14 @@ public class NativeTextFlowReflowHelperTests
         };
         var containers = new[]
         {
-            new NativeTextFlowContainerSnapshot(
+            new JournalDetailNativeBodyFlowContainerSnapshot(
                 (nint)0x301,
                 4,
                 40,
                 7),
         };
 
-        var plan = NativeTextFlowReflowHelper.CalculateVerticalLayoutPlan(
+        var plan = JournalDetailNativeBodyFlowHelper.CalculateVerticalLayoutPlan(
             blocks,
             desiredWrapperHeights,
             containers);
@@ -144,13 +144,13 @@ public class NativeTextFlowReflowHelperTests
             container => Assert.Equal((ushort)64, container.Height));
     }
 
-    private static NativeTextFlowBlockSnapshot CreateBlock(
+    private static JournalDetailNativeBodyFlowBlockSnapshot CreateBlock(
         nint wrapperNodeAddress,
         short wrapperY,
         ushort wrapperHeight,
         nint textNodeAddress)
     {
-        return new NativeTextFlowBlockSnapshot(
+        return new JournalDetailNativeBodyFlowBlockSnapshot(
             wrapperNodeAddress,
             0,
             wrapperY,
