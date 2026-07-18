@@ -38,6 +38,56 @@ run:
 The previewer remains isolated from normal plugin build, deploy, and packaging
 flows.
 
+## Hosted plugin-window backend
+
+Phase 2 added a hybrid plugin-window backend with:
+
+- CLI and shell selection for `auto`, `standalone`, and `dalamock`
+- a DalaMock-hosted runtime path for `Config`, `DB Manager`, and `Translator
+  Metrics / Debugger`
+- explicit fallback diagnostics in the shell and screenshot manifest
+
+The previewer remains outside `Echoglossian.sln`; plugin packaging and release
+flow are unchanged. `auto` requests DalaMock first and falls back visibly to
+the existing standalone backend. Explicit `dalamock` mode does not hide a
+hosted-startup failure.
+
+## Phase 2 validation on 2026-07-17
+
+Commands run from
+`C:\Dante\_dalamud\worktrees\Echoglossian\previewer-dalamock-font-builds`:
+
+```powershell
+dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1
+dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore -p:VSTestMaxCpuCount=1
+dotnet restore Echoglossian.Mock\Echoglossian.Mock.csproj
+dotnet restore Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj
+dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-restore
+dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1
+dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --host-smoke
+dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --plugin-window-backend auto --screenshot full --capture-target config-window --scenario talk --viewport 1920x1080 --output artifacts\previewer\hosted-backend-validation
+```
+
+Observed results:
+
+- production build: passed with `0` errors
+- production tests: `642 / 642` passed
+- previewer tests: `143 / 143` passed
+- DalaMock restores and build: passed with `0` errors
+- DalaMock tests: failed, `5 / 11`; hosted startup throws
+  `ReflectionTypeLoadException` because `DalaMock.Core` 6.1.7's
+  `MockFramework.CreateDebouncer` has no implementation
+- host smoke: exited `0`
+- auto-backend Config capture: wrote `manifest.json` and one PNG; the manifest
+  records requested `Auto`, effective `Standalone`, and the exact DalaMock
+  fallback reason
+
+The DalaMock test failure is a known pre-existing environment compatibility
+blocker. It prevents hosted-runtime validation, but does not regress the
+production plugin rail or standalone previewer path. Resolve the DalaMock and
+Dalamud interface compatibility before claiming a hosted DalaMock pass.
+
 ## Important final fixes already in this branch
 
 - screenshot output publication now stages atomically and preserves recovery
@@ -90,20 +140,16 @@ were addressed as follows:
 
 ## Recommended next step
 
-The highest-value next slice is **preview shell control expansion**, not more
-runtime plumbing.
+The highest-value next slice is resolving the DalaMock/Dalamud
+`CreateDebouncer` compatibility blocker before expanding hosted-runtime scope.
 
-Keep the next slice scoped to shell-driven preview controls that do not require
-starting a fake Dalamud runtime and do not write back to live user files.
+Keep the next slice scoped to restoring real DalaMock hosted startup without
+writing back to live user files.
 
 Recommended scope:
 
-1. add richer preview-only control knobs in the shell:
-   - explicit re-render / reapply button
-   - preview font family picker from the resolved preview font set
-   - preview font size override
-   - preview text color / opacity controls if they can be wired through the
-     existing overlay config model without forking renderer logic
+1. align DalaMock with the current Dalamud interface that requires
+   `CreateDebouncer`, then rerun the hosted DalaMock tests and capture.
 2. keep using real plugin-window code for plugin windows:
    - do not reimplement the config window in preview-only code
 3. preserve current isolation rules:
@@ -117,8 +163,8 @@ Recommended scope:
 - continue from a fresh dedicated worktree based on the latest `v4-series`
 - do not assume this branch stays the base forever; re-check current repo state
   first
-- keep DalaMock out unless a future step has a concrete reason to absorb its
-  maintenance cost
+- keep the hosted backend optional until the DalaMock compatibility blocker is
+  resolved
 - prefer shell-level controls over deeper renderer rewrites
 - preserve 1:1 behavior for real plugin windows whenever a control can be
   expressed through existing config/runtime inputs
@@ -127,5 +173,5 @@ Recommended scope:
 
 > Continue from `docs/handoffs/unified-imgui-previewer-next-step.md` on a fresh
 > dedicated worktree based on the latest `v4-series`. First verify the current
-> repo state, then scope the next previewer slice around shell-side control
-> expansion only.
+> repo state, resolve the DalaMock `CreateDebouncer` compatibility blocker, and
+> rerun the hosted backend validation before expanding shell controls.
