@@ -641,9 +641,16 @@ internal static unsafe class AddonStructureProbe
     var shortText = NormalizeForLog(text, 120) ?? "<empty>";
     var textMetadata = textNode == null
         ? string.Empty
-        : $" textId={textNode->TextId}";
+        : $" textId={textNode->TextId} textFlags={textNode->TextFlags} fontSize={textNode->FontSize}";
+    var parentAddress = node->ParentNode == null
+        ? "0x0"
+        : $"0x{(ulong)(nint)node->ParentNode:X}";
+    var effectiveWidth = node->GetWidth();
+    var effectiveHeight = node->GetHeight();
+    var right = node->ScreenX + effectiveWidth;
+    var bottom = node->ScreenY + effectiveHeight;
     return
-        $"addr=0x{(ulong)(nint)node:X} type={node->Type} nodeId={node->NodeId} visible={node->IsVisible()} x={node->X} y={node->Y} width={node->Width} height={node->Height} scale=({node->ScaleX},{node->ScaleY}) depth={node->Depth} flags={node->NodeFlags} drawFlags={node->DrawFlags}{textMetadata} text='{shortText}'";
+        $"addr=0x{(ulong)(nint)node:X} parent={parentAddress} type={node->Type} nodeId={node->NodeId} visible={node->IsVisible()} local=({node->X},{node->Y}) screen=({node->ScreenX:0.##},{node->ScreenY:0.##}) size=({node->Width},{node->Height}) effectiveSize=({effectiveWidth},{effectiveHeight}) bounds=({node->ScreenX:0.##},{node->ScreenY:0.##})-({right:0.##},{bottom:0.##}) scale=({node->ScaleX},{node->ScaleY}) depth={node->Depth} flags={node->NodeFlags} drawFlags={node->DrawFlags}{textMetadata} text='{shortText}'";
   }
 
   /// <summary>

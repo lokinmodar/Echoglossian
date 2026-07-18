@@ -15564,6 +15564,36 @@
             </summary>
             <param name="scopeKey">The quest-detail scope key.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.OwnsJournalDetailNativeMutationForScope(System.String)">
+            <summary>
+                Gets whether this handler currently owns the visible native
+                JournalDetail mutation for the supplied scope.
+            </summary>
+            <param name="scopeKey">The candidate quest-detail scope key.</param>
+            <returns><c>true</c> when this scope owns the active native mutation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailNativeMutation(System.String,System.String)">
+            <summary>
+                Remembers the scope and layout payload currently written into the
+                native JournalDetail body.
+            </summary>
+            <param name="scopeKey">The mutated quest-detail scope key.</param>
+            <param name="layoutKey">The applied native-layout payload key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ClearJournalDetailNativeMutation">
+            <summary>
+                Clears the currently owned native JournalDetail mutation state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailNativeLayoutKey(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+                Builds one stable native-layout cache key from the current scope and
+                visible translated payload sections.
+            </summary>
+            <param name="scopeKey">The active quest-detail scope key.</param>
+            <param name="textSections">The ordered native text payload sections.</param>
+            <returns>The stable layout-identity key.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetJournalDetailOriginalSnapshot(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot@)">
             <summary>
                 Attempts to get the original JournalDetail text snapshot for the
@@ -15573,7 +15603,7 @@
             <param name="snapshot">The cached original snapshot.</param>
             <returns>True when the scope already has an original snapshot.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailOriginalSnapshot(System.String,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RememberJournalDetailOriginalSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.String,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
                 Remembers the original JournalDetail texts for the current quest
                 scope so mode switches can restore native UI state correctly.
@@ -15583,6 +15613,13 @@
             <param name="questMessage">The original quest description.</param>
             <param name="objectiveText">The original visible objective text.</param>
             <param name="summaryText">The original visible summary text.</param>
+            <param name="descriptionNode">The live description text node.</param>
+            <param name="objectiveNodeAddresses">
+                The live visible objective text nodes in order.
+            </param>
+            <param name="objectiveTexts">
+                The original visible objective texts in order.
+            </param>
             <param name="summaryNode">The live primary summary text node, if any.</param>
             <param name="summaryContainerNode">
                 The live summary container node, if any.
@@ -15593,6 +15630,143 @@
             <param name="additionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.MergeJournalDetailOriginalSnapshotAdditionalNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr})">
+            <summary>
+                Merges newly discovered supplemental summary nodes into the existing
+                JournalDetail original snapshot so later native restores and hover
+                bounds stay stable even if the addon exposes more summary nodes on a
+                later repaint.
+            </summary>
+            <param name="scopeKey">The current quest-detail scope key.</param>
+            <param name="originalSnapshot">The original snapshot for that scope.</param>
+            <param name="objectiveNodeAddresses">
+                The currently visible objective text nodes.
+            </param>
+            <param name="objectiveTexts">
+                The currently visible objective texts.
+            </param>
+            <param name="visibleAdditionalSummaryNodes">
+                The supplemental summary nodes visible on the current repaint.
+            </param>
+            <returns>The merged snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CreateJournalDetailOriginalSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Creates one JournalDetail original snapshot, including the ordered
+                native reflow blocks and container chain used by native translation.
+            </summary>
+            <param name="journalBox">The live JournalDetail body component.</param>
+            <param name="questName">The original quest name.</param>
+            <param name="questMessage">The original quest message.</param>
+            <param name="objectiveText">The original visible objective text.</param>
+            <param name="summaryText">The original visible summary text.</param>
+            <param name="descriptionNode">The live description text node.</param>
+            <param name="objectiveNodeAddresses">
+                The live visible objective text nodes in order.
+            </param>
+            <param name="objectiveTexts">
+                The original visible objective texts in order.
+            </param>
+            <param name="summaryNode">The live primary summary text node, if any.</param>
+            <param name="summaryContainerNode">The live summary container node, if any.</param>
+            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
+            <param name="additionalSummaryTexts">The original supplemental summary texts.</param>
+            <returns>The captured original snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ApplyJournalDetailNativeTextNodePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.String)">
+            <summary>
+                Applies the native multiline presentation used by JournalDetail body
+                nodes when translated text is written into the game UI.
+            </summary>
+            <param name="textNode">The target text node.</param>
+            <param name="originalWidth">The original node width.</param>
+            <param name="originalTextFlags">The original text flags.</param>
+            <param name="originalFontSize">The original font size.</param>
+            <param name="text">The translated text to render.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RestoreJournalDetailTextNodePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.String)">
+            <summary>
+                Restores the original JournalDetail presentation for a body text
+                node after leaving native translation mode.
+            </summary>
+            <param name="textNode">The target text node.</param>
+            <param name="originalWidth">The original node width.</param>
+            <param name="originalTextFlags">The original text flags.</param>
+            <param name="originalFontSize">The original font size.</param>
+            <param name="text">The original text to restore.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureTextNodeLayout(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Captures the current layout metadata of a visible JournalDetail text
+                node so native mode can restore both presentation and position.
+            </summary>
+            <param name="textNode">The text node to snapshot.</param>
+            <returns>The captured layout, or <c>null</c> when the node is unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureVisibleTextNodeLayouts(System.Collections.Generic.IEnumerable{System.IntPtr})">
+            <summary>
+                Captures the current layout metadata of the supplied text-node
+                addresses in their current display order.
+            </summary>
+            <param name="nodes">The visible text-node addresses.</param>
+            <returns>The captured node layouts.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ApplyJournalDetailNativeSummaryFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Applies the translated JournalDetail summary block to the primary
+                summary node while clearing the supplemental summary nodes that would
+                otherwise leak original text underneath the native translation.
+            </summary>
+            <param name="originalSnapshot">The original quest-detail snapshot.</param>
+            <param name="summaryContainerNode">The live summary container node, if any.</param>
+            <param name="translatedSections">The translated summary sections in order.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.RestoreJournalDetailOriginalSummaryFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Restores the original JournalDetail summary-node positions,
+                presentation, and texts after leaving native translation mode.
+            </summary>
+            <param name="originalSnapshot">The original quest-detail snapshot.</param>
+            <param name="summaryContainerNode">The live summary container node, if any.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryApplyJournalDetailNativeBodyFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Applies the translated JournalDetail native body flow using the
+                JournalDetail-local block-reflow helper when a flow snapshot is
+                available.
+            </summary>
+            <param name="originalSnapshot">The original quest-detail snapshot.</param>
+            <param name="descriptionNode">The live description text node.</param>
+            <param name="translatedDescriptionText">The translated description text.</param>
+            <param name="objectiveNodeAddresses">
+                The live visible objective text nodes in order.
+            </param>
+            <param name="translatedObjectiveTexts">
+                The translated objective texts in visible order.
+            </param>
+            <param name="summaryNode">The live primary summary text node.</param>
+            <param name="translatedSummarySections">The translated summary sections.</param>
+            <returns>
+                <c>true</c> when the JournalDetail-local reflow helper handled the
+                body flow.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryRestoreJournalDetailOriginalBodyFlow(Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Restores the original JournalDetail body flow using the shared
+                JournalDetail-local reflow helper when a flow snapshot is available.
+            </summary>
+            <param name="originalSnapshot">The original quest-detail snapshot.</param>
+            <param name="descriptionNode">The live description text node.</param>
+            <param name="objectiveNodeAddresses">
+                The live visible objective text nodes in order.
+            </param>
+            <param name="summaryNode">The live primary summary text node.</param>
+            <returns>
+                <c>true</c> when the JournalDetail-local reflow helper handled the
+                restore.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryGetJournalDetailCachedText(System.String,System.String,System.String@)">
             <summary>
@@ -15646,15 +15820,51 @@
             <param name="sections">The summary sections to join.</param>
             <returns>A deduplicated summary block for the JournalDetail body.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.HasEquivalentTextSections(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Checks whether two ordered section collections are text-equivalent.
+            </summary>
+            <param name="leftSections">The first section collection.</param>
+            <param name="rightSections">The second section collection.</param>
+            <returns><c>true</c> when both collections are equivalent.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.NormalizeJournalDetailSummaryCandidateText(System.String)">
+            <summary>
+                Normalizes JournalDetail summary text for stable node-content
+                matching across live addon refreshes and native writes.
+            </summary>
+            <param name="text">The summary text to normalize.</param>
+            <returns>The normalized summary text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailSummaryTextCandidates(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+                Builds the set of summary texts that should be considered part of the
+                active JournalDetail summary block on the current repaint.
+            </summary>
+            <param name="summarySections">The known summary sections.</param>
+            <returns>The normalized summary text candidates.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.MatchesJournalDetailSummaryCandidate(System.String,System.Collections.Generic.IReadOnlyCollection{System.String})">
+            <summary>
+                Gets whether a visible JournalDetail text node looks like one of the
+                known summary paragraphs for the active quest.
+            </summary>
+            <param name="visibleText">The current visible text of the node.</param>
+            <param name="summaryTextCandidates">The known summary texts.</param>
+            <returns><c>true</c> when the node text matches the summary set.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyCollection{System.String})">
             <summary>
                 Collects the visible JournalDetail supplemental summary nodes in their
                 current display order.
             </summary>
-            <param name="journalBox">The live JournalDetail box component.</param>
+            <param name="journalBox">The live JournalDetail body component.</param>
             <param name="descriptionNode">The live description text node.</param>
             <param name="objectiveNode">The live objective text node.</param>
             <param name="summaryNode">The live primary summary text node, if any.</param>
+            <param name="summaryTextCandidates">
+                The normalized summary texts expected for the active quest.
+            </param>
             <returns>The visible supplemental summary text nodes.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureVisibleTextNodeTexts(System.Collections.Generic.IEnumerable{System.IntPtr})">
@@ -15663,6 +15873,147 @@
             </summary>
             <param name="nodes">The visible text nodes.</param>
             <returns>The current visible text for each node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailObjectiveDisplayText(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+                Builds the visible JournalDetail objective block text for hover and
+                native-payload readiness checks.
+            </summary>
+            <param name="objectiveSections">The visible objective sections in order.</param>
+            <returns>The combined objective text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveJournalDetailActiveBodyNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.Collections.Generic.List{System.IntPtr}@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.Collections.Generic.List{System.IntPtr}@)">
+            <summary>
+                Resolves the currently visible JournalDetail body sections from the
+                active body flow instead of relying on ambiguous repeated node ids.
+            </summary>
+            <param name="journalBox">The live JournalDetail body component.</param>
+            <param name="descriptionNode">The resolved description text node.</param>
+            <param name="objectiveNodeAddresses">
+                The resolved visible objective text nodes in order.
+            </param>
+            <param name="summaryContainerNode">
+                The resolved summary section container node.
+            </param>
+            <param name="summaryNode">The resolved primary summary text node.</param>
+            <param name="additionalSummaryNodeAddresses">
+                The resolved supplemental summary text nodes in order.
+            </param>
+            <returns><c>true</c> when the visible body sections were resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveVisibleJournalDetailSection(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,System.Collections.Generic.IReadOnlyCollection{System.UInt32},System.Single,System.Single,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.Collections.Generic.List{System.IntPtr}@)">
+            <summary>
+                Resolves one visible JournalDetail section by its label text id and
+                returns the visible body text nodes that belong to that section.
+            </summary>
+            <param name="journalBox">The live JournalDetail body component.</param>
+            <param name="labelTextIds">The section label text ids.</param>
+            <param name="viewportTop">The visible viewport top.</param>
+            <param name="viewportBottom">The visible viewport bottom.</param>
+            <param name="sectionContainerNode">The resolved section container.</param>
+            <param name="labelNode">The resolved visible label node.</param>
+            <param name="bodyNodeAddresses">The resolved visible body text nodes.</param>
+            <returns><c>true</c> when the section was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleJournalDetailLabelTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyCollection{System.UInt32},System.Single,System.Single)">
+            <summary>
+                Collects the visible JournalDetail section label text nodes inside
+                the active body flow and sorts them by on-screen order.
+            </summary>
+            <param name="rootNode">The candidate section subtree root.</param>
+            <param name="labelTextIds">The accepted label text ids.</param>
+            <param name="viewportTop">The visible viewport top.</param>
+            <param name="viewportBottom">The visible viewport bottom.</param>
+            <returns>The resolved visible label text nodes in screen order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ResolveJournalDetailSectionContainerNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Resolves the narrowest useful JournalDetail section container for one
+                visible section label inside the live body flow.
+            </summary>
+            <param name="flowRoot">The live JournalDetail body flow root.</param>
+            <param name="labelNode">The resolved visible section label node.</param>
+            <returns>The section container that owns the label and body flow.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleJournalDetailSectionBodyTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Single,System.Single)">
+            <summary>
+                Collects the visible body text nodes that belong to one resolved
+                JournalDetail section.
+            </summary>
+            <param name="sectionContainerNode">The section container subtree root.</param>
+            <param name="labelNode">The resolved label node for that section.</param>
+            <param name="viewportTop">The visible viewport top.</param>
+            <param name="viewportBottom">The visible viewport bottom.</param>
+            <returns>The visible body text nodes in display order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.IsJournalDetailNodeWithinViewport(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Single,System.Single)">
+            <summary>
+                Gets whether one node intersects the visible JournalDetail viewport.
+            </summary>
+            <param name="node">The node to evaluate.</param>
+            <param name="viewportTop">The visible viewport top.</param>
+            <param name="viewportBottom">The visible viewport bottom.</param>
+            <returns><c>true</c> when the node intersects the viewport.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleJournalDetailFlowTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr})">
+            <summary>
+                Collects the visible JournalDetail body-flow text nodes that should
+                participate in native vertical reflow.
+            </summary>
+            <param name="journalBox">The live JournalDetail body component.</param>
+            <param name="descriptionNode">The live description text node.</param>
+            <param name="objectiveNodeAddresses">
+                The live visible objective text nodes in order.
+            </param>
+            <param name="summaryNode">The live primary summary text node, if any.</param>
+            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
+            <returns>The ordered text-node addresses that belong to the body flow.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CaptureJournalDetailNativeFlowContainers(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot})">
+            <summary>
+                Captures the JournalDetail container state that should grow together
+                with the native body flow.
+            </summary>
+            <param name="flowRoot">The JournalDetail body-flow root node.</param>
+            <param name="flowBlocks">The captured ordered body-flow blocks.</param>
+            <returns>The captured container snapshots.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailNativeFlowTextMap(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Builds the translated or original text payloads that the JournalDetail
+                native body-flow reflow should apply.
+            </summary>
+            <param name="descriptionNode">The description text node.</param>
+            <param name="descriptionText">The description text to render.</param>
+            <param name="objectiveNodeAddresses">
+                The visible objective text nodes in order.
+            </param>
+            <param name="objectiveTexts">The objective texts to render in order.</param>
+            <param name="summaryNode">The primary summary text node.</param>
+            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
+            <param name="summarySections">The summary sections in display order.</param>
+            <returns>The node-address keyed text payloads.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailObjectiveNodeTextAssignments(System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Distributes JournalDetail objective sections across the currently
+                visible native objective nodes.
+            </summary>
+            <param name="objectiveNodeAddresses">
+                The visible objective text nodes in order.
+            </param>
+            <param name="objectiveSections">The objective sections in display order.</param>
+            <returns>The objective text payload keyed by node address.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildJournalDetailSummaryNodeTextAssignments(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Distributes JournalDetail summary sections across the currently
+                visible native summary nodes.
+            </summary>
+            <param name="summaryNode">The primary summary text node.</param>
+            <param name="additionalSummaryNodeAddresses">The supplemental summary nodes.</param>
+            <param name="summarySections">The summary sections in display order.</param>
+            <returns>The summary text payload keyed by node address.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveTranslatedSummaryText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.String,System.String,System.String,System.String@)">
             <summary>
@@ -15675,6 +16026,18 @@
             <param name="sourceText">The canonical summary row text.</param>
             <param name="translatedText">The translated summary row text.</param>
             <returns>True when the translated summary row is ready.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TryResolveTranslatedObjectiveText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String,System.String@)">
+            <summary>
+                Resolves one translated objective row from the JournalDetail cache or
+                the persisted quest plate.
+            </summary>
+            <param name="foundQuestPlate">The persisted quest plate, if any.</param>
+            <param name="questCanonicalData">The canonical quest payload, if any.</param>
+            <param name="journalDetailScopeKey">The current JournalDetail scope key.</param>
+            <param name="sourceText">The visible source objective text.</param>
+            <param name="translatedText">The translated objective text.</param>
+            <returns>True when the translated objective row is ready.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.BuildCanonicalSummaryRows(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String)">
             <summary>
@@ -15705,7 +16068,7 @@
             <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
             <returns>True when the node is visible and the bounds are usable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Boolean@)">
             <summary>
                 Applies translations to the active Journal detail box.
             </summary>
@@ -15718,7 +16081,12 @@
             <param name="summaryText">The summary text.</param>
             <param name="questNameNode">The quest-name text node.</param>
             <param name="descriptionNode">The description text node.</param>
-            <param name="objectiveNode">The objective text node.</param>
+            <param name="objectiveNodeAddresses">
+                The visible objective text nodes in order.
+            </param>
+            <param name="objectiveTexts">
+                The visible objective texts in order.
+            </param>
             <param name="summaryContainerNode">The summary container node, if any.</param>
             <param name="summaryNode">The optional summary text node.</param>
             <param name="hasPendingTranslations">
@@ -15816,6 +16184,20 @@
             <param name="AdditionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
+            <param name="DescriptionNodeWidth">The original description-node width.</param>
+            <param name="DescriptionNodeTextFlags">
+                The original description-node text flags.
+            </param>
+            <param name="DescriptionNodeFontSize">
+                The original description-node font size.
+            </param>
+            <param name="ObjectiveNodeWidth">The original objective-node width.</param>
+            <param name="ObjectiveNodeTextFlags">
+                The original objective-node text flags.
+            </param>
+            <param name="ObjectiveNodeFontSize">
+                The original objective-node font size.
+            </param>
             <param name="SummaryNodeWidth">The original primary summary node width.</param>
             <param name="SummaryContainerHeight">
                 The original summary container height.
@@ -15826,8 +16208,21 @@
             <param name="SummaryNodeFontSize">
                 The original primary summary node font size.
             </param>
+            <param name="SummaryNodeLayout">
+                The original primary summary node layout.
+            </param>
+            <param name="AdditionalSummaryNodeLayouts">
+                The original supplemental summary node layouts.
+            </param>
+            <param name="NativeFlowBlocks">
+                The ordered native body-flow block snapshots captured for reflow.
+            </param>
+            <param name="NativeFlowContainerSnapshots">
+                The container chain that should grow and restore with the native body
+                flow.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String},System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
             <summary>
                 Stores the original JournalDetail texts for a single visible quest
                 scope so mode changes can restore native UI state and drive swap
@@ -15843,6 +16238,20 @@
             <param name="AdditionalSummaryTexts">
                 The original visible supplemental summary texts.
             </param>
+            <param name="DescriptionNodeWidth">The original description-node width.</param>
+            <param name="DescriptionNodeTextFlags">
+                The original description-node text flags.
+            </param>
+            <param name="DescriptionNodeFontSize">
+                The original description-node font size.
+            </param>
+            <param name="ObjectiveNodeWidth">The original objective-node width.</param>
+            <param name="ObjectiveNodeTextFlags">
+                The original objective-node text flags.
+            </param>
+            <param name="ObjectiveNodeFontSize">
+                The original objective-node font size.
+            </param>
             <param name="SummaryNodeWidth">The original primary summary node width.</param>
             <param name="SummaryContainerHeight">
                 The original summary container height.
@@ -15852,6 +16261,19 @@
             </param>
             <param name="SummaryNodeFontSize">
                 The original primary summary node font size.
+            </param>
+            <param name="SummaryNodeLayout">
+                The original primary summary node layout.
+            </param>
+            <param name="AdditionalSummaryNodeLayouts">
+                The original supplemental summary node layouts.
+            </param>
+            <param name="NativeFlowBlocks">
+                The ordered native body-flow block snapshots captured for reflow.
+            </param>
+            <param name="NativeFlowContainerSnapshots">
+                The container chain that should grow and restore with the native body
+                flow.
             </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.QuestName">
@@ -15876,6 +16298,32 @@
                 The original visible supplemental summary texts.
             </summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeWidth">
+            <summary>The original description-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeTextFlags">
+            <summary>
+                The original description-node text flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.DescriptionNodeFontSize">
+            <summary>
+                The original description-node font size.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeWidth">
+            <summary>The original objective-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeTextFlags">
+            <summary>
+                The original objective-node text flags.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.ObjectiveNodeFontSize">
+            <summary>
+                The original objective-node font size.
+            </summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeWidth">
             <summary>The original primary summary node width.</summary>
         </member>
@@ -15893,6 +16341,74 @@
             <summary>
                 The original primary summary node font size.
             </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.SummaryNodeLayout">
+            <summary>
+                The original primary summary node layout.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.AdditionalSummaryNodeLayouts">
+            <summary>
+                The original supplemental summary node layouts.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.NativeFlowBlocks">
+            <summary>
+                The ordered native body-flow block snapshots captured for reflow.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailOriginalSnapshot.NativeFlowContainerSnapshots">
+            <summary>
+                The container chain that should grow and restore with the native body
+                flow.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout">
+            <summary>
+                Captures the original layout state for a JournalDetail body text
+                node.
+            </summary>
+            <param name="NodeAddress">The live text-node address.</param>
+            <param name="X">The original local X position.</param>
+            <param name="Y">The original local Y position.</param>
+            <param name="Width">The original node width.</param>
+            <param name="Height">The original node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte)">
+            <summary>
+                Captures the original layout state for a JournalDetail body text
+                node.
+            </summary>
+            <param name="NodeAddress">The live text-node address.</param>
+            <param name="X">The original local X position.</param>
+            <param name="Y">The original local Y position.</param>
+            <param name="Width">The original node width.</param>
+            <param name="Height">The original node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.NodeAddress">
+            <summary>The live text-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.X">
+            <summary>The original local X position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Y">
+            <summary>The original local Y position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Width">
+            <summary>The original node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.Height">
+            <summary>The original node height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.TextFlags">
+            <summary>The original text flags.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.JournalDetailTextNodeLayout.FontSize">
+            <summary>The original font size.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeMutationAction">
             <summary>
@@ -15913,6 +16429,317 @@
             <summary>
                 Restores state previously mutated by this handler.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper">
+            <summary>
+                Provides JournalDetail-local snapshot, reflow, and restore helpers for
+                the native quest-detail body flow when translated text grows beyond the
+                original English layout budget.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ResolveFlowWrapperNodeAddress(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Resolves the visual wrapper node address for one text node inside a
+                given flow root.
+            </summary>
+            <param name="flowRoot">The visual flow root that owns the blocks.</param>
+            <param name="textNode">The text node whose wrapper should be resolved.</param>
+            <returns>The resolved wrapper-node address.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CaptureOrderedFlowBlocks(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.IEnumerable{System.IntPtr})">
+            <summary>
+                Captures the ordered flow-block snapshots for the supplied text nodes.
+            </summary>
+            <param name="flowRoot">The visual flow root that owns the blocks.</param>
+            <param name="textNodeAddresses">The text nodes that participate in the flow.</param>
+            <returns>The captured ordered flow blocks.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CaptureContainerSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Int16,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot})">
+            <summary>
+                Captures one container snapshot for a text flow.
+            </summary>
+            <param name="containerNode">The container node to snapshot.</param>
+            <param name="flowOriginY">
+                The vertical origin of the flow inside the container.
+            </param>
+            <param name="flowBlocks">The captured flow blocks.</param>
+            <returns>The captured container snapshot, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ApplyVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
+            <summary>
+                Applies translated text to an ordered native text flow and reflows
+                later blocks by cumulative height delta.
+            </summary>
+            <param name="flowBlocks">The ordered flow blocks.</param>
+            <param name="translatedTextsByTextNode">
+                The translated text keyed by text-node address.
+            </param>
+            <param name="applyText">
+                Delegate used to apply translated text with the desired presentation.
+            </param>
+            <param name="containerSnapshots">
+                The containers whose heights should grow with the flow.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.RestoreVerticalTextFlow(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.String},Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowApplyDelegate,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
+            <summary>
+                Restores an ordered native text flow to its original layout and text.
+            </summary>
+            <param name="flowBlocks">The ordered flow blocks.</param>
+            <param name="originalTextsByTextNode">
+                The original text keyed by text-node address.
+            </param>
+            <param name="restoreText">
+                Delegate used to restore the original text presentation.
+            </param>
+            <param name="containerSnapshots">
+                The container snapshots captured before native mutation.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ResolveWrapperNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Resolves the nearest visual wrapper node for a text node inside a
+                given flow root.
+            </summary>
+            <param name="flowRoot">The flow root owning the text flow.</param>
+            <param name="textNode">The text node being wrapped.</param>
+            <returns>The resolved wrapper node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CalculateNodeOffsetToAncestor(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Calculates the local offset between one node and one ancestor node.
+            </summary>
+            <param name="node">The descendant node.</param>
+            <param name="ancestorNode">The ancestor node.</param>
+            <returns>The accumulated local offset from the ancestor to the node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.IsDescendantOf(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Gets whether one node belongs to the subtree rooted at the supplied
+                ancestor node.
+            </summary>
+            <param name="node">The node to test.</param>
+            <param name="ancestorNode">The ancestor node.</param>
+            <returns><c>true</c> when the node belongs to the ancestor subtree.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.CalculateVerticalLayoutPlan(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot},System.Collections.Generic.IReadOnlyDictionary{System.IntPtr,System.UInt16},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot})">
+            <summary>
+                Calculates the wrapper positions and container heights implied by one
+                measured vertical text flow.
+            </summary>
+            <param name="flowBlocks">The ordered original flow blocks.</param>
+            <param name="desiredWrapperHeights">
+                The desired wrapper heights keyed by text-node address after
+                translated measurement.
+            </param>
+            <param name="containerSnapshots">The captured container snapshots.</param>
+            <returns>The calculated layout plan.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper.ClampToShort(System.Single)">
+            <summary>
+                Clamps one local coordinate to the short range expected by native
+                node positioning helpers.
+            </summary>
+            <param name="value">The coordinate to clamp.</param>
+            <returns>The clamped coordinate.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowApplyDelegate">
+            <summary>
+                Applies one translated or restored text payload to a native text node
+                using its original presentation metadata.
+            </summary>
+            <param name="textNode">The target text node.</param>
+            <param name="originalWidth">The original text-node width.</param>
+            <param name="originalTextFlags">The original text flags.</param>
+            <param name="originalFontSize">The original font size.</param>
+            <param name="text">The text to render.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot">
+            <summary>
+                Captures one reflowable native text block.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The original wrapper X.</param>
+            <param name="WrapperY">The original wrapper Y.</param>
+            <param name="WrapperWidth">The original wrapper width.</param>
+            <param name="WrapperHeight">The original wrapper height.</param>
+            <param name="TextNodeAddress">The inner text-node address.</param>
+            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
+            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
+            <param name="TextWidth">The original text-node width.</param>
+            <param name="TextHeight">The original text-node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+            <param name="BottomPadding">
+                The original bottom padding between the text bottom and wrapper bottom.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,System.IntPtr,System.Int16,System.Int16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Byte,System.Int16)">
+            <summary>
+                Captures one reflowable native text block.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The original wrapper X.</param>
+            <param name="WrapperY">The original wrapper Y.</param>
+            <param name="WrapperWidth">The original wrapper width.</param>
+            <param name="WrapperHeight">The original wrapper height.</param>
+            <param name="TextNodeAddress">The inner text-node address.</param>
+            <param name="TextOffsetX">The original text offset X inside the wrapper.</param>
+            <param name="TextOffsetY">The original text offset Y inside the wrapper.</param>
+            <param name="TextWidth">The original text-node width.</param>
+            <param name="TextHeight">The original text-node height.</param>
+            <param name="TextFlags">The original text flags.</param>
+            <param name="FontSize">The original font size.</param>
+            <param name="BottomPadding">
+                The original bottom padding between the text bottom and wrapper bottom.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperNodeAddress">
+            <summary>The wrapper node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperX">
+            <summary>The original wrapper X.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperY">
+            <summary>The original wrapper Y.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperWidth">
+            <summary>The original wrapper width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.WrapperHeight">
+            <summary>The original wrapper height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextNodeAddress">
+            <summary>The inner text-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextOffsetX">
+            <summary>The original text offset X inside the wrapper.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextOffsetY">
+            <summary>The original text offset Y inside the wrapper.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextWidth">
+            <summary>The original text-node width.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextHeight">
+            <summary>The original text-node height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.TextFlags">
+            <summary>The original text flags.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.FontSize">
+            <summary>The original font size.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockSnapshot.BottomPadding">
+            <summary>
+                The original bottom padding between the text bottom and wrapper bottom.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot">
+            <summary>
+                Captures one container that should grow together with a native text
+                flow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="FlowOriginY">The flow origin Y inside the container.</param>
+            <param name="Height">The original container height.</param>
+            <param name="BottomPadding">The original bottom padding below the flow.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.#ctor(System.IntPtr,System.Int16,System.UInt16,System.Int16)">
+            <summary>
+                Captures one container that should grow together with a native text
+                flow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="FlowOriginY">The flow origin Y inside the container.</param>
+            <param name="Height">The original container height.</param>
+            <param name="BottomPadding">The original bottom padding below the flow.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.ContainerNodeAddress">
+            <summary>The container node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.FlowOriginY">
+            <summary>The flow origin Y inside the container.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.Height">
+            <summary>The original container height.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerSnapshot.BottomPadding">
+            <summary>The original bottom padding below the flow.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan">
+            <summary>
+                Captures the calculated reflow plan for one native vertical text flow.
+            </summary>
+            <param name="BlockPlans">The ordered wrapper position and size plans.</param>
+            <param name="ContainerPlans">The container height plans.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan.#ctor(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan})">
+            <summary>
+                Captures the calculated reflow plan for one native vertical text flow.
+            </summary>
+            <param name="BlockPlans">The ordered wrapper position and size plans.</param>
+            <param name="ContainerPlans">The container height plans.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan.BlockPlans">
+            <summary>The ordered wrapper position and size plans.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowLayoutPlan.ContainerPlans">
+            <summary>The container height plans.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan">
+            <summary>
+                Captures the calculated position and height for one wrapper block after
+                translated reflow.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The wrapper X position.</param>
+            <param name="WrapperY">The wrapper Y position.</param>
+            <param name="WrapperHeight">The wrapper height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.#ctor(System.IntPtr,System.Int16,System.Int16,System.UInt16)">
+            <summary>
+                Captures the calculated position and height for one wrapper block after
+                translated reflow.
+            </summary>
+            <param name="WrapperNodeAddress">The wrapper node address.</param>
+            <param name="WrapperX">The wrapper X position.</param>
+            <param name="WrapperY">The wrapper Y position.</param>
+            <param name="WrapperHeight">The wrapper height.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperNodeAddress">
+            <summary>The wrapper node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperX">
+            <summary>The wrapper X position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperY">
+            <summary>The wrapper Y position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowBlockLayoutPlan.WrapperHeight">
+            <summary>The wrapper height.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan">
+            <summary>
+                Captures the calculated height for one container after native text
+                reflow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="Height">The calculated container height.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan.#ctor(System.IntPtr,System.UInt16)">
+            <summary>
+                Captures the calculated height for one container after native text
+                reflow.
+            </summary>
+            <param name="ContainerNodeAddress">The container node address.</param>
+            <param name="Height">The calculated container height.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan.ContainerNodeAddress">
+            <summary>The container node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowContainerLayoutPlan.Height">
+            <summary>The calculated container height.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler">
             <summary>
@@ -16034,6 +16861,15 @@
             <param name="nodeKey">The live quest-name node key.</param>
             <param name="originalText">The cached original quest title.</param>
             <returns>True when an original quest title is cached for that node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ResolveJournalListOriginalText(System.IntPtr,System.String)">
+            <summary>
+                Resolves the source quest title for a Journal list node while
+                handling node reuse across different visible rows.
+            </summary>
+            <param name="nodeKey">The live quest-name node key.</param>
+            <param name="liveQuestNameText">The currently visible node text.</param>
+            <returns>The source quest title to use for lookup and hover mapping.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListOriginalText(System.IntPtr,System.String)">
             <summary>

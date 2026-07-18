@@ -30,6 +30,8 @@ When started, the probe watches the requested addon for a short period and logs:
 
 - addon lifecycle events
 - live node structure
+- local and screen positions for each node
+- node sizes, effective sizes, and screen-space bounds
 - component roots
 - likely text nodes and anchor candidates
 - text-node `TextId` values when the live node is still sheet-backed
@@ -73,3 +75,7 @@ Use this command when you want to:
 - This command is diagnostic only.
 - It is intended to be paired with `dalamud.log` inspection.
 - The command is useful when working on dense addons such as Journal, ToDoList, RecommendList, ScenarioTree, and similar UI trees.
+- For `JournalDetail`, a healthy native layout usually keeps the outer
+  viewport containers fixed and grows only the internal scroll-content flow.
+  If `NodeList[0]` or the clipped body container starts growing with the
+  translated text, the reflow is likely targeting the wrong container.

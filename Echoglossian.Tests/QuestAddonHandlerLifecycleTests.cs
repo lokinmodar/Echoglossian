@@ -111,6 +111,90 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures the resolved display mode never selects native JournalDetail
+    /// mutation work while tooltip-only rendering is active.
+    /// </summary>
+    /// <param name="displayMode">The configured JournalDetail display mode.</param>
+    /// <param name="ownsNativeMutation">
+    /// Whether this handler already owns the visible native state.
+    /// </param>
+    /// <param name="expectedAction">The expected native mutation action.</param>
+    [Theory]
+    [InlineData(
+        JournalTranslationDisplayMode.TooltipTranslation,
+        false,
+        nameof(JournalDetailNativeMutationAction.None))]
+    [InlineData(
+        JournalTranslationDisplayMode.TooltipTranslation,
+        true,
+        nameof(JournalDetailNativeMutationAction.RestoreOriginal))]
+    [InlineData(
+        JournalTranslationDisplayMode.NativeUiTranslation,
+        false,
+        nameof(JournalDetailNativeMutationAction.ApplyTranslation))]
+    [InlineData(
+        JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips,
+        false,
+        nameof(JournalDetailNativeMutationAction.ApplyTranslation))]
+    public void JournalDetailDisplayMode_MapsToExpectedNativeMutationAction(
+        JournalTranslationDisplayMode displayMode,
+        bool ownsNativeMutation,
+        string expectedAction)
+    {
+        Assert.Equal(
+            Enum.Parse<JournalDetailNativeMutationAction>(expectedAction),
+            JournalDetailHandler.ResolveNativeMutationAction(
+                QuestAddonModeHelpers.WritesNativeTranslation(displayMode),
+                ownsNativeMutation));
+    }
+
+    /// <summary>
+    /// Ensures the JournalDetail native layout cache key is stable for an
+    /// unchanged scope and invalidates on scope or payload changes.
+    /// </summary>
+    [Fact]
+    public void BuildJournalDetailNativeLayoutKey_IsStableAndInvalidatesOnChanges()
+    {
+        var stableKey = JournalDetailHandler.BuildJournalDetailNativeLayoutKey(
+            "quest-a",
+            ["title", "body", "objective"]);
+        var sameKey = JournalDetailHandler.BuildJournalDetailNativeLayoutKey(
+            "quest-a",
+            ["title", "body", "objective"]);
+        var differentScopeKey = JournalDetailHandler.BuildJournalDetailNativeLayoutKey(
+            "quest-b",
+            ["title", "body", "objective"]);
+        var differentPayloadKey = JournalDetailHandler.BuildJournalDetailNativeLayoutKey(
+            "quest-a",
+            ["title", "body changed", "objective"]);
+
+        Assert.Equal(stableKey, sameKey);
+        Assert.NotEqual(stableKey, differentScopeKey);
+        Assert.NotEqual(stableKey, differentPayloadKey);
+    }
+
+    /// <summary>
+    /// Ensures JournalDetail native reflow stays localized to the quest addon
+    /// namespace instead of drifting back into shared helper space.
+    /// </summary>
+    [Fact]
+    public void JournalDetailNativeReflow_HelperLivesInQuestNamespace()
+    {
+        var assembly = typeof(JournalDetailHandler).Assembly;
+        var localizedHelperType = assembly.GetType(
+            "Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailNativeBodyFlowHelper");
+        var retiredSharedHelperTypeName = string.Concat(
+            "Echoglossian.NativeUI.Helpers.",
+            "NativeText",
+            "FlowReflowHelper");
+        var sharedHelperType = assembly.GetType(
+            retiredSharedHelperTypeName);
+
+        Assert.NotNull(localizedHelperType);
+        Assert.Null(sharedHelperType);
+    }
+
+    /// <summary>
     /// Creates the minimal dependency bundle required to construct quest
     /// handlers for lifecycle tests.
     /// </summary>

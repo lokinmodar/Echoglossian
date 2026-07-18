@@ -39,6 +39,10 @@
       <HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImGui.dll</HintPath>
       <Private>true</Private>
     </Reference>
+    <Reference Include="FFXIVClientStructs">
+      <HintPath>$(DalamudLibPath)\FFXIVClientStructs.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
     <Reference Include="Serilog">
       <HintPath>$(DalamudLibPath)\Serilog.dll</HintPath>
       <Private>true</Private>

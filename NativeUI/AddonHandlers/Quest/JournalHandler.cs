@@ -176,11 +176,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             (nint)questName->NodeText.StringPtr.Value);
         var questNameNodeKey = (nint)questNameNode;
         visibleJournalQuestNodeKeys.Add(questNameNodeKey);
-        var originalQuestName = this.TryGetJournalListOriginalText(
-                questNameNodeKey,
-                out var cachedOriginalQuestName)
-            ? cachedOriginalQuestName
-            : liveQuestNameText;
+        var originalQuestName = this.ResolveJournalListOriginalText(
+            questNameNodeKey,
+            liveQuestNameText);
         visibleJournalQuestNames.Add(originalQuestName);
 
         if (this.TryGetJournalListCachedText(
@@ -537,6 +535,54 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     return this.journalListOriginalTextCache.TryGetValue(
         nodeKey,
         out originalText!);
+  }
+
+  /// <summary>
+  ///     Resolves the source quest title for a Journal list node while
+  ///     handling node reuse across different visible rows.
+  /// </summary>
+  /// <param name="nodeKey">The live quest-name node key.</param>
+  /// <param name="liveQuestNameText">The currently visible node text.</param>
+  /// <returns>The source quest title to use for lookup and hover mapping.</returns>
+  private string ResolveJournalListOriginalText(
+      nint nodeKey,
+      string liveQuestNameText)
+  {
+    if (nodeKey == nint.Zero || string.IsNullOrWhiteSpace(liveQuestNameText))
+    {
+      return liveQuestNameText;
+    }
+
+    if (!this.TryGetJournalListOriginalText(nodeKey, out var cachedOriginalText))
+    {
+      return liveQuestNameText;
+    }
+
+    if (string.Equals(
+            liveQuestNameText,
+            cachedOriginalText,
+            StringComparison.Ordinal))
+    {
+      return cachedOriginalText;
+    }
+
+    if (this.TryGetJournalListCachedText(
+            cachedOriginalText,
+            out var cachedTranslatedText) &&
+        string.Equals(
+            liveQuestNameText,
+            cachedTranslatedText,
+            StringComparison.Ordinal))
+    {
+      return cachedOriginalText;
+    }
+
+    // Journal recycles text nodes while scrolling; reset per-node caches when
+    // the same node starts representing another quest row.
+    this.journalListHoverCache.Remove(nodeKey);
+    this.journalListOriginalTextCache[nodeKey] = liveQuestNameText;
+    this.journalListNativeMutationNodeKeys.Remove(nodeKey);
+    return liveQuestNameText;
   }
 
   /// <summary>
