@@ -19,13 +19,14 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 - Independently closed before this release pass: #215 through PR #223
 - Release-pass closures: 6
 - Open issues after the post-publication pass: 20
-- Open issues at the current audit head: 24
+- Open issues at the current audit head: 25
 
 ## Current `v4-series` Delta
 
-- Audit head: `origin/v4-series` at `b4448b1c3d7519cbdd17e227ca44c1935688eabc`
+- Audit head: `origin/v4-series` at `0b30d30cd27ac97ad4d65087f7b0a0d88f775466`
 - Latest tagged runtime build on `v4-series`: `v4.2601.0717.0008` at `578bce65cc09deeb23571e0e58ed6306f871d859`
 - No new runtime code merged after PR [#228](https://github.com/lokinmodar/Echoglossian/pull/228); the repository baseline for this audit is still the same 2026-07-17 `v4-series` head.
+- Issue [#12](https://github.com/lokinmodar/Echoglossian/issues/12) was reopened on 2026-07-18 and should remain the living known-issues tracker, updated whenever focused issue state changes materially.
 - GitHub issue triage on 2026-07-18 updated [#15](https://github.com/lokinmodar/Echoglossian/issues/15), [#68](https://github.com/lokinmodar/Echoglossian/issues/68), [#171](https://github.com/lokinmodar/Echoglossian/issues/171), and [#172](https://github.com/lokinmodar/Echoglossian/issues/172).
 - GitHub issue triage on 2026-07-18 also created focused follow-up issues [#230](https://github.com/lokinmodar/Echoglossian/issues/230), [#231](https://github.com/lokinmodar/Echoglossian/issues/231), [#232](https://github.com/lokinmodar/Echoglossian/issues/232), [#233](https://github.com/lokinmodar/Echoglossian/issues/233), and [#234](https://github.com/lokinmodar/Echoglossian/issues/234).
 - Issue [#181](https://github.com/lokinmodar/Echoglossian/issues/181) was closed as resolved on 2026-07-18. Draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) remains open only as a separate follow-up if the narrower native `JournalDetail` reflow work is still wanted.
@@ -38,7 +39,6 @@ The release-bound closure comments were posted and these issues were closed on
 
 | Issue | Published resolution |
 | --- | --- |
-| [#12 Current known issues](https://github.com/lokinmodar/Echoglossian/issues/12) | Obsolete version-specific tracker closed administratively. Current status now lives in focused issues, this backlog, and the changelog. |
 | [#139 Arabic Translation Support](https://github.com/lokinmodar/Echoglossian/issues/139) | Plugin-owned overlays and hover tooltips support Arabic and other RTL or complex-script languages through texture-backed shaping, bidi ordering, right alignment, adaptive sizing, and bounded caches. Native FFXIV UI RTL remains separate Phase B research. |
 | [#174 Retranslate saved texts](https://github.com/lokinmodar/Echoglossian/issues/174) | Translation reuse and persistence are scoped by client source language, target language, and engine policy. Language changes invalidate incompatible runtime state and permit explicit retranslation. |
 | [#189 MSQ bar and mission windows untranslated](https://github.com/lokinmodar/Echoglossian/issues/189) | Quest-family handlers use source-scoped state and incremental application across `ScenarioTree`, `RecommendList`, `JournalAccept`, `JournalDetail`, and `ToDoList`. |
@@ -53,6 +53,12 @@ The release-bound closure comments were posted and these issues were closed on
 | [#181 Prevent TextNode Flags corruption while reading them](https://github.com/lokinmodar/Echoglossian/issues/181) | Closed on 2026-07-18 after the read-only flag corruption fix was accepted. Draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) remains open only as a separate follow-up for narrower native `JournalDetail` translated-text reflow work. |
 
 ## Open Issues Grouped By Problem Type
+
+### Meta Tracking And Living Documentation
+
+| Issue | Current reason |
+| --- | --- |
+| [#12 Current known issues](https://github.com/lokinmodar/Echoglossian/issues/12) | Living meta-tracker that should stay open and mirror the real current plugin state, recent closures, and the focused open fronts that matter to users. |
 
 ### Quest-Family Runtime And Surfaces
 
@@ -105,16 +111,17 @@ The release-bound closure comments were posted and these issues were closed on
 
 ## Complete Open-Issue Inventory
 
-This table is the countable audit of all 24 open issues at the snapshot date.
+This table is the countable audit of all 25 open issues at the snapshot date, including the living meta-tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12).
 
 | Problem type | Issues | Count |
 | --- | --- | ---: |
+| Meta tracking and living documentation | #12 | 1 |
 | Quest-family runtime and surfaces | #104, #171, #172, #231, #232 | 5 |
 | Surface coverage and interaction UIs | #15, #68, #103 | 3 |
 | Overlay, toast, and presentation behavior | #167, #175, #217, #230 | 4 |
 | Translation engines, prompts, and provider support | #148, #176, #203, #206, #209, #212, #214, #234 | 8 |
 | Compatibility, diagnostics, and UX polish | #173, #179, #192, #233 | 4 |
-| **Total open at snapshot** |  | **24** |
+| **Total open at snapshot** |  | **25** |
 
 ## Next Actions
 
@@ -122,4 +129,4 @@ This table is the countable audit of all 24 open issues at the snapshot date.
 2. Keep [#68](https://github.com/lokinmodar/Echoglossian/issues/68) narrowed to selection dialogs and similar surfaces, while tooltip activation remains isolated in [#15](https://github.com/lokinmodar/Echoglossian/issues/15).
 3. Decide whether draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) should be reconciled, retargeted, or closed now that [#181](https://github.com/lokinmodar/Echoglossian/issues/181) itself is resolved.
 4. Monitor reporter retests on [#167](https://github.com/lokinmodar/Echoglossian/issues/167), [#175](https://github.com/lokinmodar/Echoglossian/issues/175), and [#203](https://github.com/lokinmodar/Echoglossian/issues/203) and close only after the exact symptom is validated or replaced by a more focused issue.
-5. Re-run the open-issue audit whenever issue state changes again or when the next quest-surface or provider-support tranche lands.
+5. Re-run the open-issue audit and refresh [#12](https://github.com/lokinmodar/Echoglossian/issues/12) whenever issue state changes again or when the next quest-surface or provider-support tranche lands.
