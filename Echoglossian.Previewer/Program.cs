@@ -159,73 +159,91 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
-        var backendCreation = await CreatePluginWindowPreviewBackendAsync(
-            commandLine.PluginWindowBackendMode,
-            editableConfiguration,
-            languages,
-            session);
-        using var pluginWindowBackend = backendCreation.Backend;
-        using var shell = new PreviewShell(
-            sourceConfiguration,
-            editableConfiguration,
-            fontSelection,
-            session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
-            composition.Renderer,
-            pluginWindowBackend,
-            scenario,
-            viewport);
-        shell.SetPluginWindowBackendStatus(backendCreation.Status);
         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
-
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
-        host.Run(
-            () =>
-            {
-                composition.BeginDrawFrame();
-                shell.Draw();
-            },
-            () =>
-            {
-                if (!shell.TryConsumeScreenshotRequest(
-                    interactiveOutputDirectory,
-                    out var request))
+        var requestedPluginWindowBackendMode = commandLine.PluginWindowBackendMode;
+        var restartRequested = false;
+        do
+        {
+            restartRequested = false;
+            var backendCreation = await CreatePluginWindowPreviewBackendAsync(
+                requestedPluginWindowBackendMode,
+                editableConfiguration,
+                languages,
+                session);
+            using var pluginWindowBackend = backendCreation.Backend;
+            using var shell = new PreviewShell(
+                sourceConfiguration,
+                editableConfiguration,
+                fontSelection,
+                session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
+                composition.Renderer,
+                pluginWindowBackend,
+                scenario,
+                viewport);
+            shell.SetPluginWindowBackendStatus(backendCreation.Status);
+            host.Run(
+                () =>
                 {
-                    return;
-                }
+                    composition.BeginDrawFrame();
+                    shell.Draw();
+                },
+                () =>
+                {
+                    if (!shell.TryConsumeScreenshotRequest(
+                        interactiveOutputDirectory,
+                        out var request))
+                    {
+                        return;
+                    }
 
-                var outputPath = Path.Combine(
-                    request.OutputDirectory,
-                    ScreenshotFileName.CreatePngName(
-                        request.Mode,
-                        request.Scenario.Key,
-                        request.Viewport,
-                        request.CaptureTarget));
-                try
-                {
-                    var crop = CalculateInteractiveCrop(
-                        request,
-                        shell.LastRenderResult,
-                        pluginWindowBackend,
-                        ImGui.GetIO().DisplaySize,
-                        host.FramebufferSize);
+                    var outputPath = Path.Combine(
+                        request.OutputDirectory,
+                        ScreenshotFileName.CreatePngName(
+                            request.Mode,
+                            request.Scenario.Key,
+                            request.Viewport,
+                            request.CaptureTarget));
+                    try
+                    {
+                        var crop = CalculateInteractiveCrop(
+                            request,
+                            shell.LastRenderResult,
+                            pluginWindowBackend,
+                            ImGui.GetIO().DisplaySize,
+                            host.FramebufferSize);
 
-                    CaptureInteractiveScreenshot(
-                        outputPath,
-                        temporaryOutputPath => host.CapturePng(
-                            temporaryOutputPath,
-                            crop));
-                    shell.SetLastScreenshotPath(outputPath);
-                }
-                catch (Exception exception) when (
-                    IsExpectedInteractiveScreenshotFailure(exception))
+                        CaptureInteractiveScreenshot(
+                            outputPath,
+                            temporaryOutputPath => host.CapturePng(
+                                temporaryOutputPath,
+                                crop));
+                        shell.SetLastScreenshotPath(outputPath);
+                    }
+                    catch (Exception exception) when (
+                        IsExpectedInteractiveScreenshotFailure(exception))
+                    {
+                        HandleInteractiveScreenshotFailure(
+                            request.CaptureTarget,
+                            outputPath,
+                            exception,
+                            shell.SetLastScreenshotFailure);
+                    }
+                },
+                () =>
                 {
-                    HandleInteractiveScreenshotFailure(
-                        request.CaptureTarget,
-                        outputPath,
-                        exception,
-                        shell.SetLastScreenshotFailure);
-                }
-            });
+                    if (!shell.TryConsumePluginWindowBackendRestartRequest(
+                        out var restartMode))
+                    {
+                        return true;
+                    }
+
+                    requestedPluginWindowBackendMode = restartMode;
+                    restartRequested = true;
+                    return false;
+                });
+        }
+        while (restartRequested);
     }
 
     /// <summary>

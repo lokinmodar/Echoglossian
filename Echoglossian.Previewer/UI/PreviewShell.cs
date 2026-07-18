@@ -40,6 +40,7 @@ internal sealed class PreviewShell : IDisposable
         HostedRequested: true,
         HostedAvailable: false,
         FallbackReason: "Backend selection is not initialized.");
+    private PluginWindowPreviewBackendMode? pendingPluginWindowBackendRestartMode;
     private PreviewCaptureRequest? pendingScreenshotRequest;
     private string screenshotStatus = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
@@ -193,6 +194,25 @@ internal sealed class PreviewShell : IDisposable
     }
 
     /// <summary>
+    ///     Consumes a plugin-window backend restart requested from the shell.
+    /// </summary>
+    /// <param name="mode">The backend mode selected for the restarted shell.</param>
+    /// <returns><see langword="true" /> when a restart was requested.</returns>
+    internal bool TryConsumePluginWindowBackendRestartRequest(
+        out PluginWindowPreviewBackendMode mode)
+    {
+        if (this.pendingPluginWindowBackendRestartMode is not { } pendingMode)
+        {
+            mode = default;
+            return false;
+        }
+
+        this.pendingPluginWindowBackendRestartMode = null;
+        mode = pendingMode;
+        return true;
+    }
+
+    /// <summary>
     /// Gets the most recent overlay render result.
     /// </summary>
     internal TranslationOverlayRenderResult LastRenderResult => this.lastRenderResult;
@@ -229,6 +249,21 @@ internal sealed class PreviewShell : IDisposable
         return requestedMode == effectiveMode
             ? null
             : $"Plugin window backend is running as {effectiveMode}. Requested mode was {requestedMode}.";
+    }
+
+    /// <summary>
+    ///     Gets the requested restart mode when the shell selection changes.
+    /// </summary>
+    /// <param name="activeRequestedMode">The mode used to create the active backend.</param>
+    /// <param name="selectedMode">The mode selected in the shell.</param>
+    /// <returns>The selected mode when a restart is required; otherwise, <see langword="null" />.</returns>
+    internal static PluginWindowPreviewBackendMode? GetPluginWindowBackendRestartMode(
+        PluginWindowPreviewBackendMode activeRequestedMode,
+        PluginWindowPreviewBackendMode selectedMode)
+    {
+        return activeRequestedMode == selectedMode
+            ? null
+            : selectedMode;
     }
 
     /// <inheritdoc/>
@@ -471,6 +506,10 @@ internal sealed class PreviewShell : IDisposable
         if (ImGui.Selectable(mode.ToString(), selected))
         {
             this.requestedPluginWindowBackendMode = mode;
+            this.pendingPluginWindowBackendRestartMode =
+                GetPluginWindowBackendRestartMode(
+                    this.pluginWindowBackendStatus.RequestedMode,
+                    mode);
         }
 
         if (selected)

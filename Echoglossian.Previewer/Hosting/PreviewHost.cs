@@ -224,10 +224,21 @@ internal sealed unsafe class PreviewHost : IDisposable
     /// <param name="beforePresent">An optional callback invoked before each frame is presented.</param>
     internal void Run(Action draw, Action? beforePresent)
     {
+        this.Run(draw, beforePresent, continueRunning: null);
+    }
+
+    /// <summary>
+    ///     Runs frames until the preview window closes or the caller requests a controlled loop exit.
+    /// </summary>
+    /// <param name="draw">The ImGui draw callback.</param>
+    /// <param name="beforePresent">An optional callback invoked before each frame is presented.</param>
+    /// <param name="continueRunning">An optional callback that controls whether another frame should run.</param>
+    internal void Run(Action draw, Action? beforePresent, Func<bool>? continueRunning)
+    {
         ArgumentNullException.ThrowIfNull(draw);
         this.ThrowIfDisposed();
 
-        while (this.window.Exists)
+        while (this.window.Exists && (continueRunning?.Invoke() ?? true))
         {
             this.RunFrame(draw, beforePresent);
         }

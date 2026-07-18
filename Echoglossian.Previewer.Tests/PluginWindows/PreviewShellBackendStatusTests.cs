@@ -64,4 +64,17 @@ public sealed class PreviewShellBackendStatusTests
             "Plugin window backend is running as Standalone. Requested mode was DalaMockHosted.",
             warning);
     }
+
+    /// <summary>
+    ///     Ensures changing the selected backend requests an interactive backend restart.
+    /// </summary>
+    [Fact]
+    public void GetPluginWindowBackendRestartMode_selected_mode_differs_from_active_request_returns_selected_mode()
+    {
+        var restartMode = PreviewShell.GetPluginWindowBackendRestartMode(
+            PluginWindowPreviewBackendMode.Auto,
+            PluginWindowPreviewBackendMode.DalaMockHosted);
+
+        Assert.Equal(PluginWindowPreviewBackendMode.DalaMockHosted, restartMode);
+    }
 }
