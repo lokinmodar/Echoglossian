@@ -35,7 +35,7 @@ public static class OpenRouterModelManager
         {
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"{baseUrl.TrimEnd('/')}/v1/models");
+                $"{baseUrl.Trim().TrimEnd('/')}/models");
             request.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", apiKey);
 
