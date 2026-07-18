@@ -361,3 +361,4 @@ AGENTS.md
 /.agents/skills
 /.agents/skills/dalamud-addon-probing
 /.superpowers/sdd/tmp/
+/.worktrees/
