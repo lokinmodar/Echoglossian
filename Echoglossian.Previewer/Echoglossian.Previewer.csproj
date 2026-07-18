@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Echoglossian.csproj" />
+    <ProjectReference Include="..\Echoglossian.Mock\Echoglossian.Mock.csproj" />
   </ItemGroup>
 
   <ItemGroup>

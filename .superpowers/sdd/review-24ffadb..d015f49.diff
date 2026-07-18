@@ -1,0 +1,851 @@
+# Review package: 24ffadb0828893b954181b34bc0fa43feb75c960..d015f4961cbe4ef65ac49269425e76d82577f184
+
+## Commits
+d015f49 fix: restart preview backend from shell selection
+6f100fc feat: surface preview plugin-window backend diagnostics
+
+## Files changed
+ .superpowers/sdd/task-5-report.md                  |  44 +++++++
+ .../PreviewShellBackendStatusTests.cs              |  29 +++++
+ .../BatchScreenshotRunnerBackendManifestTests.cs   |  35 +++++
+ .../Screenshots/BatchScreenshotRunnerTests.cs      |   5 +-
+ Echoglossian.Previewer/Hosting/PreviewHost.cs      |  13 +-
+ Echoglossian.Previewer/Program.cs                  | 142 ++++++++++++---------
+ .../Screenshots/BatchScreenshotRunner.cs           |  50 +++++++-
+ Echoglossian.Previewer/UI/PreviewShell.cs          |  95 ++++++++++++++
+ 8 files changed, 347 insertions(+), 66 deletions(-)
+
+## Diff
+diff --git a/.superpowers/sdd/task-5-report.md b/.superpowers/sdd/task-5-report.md
+index 0e25aae..65444cf 100644
+--- a/.superpowers/sdd/task-5-report.md
++++ b/.superpowers/sdd/task-5-report.md
+@@ -86,10 +86,54 @@ Completed and committed.
+ 
+ ### Result
+ 
+ - Added previewer-side composition that creates
+   `RtlTexturePresentationService` with
+   `host.CreateTextTextureFactory().CreateTextureAsync` and passes it to
+   `TranslationOverlayRenderer`.
+ - Preserved the production `ITextureProvider` construction path.
+ - Added a previewer regression test proving an RTL render request reaches the
+   supplied Veldrid texture creation delegate through the composed RTL service.
++
++## Backend Diagnostics
++
++### Commit
++
++- `6f100fc feat: surface preview plugin-window backend diagnostics`
++
++### Result
++
++- Added requested, effective, and fallback backend fields to screenshot manifests.
++- Added shell backend status and selection controls.
++
++### Validation
++
++- `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~BatchScreenshotRunnerBackendManifestTests|FullyQualifiedName~PreviewShellBackendStatusTests"`: passed, 4/4.
++- `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore`: passed, 142/142.
++
++## Backend Restart Fix Wave
++
++### Root Cause
++
++- The shell selector only updated display state. `Program` created its backend once before `PreviewHost.Run`, so restarting the previewer shell reused the original command-line backend mode.
++
++### Implementation
++
++- The shell emits a one-shot pending restart mode when the operator changes the backend selection.
++- `PreviewHost.Run` accepts a continuation predicate so the interactive loop can exit without closing the preview window.
++- `Program` consumes the request, updates the requested mode, disposes the current shell and backend, and recreates them over the existing preview-owned session, host, renderer, and font runtime.
++
++### TDD Evidence
++
++- RED: `PreviewShellBackendStatusTests` failed with `CS0117` because `PreviewShell.GetPluginWindowBackendRestartMode` did not exist.
++- GREEN: the focused shell status and host contract tests passed after the restart path was added.
++
++### Commands Run
++
++- `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore --filter "FullyQualifiedName~PreviewShellBackendStatusTests|FullyQualifiedName~PreviewHostContractTests"`: passed, 6/6.
++- `dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --host-smoke`: passed, exit code 0.
++- `dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore`: passed, 143/143.
++- `git diff --check`: passed.
++
++### Concern
++
++- The pre-existing DalaMock `CreateDebouncer` incompatibility still prevents a local end-to-end hosted preview frame. Auto fallback remains visible; this fix does not alter that external blocker.
+diff --git a/Echoglossian.Previewer.Tests/PluginWindows/PreviewShellBackendStatusTests.cs b/Echoglossian.Previewer.Tests/PluginWindows/PreviewShellBackendStatusTests.cs
+index 6b50a10..8e2f36c 100644
+--- a/Echoglossian.Previewer.Tests/PluginWindows/PreviewShellBackendStatusTests.cs
++++ b/Echoglossian.Previewer.Tests/PluginWindows/PreviewShellBackendStatusTests.cs
+@@ -1,16 +1,17 @@
+ // <copyright file="PreviewShellBackendStatusTests.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
+ using Echoglossian.Previewer.PluginWindows;
++using Echoglossian.Previewer.UI;
+ 
+ using Xunit;
+ 
+ namespace Echoglossian.Previewer.Tests.PluginWindows;
+ 
+ /// <summary>
+ ///     Covers plugin-window backend status state.
+ /// </summary>
+ public sealed class PreviewShellBackendStatusTests
+ {
+@@ -41,11 +42,39 @@ public sealed class PreviewShellBackendStatusTests
+             PluginWindowPreviewBackendMode.Auto,
+             PluginWindowPreviewBackendMode.Standalone,
+             HostedRequested: true,
+             HostedAvailable: false,
+             FallbackReason: "DalaMock initialization failed");
+ 
+         Assert.True(status.HostedRequested);
+         Assert.False(status.HostedAvailable);
+         Assert.Equal("DalaMock initialization failed", status.FallbackReason);
+     }
++
++    /// <summary>
++    ///     Ensures a backend selection that differs from the active backend requires a restart.
++    /// </summary>
++    [Fact]
++    public void GetPluginWindowBackendRestartWarning_requested_mode_differs_from_effective_mode_reports_active_backend()
++    {
++        var warning = PreviewShell.GetPluginWindowBackendRestartWarning(
++            PluginWindowPreviewBackendMode.DalaMockHosted,
++            PluginWindowPreviewBackendMode.Standalone);
++
++        Assert.Equal(
++            "Plugin window backend is running as Standalone. Requested mode was DalaMockHosted.",
++            warning);
++    }
++
++    /// <summary>
++    ///     Ensures changing the selected backend requests an interactive backend restart.
++    /// </summary>
++    [Fact]
++    public void GetPluginWindowBackendRestartMode_selected_mode_differs_from_active_request_returns_selected_mode()
++    {
++        var restartMode = PreviewShell.GetPluginWindowBackendRestartMode(
++            PluginWindowPreviewBackendMode.Auto,
++            PluginWindowPreviewBackendMode.DalaMockHosted);
++
++        Assert.Equal(PluginWindowPreviewBackendMode.DalaMockHosted, restartMode);
++    }
+ }
+diff --git a/Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerBackendManifestTests.cs b/Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerBackendManifestTests.cs
+new file mode 100644
+index 0000000..e338293
+--- /dev/null
++++ b/Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerBackendManifestTests.cs
+@@ -0,0 +1,35 @@
++// <copyright file="BatchScreenshotRunnerBackendManifestTests.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.PluginWindows;
++using Echoglossian.Previewer.Screenshots;
++using Echoglossian.Previewer.UI;
++
++using Xunit;
++
++namespace Echoglossian.Previewer.Tests.Screenshots;
++
++/// <summary>
++///     Covers plugin-window backend details in screenshot manifests.
++/// </summary>
++public sealed class BatchScreenshotRunnerBackendManifestTests
++{
++    /// <summary>
++    ///     Ensures plugin-window captures record both the requested and effective backend.
++    /// </summary>
++    [Fact]
++    public void SerializeManifest_plugin_window_capture_records_requested_and_effective_backend()
++    {
++        var manifest = BatchScreenshotRunner.CreateManifestForTests(
++            captureTarget: PreviewCaptureTarget.ConfigWindow,
++            requestedBackend: PluginWindowPreviewBackendMode.Auto,
++            effectiveBackend: PluginWindowPreviewBackendMode.Standalone,
++            fallbackReason: "DalaMock initialization failed");
++
++        Assert.Equal("Auto", manifest.RequestedPluginWindowBackend);
++        Assert.Equal("Standalone", manifest.EffectivePluginWindowBackend);
++        Assert.Equal("DalaMock initialization failed", manifest.PluginWindowBackendFallbackReason);
++    }
++}
+diff --git a/Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerTests.cs b/Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerTests.cs
+index d5f553f..20c21b2 100644
+--- a/Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerTests.cs
++++ b/Echoglossian.Previewer.Tests/Screenshots/BatchScreenshotRunnerTests.cs
+@@ -118,21 +118,24 @@ public sealed class BatchScreenshotRunnerTests
+             [
+                 new BatchScreenshotRunner.ScreenshotManifestEntry(
+                     "talk",
+                     "Talk",
+                     1920,
+                     1080,
+                     "Full",
+                     PreviewCaptureTarget.DbManagerWindow,
+                     "PlainImGui",
+                     "full-talk-dbmanagerwindow-1920x1080.png"),
+-            ]);
++            ],
++            "Auto",
++            "Standalone",
++            null);
+ 
+         var json = BatchScreenshotRunner.SerializeManifest(manifest);
+         using var document = JsonDocument.Parse(json);
+ 
+         Assert.Equal(
+             "DbManagerWindow",
+             document.RootElement
+                 .GetProperty("Entries")[0]
+                 .GetProperty("CaptureTarget")
+                 .GetString());
+diff --git a/Echoglossian.Previewer/Hosting/PreviewHost.cs b/Echoglossian.Previewer/Hosting/PreviewHost.cs
+index 3c693af..40555b6 100644
+--- a/Echoglossian.Previewer/Hosting/PreviewHost.cs
++++ b/Echoglossian.Previewer/Hosting/PreviewHost.cs
+@@ -216,25 +216,36 @@ internal sealed unsafe class PreviewHost : IDisposable
+     {
+         this.Run(draw, beforePresent: null);
+     }
+ 
+     /// <summary>
+     ///     Runs frames until the standalone preview window is closed.
+     /// </summary>
+     /// <param name="draw">The ImGui draw callback.</param>
+     /// <param name="beforePresent">An optional callback invoked before each frame is presented.</param>
+     internal void Run(Action draw, Action? beforePresent)
++    {
++        this.Run(draw, beforePresent, continueRunning: null);
++    }
++
++    /// <summary>
++    ///     Runs frames until the preview window closes or the caller requests a controlled loop exit.
++    /// </summary>
++    /// <param name="draw">The ImGui draw callback.</param>
++    /// <param name="beforePresent">An optional callback invoked before each frame is presented.</param>
++    /// <param name="continueRunning">An optional callback that controls whether another frame should run.</param>
++    internal void Run(Action draw, Action? beforePresent, Func<bool>? continueRunning)
+     {
+         ArgumentNullException.ThrowIfNull(draw);
+         this.ThrowIfDisposed();
+ 
+-        while (this.window.Exists)
++        while (this.window.Exists && (continueRunning?.Invoke() ?? true))
+         {
+             this.RunFrame(draw, beforePresent);
+         }
+     }
+ 
+     /// <summary>
+     ///     Rebuilds the backend font texture after preview fonts are added to
+     ///     the active ImGui atlas.
+     /// </summary>
+     internal void RecreateFontDeviceTexture()
+diff --git a/Echoglossian.Previewer/Program.cs b/Echoglossian.Previewer/Program.cs
+index 2962682..44e9073 100644
+--- a/Echoglossian.Previewer/Program.cs
++++ b/Echoglossian.Previewer/Program.cs
+@@ -152,87 +152,105 @@ internal static class Program
+             });
+         var fontRuntime = new PreviewFontRuntime(
+             fontSelection,
+             scenario.Title,
+             scenario.TranslatedText,
+             host.RecreateFontDeviceTexture);
+         using var composition = new PreviewOverlayRendererFactory(host).Create(
+             editableConfiguration,
+             fontRuntime,
+             fontSelection);
+-        var backendCreation = await CreatePluginWindowPreviewBackendAsync(
+-            commandLine.PluginWindowBackendMode,
+-            editableConfiguration,
+-            languages,
+-            session);
+-        using var pluginWindowBackend = backendCreation.Backend;
+-        using var shell = new PreviewShell(
+-            sourceConfiguration,
+-            editableConfiguration,
+-            fontSelection,
+-            session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
+-            composition.Renderer,
+-            pluginWindowBackend,
+-            scenario,
+-            viewport);
+-        shell.SetPluginWindowBackendStatus(backendCreation.Status);
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+-
+         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
+-        host.Run(
+-            () =>
+-            {
+-                composition.BeginDrawFrame();
+-                shell.Draw();
+-            },
+-            () =>
+-            {
+-                if (!shell.TryConsumeScreenshotRequest(
+-                    interactiveOutputDirectory,
+-                    out var request))
++        var requestedPluginWindowBackendMode = commandLine.PluginWindowBackendMode;
++        var restartRequested = false;
++        do
++        {
++            restartRequested = false;
++            var backendCreation = await CreatePluginWindowPreviewBackendAsync(
++                requestedPluginWindowBackendMode,
++                editableConfiguration,
++                languages,
++                session);
++            using var pluginWindowBackend = backendCreation.Backend;
++            using var shell = new PreviewShell(
++                sourceConfiguration,
++                editableConfiguration,
++                fontSelection,
++                session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
++                composition.Renderer,
++                pluginWindowBackend,
++                scenario,
++                viewport);
++            shell.SetPluginWindowBackendStatus(backendCreation.Status);
++            host.Run(
++                () =>
+                 {
+-                    return;
+-                }
+-
+-                var outputPath = Path.Combine(
+-                    request.OutputDirectory,
+-                    ScreenshotFileName.CreatePngName(
+-                        request.Mode,
+-                        request.Scenario.Key,
+-                        request.Viewport,
+-                        request.CaptureTarget));
+-                try
++                    composition.BeginDrawFrame();
++                    shell.Draw();
++                },
++                () =>
+                 {
+-                    var crop = CalculateInteractiveCrop(
+-                        request,
+-                        shell.LastRenderResult,
+-                        pluginWindowBackend,
+-                        ImGui.GetIO().DisplaySize,
+-                        host.FramebufferSize);
+-
+-                    CaptureInteractiveScreenshot(
+-                        outputPath,
+-                        temporaryOutputPath => host.CapturePng(
+-                            temporaryOutputPath,
+-                            crop));
+-                    shell.SetLastScreenshotPath(outputPath);
+-                }
+-                catch (Exception exception) when (
+-                    IsExpectedInteractiveScreenshotFailure(exception))
++                    if (!shell.TryConsumeScreenshotRequest(
++                        interactiveOutputDirectory,
++                        out var request))
++                    {
++                        return;
++                    }
++
++                    var outputPath = Path.Combine(
++                        request.OutputDirectory,
++                        ScreenshotFileName.CreatePngName(
++                            request.Mode,
++                            request.Scenario.Key,
++                            request.Viewport,
++                            request.CaptureTarget));
++                    try
++                    {
++                        var crop = CalculateInteractiveCrop(
++                            request,
++                            shell.LastRenderResult,
++                            pluginWindowBackend,
++                            ImGui.GetIO().DisplaySize,
++                            host.FramebufferSize);
++
++                        CaptureInteractiveScreenshot(
++                            outputPath,
++                            temporaryOutputPath => host.CapturePng(
++                                temporaryOutputPath,
++                                crop));
++                        shell.SetLastScreenshotPath(outputPath);
++                    }
++                    catch (Exception exception) when (
++                        IsExpectedInteractiveScreenshotFailure(exception))
++                    {
++                        HandleInteractiveScreenshotFailure(
++                            request.CaptureTarget,
++                            outputPath,
++                            exception,
++                            shell.SetLastScreenshotFailure);
++                    }
++                },
++                () =>
+                 {
+-                    HandleInteractiveScreenshotFailure(
+-                        request.CaptureTarget,
+-                        outputPath,
+-                        exception,
+-                        shell.SetLastScreenshotFailure);
+-                }
+-            });
++                    if (!shell.TryConsumePluginWindowBackendRestartRequest(
++                        out var restartMode))
++                    {
++                        return true;
++                    }
++
++                    requestedPluginWindowBackendMode = restartMode;
++                    restartRequested = true;
++                    return false;
++                });
++        }
++        while (restartRequested);
+     }
+ 
+     /// <summary>
+     ///     Runs hidden deterministic screenshot export.
+     /// </summary>
+     /// <param name="commandLine">The parsed command line.</param>
+     private static void RunScreenshotExport(PreviewCommandLine commandLine)
+     {
+         using var session = PreviewSessionLoader.Load(
+             new PreviewSessionSourceOptions(
+diff --git a/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs b/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs
+index e84afbd..78c1d83 100644
+--- a/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs
++++ b/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs
+@@ -24,20 +24,21 @@ namespace Echoglossian.Previewer.Screenshots;
+ 
+ /// <summary>
+ /// Runs deterministic preview screenshot captures.
+ /// </summary>
+ internal sealed class BatchScreenshotRunner
+ {
+     private readonly PreviewConfiguration sourceConfiguration;
+     private readonly Config editableConfiguration;
+     private readonly PreviewFontSelection fontSelection;
+     private readonly Func<IPluginWindowPreviewBackend>? pluginWindowBackendFactory;
++    private PluginWindowBackendStatus? pluginWindowBackendStatus;
+ 
+     /// <summary>
+     /// Initializes a new instance of the <see cref="BatchScreenshotRunner"/> class.
+     /// </summary>
+     /// <param name="sourceConfiguration">The loaded preview configuration source.</param>
+     /// <param name="editableConfiguration">The isolated editable preview configuration.</param>
+     /// <param name="fontSelection">The resolved preview fonts.</param>
+     /// <param name="pluginWindowBackendFactory">Creates preview-owned plugin-window backends when needed.</param>
+     internal BatchScreenshotRunner(
+         PreviewConfiguration sourceConfiguration,
+@@ -91,21 +92,26 @@ internal sealed class BatchScreenshotRunner
+                             exception);
+                     }
+ 
+                     entries.Add(this.CreateManifestEntry(request, capture));
+                 }
+ 
+                 var manifest = new ScreenshotManifest(
+                     GetManifestConfigSourceLabel(this.sourceConfiguration),
+                     this.fontSelection.FontPaths.Select(Path.GetFileName).ToArray()!,
+                     this.fontSelection.FontSize,
+-                    entries);
++                    entries,
++                    this.pluginWindowBackendStatus?.RequestedMode.ToString() ??
++                        PluginWindowPreviewBackendMode.Auto.ToString(),
++                    this.pluginWindowBackendStatus?.EffectiveMode.ToString() ??
++                        PluginWindowPreviewBackendMode.Standalone.ToString(),
++                    this.pluginWindowBackendStatus?.FallbackReason);
+                 var manifestPath = Path.Combine(stagingDirectory, "manifest.json");
+                 try
+                 {
+                     File.WriteAllText(manifestPath, SerializeManifest(manifest));
+                 }
+                 catch (Exception exception) when (
+                     exception is IOException or UnauthorizedAccessException)
+                 {
+                     throw new InvalidOperationException(
+                         CreateOutputFailureMessage(
+@@ -391,20 +397,21 @@ internal sealed class BatchScreenshotRunner
+             new PreviewHostOptions
+             {
+                 Width = Math.Max(request.Viewport.Width, captureLayoutSize.Width),
+                 Height = Math.Max(request.Viewport.Height, captureLayoutSize.Height),
+                 Title = "Echoglossian Screenshot Capture",
+                 StartHidden = true,
+             });
+         using var pluginWindowBackend = this.CreatePluginWindowBackend(request.CaptureTarget);
+         if (pluginWindowBackend is not null)
+         {
++            this.pluginWindowBackendStatus = pluginWindowBackend.Status;
+             pluginWindowBackend.BeginCapture(request.CaptureTarget);
+         }
+ 
+         var fontRuntime = new PreviewFontRuntime(
+             this.fontSelection,
+             string.Join(
+                 Environment.NewLine,
+                 PreviewScenarioCatalog.Defaults.Select(scenario => scenario.Title)),
+             string.Join(
+                 Environment.NewLine,
+@@ -477,20 +484,25 @@ internal sealed class BatchScreenshotRunner
+         host.CaptureFramePng(
+             draw,
+             outputPath,
+             sourceTextureSize => this.CalculateCrop(
+                 request,
+                 renderResult,
+                 pluginWindowBackend,
+                 ImGui.GetIO().DisplaySize,
+                 sourceTextureSize));
+ 
++        if (pluginWindowBackend is not null)
++        {
++            this.pluginWindowBackendStatus = pluginWindowBackend.Status;
++        }
++
+         return new CapturedScreenshot(outputPath, renderResult);
+     }
+ 
+     /// <summary>
+     /// Resolves the physical crop for the requested preview target.
+     /// </summary>
+     /// <param name="request">The screenshot request.</param>
+     /// <param name="renderResult">The overlay draw result.</param>
+     /// <param name="pluginWindowBackend">The optional plugin-window preview backend.</param>
+     /// <param name="displaySize">The logical ImGui display dimensions.</param>
+@@ -594,20 +606,51 @@ internal sealed class BatchScreenshotRunner
+     /// <param name="manifest">The manifest to serialize.</param>
+     /// <returns>The indented JSON manifest.</returns>
+     internal static string SerializeManifest(ScreenshotManifest manifest)
+     {
+         ArgumentNullException.ThrowIfNull(manifest);
+         var options = new JsonSerializerOptions { WriteIndented = true };
+         options.Converters.Add(new JsonStringEnumConverter());
+         return JsonSerializer.Serialize(manifest, options);
+     }
+ 
++    /// <summary>
++    ///     Creates a plugin-window manifest for focused backend metadata tests.
++    /// </summary>
++    /// <param name="captureTarget">The requested plugin-window capture target.</param>
++    /// <param name="requestedBackend">The backend requested by the operator.</param>
++    /// <param name="effectiveBackend">The backend that rendered the window.</param>
++    /// <param name="fallbackReason">The optional fallback diagnostic.</param>
++    /// <returns>A manifest containing the supplied backend metadata.</returns>
++    internal static ScreenshotManifest CreateManifestForTests(
++        PreviewCaptureTarget captureTarget,
++        PluginWindowPreviewBackendMode requestedBackend,
++        PluginWindowPreviewBackendMode effectiveBackend,
++        string? fallbackReason)
++    {
++        if (!PreviewPluginWindowHost.IsPluginWindowTarget(captureTarget))
++        {
++            throw new ArgumentException(
++                "Backend manifest test data requires a plugin-window capture target.",
++                nameof(captureTarget));
++        }
++
++        return new ScreenshotManifest(
++            "tests",
++            [],
++            0,
++            [],
++            requestedBackend.ToString(),
++            effectiveBackend.ToString(),
++            fallbackReason);
++    }
++
+     /// <summary>
+     /// Creates real plugin windows only for a plugin-window screenshot target.
+     /// </summary>
+     /// <param name="target">The requested capture target.</param>
+     /// <returns>The plugin-window preview backend, or <see langword="null" /> when unnecessary.</returns>
+     private IPluginWindowPreviewBackend? CreatePluginWindowBackend(PreviewCaptureTarget target)
+     {
+         if (target is not (PreviewCaptureTarget.ConfigWindow or
+             PreviewCaptureTarget.DbManagerWindow or
+             PreviewCaptureTarget.TranslatorMetricsWindow))
+@@ -831,21 +874,24 @@ internal sealed class BatchScreenshotRunner
+         {
+             ImGui.End();
+             ImGui.PopStyleVar(2);
+         }
+     }
+ 
+     internal sealed record ScreenshotManifest(
+         string ConfigSourceLabel,
+         IReadOnlyList<string?> FontFileNames,
+         int FontSize,
+-        IReadOnlyList<ScreenshotManifestEntry> Entries);
++        IReadOnlyList<ScreenshotManifestEntry> Entries,
++        string RequestedPluginWindowBackend,
++        string EffectivePluginWindowBackend,
++        string? PluginWindowBackendFallbackReason);
+ 
+     internal sealed record ScreenshotManifestEntry(
+         string ScenarioKey,
+         string SurfaceKey,
+         int ViewportWidth,
+         int ViewportHeight,
+         string ScreenshotMode,
+         PreviewCaptureTarget CaptureTarget,
+         string PresentationMode,
+         string PngPath);
+diff --git a/Echoglossian.Previewer/UI/PreviewShell.cs b/Echoglossian.Previewer/UI/PreviewShell.cs
+index d4da109..14f1e06 100644
+--- a/Echoglossian.Previewer/UI/PreviewShell.cs
++++ b/Echoglossian.Previewer/UI/PreviewShell.cs
+@@ -25,26 +25,29 @@ internal sealed class PreviewShell : IDisposable
+     private readonly PreviewConfiguration sourceConfiguration;
+     private readonly Config editableConfiguration;
+     private readonly PreviewFontSelection fontSelection;
+     private readonly IReadOnlyList<string> sessionDiagnostics;
+     private readonly PreviewCanvas canvas;
+     private readonly IPluginWindowPreviewBackend pluginWindowBackend;
+     private readonly PreviewWorkbenchState workbenchState;
+     private readonly PreviewShellState state;
+     private readonly int appliedLanguageId;
+     private readonly int appliedFontSize;
++    private PluginWindowPreviewBackendMode requestedPluginWindowBackendMode =
++        PluginWindowPreviewBackendMode.Auto;
+     private PluginWindowBackendStatus pluginWindowBackendStatus = new(
+         PluginWindowPreviewBackendMode.Auto,
+         PluginWindowPreviewBackendMode.Standalone,
+         HostedRequested: true,
+         HostedAvailable: false,
+         FallbackReason: "Backend selection is not initialized.");
++    private PluginWindowPreviewBackendMode? pendingPluginWindowBackendRestartMode;
+     private PreviewCaptureRequest? pendingScreenshotRequest;
+     private string screenshotStatus = string.Empty;
+     private TranslationOverlayRenderResult lastRenderResult = new(
+         false,
+         Vector2.Zero,
+         Vector2.Zero,
+         TextPresentationBackendKind.PlainImGui);
+     private bool disposed;
+ 
+     /// <summary>
+@@ -130,20 +133,21 @@ internal sealed class PreviewShell : IDisposable
+     }
+ 
+     /// <summary>
+     ///     Updates the plugin-window backend status shown in the fidelity summary.
+     /// </summary>
+     /// <param name="status">The current backend status.</param>
+     internal void SetPluginWindowBackendStatus(PluginWindowBackendStatus status)
+     {
+         this.pluginWindowBackendStatus = status ??
+             throw new ArgumentNullException(nameof(status));
++        this.requestedPluginWindowBackendMode = status.RequestedMode;
+     }
+ 
+     /// <summary>
+     /// Consumes a screenshot request made by the interactive controls.
+     /// </summary>
+     /// <param name="outputDirectory">The screenshot output directory.</param>
+     /// <param name="request">The consumed request.</param>
+     /// <returns><see langword="true"/> when a request was pending.</returns>
+     internal bool TryConsumeScreenshotRequest(
+         string outputDirectory,
+@@ -182,20 +186,39 @@ internal sealed class PreviewShell : IDisposable
+         this.pendingScreenshotRequest = null;
+         request = new ScreenshotRequest(
+             pendingRequest.Mode,
+             this.state.CreateScenarioSnapshot(),
+             this.state.Viewport,
+             outputDirectory,
+             pendingRequest.CaptureTarget);
+         return true;
+     }
+ 
++    /// <summary>
++    ///     Consumes a plugin-window backend restart requested from the shell.
++    /// </summary>
++    /// <param name="mode">The backend mode selected for the restarted shell.</param>
++    /// <returns><see langword="true" /> when a restart was requested.</returns>
++    internal bool TryConsumePluginWindowBackendRestartRequest(
++        out PluginWindowPreviewBackendMode mode)
++    {
++        if (this.pendingPluginWindowBackendRestartMode is not { } pendingMode)
++        {
++            mode = default;
++            return false;
++        }
++
++        this.pendingPluginWindowBackendRestartMode = null;
++        mode = pendingMode;
++        return true;
++    }
++
+     /// <summary>
+     /// Gets the most recent overlay render result.
+     /// </summary>
+     internal TranslationOverlayRenderResult LastRenderResult => this.lastRenderResult;
+ 
+     /// <summary>
+     /// Gets a warning when mutable config no longer matches the applied startup runtime.
+     /// </summary>
+     /// <param name="configuration">The current preview-owned configuration.</param>
+     /// <param name="appliedLanguageId">The language identifier applied at startup.</param>
+@@ -206,20 +229,50 @@ internal sealed class PreviewShell : IDisposable
+         int appliedLanguageId,
+         int appliedFontSize)
+     {
+         ArgumentNullException.ThrowIfNull(configuration);
+         return configuration.Lang != appliedLanguageId ||
+             configuration.FontSize != appliedFontSize
+             ? "Restart the previewer to apply config language or font size changes."
+             : null;
+     }
+ 
++    /// <summary>
++    ///     Gets the restart warning when the selected backend differs from the active backend.
++    /// </summary>
++    /// <param name="requestedMode">The backend selected in the shell.</param>
++    /// <param name="effectiveMode">The backend currently running.</param>
++    /// <returns>The restart warning, or <see langword="null" /> when modes match.</returns>
++    internal static string? GetPluginWindowBackendRestartWarning(
++        PluginWindowPreviewBackendMode requestedMode,
++        PluginWindowPreviewBackendMode effectiveMode)
++    {
++        return requestedMode == effectiveMode
++            ? null
++            : $"Plugin window backend is running as {effectiveMode}. Requested mode was {requestedMode}.";
++    }
++
++    /// <summary>
++    ///     Gets the requested restart mode when the shell selection changes.
++    /// </summary>
++    /// <param name="activeRequestedMode">The mode used to create the active backend.</param>
++    /// <param name="selectedMode">The mode selected in the shell.</param>
++    /// <returns>The selected mode when a restart is required; otherwise, <see langword="null" />.</returns>
++    internal static PluginWindowPreviewBackendMode? GetPluginWindowBackendRestartMode(
++        PluginWindowPreviewBackendMode activeRequestedMode,
++        PluginWindowPreviewBackendMode selectedMode)
++    {
++        return activeRequestedMode == selectedMode
++            ? null
++            : selectedMode;
++    }
++
+     /// <inheritdoc/>
+     public void Dispose()
+     {
+         if (this.disposed)
+         {
+             return;
+         }
+ 
+         this.canvas.Dispose();
+         this.disposed = true;
+@@ -273,20 +326,21 @@ internal sealed class PreviewShell : IDisposable
+ 
+         this.DrawToggle(
+             "Translator Metrics / Debugger",
+             this.workbenchState.TranslatorMetricsWindowOpen,
+             value => this.workbenchState.TranslatorMetricsWindowOpen = value);
+ 
+         ImGui.Separator();
+         ImGui.TextUnformatted("Scenario");
+         this.DrawScenarioCombo();
+         this.DrawViewportCombo();
++        this.DrawPluginWindowBackendCombo();
+         ImGui.Checkbox("Visible", ref this.state.Visible);
+         ImGui.Checkbox("Show simulated addon bounds", ref this.state.ShowSimulatedAddonBounds);
+ 
+         ImGui.Separator();
+         ImGui.TextUnformatted("Content");
+         ImGui.InputText("Title", ref this.state.Title, 256);
+         ImGui.InputTextMultiline(
+             "Body text",
+             ref this.state.BodyText,
+             4096,
+@@ -426,36 +480,77 @@ internal sealed class PreviewShell : IDisposable
+                 if (selected)
+                 {
+                     ImGui.SetItemDefaultFocus();
+                 }
+             }
+ 
+             ImGui.EndCombo();
+         }
+     }
+ 
++    private void DrawPluginWindowBackendCombo()
++    {
++        if (ImGui.BeginCombo(
++                "Plugin window backend",
++                this.requestedPluginWindowBackendMode.ToString()))
++        {
++            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.Auto);
++            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.Standalone);
++            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.DalaMockHosted);
++            ImGui.EndCombo();
++        }
++    }
++
++    private void DrawBackendSelectable(PluginWindowPreviewBackendMode mode)
++    {
++        var selected = this.requestedPluginWindowBackendMode == mode;
++        if (ImGui.Selectable(mode.ToString(), selected))
++        {
++            this.requestedPluginWindowBackendMode = mode;
++            this.pendingPluginWindowBackendRestartMode =
++                GetPluginWindowBackendRestartMode(
++                    this.pluginWindowBackendStatus.RequestedMode,
++                    mode);
++        }
++
++        if (selected)
++        {
++            ImGui.SetItemDefaultFocus();
++        }
++    }
++
+     private void DrawFidelitySummary()
+     {
+         this.pluginWindowBackendStatus = this.pluginWindowBackend.Status;
+         ImGui.TextUnformatted("Fidelity summary");
+         ImGui.TextWrapped(
+             $"Config source: {this.sourceConfiguration.SourceLabel}");
+         ImGui.TextWrapped(
+             $"Font: {Path.GetFileName(this.fontSelection.SpecialFontPath)} / {this.fontSelection.FontSize}px");
+         ImGui.TextUnformatted(
+             $"Logical viewport: {this.state.Viewport.Width}x{this.state.Viewport.Height}");
+         ImGui.TextUnformatted($"Presentation mode: {this.lastRenderResult.PresentationMode}");
+         ImGui.TextUnformatted(
+             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");
+         ImGui.TextUnformatted(
+             $"Plugin window backend: requested={this.pluginWindowBackendStatus.RequestedMode}, effective={this.pluginWindowBackendStatus.EffectiveMode}");
+ 
++        var backendRestartWarning = GetPluginWindowBackendRestartWarning(
++            this.requestedPluginWindowBackendMode,
++            this.pluginWindowBackendStatus.EffectiveMode);
++        if (backendRestartWarning is not null)
++        {
++            ImGui.TextWrapped(backendRestartWarning);
++            ImGui.TextWrapped(
++                "Restart the previewer to apply plugin window backend changes.");
++        }
++
+         if (!string.IsNullOrWhiteSpace(this.pluginWindowBackendStatus.FallbackReason))
+         {
+             ImGui.TextWrapped(
+                 $"Plugin window backend fallback: {this.pluginWindowBackendStatus.FallbackReason}");
+         }
+ 
+         var restartWarning = GetRuntimeRestartWarning(
+             this.editableConfiguration,
+             this.appliedLanguageId,
+             this.appliedFontSize);

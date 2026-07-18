@@ -1,0 +1,1001 @@
+# Review package: feeecd3df3acf757faa098367bce2ec7a84922e3..9bad56e50d376cbaa41a1f1f3d9552b19c549b57
+
+## Commits
+9bad56e refactor: extract standalone preview plugin-window backend
+
+## Files changed
+ .../StandalonePluginWindowPreviewBackendTests.cs   | 34 +++++++++
+ .../PluginWindows/IPluginWindowPreviewBackend.cs   | 55 +++++++++++++++
+ .../StandalonePluginWindowPreviewBackend.cs        | 81 ++++++++++++++++++++++
+ Echoglossian.Previewer/Program.cs                  | 48 ++++---------
+ .../Screenshots/BatchScreenshotRunner.cs           | 51 +++++++-------
+ .../UI/PreviewPluginWindowHost.cs                  | 22 +++++-
+ Echoglossian.Previewer/UI/PreviewShell.cs          | 32 ++++-----
+ 7 files changed, 247 insertions(+), 76 deletions(-)
+
+## Diff
+diff --git a/Echoglossian.Previewer.Tests/PluginWindows/StandalonePluginWindowPreviewBackendTests.cs b/Echoglossian.Previewer.Tests/PluginWindows/StandalonePluginWindowPreviewBackendTests.cs
+new file mode 100644
+index 0000000..e9ac687
+--- /dev/null
++++ b/Echoglossian.Previewer.Tests/PluginWindows/StandalonePluginWindowPreviewBackendTests.cs
+@@ -0,0 +1,34 @@
++// <copyright file="StandalonePluginWindowPreviewBackendTests.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.PluginWindows;
++
++using Xunit;
++
++namespace Echoglossian.Previewer.Tests.PluginWindows;
++
++/// <summary>
++///     Covers the standalone plugin-window preview backend.
++/// </summary>
++public sealed class StandalonePluginWindowPreviewBackendTests
++{
++    /// <summary>
++    ///     Ensures the standalone backend reports its active mode.
++    /// </summary>
++    [Fact]
++    public void Standalone_backend_reports_standalone_status()
++    {
++        using var backend = StandalonePluginWindowPreviewBackend.CreateForTests(
++            dbManagerAvailable: true);
++
++        Assert.Equal(
++            PluginWindowPreviewBackendMode.Standalone,
++            backend.Status.RequestedMode);
++        Assert.Equal(
++            PluginWindowPreviewBackendMode.Standalone,
++            backend.Status.EffectiveMode);
++        Assert.True(backend.Status.HostedAvailable);
++    }
++}
+diff --git a/Echoglossian.Previewer/PluginWindows/IPluginWindowPreviewBackend.cs b/Echoglossian.Previewer/PluginWindows/IPluginWindowPreviewBackend.cs
+new file mode 100644
+index 0000000..01b91c4
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/IPluginWindowPreviewBackend.cs
+@@ -0,0 +1,55 @@
++// <copyright file="IPluginWindowPreviewBackend.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.UI;
++
++using System.Drawing;
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>
++///     Hosts real plugin windows for the previewer.
++/// </summary>
++internal interface IPluginWindowPreviewBackend : IDisposable
++{
++    /// <summary>
++    ///     Gets the current backend availability and selection status.
++    /// </summary>
++    PluginWindowBackendStatus Status { get; }
++
++    /// <summary>
++    ///     Gets a value indicating whether the database manager window is available.
++    /// </summary>
++    bool DbManagerAvailable { get; }
++
++    /// <summary>
++    ///     Gets a value indicating whether the active capture failed to stabilize.
++    /// </summary>
++    bool CaptureFailed { get; }
++
++    /// <summary>
++    ///     Draws the windows requested by the preview workbench.
++    /// </summary>
++    /// <param name="state">The shared workbench state.</param>
++    void Draw(PreviewWorkbenchState state);
++
++    /// <summary>
++    ///     Starts deterministic capture for a plugin window.
++    /// </summary>
++    /// <param name="target">The requested plugin-window capture target.</param>
++    void BeginCapture(PreviewCaptureTarget target);
++
++    /// <summary>
++    ///     Ends deterministic capture for the active plugin window.
++    /// </summary>
++    void EndCapture();
++
++    /// <summary>
++    ///     Gets stable capture bounds for a plugin window.
++    /// </summary>
++    /// <param name="target">The requested plugin-window capture target.</param>
++    /// <returns>The stable bounds, or <see langword="null" /> when unavailable.</returns>
++    Rectangle? TryGetStableCrop(PreviewCaptureTarget target);
++}
+diff --git a/Echoglossian.Previewer/PluginWindows/StandalonePluginWindowPreviewBackend.cs b/Echoglossian.Previewer/PluginWindows/StandalonePluginWindowPreviewBackend.cs
+new file mode 100644
+index 0000000..1331c3c
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/StandalonePluginWindowPreviewBackend.cs
+@@ -0,0 +1,81 @@
++// <copyright file="StandalonePluginWindowPreviewBackend.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.UI;
++
++using System.Drawing;
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>
++///     Provides plugin-window previews through the standalone ImGui host.
++/// </summary>
++internal sealed class StandalonePluginWindowPreviewBackend : IPluginWindowPreviewBackend
++{
++    private readonly PreviewPluginWindowHost host;
++
++    private StandalonePluginWindowPreviewBackend(PreviewPluginWindowHost host)
++    {
++        this.host = host ?? throw new ArgumentNullException(nameof(host));
++        this.Status = new PluginWindowBackendStatus(
++            PluginWindowPreviewBackendMode.Standalone,
++            PluginWindowPreviewBackendMode.Standalone,
++            HostedRequested: false,
++            HostedAvailable: true,
++            FallbackReason: null);
++    }
++
++    /// <summary>
++    ///     Gets the current backend availability and selection status.
++    /// </summary>
++    public PluginWindowBackendStatus Status { get; }
++
++    /// <summary>
++    ///     Gets a value indicating whether the database manager window is available.
++    /// </summary>
++    public bool DbManagerAvailable => this.host.DbManagerAvailable;
++
++    /// <summary>
++    ///     Gets a value indicating whether the active capture failed to stabilize.
++    /// </summary>
++    public bool CaptureFailed => this.host.CaptureFailed;
++
++    /// <summary>
++    ///     Creates a standalone backend around a real preview window host.
++    /// </summary>
++    /// <param name="host">The standalone preview window host.</param>
++    /// <returns>The standalone backend.</returns>
++    internal static StandalonePluginWindowPreviewBackend Create(PreviewPluginWindowHost host)
++    {
++        return new StandalonePluginWindowPreviewBackend(host);
++    }
++
++    /// <summary>
++    ///     Creates a standalone backend for status-focused tests.
++    /// </summary>
++    /// <param name="dbManagerAvailable">Whether the database manager is available.</param>
++    /// <returns>The standalone backend.</returns>
++    internal static StandalonePluginWindowPreviewBackend CreateForTests(bool dbManagerAvailable)
++    {
++        return new StandalonePluginWindowPreviewBackend(
++            PreviewPluginWindowHost.CreateForTests(dbManagerAvailable));
++    }
++
++    /// <inheritdoc />
++    public void Draw(PreviewWorkbenchState state) => this.host.Draw(state);
++
++    /// <inheritdoc />
++    public void BeginCapture(PreviewCaptureTarget target) => this.host.BeginCapture(target);
++
++    /// <inheritdoc />
++    public void EndCapture() => this.host.EndCapture();
++
++    /// <inheritdoc />
++    public Rectangle? TryGetStableCrop(PreviewCaptureTarget target) =>
++        this.host.TryGetStableCrop(target);
++
++    /// <inheritdoc />
++    public void Dispose() => this.host.Dispose();
++}
+diff --git a/Echoglossian.Previewer/Program.cs b/Echoglossian.Previewer/Program.cs
+index b28f76d..c8d2206 100644
+--- a/Echoglossian.Previewer/Program.cs
++++ b/Echoglossian.Previewer/Program.cs
+@@ -151,35 +151,34 @@ internal static class Program
+             });
+         var fontRuntime = new PreviewFontRuntime(
+             fontSelection,
+             scenario.Title,
+             scenario.TranslatedText,
+             host.RecreateFontDeviceTexture);
+         using var composition = new PreviewOverlayRendererFactory(host).Create(
+             editableConfiguration,
+             fontRuntime,
+             fontSelection);
+-        using var pluginWindowHost = CreatePreviewPluginWindowHost(
++        using var pluginWindowBackend = CreateStandalonePluginWindowPreviewBackend(
+             editableConfiguration,
+             languages,
+             session.ClonedDatabasePath);
+         using var shell = new PreviewShell(
+             sourceConfiguration,
+             editableConfiguration,
+             fontSelection,
+             session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
+             composition.Renderer,
+-            pluginWindowHost,
++            pluginWindowBackend,
+             scenario,
+             viewport);
+-        shell.SetPluginWindowBackendStatus(
+-            CreatePluginWindowBackendStatus(commandLine.PluginWindowBackendMode));
++        shell.SetPluginWindowBackendStatus(pluginWindowBackend.Status);
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+ 
+         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
+         host.Run(
+             () =>
+             {
+                 composition.BeginDrawFrame();
+                 shell.Draw();
+             },
+             () =>
+@@ -196,21 +195,21 @@ internal static class Program
+                     ScreenshotFileName.CreatePngName(
+                         request.Mode,
+                         request.Scenario.Key,
+                         request.Viewport,
+                         request.CaptureTarget));
+                 try
+                 {
+                     var crop = CalculateInteractiveCrop(
+                         request,
+                         shell.LastRenderResult,
+-                        pluginWindowHost,
++                        pluginWindowBackend,
+                         ImGui.GetIO().DisplaySize,
+                         host.FramebufferSize);
+ 
+                     CaptureInteractiveScreenshot(
+                         outputPath,
+                         temporaryOutputPath => host.CapturePng(
+                             temporaryOutputPath,
+                             crop));
+                     shell.SetLastScreenshotPath(outputPath);
+                 }
+@@ -278,21 +277,21 @@ internal static class Program
+                     outputDirectory,
+                     commandLine.CaptureTarget ?? GetCaptureTarget(mode)));
+             }
+         }
+ 
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+         var runner = new BatchScreenshotRunner(
+             sourceConfiguration,
+             editableConfiguration,
+             fontSelection,
+-            () => CreatePreviewPluginWindowHost(
++            () => CreateStandalonePluginWindowPreviewBackend(
+                 editableConfiguration,
+                 languages,
+                 session.ClonedDatabasePath));
+         runner.Run(requests);
+         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
+     }
+ 
+     private static string ResolveOutputDirectory(string? outputDirectory)
+     {
+         return string.IsNullOrWhiteSpace(outputDirectory)
+@@ -322,53 +321,34 @@ internal static class Program
+             .Options;
+         return new EchoglossianDbContext(options);
+     }
+ 
+     /// <summary>
+     /// Creates real plugin windows over preview-owned configuration and database state.
+     /// </summary>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     /// <param name="languages">The available preview languages.</param>
+     /// <param name="databasePath">The optional preview database snapshot.</param>
+-    /// <returns>The preview-owned plugin-window host.</returns>
+-    private static PreviewPluginWindowHost CreatePreviewPluginWindowHost(
++    /// <returns>The standalone plugin-window preview backend.</returns>
++    private static IPluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
+         Config configuration,
+         IReadOnlyDictionary<int, LanguageInfo> languages,
+         string? databasePath)
+     {
+         var configWindowContext = CreatePreviewPluginWindowContext(
+             configuration,
+             languages);
+-        return new PreviewPluginWindowHost(
++        return StandalonePluginWindowPreviewBackend.Create(new PreviewPluginWindowHost(
+             new PluginConfigWindowRenderer(),
+             configWindowContext,
+             CreatePreviewDbContext(databasePath),
+-            configuration);
+-    }
+-
+-    /// <summary>
+-    ///     Creates the shell-visible backend status for the current standalone host.
+-    /// </summary>
+-    /// <param name="requestedMode">The backend requested from the command line.</param>
+-    /// <returns>The current standalone backend status.</returns>
+-    private static PluginWindowBackendStatus CreatePluginWindowBackendStatus(
+-        PluginWindowPreviewBackendMode requestedMode)
+-    {
+-        var hostedRequested = requestedMode != PluginWindowPreviewBackendMode.Standalone;
+-        return new PluginWindowBackendStatus(
+-            requestedMode,
+-            PluginWindowPreviewBackendMode.Standalone,
+-            hostedRequested,
+-            HostedAvailable: false,
+-            hostedRequested
+-                ? "Backend selection is not initialized."
+-                : null);
++            configuration));
+     }
+ 
+     /// <summary>
+     /// Creates config-window dependencies with explicit unavailable preview imagery.
+     /// </summary>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     /// <param name="languages">The available preview languages.</param>
+     /// <returns>The preview-safe config-window context.</returns>
+     internal static PluginConfigWindowContext CreatePreviewPluginWindowContext(
+         Config configuration,
+@@ -687,48 +667,48 @@ internal static class Program
+ 
+         return fallbackLanguage ?? throw new InvalidOperationException(
+             "Preview language dictionary is empty.");
+     }
+ 
+     /// <summary>
+     /// Resolves an interactive screenshot crop from its explicit capture target.
+     /// </summary>
+     /// <param name="request">The interactive screenshot request.</param>
+     /// <param name="renderResult">The latest overlay draw result.</param>
+-    /// <param name="pluginWindowHost">The real plugin-window host.</param>
++    /// <param name="pluginWindowBackend">The plugin-window preview backend.</param>
+     /// <param name="displaySize">The logical ImGui display dimensions.</param>
+     /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
+     /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
+     private static Rectangle? CalculateInteractiveCrop(
+         ScreenshotRequest request,
+         TranslationOverlayRenderResult renderResult,
+-        PreviewPluginWindowHost pluginWindowHost,
++        IPluginWindowPreviewBackend pluginWindowBackend,
+         Vector2 displaySize,
+         Vector2 framebufferSize)
+     {
+         var crop = request.CaptureTarget switch
+         {
+             PreviewCaptureTarget.OverlaySurface => CalculateInteractiveSurfaceCrop(
+                 request,
+                 renderResult,
+                 displaySize,
+                 framebufferSize),
+             PreviewCaptureTarget.ConfigWindow => CalculateInteractiveWindowCrop(
+-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
++                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
+                 displaySize,
+                 framebufferSize),
+             PreviewCaptureTarget.DbManagerWindow => CalculateInteractiveWindowCrop(
+-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
++                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
+                 displaySize,
+                 framebufferSize),
+             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateInteractiveWindowCrop(
+-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
++                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                 displaySize,
+                 framebufferSize),
+             _ => null,
+         };
+ 
+         return PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget)
+             ? BatchScreenshotRunner.RequireWindowCrop(crop, request.CaptureTarget)
+             : crop;
+     }
+ 
+diff --git a/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs b/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs
+index 9d9143a..e84afbd 100644
+--- a/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs
++++ b/Echoglossian.Previewer/Screenshots/BatchScreenshotRunner.cs
+@@ -1,20 +1,21 @@
+ // <copyright file="BatchScreenshotRunner.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
+ using Dalamud.Bindings.ImGui;
+ 
+ using Echoglossian.Previewer.Configuration;
+ using Echoglossian.Previewer.Fonts;
+ using Echoglossian.Previewer.Hosting;
++using Echoglossian.Previewer.PluginWindows;
+ using Echoglossian.Previewer.Scenarios;
+ using Echoglossian.Previewer.UI;
+ using Echoglossian.UIOverlays.TextPresentation;
+ using Echoglossian.UIOverlays.TranslationOverlay;
+ 
+ using System.Drawing;
+ using System.Numerics;
+ using System.Diagnostics;
+ using System.Text.Json;
+ using System.Text.Json.Serialization;
+@@ -22,42 +23,42 @@ using System.Text.Json.Serialization;
+ namespace Echoglossian.Previewer.Screenshots;
+ 
+ /// <summary>
+ /// Runs deterministic preview screenshot captures.
+ /// </summary>
+ internal sealed class BatchScreenshotRunner
+ {
+     private readonly PreviewConfiguration sourceConfiguration;
+     private readonly Config editableConfiguration;
+     private readonly PreviewFontSelection fontSelection;
+-    private readonly Func<PreviewPluginWindowHost>? pluginWindowHostFactory;
++    private readonly Func<IPluginWindowPreviewBackend>? pluginWindowBackendFactory;
+ 
+     /// <summary>
+     /// Initializes a new instance of the <see cref="BatchScreenshotRunner"/> class.
+     /// </summary>
+     /// <param name="sourceConfiguration">The loaded preview configuration source.</param>
+     /// <param name="editableConfiguration">The isolated editable preview configuration.</param>
+     /// <param name="fontSelection">The resolved preview fonts.</param>
+-    /// <param name="pluginWindowHostFactory">Creates preview-owned plugin windows when needed.</param>
++    /// <param name="pluginWindowBackendFactory">Creates preview-owned plugin-window backends when needed.</param>
+     internal BatchScreenshotRunner(
+         PreviewConfiguration sourceConfiguration,
+         Config editableConfiguration,
+         PreviewFontSelection fontSelection,
+-        Func<PreviewPluginWindowHost>? pluginWindowHostFactory = null)
++        Func<IPluginWindowPreviewBackend>? pluginWindowBackendFactory = null)
+     {
+         this.sourceConfiguration = sourceConfiguration ??
+             throw new ArgumentNullException(nameof(sourceConfiguration));
+         this.editableConfiguration = editableConfiguration ??
+             throw new ArgumentNullException(nameof(editableConfiguration));
+         this.fontSelection = fontSelection ??
+             throw new ArgumentNullException(nameof(fontSelection));
+-        this.pluginWindowHostFactory = pluginWindowHostFactory;
++        this.pluginWindowBackendFactory = pluginWindowBackendFactory;
+     }
+ 
+     /// <summary>
+     /// Captures all requested scenarios and writes a sidecar manifest.
+     /// </summary>
+     /// <param name="requests">The screenshot requests to run.</param>
+     internal void Run(IReadOnlyList<ScreenshotRequest> requests)
+     {
+         ArgumentNullException.ThrowIfNull(requests);
+         if (requests.Count == 0)
+@@ -387,24 +388,24 @@ internal sealed class BatchScreenshotRunner
+         var captureLayoutSize = PreviewPluginWindowHost.GetCaptureLayoutSize(
+             request.CaptureTarget);
+         using PreviewHost host = new(
+             new PreviewHostOptions
+             {
+                 Width = Math.Max(request.Viewport.Width, captureLayoutSize.Width),
+                 Height = Math.Max(request.Viewport.Height, captureLayoutSize.Height),
+                 Title = "Echoglossian Screenshot Capture",
+                 StartHidden = true,
+             });
+-        using var pluginWindowHost = this.CreatePluginWindowHost(request.CaptureTarget);
+-        if (pluginWindowHost is not null)
++        using var pluginWindowBackend = this.CreatePluginWindowBackend(request.CaptureTarget);
++        if (pluginWindowBackend is not null)
+         {
+-            pluginWindowHost.BeginCapture(request.CaptureTarget);
++            pluginWindowBackend.BeginCapture(request.CaptureTarget);
+         }
+ 
+         var fontRuntime = new PreviewFontRuntime(
+             this.fontSelection,
+             string.Join(
+                 Environment.NewLine,
+                 PreviewScenarioCatalog.Defaults.Select(scenario => scenario.Title)),
+             string.Join(
+                 Environment.NewLine,
+                 PreviewScenarioCatalog.Defaults.Select(scenario => scenario.TranslatedText)),
+@@ -429,104 +430,104 @@ internal sealed class BatchScreenshotRunner
+             composition.BeginDrawFrame();
+             if (!PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget))
+             {
+                 renderResult = DrawCaptureFrame(
+                     canvas,
+                     state,
+                     this.editableConfiguration,
+                     request.Viewport);
+             }
+ 
+-            pluginWindowHost?.Draw(workbenchState);
++            pluginWindowBackend?.Draw(workbenchState);
+         };
+         var stopwatch = Stopwatch.StartNew();
+         while (!IsCaptureReady(
+                 request.CaptureTarget,
+                 renderResult.WasDrawn,
+-                IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)) &&
++                IsCaptureTargetReady(request.CaptureTarget, pluginWindowBackend)) &&
+             stopwatch.Elapsed < TimeSpan.FromSeconds(5) &&
+-            pluginWindowHost?.CaptureFailed != true)
++            pluginWindowBackend?.CaptureFailed != true)
+         {
+             host.RunFrame(draw);
+             if (!IsCaptureReady(
+                     request.CaptureTarget,
+                     renderResult.WasDrawn,
+-                    IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)))
++                    IsCaptureTargetReady(request.CaptureTarget, pluginWindowBackend)))
+             {
+                 Thread.Sleep(25);
+             }
+         }
+ 
+         if (!PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget) &&
+             !renderResult.WasDrawn)
+         {
+             throw new InvalidOperationException(
+                 $"Preview screenshot scenario did not render: {request.Scenario.Key}");
+         }
+ 
+         if (!IsCaptureReady(
+                 request.CaptureTarget,
+                 renderResult.WasDrawn,
+-                IsCaptureTargetReady(request.CaptureTarget, pluginWindowHost)))
++                IsCaptureTargetReady(request.CaptureTarget, pluginWindowBackend)))
+         {
+             throw new InvalidOperationException(
+                 $"Preview screenshot target did not produce stable bounds: " +
+                 request.CaptureTarget);
+         }
+ 
+         host.CaptureFramePng(
+             draw,
+             outputPath,
+             sourceTextureSize => this.CalculateCrop(
+                 request,
+                 renderResult,
+-                pluginWindowHost,
++                pluginWindowBackend,
+                 ImGui.GetIO().DisplaySize,
+                 sourceTextureSize));
+ 
+         return new CapturedScreenshot(outputPath, renderResult);
+     }
+ 
+     /// <summary>
+     /// Resolves the physical crop for the requested preview target.
+     /// </summary>
+     /// <param name="request">The screenshot request.</param>
+     /// <param name="renderResult">The overlay draw result.</param>
+-    /// <param name="pluginWindowHost">The optional real plugin-window host.</param>
++    /// <param name="pluginWindowBackend">The optional plugin-window preview backend.</param>
+     /// <param name="displaySize">The logical ImGui display dimensions.</param>
+     /// <param name="sourceTextureSize">The physical offscreen capture texture dimensions.</param>
+     /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
+     private Rectangle? CalculateCrop(
+         ScreenshotRequest request,
+         TranslationOverlayRenderResult renderResult,
+-        PreviewPluginWindowHost? pluginWindowHost,
++        IPluginWindowPreviewBackend? pluginWindowBackend,
+         Vector2 displaySize,
+         Vector2 sourceTextureSize)
+     {
+         var crop = request.CaptureTarget switch
+         {
+             PreviewCaptureTarget.OverlaySurface => VeldridScreenshotCapture.CalculateSurfaceCrop(
+                 renderResult,
+                 request.Viewport.Width,
+                 request.Viewport.Height,
+                 request.SurfaceMargin,
+                 framebufferScale: 1f),
+             PreviewCaptureTarget.ConfigWindow => CalculateWindowCrop(
+-                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
++                pluginWindowBackend?.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
+                 displaySize,
+                 sourceTextureSize),
+             PreviewCaptureTarget.DbManagerWindow => CalculateWindowCrop(
+-                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
++                pluginWindowBackend?.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
+                 displaySize,
+                 sourceTextureSize),
+             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateWindowCrop(
+-                pluginWindowHost?.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
++                pluginWindowBackend?.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                 displaySize,
+                 sourceTextureSize),
+             _ => null,
+         };
+ 
+         return PreviewPluginWindowHost.IsPluginWindowTarget(request.CaptureTarget)
+             ? RequireWindowCrop(crop, request.CaptureTarget)
+             : crop;
+     }
+ 
+@@ -597,46 +598,46 @@ internal sealed class BatchScreenshotRunner
+         ArgumentNullException.ThrowIfNull(manifest);
+         var options = new JsonSerializerOptions { WriteIndented = true };
+         options.Converters.Add(new JsonStringEnumConverter());
+         return JsonSerializer.Serialize(manifest, options);
+     }
+ 
+     /// <summary>
+     /// Creates real plugin windows only for a plugin-window screenshot target.
+     /// </summary>
+     /// <param name="target">The requested capture target.</param>
+-    /// <returns>The plugin-window host, or <see langword="null" /> when unnecessary.</returns>
+-    private PreviewPluginWindowHost? CreatePluginWindowHost(PreviewCaptureTarget target)
++    /// <returns>The plugin-window preview backend, or <see langword="null" /> when unnecessary.</returns>
++    private IPluginWindowPreviewBackend? CreatePluginWindowBackend(PreviewCaptureTarget target)
+     {
+         if (target is not (PreviewCaptureTarget.ConfigWindow or
+             PreviewCaptureTarget.DbManagerWindow or
+             PreviewCaptureTarget.TranslatorMetricsWindow))
+         {
+             return null;
+         }
+ 
+-        return this.pluginWindowHostFactory?.Invoke() ?? throw new InvalidOperationException(
+-            "Plugin-window screenshot capture requires a preview window host.");
++        return this.pluginWindowBackendFactory?.Invoke() ?? throw new InvalidOperationException(
++            "Plugin-window screenshot capture requires a preview window backend.");
+     }
+ 
+     /// <summary>
+     /// Determines whether the requested target is ready for capture.
+     /// </summary>
+     /// <param name="target">The requested capture target.</param>
+-    /// <param name="pluginWindowHost">The optional plugin-window host.</param>
++    /// <param name="pluginWindowBackend">The optional plugin-window preview backend.</param>
+     /// <returns><see langword="true" /> when no stabilization is needed or stable bounds exist.</returns>
+     private static bool IsCaptureTargetReady(
+         PreviewCaptureTarget target,
+-        PreviewPluginWindowHost? pluginWindowHost)
++        IPluginWindowPreviewBackend? pluginWindowBackend)
+     {
+         return !PreviewPluginWindowHost.IsPluginWindowTarget(target) ||
+-            pluginWindowHost?.TryGetStableCrop(target) is not null;
++            pluginWindowBackend?.TryGetStableCrop(target) is not null;
+     }
+ 
+     /// <summary>
+     /// Determines whether a capture target has met its target-specific readiness condition.
+     /// </summary>
+     /// <param name="target">The requested capture target.</param>
+     /// <param name="overlayWasDrawn"><see langword="true" /> when the overlay rendered successfully.</param>
+     /// <param name="hasStableWindowBounds"><see langword="true" /> when the requested plugin window has stable bounds.</param>
+     /// <returns><see langword="true" /> when the target is ready to capture; otherwise, <see langword="false" />.</returns>
+     internal static bool IsCaptureReady(
+diff --git a/Echoglossian.Previewer/UI/PreviewPluginWindowHost.cs b/Echoglossian.Previewer/UI/PreviewPluginWindowHost.cs
+index cd76261..f65521a 100644
+--- a/Echoglossian.Previewer/UI/PreviewPluginWindowHost.cs
++++ b/Echoglossian.Previewer/UI/PreviewPluginWindowHost.cs
+@@ -25,22 +25,31 @@ internal sealed class PreviewPluginWindowHost : IDisposable
+     private const int MaximumCaptureObservationFrames = 180;
+     private readonly PluginConfigWindowRenderer configWindowRenderer;
+     private readonly EchoglossianDbContext? dbContext;
+     private readonly DbEditorWindow? dbEditorWindow;
+     private readonly TranslatorMetricsWindow translatorMetricsWindow;
+     private readonly PluginConfigWindowContext configWindowContext;
+     private readonly PreviewCaptureStabilityTracker captureStabilityTracker = new(
+         RequiredCaptureStableFrames,
+         MaximumCaptureObservationFrames);
+     private RectangleF? configWindowBounds;
++    private readonly bool? dbManagerAvailableForTests;
+     private bool disposed;
+ 
++    private PreviewPluginWindowHost(bool dbManagerAvailable)
++    {
++        this.configWindowRenderer = null!;
++        this.configWindowContext = null!;
++        this.translatorMetricsWindow = null!;
++        this.dbManagerAvailableForTests = dbManagerAvailable;
++    }
++
+     /// <summary>
+     /// Initializes a new instance of the <see cref="PreviewPluginWindowHost" /> class.
+     /// </summary>
+     /// <param name="configWindowRenderer">The shared real config-window renderer.</param>
+     /// <param name="configWindowContext">Preview-safe config-window dependencies.</param>
+     /// <param name="dbContext">The optional preview-owned database context.</param>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     internal PreviewPluginWindowHost(
+         PluginConfigWindowRenderer configWindowRenderer,
+         PluginConfigWindowContext configWindowContext,
+@@ -64,21 +73,32 @@ internal sealed class PreviewPluginWindowHost : IDisposable
+                     false,
+                     null,
+                     "Preview",
+                     "Preview mode does not retranslate live dialogue.")),
+             runtimeActionsAvailable: false);
+     }
+ 
+     /// <summary>
+     /// Gets a value indicating whether a database snapshot is available.
+     /// </summary>
+-    internal bool DbManagerAvailable => this.dbEditorWindow is not null;
++    internal bool DbManagerAvailable =>
++        this.dbManagerAvailableForTests ?? this.dbEditorWindow is not null;
++
++    /// <summary>
++    /// Creates a host for status-focused tests without runtime window dependencies.
++    /// </summary>
++    /// <param name="dbManagerAvailable">Whether the database manager is available.</param>
++    /// <returns>A test-only preview plugin-window host.</returns>
++    internal static PreviewPluginWindowHost CreateForTests(bool dbManagerAvailable)
++    {
++        return new PreviewPluginWindowHost(dbManagerAvailable);
++    }
+ 
+     /// <summary>
+     /// Gets a value indicating whether the active target failed to stabilize.
+     /// </summary>
+     internal bool CaptureFailed => this.captureStabilityTracker.CaptureFailed;
+ 
+     /// <summary>
+     /// Starts deterministic layout and stabilization for one plugin window.
+     /// </summary>
+     /// <param name="target">The requested plugin-window target.</param>
+diff --git a/Echoglossian.Previewer/UI/PreviewShell.cs b/Echoglossian.Previewer/UI/PreviewShell.cs
+index 95bd16a..eb0e21e 100644
+--- a/Echoglossian.Previewer/UI/PreviewShell.cs
++++ b/Echoglossian.Previewer/UI/PreviewShell.cs
+@@ -20,21 +20,21 @@ namespace Echoglossian.Previewer.UI;
+ /// <summary>
+ /// Draws the interactive previewer shell around the shared overlay renderer.
+ /// </summary>
+ internal sealed class PreviewShell : IDisposable
+ {
+     private readonly PreviewConfiguration sourceConfiguration;
+     private readonly Config editableConfiguration;
+     private readonly PreviewFontSelection fontSelection;
+     private readonly IReadOnlyList<string> sessionDiagnostics;
+     private readonly PreviewCanvas canvas;
+-    private readonly PreviewPluginWindowHost pluginWindowHost;
++    private readonly IPluginWindowPreviewBackend pluginWindowBackend;
+     private readonly PreviewWorkbenchState workbenchState;
+     private readonly PreviewShellState state;
+     private readonly int appliedLanguageId;
+     private readonly int appliedFontSize;
+     private PluginWindowBackendStatus pluginWindowBackendStatus = new(
+         PluginWindowPreviewBackendMode.Auto,
+         PluginWindowPreviewBackendMode.Standalone,
+         HostedRequested: true,
+         HostedAvailable: false,
+         FallbackReason: "Backend selection is not initialized.");
+@@ -48,46 +48,46 @@ internal sealed class PreviewShell : IDisposable
+     private bool disposed;
+ 
+     /// <summary>
+     /// Initializes a new instance of the <see cref="PreviewShell" /> class.
+     /// </summary>
+     /// <param name="sourceConfiguration">The read-only source configuration.</param>
+     /// <param name="editableConfiguration">The preview-owned editable configuration.</param>
+     /// <param name="fontSelection">The resolved preview font selection.</param>
+     /// <param name="sessionDiagnostics">The configuration and database session diagnostics.</param>
+     /// <param name="renderer">The shared overlay renderer.</param>
+-    /// <param name="pluginWindowHost">The real plugin-window host.</param>
++    /// <param name="pluginWindowBackend">The plugin-window preview backend.</param>
+     /// <param name="scenario">The initial scenario.</param>
+     /// <param name="viewport">The initial logical viewport.</param>
+     internal PreviewShell(
+         PreviewConfiguration sourceConfiguration,
+         Config editableConfiguration,
+         PreviewFontSelection fontSelection,
+         IReadOnlyList<string> sessionDiagnostics,
+         TranslationOverlayRenderer renderer,
+-        PreviewPluginWindowHost pluginWindowHost,
++        IPluginWindowPreviewBackend pluginWindowBackend,
+         PreviewScenario scenario,
+         PreviewViewportPreset viewport)
+     {
+         this.sourceConfiguration = sourceConfiguration ??
+             throw new ArgumentNullException(nameof(sourceConfiguration));
+         this.editableConfiguration = editableConfiguration ??
+             throw new ArgumentNullException(nameof(editableConfiguration));
+         this.fontSelection = fontSelection ??
+             throw new ArgumentNullException(nameof(fontSelection));
+         this.sessionDiagnostics = sessionDiagnostics ??
+             throw new ArgumentNullException(nameof(sessionDiagnostics));
+         this.appliedLanguageId = editableConfiguration.Lang;
+         this.appliedFontSize = fontSelection.FontSize;
+         this.canvas = new PreviewCanvas(renderer);
+-        this.pluginWindowHost = pluginWindowHost ??
+-            throw new ArgumentNullException(nameof(pluginWindowHost));
++        this.pluginWindowBackend = pluginWindowBackend ??
++            throw new ArgumentNullException(nameof(pluginWindowBackend));
+         this.workbenchState = PreviewWorkbenchState.CreateDefault(viewport);
+         this.state = PreviewShellState.FromScenario(
+             scenario ?? throw new ArgumentNullException(nameof(scenario)),
+             viewport ?? throw new ArgumentNullException(nameof(viewport)));
+     }
+ 
+     /// <summary>
+     /// Draws one previewer shell frame.
+     /// </summary>
+     internal void Draw()
+@@ -119,21 +119,21 @@ internal sealed class PreviewShell : IDisposable
+                 ImGui.GetContentRegionAvail());
+         }
+         finally
+         {
+             this.state.Visible = scenarioVisible;
+         }
+ 
+         ImGui.EndChild();
+ 
+         ImGui.End();
+-        this.pluginWindowHost.Draw(this.workbenchState);
++        this.pluginWindowBackend.Draw(this.workbenchState);
+     }
+ 
+     /// <summary>
+     ///     Updates the plugin-window backend status shown in the fidelity summary.
+     /// </summary>
+     /// <param name="status">The current backend status.</param>
+     internal void SetPluginWindowBackendStatus(PluginWindowBackendStatus status)
+     {
+         this.pluginWindowBackendStatus = status ??
+             throw new ArgumentNullException(nameof(status));
+@@ -151,39 +151,39 @@ internal sealed class PreviewShell : IDisposable
+     {
+         if (this.pendingScreenshotRequest is not { } pendingRequest)
+         {
+             request = null!;
+             return false;
+         }
+ 
+         if (PreviewPluginWindowHost.IsPluginWindowTarget(
+                 pendingRequest.CaptureTarget))
+         {
+-            if (this.pluginWindowHost.CaptureFailed)
++            if (this.pluginWindowBackend.CaptureFailed)
+             {
+                 this.pendingScreenshotRequest = null;
+-                this.pluginWindowHost.EndCapture();
++                this.pluginWindowBackend.EndCapture();
+                 this.screenshotStatus =
+                     $"Screenshot failed: {pendingRequest.CaptureTarget} " +
+                     "did not produce stable bounds.";
+                 request = null!;
+                 return false;
+             }
+ 
+-            if (this.pluginWindowHost.TryGetStableCrop(
++            if (this.pluginWindowBackend.TryGetStableCrop(
+                     pendingRequest.CaptureTarget) is null)
+             {
+                 request = null!;
+                 return false;
+             }
+ 
+-            this.pluginWindowHost.EndCapture();
++            this.pluginWindowBackend.EndCapture();
+         }
+ 
+         this.pendingScreenshotRequest = null;
+         request = new ScreenshotRequest(
+             pendingRequest.Mode,
+             this.state.CreateScenarioSnapshot(),
+             this.state.Viewport,
+             outputDirectory,
+             pendingRequest.CaptureTarget);
+         return true;
+@@ -248,31 +248,31 @@ internal sealed class PreviewShell : IDisposable
+         ImGui.TextUnformatted("Workbench");
+         this.DrawToggle(
+             "Overlay visible",
+             this.workbenchState.OverlayVisible,
+             value => this.workbenchState.OverlayVisible = value);
+         this.DrawToggle(
+             "Config",
+             this.workbenchState.ConfigWindowOpen,
+             value => this.workbenchState.ConfigWindowOpen = value);
+ 
+-        if (!this.pluginWindowHost.DbManagerAvailable)
++        if (!this.pluginWindowBackend.DbManagerAvailable)
+         {
+             ImGui.BeginDisabled();
+         }
+ 
+         this.DrawToggle(
+             "DB Manager",
+             this.workbenchState.DbManagerWindowOpen,
+             value => this.workbenchState.DbManagerWindowOpen = value);
+ 
+-        if (!this.pluginWindowHost.DbManagerAvailable)
++        if (!this.pluginWindowBackend.DbManagerAvailable)
+         {
+             ImGui.EndDisabled();
+             ImGui.TextDisabled("DB snapshot unavailable");
+         }
+ 
+         this.DrawToggle(
+             "Translator Metrics / Debugger",
+             this.workbenchState.TranslatorMetricsWindowOpen,
+             value => this.workbenchState.TranslatorMetricsWindowOpen = value);
+ 
+@@ -315,33 +315,33 @@ internal sealed class PreviewShell : IDisposable
+                 PreviewCaptureTarget.OverlaySurface);
+         }
+ 
+         if (ImGui.Button("Save config window screenshot"))
+         {
+             this.QueueScreenshot(
+                 ScreenshotMode.Full,
+                 PreviewCaptureTarget.ConfigWindow);
+         }
+ 
+-        if (!this.pluginWindowHost.DbManagerAvailable)
++        if (!this.pluginWindowBackend.DbManagerAvailable)
+         {
+             ImGui.BeginDisabled();
+         }
+ 
+         if (ImGui.Button("Save DB Manager window screenshot"))
+         {
+             this.QueueScreenshot(
+                 ScreenshotMode.Full,
+                 PreviewCaptureTarget.DbManagerWindow);
+         }
+ 
+-        if (!this.pluginWindowHost.DbManagerAvailable)
++        if (!this.pluginWindowBackend.DbManagerAvailable)
+         {
+             ImGui.EndDisabled();
+         }
+ 
+         if (ImGui.Button("Save Translator Metrics window screenshot"))
+         {
+             this.QueueScreenshot(
+                 ScreenshotMode.Full,
+                 PreviewCaptureTarget.TranslatorMetricsWindow);
+         }
+@@ -357,37 +357,37 @@ internal sealed class PreviewShell : IDisposable
+ 
+     /// <summary>
+     /// Queues a screenshot and starts deterministic plugin-window stabilization when needed.
+     /// </summary>
+     /// <param name="mode">The screenshot mode.</param>
+     /// <param name="target">The requested capture target.</param>
+     private void QueueScreenshot(
+         ScreenshotMode mode,
+         PreviewCaptureTarget target)
+     {
+-        this.pluginWindowHost.EndCapture();
++        this.pluginWindowBackend.EndCapture();
+         if (PreviewPluginWindowHost.IsPluginWindowTarget(target))
+         {
+             switch (target)
+             {
+                 case PreviewCaptureTarget.ConfigWindow:
+                     this.workbenchState.ConfigWindowOpen = true;
+                     break;
+                 case PreviewCaptureTarget.DbManagerWindow:
+                     this.workbenchState.DbManagerWindowOpen = true;
+                     break;
+                 case PreviewCaptureTarget.TranslatorMetricsWindow:
+                     this.workbenchState.TranslatorMetricsWindowOpen = true;
+                     break;
+             }
+ 
+-            this.pluginWindowHost.BeginCapture(target);
++            this.pluginWindowBackend.BeginCapture(target);
+             this.screenshotStatus =
+                 $"Waiting for stable {target} bounds before capture.";
+         }
+ 
+         this.pendingScreenshotRequest = new PreviewCaptureRequest(mode, target);
+     }
+ 
+     private void DrawScenarioCombo()
+     {
+         if (ImGui.BeginCombo("Surface", this.state.DisplayName))

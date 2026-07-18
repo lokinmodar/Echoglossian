@@ -60,6 +60,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalaMock.Core" Version="6.1.7" />
+    <ProjectReference Include="..\\vendor\\DalaMock\\DalaMock\\DalaMock.Core.csproj" />
   </ItemGroup>
 </Project>

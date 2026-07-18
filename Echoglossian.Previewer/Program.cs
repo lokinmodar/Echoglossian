@@ -7,10 +7,12 @@ using Dalamud.Bindings.ImGui;
 
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.LanguagesHandling;
+using Echoglossian.Mock.Hosting;
 using Echoglossian.PluginUI;
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
 using Echoglossian.Previewer.Hosting;
+using Echoglossian.Previewer.PluginWindows;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.Previewer.Session;
@@ -60,7 +62,7 @@ internal static class Program
             }
             else if (!commandLine.BindingSmoke && !commandLine.HostSmoke)
             {
-                RunInteractivePreview(commandLine);
+                RunInteractivePreviewAsync(commandLine).GetAwaiter().GetResult();
             }
 
             return 0;
@@ -117,7 +119,7 @@ internal static class Program
     ///     Runs the interactive preview shell.
     /// </summary>
     /// <param name="commandLine">The parsed command line.</param>
-    private static void RunInteractivePreview(PreviewCommandLine commandLine)
+    private static async Task RunInteractivePreviewAsync(PreviewCommandLine commandLine)
     {
         using var session = PreviewSessionLoader.Load(
             new PreviewSessionSourceOptions(
@@ -157,70 +159,91 @@ internal static class Program
             editableConfiguration,
             fontRuntime,
             fontSelection);
-        using var pluginWindowHost = CreatePreviewPluginWindowHost(
-            editableConfiguration,
-            languages,
-            session.ClonedDatabasePath);
-        using var shell = new PreviewShell(
-            sourceConfiguration,
-            editableConfiguration,
-            fontSelection,
-            session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
-            composition.Renderer,
-            pluginWindowHost,
-            scenario,
-            viewport);
         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
-
         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
-        host.Run(
-            () =>
-            {
-                composition.BeginDrawFrame();
-                shell.Draw();
-            },
-            () =>
-            {
-                if (!shell.TryConsumeScreenshotRequest(
-                    interactiveOutputDirectory,
-                    out var request))
+        var requestedPluginWindowBackendMode = commandLine.PluginWindowBackendMode;
+        var restartRequested = false;
+        do
+        {
+            restartRequested = false;
+            var backendCreation = await CreatePluginWindowPreviewBackendAsync(
+                requestedPluginWindowBackendMode,
+                editableConfiguration,
+                languages,
+                session);
+            using var pluginWindowBackend = backendCreation.Backend;
+            using var shell = new PreviewShell(
+                sourceConfiguration,
+                editableConfiguration,
+                fontSelection,
+                session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
+                composition.Renderer,
+                pluginWindowBackend,
+                scenario,
+                viewport);
+            shell.SetPluginWindowBackendStatus(backendCreation.Status);
+            host.Run(
+                () =>
                 {
-                    return;
-                }
+                    composition.BeginDrawFrame();
+                    shell.Draw();
+                },
+                () =>
+                {
+                    if (!shell.TryConsumeScreenshotRequest(
+                        interactiveOutputDirectory,
+                        out var request))
+                    {
+                        return;
+                    }
 
-                var outputPath = Path.Combine(
-                    request.OutputDirectory,
-                    ScreenshotFileName.CreatePngName(
-                        request.Mode,
-                        request.Scenario.Key,
-                        request.Viewport,
-                        request.CaptureTarget));
-                try
-                {
-                    var crop = CalculateInteractiveCrop(
-                        request,
-                        shell.LastRenderResult,
-                        pluginWindowHost,
-                        ImGui.GetIO().DisplaySize,
-                        host.FramebufferSize);
+                    var outputPath = Path.Combine(
+                        request.OutputDirectory,
+                        ScreenshotFileName.CreatePngName(
+                            request.Mode,
+                            request.Scenario.Key,
+                            request.Viewport,
+                            request.CaptureTarget));
+                    try
+                    {
+                        var crop = CalculateInteractiveCrop(
+                            request,
+                            shell.LastRenderResult,
+                            pluginWindowBackend,
+                            ImGui.GetIO().DisplaySize,
+                            host.FramebufferSize);
 
-                    CaptureInteractiveScreenshot(
-                        outputPath,
-                        temporaryOutputPath => host.CapturePng(
-                            temporaryOutputPath,
-                            crop));
-                    shell.SetLastScreenshotPath(outputPath);
-                }
-                catch (Exception exception) when (
-                    IsExpectedInteractiveScreenshotFailure(exception))
+                        CaptureInteractiveScreenshot(
+                            outputPath,
+                            temporaryOutputPath => host.CapturePng(
+                                temporaryOutputPath,
+                                crop));
+                        shell.SetLastScreenshotPath(outputPath);
+                    }
+                    catch (Exception exception) when (
+                        IsExpectedInteractiveScreenshotFailure(exception))
+                    {
+                        HandleInteractiveScreenshotFailure(
+                            request.CaptureTarget,
+                            outputPath,
+                            exception,
+                            shell.SetLastScreenshotFailure);
+                    }
+                },
+                () =>
                 {
-                    HandleInteractiveScreenshotFailure(
-                        request.CaptureTarget,
-                        outputPath,
-                        exception,
-                        shell.SetLastScreenshotFailure);
-                }
-            });
+                    if (!shell.TryConsumePluginWindowBackendRestartRequest(
+                        out var restartMode))
+                    {
+                        return true;
+                    }
+
+                    requestedPluginWindowBackendMode = restartMode;
+                    restartRequested = true;
+                    return false;
+                });
+        }
+        while (restartRequested);
     }
 
     /// <summary>
@@ -278,15 +301,28 @@ internal static class Program
         }
 
         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+        IPluginWindowPreviewBackend? pluginWindowBackend = null;
         var runner = new BatchScreenshotRunner(
             sourceConfiguration,
             editableConfiguration,
             fontSelection,
-            () => CreatePreviewPluginWindowHost(
-                editableConfiguration,
-                languages,
-                session.ClonedDatabasePath));
+            () =>
+            {
+                pluginWindowBackend = CreatePluginWindowPreviewBackendAsync(
+                    commandLine.PluginWindowBackendMode,
+                    editableConfiguration,
+                    languages,
+                    session).GetAwaiter().GetResult().Backend;
+                return pluginWindowBackend;
+            });
         runner.Run(requests);
+        if (pluginWindowBackend?.Status is { FallbackReason: not null } backendStatus)
+        {
+            Console.WriteLine(
+                $"Plugin window backend: requested={backendStatus.RequestedMode}, " +
+                $"effective={backendStatus.EffectiveMode}. Fallback: {backendStatus.FallbackReason}");
+        }
+
         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
     }
 
@@ -326,8 +362,8 @@ internal static class Program
     /// <param name="configuration">The preview-owned editable configuration.</param>
     /// <param name="languages">The available preview languages.</param>
     /// <param name="databasePath">The optional preview database snapshot.</param>
-    /// <returns>The preview-owned plugin-window host.</returns>
-    private static PreviewPluginWindowHost CreatePreviewPluginWindowHost(
+    /// <returns>The standalone plugin-window preview backend.</returns>
+    private static StandalonePluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
         Config configuration,
         IReadOnlyDictionary<int, LanguageInfo> languages,
         string? databasePath)
@@ -335,11 +371,63 @@ internal static class Program
         var configWindowContext = CreatePreviewPluginWindowContext(
             configuration,
             languages);
-        return new PreviewPluginWindowHost(
+        return StandalonePluginWindowPreviewBackend.Create(new PreviewPluginWindowHost(
             new PluginConfigWindowRenderer(),
             configWindowContext,
             CreatePreviewDbContext(databasePath),
-            configuration);
+            configuration));
+    }
+
+    /// <summary>
+    ///     Selects a preview backend using only preview-session-owned state.
+    /// </summary>
+    /// <param name="requestedMode">The backend mode requested by the operator.</param>
+    /// <param name="session">The preview-owned session artifacts.</param>
+    /// <returns>The selected backend and its effective status.</returns>
+    private static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
+        CreatePluginWindowPreviewBackendAsync(
+            PluginWindowPreviewBackendMode requestedMode,
+            Config configuration,
+            IReadOnlyDictionary<int, LanguageInfo> languages,
+            PreviewSessionArtifacts session)
+    {
+        return PluginWindowPreviewBackendFactory.CreateAsync(
+            requestedMode,
+            async () => await CreateDalaMockHostedPluginWindowPreviewBackendAsync(session),
+            () => CreateStandalonePluginWindowPreviewBackend(
+                configuration,
+                languages,
+                session.ClonedDatabasePath));
+    }
+
+    /// <summary>
+    ///     Starts DalaMock over the preview session for hosted plugin-window rendering.
+    /// </summary>
+    /// <param name="session">The preview-owned session artifacts.</param>
+    /// <returns>The DalaMock-hosted plugin-window backend.</returns>
+    private static async Task<DalaMockHostedPluginWindowPreviewBackend>
+        CreateDalaMockHostedPluginWindowPreviewBackendAsync(
+            PreviewSessionArtifacts session)
+    {
+        var stateRoot = new DirectoryInfo(session.WorkingDirectory);
+        var hostedSession = await HostedPreviewPluginSessionFactory.StartAsync(
+            new HostedPreviewPluginOptions(
+                stateRoot,
+                stateRoot.CreateSubdirectory(".dalamock"),
+                new FileInfo(session.ClonedConfigPath),
+                session.ClonedDatabasePath,
+                CreateWindow: false));
+
+        try
+        {
+            return new DalaMockHostedPluginWindowPreviewBackend(
+                hostedSession);
+        }
+        catch
+        {
+            hostedSession.Dispose();
+            throw;
+        }
     }
 
     /// <summary>
@@ -672,14 +760,14 @@ internal static class Program
     /// </summary>
     /// <param name="request">The interactive screenshot request.</param>
     /// <param name="renderResult">The latest overlay draw result.</param>
-    /// <param name="pluginWindowHost">The real plugin-window host.</param>
+    /// <param name="pluginWindowBackend">The plugin-window preview backend.</param>
     /// <param name="displaySize">The logical ImGui display dimensions.</param>
     /// <param name="framebufferSize">The physical framebuffer dimensions.</param>
     /// <returns>The requested crop, or <see langword="null" /> for the full frame.</returns>
     private static Rectangle? CalculateInteractiveCrop(
         ScreenshotRequest request,
         TranslationOverlayRenderResult renderResult,
-        PreviewPluginWindowHost pluginWindowHost,
+        IPluginWindowPreviewBackend pluginWindowBackend,
         Vector2 displaySize,
         Vector2 framebufferSize)
     {
@@ -691,15 +779,15 @@ internal static class Program
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.ConfigWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
+                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.ConfigWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.DbManagerWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
+                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.DbManagerWindow),
                 displaySize,
                 framebufferSize),
             PreviewCaptureTarget.TranslatorMetricsWindow => CalculateInteractiveWindowCrop(
-                pluginWindowHost.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
+                pluginWindowBackend.TryGetStableCrop(PreviewCaptureTarget.TranslatorMetricsWindow),
                 displaySize,
                 framebufferSize),
             _ => null,

@@ -78,11 +78,28 @@ session has no database snapshot. Preview edits and saves affect only the
 cloned session files; they are never written back automatically to either live
 source. There is no export-back flow in Phase 1.
 
+### Plugin Window Backend Selection
+
+Use `--plugin-window-backend auto|standalone|dalamock` to choose how `Config`,
+`DB Manager`, and `Translator Metrics / Debugger` are hosted.
+
+- `auto`: tries DalaMock first, then falls back to standalone with a visible
+  diagnostic.
+- `standalone`: always uses the previewer's existing plugin-window runtime.
+- `dalamock`: requires the DalaMock-hosted runtime and reports startup failure
+  instead of silently falling back.
+
+The interactive shell provides the same selection and restarts only the
+plugin-window backend when it changes. The selected backend affects plugin
+windows only; overlay preview remains on the existing standalone pipeline.
+
 ## CLI Options
 
 - `--binding-smoke`: creates and destroys a Dalamud ImGui context, then exits.
 - `--host-smoke`: creates a hidden 640x360 Veldrid ImGui host, draws one frame,
   then exits.
+- `--plugin-window-backend <auto|standalone|dalamock>`: selects the backend for
+  real plugin windows; defaults to `auto`.
 - `--config <path>`: loads an absolute or relative Echoglossian config JSON
   read-only.
 - `--db <path>`: creates a WAL-aware snapshot of an absolute or relative
@@ -141,10 +158,12 @@ Batch mode with a single viewport writes 12 overlay PNG files plus
 Use `--capture-target` or the interactive shell's target-specific buttons to
 capture Config, DB Manager, or Translator Metrics windows. Each window uses a
 fixed layout and must report stable non-empty bounds before capture; missing
-bounds fail without writing a misleading target-specific image. The manifest records scenario key, surface
-key, viewport, screenshot mode, capture target, presentation mode, config
-source label, font file names, font size, and PNG path. Screenshot output is
-under `artifacts/` and ignored by git.
+bounds fail without writing a misleading target-specific image. The manifest
+records scenario key, surface key, viewport, screenshot mode, capture target,
+presentation mode, config source label, font file names, font size, and PNG
+path. Plugin-window captures also record requested and effective backend modes
+plus any fallback reason. Screenshot output is under `artifacts/` and ignored
+by git.
 
 ## Presentation Modes
 
@@ -193,6 +212,9 @@ and addon bounds before claiming 1:1 visual fidelity.
   being loaded.
 - Host smoke fails on startup: verify Windows x64, the .NET 10 SDK, GPU driver,
   and Veldrid/SDL2 native dependencies restored correctly.
+- `auto` falls back to standalone: read the shell diagnostic and
+  `PluginWindowBackendFallbackReason` in `manifest.json`. Select `dalamock`
+  when a hosted startup failure must be surfaced without fallback.
 - Config loads as defaults: confirm the path passed to `--config` exists and is
   valid JSON. Diagnostics intentionally do not include config contents or API
   keys.

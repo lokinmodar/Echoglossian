@@ -7,6 +7,7 @@ using Dalamud.Bindings.ImGui;
 
 using Echoglossian.Previewer.Configuration;
 using Echoglossian.Previewer.Fonts;
+using Echoglossian.Previewer.PluginWindows;
 using Echoglossian.Previewer.Scenarios;
 using Echoglossian.Previewer.Screenshots;
 using Echoglossian.UIOverlays.TextPresentation;
@@ -26,11 +27,20 @@ internal sealed class PreviewShell : IDisposable
     private readonly PreviewFontSelection fontSelection;
     private readonly IReadOnlyList<string> sessionDiagnostics;
     private readonly PreviewCanvas canvas;
-    private readonly PreviewPluginWindowHost pluginWindowHost;
+    private readonly IPluginWindowPreviewBackend pluginWindowBackend;
     private readonly PreviewWorkbenchState workbenchState;
     private readonly PreviewShellState state;
     private readonly int appliedLanguageId;
     private readonly int appliedFontSize;
+    private PluginWindowPreviewBackendMode requestedPluginWindowBackendMode =
+        PluginWindowPreviewBackendMode.Auto;
+    private PluginWindowBackendStatus pluginWindowBackendStatus = new(
+        PluginWindowPreviewBackendMode.Auto,
+        PluginWindowPreviewBackendMode.Standalone,
+        HostedRequested: true,
+        HostedAvailable: false,
+        FallbackReason: "Backend selection is not initialized.");
+    private PluginWindowPreviewBackendMode? pendingPluginWindowBackendRestartMode;
     private PreviewCaptureRequest? pendingScreenshotRequest;
     private string screenshotStatus = string.Empty;
     private TranslationOverlayRenderResult lastRenderResult = new(
@@ -48,7 +58,7 @@ internal sealed class PreviewShell : IDisposable
     /// <param name="fontSelection">The resolved preview font selection.</param>
     /// <param name="sessionDiagnostics">The configuration and database session diagnostics.</param>
     /// <param name="renderer">The shared overlay renderer.</param>
-    /// <param name="pluginWindowHost">The real plugin-window host.</param>
+    /// <param name="pluginWindowBackend">The plugin-window preview backend.</param>
     /// <param name="scenario">The initial scenario.</param>
     /// <param name="viewport">The initial logical viewport.</param>
     internal PreviewShell(
@@ -57,7 +67,7 @@ internal sealed class PreviewShell : IDisposable
         PreviewFontSelection fontSelection,
         IReadOnlyList<string> sessionDiagnostics,
         TranslationOverlayRenderer renderer,
-        PreviewPluginWindowHost pluginWindowHost,
+        IPluginWindowPreviewBackend pluginWindowBackend,
         PreviewScenario scenario,
         PreviewViewportPreset viewport)
     {
@@ -72,8 +82,8 @@ internal sealed class PreviewShell : IDisposable
         this.appliedLanguageId = editableConfiguration.Lang;
         this.appliedFontSize = fontSelection.FontSize;
         this.canvas = new PreviewCanvas(renderer);
-        this.pluginWindowHost = pluginWindowHost ??
-            throw new ArgumentNullException(nameof(pluginWindowHost));
+        this.pluginWindowBackend = pluginWindowBackend ??
+            throw new ArgumentNullException(nameof(pluginWindowBackend));
         this.workbenchState = PreviewWorkbenchState.CreateDefault(viewport);
         this.state = PreviewShellState.FromScenario(
             scenario ?? throw new ArgumentNullException(nameof(scenario)),
@@ -119,7 +129,18 @@ internal sealed class PreviewShell : IDisposable
         ImGui.EndChild();
 
         ImGui.End();
-        this.pluginWindowHost.Draw(this.workbenchState);
+        this.pluginWindowBackend.Draw(this.workbenchState);
+    }
+
+    /// <summary>
+    ///     Updates the plugin-window backend status shown in the fidelity summary.
+    /// </summary>
+    /// <param name="status">The current backend status.</param>
+    internal void SetPluginWindowBackendStatus(PluginWindowBackendStatus status)
+    {
+        this.pluginWindowBackendStatus = status ??
+            throw new ArgumentNullException(nameof(status));
+        this.requestedPluginWindowBackendMode = status.RequestedMode;
     }
 
     /// <summary>
@@ -141,10 +162,10 @@ internal sealed class PreviewShell : IDisposable
         if (PreviewPluginWindowHost.IsPluginWindowTarget(
                 pendingRequest.CaptureTarget))
         {
-            if (this.pluginWindowHost.CaptureFailed)
+            if (this.pluginWindowBackend.CaptureFailed)
             {
                 this.pendingScreenshotRequest = null;
-                this.pluginWindowHost.EndCapture();
+                this.pluginWindowBackend.EndCapture();
                 this.screenshotStatus =
                     $"Screenshot failed: {pendingRequest.CaptureTarget} " +
                     "did not produce stable bounds.";
@@ -152,14 +173,14 @@ internal sealed class PreviewShell : IDisposable
                 return false;
             }
 
-            if (this.pluginWindowHost.TryGetStableCrop(
+            if (this.pluginWindowBackend.TryGetStableCrop(
                     pendingRequest.CaptureTarget) is null)
             {
                 request = null!;
                 return false;
             }
 
-            this.pluginWindowHost.EndCapture();
+            this.pluginWindowBackend.EndCapture();
         }
 
         this.pendingScreenshotRequest = null;
@@ -169,6 +190,25 @@ internal sealed class PreviewShell : IDisposable
             this.state.Viewport,
             outputDirectory,
             pendingRequest.CaptureTarget);
+        return true;
+    }
+
+    /// <summary>
+    ///     Consumes a plugin-window backend restart requested from the shell.
+    /// </summary>
+    /// <param name="mode">The backend mode selected for the restarted shell.</param>
+    /// <returns><see langword="true" /> when a restart was requested.</returns>
+    internal bool TryConsumePluginWindowBackendRestartRequest(
+        out PluginWindowPreviewBackendMode mode)
+    {
+        if (this.pendingPluginWindowBackendRestartMode is not { } pendingMode)
+        {
+            mode = default;
+            return false;
+        }
+
+        this.pendingPluginWindowBackendRestartMode = null;
+        mode = pendingMode;
         return true;
     }
 
@@ -194,6 +234,36 @@ internal sealed class PreviewShell : IDisposable
             configuration.FontSize != appliedFontSize
             ? "Restart the previewer to apply config language or font size changes."
             : null;
+    }
+
+    /// <summary>
+    ///     Gets the restart warning when the selected backend differs from the active backend.
+    /// </summary>
+    /// <param name="requestedMode">The backend selected in the shell.</param>
+    /// <param name="effectiveMode">The backend currently running.</param>
+    /// <returns>The restart warning, or <see langword="null" /> when modes match.</returns>
+    internal static string? GetPluginWindowBackendRestartWarning(
+        PluginWindowPreviewBackendMode requestedMode,
+        PluginWindowPreviewBackendMode effectiveMode)
+    {
+        return requestedMode == effectiveMode
+            ? null
+            : $"Plugin window backend is running as {effectiveMode}. Requested mode was {requestedMode}.";
+    }
+
+    /// <summary>
+    ///     Gets the requested restart mode when the shell selection changes.
+    /// </summary>
+    /// <param name="activeRequestedMode">The mode used to create the active backend.</param>
+    /// <param name="selectedMode">The mode selected in the shell.</param>
+    /// <returns>The selected mode when a restart is required; otherwise, <see langword="null" />.</returns>
+    internal static PluginWindowPreviewBackendMode? GetPluginWindowBackendRestartMode(
+        PluginWindowPreviewBackendMode activeRequestedMode,
+        PluginWindowPreviewBackendMode selectedMode)
+    {
+        return activeRequestedMode == selectedMode
+            ? null
+            : selectedMode;
     }
 
     /// <inheritdoc/>
@@ -238,7 +308,7 @@ internal sealed class PreviewShell : IDisposable
             this.workbenchState.ConfigWindowOpen,
             value => this.workbenchState.ConfigWindowOpen = value);
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.BeginDisabled();
         }
@@ -248,7 +318,7 @@ internal sealed class PreviewShell : IDisposable
             this.workbenchState.DbManagerWindowOpen,
             value => this.workbenchState.DbManagerWindowOpen = value);
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.EndDisabled();
             ImGui.TextDisabled("DB snapshot unavailable");
@@ -263,6 +333,7 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted("Scenario");
         this.DrawScenarioCombo();
         this.DrawViewportCombo();
+        this.DrawPluginWindowBackendCombo();
         ImGui.Checkbox("Visible", ref this.state.Visible);
         ImGui.Checkbox("Show simulated addon bounds", ref this.state.ShowSimulatedAddonBounds);
 
@@ -305,7 +376,7 @@ internal sealed class PreviewShell : IDisposable
                 PreviewCaptureTarget.ConfigWindow);
         }
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.BeginDisabled();
         }
@@ -317,7 +388,7 @@ internal sealed class PreviewShell : IDisposable
                 PreviewCaptureTarget.DbManagerWindow);
         }
 
-        if (!this.pluginWindowHost.DbManagerAvailable)
+        if (!this.pluginWindowBackend.DbManagerAvailable)
         {
             ImGui.EndDisabled();
         }
@@ -347,7 +418,7 @@ internal sealed class PreviewShell : IDisposable
         ScreenshotMode mode,
         PreviewCaptureTarget target)
     {
-        this.pluginWindowHost.EndCapture();
+        this.pluginWindowBackend.EndCapture();
         if (PreviewPluginWindowHost.IsPluginWindowTarget(target))
         {
             switch (target)
@@ -363,7 +434,7 @@ internal sealed class PreviewShell : IDisposable
                     break;
             }
 
-            this.pluginWindowHost.BeginCapture(target);
+            this.pluginWindowBackend.BeginCapture(target);
             this.screenshotStatus =
                 $"Waiting for stable {target} bounds before capture.";
         }
@@ -416,8 +487,40 @@ internal sealed class PreviewShell : IDisposable
         }
     }
 
+    private void DrawPluginWindowBackendCombo()
+    {
+        if (ImGui.BeginCombo(
+                "Plugin window backend",
+                this.requestedPluginWindowBackendMode.ToString()))
+        {
+            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.Auto);
+            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.Standalone);
+            this.DrawBackendSelectable(PluginWindowPreviewBackendMode.DalaMockHosted);
+            ImGui.EndCombo();
+        }
+    }
+
+    private void DrawBackendSelectable(PluginWindowPreviewBackendMode mode)
+    {
+        var selected = this.requestedPluginWindowBackendMode == mode;
+        if (ImGui.Selectable(mode.ToString(), selected))
+        {
+            this.requestedPluginWindowBackendMode = mode;
+            this.pendingPluginWindowBackendRestartMode =
+                GetPluginWindowBackendRestartMode(
+                    this.pluginWindowBackendStatus.RequestedMode,
+                    mode);
+        }
+
+        if (selected)
+        {
+            ImGui.SetItemDefaultFocus();
+        }
+    }
+
     private void DrawFidelitySummary()
     {
+        this.pluginWindowBackendStatus = this.pluginWindowBackend.Status;
         ImGui.TextUnformatted("Fidelity summary");
         ImGui.TextWrapped(
             $"Config source: {this.sourceConfiguration.SourceLabel}");
@@ -428,6 +531,25 @@ internal sealed class PreviewShell : IDisposable
         ImGui.TextUnformatted($"Presentation mode: {this.lastRenderResult.PresentationMode}");
         ImGui.TextUnformatted(
             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");
+        ImGui.TextUnformatted(
+            $"Plugin window backend: requested={this.pluginWindowBackendStatus.RequestedMode}, effective={this.pluginWindowBackendStatus.EffectiveMode}");
+
+        var backendRestartWarning = GetPluginWindowBackendRestartWarning(
+            this.requestedPluginWindowBackendMode,
+            this.pluginWindowBackendStatus.EffectiveMode);
+        if (backendRestartWarning is not null)
+        {
+            ImGui.TextWrapped(backendRestartWarning);
+            ImGui.TextWrapped(
+                "Restart the previewer to apply plugin window backend changes.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(this.pluginWindowBackendStatus.FallbackReason))
+        {
+            ImGui.TextWrapped(
+                $"Plugin window backend fallback: {this.pluginWindowBackendStatus.FallbackReason}");
+        }
+
         var restartWarning = GetRuntimeRestartWarning(
             this.editableConfiguration,
             this.appliedLanguageId,

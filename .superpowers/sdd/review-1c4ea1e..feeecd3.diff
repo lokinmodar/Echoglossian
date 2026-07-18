@@ -1,0 +1,487 @@
+# Review package: 1c4ea1e643ca223ecb12d2e511575461f292eacc..feeecd3df3acf757faa098367bce2ec7a84922e3
+
+## Commits
+feeecd3 feat: add preview plugin-window backend selection contract
+
+## Files changed
+ .../PreviewCommandLineBackendModeTests.cs          | 55 ++++++++++++++++++++++
+ .../PreviewShellBackendStatusTests.cs              | 51 ++++++++++++++++++++
+ .../Hosting/PreviewCommandLine.cs                  | 29 ++++++++++++
+ .../PluginWindows/PluginWindowBackendStatus.cs     | 21 +++++++++
+ .../PluginWindowPreviewBackendMode.cs              | 27 +++++++++++
+ Echoglossian.Previewer/Program.cs                  | 22 +++++++++
+ Echoglossian.Previewer/UI/PreviewShell.cs          | 26 ++++++++++
+ 7 files changed, 231 insertions(+)
+
+## Diff
+diff --git a/Echoglossian.Previewer.Tests/PluginWindows/PreviewCommandLineBackendModeTests.cs b/Echoglossian.Previewer.Tests/PluginWindows/PreviewCommandLineBackendModeTests.cs
+new file mode 100644
+index 0000000..4b12064
+--- /dev/null
++++ b/Echoglossian.Previewer.Tests/PluginWindows/PreviewCommandLineBackendModeTests.cs
+@@ -0,0 +1,55 @@
++// <copyright file="PreviewCommandLineBackendModeTests.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.Hosting;
++using Echoglossian.Previewer.PluginWindows;
++
++using Xunit;
++
++namespace Echoglossian.Previewer.Tests.PluginWindows;
++
++/// <summary>
++///     Covers plugin-window backend command-line parsing.
++/// </summary>
++public sealed class PreviewCommandLineBackendModeTests
++{
++    /// <summary>
++    ///     Ensures known plugin-window backend values map to their matching modes.
++    /// </summary>
++    /// <param name="rawValue">The command-line backend value.</param>
++    /// <param name="expectedMode">The expected parsed backend mode.</param>
++    [Theory]
++    [InlineData("auto", PluginWindowPreviewBackendMode.Auto)]
++    [InlineData("standalone", PluginWindowPreviewBackendMode.Standalone)]
++    [InlineData("dalamock", PluginWindowPreviewBackendMode.DalaMockHosted)]
++    public void Parse_plugin_window_backend_mode_maps_known_values(
++        string rawValue,
++        object expectedMode)
++    {
++        var commandLine = PreviewCommandLine.Parse(
++            ["--plugin-window-backend", rawValue]);
++
++        Assert.Equal(
++            (PluginWindowPreviewBackendMode)expectedMode,
++            commandLine.PluginWindowBackendMode);
++    }
++
++    /// <summary>
++    ///     Ensures unknown plugin-window backend values are rejected.
++    /// </summary>
++    [Fact]
++    public void Parse_plugin_window_backend_mode_rejects_unknown_values()
++    {
++        Action act = () => PreviewCommandLine.Parse(
++            ["--plugin-window-backend", "bogus"]);
++
++        var exception = Assert.Throws<ArgumentException>(act);
++
++        Assert.Contains(
++            "plugin window backend",
++            exception.Message,
++            StringComparison.OrdinalIgnoreCase);
++    }
++}
+diff --git a/Echoglossian.Previewer.Tests/PluginWindows/PreviewShellBackendStatusTests.cs b/Echoglossian.Previewer.Tests/PluginWindows/PreviewShellBackendStatusTests.cs
+new file mode 100644
+index 0000000..6b50a10
+--- /dev/null
++++ b/Echoglossian.Previewer.Tests/PluginWindows/PreviewShellBackendStatusTests.cs
+@@ -0,0 +1,51 @@
++// <copyright file="PreviewShellBackendStatusTests.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.PluginWindows;
++
++using Xunit;
++
++namespace Echoglossian.Previewer.Tests.PluginWindows;
++
++/// <summary>
++///     Covers plugin-window backend status state.
++/// </summary>
++public sealed class PreviewShellBackendStatusTests
++{
++    /// <summary>
++    ///     Ensures matching requested and effective modes do not report a fallback.
++    /// </summary>
++    [Fact]
++    public void Backend_status_reports_no_fallback_when_requested_and_effective_match()
++    {
++        var status = new PluginWindowBackendStatus(
++            PluginWindowPreviewBackendMode.Standalone,
++            PluginWindowPreviewBackendMode.Standalone,
++            HostedRequested: false,
++            HostedAvailable: true,
++            FallbackReason: null);
++
++        Assert.Null(status.FallbackReason);
++        Assert.Equal(PluginWindowPreviewBackendMode.Standalone, status.EffectiveMode);
++    }
++
++    /// <summary>
++    ///     Ensures auto-mode fallback details remain visible in backend status state.
++    /// </summary>
++    [Fact]
++    public void Backend_status_retains_fallback_reason_when_auto_downgrades()
++    {
++        var status = new PluginWindowBackendStatus(
++            PluginWindowPreviewBackendMode.Auto,
++            PluginWindowPreviewBackendMode.Standalone,
++            HostedRequested: true,
++            HostedAvailable: false,
++            FallbackReason: "DalaMock initialization failed");
++
++        Assert.True(status.HostedRequested);
++        Assert.False(status.HostedAvailable);
++        Assert.Equal("DalaMock initialization failed", status.FallbackReason);
++    }
++}
+diff --git a/Echoglossian.Previewer/Hosting/PreviewCommandLine.cs b/Echoglossian.Previewer/Hosting/PreviewCommandLine.cs
+index 949a4a8..c4fe607 100644
+--- a/Echoglossian.Previewer/Hosting/PreviewCommandLine.cs
++++ b/Echoglossian.Previewer/Hosting/PreviewCommandLine.cs
+@@ -1,24 +1,30 @@
+ // <copyright file="PreviewCommandLine.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
++using Echoglossian.Previewer.PluginWindows;
+ using Echoglossian.Previewer.UI;
+ 
+ namespace Echoglossian.Previewer.Hosting;
+ 
+ /// <summary>
+ ///     Represents the stable command-line options accepted by the previewer.
+ /// </summary>
+ internal sealed class PreviewCommandLine
+ {
++    /// <summary>
++    ///     Gets the requested plugin-window preview backend mode.
++    /// </summary>
++    internal PluginWindowPreviewBackendMode PluginWindowBackendMode { get; private set; }
++
+     /// <summary>
+     ///     Gets a value indicating whether the native ImGui binding probe was
+     ///     requested.
+     /// </summary>
+     internal bool BindingSmoke { get; private set; }
+ 
+     /// <summary>
+     ///     Gets a value indicating whether the future standalone host probe was
+     ///     requested.
+     /// </summary>
+@@ -111,20 +117,24 @@ internal sealed class PreviewCommandLine
+                     commandLine.ScreenshotMode = ParseScreenshotMode(
+                         GetValue(args, ref index, "--screenshot"));
+                     break;
+                 case "--capture-target":
+                     commandLine.CaptureTarget = ParseCaptureTarget(
+                         GetValue(args, ref index, "--capture-target"));
+                     break;
+                 case "--output":
+                     commandLine.OutputDirectory = GetValue(args, ref index, "--output");
+                     break;
++                case "--plugin-window-backend":
++                    commandLine.PluginWindowBackendMode = ParsePluginWindowBackendMode(
++                        GetValue(args, ref index, "--plugin-window-backend"));
++                    break;
+                 default:
+                     throw new ArgumentException(
+                         $"Unknown previewer argument: {args[index]}");
+             }
+         }
+ 
+         if (commandLine.CaptureTarget is not null &&
+             commandLine.ScreenshotMode != "full")
+         {
+             throw new ArgumentException(
+@@ -219,11 +229,30 @@ internal sealed class PreviewCommandLine
+         return value switch
+         {
+             "config-window" => PreviewCaptureTarget.ConfigWindow,
+             "db-manager-window" => PreviewCaptureTarget.DbManagerWindow,
+             "translator-metrics-window" => PreviewCaptureTarget.TranslatorMetricsWindow,
+             _ => throw new ArgumentException(
+                 "Previewer capture target must be config-window, " +
+                 "db-manager-window, or translator-metrics-window."),
+         };
+     }
++
++    /// <summary>
++    ///     Parses a requested plugin-window preview backend mode.
++    /// </summary>
++    /// <param name="rawValue">The raw command-line value.</param>
++    /// <returns>The matching backend mode.</returns>
++    /// <exception cref="ArgumentException">Thrown when the value is unsupported.</exception>
++    internal static PluginWindowPreviewBackendMode ParsePluginWindowBackendMode(string? rawValue)
++    {
++        return rawValue?.Trim().ToLowerInvariant() switch
++        {
++            null or "" => PluginWindowPreviewBackendMode.Auto,
++            "auto" => PluginWindowPreviewBackendMode.Auto,
++            "standalone" => PluginWindowPreviewBackendMode.Standalone,
++            "dalamock" => PluginWindowPreviewBackendMode.DalaMockHosted,
++            _ => throw new ArgumentException(
++                $"Preview plugin window backend '{rawValue}' is invalid. Use auto, standalone, or dalamock."),
++        };
++    }
+ }
+diff --git a/Echoglossian.Previewer/PluginWindows/PluginWindowBackendStatus.cs b/Echoglossian.Previewer/PluginWindows/PluginWindowBackendStatus.cs
+new file mode 100644
+index 0000000..8ee81fd
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/PluginWindowBackendStatus.cs
+@@ -0,0 +1,21 @@
++// <copyright file="PluginWindowBackendStatus.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>
++///     Describes the requested and active plugin-window preview backend.
++/// </summary>
++/// <param name="RequestedMode">The backend requested by the user.</param>
++/// <param name="EffectiveMode">The backend currently in use.</param>
++/// <param name="HostedRequested">Whether a hosted backend was requested.</param>
++/// <param name="HostedAvailable">Whether a hosted backend is available.</param>
++/// <param name="FallbackReason">The reason the requested backend was not used.</param>
++internal sealed record PluginWindowBackendStatus(
++    PluginWindowPreviewBackendMode RequestedMode,
++    PluginWindowPreviewBackendMode EffectiveMode,
++    bool HostedRequested,
++    bool HostedAvailable,
++    string? FallbackReason);
+diff --git a/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendMode.cs b/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendMode.cs
+new file mode 100644
+index 0000000..f0585da
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendMode.cs
+@@ -0,0 +1,27 @@
++// <copyright file="PluginWindowPreviewBackendMode.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>
++///     Identifies the backend requested for real plugin-window previews.
++/// </summary>
++internal enum PluginWindowPreviewBackendMode
++{
++    /// <summary>
++    ///     Automatically selects the highest-fidelity available backend.
++    /// </summary>
++    Auto,
++
++    /// <summary>
++    ///     Uses the existing standalone preview backend.
++    /// </summary>
++    Standalone,
++
++    /// <summary>
++    ///     Uses the DalaMock-hosted plugin-window backend.
++    /// </summary>
++    DalaMockHosted,
++}
+diff --git a/Echoglossian.Previewer/Program.cs b/Echoglossian.Previewer/Program.cs
+index e6e41be..b28f76d 100644
+--- a/Echoglossian.Previewer/Program.cs
++++ b/Echoglossian.Previewer/Program.cs
+@@ -4,20 +4,21 @@
+ // </copyright>
+ 
+ using Dalamud.Bindings.ImGui;
+ 
+ using Echoglossian.EFCoreSqlite;
+ using Echoglossian.LanguagesHandling;
+ using Echoglossian.PluginUI;
+ using Echoglossian.Previewer.Configuration;
+ using Echoglossian.Previewer.Fonts;
+ using Echoglossian.Previewer.Hosting;
++using Echoglossian.Previewer.PluginWindows;
+ using Echoglossian.Previewer.Scenarios;
+ using Echoglossian.Previewer.Screenshots;
+ using Echoglossian.Previewer.Session;
+ using Echoglossian.Previewer.UI;
+ using Echoglossian.UIOverlays.TextPresentation;
+ using Echoglossian.UIOverlays.TranslationOverlay;
+ 
+ using Microsoft.Data.Sqlite;
+ using Microsoft.EntityFrameworkCore;
+ 
+@@ -163,20 +164,22 @@ internal static class Program
+             session.ClonedDatabasePath);
+         using var shell = new PreviewShell(
+             sourceConfiguration,
+             editableConfiguration,
+             fontSelection,
+             session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
+             composition.Renderer,
+             pluginWindowHost,
+             scenario,
+             viewport);
++        shell.SetPluginWindowBackendStatus(
++            CreatePluginWindowBackendStatus(commandLine.PluginWindowBackendMode));
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+ 
+         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
+         host.Run(
+             () =>
+             {
+                 composition.BeginDrawFrame();
+                 shell.Draw();
+             },
+             () =>
+@@ -335,20 +338,39 @@ internal static class Program
+         var configWindowContext = CreatePreviewPluginWindowContext(
+             configuration,
+             languages);
+         return new PreviewPluginWindowHost(
+             new PluginConfigWindowRenderer(),
+             configWindowContext,
+             CreatePreviewDbContext(databasePath),
+             configuration);
+     }
+ 
++    /// <summary>
++    ///     Creates the shell-visible backend status for the current standalone host.
++    /// </summary>
++    /// <param name="requestedMode">The backend requested from the command line.</param>
++    /// <returns>The current standalone backend status.</returns>
++    private static PluginWindowBackendStatus CreatePluginWindowBackendStatus(
++        PluginWindowPreviewBackendMode requestedMode)
++    {
++        var hostedRequested = requestedMode != PluginWindowPreviewBackendMode.Standalone;
++        return new PluginWindowBackendStatus(
++            requestedMode,
++            PluginWindowPreviewBackendMode.Standalone,
++            hostedRequested,
++            HostedAvailable: false,
++            hostedRequested
++                ? "Backend selection is not initialized."
++                : null);
++    }
++
+     /// <summary>
+     /// Creates config-window dependencies with explicit unavailable preview imagery.
+     /// </summary>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     /// <param name="languages">The available preview languages.</param>
+     /// <returns>The preview-safe config-window context.</returns>
+     internal static PluginConfigWindowContext CreatePreviewPluginWindowContext(
+         Config configuration,
+         IReadOnlyDictionary<int, LanguageInfo> languages)
+     {
+diff --git a/Echoglossian.Previewer/UI/PreviewShell.cs b/Echoglossian.Previewer/UI/PreviewShell.cs
+index 9c09dee..95bd16a 100644
+--- a/Echoglossian.Previewer/UI/PreviewShell.cs
++++ b/Echoglossian.Previewer/UI/PreviewShell.cs
+@@ -1,19 +1,20 @@
+ // <copyright file="PreviewShell.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
+ using Dalamud.Bindings.ImGui;
+ 
+ using Echoglossian.Previewer.Configuration;
+ using Echoglossian.Previewer.Fonts;
++using Echoglossian.Previewer.PluginWindows;
+ using Echoglossian.Previewer.Scenarios;
+ using Echoglossian.Previewer.Screenshots;
+ using Echoglossian.UIOverlays.TextPresentation;
+ using Echoglossian.UIOverlays.TranslationOverlay;
+ 
+ using System.Numerics;
+ 
+ namespace Echoglossian.Previewer.UI;
+ 
+ /// <summary>
+@@ -24,20 +25,26 @@ internal sealed class PreviewShell : IDisposable
+     private readonly PreviewConfiguration sourceConfiguration;
+     private readonly Config editableConfiguration;
+     private readonly PreviewFontSelection fontSelection;
+     private readonly IReadOnlyList<string> sessionDiagnostics;
+     private readonly PreviewCanvas canvas;
+     private readonly PreviewPluginWindowHost pluginWindowHost;
+     private readonly PreviewWorkbenchState workbenchState;
+     private readonly PreviewShellState state;
+     private readonly int appliedLanguageId;
+     private readonly int appliedFontSize;
++    private PluginWindowBackendStatus pluginWindowBackendStatus = new(
++        PluginWindowPreviewBackendMode.Auto,
++        PluginWindowPreviewBackendMode.Standalone,
++        HostedRequested: true,
++        HostedAvailable: false,
++        FallbackReason: "Backend selection is not initialized.");
+     private PreviewCaptureRequest? pendingScreenshotRequest;
+     private string screenshotStatus = string.Empty;
+     private TranslationOverlayRenderResult lastRenderResult = new(
+         false,
+         Vector2.Zero,
+         Vector2.Zero,
+         TextPresentationBackendKind.PlainImGui);
+     private bool disposed;
+ 
+     /// <summary>
+@@ -115,20 +122,30 @@ internal sealed class PreviewShell : IDisposable
+         {
+             this.state.Visible = scenarioVisible;
+         }
+ 
+         ImGui.EndChild();
+ 
+         ImGui.End();
+         this.pluginWindowHost.Draw(this.workbenchState);
+     }
+ 
++    /// <summary>
++    ///     Updates the plugin-window backend status shown in the fidelity summary.
++    /// </summary>
++    /// <param name="status">The current backend status.</param>
++    internal void SetPluginWindowBackendStatus(PluginWindowBackendStatus status)
++    {
++        this.pluginWindowBackendStatus = status ??
++            throw new ArgumentNullException(nameof(status));
++    }
++
+     /// <summary>
+     /// Consumes a screenshot request made by the interactive controls.
+     /// </summary>
+     /// <param name="outputDirectory">The screenshot output directory.</param>
+     /// <param name="request">The consumed request.</param>
+     /// <returns><see langword="true"/> when a request was pending.</returns>
+     internal bool TryConsumeScreenshotRequest(
+         string outputDirectory,
+         out ScreenshotRequest request)
+     {
+@@ -421,20 +438,29 @@ internal sealed class PreviewShell : IDisposable
+         ImGui.TextUnformatted("Fidelity summary");
+         ImGui.TextWrapped(
+             $"Config source: {this.sourceConfiguration.SourceLabel}");
+         ImGui.TextWrapped(
+             $"Font: {Path.GetFileName(this.fontSelection.SpecialFontPath)} / {this.fontSelection.FontSize}px");
+         ImGui.TextUnformatted(
+             $"Logical viewport: {this.state.Viewport.Width}x{this.state.Viewport.Height}");
+         ImGui.TextUnformatted($"Presentation mode: {this.lastRenderResult.PresentationMode}");
+         ImGui.TextUnformatted(
+             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");
++        ImGui.TextUnformatted(
++            $"Plugin window backend: requested={this.pluginWindowBackendStatus.RequestedMode}, effective={this.pluginWindowBackendStatus.EffectiveMode}");
++
++        if (!string.IsNullOrWhiteSpace(this.pluginWindowBackendStatus.FallbackReason))
++        {
++            ImGui.TextWrapped(
++                $"Plugin window backend fallback: {this.pluginWindowBackendStatus.FallbackReason}");
++        }
++
+         var restartWarning = GetRuntimeRestartWarning(
+             this.editableConfiguration,
+             this.appliedLanguageId,
+             this.appliedFontSize);
+         if (restartWarning is not null)
+         {
+             ImGui.TextWrapped(restartWarning);
+         }
+ 
+         foreach (var diagnostic in this.sessionDiagnostics)
