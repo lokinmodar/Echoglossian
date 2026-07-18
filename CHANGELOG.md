@@ -7,10 +7,33 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0717.0008`
+## Submitted Release `v4.2601.0718.2006`
 
-This package is prepared for submission and focuses on the urgent MiniTalk
-native-layout regression that resurfaced after the last release.
+This package submits the latest `v4-series` head after the 2026-07-17
+MiniTalk hotfix release and focuses on OpenRouter recovery plus hosted preview
+infrastructure that will support future UI validation without relying on
+external mock-package drift.
+
+Highlights:
+
+- fixed OpenRouter live model refresh when the configured base URL already
+  includes `/v1`, so `Fetch Live Models` stops calling an invalid doubled
+  endpoint
+- vendored the `DalaMock` source used by the hosted preview backend so local
+  preview and mock sessions run against a known-good source snapshot instead of
+  drifting package behavior
+- expanded previewer and hosted-plugin validation rails while keeping vendored
+  preview infrastructure out of the shipped plugin package
+
+## Published Release `v4.2601.0717.0008`
+
+This package was published to the official Dalamud feed and focused on the
+urgent MiniTalk native-layout regression that resurfaced after the previous
+release.
+
+Published in `DalamudPluginsD17` via
+[PR #9027](https://github.com/goatcorp/DalamudPluginsD17/pull/9027) on
+2026-07-17.
 
 Highlights:
 
