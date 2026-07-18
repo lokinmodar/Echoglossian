@@ -19,8 +19,17 @@ internal static class Program
     /// <summary>
     /// Starts the mock plugin host and runs its UI loop.
     /// </summary>
-    private static async Task Main()
+    /// <param name="args">Optional command-line arguments.</param>
+    /// <returns>The process exit code.</returns>
+    private static async Task<int> Main(string[] args)
     {
+        if (args.Length == 1 && string.Equals(args[0], "--check-compatibility", StringComparison.Ordinal))
+        {
+            return DalaMockHostCompatibilityGuard.WriteCommandLineStatus(Console.Out);
+        }
+
+        DalaMockHostCompatibilityGuard.ThrowIfIncompatible();
+
         var mockContainer = new MockContainer(
             new MockDalamudConfiguration
             {
@@ -50,5 +59,7 @@ internal static class Program
                     break;
             }
         }
+
+        return 0;
     }
 }

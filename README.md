@@ -70,7 +70,11 @@ Run the local plugin test rails with:
 This keeps plugin validation local-only and does not rely on GitHub Actions.
 The DalaMock runner and startup smoke tests require resolvable local FFXIV
 game data. They check `EXD_DATA_DIR`, then `%AppData%\XIVLauncher\launcherConfigV3.json`,
-then standard Windows install paths for the game's `sqpack` directory.
+then standard Windows install paths for the game's `sqpack` directory. The
+validation script now probes `.Mock` host compatibility first and skips the
+startup smoke rail when the local `Hooks\dev` Dalamud build requires
+`IFramework.CreateDebouncer(...)` but the published `DalaMock.Core` package
+does not advertise that contract yet.
 
 ## DalaMock Runner
 
@@ -78,6 +82,12 @@ Launch the local mock host with:
 
 ```powershell
 dotnet run --project .\Echoglossian.Mock\Echoglossian.Mock.csproj -c Debug
+```
+
+Probe the current host/runtime compatibility explicitly with:
+
+```powershell
+dotnet run --project .\Echoglossian.Mock\Echoglossian.Mock.csproj -c Debug -- --check-compatibility
 ```
 
 `Echoglossian.Mock` is a local DalaMock runner for startup and wiring checks.

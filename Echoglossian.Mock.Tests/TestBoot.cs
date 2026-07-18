@@ -66,6 +66,8 @@ internal sealed class TestBoot
     /// <returns>The started plugin and its owning mock container.</returns>
     public async Task<StartedPlugin> StartPluginAsync()
     {
+        global::Echoglossian.Mock.DalaMockHostCompatibilityGuard.ThrowIfIncompatible();
+
         var stateRoot = this.runStateRootFactory();
         var pluginSavePath = this.CreateLocalPluginSavePath(stateRoot);
         var configPath = new FileInfo(Path.Combine(stateRoot.FullName, "test.json"));

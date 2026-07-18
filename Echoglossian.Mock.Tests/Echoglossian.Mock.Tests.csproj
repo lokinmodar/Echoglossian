@@ -69,4 +69,8 @@
   <ItemGroup>
     <ProjectReference Include="..\\Echoglossian.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\\Echoglossian.Mock\\DalaMockHostCompatibilityGuard.cs" Link="DalaMockHostCompatibilityGuard.cs" />
+  </ItemGroup>
 </Project>
