@@ -33,6 +33,7 @@ public static class HostedPreviewPluginSessionFactory
         cancellationToken.ThrowIfCancellationRequested();
         options.StateRoot.Create();
         options.PluginSavePath.Create();
+        PrepareHostedConfiguration(options);
         var effectiveDatabasePath = PrepareHostedDatabase(options);
 
         var container = new MockContainer(
@@ -80,6 +81,24 @@ public static class HostedPreviewPluginSessionFactory
             await DisposeContainerAsync(container);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Copies the preview-owned config clone to the config file path that
+    /// DalaMock actually reads for plugin startup.
+    /// </summary>
+    /// <param name="options">The preview-owned hosted-session options.</param>
+    private static void PrepareHostedConfiguration(HostedPreviewPluginOptions options)
+    {
+        if (!options.ConfigPath.Exists)
+        {
+            return;
+        }
+
+        var destinationConfigPath = Path.Combine(
+            options.StateRoot.FullName,
+            $"{typeof(global::Echoglossian.Echoglossian).Assembly.GetName().Name!}.json");
+        File.Copy(options.ConfigPath.FullName, destinationConfigPath, overwrite: true);
     }
 
     /// <summary>
