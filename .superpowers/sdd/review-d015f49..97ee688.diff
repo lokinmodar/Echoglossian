@@ -1,0 +1,241 @@
+# Review package: d015f4961cbe4ef65ac49269425e76d82577f184..97ee688cefb1da0e8ee6b3f34f8c009ec8ea5467
+
+## Commits
+97ee688 docs: validate hybrid previewer hosted backend workflow
+
+## Files changed
+ Echoglossian.Previewer/README.md                   | 30 +++++++--
+ docs/handoffs/unified-imgui-previewer-next-step.md | 74 ++++++++++++++++++----
+ 2 files changed, 86 insertions(+), 18 deletions(-)
+
+## Diff
+diff --git a/Echoglossian.Previewer/README.md b/Echoglossian.Previewer/README.md
+index a1ee7ea..577a55c 100644
+--- a/Echoglossian.Previewer/README.md
++++ b/Echoglossian.Previewer/README.md
+@@ -71,25 +71,42 @@ the overlay scenarios:
+ 
+ - `Config`
+ - `DB Manager`
+ - `Translator Metrics / Debugger`
+ 
+ Use the window toggles to open each surface. DB Manager is disabled when the
+ session has no database snapshot. Preview edits and saves affect only the
+ cloned session files; they are never written back automatically to either live
+ source. There is no export-back flow in Phase 1.
+ 
++### Plugin Window Backend Selection
++
++Use `--plugin-window-backend auto|standalone|dalamock` to choose how `Config`,
++`DB Manager`, and `Translator Metrics / Debugger` are hosted.
++
++- `auto`: tries DalaMock first, then falls back to standalone with a visible
++  diagnostic.
++- `standalone`: always uses the previewer's existing plugin-window runtime.
++- `dalamock`: requires the DalaMock-hosted runtime and reports startup failure
++  instead of silently falling back.
++
++The interactive shell provides the same selection and restarts only the
++plugin-window backend when it changes. The selected backend affects plugin
++windows only; overlay preview remains on the existing standalone pipeline.
++
+ ## CLI Options
+ 
+ - `--binding-smoke`: creates and destroys a Dalamud ImGui context, then exits.
+ - `--host-smoke`: creates a hidden 640x360 Veldrid ImGui host, draws one frame,
+   then exits.
++- `--plugin-window-backend <auto|standalone|dalamock>`: selects the backend for
++  real plugin windows; defaults to `auto`.
+ - `--config <path>`: loads an absolute or relative Echoglossian config JSON
+   read-only.
+ - `--db <path>`: creates a WAL-aware snapshot of an absolute or relative
+   Echoglossian database in the preview-owned session workspace.
+ - `--scenario <surface-key>`: selects a scenario; defaults to `talk`.
+ - `--viewport <width>x<height>`: selects the logical preview viewport; defaults
+   to `1920x1080`.
+ - `--screenshot <full|surface|batch>`: exports screenshots instead of opening
+   the interactive shell.
+ - `--capture-target <config-window|db-manager-window|translator-metrics-window>`:
+@@ -134,24 +151,26 @@ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Deb
+ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot surface --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\surface
+ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot batch --viewport 1920x1080 --output artifacts\previewer\screenshots\batch
+ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot full --capture-target config-window --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\config-window
+ ```
+ 
+ Batch mode with a single viewport writes 12 overlay PNG files plus
+ `manifest.json`. Batch mode without `--viewport` runs all built-in viewports.
+ Use `--capture-target` or the interactive shell's target-specific buttons to
+ capture Config, DB Manager, or Translator Metrics windows. Each window uses a
+ fixed layout and must report stable non-empty bounds before capture; missing
+-bounds fail without writing a misleading target-specific image. The manifest records scenario key, surface
+-key, viewport, screenshot mode, capture target, presentation mode, config
+-source label, font file names, font size, and PNG path. Screenshot output is
+-under `artifacts/` and ignored by git.
++bounds fail without writing a misleading target-specific image. The manifest
++records scenario key, surface key, viewport, screenshot mode, capture target,
++presentation mode, config source label, font file names, font size, and PNG
++path. Plugin-window captures also record requested and effective backend modes
++plus any fallback reason. Screenshot output is under `artifacts/` and ignored
++by git.
+ 
+ ## Presentation Modes
+ 
+ The previewer uses the shared overlay renderer and reports the presentation mode
+ returned by that renderer:
+ 
+ - `PlainImGui`: text is drawn through the active ImGui font atlas.
+ - `RtlTexture`: text is rasterized through the same RTL text image path and
+   uploaded as a preview texture.
+ 
+@@ -186,13 +205,16 @@ and addon bounds before claiming 1:1 visual fidelity.
+ - Missing `cimgui.dll`: install or refresh XIVLauncher dev hooks, or pass
+   `-p:DalamudLibPath=<path>` to a directory containing `cimgui.dll`.
+ - Missing `Dalamud.Bindings.ImGui.dll` or `HexaGen.Runtime.dll`: verify the dev
+   hooks path points at `%APPDATA%\XIVLauncher\addon\Hooks\dev` or the matching
+   custom dev binding directory.
+ - Binding smoke fails before printing an ImGui version: the native binding files
+   are not being copied to the previewer output, or a mismatched `cimgui.dll` is
+   being loaded.
+ - Host smoke fails on startup: verify Windows x64, the .NET 10 SDK, GPU driver,
+   and Veldrid/SDL2 native dependencies restored correctly.
++- `auto` falls back to standalone: read the shell diagnostic and
++  `PluginWindowBackendFallbackReason` in `manifest.json`. Select `dalamock`
++  when a hosted startup failure must be surfaced without fallback.
+ - Config loads as defaults: confirm the path passed to `--config` exists and is
+   valid JSON. Diagnostics intentionally do not include config contents or API
+   keys.
+diff --git a/docs/handoffs/unified-imgui-previewer-next-step.md b/docs/handoffs/unified-imgui-previewer-next-step.md
+index 8b6ea08..36c885f 100644
+--- a/docs/handoffs/unified-imgui-previewer-next-step.md
++++ b/docs/handoffs/unified-imgui-previewer-next-step.md
+@@ -31,20 +31,70 @@ run:
+ - deterministic screenshot export for:
+   - full frame
+   - overlay surface crop
+   - `Config`
+   - `DB Manager`
+   - `Translator Metrics / Debugger`
+ 
+ The previewer remains isolated from normal plugin build, deploy, and packaging
+ flows.
+ 
++## Hosted plugin-window backend
++
++Phase 2 added a hybrid plugin-window backend with:
++
++- CLI and shell selection for `auto`, `standalone`, and `dalamock`
++- a DalaMock-hosted runtime path for `Config`, `DB Manager`, and `Translator
++  Metrics / Debugger`
++- explicit fallback diagnostics in the shell and screenshot manifest
++
++The previewer remains outside `Echoglossian.sln`; plugin packaging and release
++flow are unchanged. `auto` requests DalaMock first and falls back visibly to
++the existing standalone backend. Explicit `dalamock` mode does not hide a
++hosted-startup failure.
++
++## Phase 2 validation on 2026-07-17
++
++Commands run from
++`C:\Dante\_dalamud\worktrees\Echoglossian\previewer-dalamock-font-builds`:
++
++```powershell
++dotnet build Echoglossian.sln -c Debug --no-restore
++dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1
++dotnet test Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore -p:VSTestMaxCpuCount=1
++dotnet restore Echoglossian.Mock\Echoglossian.Mock.csproj
++dotnet restore Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj
++dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-restore
++dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1
++dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --host-smoke
++dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --plugin-window-backend auto --screenshot full --capture-target config-window --scenario talk --viewport 1920x1080 --output artifacts\previewer\hosted-backend-validation
++```
++
++Observed results:
++
++- production build: passed with `0` errors
++- production tests: `642 / 642` passed
++- previewer tests: `143 / 143` passed
++- DalaMock restores and build: passed with `0` errors
++- DalaMock tests: failed, `5 / 11`; hosted startup throws
++  `ReflectionTypeLoadException` because `DalaMock.Core` 6.1.7's
++  `MockFramework.CreateDebouncer` has no implementation
++- host smoke: exited `0`
++- auto-backend Config capture: wrote `manifest.json` and one PNG; the manifest
++  records requested `Auto`, effective `Standalone`, and the exact DalaMock
++  fallback reason
++
++The DalaMock test failure is a known pre-existing environment compatibility
++blocker. It prevents hosted-runtime validation, but does not regress the
++production plugin rail or standalone previewer path. Resolve the DalaMock and
++Dalamud interface compatibility before claiming a hosted DalaMock pass.
++
+ ## Important final fixes already in this branch
+ 
+ - screenshot output publication now stages atomically and preserves recovery
+   directories when rollback is incomplete
+ - preview mode suppresses live runtime actions that would otherwise try to
+   contact providers or mutate shared glossary/runtime state
+ - provider credential fields render masked instead of plain text
+ - preview engine configuration remains editable while passive live refresh
+   requests stay suppressed
+ - duplicate `PreviewWorkbenchState.Scenario` storage was removed so the shell
+@@ -83,49 +133,45 @@ were addressed as follows:
+    - resolved in code by removing the stale secondary `Scenario` storage from
+      `PreviewWorkbenchState`
+ 2. manifest/capture-target coverage concern:
+    - accepted as already sufficiently covered by
+      `BatchScreenshotRunnerTests.SerializeManifest_PluginWindowTarget_WritesCaptureTargetString`
+      plus
+      `BatchScreenshotRunnerTests.GetManifestTargetMetadata_PluginWindow_UsesNotApplicableValues`
+ 
+ ## Recommended next step
+ 
+-The highest-value next slice is **preview shell control expansion**, not more
+-runtime plumbing.
++The highest-value next slice is resolving the DalaMock/Dalamud
++`CreateDebouncer` compatibility blocker before expanding hosted-runtime scope.
+ 
+-Keep the next slice scoped to shell-driven preview controls that do not require
+-starting a fake Dalamud runtime and do not write back to live user files.
++Keep the next slice scoped to restoring real DalaMock hosted startup without
++writing back to live user files.
+ 
+ Recommended scope:
+ 
+-1. add richer preview-only control knobs in the shell:
+-   - explicit re-render / reapply button
+-   - preview font family picker from the resolved preview font set
+-   - preview font size override
+-   - preview text color / opacity controls if they can be wired through the
+-     existing overlay config model without forking renderer logic
++1. align DalaMock with the current Dalamud interface that requires
++   `CreateDebouncer`, then rerun the hosted DalaMock tests and capture.
+ 2. keep using real plugin-window code for plugin windows:
+    - do not reimplement the config window in preview-only code
+ 3. preserve current isolation rules:
+    - previewer remains outside `Echoglossian.sln`
+    - preview artifacts stay out of plugin packaging
+    - preview session writes only to cloned session files
+    - runtime-owned actions remain explicitly unavailable in preview
+ 
+ ## Constraints for the next chat
+ 
+ - continue from a fresh dedicated worktree based on the latest `v4-series`
+ - do not assume this branch stays the base forever; re-check current repo state
+   first
+-- keep DalaMock out unless a future step has a concrete reason to absorb its
+-  maintenance cost
++- keep the hosted backend optional until the DalaMock compatibility blocker is
++  resolved
+ - prefer shell-level controls over deeper renderer rewrites
+ - preserve 1:1 behavior for real plugin windows whenever a control can be
+   expressed through existing config/runtime inputs
+ 
+ ## Quick resume prompt
+ 
+ > Continue from `docs/handoffs/unified-imgui-previewer-next-step.md` on a fresh
+ > dedicated worktree based on the latest `v4-series`. First verify the current
+-> repo state, then scope the next previewer slice around shell-side control
+-> expansion only.
++> repo state, resolve the DalaMock `CreateDebouncer` compatibility blocker, and
++> rerun the hosted backend validation before expanding shell controls.

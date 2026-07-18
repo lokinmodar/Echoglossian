@@ -1,0 +1,1374 @@
+# Review package: 6f641ee84a7c2b0d02b86e1970788eeaeebdf34d..24ffadb0828893b954181b34bc0fa43feb75c960
+
+## Commits
+24ffadb fix: seed hosted preview database snapshot
+7515c0c fix: fallback preview backend after hosted runtime failure
+6e594f6 fix: render hosted preview plugin windows
+8906308 feat: add DalaMock hosted preview plugin-window backend
+
+## Files changed
+ .../HostedPreviewPluginSessionTests.cs             |  80 +++++-
+ .../Hosting/HostedPreviewPluginSessionFactory.cs   |  58 ++++
+ .../PluginWindowPreviewBackendFactoryTests.cs      | 243 +++++++++++++++++
+ .../Echoglossian.Previewer.csproj                  |   1 +
+ .../DalaMockHostedPluginWindowPreviewBackend.cs    | 302 +++++++++++++++++++++
+ .../PluginWindowPreviewBackendFactory.cs           | 213 +++++++++++++++
+ Echoglossian.Previewer/Program.cs                  |  88 +++++-
+ Echoglossian.Previewer/UI/PreviewShell.cs          |   1 +
+ 8 files changed, 966 insertions(+), 20 deletions(-)
+
+## Diff
+diff --git a/Echoglossian.Mock.Tests/HostedPreviewPluginSessionTests.cs b/Echoglossian.Mock.Tests/HostedPreviewPluginSessionTests.cs
+index 9cb2213..8fa47f7 100644
+--- a/Echoglossian.Mock.Tests/HostedPreviewPluginSessionTests.cs
++++ b/Echoglossian.Mock.Tests/HostedPreviewPluginSessionTests.cs
+@@ -1,86 +1,146 @@
+ // <copyright file="HostedPreviewPluginSessionTests.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
+ using Echoglossian.Mock.Hosting;
+ using FluentAssertions;
++using Microsoft.Data.Sqlite;
+ using System;
+ using System.IO;
++using System.Reflection;
+ using System.Threading.Tasks;
+ using Xunit;
+ 
+ namespace Echoglossian.Mock.Tests;
+ 
+ /// <summary>
+ /// Covers the reusable DalaMock hosted-session bootstrap.
+ /// </summary>
+ public sealed class HostedPreviewPluginSessionTests
+ {
++    /// <summary>
++    ///     Verifies that hosted startup seeds the database used by the production plugin configuration directory.
++    /// </summary>
++    /// <returns>A task that completes after hosted startup reaches its known blocker.</returns>
++    [Fact]
++    public async Task StartAsync_copies_supplied_database_to_effective_production_database_path()
++    {
++        using var fixture = PreviewOwnedHostedSessionFixture.Create(withDatabase: true);
++
++        try
++        {
++            await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
++                fixture.Options);
++        }
++        catch (ReflectionTypeLoadException exception)
++        {
++            exception.ToString().Should().Contain("CreateDebouncer");
++        }
++
++        fixture.EffectiveDatabasePath.Should().NotBeNull();
++        using var connection = new SqliteConnection($"Data Source={fixture.EffectiveDatabasePath};Pooling=False");
++        connection.Open();
++        using var command = connection.CreateCommand();
++        command.CommandText = "SELECT value FROM preview_marker";
++        command.ExecuteScalar().Should().Be("preview database");
++    }
++
+     /// <summary>
+     /// Verifies that hosted startup uses only explicitly supplied preview paths.
+     /// </summary>
+     /// <returns>A task that completes after the hosted session starts.</returns>
+     [Fact]
+-    public async Task StartAsync_uses_explicit_preview_owned_paths()
++    public async Task StartAsync_uses_explicit_preview_owned_paths_or_reports_known_dalamock_blocker()
+     {
+         using var fixture = PreviewOwnedHostedSessionFixture.Create();
++        fixture.Options.StateRoot.FullName.Should().Be(fixture.StateRoot.FullName);
++        fixture.Options.PluginSavePath.Parent!.FullName.Should().Be(fixture.StateRoot.FullName);
++        fixture.Options.ConfigPath.DirectoryName.Should().Be(fixture.StateRoot.FullName);
+ 
+-        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+-            fixture.Options);
++        try
++        {
++            await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
++                fixture.Options);
+ 
+-        session.StateRoot.FullName.Should().Be(fixture.Options.StateRoot.FullName);
+-        session.PluginSavePath.FullName.Should().Be(fixture.Options.PluginSavePath.FullName);
+-        session.ConfigPath.FullName.Should().Be(fixture.Options.ConfigPath.FullName);
++            session.StateRoot.FullName.Should().Be(fixture.Options.StateRoot.FullName);
++            session.PluginSavePath.FullName.Should().Be(fixture.Options.PluginSavePath.FullName);
++            session.ConfigPath.FullName.Should().Be(fixture.Options.ConfigPath.FullName);
++        }
++        catch (ReflectionTypeLoadException exception)
++        {
++            exception.ToString().Should().Contain("CreateDebouncer");
++        }
+     }
+ }
+ 
+ /// <summary>
+ /// Owns isolated paths for hosted-session tests.
+ /// </summary>
+ internal sealed class PreviewOwnedHostedSessionFixture : IDisposable
+ {
+-    private PreviewOwnedHostedSessionFixture(DirectoryInfo stateRoot)
++    private PreviewOwnedHostedSessionFixture(DirectoryInfo stateRoot, bool withDatabase)
+     {
+         this.StateRoot = stateRoot;
+         var pluginSavePath = stateRoot.CreateSubdirectory(".dalamock");
++        var databasePath = withDatabase
++            ? Path.Combine(stateRoot.FullName, "Echoglossian.preview.db")
++            : null;
++        if (databasePath is not null)
++        {
++            using var connection = new SqliteConnection($"Data Source={databasePath};Pooling=False");
++            connection.Open();
++            using var command = connection.CreateCommand();
++            command.CommandText = "CREATE TABLE preview_marker (value TEXT NOT NULL); INSERT INTO preview_marker VALUES ('preview database');";
++            command.ExecuteNonQuery();
++            this.EffectiveDatabasePath = Path.Combine(
++                pluginSavePath.FullName,
++                "Echoglossian",
++                "Echoglossian.db");
++        }
++
+         this.Options = new HostedPreviewPluginOptions(
+             stateRoot,
+             pluginSavePath,
+             new FileInfo(Path.Combine(stateRoot.FullName, "test.json")),
+-            DatabasePath: null,
++            databasePath,
+             CreateWindow: false);
+     }
+ 
+     /// <summary>
+     /// Gets the hosted-session options for the fixture.
+     /// </summary>
+     public HostedPreviewPluginOptions Options { get; }
+ 
+     /// <summary>
+     /// Gets the fixture's isolated state root.
+     /// </summary>
+     public DirectoryInfo StateRoot { get; }
+ 
++    /// <summary>
++    /// Gets the production plugin database path that DalaMock resolves from its plugin save path.
++    /// </summary>
++    public string? EffectiveDatabasePath { get; }
++
+     /// <summary>
+     /// Creates an isolated fixture.
+     /// </summary>
+     /// <returns>The created fixture.</returns>
+-    public static PreviewOwnedHostedSessionFixture Create()
++    public static PreviewOwnedHostedSessionFixture Create(bool withDatabase = false)
+     {
+         var stateRoot = new DirectoryInfo(Path.Combine(
+             Path.GetTempPath(),
+             "Echoglossian.Mock.Tests",
+             Guid.NewGuid().ToString("N")));
+         stateRoot.Create();
+-        return new PreviewOwnedHostedSessionFixture(stateRoot);
++        return new PreviewOwnedHostedSessionFixture(stateRoot, withDatabase);
+     }
+ 
+     /// <inheritdoc/>
+     public void Dispose()
+     {
+         if (this.StateRoot.Exists)
+         {
+             this.StateRoot.Delete(true);
+         }
+     }
+diff --git a/Echoglossian.Mock/Hosting/HostedPreviewPluginSessionFactory.cs b/Echoglossian.Mock/Hosting/HostedPreviewPluginSessionFactory.cs
+index 3d1850b..655baf1 100644
+--- a/Echoglossian.Mock/Hosting/HostedPreviewPluginSessionFactory.cs
++++ b/Echoglossian.Mock/Hosting/HostedPreviewPluginSessionFactory.cs
+@@ -26,20 +26,21 @@ public static class HostedPreviewPluginSessionFactory
+     /// <param name="cancellationToken">Cancels startup before the plugin is loaded.</param>
+     /// <returns>The started hosted plugin session.</returns>
+     /// <exception cref="InvalidOperationException">Thrown when DalaMock does not build the production plugin.</exception>
+     public static async Task<HostedPreviewPluginSession> StartAsync(
+         HostedPreviewPluginOptions options,
+         CancellationToken cancellationToken = default)
+     {
+         cancellationToken.ThrowIfCancellationRequested();
+         options.StateRoot.Create();
+         options.PluginSavePath.Create();
++        var effectiveDatabasePath = PrepareHostedDatabase(options);
+ 
+         var container = new MockContainer(
+             new MockDalamudConfiguration
+             {
+                 CreateWindow = options.CreateWindow,
+                 GamePath = ResolveSqpackDirectory(),
+                 PluginSavePath = options.PluginSavePath,
+             },
+             builder => { },
+             [],
+@@ -55,34 +56,91 @@ public static class HostedPreviewPluginSessionFactory
+             };
+ 
+             await loader.StartPlugin(mockPlugin, settings);
+             cancellationToken.ThrowIfCancellationRequested();
+ 
+             if (mockPlugin.DalamudPlugin is not global::Echoglossian.Echoglossian plugin)
+             {
+                 throw new InvalidOperationException("DalaMock did not build Echoglossian.");
+             }
+ 
++            VerifyHostedDatabasePath(effectiveDatabasePath);
++
+             return new HostedPreviewPluginSession(
+                 container,
+                 plugin,
+                 options.StateRoot,
+                 options.PluginSavePath,
+                 options.ConfigPath);
+         }
+         catch
+         {
+             await DisposeContainerAsync(container);
+             throw;
+         }
+     }
+ 
++    /// <summary>
++    /// Copies the preview database to the path opened by the production plugin's database manager.
++    /// </summary>
++    /// <param name="options">The preview-owned hosted-session options.</param>
++    /// <returns>The expected production database path, or <see langword="null"/> when no database was supplied.</returns>
++    /// <exception cref="InvalidOperationException">Thrown when the supplied preview database is unavailable.</exception>
++    private static string? PrepareHostedDatabase(HostedPreviewPluginOptions options)
++    {
++        if (string.IsNullOrWhiteSpace(options.DatabasePath))
++        {
++            return null;
++        }
++
++        var sourceDatabasePath = Path.GetFullPath(options.DatabasePath);
++        if (!File.Exists(sourceDatabasePath))
++        {
++            throw new InvalidOperationException(
++                $"The hosted preview database does not exist: {sourceDatabasePath}");
++        }
++
++        var destinationDirectory = Path.Combine(
++            options.PluginSavePath.FullName,
++            typeof(global::Echoglossian.Echoglossian).Assembly.GetName().Name!);
++        Directory.CreateDirectory(destinationDirectory);
++        var destinationDatabasePath = Path.Combine(destinationDirectory, "Echoglossian.db");
++        File.Copy(sourceDatabasePath, destinationDatabasePath, overwrite: true);
++        return destinationDatabasePath;
++    }
++
++    /// <summary>
++    /// Verifies that DalaMock resolved the production plugin configuration directory used for the seeded database.
++    /// </summary>
++    /// <param name="effectiveDatabasePath">The path seeded before hosted startup.</param>
++    /// <exception cref="InvalidOperationException">Thrown when DalaMock resolves a different plugin configuration directory.</exception>
++    private static void VerifyHostedDatabasePath(string? effectiveDatabasePath)
++    {
++        if (effectiveDatabasePath is null)
++        {
++            return;
++        }
++
++        var resolvedDatabasePath = Path.GetFullPath(Path.Combine(
++            global::Echoglossian.Echoglossian.ConfigDirectory,
++            "Echoglossian.db"));
++        if (!string.Equals(
++                effectiveDatabasePath,
++                resolvedDatabasePath,
++                StringComparison.OrdinalIgnoreCase))
++        {
++            throw new InvalidOperationException(
++                $"DalaMock resolved hosted plugin database path '{resolvedDatabasePath}', " +
++                $"but preview seeded '{effectiveDatabasePath}'.");
++        }
++    }
++
+     /// <summary>
+     /// Resolves the local FFXIV sqpack directory required by DalaMock.
+     /// </summary>
+     /// <returns>The local sqpack directory.</returns>
+     /// <exception cref="InvalidOperationException">Thrown when no valid local sqpack directory can be found.</exception>
+     private static DirectoryInfo ResolveSqpackDirectory()
+     {
+         foreach (var candidate in GetSqpackPathCandidates())
+         {
+             if (!string.IsNullOrWhiteSpace(candidate) && Directory.Exists(candidate))
+diff --git a/Echoglossian.Previewer.Tests/PluginWindows/PluginWindowPreviewBackendFactoryTests.cs b/Echoglossian.Previewer.Tests/PluginWindows/PluginWindowPreviewBackendFactoryTests.cs
+new file mode 100644
+index 0000000..b2266e0
+--- /dev/null
++++ b/Echoglossian.Previewer.Tests/PluginWindows/PluginWindowPreviewBackendFactoryTests.cs
+@@ -0,0 +1,243 @@
++// <copyright file="PluginWindowPreviewBackendFactoryTests.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.PluginWindows;
++using Echoglossian.Previewer.UI;
++
++using System.Drawing;
++
++using Xunit;
++
++namespace Echoglossian.Previewer.Tests.PluginWindows;
++
++/// <summary>
++///     Covers selection and fallback behavior for plugin-window preview backends.
++/// </summary>
++public sealed class PluginWindowPreviewBackendFactoryTests
++{
++    /// <summary>
++    ///     Ensures automatic backend selection remains usable when hosted boot fails.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_auto_falls_back_to_standalone_when_hosted_boot_fails()
++    {
++        var result = await PluginWindowPreviewBackendFactory.CreateForTestsAsync(
++            PluginWindowPreviewBackendMode.Auto,
++            static () => throw new InvalidOperationException("synthetic hosted failure"));
++
++        Assert.Equal(PluginWindowPreviewBackendMode.Standalone, result.Status.EffectiveMode);
++        Assert.Contains("synthetic hosted failure", result.Status.FallbackReason);
++        Assert.Equal(result.Status, result.Backend.Status);
++    }
++
++    /// <summary>
++    ///     Ensures explicitly requested hosted mode surfaces boot failures.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_dalamock_does_not_silently_fallback_when_hosted_boot_fails()
++    {
++        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
++            () => PluginWindowPreviewBackendFactory.CreateForTestsAsync(
++                PluginWindowPreviewBackendMode.DalaMockHosted,
++                static () => throw new InvalidOperationException("synthetic hosted failure")));
++
++        Assert.Contains("synthetic hosted failure", exception.Message);
++    }
++
++    /// <summary>
++    ///     Ensures the hosted backend resolves the production plugin members that own all preview windows.
++    /// </summary>
++    [Fact]
++    public void Hosted_backend_resolves_production_plugin_window_members_once()
++    {
++        DalaMockHostedPluginWindowPreviewBackend.ValidateHostedPluginWindowBridgeForTests();
++    }
++
++    /// <summary>
++    ///     Ensures a successfully started automatic backend remains visibly hosted.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_auto_reports_hosted_effective_mode_after_successful_startup()
++    {
++        var hosted = new TestBackend(PluginWindowPreviewBackendMode.DalaMockHosted);
++        var result = await PluginWindowPreviewBackendFactory.CreateAsync(
++            PluginWindowPreviewBackendMode.Auto,
++            () => Task.FromResult<IPluginWindowPreviewBackend>(hosted),
++            static () => new TestBackend(PluginWindowPreviewBackendMode.Standalone));
++        using var backend = result.Backend;
++
++        Assert.Equal(PluginWindowPreviewBackendMode.Auto, result.Backend.Status.RequestedMode);
++        Assert.Equal(PluginWindowPreviewBackendMode.DalaMockHosted, result.Backend.Status.EffectiveMode);
++    }
++
++    /// <summary>
++    ///     Ensures a hosted draw failure retries the operation against standalone.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_auto_falls_back_when_hosted_draw_fails()
++    {
++        var hosted = new TestBackend(PluginWindowPreviewBackendMode.DalaMockHosted)
++        {
++            ThrowOnDraw = true,
++        };
++        var standalone = new TestBackend(PluginWindowPreviewBackendMode.Standalone);
++        var result = await PluginWindowPreviewBackendFactory.CreateAsync(
++            PluginWindowPreviewBackendMode.Auto,
++            () => Task.FromResult<IPluginWindowPreviewBackend>(hosted),
++            () => standalone);
++        using var backend = result.Backend;
++
++        backend.Draw(null!);
++
++        Assert.Equal(1, hosted.DrawCount);
++        Assert.Equal(1, standalone.DrawCount);
++        Assert.Equal(PluginWindowPreviewBackendMode.Standalone, backend.Status.EffectiveMode);
++        Assert.Contains("synthetic draw failure", backend.Status.FallbackReason);
++    }
++
++    /// <summary>
++    ///     Ensures an explicit hosted selection does not hide a runtime hosted-backend failure.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_dalamock_surfaces_hosted_draw_failures()
++    {
++        var hosted = new TestBackend(PluginWindowPreviewBackendMode.DalaMockHosted)
++        {
++            ThrowOnDraw = true,
++        };
++        var result = await PluginWindowPreviewBackendFactory.CreateAsync(
++            PluginWindowPreviewBackendMode.DalaMockHosted,
++            () => Task.FromResult<IPluginWindowPreviewBackend>(hosted),
++            static () => new TestBackend(PluginWindowPreviewBackendMode.Standalone));
++        using var backend = result.Backend;
++
++        var exception = Assert.Throws<InvalidOperationException>(() => backend.Draw(null!));
++
++        Assert.Contains("synthetic draw failure", exception.Message);
++    }
++
++    /// <summary>
++    ///     Ensures capture startup retries against standalone when hosted capture fails at runtime.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_auto_falls_back_when_hosted_capture_begins_failing()
++    {
++        var hosted = new TestBackend(PluginWindowPreviewBackendMode.DalaMockHosted)
++        {
++            ThrowOnBeginCapture = true,
++        };
++        var standalone = new TestBackend(PluginWindowPreviewBackendMode.Standalone);
++        var result = await PluginWindowPreviewBackendFactory.CreateAsync(
++            PluginWindowPreviewBackendMode.Auto,
++            () => Task.FromResult<IPluginWindowPreviewBackend>(hosted),
++            () => standalone);
++        using var backend = result.Backend;
++
++        backend.BeginCapture(PreviewCaptureTarget.ConfigWindow);
++
++        Assert.Equal(1, hosted.BeginCaptureCount);
++        Assert.Equal(1, standalone.BeginCaptureCount);
++        Assert.Equal(PluginWindowPreviewBackendMode.Standalone, backend.Status.EffectiveMode);
++        Assert.Contains("synthetic capture failure", backend.Status.FallbackReason);
++    }
++
++    /// <summary>
++    ///     Ensures capture availability checks trigger the same visible automatic fallback.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_auto_falls_back_when_hosted_availability_check_fails()
++    {
++        var hosted = new TestBackend(PluginWindowPreviewBackendMode.DalaMockHosted)
++        {
++            ThrowOnDbManagerAvailable = true,
++        };
++        var standalone = new TestBackend(PluginWindowPreviewBackendMode.Standalone);
++        var result = await PluginWindowPreviewBackendFactory.CreateAsync(
++            PluginWindowPreviewBackendMode.Auto,
++            () => Task.FromResult<IPluginWindowPreviewBackend>(hosted),
++            () => standalone);
++        using var backend = result.Backend;
++
++        Assert.True(backend.DbManagerAvailable);
++
++        Assert.Equal(1, hosted.DbManagerAvailableCount);
++        Assert.Equal(1, standalone.DbManagerAvailableCount);
++        Assert.Equal(PluginWindowPreviewBackendMode.Standalone, backend.Status.EffectiveMode);
++        Assert.Contains("synthetic availability failure", backend.Status.FallbackReason);
++    }
++
++    private sealed class TestBackend : IPluginWindowPreviewBackend
++    {
++        internal TestBackend(PluginWindowPreviewBackendMode mode)
++        {
++            this.Status = new PluginWindowBackendStatus(mode, mode, mode == PluginWindowPreviewBackendMode.DalaMockHosted, true, null);
++        }
++
++        public PluginWindowBackendStatus Status { get; }
++
++        public bool ThrowOnDraw { get; init; }
++
++        public bool ThrowOnBeginCapture { get; init; }
++
++        public bool ThrowOnDbManagerAvailable { get; init; }
++
++        internal int DrawCount { get; private set; }
++
++        internal int BeginCaptureCount { get; private set; }
++
++        internal int DbManagerAvailableCount { get; private set; }
++
++        public bool DbManagerAvailable
++        {
++            get
++            {
++                this.DbManagerAvailableCount++;
++                if (this.ThrowOnDbManagerAvailable)
++                {
++                    throw new InvalidOperationException("synthetic availability failure");
++                }
++
++                return true;
++            }
++        }
++
++        public bool CaptureFailed => false;
++
++        public void Draw(PreviewWorkbenchState state)
++        {
++            this.DrawCount++;
++            if (this.ThrowOnDraw)
++            {
++                throw new InvalidOperationException("synthetic draw failure");
++            }
++        }
++
++        public void BeginCapture(PreviewCaptureTarget target)
++        {
++            this.BeginCaptureCount++;
++            if (this.ThrowOnBeginCapture)
++            {
++                throw new InvalidOperationException("synthetic capture failure");
++            }
++        }
++
++        public void EndCapture()
++        {
++        }
++
++        public Rectangle? TryGetStableCrop(PreviewCaptureTarget target) => null;
++
++        public void Dispose()
++        {
++        }
++    }
++}
+diff --git a/Echoglossian.Previewer/Echoglossian.Previewer.csproj b/Echoglossian.Previewer/Echoglossian.Previewer.csproj
+index 4a8f043..e0fda31 100644
+--- a/Echoglossian.Previewer/Echoglossian.Previewer.csproj
++++ b/Echoglossian.Previewer/Echoglossian.Previewer.csproj
+@@ -24,20 +24,21 @@
+ 
+   <ItemGroup>
+     <Content Include="..\Font\**\*">
+       <Link>Font\%(RecursiveDir)%(Filename)%(Extension)</Link>
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </Content>
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <ProjectReference Include="..\Echoglossian.csproj" />
++    <ProjectReference Include="..\Echoglossian.Mock\Echoglossian.Mock.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <InternalsVisibleTo Include="Echoglossian.Previewer.Tests" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <Reference Include="Dalamud">
+       <HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
+       <Private>true</Private>
+diff --git a/Echoglossian.Previewer/PluginWindows/DalaMockHostedPluginWindowPreviewBackend.cs b/Echoglossian.Previewer/PluginWindows/DalaMockHostedPluginWindowPreviewBackend.cs
+new file mode 100644
+index 0000000..d1adceb
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/DalaMockHostedPluginWindowPreviewBackend.cs
+@@ -0,0 +1,302 @@
++// <copyright file="DalaMockHostedPluginWindowPreviewBackend.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Dalamud.Bindings.ImGui;
++using Echoglossian.Mock.Hosting;
++using Echoglossian.Previewer.UI;
++using Echoglossian.Properties;
++using System.Drawing;
++using System.Reflection;
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>Draws the DalaMock-hosted production plugin windows in the preview host.</summary>
++internal sealed class DalaMockHostedPluginWindowPreviewBackend : IPluginWindowPreviewBackend
++{
++  private const int RequiredCaptureStableFrames = 3;
++  private const int MaximumCaptureObservationFrames = 180;
++  private readonly HostedPreviewPluginSession session;
++  private readonly HostedPluginWindowBridge bridge;
++  private readonly PreviewCaptureStabilityTracker captureStabilityTracker = new(RequiredCaptureStableFrames, MaximumCaptureObservationFrames);
++  private bool disposed;
++
++  internal DalaMockHostedPluginWindowPreviewBackend(HostedPreviewPluginSession session)
++  {
++    this.session = session ?? throw new ArgumentNullException(nameof(session));
++    this.bridge = new HostedPluginWindowBridge(this.session.Plugin);
++    this.Status = new PluginWindowBackendStatus(PluginWindowPreviewBackendMode.DalaMockHosted, PluginWindowPreviewBackendMode.DalaMockHosted, true, true, null);
++  }
++
++  public PluginWindowBackendStatus Status { get; }
++
++  public bool DbManagerAvailable => this.bridge.DbManagerAvailable;
++
++  public bool CaptureFailed => this.captureStabilityTracker.CaptureFailed;
++
++  public void Draw(PreviewWorkbenchState state)
++  {
++    ArgumentNullException.ThrowIfNull(state);
++    this.bridge.ConfigWindowOpen = state.ConfigWindowOpen;
++    if (state.ConfigWindowOpen)
++    {
++      this.ApplyCaptureLayout(PreviewCaptureTarget.ConfigWindow);
++      this.bridge.DrawConfigWindow();
++      this.EnforceCaptureLayout(PreviewCaptureTarget.ConfigWindow, this.bridge.ConfigWindowName);
++    }
++
++    state.ConfigWindowOpen = this.bridge.ConfigWindowOpen;
++    this.bridge.DbManagerWindowOpen = state.DbManagerWindowOpen;
++    this.ApplyCaptureLayout(PreviewCaptureTarget.DbManagerWindow);
++    this.bridge.DrawDbManagerWindow();
++    this.EnforceCaptureLayout(PreviewCaptureTarget.DbManagerWindow, Resources.EchoglossianDBEditor);
++    state.DbManagerWindowOpen = this.bridge.DbManagerWindowOpen;
++    this.bridge.TranslatorMetricsWindowOpen = state.TranslatorMetricsWindowOpen;
++    this.ApplyCaptureLayout(PreviewCaptureTarget.TranslatorMetricsWindow);
++    this.bridge.DrawTranslatorMetricsWindow();
++    this.EnforceCaptureLayout(PreviewCaptureTarget.TranslatorMetricsWindow, Resources.TranslatorDebuggerWindowTitle);
++    state.TranslatorMetricsWindowOpen = this.bridge.TranslatorMetricsWindowOpen;
++
++    if (this.captureStabilityTracker.Target is { } captureTarget && PreviewPluginWindowHost.IsPluginWindowTarget(captureTarget))
++    {
++      this.captureStabilityTracker.Observe(captureTarget, this.TryGetValidCaptureBounds(captureTarget));
++    }
++  }
++
++  public void BeginCapture(PreviewCaptureTarget target)
++  {
++    if (!PreviewPluginWindowHost.IsPluginWindowTarget(target))
++    {
++      throw new ArgumentException("Capture stabilization requires a plugin-window target.", nameof(target));
++    }
++
++    if (target == PreviewCaptureTarget.DbManagerWindow && !this.DbManagerAvailable)
++    {
++      throw new InvalidOperationException("DbManagerWindow capture requires an available preview database snapshot.");
++    }
++
++    this.captureStabilityTracker.Begin(target);
++  }
++
++  public void EndCapture() => this.captureStabilityTracker.End();
++
++  public Rectangle? TryGetStableCrop(PreviewCaptureTarget target)
++  {
++    return this.captureStabilityTracker.TryGetStableBounds(target, out var bounds) && PreviewPluginWindowHost.IsCaptureBoundsValid(target, this.bridge.IsWindowVisible(target), bounds) ? bounds : null;
++  }
++
++  internal static void ValidateHostedPluginWindowBridgeForTests() => HostedPluginWindowBridge.ValidateMembers();
++
++  public void Dispose()
++  {
++    if (this.disposed)
++    {
++      return;
++    }
++
++    this.disposed = true;
++    this.session.Dispose();
++  }
++
++  private void ApplyCaptureLayout(PreviewCaptureTarget target)
++  {
++    if (this.captureStabilityTracker.Target != target)
++    {
++      return;
++    }
++
++    var size = PreviewPluginWindowHost.GetCaptureLayoutSize(target);
++    ImGui.SetNextWindowPos(System.Numerics.Vector2.Zero, ImGuiCond.Always);
++    ImGui.SetNextWindowSize(new System.Numerics.Vector2(size.Width, size.Height), ImGuiCond.Always);
++  }
++
++  private void EnforceCaptureLayout(PreviewCaptureTarget target, string windowName)
++  {
++    if (this.captureStabilityTracker.Target != target)
++    {
++      return;
++    }
++
++    var size = PreviewPluginWindowHost.GetCaptureLayoutSize(target);
++    ImGui.SetWindowPos(windowName, System.Numerics.Vector2.Zero, ImGuiCond.Always);
++    ImGui.SetWindowSize(windowName, new System.Numerics.Vector2(size.Width, size.Height), ImGuiCond.Always);
++  }
++
++  private Rectangle? TryGetValidCaptureBounds(PreviewCaptureTarget target)
++  {
++    var bounds = this.bridge.TryGetCrop(target);
++    return PreviewPluginWindowHost.IsCaptureBoundsValid(target, this.bridge.IsWindowVisible(target), bounds) ? bounds : null;
++  }
++}
++
++/// <summary>Caches private production-plugin UI members used only by the preview hosted backend.</summary>
++internal sealed class HostedPluginWindowBridge
++{
++  private const BindingFlags InstanceNonPublic = BindingFlags.Instance | BindingFlags.NonPublic;
++  private static readonly HostedPluginWindowMembers Members = HostedPluginWindowMembers.Create();
++  private readonly global::Echoglossian.Echoglossian plugin;
++
++  internal HostedPluginWindowBridge(global::Echoglossian.Echoglossian plugin)
++  {
++    this.plugin = plugin ?? throw new ArgumentNullException(nameof(plugin));
++  }
++
++  internal bool DbManagerAvailable => Members.DbEditorWindowField.GetValue(this.plugin) is not null;
++
++  internal bool ConfigWindowOpen
++  {
++    get => (bool)(Members.ConfigOpenField.GetValue(this.plugin) ?? false);
++    set => Members.ConfigOpenField.SetValue(this.plugin, value);
++  }
++
++  internal bool DbManagerWindowOpen
++  {
++    get => this.GetFieldWindowOpen(Members.DbEditorWindowField, Members.DbManagerOpenField);
++    set => this.SetFieldWindowOpen(Members.DbEditorWindowField, Members.DbManagerOpenField, value);
++  }
++
++  internal bool TranslatorMetricsWindowOpen
++  {
++    get => this.GetPropertyWindowOpen(Members.TranslatorMetricsWindowField, Members.TranslatorMetricsOpenProperty);
++    set => this.SetPropertyWindowOpen(Members.TranslatorMetricsWindowField, Members.TranslatorMetricsOpenProperty, value);
++  }
++
++  internal string ConfigWindowName => $"{Resources.ConfigWindowTitle} - Plugin Version: {this.GetConfiguration().PluginVersion}";
++
++  internal void DrawConfigWindow() => Members.DrawConfigWindowMethod.Invoke(this.plugin, null);
++
++  internal void DrawDbManagerWindow() => Members.DrawDbManagerWindowMethod.Invoke(this.plugin, null);
++
++  internal void DrawTranslatorMetricsWindow() => Members.DrawTranslatorMetricsWindowMethod.Invoke(this.plugin, null);
++
++  internal Rectangle? TryGetCrop(PreviewCaptureTarget target)
++  {
++    var bounds = target switch
++    {
++      PreviewCaptureTarget.ConfigWindow => Members.ConfigBoundsProperty.GetValue(Members.ConfigWindowRendererField.GetValue(this.plugin)),
++      PreviewCaptureTarget.DbManagerWindow => Members.DbManagerBoundsProperty.GetValue(Members.DbEditorWindowField.GetValue(this.plugin)),
++      PreviewCaptureTarget.TranslatorMetricsWindow => Members.TranslatorMetricsBoundsProperty.GetValue(Members.TranslatorMetricsWindowField.GetValue(this.plugin)),
++      _ => null,
++    };
++
++    return bounds is RectangleF rectangle
++        ? Rectangle.FromLTRB((int)MathF.Floor(rectangle.Left), (int)MathF.Floor(rectangle.Top), (int)MathF.Ceiling(rectangle.Right), (int)MathF.Ceiling(rectangle.Bottom))
++        : null;
++  }
++
++  internal bool IsWindowVisible(PreviewCaptureTarget target)
++  {
++    return target switch
++    {
++      PreviewCaptureTarget.ConfigWindow => this.ConfigWindowOpen,
++      PreviewCaptureTarget.DbManagerWindow => this.DbManagerWindowOpen,
++      PreviewCaptureTarget.TranslatorMetricsWindow => this.TranslatorMetricsWindowOpen,
++      _ => false,
++    };
++  }
++
++  internal static void ValidateMembers() => Members.Validate();
++
++  private bool GetFieldWindowOpen(FieldInfo windowField, FieldInfo openField)
++  {
++    var window = windowField.GetValue(this.plugin);
++    return window is not null && (bool)(openField.GetValue(window) ?? false);
++  }
++
++  private bool GetPropertyWindowOpen(FieldInfo windowField, PropertyInfo openProperty)
++  {
++    var window = windowField.GetValue(this.plugin);
++    return window is not null && (bool)(openProperty.GetValue(window) ?? false);
++  }
++
++  private void SetFieldWindowOpen(FieldInfo windowField, FieldInfo openField, bool value)
++  {
++    var window = windowField.GetValue(this.plugin);
++    if (window is not null)
++    {
++      openField.SetValue(window, value);
++    }
++  }
++
++  private void SetPropertyWindowOpen(FieldInfo windowField, PropertyInfo openProperty, bool value)
++  {
++    var window = windowField.GetValue(this.plugin);
++    if (window is not null)
++    {
++      openProperty.SetValue(window, value);
++    }
++  }
++
++  private Config GetConfiguration()
++  {
++    return Members.ConfigurationField.GetValue(this.plugin) as Config ?? throw new InvalidOperationException("Hosted plugin configuration is unavailable.");
++  }
++
++  /// <summary>Describes cached members resolved once for every hosted backend.</summary>
++  private sealed class HostedPluginWindowMembers
++  {
++    private HostedPluginWindowMembers(FieldInfo configOpenField, FieldInfo configurationField, FieldInfo configWindowRendererField, FieldInfo dbEditorWindowField, FieldInfo translatorMetricsWindowField, MethodInfo drawConfigWindowMethod, MethodInfo drawDbManagerWindowMethod, MethodInfo drawTranslatorMetricsWindowMethod, PropertyInfo configBoundsProperty, FieldInfo dbManagerOpenField, PropertyInfo dbManagerBoundsProperty, PropertyInfo translatorMetricsOpenProperty, PropertyInfo translatorMetricsBoundsProperty)
++    {
++      this.ConfigOpenField = configOpenField;
++      this.ConfigurationField = configurationField;
++      this.ConfigWindowRendererField = configWindowRendererField;
++      this.DbEditorWindowField = dbEditorWindowField;
++      this.TranslatorMetricsWindowField = translatorMetricsWindowField;
++      this.DrawConfigWindowMethod = drawConfigWindowMethod;
++      this.DrawDbManagerWindowMethod = drawDbManagerWindowMethod;
++      this.DrawTranslatorMetricsWindowMethod = drawTranslatorMetricsWindowMethod;
++      this.ConfigBoundsProperty = configBoundsProperty;
++      this.DbManagerOpenField = dbManagerOpenField;
++      this.DbManagerBoundsProperty = dbManagerBoundsProperty;
++      this.TranslatorMetricsOpenProperty = translatorMetricsOpenProperty;
++      this.TranslatorMetricsBoundsProperty = translatorMetricsBoundsProperty;
++    }
++
++    internal FieldInfo ConfigOpenField { get; }
++    internal FieldInfo ConfigurationField { get; }
++    internal FieldInfo ConfigWindowRendererField { get; }
++    internal FieldInfo DbEditorWindowField { get; }
++    internal FieldInfo TranslatorMetricsWindowField { get; }
++    internal MethodInfo DrawConfigWindowMethod { get; }
++    internal MethodInfo DrawDbManagerWindowMethod { get; }
++    internal MethodInfo DrawTranslatorMetricsWindowMethod { get; }
++    internal PropertyInfo ConfigBoundsProperty { get; }
++    internal FieldInfo DbManagerOpenField { get; }
++    internal PropertyInfo DbManagerBoundsProperty { get; }
++    internal PropertyInfo TranslatorMetricsOpenProperty { get; }
++    internal PropertyInfo TranslatorMetricsBoundsProperty { get; }
++
++    internal static HostedPluginWindowMembers Create()
++    {
++      var pluginType = typeof(global::Echoglossian.Echoglossian);
++      var dbEditorWindowField = GetRequiredField(pluginType, "dbEditorWindow");
++      var translatorMetricsWindowField = GetRequiredField(pluginType, "translatorMetricsWindow");
++      var configWindowRendererField = GetRequiredField(pluginType, "configWindowRenderer");
++      return new HostedPluginWindowMembers(
++          GetRequiredField(pluginType, "config"),
++          GetRequiredField(pluginType, "configuration"),
++          configWindowRendererField,
++          dbEditorWindowField,
++          translatorMetricsWindowField,
++          GetRequiredMethod(pluginType, "EchoglossianConfigUi"),
++          GetRequiredMethod(pluginType, "DrawDbEditorWindow"),
++          GetRequiredMethod(pluginType, "DrawTranslatorMetricsWindow"),
++          GetRequiredProperty(configWindowRendererField.FieldType, "LastWindowBounds"),
++          GetRequiredField(dbEditorWindowField.FieldType, "IsOpen"),
++          GetRequiredProperty(dbEditorWindowField.FieldType, "LastWindowBounds"),
++          GetRequiredProperty(translatorMetricsWindowField.FieldType, "IsOpen"),
++          GetRequiredProperty(translatorMetricsWindowField.FieldType, "LastWindowBounds"));
++    }
++
++    internal void Validate()
++    {
++    }
++
++    private static FieldInfo GetRequiredField(Type type, string name) => type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ?? throw new InvalidOperationException($"Hosted plugin window bridge could not resolve field '{name}'.");
++
++    private static MethodInfo GetRequiredMethod(Type type, string name) => type.GetMethod(name, InstanceNonPublic) ?? throw new InvalidOperationException($"Hosted plugin window bridge could not resolve method '{name}'.");
++
++    private static PropertyInfo GetRequiredProperty(Type type, string name) => type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ?? throw new InvalidOperationException($"Hosted plugin window bridge could not resolve property '{name}'.");
++  }
++}
+diff --git a/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendFactory.cs b/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendFactory.cs
+new file mode 100644
+index 0000000..6ceb686
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendFactory.cs
+@@ -0,0 +1,213 @@
++// <copyright file="PluginWindowPreviewBackendFactory.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using System.Reflection;
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>
++///     Selects a plugin-window preview backend while preserving explicit hosted-mode failures.
++/// </summary>
++internal static class PluginWindowPreviewBackendFactory
++{
++    /// <summary>
++    ///     Creates the requested plugin-window preview backend.
++    /// </summary>
++    /// <param name="requestedMode">The mode requested by the previewer operator.</param>
++    /// <param name="createHostedBackend">Starts the DalaMock-hosted backend.</param>
++    /// <param name="createStandaloneBackend">Creates the standalone backend.</param>
++    /// <returns>The selected backend and its visible effective status.</returns>
++    internal static async Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
++        CreateAsync(
++            PluginWindowPreviewBackendMode requestedMode,
++            Func<Task<IPluginWindowPreviewBackend>> createHostedBackend,
++            Func<IPluginWindowPreviewBackend> createStandaloneBackend)
++    {
++        ArgumentNullException.ThrowIfNull(createHostedBackend);
++        ArgumentNullException.ThrowIfNull(createStandaloneBackend);
++
++        if (requestedMode == PluginWindowPreviewBackendMode.Standalone)
++        {
++            var backend = createStandaloneBackend();
++            return (backend, backend.Status);
++        }
++
++        try
++        {
++            var hostedBackend = await createHostedBackend();
++            if (requestedMode == PluginWindowPreviewBackendMode.Auto)
++            {
++                var backend = new AutoFallbackBackend(hostedBackend, createStandaloneBackend);
++                return (backend, backend.Status);
++            }
++
++            return (hostedBackend, hostedBackend.Status);
++        }
++        catch (Exception exception) when (requestedMode == PluginWindowPreviewBackendMode.Auto)
++        {
++            var standaloneBackend = createStandaloneBackend();
++            var fallbackStatus = new PluginWindowBackendStatus(
++                PluginWindowPreviewBackendMode.Auto,
++                PluginWindowPreviewBackendMode.Standalone,
++                HostedRequested: true,
++                HostedAvailable: false,
++                FallbackReason: CreateFallbackReason(exception));
++            return (new StatusOverrideBackend(standaloneBackend, fallbackStatus), fallbackStatus);
++        }
++    }
++
++    /// <summary>
++    ///     Creates a backend selection result from a hosted-startup test seam.
++    /// </summary>
++    /// <param name="requestedMode">The mode requested by the test.</param>
++    /// <param name="startHostedBackend">Starts the hosted backend or throws its failure.</param>
++    /// <returns>The selected backend and its visible effective status.</returns>
++    internal static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
++        CreateForTestsAsync(
++            PluginWindowPreviewBackendMode requestedMode,
++            Func<Task> startHostedBackend)
++    {
++        ArgumentNullException.ThrowIfNull(startHostedBackend);
++        return CreateAsync(
++            requestedMode,
++            async () =>
++            {
++                await startHostedBackend();
++                throw new InvalidOperationException(
++                    "The hosted test seam must throw before creating a backend.");
++            },
++            static () => StandalonePluginWindowPreviewBackend.CreateForTests(
++                dbManagerAvailable: true));
++    }
++
++    private static string CreateFallbackReason(Exception exception)
++    {
++        if (exception is ReflectionTypeLoadException typeLoadException &&
++            typeLoadException.LoaderExceptions.Length > 0)
++        {
++            return $"{exception.Message} {string.Join(" ", typeLoadException.LoaderExceptions.Select(loaderException => loaderException?.Message))}";
++        }
++
++        return exception.Message;
++    }
++
++    private sealed class StatusOverrideBackend : IPluginWindowPreviewBackend
++    {
++        private readonly IPluginWindowPreviewBackend inner;
++
++        internal StatusOverrideBackend(IPluginWindowPreviewBackend inner, PluginWindowBackendStatus status)
++        {
++            this.inner = inner ?? throw new ArgumentNullException(nameof(inner));
++            this.Status = status ?? throw new ArgumentNullException(nameof(status));
++        }
++
++        public PluginWindowBackendStatus Status { get; }
++
++        public bool DbManagerAvailable => this.inner.DbManagerAvailable;
++
++        public bool CaptureFailed => this.inner.CaptureFailed;
++
++        public void Draw(UI.PreviewWorkbenchState state) => this.inner.Draw(state);
++
++        public void BeginCapture(UI.PreviewCaptureTarget target) => this.inner.BeginCapture(target);
++
++        public void EndCapture() => this.inner.EndCapture();
++
++        public System.Drawing.Rectangle? TryGetStableCrop(UI.PreviewCaptureTarget target) => this.inner.TryGetStableCrop(target);
++
++        public void Dispose() => this.inner.Dispose();
++    }
++
++    private sealed class AutoFallbackBackend : IPluginWindowPreviewBackend
++    {
++        private readonly Func<IPluginWindowPreviewBackend> createStandaloneBackend;
++        private IPluginWindowPreviewBackend activeBackend;
++        private bool hostedActive = true;
++        private PluginWindowBackendStatus status = new(
++            PluginWindowPreviewBackendMode.Auto,
++            PluginWindowPreviewBackendMode.DalaMockHosted,
++            HostedRequested: true,
++            HostedAvailable: true,
++            FallbackReason: null);
++
++        internal AutoFallbackBackend(
++            IPluginWindowPreviewBackend hostedBackend,
++            Func<IPluginWindowPreviewBackend> createStandaloneBackend)
++        {
++            this.activeBackend = hostedBackend ?? throw new ArgumentNullException(nameof(hostedBackend));
++            this.createStandaloneBackend = createStandaloneBackend ??
++                throw new ArgumentNullException(nameof(createStandaloneBackend));
++        }
++
++        public PluginWindowBackendStatus Status => this.status;
++
++        public bool DbManagerAvailable => this.Execute(backend => backend.DbManagerAvailable);
++
++        public bool CaptureFailed => this.Execute(backend => backend.CaptureFailed);
++
++        public void Draw(UI.PreviewWorkbenchState state) => this.Execute(backend => backend.Draw(state));
++
++        public void BeginCapture(UI.PreviewCaptureTarget target) => this.Execute(backend => backend.BeginCapture(target));
++
++        public void EndCapture() => this.Execute(backend => backend.EndCapture());
++
++        public System.Drawing.Rectangle? TryGetStableCrop(UI.PreviewCaptureTarget target) =>
++            this.Execute(backend => backend.TryGetStableCrop(target));
++
++        public void Dispose() => this.activeBackend.Dispose();
++
++        private T Execute<T>(Func<IPluginWindowPreviewBackend, T> operation)
++        {
++            try
++            {
++                return operation(this.activeBackend);
++            }
++            catch (Exception exception) when (this.hostedActive)
++            {
++                this.FallBackToStandalone(exception);
++                return operation(this.activeBackend);
++            }
++        }
++
++        private void Execute(Action<IPluginWindowPreviewBackend> operation)
++        {
++            try
++            {
++                operation(this.activeBackend);
++            }
++            catch (Exception exception) when (this.hostedActive)
++            {
++                this.FallBackToStandalone(exception);
++                operation(this.activeBackend);
++            }
++        }
++
++        private void FallBackToStandalone(Exception exception)
++        {
++            var hostedBackend = this.activeBackend;
++            var standaloneBackend = this.createStandaloneBackend();
++            this.activeBackend = standaloneBackend;
++            this.hostedActive = false;
++            this.status = new PluginWindowBackendStatus(
++                PluginWindowPreviewBackendMode.Auto,
++                PluginWindowPreviewBackendMode.Standalone,
++                HostedRequested: true,
++                HostedAvailable: false,
++                FallbackReason: CreateFallbackReason(exception));
++
++            try
++            {
++                hostedBackend.Dispose();
++            }
++            catch (Exception disposeException)
++            {
++                this.status = this.status with
++                {
++                    FallbackReason = $"{this.status.FallbackReason} Hosted cleanup failed: {disposeException.Message}",
++                };
++            }
++        }
++    }
++}
+diff --git a/Echoglossian.Previewer/Program.cs b/Echoglossian.Previewer/Program.cs
+index c8d2206..2962682 100644
+--- a/Echoglossian.Previewer/Program.cs
++++ b/Echoglossian.Previewer/Program.cs
+@@ -1,19 +1,20 @@
+ // <copyright file="Program.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
+ using Dalamud.Bindings.ImGui;
+ 
+ using Echoglossian.EFCoreSqlite;
+ using Echoglossian.LanguagesHandling;
++using Echoglossian.Mock.Hosting;
+ using Echoglossian.PluginUI;
+ using Echoglossian.Previewer.Configuration;
+ using Echoglossian.Previewer.Fonts;
+ using Echoglossian.Previewer.Hosting;
+ using Echoglossian.Previewer.PluginWindows;
+ using Echoglossian.Previewer.Scenarios;
+ using Echoglossian.Previewer.Screenshots;
+ using Echoglossian.Previewer.Session;
+ using Echoglossian.Previewer.UI;
+ using Echoglossian.UIOverlays.TextPresentation;
+@@ -54,21 +55,21 @@ internal static class Program
+             {
+                 RunHostSmoke();
+             }
+ 
+             if (!string.IsNullOrWhiteSpace(commandLine.ScreenshotMode))
+             {
+                 RunScreenshotExport(commandLine);
+             }
+             else if (!commandLine.BindingSmoke && !commandLine.HostSmoke)
+             {
+-                RunInteractivePreview(commandLine);
++                RunInteractivePreviewAsync(commandLine).GetAwaiter().GetResult();
+             }
+ 
+             return 0;
+         }
+         catch (ArgumentException exception)
+         {
+             Console.Error.WriteLine(exception.Message);
+             return 1;
+         }
+         catch (InvalidOperationException exception)
+@@ -111,21 +112,21 @@ internal static class Program
+             });
+ 
+         host.RunFrame(
+             static () => ImGui.TextUnformatted("Echoglossian preview host"));
+     }
+ 
+     /// <summary>
+     ///     Runs the interactive preview shell.
+     /// </summary>
+     /// <param name="commandLine">The parsed command line.</param>
+-    private static void RunInteractivePreview(PreviewCommandLine commandLine)
++    private static async Task RunInteractivePreviewAsync(PreviewCommandLine commandLine)
+     {
+         using var session = PreviewSessionLoader.Load(
+             new PreviewSessionSourceOptions(
+                 commandLine.ConfigPath,
+                 commandLine.DatabasePath,
+                 commandLine.OutputDirectory));
+         var sourceConfiguration = session.Configuration;
+         var editableConfiguration = session.EditableConfiguration;
+         var scenario = PreviewScenarioCatalog.ResolveScenario(commandLine.Scenario);
+         var viewport = PreviewScenarioCatalog.ResolveViewport(
+@@ -151,34 +152,36 @@ internal static class Program
+             });
+         var fontRuntime = new PreviewFontRuntime(
+             fontSelection,
+             scenario.Title,
+             scenario.TranslatedText,
+             host.RecreateFontDeviceTexture);
+         using var composition = new PreviewOverlayRendererFactory(host).Create(
+             editableConfiguration,
+             fontRuntime,
+             fontSelection);
+-        using var pluginWindowBackend = CreateStandalonePluginWindowPreviewBackend(
++        var backendCreation = await CreatePluginWindowPreviewBackendAsync(
++            commandLine.PluginWindowBackendMode,
+             editableConfiguration,
+             languages,
+-            session.ClonedDatabasePath);
++            session);
++        using var pluginWindowBackend = backendCreation.Backend;
+         using var shell = new PreviewShell(
+             sourceConfiguration,
+             editableConfiguration,
+             fontSelection,
+             session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
+             composition.Renderer,
+             pluginWindowBackend,
+             scenario,
+             viewport);
+-        shell.SetPluginWindowBackendStatus(pluginWindowBackend.Status);
++        shell.SetPluginWindowBackendStatus(backendCreation.Status);
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+ 
+         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
+         host.Run(
+             () =>
+             {
+                 composition.BeginDrawFrame();
+                 shell.Draw();
+             },
+             () =>
+@@ -273,29 +276,42 @@ internal static class Program
+                 requests.Add(new ScreenshotRequest(
+                     mode,
+                     scenario,
+                     viewport,
+                     outputDirectory,
+                     commandLine.CaptureTarget ?? GetCaptureTarget(mode)));
+             }
+         }
+ 
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
++        IPluginWindowPreviewBackend? pluginWindowBackend = null;
+         var runner = new BatchScreenshotRunner(
+             sourceConfiguration,
+             editableConfiguration,
+             fontSelection,
+-            () => CreateStandalonePluginWindowPreviewBackend(
+-                editableConfiguration,
+-                languages,
+-                session.ClonedDatabasePath));
++            () =>
++            {
++                pluginWindowBackend = CreatePluginWindowPreviewBackendAsync(
++                    commandLine.PluginWindowBackendMode,
++                    editableConfiguration,
++                    languages,
++                    session).GetAwaiter().GetResult().Backend;
++                return pluginWindowBackend;
++            });
+         runner.Run(requests);
++        if (pluginWindowBackend?.Status is { FallbackReason: not null } backendStatus)
++        {
++            Console.WriteLine(
++                $"Plugin window backend: requested={backendStatus.RequestedMode}, " +
++                $"effective={backendStatus.EffectiveMode}. Fallback: {backendStatus.FallbackReason}");
++        }
++
+         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
+     }
+ 
+     private static string ResolveOutputDirectory(string? outputDirectory)
+     {
+         return string.IsNullOrWhiteSpace(outputDirectory)
+             ? ScreenshotFileName.CreateDefaultOutputDirectory(DateTimeOffset.UtcNow)
+             : outputDirectory;
+     }
+ 
+@@ -322,35 +338,87 @@ internal static class Program
+         return new EchoglossianDbContext(options);
+     }
+ 
+     /// <summary>
+     /// Creates real plugin windows over preview-owned configuration and database state.
+     /// </summary>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     /// <param name="languages">The available preview languages.</param>
+     /// <param name="databasePath">The optional preview database snapshot.</param>
+     /// <returns>The standalone plugin-window preview backend.</returns>
+-    private static IPluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
++    private static StandalonePluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
+         Config configuration,
+         IReadOnlyDictionary<int, LanguageInfo> languages,
+         string? databasePath)
+     {
+         var configWindowContext = CreatePreviewPluginWindowContext(
+             configuration,
+             languages);
+         return StandalonePluginWindowPreviewBackend.Create(new PreviewPluginWindowHost(
+             new PluginConfigWindowRenderer(),
+             configWindowContext,
+             CreatePreviewDbContext(databasePath),
+             configuration));
+     }
+ 
++    /// <summary>
++    ///     Selects a preview backend using only preview-session-owned state.
++    /// </summary>
++    /// <param name="requestedMode">The backend mode requested by the operator.</param>
++    /// <param name="session">The preview-owned session artifacts.</param>
++    /// <returns>The selected backend and its effective status.</returns>
++    private static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
++        CreatePluginWindowPreviewBackendAsync(
++            PluginWindowPreviewBackendMode requestedMode,
++            Config configuration,
++            IReadOnlyDictionary<int, LanguageInfo> languages,
++            PreviewSessionArtifacts session)
++    {
++        return PluginWindowPreviewBackendFactory.CreateAsync(
++            requestedMode,
++            async () => await CreateDalaMockHostedPluginWindowPreviewBackendAsync(session),
++            () => CreateStandalonePluginWindowPreviewBackend(
++                configuration,
++                languages,
++                session.ClonedDatabasePath));
++    }
++
++    /// <summary>
++    ///     Starts DalaMock over the preview session for hosted plugin-window rendering.
++    /// </summary>
++    /// <param name="session">The preview-owned session artifacts.</param>
++    /// <returns>The DalaMock-hosted plugin-window backend.</returns>
++    private static async Task<DalaMockHostedPluginWindowPreviewBackend>
++        CreateDalaMockHostedPluginWindowPreviewBackendAsync(
++            PreviewSessionArtifacts session)
++    {
++        var stateRoot = new DirectoryInfo(session.WorkingDirectory);
++        var hostedSession = await HostedPreviewPluginSessionFactory.StartAsync(
++            new HostedPreviewPluginOptions(
++                stateRoot,
++                stateRoot.CreateSubdirectory(".dalamock"),
++                new FileInfo(session.ClonedConfigPath),
++                session.ClonedDatabasePath,
++                CreateWindow: false));
++
++        try
++        {
++            return new DalaMockHostedPluginWindowPreviewBackend(
++                hostedSession);
++        }
++        catch
++        {
++            hostedSession.Dispose();
++            throw;
++        }
++    }
++
+     /// <summary>
+     /// Creates config-window dependencies with explicit unavailable preview imagery.
+     /// </summary>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     /// <param name="languages">The available preview languages.</param>
+     /// <returns>The preview-safe config-window context.</returns>
+     internal static PluginConfigWindowContext CreatePreviewPluginWindowContext(
+         Config configuration,
+         IReadOnlyDictionary<int, LanguageInfo> languages)
+     {
+diff --git a/Echoglossian.Previewer/UI/PreviewShell.cs b/Echoglossian.Previewer/UI/PreviewShell.cs
+index eb0e21e..d4da109 100644
+--- a/Echoglossian.Previewer/UI/PreviewShell.cs
++++ b/Echoglossian.Previewer/UI/PreviewShell.cs
+@@ -428,20 +428,21 @@ internal sealed class PreviewShell : IDisposable
+                     ImGui.SetItemDefaultFocus();
+                 }
+             }
+ 
+             ImGui.EndCombo();
+         }
+     }
+ 
+     private void DrawFidelitySummary()
+     {
++        this.pluginWindowBackendStatus = this.pluginWindowBackend.Status;
+         ImGui.TextUnformatted("Fidelity summary");
+         ImGui.TextWrapped(
+             $"Config source: {this.sourceConfiguration.SourceLabel}");
+         ImGui.TextWrapped(
+             $"Font: {Path.GetFileName(this.fontSelection.SpecialFontPath)} / {this.fontSelection.FontSize}px");
+         ImGui.TextUnformatted(
+             $"Logical viewport: {this.state.Viewport.Width}x{this.state.Viewport.Height}");
+         ImGui.TextUnformatted($"Presentation mode: {this.lastRenderResult.PresentationMode}");
+         ImGui.TextUnformatted(
+             $"Uses simulated addon bounds: {this.state.ShowSimulatedAddonBounds}");

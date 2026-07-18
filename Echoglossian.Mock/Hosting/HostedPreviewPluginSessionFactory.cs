@@ -49,7 +49,7 @@ public static class HostedPreviewPluginSessionFactory
         try
         {
             var loader = container.GetPluginLoader();
-            var mockPlugin = loader.AddPlugin(typeof(global::Echoglossian.Echoglossian));
+            var mockPlugin = loader.AddPlugin(typeof(EchoglossianAsyncPluginAdapter));
             var settings = new PluginLoadSettings(options.StateRoot, options.ConfigPath)
             {
                 AssemblyLocation = typeof(global::Echoglossian.Echoglossian).Assembly.Location,
@@ -58,10 +58,13 @@ public static class HostedPreviewPluginSessionFactory
             await loader.StartPlugin(mockPlugin, settings);
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (mockPlugin.DalamudPlugin is not global::Echoglossian.Echoglossian plugin)
+            if (mockPlugin.DalamudPlugin is not EchoglossianAsyncPluginAdapter adapter ||
+                adapter.Plugin is null)
             {
                 throw new InvalidOperationException("DalaMock did not build Echoglossian.");
             }
+
+            var plugin = adapter.Plugin;
 
             VerifyHostedDatabasePath(effectiveDatabasePath);
 
@@ -100,7 +103,7 @@ public static class HostedPreviewPluginSessionFactory
         }
 
         var destinationDirectory = Path.Combine(
-            options.PluginSavePath.FullName,
+            options.StateRoot.FullName,
             typeof(global::Echoglossian.Echoglossian).Assembly.GetName().Name!);
         Directory.CreateDirectory(destinationDirectory);
         var destinationDatabasePath = Path.Combine(destinationDirectory, "Echoglossian.db");

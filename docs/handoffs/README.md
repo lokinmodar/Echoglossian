@@ -37,6 +37,9 @@ Example:
 
 ## Handoffs in this folder
 
+- [DalaMock Upstream Workstreams](./dalamock-upstream-workstreams.md)
+- [DalaMock `CreateDebouncer` Compatibility](./dalamock-upstream-create-debouncer.md)
+- [DalaMock Hosted Plugin Loader Assembly Resolution](./dalamock-upstream-plugin-loader-assembly-resolution.md)
 - [JournalDetail And Quest Native Reflow](./journaldetail-quest-native-reflow.md)
 - [LLM Post-Release Follow-Up (`#148`, `#174`, `#176`)](./llm-post-release-followup-148-174-176.md)
 - [LLM Translation Rework](./llm-translation-rework.md)

@@ -9,6 +9,7 @@ using Microsoft.Data.Sqlite;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -94,7 +95,7 @@ internal sealed class PreviewOwnedHostedSessionFixture : IDisposable
             command.CommandText = "CREATE TABLE preview_marker (value TEXT NOT NULL); INSERT INTO preview_marker VALUES ('preview database');";
             command.ExecuteNonQuery();
             this.EffectiveDatabasePath = Path.Combine(
-                pluginSavePath.FullName,
+                stateRoot.FullName,
                 "Echoglossian",
                 "Echoglossian.db");
         }
@@ -139,9 +140,45 @@ internal sealed class PreviewOwnedHostedSessionFixture : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (this.StateRoot.Exists)
+        for (var attempt = 0; attempt < 10; attempt++)
         {
-            this.StateRoot.Delete(true);
+            try
+            {
+                if (this.StateRoot.Exists)
+                {
+                    this.StateRoot.Delete(true);
+                }
+
+                return;
+            }
+            catch (IOException)
+            {
+                if (attempt == 9)
+                {
+                    throw;
+                }
+
+                SqliteConnection.ClearAllPools();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                this.StateRoot.Refresh();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                if (attempt == 9)
+                {
+                    throw;
+                }
+
+                SqliteConnection.ClearAllPools();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                this.StateRoot.Refresh();
+            }
         }
     }
 }

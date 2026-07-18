@@ -1,0 +1,31 @@
+## Global Constraints
+
+- keep one previewer shell, not multiple windows or separate tools
+- apply the new hosted path to real plugin windows only
+- include all three real plugin windows in scope:
+  - `Config`
+  - `DB Manager`
+  - `Translator Metrics / Debugger`
+- allow interaction with cloned session state, not live user state
+- expose backend choice both in CLI and in the previewer shell
+- default behavior should try the hosted backend and fall back automatically
+- fallback must remain visible and diagnosable, not silent
+- keep the previewer outside `Echoglossian.sln`
+- keep previewer dependencies out of normal plugin packaging
+- keep `Echoglossian.Mock` and `Echoglossian.Mock.Tests` as local-only development/runtime complements
+- preserve the current plugin entrypoint and release path
+- all preview edits continue to target cloned session config and cloned session DB state only
+- network or provider actions remain blocked in preview mode
+- any runtime service that cannot be provided safely under the hosted backend must be stubbed, redirected, or cause a backend fallback
+- one shell remains the only user-facing preview control surface
+- backend choice must be visible in both CLI and shell
+- fallback cannot silently degrade fidelity
+- no preview of native game UI or native addon mutation
+- no conversion of the entire previewer to a DalaMock-first architecture
+- no removal of the current standalone plugin-window backend
+- no change to plugin packaging or release flows
+- no broad plugin dependency-injection rewrite
+- no automatic write-back from preview session clones into the user's live config or DB
+- no promise that overlay rendering will move to DalaMock in this slice
+- keep the plugin path safe: if a shared production file needs to change, the smallest safe change wins, and production behavior must remain the same when the previewer is not running
+

@@ -1,0 +1,498 @@
+# Review package: 6f641ee84a7c2b0d02b86e1970788eeaeebdf34d..8906308027f78718b2151ad0fa8a56ccdb021d6a
+
+## Commits
+8906308 feat: add DalaMock hosted preview plugin-window backend
+
+## Files changed
+ .../PluginWindowPreviewBackendFactoryTests.cs      | 46 ++++++++++++
+ .../Echoglossian.Previewer.csproj                  |  1 +
+ .../DalaMockHostedPluginWindowPreviewBackend.cs    | 77 ++++++++++++++++++++
+ .../PluginWindowPreviewBackendFactory.cs           | 76 +++++++++++++++++++
+ Echoglossian.Previewer/Program.cs                  | 85 ++++++++++++++++++++--
+ 5 files changed, 277 insertions(+), 8 deletions(-)
+
+## Diff
+diff --git a/Echoglossian.Previewer.Tests/PluginWindows/PluginWindowPreviewBackendFactoryTests.cs b/Echoglossian.Previewer.Tests/PluginWindows/PluginWindowPreviewBackendFactoryTests.cs
+new file mode 100644
+index 0000000..5121543
+--- /dev/null
++++ b/Echoglossian.Previewer.Tests/PluginWindows/PluginWindowPreviewBackendFactoryTests.cs
+@@ -0,0 +1,46 @@
++// <copyright file="PluginWindowPreviewBackendFactoryTests.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Previewer.PluginWindows;
++
++using Xunit;
++
++namespace Echoglossian.Previewer.Tests.PluginWindows;
++
++/// <summary>
++///     Covers selection and fallback behavior for plugin-window preview backends.
++/// </summary>
++public sealed class PluginWindowPreviewBackendFactoryTests
++{
++    /// <summary>
++    ///     Ensures automatic backend selection remains usable when hosted boot fails.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_auto_falls_back_to_standalone_when_hosted_boot_fails()
++    {
++        var result = await PluginWindowPreviewBackendFactory.CreateForTestsAsync(
++            PluginWindowPreviewBackendMode.Auto,
++            static () => throw new InvalidOperationException("synthetic hosted failure"));
++
++        Assert.Equal(PluginWindowPreviewBackendMode.Standalone, result.Status.EffectiveMode);
++        Assert.Contains("synthetic hosted failure", result.Status.FallbackReason);
++    }
++
++    /// <summary>
++    ///     Ensures explicitly requested hosted mode surfaces boot failures.
++    /// </summary>
++    /// <returns>A task that completes after backend selection.</returns>
++    [Fact]
++    public async Task CreateAsync_dalamock_does_not_silently_fallback_when_hosted_boot_fails()
++    {
++        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
++            () => PluginWindowPreviewBackendFactory.CreateForTestsAsync(
++                PluginWindowPreviewBackendMode.DalaMockHosted,
++                static () => throw new InvalidOperationException("synthetic hosted failure")));
++
++        Assert.Contains("synthetic hosted failure", exception.Message);
++    }
++}
+diff --git a/Echoglossian.Previewer/Echoglossian.Previewer.csproj b/Echoglossian.Previewer/Echoglossian.Previewer.csproj
+index 4a8f043..e0fda31 100644
+--- a/Echoglossian.Previewer/Echoglossian.Previewer.csproj
++++ b/Echoglossian.Previewer/Echoglossian.Previewer.csproj
+@@ -24,20 +24,21 @@
+ 
+   <ItemGroup>
+     <Content Include="..\Font\**\*">
+       <Link>Font\%(RecursiveDir)%(Filename)%(Extension)</Link>
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </Content>
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <ProjectReference Include="..\Echoglossian.csproj" />
++    <ProjectReference Include="..\Echoglossian.Mock\Echoglossian.Mock.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <InternalsVisibleTo Include="Echoglossian.Previewer.Tests" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <Reference Include="Dalamud">
+       <HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
+       <Private>true</Private>
+diff --git a/Echoglossian.Previewer/PluginWindows/DalaMockHostedPluginWindowPreviewBackend.cs b/Echoglossian.Previewer/PluginWindows/DalaMockHostedPluginWindowPreviewBackend.cs
+new file mode 100644
+index 0000000..5d45b52
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/DalaMockHostedPluginWindowPreviewBackend.cs
+@@ -0,0 +1,77 @@
++// <copyright file="DalaMockHostedPluginWindowPreviewBackend.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Mock.Hosting;
++using Echoglossian.Previewer.UI;
++
++using System.Drawing;
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>
++///     Hosts the production plugin in DalaMock while rendering preview windows in the preview host.
++/// </summary>
++internal sealed class DalaMockHostedPluginWindowPreviewBackend : IPluginWindowPreviewBackend
++{
++    private readonly HostedPreviewPluginSession session;
++    private readonly StandalonePluginWindowPreviewBackend fallbackRenderer;
++    private bool disposed;
++
++    /// <summary>
++    ///     Initializes a new instance of the <see cref="DalaMockHostedPluginWindowPreviewBackend" /> class.
++    /// </summary>
++    /// <param name="session">The started DalaMock-hosted production plugin session.</param>
++    /// <param name="fallbackRenderer">The preview-owned renderer for plugin window output.</param>
++    internal DalaMockHostedPluginWindowPreviewBackend(
++        HostedPreviewPluginSession session,
++        StandalonePluginWindowPreviewBackend fallbackRenderer)
++    {
++        this.session = session ?? throw new ArgumentNullException(nameof(session));
++        this.fallbackRenderer = fallbackRenderer ??
++            throw new ArgumentNullException(nameof(fallbackRenderer));
++        this.Status = new PluginWindowBackendStatus(
++            PluginWindowPreviewBackendMode.DalaMockHosted,
++            PluginWindowPreviewBackendMode.DalaMockHosted,
++            HostedRequested: true,
++            HostedAvailable: true,
++            FallbackReason: null);
++    }
++
++    /// <inheritdoc />
++    public PluginWindowBackendStatus Status { get; }
++
++    /// <inheritdoc />
++    public bool DbManagerAvailable => this.fallbackRenderer.DbManagerAvailable;
++
++    /// <inheritdoc />
++    public bool CaptureFailed => this.fallbackRenderer.CaptureFailed;
++
++    /// <inheritdoc />
++    public void Draw(PreviewWorkbenchState state) => this.fallbackRenderer.Draw(state);
++
++    /// <inheritdoc />
++    public void BeginCapture(PreviewCaptureTarget target) =>
++        this.fallbackRenderer.BeginCapture(target);
++
++    /// <inheritdoc />
++    public void EndCapture() => this.fallbackRenderer.EndCapture();
++
++    /// <inheritdoc />
++    public Rectangle? TryGetStableCrop(PreviewCaptureTarget target) =>
++        this.fallbackRenderer.TryGetStableCrop(target);
++
++    /// <inheritdoc />
++    public void Dispose()
++    {
++        if (this.disposed)
++        {
++            return;
++        }
++
++        this.disposed = true;
++        this.fallbackRenderer.Dispose();
++        this.session.Dispose();
++    }
++}
+diff --git a/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendFactory.cs b/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendFactory.cs
+new file mode 100644
+index 0000000..8b97aad
+--- /dev/null
++++ b/Echoglossian.Previewer/PluginWindows/PluginWindowPreviewBackendFactory.cs
+@@ -0,0 +1,76 @@
++// <copyright file="PluginWindowPreviewBackendFactory.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++namespace Echoglossian.Previewer.PluginWindows;
++
++/// <summary>
++///     Selects a plugin-window preview backend while preserving explicit hosted-mode failures.
++/// </summary>
++internal static class PluginWindowPreviewBackendFactory
++{
++    /// <summary>
++    ///     Creates the requested plugin-window preview backend.
++    /// </summary>
++    /// <param name="requestedMode">The mode requested by the previewer operator.</param>
++    /// <param name="createHostedBackend">Starts the DalaMock-hosted backend.</param>
++    /// <param name="createStandaloneBackend">Creates the standalone backend.</param>
++    /// <returns>The selected backend and its visible effective status.</returns>
++    internal static async Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
++        CreateAsync(
++            PluginWindowPreviewBackendMode requestedMode,
++            Func<Task<DalaMockHostedPluginWindowPreviewBackend>> createHostedBackend,
++            Func<IPluginWindowPreviewBackend> createStandaloneBackend)
++    {
++        ArgumentNullException.ThrowIfNull(createHostedBackend);
++        ArgumentNullException.ThrowIfNull(createStandaloneBackend);
++
++        if (requestedMode == PluginWindowPreviewBackendMode.Standalone)
++        {
++            var backend = createStandaloneBackend();
++            return (backend, backend.Status);
++        }
++
++        try
++        {
++            var hostedBackend = await createHostedBackend();
++            return (hostedBackend, hostedBackend.Status);
++        }
++        catch (Exception exception) when (requestedMode == PluginWindowPreviewBackendMode.Auto)
++        {
++            var standaloneBackend = createStandaloneBackend();
++            var fallbackStatus = new PluginWindowBackendStatus(
++                PluginWindowPreviewBackendMode.Auto,
++                PluginWindowPreviewBackendMode.Standalone,
++                HostedRequested: true,
++                HostedAvailable: false,
++                FallbackReason: exception.Message);
++            return (standaloneBackend, fallbackStatus);
++        }
++    }
++
++    /// <summary>
++    ///     Creates a backend selection result from a hosted-startup test seam.
++    /// </summary>
++    /// <param name="requestedMode">The mode requested by the test.</param>
++    /// <param name="startHostedBackend">Starts the hosted backend or throws its failure.</param>
++    /// <returns>The selected backend and its visible effective status.</returns>
++    internal static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
++        CreateForTestsAsync(
++            PluginWindowPreviewBackendMode requestedMode,
++            Func<Task> startHostedBackend)
++    {
++        ArgumentNullException.ThrowIfNull(startHostedBackend);
++        return CreateAsync(
++            requestedMode,
++            async () =>
++            {
++                await startHostedBackend();
++                throw new InvalidOperationException(
++                    "The hosted test seam must throw before creating a backend.");
++            },
++            static () => StandalonePluginWindowPreviewBackend.CreateForTests(
++                dbManagerAvailable: true));
++    }
++}
+diff --git a/Echoglossian.Previewer/Program.cs b/Echoglossian.Previewer/Program.cs
+index c8d2206..bee7df9 100644
+--- a/Echoglossian.Previewer/Program.cs
++++ b/Echoglossian.Previewer/Program.cs
+@@ -1,19 +1,20 @@
+ // <copyright file="Program.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
+ using Dalamud.Bindings.ImGui;
+ 
+ using Echoglossian.EFCoreSqlite;
+ using Echoglossian.LanguagesHandling;
++using Echoglossian.Mock.Hosting;
+ using Echoglossian.PluginUI;
+ using Echoglossian.Previewer.Configuration;
+ using Echoglossian.Previewer.Fonts;
+ using Echoglossian.Previewer.Hosting;
+ using Echoglossian.Previewer.PluginWindows;
+ using Echoglossian.Previewer.Scenarios;
+ using Echoglossian.Previewer.Screenshots;
+ using Echoglossian.Previewer.Session;
+ using Echoglossian.Previewer.UI;
+ using Echoglossian.UIOverlays.TextPresentation;
+@@ -54,21 +55,21 @@ internal static class Program
+             {
+                 RunHostSmoke();
+             }
+ 
+             if (!string.IsNullOrWhiteSpace(commandLine.ScreenshotMode))
+             {
+                 RunScreenshotExport(commandLine);
+             }
+             else if (!commandLine.BindingSmoke && !commandLine.HostSmoke)
+             {
+-                RunInteractivePreview(commandLine);
++                RunInteractivePreviewAsync(commandLine).GetAwaiter().GetResult();
+             }
+ 
+             return 0;
+         }
+         catch (ArgumentException exception)
+         {
+             Console.Error.WriteLine(exception.Message);
+             return 1;
+         }
+         catch (InvalidOperationException exception)
+@@ -111,21 +112,21 @@ internal static class Program
+             });
+ 
+         host.RunFrame(
+             static () => ImGui.TextUnformatted("Echoglossian preview host"));
+     }
+ 
+     /// <summary>
+     ///     Runs the interactive preview shell.
+     /// </summary>
+     /// <param name="commandLine">The parsed command line.</param>
+-    private static void RunInteractivePreview(PreviewCommandLine commandLine)
++    private static async Task RunInteractivePreviewAsync(PreviewCommandLine commandLine)
+     {
+         using var session = PreviewSessionLoader.Load(
+             new PreviewSessionSourceOptions(
+                 commandLine.ConfigPath,
+                 commandLine.DatabasePath,
+                 commandLine.OutputDirectory));
+         var sourceConfiguration = session.Configuration;
+         var editableConfiguration = session.EditableConfiguration;
+         var scenario = PreviewScenarioCatalog.ResolveScenario(commandLine.Scenario);
+         var viewport = PreviewScenarioCatalog.ResolveViewport(
+@@ -151,34 +152,36 @@ internal static class Program
+             });
+         var fontRuntime = new PreviewFontRuntime(
+             fontSelection,
+             scenario.Title,
+             scenario.TranslatedText,
+             host.RecreateFontDeviceTexture);
+         using var composition = new PreviewOverlayRendererFactory(host).Create(
+             editableConfiguration,
+             fontRuntime,
+             fontSelection);
+-        using var pluginWindowBackend = CreateStandalonePluginWindowPreviewBackend(
++        var backendCreation = await CreatePluginWindowPreviewBackendAsync(
++            commandLine.PluginWindowBackendMode,
+             editableConfiguration,
+             languages,
+-            session.ClonedDatabasePath);
++            session);
++        using var pluginWindowBackend = backendCreation.Backend;
+         using var shell = new PreviewShell(
+             sourceConfiguration,
+             editableConfiguration,
+             fontSelection,
+             session.Diagnostics.Concat(fontAssetDiagnostics).ToArray(),
+             composition.Renderer,
+             pluginWindowBackend,
+             scenario,
+             viewport);
+-        shell.SetPluginWindowBackendStatus(pluginWindowBackend.Status);
++        shell.SetPluginWindowBackendStatus(backendCreation.Status);
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+ 
+         var interactiveOutputDirectory = ResolveOutputDirectory(commandLine.OutputDirectory);
+         host.Run(
+             () =>
+             {
+                 composition.BeginDrawFrame();
+                 shell.Draw();
+             },
+             () =>
+@@ -277,24 +280,25 @@ internal static class Program
+                     outputDirectory,
+                     commandLine.CaptureTarget ?? GetCaptureTarget(mode)));
+             }
+         }
+ 
+         using var configSaveScope = PushPreviewConfigSaveScope(session.ClonedConfigPath);
+         var runner = new BatchScreenshotRunner(
+             sourceConfiguration,
+             editableConfiguration,
+             fontSelection,
+-            () => CreateStandalonePluginWindowPreviewBackend(
++            () => CreatePluginWindowPreviewBackendAsync(
++                commandLine.PluginWindowBackendMode,
+                 editableConfiguration,
+                 languages,
+-                session.ClonedDatabasePath));
++                session).GetAwaiter().GetResult().Backend);
+         runner.Run(requests);
+         Console.WriteLine($"Wrote {requests.Count} screenshot(s) to {outputDirectory}");
+     }
+ 
+     private static string ResolveOutputDirectory(string? outputDirectory)
+     {
+         return string.IsNullOrWhiteSpace(outputDirectory)
+             ? ScreenshotFileName.CreateDefaultOutputDirectory(DateTimeOffset.UtcNow)
+             : outputDirectory;
+     }
+@@ -322,35 +326,100 @@ internal static class Program
+         return new EchoglossianDbContext(options);
+     }
+ 
+     /// <summary>
+     /// Creates real plugin windows over preview-owned configuration and database state.
+     /// </summary>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     /// <param name="languages">The available preview languages.</param>
+     /// <param name="databasePath">The optional preview database snapshot.</param>
+     /// <returns>The standalone plugin-window preview backend.</returns>
+-    private static IPluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
++    private static StandalonePluginWindowPreviewBackend CreateStandalonePluginWindowPreviewBackend(
+         Config configuration,
+         IReadOnlyDictionary<int, LanguageInfo> languages,
+         string? databasePath)
+     {
+         var configWindowContext = CreatePreviewPluginWindowContext(
+             configuration,
+             languages);
+         return StandalonePluginWindowPreviewBackend.Create(new PreviewPluginWindowHost(
+             new PluginConfigWindowRenderer(),
+             configWindowContext,
+             CreatePreviewDbContext(databasePath),
+             configuration));
+     }
+ 
++    /// <summary>
++    ///     Selects a preview backend using only preview-session-owned state.
++    /// </summary>
++    /// <param name="requestedMode">The backend mode requested by the operator.</param>
++    /// <param name="configuration">The preview-owned editable configuration.</param>
++    /// <param name="languages">The available preview languages.</param>
++    /// <param name="session">The preview-owned session artifacts.</param>
++    /// <returns>The selected backend and its effective status.</returns>
++    private static Task<(IPluginWindowPreviewBackend Backend, PluginWindowBackendStatus Status)>
++        CreatePluginWindowPreviewBackendAsync(
++            PluginWindowPreviewBackendMode requestedMode,
++            Config configuration,
++            IReadOnlyDictionary<int, LanguageInfo> languages,
++            PreviewSessionArtifacts session)
++    {
++        return PluginWindowPreviewBackendFactory.CreateAsync(
++            requestedMode,
++            () => CreateDalaMockHostedPluginWindowPreviewBackendAsync(
++                configuration,
++                languages,
++                session),
++            () => CreateStandalonePluginWindowPreviewBackend(
++                configuration,
++                languages,
++                session.ClonedDatabasePath));
++    }
++
++    /// <summary>
++    ///     Starts DalaMock over the preview session and retains standalone rendering for capture.
++    /// </summary>
++    /// <param name="configuration">The preview-owned editable configuration.</param>
++    /// <param name="languages">The available preview languages.</param>
++    /// <param name="session">The preview-owned session artifacts.</param>
++    /// <returns>The DalaMock-hosted plugin-window backend.</returns>
++    private static async Task<DalaMockHostedPluginWindowPreviewBackend>
++        CreateDalaMockHostedPluginWindowPreviewBackendAsync(
++            Config configuration,
++            IReadOnlyDictionary<int, LanguageInfo> languages,
++            PreviewSessionArtifacts session)
++    {
++        var stateRoot = new DirectoryInfo(session.WorkingDirectory);
++        var hostedSession = await HostedPreviewPluginSessionFactory.StartAsync(
++            new HostedPreviewPluginOptions(
++                stateRoot,
++                stateRoot.CreateSubdirectory(".dalamock"),
++                new FileInfo(session.ClonedConfigPath),
++                session.ClonedDatabasePath,
++                CreateWindow: false));
++
++        try
++        {
++            return new DalaMockHostedPluginWindowPreviewBackend(
++                hostedSession,
++                CreateStandalonePluginWindowPreviewBackend(
++                    configuration,
++                    languages,
++                    session.ClonedDatabasePath));
++        }
++        catch
++        {
++            hostedSession.Dispose();
++            throw;
++        }
++    }
++
+     /// <summary>
+     /// Creates config-window dependencies with explicit unavailable preview imagery.
+     /// </summary>
+     /// <param name="configuration">The preview-owned editable configuration.</param>
+     /// <param name="languages">The available preview languages.</param>
+     /// <returns>The preview-safe config-window context.</returns>
+     internal static PluginConfigWindowContext CreatePreviewPluginWindowContext(
+         Config configuration,
+         IReadOnlyDictionary<int, LanguageInfo> languages)
+     {

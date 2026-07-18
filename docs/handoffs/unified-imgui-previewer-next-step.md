@@ -1,20 +1,24 @@
 # Unified ImGui Previewer Next Step
 
-Snapshot date: 2026-07-17
+Snapshot date: 2026-07-18
 
 This handoff captures the current state of the standalone ImGui previewer work
-on `feature/dalamock-unified-previewer` after Phase 1 implementation and the
-final review-fix passes that followed it.
+on the previewer follow-up branches after Phase 1 implementation, the hybrid
+hosted-backend slice, and the DalaMock compatibility recovery that followed.
 
 Read `AGENTS.md` first. Then verify the current branch and worktree state
 before editing.
 
 ## Branch and workspace
 
-- branch: `feature/dalamock-unified-previewer`
+- branch at the original Phase 1 snapshot: `feature/dalamock-unified-previewer`
+- latest follow-up branch at this snapshot:
+  `feature/previewer-dalamock-font-builds`
 - recommended base: current `v4-series`
 - worktree used during implementation:
   `C:\Dante\_dalamud\worktrees\Echoglossian\feature-dalamock-unified-previewer`
+- follow-up worktree used for hosted-backend recovery:
+  `C:\Dante\_dalamud\worktrees\Echoglossian\previewer-dalamock-font-builds`
 - merge base against `origin/v4-series` at this snapshot:
   `578bce65cc09deeb23571e0e58ed6306f871d859`
 
@@ -69,7 +73,7 @@ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Deb
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --plugin-window-backend auto --screenshot full --capture-target config-window --scenario talk --viewport 1920x1080 --output artifacts\previewer\hosted-backend-validation
 ```
 
-Observed results:
+Observed results at that time:
 
 - production build: passed with `0` errors
 - production tests: `642 / 642` passed
@@ -83,10 +87,40 @@ Observed results:
   records requested `Auto`, effective `Standalone`, and the exact DalaMock
   fallback reason
 
-The DalaMock test failure is a known pre-existing environment compatibility
-blocker. It prevents hosted-runtime validation, but does not regress the
-production plugin rail or standalone previewer path. Resolve the DalaMock and
-Dalamud interface compatibility before claiming a hosted DalaMock pass.
+That July 17 failure was a real DalaMock compatibility blocker, not evidence
+that the previewer architecture or the Echoglossian plugin window path had to
+be discarded.
+
+## Hosted DalaMock recovery on 2026-07-18
+
+Commands run from
+`C:\Dante\_dalamud\worktrees\Echoglossian\previewer-dalamock-font-builds`:
+
+```powershell
+dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
+dotnet build Echoglossian.Previewer.Tests\Echoglossian.Previewer.Tests.csproj -c Debug --no-restore
+dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-restore
+dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1
+```
+
+Observed results:
+
+- production build: passed with `0` errors
+- production tests: `642 / 642` passed
+- previewer test build: passed with `0` errors
+- DalaMock mock-test build: passed with `0` errors
+- DalaMock mock tests: `11 / 11` passed
+
+The hosted blocker was recovered locally by vendoring a minimal DalaMock source
+copy and applying two narrow compatibility fixes:
+
+- `MockFramework.CreateDebouncer(TimeSpan, Action)`
+- plugin assembly resolution in `PluginLoader` when using the async hosted
+  adapter plus `AssemblyLocation`
+
+See `docs/dalamock-hosted-preview-boundary.md` and `vendor/DalaMock/UPSTREAM.md`
+for the upstream/local split.
 
 ## Important final fixes already in this branch
 
@@ -140,16 +174,14 @@ were addressed as follows:
 
 ## Recommended next step
 
-The highest-value next slice is resolving the DalaMock/Dalamud
-`CreateDebouncer` compatibility blocker before expanding hosted-runtime scope.
-
-Keep the next slice scoped to restoring real DalaMock hosted startup without
-writing back to live user files.
+The highest-value next slice is upstreaming the DalaMock compatibility fixes
+before broadening hosted-runtime scope again.
 
 Recommended scope:
 
-1. align DalaMock with the current Dalamud interface that requires
-   `CreateDebouncer`, then rerun the hosted DalaMock tests and capture.
+1. upstream the DalaMock fixes for:
+   - `CreateDebouncer`
+   - hosted plugin assembly resolution through `AssemblyLocation`
 2. keep using real plugin-window code for plugin windows:
    - do not reimplement the config window in preview-only code
 3. preserve current isolation rules:
@@ -158,13 +190,24 @@ Recommended scope:
    - preview session writes only to cloned session files
    - runtime-owned actions remain explicitly unavailable in preview
 
+## DalaMock versus Echoglossian boundary
+
+The current evidence points to a split responsibility:
+
+- DalaMock owned the original hosted-startup blocker
+- Echoglossian owns the local adapter, state cloning, and headless cleanup
+  needed to host the real plugin safely outside the game
+
+That means the previewer should continue using real plugin code while the
+upstream fixes are proposed separately.
+
 ## Constraints for the next chat
 
 - continue from a fresh dedicated worktree based on the latest `v4-series`
 - do not assume this branch stays the base forever; re-check current repo state
   first
-- keep the hosted backend optional until the DalaMock compatibility blocker is
-  resolved
+- keep the hosted backend optional until upstream DalaMock ships the equivalent
+  compatibility fixes or the vendored delta is consciously retained
 - prefer shell-level controls over deeper renderer rewrites
 - preserve 1:1 behavior for real plugin windows whenever a control can be
   expressed through existing config/runtime inputs
@@ -173,5 +216,6 @@ Recommended scope:
 
 > Continue from `docs/handoffs/unified-imgui-previewer-next-step.md` on a fresh
 > dedicated worktree based on the latest `v4-series`. First verify the current
-> repo state, resolve the DalaMock `CreateDebouncer` compatibility blocker, and
-> rerun the hosted backend validation before expanding shell controls.
+> repo state, review `docs/dalamock-hosted-preview-boundary.md`, upstream the
+> vendored DalaMock compatibility fixes if possible, and only then expand the
+> hosted previewer shell controls or surface coverage.

@@ -1,0 +1,638 @@
+# Review package: 9bad56e50d376cbaa41a1f1f3d9552b19c549b57..6f641ee84a7c2b0d02b86e1970788eeaeebdf34d
+
+## Commits
+6f641ee refactor: extract reusable DalaMock hosted preview session
+
+## Files changed
+ .../Echoglossian.Mock.Tests.csproj                 |   1 +
+ .../HostedPreviewPluginSessionTests.cs             |  87 +++++++++++
+ Echoglossian.Mock.Tests/TestBoot.cs                |  20 +++
+ Echoglossian.Mock.Tests/packages.lock.json         |   7 +
+ .../Hosting/HostedPreviewPluginOptions.cs          |  23 +++
+ .../Hosting/HostedPreviewPluginSession.cs          |  93 ++++++++++++
+ .../Hosting/HostedPreviewPluginSessionFactory.cs   | 168 +++++++++++++++++++++
+ Echoglossian.Mock/Program.cs                       |  43 ++----
+ 8 files changed, 412 insertions(+), 30 deletions(-)
+
+## Diff
+diff --git a/Echoglossian.Mock.Tests/Echoglossian.Mock.Tests.csproj b/Echoglossian.Mock.Tests/Echoglossian.Mock.Tests.csproj
+index 54f5f6f..636ecf9 100644
+--- a/Echoglossian.Mock.Tests/Echoglossian.Mock.Tests.csproj
++++ b/Echoglossian.Mock.Tests/Echoglossian.Mock.Tests.csproj
+@@ -61,12 +61,13 @@
+       <Private>True</Private>
+     </Reference>
+     <Reference Include="InteropGenerator.Runtime">
+       <HintPath>$(DalamudLibPath)InteropGenerator.Runtime.dll</HintPath>
+       <Private>True</Private>
+     </Reference>
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <ProjectReference Include="..\\Echoglossian.csproj" />
++    <ProjectReference Include="..\\Echoglossian.Mock\\Echoglossian.Mock.csproj" />
+   </ItemGroup>
+ </Project>
+diff --git a/Echoglossian.Mock.Tests/HostedPreviewPluginSessionTests.cs b/Echoglossian.Mock.Tests/HostedPreviewPluginSessionTests.cs
+new file mode 100644
+index 0000000..9cb2213
+--- /dev/null
++++ b/Echoglossian.Mock.Tests/HostedPreviewPluginSessionTests.cs
+@@ -0,0 +1,87 @@
++// <copyright file="HostedPreviewPluginSessionTests.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using Echoglossian.Mock.Hosting;
++using FluentAssertions;
++using System;
++using System.IO;
++using System.Threading.Tasks;
++using Xunit;
++
++namespace Echoglossian.Mock.Tests;
++
++/// <summary>
++/// Covers the reusable DalaMock hosted-session bootstrap.
++/// </summary>
++public sealed class HostedPreviewPluginSessionTests
++{
++    /// <summary>
++    /// Verifies that hosted startup uses only explicitly supplied preview paths.
++    /// </summary>
++    /// <returns>A task that completes after the hosted session starts.</returns>
++    [Fact]
++    public async Task StartAsync_uses_explicit_preview_owned_paths()
++    {
++        using var fixture = PreviewOwnedHostedSessionFixture.Create();
++
++        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
++            fixture.Options);
++
++        session.StateRoot.FullName.Should().Be(fixture.Options.StateRoot.FullName);
++        session.PluginSavePath.FullName.Should().Be(fixture.Options.PluginSavePath.FullName);
++        session.ConfigPath.FullName.Should().Be(fixture.Options.ConfigPath.FullName);
++    }
++}
++
++/// <summary>
++/// Owns isolated paths for hosted-session tests.
++/// </summary>
++internal sealed class PreviewOwnedHostedSessionFixture : IDisposable
++{
++    private PreviewOwnedHostedSessionFixture(DirectoryInfo stateRoot)
++    {
++        this.StateRoot = stateRoot;
++        var pluginSavePath = stateRoot.CreateSubdirectory(".dalamock");
++        this.Options = new HostedPreviewPluginOptions(
++            stateRoot,
++            pluginSavePath,
++            new FileInfo(Path.Combine(stateRoot.FullName, "test.json")),
++            DatabasePath: null,
++            CreateWindow: false);
++    }
++
++    /// <summary>
++    /// Gets the hosted-session options for the fixture.
++    /// </summary>
++    public HostedPreviewPluginOptions Options { get; }
++
++    /// <summary>
++    /// Gets the fixture's isolated state root.
++    /// </summary>
++    public DirectoryInfo StateRoot { get; }
++
++    /// <summary>
++    /// Creates an isolated fixture.
++    /// </summary>
++    /// <returns>The created fixture.</returns>
++    public static PreviewOwnedHostedSessionFixture Create()
++    {
++        var stateRoot = new DirectoryInfo(Path.Combine(
++            Path.GetTempPath(),
++            "Echoglossian.Mock.Tests",
++            Guid.NewGuid().ToString("N")));
++        stateRoot.Create();
++        return new PreviewOwnedHostedSessionFixture(stateRoot);
++    }
++
++    /// <inheritdoc/>
++    public void Dispose()
++    {
++        if (this.StateRoot.Exists)
++        {
++            this.StateRoot.Delete(true);
++        }
++    }
++}
+diff --git a/Echoglossian.Mock.Tests/TestBoot.cs b/Echoglossian.Mock.Tests/TestBoot.cs
+index c7acad2..91d8711 100644
+--- a/Echoglossian.Mock.Tests/TestBoot.cs
++++ b/Echoglossian.Mock.Tests/TestBoot.cs
+@@ -1,18 +1,19 @@
+ // <copyright file="TestBoot.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
+ using Autofac;
+ using DalaMock.Core.Configuration;
+ using DalaMock.Core.Plugin;
++using Echoglossian.Mock.Hosting;
+ using Dalamud.Bindings.ImGui;
+ using Dalamud.Game.Addon.Events;
+ using Dalamud.Interface.ImGuiNotification;
+ using Dalamud.Interface.ImGuiNotification.EventArgs;
+ using Dalamud.Interface.Textures;
+ using Dalamud.Interface.Textures.TextureWraps;
+ using Dalamud.Plugin;
+ using Dalamud.Plugin.Services;
+ using Microsoft.Data.Sqlite;
+ using System;
+@@ -27,20 +28,21 @@ using System.Threading.Tasks;
+ namespace Echoglossian.Mock.Tests;
+ 
+ /// <summary>
+ /// Builds a headless DalaMock container and starts the real Echoglossian plugin inside it.
+ /// </summary>
+ internal sealed class TestBoot
+ {
+     private readonly Func<DirectoryInfo> runStateRootFactory;
+     private readonly Func<Func<Task>, Task> startPluginRunner;
+     private readonly Func<MockContainer, global::Echoglossian.Echoglossian, DirectoryInfo, DirectoryInfo, FileInfo, Task> postStartValidation;
++    private readonly bool useHostedSessionFactory;
+ 
+     /// <summary>
+     /// Initializes a new instance of the <see cref="TestBoot"/> class.
+     /// </summary>
+     public TestBoot()
+         : this(null, null, null)
+     {
+     }
+ 
+     /// <summary>
+@@ -48,39 +50,57 @@ internal sealed class TestBoot
+     /// deterministic test seams for startup-failure coverage.
+     /// </summary>
+     /// <param name="runStateRootFactory">Creates the isolated local state root for the current run.</param>
+     /// <param name="startPluginRunner">Runs or overrides the plugin-startup action.</param>
+     /// <param name="postStartValidation">Runs additional validation before returning the started plugin rail.</param>
+     internal TestBoot(
+         Func<DirectoryInfo>? runStateRootFactory,
+         Func<Func<Task>, Task>? startPluginRunner,
+         Func<MockContainer, global::Echoglossian.Echoglossian, DirectoryInfo, DirectoryInfo, FileInfo, Task>? postStartValidation)
+     {
++        this.useHostedSessionFactory = runStateRootFactory is null &&
++            startPluginRunner is null &&
++            postStartValidation is null;
+         this.runStateRootFactory = runStateRootFactory ?? this.CreateRunStateRoot;
+         this.startPluginRunner = startPluginRunner ?? RunStartPluginAsync;
+         this.postStartValidation = postStartValidation ?? NoOpPostStartValidationAsync;
+     }
+ 
+     /// <summary>
+     /// Starts the real plugin under a headless DalaMock container.
+     /// </summary>
+     /// <returns>The started plugin and its owning mock container.</returns>
+     public async Task<StartedPlugin> StartPluginAsync()
+     {
+         var stateRoot = this.runStateRootFactory();
+         var pluginSavePath = this.CreateLocalPluginSavePath(stateRoot);
+         var configPath = new FileInfo(Path.Combine(stateRoot.FullName, "test.json"));
+         MockContainer? mockContainer = null;
+         global::Echoglossian.Echoglossian? plugin = null;
+ 
+         try
+         {
++            if (this.useHostedSessionFactory)
++            {
++                var session = await HostedPreviewPluginSessionFactory.StartAsync(
++                    new HostedPreviewPluginOptions(
++                        stateRoot,
++                        pluginSavePath,
++                        configPath,
++                        DatabasePath: null,
++                        CreateWindow: false));
++                mockContainer = session.Container;
++                plugin = session.Plugin;
++                await this.postStartValidation(mockContainer, plugin, stateRoot, pluginSavePath, configPath);
++                return new StartedPlugin(mockContainer, plugin, stateRoot, pluginSavePath, configPath);
++            }
++
+             mockContainer = new MockContainer(
+                 new MockDalamudConfiguration
+                 {
+                     CreateWindow = false,
+                     GamePath = this.ResolveSqpackDirectory(),
+                     PluginSavePath = pluginSavePath,
+                 },
+                 builder => { },
+                 [],
+                 false);
+diff --git a/Echoglossian.Mock.Tests/packages.lock.json b/Echoglossian.Mock.Tests/packages.lock.json
+index f44aecc..fe209d4 100644
+--- a/Echoglossian.Mock.Tests/packages.lock.json
++++ b/Echoglossian.Mock.Tests/packages.lock.json
+@@ -877,20 +877,27 @@
+           "GTranslate": "[2.3.1, )",
+           "HtmlAgilityPack": "[1.12.4, )",
+           "Injectio": "[5.2.2, )",
+           "Microsoft.EntityFrameworkCore": "[10.0.7, )",
+           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.7, )",
+           "Newtonsoft.Json": "[13.0.4, )",
+           "OpenAI": "[2.10.0, )",
+           "RestSharp": "[114.0.0, )",
+           "System.Drawing.Common": "[10.0.7, )"
+         }
++      },
++      "echoglossian.mock": {
++        "type": "Project",
++        "dependencies": {
++          "DalaMock.Core": "[6.1.7, )",
++          "Echoglossian": "[4.2601.717.8, )"
++        }
+       }
+     },
+     "net10.0-windows7.0/win-x64": {
+       "Microsoft.Win32.SystemEvents": {
+         "type": "Transitive",
+         "resolved": "10.0.7",
+         "contentHash": "yRy88RjP9RlFxiaxwkGSh5e7lhSRCUaSwYW323ssK85XTm13b3y65Yp8HuURXNnxGQGo9L4Bz19aQAbrfTyJqA=="
+       },
+       "NativeFileDialogSharp": {
+         "type": "Transitive",
+diff --git a/Echoglossian.Mock/Hosting/HostedPreviewPluginOptions.cs b/Echoglossian.Mock/Hosting/HostedPreviewPluginOptions.cs
+new file mode 100644
+index 0000000..0cbf867
+--- /dev/null
++++ b/Echoglossian.Mock/Hosting/HostedPreviewPluginOptions.cs
+@@ -0,0 +1,23 @@
++// <copyright file="HostedPreviewPluginOptions.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using System.IO;
++
++namespace Echoglossian.Mock.Hosting;
++
++/// <summary>
++/// Describes the preview-owned paths and UI mode for a hosted DalaMock plugin session.
++/// </summary>
++/// <param name="StateRoot">The root directory owned by the preview session.</param>
++/// <param name="PluginSavePath">The DalaMock plugin-save directory owned by the preview session.</param>
++/// <param name="ConfigPath">The plugin configuration file owned by the preview session.</param>
++/// <param name="DatabasePath">The optional preview-owned database path reserved for hosted startup.</param>
++/// <param name="CreateWindow">Whether DalaMock should create its UI window.</param>
++public sealed record HostedPreviewPluginOptions(
++    DirectoryInfo StateRoot,
++    DirectoryInfo PluginSavePath,
++    FileInfo ConfigPath,
++    string? DatabasePath,
++    bool CreateWindow);
+diff --git a/Echoglossian.Mock/Hosting/HostedPreviewPluginSession.cs b/Echoglossian.Mock/Hosting/HostedPreviewPluginSession.cs
+new file mode 100644
+index 0000000..0d4788c
+--- /dev/null
++++ b/Echoglossian.Mock/Hosting/HostedPreviewPluginSession.cs
+@@ -0,0 +1,93 @@
++// <copyright file="HostedPreviewPluginSession.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using DalaMock.Core.Plugin;
++using System;
++using System.IO;
++using System.Threading.Tasks;
++
++namespace Echoglossian.Mock.Hosting;
++
++/// <summary>
++/// Owns a started DalaMock container and its hosted Echoglossian plugin.
++/// </summary>
++public sealed class HostedPreviewPluginSession : IAsyncDisposable, IDisposable
++{
++    private bool disposed;
++
++    /// <summary>
++    /// Initializes a new instance of the <see cref="HostedPreviewPluginSession"/> class.
++    /// </summary>
++    /// <param name="container">The owning DalaMock container.</param>
++    /// <param name="plugin">The started production plugin instance.</param>
++    /// <param name="stateRoot">The preview-owned state root.</param>
++    /// <param name="pluginSavePath">The preview-owned plugin save path.</param>
++    /// <param name="configPath">The preview-owned configuration path.</param>
++    public HostedPreviewPluginSession(
++        MockContainer container,
++        global::Echoglossian.Echoglossian plugin,
++        DirectoryInfo stateRoot,
++        DirectoryInfo pluginSavePath,
++        FileInfo configPath)
++    {
++        this.Container = container;
++        this.Plugin = plugin;
++        this.StateRoot = stateRoot;
++        this.PluginSavePath = pluginSavePath;
++        this.ConfigPath = configPath;
++    }
++
++    /// <summary>Gets the owning DalaMock container.</summary>
++    public MockContainer Container { get; }
++
++    /// <summary>Gets the started production plugin.</summary>
++    public global::Echoglossian.Echoglossian Plugin { get; }
++
++    /// <summary>Gets the preview-owned state root.</summary>
++    public DirectoryInfo StateRoot { get; }
++
++    /// <summary>Gets the preview-owned plugin save path.</summary>
++    public DirectoryInfo PluginSavePath { get; }
++
++    /// <summary>Gets the preview-owned configuration path.</summary>
++    public FileInfo ConfigPath { get; }
++
++    /// <inheritdoc/>
++    public void Dispose()
++    {
++        if (this.disposed)
++        {
++            return;
++        }
++
++        this.disposed = true;
++        switch (this.Container)
++        {
++            case IDisposable disposable:
++                disposable.Dispose();
++                break;
++        }
++    }
++
++    /// <inheritdoc/>
++    public async ValueTask DisposeAsync()
++    {
++        if (this.disposed)
++        {
++            return;
++        }
++
++        this.disposed = true;
++        switch (this.Container)
++        {
++            case IAsyncDisposable asyncDisposable:
++                await asyncDisposable.DisposeAsync();
++                break;
++            case IDisposable disposable:
++                disposable.Dispose();
++                break;
++        }
++    }
++}
+diff --git a/Echoglossian.Mock/Hosting/HostedPreviewPluginSessionFactory.cs b/Echoglossian.Mock/Hosting/HostedPreviewPluginSessionFactory.cs
+new file mode 100644
+index 0000000..3d1850b
+--- /dev/null
++++ b/Echoglossian.Mock/Hosting/HostedPreviewPluginSessionFactory.cs
+@@ -0,0 +1,168 @@
++// <copyright file="HostedPreviewPluginSessionFactory.cs" company="lokinmodar">
++// Copyright (c) lokinmodar. All rights reserved.
++// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
++// </copyright>
++
++using DalaMock.Core.Configuration;
++using DalaMock.Core.Plugin;
++using System;
++using System.Collections.Generic;
++using System.IO;
++using System.Text.Json;
++using System.Threading;
++using System.Threading.Tasks;
++
++namespace Echoglossian.Mock.Hosting;
++
++/// <summary>
++/// Starts the production plugin inside a preview-owned DalaMock session.
++/// </summary>
++public static class HostedPreviewPluginSessionFactory
++{
++    /// <summary>
++    /// Starts a DalaMock session using only the caller-supplied preview paths.
++    /// </summary>
++    /// <param name="options">The preview-owned session paths and UI mode.</param>
++    /// <param name="cancellationToken">Cancels startup before the plugin is loaded.</param>
++    /// <returns>The started hosted plugin session.</returns>
++    /// <exception cref="InvalidOperationException">Thrown when DalaMock does not build the production plugin.</exception>
++    public static async Task<HostedPreviewPluginSession> StartAsync(
++        HostedPreviewPluginOptions options,
++        CancellationToken cancellationToken = default)
++    {
++        cancellationToken.ThrowIfCancellationRequested();
++        options.StateRoot.Create();
++        options.PluginSavePath.Create();
++
++        var container = new MockContainer(
++            new MockDalamudConfiguration
++            {
++                CreateWindow = options.CreateWindow,
++                GamePath = ResolveSqpackDirectory(),
++                PluginSavePath = options.PluginSavePath,
++            },
++            builder => { },
++            [],
++            false);
++
++        try
++        {
++            var loader = container.GetPluginLoader();
++            var mockPlugin = loader.AddPlugin(typeof(global::Echoglossian.Echoglossian));
++            var settings = new PluginLoadSettings(options.StateRoot, options.ConfigPath)
++            {
++                AssemblyLocation = typeof(global::Echoglossian.Echoglossian).Assembly.Location,
++            };
++
++            await loader.StartPlugin(mockPlugin, settings);
++            cancellationToken.ThrowIfCancellationRequested();
++
++            if (mockPlugin.DalamudPlugin is not global::Echoglossian.Echoglossian plugin)
++            {
++                throw new InvalidOperationException("DalaMock did not build Echoglossian.");
++            }
++
++            return new HostedPreviewPluginSession(
++                container,
++                plugin,
++                options.StateRoot,
++                options.PluginSavePath,
++                options.ConfigPath);
++        }
++        catch
++        {
++            await DisposeContainerAsync(container);
++            throw;
++        }
++    }
++
++    /// <summary>
++    /// Resolves the local FFXIV sqpack directory required by DalaMock.
++    /// </summary>
++    /// <returns>The local sqpack directory.</returns>
++    /// <exception cref="InvalidOperationException">Thrown when no valid local sqpack directory can be found.</exception>
++    private static DirectoryInfo ResolveSqpackDirectory()
++    {
++        foreach (var candidate in GetSqpackPathCandidates())
++        {
++            if (!string.IsNullOrWhiteSpace(candidate) && Directory.Exists(candidate))
++            {
++                return new DirectoryInfo(candidate);
++            }
++        }
++
++        throw new InvalidOperationException("Unable to resolve a local FFXIV sqpack directory for DalaMock.");
++    }
++
++    /// <summary>
++    /// Gets the local sqpack path candidates that should be checked for DalaMock.
++    /// </summary>
++    /// <returns>The ordered local sqpack path candidates.</returns>
++    private static IEnumerable<string?> GetSqpackPathCandidates()
++    {
++        yield return Environment.GetEnvironmentVariable("EXD_DATA_DIR");
++
++        var launcherGamePath = TryReadLauncherGamePath();
++        if (!string.IsNullOrWhiteSpace(launcherGamePath))
++        {
++            yield return Path.Combine(launcherGamePath, "game", "sqpack");
++        }
++
++        yield return @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack";
++        yield return @"C:\Program Files\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack";
++        yield return @"C:\Program Files (x86)\Steam\steamapps\common\FINAL FANTASY XIV Online\game\sqpack";
++    }
++
++    /// <summary>
++    /// Reads the local XIVLauncher game path when it is available.
++    /// </summary>
++    /// <returns>The configured XIVLauncher game path, or <see langword="null"/> when unavailable.</returns>
++    private static string? TryReadLauncherGamePath()
++    {
++        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
++        var launcherConfigPath = Path.Combine(appDataPath, "XIVLauncher", "launcherConfigV3.json");
++        if (!File.Exists(launcherConfigPath))
++        {
++            return null;
++        }
++
++        try
++        {
++            using var launcherConfigStream = File.OpenRead(launcherConfigPath);
++            using var launcherConfigDocument = JsonDocument.Parse(launcherConfigStream);
++            return launcherConfigDocument.RootElement.TryGetProperty("GamePath", out var gamePathElement)
++                ? gamePathElement.GetString()
++                : null;
++        }
++        catch (IOException)
++        {
++            return null;
++        }
++        catch (UnauthorizedAccessException)
++        {
++            return null;
++        }
++        catch (JsonException)
++        {
++            return null;
++        }
++    }
++
++    /// <summary>
++    /// Disposes a DalaMock container after failed startup.
++    /// </summary>
++    /// <param name="container">The container to dispose.</param>
++    /// <returns>A task that completes when disposal finishes.</returns>
++    private static async Task DisposeContainerAsync(MockContainer container)
++    {
++        switch (container)
++        {
++            case IAsyncDisposable asyncDisposable:
++                await asyncDisposable.DisposeAsync();
++                break;
++            case IDisposable disposable:
++                disposable.Dispose();
++                break;
++        }
++    }
++}
+diff --git a/Echoglossian.Mock/Program.cs b/Echoglossian.Mock/Program.cs
+index 26b152b..ec69602 100644
+--- a/Echoglossian.Mock/Program.cs
++++ b/Echoglossian.Mock/Program.cs
+@@ -1,54 +1,37 @@
+ // <copyright file="Program.cs" company="lokinmodar">
+ // Copyright (c) lokinmodar. All rights reserved.
+ // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+ // </copyright>
+ 
++using Echoglossian.Mock.Hosting;
+ using System;
+-using DalaMock.Core.Configuration;
+-using DalaMock.Core.Mocks;
+-using DalaMock.Core.Plugin;
++using System.IO;
+ using System.Threading.Tasks;
+ 
+ namespace Echoglossian.Mock;
+ 
+ /// <summary>
+ /// Hosts a local DalaMock runner for the Echoglossian plugin.
+ /// </summary>
+ internal static class Program
+ {
+     /// <summary>
+     /// Starts the mock plugin host and runs its UI loop.
+     /// </summary>
+     private static async Task Main()
+     {
+-        var mockContainer = new MockContainer(
+-            new MockDalamudConfiguration
+-            {
+-                CreateWindow = true,
+-            },
+-            builder => { },
+-            [],
+-            false);
+-        try
+-        {
+-            var pluginLoader = mockContainer.GetPluginLoader();
+-            var mockPlugin = pluginLoader.AddPlugin(typeof(global::Echoglossian.Echoglossian));
++        var stateRoot = new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, ".dalamock"));
++        var pluginSavePath = stateRoot.CreateSubdirectory("plugin-save");
++        var configPath = new FileInfo(Path.Combine(stateRoot.FullName, "Echoglossian.json"));
+ 
+-            await pluginLoader.StartPlugin(mockPlugin);
++        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
++            new HostedPreviewPluginOptions(
++                stateRoot,
++                pluginSavePath,
++                configPath,
++                DatabasePath: null,
++                CreateWindow: true));
+ 
+-            mockContainer.GetMockUi().Run();
+-        }
+-        finally
+-        {
+-            switch (mockContainer)
+-            {
+-                case IAsyncDisposable asyncDisposable:
+-                    await asyncDisposable.DisposeAsync();
+-                    break;
+-                case IDisposable disposable:
+-                    disposable.Dispose();
+-                    break;
+-            }
+-        }
++        session.Container.GetMockUi().Run();
+     }
+ }

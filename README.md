@@ -82,6 +82,11 @@ dotnet run --project .\Echoglossian.Mock\Echoglossian.Mock.csproj -c Debug
 
 `Echoglossian.Mock` is a local DalaMock runner for startup and wiring checks.
 It complements `Echoglossian.Tests`; it does not replace the existing unit-test rail.
+The current hosted-preview compatibility notes and vendored DalaMock delta are
+documented in:
+
+- [docs/dalamock-hosted-preview-boundary.md](docs/dalamock-hosted-preview-boundary.md)
+- [vendor/DalaMock/UPSTREAM.md](vendor/DalaMock/UPSTREAM.md)
 
 ## Official Repo AI Disclosure
 

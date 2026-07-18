@@ -4,8 +4,10 @@
 // </copyright>
 
 using DalaMock.Core.Plugin;
+using Microsoft.Data.Sqlite;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Echoglossian.Mock.Hosting;
@@ -63,11 +65,17 @@ public sealed class HostedPreviewPluginSession : IAsyncDisposable, IDisposable
         }
 
         this.disposed = true;
-        switch (this.Container)
+        try
         {
-            case IDisposable disposable:
-                disposable.Dispose();
-                break;
+            HeadlessPluginCleanup.PrepareForHeadlessDispose(this.Plugin);
+            this.DisposeContainerAndPluginIfNeeded();
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
     }
 
@@ -80,6 +88,40 @@ public sealed class HostedPreviewPluginSession : IAsyncDisposable, IDisposable
         }
 
         this.disposed = true;
+        try
+        {
+            HeadlessPluginCleanup.PrepareForHeadlessDispose(this.Plugin);
+            await this.DisposeContainerAndPluginIfNeededAsync();
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+    }
+
+    private void DisposeContainerAndPluginIfNeeded()
+    {
+        switch (this.Container)
+        {
+            case IAsyncDisposable asyncDisposable:
+                asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                break;
+            case IDisposable disposable:
+                disposable.Dispose();
+                break;
+        }
+
+        if (!this.HasPluginStartedDispose())
+        {
+            this.Plugin.Dispose();
+        }
+    }
+
+    private async Task DisposeContainerAndPluginIfNeededAsync()
+    {
         switch (this.Container)
         {
             case IAsyncDisposable asyncDisposable:
@@ -89,5 +131,47 @@ public sealed class HostedPreviewPluginSession : IAsyncDisposable, IDisposable
                 disposable.Dispose();
                 break;
         }
+
+        if (!this.HasPluginStartedDispose())
+        {
+            this.Plugin.Dispose();
+        }
+    }
+
+    private bool HasPluginStartedDispose()
+    {
+        var startupAuditProperty = typeof(global::Echoglossian.Echoglossian).GetProperty(
+            "StartupAudit",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        if (startupAuditProperty?.GetValue(this.Plugin) is not { } startupAudit)
+        {
+            return false;
+        }
+
+        var captureSnapshotMethod = startupAudit.GetType().GetMethod(
+            "CaptureSnapshot",
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (captureSnapshotMethod?.Invoke(startupAudit, null) is not { } snapshot)
+        {
+            return false;
+        }
+
+        var pluginStartupStageType = snapshot.GetType().Assembly.GetType(
+            "Echoglossian.PluginRuntime.Startup.PluginStartupStage");
+        if (pluginStartupStageType is null)
+        {
+            return false;
+        }
+
+        var hasStageMethod = snapshot.GetType().GetMethod(
+            "HasStage",
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (hasStageMethod is null)
+        {
+            return false;
+        }
+
+        var disposeStarted = Enum.Parse(pluginStartupStageType, "DisposeStarted");
+        return hasStageMethod.Invoke(snapshot, [disposeStarted]) is true;
     }
 }

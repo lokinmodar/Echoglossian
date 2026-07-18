@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalaMock.Core" Version="6.1.7" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -69,5 +68,6 @@
   <ItemGroup>
     <ProjectReference Include="..\\Echoglossian.csproj" />
     <ProjectReference Include="..\\Echoglossian.Mock\\Echoglossian.Mock.csproj" />
+    <ProjectReference Include="..\\vendor\\DalaMock\\DalaMock\\DalaMock.Core.csproj" />
   </ItemGroup>
 </Project>

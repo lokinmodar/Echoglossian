@@ -367,6 +367,18 @@
     <None Remove="Echoglossian.Previewer\**;Echoglossian.Previewer.Tests\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="vendor\**" />
+    <EmbeddedResource Remove="vendor\**" />
+    <None Remove="vendor\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove=".superpowers\**" />
+    <EmbeddedResource Remove=".superpowers\**" />
+    <None Remove=".superpowers\**" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
