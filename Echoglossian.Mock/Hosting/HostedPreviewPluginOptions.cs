@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Echoglossian.Mock.Hosting;
@@ -20,4 +22,10 @@ public sealed record HostedPreviewPluginOptions(
     DirectoryInfo PluginSavePath,
     FileInfo ConfigPath,
     string? DatabasePath,
-    bool CreateWindow);
+    bool CreateWindow)
+{
+    /// <summary>
+    /// Gets service replacements supplied to the underlying DalaMock container.
+    /// </summary>
+    public IReadOnlyDictionary<Type, Type>? ServiceReplacements { get; init; }
+}
