@@ -326,7 +326,7 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
             questListComponent->UldManager.NodeList[i]->
                 GetAsAtkComponentNode();
         var questNameNode =
-            questItemNode->Component->UldManager.SearchNodeById(5);
+            questItemNode->Component->UldManager.SearchNodeById(6);
         if (questNameNode == null || !questNameNode->IsVisible() ||
             questNameNode->Type != NodeType.Text)
         {

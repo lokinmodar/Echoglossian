@@ -53,6 +53,25 @@ public sealed class RecommendListHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures RecommendList reads the visible row title node observed by
+    ///     addon probing instead of the row container node.
+    /// </summary>
+    [Fact]
+    public void RecommendList_reads_visible_title_node_id()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Quest",
+            "RecommendListHandler.cs"));
+
+        Assert.Contains("SearchNodeById(6)", source);
+        Assert.DoesNotContain("SearchNodeById(5)", source);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

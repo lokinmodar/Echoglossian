@@ -31,16 +31,18 @@ public sealed class AreaMapHandlerContractTests
     }
 
     /// <summary>
-    ///     Ensures AreaMap accepts the string value kinds used by modern
-    ///     Dalamud/ClientStructs addon payloads.
+    ///     Ensures AreaMap reads quest text from the visible map text nodes
+    ///     observed by addon probing instead of a stale AtkValue index.
     /// </summary>
     [Fact]
-    public void AreaMap_reads_modern_string_value_kinds()
+    public void AreaMap_reads_visible_quest_text_nodes()
     {
         var source = ReadAreaMapHandlerSource();
 
-        Assert.Contains("ValueType.String8", source);
-        Assert.Contains("ValueType.ManagedString", source);
+        Assert.Contains("ResolveAreaMapQuestTextNodes", source);
+        Assert.Contains("AddonTextNodeResolvers.ResolveReadableTextNodes", source);
+        Assert.Contains("AreaMapLevelQuestTextPattern", source);
+        Assert.DoesNotContain("AreaMapQuestValueIndex", source);
     }
 
     /// <summary>
