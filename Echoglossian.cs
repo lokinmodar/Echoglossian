@@ -278,6 +278,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.MigrateOverlayStyleSettings();
     this.MigrateOverlayDisplayModes();
+    this.MigrateToastPlacementSettings();
     this.MigrateGameMainMenuTranslationSettings();
     this.MigrateTranslationEngineSelection(loadedConfigVersion);
     if (this.configuration.NormalizeNativeReplacementDiacriticsSettings())

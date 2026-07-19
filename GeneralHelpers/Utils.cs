@@ -397,6 +397,75 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Migrates shared callback-owned toast presentation settings into the
+  ///     placement-specific buckets used by the newer toast runtimes.
+  /// </summary>
+  public void MigrateToastPlacementSettings()
+  {
+    if (this.configuration.Version >= 16)
+    {
+      return;
+    }
+
+    this.configuration.TopToastTranslationDisplayMode =
+        this.configuration.WideTextToastTranslationDisplayMode;
+    this.configuration.BottomToastTranslationDisplayMode =
+        this.configuration.WideTextToastTranslationDisplayMode;
+
+    this.configuration.ImGuiTopToastWindowWidthMult =
+        this.configuration.ImGuiWideTextToastWindowWidthMult;
+    this.configuration.ImGuiBottomToastWindowWidthMult =
+        this.configuration.ImGuiWideTextToastWindowWidthMult;
+    this.configuration.ImGuiTopToastWindowPosCorrection =
+        this.configuration.ImGuiWideTextToastWindowPosCorrection;
+    this.configuration.ImGuiBottomToastWindowPosCorrection =
+        this.configuration.ImGuiWideTextToastWindowPosCorrection;
+    this.configuration.OverlayTopToastTextColor =
+        this.configuration.OverlayWideTextToastTextColor;
+    this.configuration.OverlayBottomToastTextColor =
+        this.configuration.OverlayWideTextToastTextColor;
+    this.configuration.TopToastBackgroundOpacity =
+        this.configuration.WideTextToastBackgroundOpacity;
+    this.configuration.BottomToastBackgroundOpacity =
+        this.configuration.WideTextToastBackgroundOpacity;
+
+    this.configuration.QuestToastLeftTranslationDisplayMode =
+        this.configuration.QuestToastTranslationDisplayMode;
+    this.configuration.QuestToastCentreTranslationDisplayMode =
+        this.configuration.QuestToastTranslationDisplayMode;
+    this.configuration.QuestToastRightTranslationDisplayMode =
+        this.configuration.QuestToastTranslationDisplayMode;
+
+    this.configuration.ImGuiQuestToastLeftWindowWidthMult =
+        this.configuration.ImGuiQuestToastWindowWidthMult;
+    this.configuration.ImGuiQuestToastCentreWindowWidthMult =
+        this.configuration.ImGuiQuestToastWindowWidthMult;
+    this.configuration.ImGuiQuestToastRightWindowWidthMult =
+        this.configuration.ImGuiQuestToastWindowWidthMult;
+    this.configuration.ImGuiQuestToastLeftWindowPosCorrection =
+        this.configuration.ImGuiQuestToastWindowPosCorrection;
+    this.configuration.ImGuiQuestToastCentreWindowPosCorrection =
+        this.configuration.ImGuiQuestToastWindowPosCorrection;
+    this.configuration.ImGuiQuestToastRightWindowPosCorrection =
+        this.configuration.ImGuiQuestToastWindowPosCorrection;
+    this.configuration.OverlayQuestToastLeftTextColor =
+        this.configuration.OverlayQuestToastTextColor;
+    this.configuration.OverlayQuestToastCentreTextColor =
+        this.configuration.OverlayQuestToastTextColor;
+    this.configuration.OverlayQuestToastRightTextColor =
+        this.configuration.OverlayQuestToastTextColor;
+    this.configuration.QuestToastLeftBackgroundOpacity =
+        this.configuration.QuestToastBackgroundOpacity;
+    this.configuration.QuestToastCentreBackgroundOpacity =
+        this.configuration.QuestToastBackgroundOpacity;
+    this.configuration.QuestToastRightBackgroundOpacity =
+        this.configuration.QuestToastBackgroundOpacity;
+
+    this.configuration.Version = 16;
+    SaveConfig(this.configuration);
+  }
+
+  /// <summary>
   ///     Migrates legacy persisted translation engine ids and stamps the config
   ///     with the current engine-selection schema version.
   /// </summary>

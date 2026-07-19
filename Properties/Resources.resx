@@ -1006,6 +1006,27 @@
   <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
     <value>Controls how opaque the toast Plugin Overlay background should be. Use 0 for a fully transparent background.</value>
   </data>
+  <data name="ToastOverlaySupportedNormalPlacementDescription" xml:space="preserve">
+    <value>Supported normal toasts currently share one callback-owned runtime. Configure their top and bottom placement buckets here.</value>
+  </data>
+  <data name="ToastOverlaySupportedNormalSharedSettingsMessage" xml:space="preserve">
+    <value>This toast type currently uses the shared top and bottom supported-normal placement settings from the Screen Info page.</value>
+  </data>
+  <data name="ToastOverlayTopPlacementTitle" xml:space="preserve">
+    <value>Top placement</value>
+  </data>
+  <data name="ToastOverlayBottomPlacementTitle" xml:space="preserve">
+    <value>Bottom placement</value>
+  </data>
+  <data name="ToastOverlayLeftPlacementTitle" xml:space="preserve">
+    <value>Left placement</value>
+  </data>
+  <data name="ToastOverlayCentrePlacementTitle" xml:space="preserve">
+    <value>Centre placement</value>
+  </data>
+  <data name="ToastOverlayRightPlacementTitle" xml:space="preserve">
+    <value>Right placement</value>
+  </data>
   <data name="OverlayDisplayModeDescription" xml:space="preserve">
     <value>This mode controls how the translated text is presented. Native UI writes directly into the game addon, Plugin Overlay translation only leaves the native addon untouched, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in the Plugin Overlay.</value>
   </data>

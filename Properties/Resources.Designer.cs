@@ -3584,6 +3584,83 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("ToastOverlayScreenInfoWideTextSectionTitle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Supported normal toasts currently share one callback-owned runtime. Configure their top and bottom placement buckets here..
+        /// </summary>
+        public static string ToastOverlaySupportedNormalPlacementDescription
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlaySupportedNormalPlacementDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a This toast type currently uses the shared top and bottom supported-normal placement settings from the Screen Info page..
+        /// </summary>
+        public static string ToastOverlaySupportedNormalSharedSettingsMessage
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlaySupportedNormalSharedSettingsMessage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Top placement.
+        /// </summary>
+        public static string ToastOverlayTopPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayTopPlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Bottom placement.
+        /// </summary>
+        public static string ToastOverlayBottomPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayBottomPlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Left placement.
+        /// </summary>
+        public static string ToastOverlayLeftPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayLeftPlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Centre placement.
+        /// </summary>
+        public static string ToastOverlayCentrePlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayCentrePlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Right placement.
+        /// </summary>
+        public static string ToastOverlayRightPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayRightPlacementTitle", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Area.
