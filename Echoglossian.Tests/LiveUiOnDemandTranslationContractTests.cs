@@ -57,6 +57,32 @@ public class LiveUiOnDemandTranslationContractTests
     }
 
     /// <summary>
+    /// Ensures native nameplate writes are protected against nested
+    /// <c>INamePlateGui.OnNamePlateUpdate</c> callbacks.
+    /// </summary>
+    [Fact]
+    public void NamePlateRuntime_guards_reentrant_update_callbacks()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "NamePlates",
+            "NamePlateTranslationRuntime.cs"));
+
+        Assert.Contains(
+            "ReentrantCallbackGuard",
+            source);
+        Assert.Contains(
+            "TryEnter()",
+            source);
+        Assert.Contains(
+            "SetField(",
+            source);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

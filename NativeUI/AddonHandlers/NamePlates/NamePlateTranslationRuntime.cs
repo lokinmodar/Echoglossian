@@ -24,6 +24,7 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   private readonly IObjectTable objectTable;
   private readonly ConcurrentDictionary<ulong, NamePlateOverlayEntry> overlays =
       new();
+  private readonly ReentrantCallbackGuard namePlateUpdateGuard = new();
   private readonly TranslationOverlayRenderer renderer;
   private readonly Action<NamePlatePrefetchCandidate> trackPrefetchCandidate;
   private readonly TranslationService translationService;
@@ -73,28 +74,38 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
       INamePlateUpdateContext context,
       IReadOnlyList<INamePlateUpdateHandler> handlers)
   {
-    if (this.disposed ||
-        !FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() ||
-        !this.config.Translate ||
-        !this.config.TranslateNamePlates ||
-        handlers.Count == 0)
+    var callbackLease = this.namePlateUpdateGuard.TryEnter();
+    if (callbackLease == null)
     {
       return;
     }
 
-    var effectiveEngine = this.translationService.GetEffectiveTranslationEngineId(
-        TranslationSurfaceGroup.Default);
-    if (!TranslationReuseScope.TryCreate(
-            this.config,
-            effectiveEngine,
-            out var scope))
+    using (callbackLease)
     {
-      return;
-    }
+      if (this.disposed ||
+          !FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() ||
+          !this.config.Translate ||
+          !this.config.TranslateNamePlates ||
+          handlers.Count == 0)
+      {
+        return;
+      }
 
-    foreach (var handler in handlers)
-    {
-      this.ProcessNamePlate(handler, scope);
+      var effectiveEngine =
+          this.translationService.GetEffectiveTranslationEngineId(
+              TranslationSurfaceGroup.Default);
+      if (!TranslationReuseScope.TryCreate(
+              this.config,
+              effectiveEngine,
+              out var scope))
+      {
+        return;
+      }
+
+      foreach (var handler in handlers)
+      {
+        this.ProcessNamePlate(handler, scope);
+      }
     }
   }
 

@@ -10988,6 +10988,35 @@
             <param name="message">The message to format.</param>
             <returns>The formatted message.</returns>
         </member>
+        <member name="T:Echoglossian.ReentrantCallbackGuard">
+            <summary>
+                Provides a small non-blocking guard for callbacks that must not process
+                nested invocations while mutating the surface that raised the callback.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ReentrantCallbackGuard.TryEnter">
+            <summary>
+                Attempts to enter the protected callback section.
+            </summary>
+            <returns>
+                A disposable lease when entry succeeds; otherwise, <see langword="null" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.ReentrantCallbackGuard.ReentrantCallbackLease">
+            <summary>
+                Releases one successful <see cref="T:Echoglossian.ReentrantCallbackGuard" /> entry.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ReentrantCallbackGuard.ReentrantCallbackLease.#ctor(Echoglossian.ReentrantCallbackGuard)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.ReentrantCallbackGuard.ReentrantCallbackLease" /> class.
+            </summary>
+            <param name="owner">The guard that owns this lease.</param>
+        </member>
+        <member name="M:Echoglossian.ReentrantCallbackGuard.ReentrantCallbackLease.Dispose">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.RuntimeLanguageHelper">
             <summary>
                 Normalizes the runtime game and target language values so DB-first
