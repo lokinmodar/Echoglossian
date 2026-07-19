@@ -15984,9 +15984,27 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapShouldRemoveDiacritics">
             <summary>
-                Gets whether the AreaMap family should strip diacritics from
-                translated text before it is written to the native UI.
+                Gets whether translated AreaMap text should be normalized before being
+                written to the native UI.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.CanRenderAreaMapHoverTooltip(System.Boolean)">
+            <summary>
+                Gets whether AreaMap may render a hover tooltip for a payload whose
+                translated content is ready.
+            </summary>
+            <param name="translatedPayloadReady">
+                Whether the translated payload required by the current mode is ready.
+            </param>
+            <returns><c>true</c> when the hover tooltip may be rendered.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.IsTranslatedPayloadReady(System.String)">
+            <summary>
+                Determines whether translated AreaMap quest text is ready for native
+                application or tooltip rendering.
+            </summary>
+            <param name="translatedQuestText">The translated AreaMap quest text.</param>
+            <returns><c>true</c> when the translated text exists.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.OnAreaMapEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
@@ -15995,22 +16013,104 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.OnAreaMapPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Refreshes AreaMap application and hover targets after delayed
+                translations settle.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.ProcessAreaMap(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,System.Boolean)">
+            <summary>
+                Processes the visible AreaMap quest row by resolving cached or
+                persisted translations, applying the selected display mode, and
+                optionally queueing missing background translations.
+            </summary>
+            <param name="args">The addon lifecycle arguments, if available.</param>
+            <param name="queueMissingTranslation">
+                Whether missing text should be sent to the shared translation broker.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.TryResolveAreaMapAtkValues(Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*@)">
             <summary>
-                Resolves the live AreaMap ATK value array for refresh and requested-
-                update events.
+                Resolves the live AreaMap ATK value array for refresh, requested-
+                update, and draw events.
             </summary>
             <param name="args">The lifecycle arguments for the current event.</param>
             <param name="atkValues">The resolved ATK value pointer.</param>
             <returns>True when a usable ATK value array was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.OnAreaMapHoverRefreshEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.TryReadAreaMapQuestText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String@)">
             <summary>
-                Refreshes the AreaMap hover target every draw using the most recently
-                resolved text pair without queueing new translations.
+                Reads the AreaMap quest text from the live ATK value payload.
             </summary>
-            <param name="type">The addon lifecycle event.</param>
-            <param name="args">The addon lifecycle arguments.</param>
+            <param name="atkValues">The AreaMap ATK values.</param>
+            <param name="questText">The resolved quest text.</param>
+            <returns><c>true</c> when a readable quest string exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.TryResolveAreaMapTranslation(Echoglossian.SourceClientLanguage,System.String,System.String,System.String@)">
+            <summary>
+                Resolves a translated AreaMap quest text from local state, the DB, or
+                the shared translation queue.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalQuestText">The original AreaMap quest text.</param>
+            <param name="visibleQuestText">The current visible AreaMap text.</param>
+            <param name="translatedQuestText">The resolved translated text.</param>
+            <returns><c>true</c> when a translated quest text exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.TryRefreshAreaMapPendingTranslation">
+            <summary>
+                Attempts to promote a pending AreaMap payload from the broker cache.
+            </summary>
+            <returns><c>true</c> when translated text became available.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.QueueAreaMapTranslation(Echoglossian.SourceClientLanguage,System.String)">
+            <summary>
+                Enqueues one AreaMap quest text through the shared quest broker.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="questText">The original AreaMap quest text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.ApplyAreaMapPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
+            <summary>
+                Applies the current AreaMap presentation mode to native text and hover
+                tooltip state.
+            </summary>
+            <param name="atkValues">The live AreaMap ATK values.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.RestoreAreaMapOriginal(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
+            <summary>
+                Restores the original AreaMap native text when this handler previously
+                wrote a native translation.
+            </summary>
+            <param name="atkValues">The live AreaMap ATK values.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.RegisterAreaMapHoverTooltip(System.Boolean)">
+            <summary>
+                Registers or suppresses the AreaMap hover tooltip for the current
+                resolved text pair.
+            </summary>
+            <param name="translatedPayloadReady">
+                Whether the translated text required by the tooltip exists.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.ResolveOriginalAreaMapText(System.String)">
+            <summary>
+                Resolves the original AreaMap text even if the addon currently shows
+                a translated value written by a previous native mode.
+            </summary>
+            <param name="visibleText">The current visible AreaMap text.</param>
+            <returns>The original source text backing the current AreaMap row.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.GetAreaMapTranslatedDisplayText(System.String)">
+            <summary>
+                Normalizes translated AreaMap text before it is written into the
+                native UI.
+            </summary>
+            <param name="translatedText">The translated text.</param>
+            <returns>The translated text as it should be displayed natively.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.RememberAreaMapHoverTexts(System.String,System.String)">
             <summary>
@@ -16027,6 +16127,14 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.ClearAreaMapRuntimeState(System.Boolean)">
+            <summary>
+                Clears AreaMap runtime state.
+            </summary>
+            <param name="removeHoverTooltips">
+                Whether registered hover targets should also be removed.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.TryGetAreaMapCachedText(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapTextCacheEntry@)">
             <summary>
                 Attempts to read the handler-local AreaMap translated-text cache.
@@ -16042,6 +16150,13 @@
             </summary>
             <param name="originalText">The original AreaMap quest text.</param>
             <param name="translatedText">The translated AreaMap quest text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.BuildAreaMapCacheKey(System.String)">
+            <summary>
+                Builds the shared broker cache key for one AreaMap quest text.
+            </summary>
+            <param name="questText">The original AreaMap quest text.</param>
+            <returns>The stable cache key.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.AreaMapHandler.AreaMapTextCacheEntry">
             <summary>

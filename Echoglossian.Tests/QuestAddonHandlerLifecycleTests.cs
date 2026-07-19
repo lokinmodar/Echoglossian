@@ -223,6 +223,23 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures AreaMap tooltips wait until translated quest text exists.
+    /// </summary>
+    /// <param name="translatedQuestText">The translated AreaMap quest text.</param>
+    /// <param name="expected">The expected readiness value.</param>
+    [Theory]
+    [InlineData("Texto traduzido", true)]
+    [InlineData("", false)]
+    public void AreaMapTooltipReadiness_RequiresTranslatedText(
+        string translatedQuestText,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            AreaMapHandler.IsTranslatedPayloadReady(translatedQuestText));
+    }
+
+    /// <summary>
     ///     Ensures every remaining quest-family handler is reachable through
     ///     runtime wiring, otherwise the addon-specific apply path never runs.
     /// </summary>
