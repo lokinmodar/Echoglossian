@@ -12,6 +12,8 @@ using Echoglossian.NativeUI.Handlers;
 
 using Xunit;
 
+using PluginEntry = Echoglossian.Echoglossian;
+
 namespace Echoglossian.Tests;
 
 /// <summary>
@@ -111,6 +113,32 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures every remaining quest-family handler is reachable through
+    ///     runtime wiring, otherwise the addon-specific apply path never runs.
+    /// </summary>
+    /// <param name="handlerType">The quest handler type that must be wired.</param>
+    [Theory]
+    [InlineData(typeof(JournalAcceptHandler))]
+    [InlineData(typeof(JournalResultHandler))]
+    [InlineData(typeof(RecommendListHandler))]
+    [InlineData(typeof(AreaMapHandler))]
+    public void RuntimeWiring_RegistersRemainingQuestFamilyHandlers(
+        Type handlerType)
+    {
+        var wiringMethod = typeof(PluginEntry).GetMethod(
+            "EgloAddonHandler",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var handlerConstructor = handlerType.GetConstructor(
+            [typeof(QuestAddonHandlerDependencies)]);
+
+        Assert.NotNull(wiringMethod);
+        Assert.NotNull(handlerConstructor);
+        Assert.True(
+            MethodReferences(wiringMethod!, handlerConstructor!),
+            $"{handlerType.Name} must be constructed by EgloAddonHandler.");
+    }
+
+    /// <summary>
     /// Creates the minimal dependency bundle required to construct quest
     /// handlers for lifecycle tests.
     /// </summary>
@@ -149,5 +177,26 @@ public class QuestAddonHandlerLifecycleTests
                 _,
                 _) => { },
         };
+    }
+
+    /// <summary>
+    /// Determines whether one compiled method body references another member.
+    /// </summary>
+    /// <param name="method">The method body to inspect.</param>
+    /// <param name="referencedMember">The expected referenced member.</param>
+    /// <returns>True when the metadata token appears in the method body.</returns>
+    private static bool MethodReferences(
+        MethodInfo method,
+        MemberInfo referencedMember)
+    {
+        var methodBody = method.GetMethodBody()?.GetILAsByteArray();
+        if (methodBody == null)
+        {
+            return false;
+        }
+
+        var referencedToken = BitConverter.GetBytes(
+            referencedMember.MetadataToken);
+        return methodBody.AsSpan().IndexOf(referencedToken) >= 0;
     }
 }
