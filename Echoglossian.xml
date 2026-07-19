@@ -10756,6 +10756,42 @@
             <param name="requestedVersion">The current runtime version being requested.</param>
             <returns>True when the stored row should be considered compatible.</returns>
         </member>
+        <member name="T:Echoglossian.PlayerScopedFrameworkReadinessGate">
+            <summary>
+                Requires player-scoped framework prerequisites to remain stable before
+                native player-dependent work is allowed to run.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PlayerScopedFrameworkReadinessGate.#ctor(System.TimeSpan)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.PlayerScopedFrameworkReadinessGate" /> class.
+            </summary>
+            <param name="stabilizationWindow">
+                The continuous ready interval required before access is allowed.
+            </param>
+        </member>
+        <member name="M:Echoglossian.PlayerScopedFrameworkReadinessGate.IsReady(System.Boolean,System.Boolean,System.Boolean,System.Byte,System.DateTime)">
+            <summary>
+                Gets whether the current player-scoped framework state is ready and
+                has remained stable long enough for background prefetch runtimes.
+            </summary>
+            <param name="isLoggedIn">Whether Dalamud reports an active login.</param>
+            <param name="hasTerritory">
+                Whether <c>IClientState.TerritoryType</c> has been populated.
+            </param>
+            <param name="hasObjectTableLocalPlayer">
+                Whether <c>IObjectTable.LocalPlayer</c> is available.
+            </param>
+            <param name="currentClassJobId">The current player class/job id.</param>
+            <param name="nowUtc">The current UTC timestamp.</param>
+            <returns><see langword="true" /> when access is stable.</returns>
+        </member>
+        <member name="M:Echoglossian.PlayerScopedFrameworkReadinessGate.Reset">
+            <summary>
+                Clears the tracked stable-ready interval.
+            </summary>
+        </member>
         <member name="T:Echoglossian.PluginRuntimeLogLevel">
             <summary>
                 Supported plugin log levels for shared logging helpers.
