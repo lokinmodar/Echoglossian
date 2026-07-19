@@ -4,10 +4,13 @@
 // </copyright>
 
 using Echoglossian.Mock.Hosting;
+using Echoglossian.NativeUI.AddonHandlers.Quest;
+using Echoglossian.NativeUI.Handlers;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -96,6 +99,54 @@ public sealed class HostedPreviewPluginSessionTests
         session.StateRoot.FullName.Should().Be(fixture.Options.StateRoot.FullName);
         session.PluginSavePath.FullName.Should().Be(fixture.Options.PluginSavePath.FullName);
         session.ConfigPath.FullName.Should().Be(fixture.Options.ConfigPath.FullName);
+    }
+
+    /// <summary>
+    /// Verifies that the remaining quest-family handlers are active in the
+    /// real plugin when their config toggles are enabled under DalaMock.
+    /// </summary>
+    /// <returns>A task that completes after hosted startup wires the addon handlers.</returns>
+    [Fact]
+    public async Task StartAsync_registers_remaining_quest_family_handlers_when_enabled()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(
+            config: new global::Echoglossian.Config
+            {
+                TranslateJournalAccept = true,
+                TranslateJournalResult = true,
+                TranslateRecommendList = true,
+                TranslateAreaMap = true,
+            });
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            fixture.Options);
+
+        var registeredHandlers = GetRegisteredAddonHandlers(session.Plugin);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "JournalAccept" &&
+            entry.Handler is JournalAcceptHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "JournalResult" &&
+            entry.Handler is JournalResultHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "RecommendList" &&
+            entry.Handler is RecommendListHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "AreaMap" &&
+            entry.Handler is AreaMapHandler);
+    }
+
+    private static IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)>
+        GetRegisteredAddonHandlers(global::Echoglossian.Echoglossian plugin)
+    {
+        var handlersField = typeof(global::Echoglossian.Echoglossian).GetField(
+            "registeredAddonHandlers",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        handlersField.Should().NotBeNull();
+        return handlersField!.GetValue(plugin)
+            .Should()
+            .BeAssignableTo<List<(string AddonName, IAddonTranslationHandler Handler)>>()
+            .Subject;
     }
 }
 
