@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Game.Gui.Toast;
+
 namespace Echoglossian.UIOverlays.TranslationOverlay;
 
 /// <summary>
@@ -269,6 +271,45 @@ internal record TranslationWindowConfig(
   }
 
   /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance for one
+  /// callback-owned normal-toast placement bucket.
+  /// </summary>
+  /// <param name="config">The active configuration.</param>
+  /// <param name="position">The runtime toast placement.</param>
+  /// <returns>The placement-specific overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForSupportedNormalToastPlacement(
+      Config config,
+      ToastPosition position)
+  {
+    var (widthMultiplier, posCorrection, textColor, backgroundOpacity) =
+        position == ToastPosition.Bottom
+            ? (
+                config.ImGuiBottomToastWindowWidthMult,
+                config.ImGuiBottomToastWindowPosCorrection,
+                config.OverlayBottomToastTextColor,
+                config.BottomToastBackgroundOpacity)
+            : (
+                config.ImGuiTopToastWindowWidthMult,
+                config.ImGuiTopToastWindowPosCorrection,
+                config.OverlayTopToastTextColor,
+                config.TopToastBackgroundOpacity);
+
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.WideTextToast,
+        DefaultTitle: Resources.OverlayWindowTitleWideTextToastTranslation,
+        FontScale: config.WideTextToastFontScale,
+        WidthMultiplier: widthMultiplier,
+        HeightMultiplier: 2.0f,
+        TextColor: new Vector4(textColor.X, textColor.Y, textColor.Z, 1.0f),
+        PosCorrection: posCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: backgroundOpacity,
+        NoBackground: backgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
   /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for error toast translations.
   /// </summary>
   /// <param name="config"></param>
@@ -356,6 +397,51 @@ internal record TranslationWindowConfig(
         ForceShowTitle: false,
         BackgroundOpacity: config.QuestToastBackgroundOpacity,
         NoBackground: config.QuestToastBackgroundOpacity <= 0f,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance for one
+  /// quest-toast placement bucket.
+  /// </summary>
+  /// <param name="config">The active configuration.</param>
+  /// <param name="position">The runtime quest-toast placement.</param>
+  /// <returns>The placement-specific overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForQuestToastPlacement(
+      Config config,
+      QuestToastPosition position)
+  {
+    var (widthMultiplier, posCorrection, textColor, backgroundOpacity) =
+        position switch
+        {
+          QuestToastPosition.Left => (
+              config.ImGuiQuestToastLeftWindowWidthMult,
+              config.ImGuiQuestToastLeftWindowPosCorrection,
+              config.OverlayQuestToastLeftTextColor,
+              config.QuestToastLeftBackgroundOpacity),
+          QuestToastPosition.Right => (
+              config.ImGuiQuestToastRightWindowWidthMult,
+              config.ImGuiQuestToastRightWindowPosCorrection,
+              config.OverlayQuestToastRightTextColor,
+              config.QuestToastRightBackgroundOpacity),
+          _ => (
+              config.ImGuiQuestToastCentreWindowWidthMult,
+              config.ImGuiQuestToastCentreWindowPosCorrection,
+              config.OverlayQuestToastCentreTextColor,
+              config.QuestToastCentreBackgroundOpacity),
+        };
+
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.QuestToast,
+        DefaultTitle: Resources.OverlayWindowTitleQuestToastTranslation,
+        FontScale: config.QuestToastFontScale,
+        WidthMultiplier: widthMultiplier,
+        HeightMultiplier: 2.0f,
+        TextColor: new Vector4(textColor.X, textColor.Y, textColor.Z, 1.0f),
+        PosCorrection: posCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: backgroundOpacity,
+        NoBackground: backgroundOpacity <= 0f,
         AutoSizeToTextWithMaxWidth: true);
   }
 

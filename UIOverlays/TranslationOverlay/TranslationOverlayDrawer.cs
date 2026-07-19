@@ -592,8 +592,16 @@ namespace Echoglossian
       }
 
       var viewport = ImGui.GetMainViewport();
+      var questToastPosition = this.questToastRuntime.GetCurrentQuestToastPosition();
+      var positionX = questToastPosition switch
+      {
+        QuestToastPosition.Left => viewport.Pos.X + (viewport.Size.X * 0.28f),
+        QuestToastPosition.Right => viewport.Pos.X + (viewport.Size.X * 0.72f),
+        _ => viewport.Pos.X + (viewport.Size.X * 0.5f),
+      };
+
       this.questToastOverlay.Position = new Vector2(
-          viewport.Pos.X + (viewport.Size.X * 0.5f),
+          positionX,
           viewport.Pos.Y + (viewport.Size.Y * 0.14f));
       this.questToastOverlay.Dimensions = new Vector2(
           viewport.Size.X * 0.35f,

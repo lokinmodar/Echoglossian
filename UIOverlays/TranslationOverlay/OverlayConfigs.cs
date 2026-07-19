@@ -107,7 +107,13 @@ public partial class Echoglossian
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.toastOverlay,
-                () => TranslationWindowConfig.FromConfigForToast(this.configuration),
+                () =>
+                    NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
+                        .UseSupportedNormalToastRuntime(this.configuration)
+                        ? this.toastGuiSupportedToastRuntime
+                            .GetCurrentNormalOverlayConfig()
+                        : TranslationWindowConfig.FromConfigForToast(
+                            this.configuration),
                 isEnabled: () =>
                     NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
                         this.configuration)
@@ -197,8 +203,7 @@ public partial class Echoglossian
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.questToastOverlay,
-                () => TranslationWindowConfig.FromConfigForQuestToast(
-                    this.configuration),
+                () => this.questToastRuntime.GetCurrentOverlayConfig(),
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateQuestToast &&

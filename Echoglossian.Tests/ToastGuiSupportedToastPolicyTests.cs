@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Game.Gui.Toast;
+
 using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Xunit;
 
@@ -166,5 +168,45 @@ public class ToastGuiSupportedToastPolicyTests
         Assert.Equal(
             JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips,
             ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(config));
+    }
+
+    /// <summary>
+    ///     Ensures the callback-owned normal-toast runtime resolves the top
+    ///     placement bucket independently from the bottom placement bucket.
+    /// </summary>
+    [Fact]
+    public void GetNormalToastDisplayMode_ReturnsTopPlacementDisplayMode_WhenPositionIsTop()
+    {
+        var config = new Config
+        {
+            TopToastTranslationDisplayMode = JournalTranslationDisplayMode.TooltipTranslation,
+            BottomToastTranslationDisplayMode = JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips,
+        };
+
+        Assert.Equal(
+            JournalTranslationDisplayMode.TooltipTranslation,
+            ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(
+                config,
+                ToastPosition.Top));
+    }
+
+    /// <summary>
+    ///     Ensures the callback-owned normal-toast runtime resolves the bottom
+    ///     placement bucket independently from the top placement bucket.
+    /// </summary>
+    [Fact]
+    public void GetNormalToastDisplayMode_ReturnsBottomPlacementDisplayMode_WhenPositionIsBottom()
+    {
+        var config = new Config
+        {
+            TopToastTranslationDisplayMode = JournalTranslationDisplayMode.TooltipTranslation,
+            BottomToastTranslationDisplayMode = JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips,
+        };
+
+        Assert.Equal(
+            JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips,
+            ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(
+                config,
+                ToastPosition.Bottom));
     }
 }

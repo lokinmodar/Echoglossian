@@ -3,6 +3,10 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Numerics;
+
+using Dalamud.Game.Gui.Toast;
+
 using Echoglossian.UIOverlays.TranslationOverlay;
 
 using Xunit;
@@ -63,6 +67,63 @@ public class TranslationWindowConfigTests
             () => TranslationWindowConfig.ForSurface(
                 null!,
                 TranslationOverlaySurfaceId.Talk));
+    }
+
+    /// <summary>
+    ///     Ensures the callback-owned normal-toast placement factories use the
+    ///     placement-specific overrides instead of the legacy shared family
+    ///     config.
+    /// </summary>
+    [Fact]
+    public void FromConfigForSupportedNormalToastPlacement_UsesBottomPlacementOverrides()
+    {
+        var config = new Config
+        {
+            WideTextToastFontScale = 1.5f,
+            ImGuiBottomToastWindowWidthMult = 1.8f,
+            ImGuiBottomToastWindowPosCorrection = new Vector2(12f, -8f),
+            OverlayBottomToastTextColor = new Vector3(0.2f, 0.4f, 0.6f),
+            BottomToastBackgroundOpacity = 0.35f,
+        };
+
+        var actual = TranslationWindowConfig.FromConfigForSupportedNormalToastPlacement(
+            config,
+            ToastPosition.Bottom);
+
+        Assert.Equal(TranslationOverlaySurfaceId.WideTextToast, actual.SurfaceId);
+        Assert.Equal(1.5f, actual.FontScale);
+        Assert.Equal(1.8f, actual.WidthMultiplier);
+        Assert.Equal(new Vector2(12f, -8f), actual.PosCorrection);
+        Assert.Equal(new Vector4(0.2f, 0.4f, 0.6f, 1.0f), actual.TextColor);
+        Assert.Equal(0.35f, actual.BackgroundOpacity);
+    }
+
+    /// <summary>
+    ///     Ensures the quest-toast placement factories use the per-placement
+    ///     overrides for the active quest alignment bucket.
+    /// </summary>
+    [Fact]
+    public void FromConfigForQuestToastPlacement_UsesRightPlacementOverrides()
+    {
+        var config = new Config
+        {
+            QuestToastFontScale = 1.25f,
+            ImGuiQuestToastRightWindowWidthMult = 1.6f,
+            ImGuiQuestToastRightWindowPosCorrection = new Vector2(-16f, 4f),
+            OverlayQuestToastRightTextColor = new Vector3(0.9f, 0.8f, 0.1f),
+            QuestToastRightBackgroundOpacity = 0.6f,
+        };
+
+        var actual = TranslationWindowConfig.FromConfigForQuestToastPlacement(
+            config,
+            QuestToastPosition.Right);
+
+        Assert.Equal(TranslationOverlaySurfaceId.QuestToast, actual.SurfaceId);
+        Assert.Equal(1.25f, actual.FontScale);
+        Assert.Equal(1.6f, actual.WidthMultiplier);
+        Assert.Equal(new Vector2(-16f, 4f), actual.PosCorrection);
+        Assert.Equal(new Vector4(0.9f, 0.8f, 0.1f, 1.0f), actual.TextColor);
+        Assert.Equal(0.6f, actual.BackgroundOpacity);
     }
 
     /// <summary>

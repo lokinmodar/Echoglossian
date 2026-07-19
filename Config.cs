@@ -268,6 +268,31 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode QuestToastTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Display mode for callback-owned top-position normal toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode TopToastTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for callback-owned bottom-position normal toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode BottomToastTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for left-aligned quest toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode QuestToastLeftTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for centred quest toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode QuestToastCentreTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for right-aligned quest toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode QuestToastRightTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Always show the BattleTalk overlay title bar.</summary>
   [DefaultValue(false)] public bool BattleTalkForceShowTitle = false;
 
@@ -357,6 +382,41 @@ public class Config : IPluginConfiguration
 
   /// <summary>Width multiplier for Quest toast overlays.</summary>
   [DefaultValue(1.0f)] public float ImGuiQuestToastWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for top-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiTopToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for top-position callback-owned toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiTopToastWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiBottomToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiBottomToastWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for left-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiQuestToastLeftWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for left-aligned quest toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiQuestToastLeftWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for centred quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiQuestToastCentreWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for centred quest toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiQuestToastCentreWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for right-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiQuestToastRightWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for right-aligned quest toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiQuestToastRightWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for ImGui overlay windows.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
@@ -519,6 +579,26 @@ public class Config : IPluginConfiguration
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 OverlayQuestToastTextColor = new(1f, 1f, 1f);
 
+  /// <summary>Text color used by top-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayTopToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayBottomToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by left-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayQuestToastLeftTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by centred quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayQuestToastCentreTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by right-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayQuestToastRightTextColor = new(1f, 1f, 1f);
+
   /// <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
   [DefaultValue(1f)] public float WideTextToastBackgroundOpacity = 1f;
 
@@ -533,6 +613,21 @@ public class Config : IPluginConfiguration
 
   /// <summary>Background opacity used by Quest toast overlays.</summary>
   [DefaultValue(1f)] public float QuestToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by top-position callback-owned toast overlays.</summary>
+  [DefaultValue(1f)] public float TopToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(1f)] public float BottomToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by left-aligned quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastLeftBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by centred quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastCentreBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by right-aligned quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastRightBackgroundOpacity = 1f;
 
   /// <summary>Whether plugin assets have been successfully downloaded.</summary>
   [DefaultValue(false)] public bool PluginAssetsDownloaded = false;
@@ -1156,8 +1251,8 @@ public class Config : IPluginConfiguration
   [DefaultValue("")] public string YandexPaidApiKey = string.Empty;
 
   /// <summary>Plugin configuration version number (used during migration).</summary>
-  [DefaultValue(15)]
-  public int Version { get; set; } = 15;
+  [DefaultValue(16)]
+  public int Version { get; set; } = 16;
 
   /// <summary>
   /// Gets or sets a value indicating whether translation should run asynchronously.
