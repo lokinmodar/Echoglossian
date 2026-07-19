@@ -80,6 +80,30 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures JournalAccept refreshes tooltip targets after setup so queued
+    /// translations can surface while the accept dialog remains open.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_RegistersPreDrawRefresh()
+    {
+        var handler = new JournalAcceptHandler(CreateDependencies());
+
+        Assert.Contains(AddonEvent.PreDraw, handler.GetEventHandlers().Keys);
+    }
+
+    /// <summary>
+    /// Ensures JournalResult refreshes tooltip targets after setup so queued
+    /// translations can surface while the result dialog remains open.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_RegistersPreDrawRefresh()
+    {
+        var handler = new JournalResultHandler(CreateDependencies());
+
+        Assert.Contains(AddonEvent.PreDraw, handler.GetEventHandlers().Keys);
+    }
+
+    /// <summary>
     ///     Ensures tooltip-only JournalDetail rendering remains read-only unless
     ///     it must restore native text previously written by this handler.
     /// </summary>
@@ -110,6 +134,46 @@ public class QuestAddonHandlerLifecycleTests
             JournalDetailHandler.ResolveNativeMutationAction(
                 writesNativeTranslation,
                 ownsNativeMutation));
+    }
+
+    /// <summary>
+    /// Ensures JournalAccept tooltips wait until both title and body
+    /// translations are available.
+    /// </summary>
+    /// <param name="translatedQuestName">The translated quest title.</param>
+    /// <param name="translatedQuestMessage">The translated quest body.</param>
+    /// <param name="expected">The expected readiness value.</param>
+    [Theory]
+    [InlineData("Titulo traduzido", "Corpo traduzido", true)]
+    [InlineData("", "Corpo traduzido", false)]
+    [InlineData("Titulo traduzido", "", false)]
+    public void JournalAcceptTooltipReadiness_RequiresTranslatedNameAndMessage(
+        string translatedQuestName,
+        string translatedQuestMessage,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            JournalAcceptHandler.IsTranslatedPayloadReady(
+                translatedQuestName,
+                translatedQuestMessage));
+    }
+
+    /// <summary>
+    /// Ensures JournalResult tooltips wait until the translated title exists.
+    /// </summary>
+    /// <param name="translatedQuestName">The translated quest title.</param>
+    /// <param name="expected">The expected readiness value.</param>
+    [Theory]
+    [InlineData("Titulo traduzido", true)]
+    [InlineData("", false)]
+    public void JournalResultTooltipReadiness_RequiresTranslatedName(
+        string translatedQuestName,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            JournalResultHandler.IsTranslatedPayloadReady(translatedQuestName));
     }
 
     /// <summary>

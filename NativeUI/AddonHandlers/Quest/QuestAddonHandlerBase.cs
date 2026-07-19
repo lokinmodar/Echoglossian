@@ -280,6 +280,145 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Finds a visible readable text node whose current native text matches
+  ///     either the original or translated payload.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="originalText">The original source text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <param name="textNode">The matched text node, if any.</param>
+  /// <returns><c>true</c> when a matching text node was found.</returns>
+  protected unsafe bool TryFindReadableTextNodeByText(
+      AtkUnitBase* addon,
+      string originalText,
+      string translatedText,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (addon == null)
+    {
+      return false;
+    }
+
+    foreach (var nodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
+    {
+      var candidate = (AtkTextNode*)nodeAddress;
+      if (candidate == null || !candidate->IsVisible())
+      {
+        continue;
+      }
+
+      var visibleText = ReadReadableTextNode(candidate);
+      if (TextNodePayloadMatches(visibleText, originalText) ||
+          TextNodePayloadMatches(visibleText, translatedText))
+      {
+        textNode = candidate;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Reads the best plain-text representation available from a native text
+  ///     node without mutating the node.
+  /// </summary>
+  /// <param name="textNode">The text node to read.</param>
+  /// <returns>The readable text, or an empty string.</returns>
+  private static unsafe string ReadReadableTextNode(AtkTextNode* textNode)
+  {
+    if (textNode == null)
+    {
+      return string.Empty;
+    }
+
+    var currentText = textNode->NodeText.ToString();
+    if (!string.IsNullOrWhiteSpace(currentText))
+    {
+      return currentText;
+    }
+
+    try
+    {
+      var originalText = textNode->OriginalTextPointer
+          .AsReadOnlySeStringSpan()
+          .ExtractText();
+      if (!string.IsNullOrWhiteSpace(originalText))
+      {
+        return originalText;
+      }
+    }
+    catch
+    {
+      // Keep falling through to the legacy buffer read below.
+    }
+
+    try
+    {
+      return MemoryHelper.ReadSeStringAsString(
+          out _,
+          (nint)textNode->NodeText.StringPtr.Value);
+    }
+    catch
+    {
+      return string.Empty;
+    }
+  }
+
+  /// <summary>
+  ///     Compares visible native text with one expected payload while allowing
+  ///     line wrapping and SeString whitespace differences.
+  /// </summary>
+  /// <param name="visibleText">The text read from the native node.</param>
+  /// <param name="expectedText">The expected original or translated payload.</param>
+  /// <returns><c>true</c> when the texts describe the same payload.</returns>
+  private static bool TextNodePayloadMatches(
+      string visibleText,
+      string expectedText)
+  {
+    var normalizedVisibleText = NormalizeReadableText(visibleText);
+    var normalizedExpectedText = NormalizeReadableText(expectedText);
+    if (string.IsNullOrWhiteSpace(normalizedVisibleText) ||
+        string.IsNullOrWhiteSpace(normalizedExpectedText))
+    {
+      return false;
+    }
+
+    if (string.Equals(
+            normalizedVisibleText,
+            normalizedExpectedText,
+            StringComparison.Ordinal))
+    {
+      return true;
+    }
+
+    if (normalizedVisibleText.Length < 4 || normalizedExpectedText.Length < 4)
+    {
+      return false;
+    }
+
+    return normalizedVisibleText.Contains(
+               normalizedExpectedText,
+               StringComparison.Ordinal) ||
+           normalizedExpectedText.Contains(
+               normalizedVisibleText,
+               StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Normalizes readable native text for popup text-node matching.
+  /// </summary>
+  /// <param name="text">The text to normalize.</param>
+  /// <returns>The normalized text.</returns>
+  private static string NormalizeReadableText(string text)
+  {
+    return string.IsNullOrWhiteSpace(text)
+        ? string.Empty
+        : Regex.Replace(text.Trim(), @"\s+", " ");
+  }
+
+  /// <summary>
   ///     Normalizes quest text before writing it to the native UI.
   /// </summary>
   /// <param name="text">The text to normalize.</param>
