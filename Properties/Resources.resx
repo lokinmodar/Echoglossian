@@ -653,7 +653,7 @@
     <value>No settings required for this engine</value>
   </data>
   <data name="SettingsForGeminiText" xml:space="preserve">
-    <value>Settings for Gemini:</value>
+    <value>Settings for Google AI Studio / Gemini:</value>
   </data>
   <data name="SettingsForLibreTranslateText" xml:space="preserve">
     <value>Settings for LibreTranslate:</value>
@@ -695,7 +695,7 @@
     <value>Translate SelectOk</value>
   </data>
   <data name="GeminiAPIKey" xml:space="preserve">
-    <value>Gemini API Key</value>
+    <value>Google AI Studio API Key</value>
   </data>
   <data name="SettingsForYandexPublic" xml:space="preserve">
     <value>Settings for Yandex public Translator</value>
@@ -1157,10 +1157,10 @@
     <value>GPT-3.5</value>
   </data>
   <data name="ModelTierGemini15" xml:space="preserve">
-    <value>Gemini 1.5</value>
+    <value>Gemini 2.5 Flash</value>
   </data>
   <data name="ModelTierGeminiPro" xml:space="preserve">
-    <value>Gemini Pro</value>
+    <value>Gemini 2.5 Pro</value>
   </data>
   <data name="ModelTierChat" xml:space="preserve">
     <value>Chat</value>
@@ -1565,13 +1565,13 @@
     <value>Visible story-surface retranslation was canceled before completion.</value>
   </data>
   <data name="GeminiModelTooltipPro" xml:space="preserve">
-    <value>🔷 Legacy Gemini Pro model (default)</value>
+    <value>⚪ Lowest-cost Gemini 2.5 Flash-Lite text model.</value>
   </data>
   <data name="GeminiModelTooltip15Pro" xml:space="preserve">
-    <value>🟢 Large context window and high accuracy</value>
+    <value>🟢 Highest-quality Gemini 2.5 Pro text model.</value>
   </data>
   <data name="GeminiModelTooltip15Flash" xml:space="preserve">
-    <value>⚡ Fastest and cheapest Gemini model</value>
+    <value>⚡ Default Gemini 2.5 Flash text model with balanced speed and quality.</value>
   </data>
   <data name="DeepSeekModelTooltipChat" xml:space="preserve">
     <value>💬 Optimized for general chat and speed</value>
