@@ -248,8 +248,9 @@ public sealed class PluginConfigWindowRenderer
 
         using (context.PushGeneralFont())
         {
-            Echoglossian.LangToRemoveDiacritics = config.Lang is 24 or 25 or 44 or 60
-                or 61 or 80 or 83 or 87 or 91 or 104 or 105 or 109 or 110;
+            Echoglossian.LangToRemoveDiacritics =
+                languages.TryGetValue(config.Lang, out var selectedLanguage) &&
+                selectedLanguage.SupportsNativeReplacementDiacriticsFallback;
 
             if (LanguageDropdownHelper.DrawLanguageDropdown(
                     ref config.Lang,
@@ -258,6 +259,9 @@ public sealed class PluginConfigWindowRenderer
                 Echoglossian.LanguageInt = config.Lang;
                 Echoglossian.SpecialFontFileName = languages[config.Lang].FontName;
                 Echoglossian.SelectedLanguage = languages[config.Lang];
+                Echoglossian.LangToRemoveDiacritics =
+                    Echoglossian.SelectedLanguage
+                        .SupportsNativeReplacementDiacriticsFallback;
                 LanguagePresentationPolicy.ApplyLanguageFlags(config);
 
                 if (TranslationEngineSelectionMigrationHelper
