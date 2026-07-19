@@ -1798,6 +1798,21 @@
         <member name="F:Echoglossian.Config.QuestToastTranslationDisplayMode">
             <summary>Display mode for Quest toasts.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TopToastTranslationDisplayMode">
+            <summary>Display mode for callback-owned top-position normal toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.BottomToastTranslationDisplayMode">
+            <summary>Display mode for callback-owned bottom-position normal toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastLeftTranslationDisplayMode">
+            <summary>Display mode for left-aligned quest toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastCentreTranslationDisplayMode">
+            <summary>Display mode for centred quest toasts.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastRightTranslationDisplayMode">
+            <summary>Display mode for right-aligned quest toasts.</summary>
+        </member>
         <member name="F:Echoglossian.Config.BattleTalkForceShowTitle">
             <summary>Always show the BattleTalk overlay title bar.</summary>
         </member>
@@ -1853,6 +1868,36 @@
         </member>
         <member name="F:Echoglossian.Config.ImGuiQuestToastWindowWidthMult">
             <summary>Width multiplier for Quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiTopToastWindowPosCorrection">
+            <summary>Position correction for top-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiTopToastWindowWidthMult">
+            <summary>Width multiplier for top-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiBottomToastWindowPosCorrection">
+            <summary>Position correction for bottom-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiBottomToastWindowWidthMult">
+            <summary>Width multiplier for bottom-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastLeftWindowPosCorrection">
+            <summary>Position correction for left-aligned quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastLeftWindowWidthMult">
+            <summary>Width multiplier for left-aligned quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastCentreWindowPosCorrection">
+            <summary>Position correction for centred quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastCentreWindowWidthMult">
+            <summary>Width multiplier for centred quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastRightWindowPosCorrection">
+            <summary>Position correction for right-aligned quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiQuestToastRightWindowWidthMult">
+            <summary>Width multiplier for right-aligned quest toast overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.ImGuiWindowPosCorrection">
             <summary>Position correction for ImGui overlay windows.</summary>
@@ -1981,6 +2026,21 @@
         <member name="F:Echoglossian.Config.OverlayQuestToastTextColor">
             <summary>Text color used by Quest toast overlays.</summary>
         </member>
+        <member name="F:Echoglossian.Config.OverlayTopToastTextColor">
+            <summary>Text color used by top-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayBottomToastTextColor">
+            <summary>Text color used by bottom-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayQuestToastLeftTextColor">
+            <summary>Text color used by left-aligned quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayQuestToastCentreTextColor">
+            <summary>Text color used by centred quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.OverlayQuestToastRightTextColor">
+            <summary>Text color used by right-aligned quest toast overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.WideTextToastBackgroundOpacity">
             <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
         </member>
@@ -1995,6 +2055,21 @@
         </member>
         <member name="F:Echoglossian.Config.QuestToastBackgroundOpacity">
             <summary>Background opacity used by Quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TopToastBackgroundOpacity">
+            <summary>Background opacity used by top-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.BottomToastBackgroundOpacity">
+            <summary>Background opacity used by bottom-position callback-owned toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastLeftBackgroundOpacity">
+            <summary>Background opacity used by left-aligned quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastCentreBackgroundOpacity">
+            <summary>Background opacity used by centred quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.QuestToastRightBackgroundOpacity">
+            <summary>Background opacity used by right-aligned quest toast overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.PluginAssetsDownloaded">
             <summary>Whether plugin assets have been successfully downloaded.</summary>
@@ -2494,8 +2569,17 @@
                 ItemDetail addons, including trait-aware ActionDetail handling.
             </summary>
             <summary>
+                Hosts debug-only automatic addon-probe watches that start on login for
+                selected addons with early hidden-state value.
+            </summary>
+            <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
+            </summary>
+            <summary>
+                Handles the quest probe command used to inspect the complete quest data
+                shape from Lumina, the live quest progress resolver, and the current
+                QuestPlate database rows.
             </summary>
             <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
@@ -3133,6 +3217,11 @@
             Holds the translator debugger and metrics window instance.
             </summary>
         </member>
+        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
+            <summary>
+            Holds the currently active addon structure probe watch, if any.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -3306,6 +3395,11 @@
                 Regex used to help filtering out numeric-like strings.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
+            <summary>
+                Lists all available culture information and writes it to a file.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
             <summary>
                 Moves the given path up by the specified number of levels.
@@ -3347,6 +3441,12 @@
             <summary>
                 Migrates legacy overlay booleans and the shared swap toggle into
                 per-surface translation display modes.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.MigrateToastPlacementSettings">
+            <summary>
+                Migrates shared callback-owned toast presentation settings into the
+                placement-specific buckets used by the newer toast runtimes.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MigrateTranslationEngineSelection(System.Int32)">
@@ -3563,6 +3663,13 @@
             </summary>
             <returns>The default language metadata dictionary.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ApplyNativeReplacementDiacriticsFallbackEligibility(System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
+            <summary>
+                Marks the current manually-curated language set that may expose the
+                optional native replacement diacritics fallback.
+            </summary>
+            <param name="languages">The language metadata dictionary to update.</param>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TickAcceptedQuestPrefetch">
             <summary>
                 Ticks the accepted-quest prefetch runtime so active quests can be
@@ -3705,6 +3812,14 @@
             <param name="payloadIdentity">The existing payload identity.</param>
             <param name="scope">The immutable operation reuse scope.</param>
             <returns>The source-scoped broker key.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildAcceptedQuestOriginContext(Echoglossian.QuestProgressSnapshot,System.String)">
+            <summary>
+                Builds the diagnostic surface identity for one accepted-quest field.
+            </summary>
+            <param name="questProgressSnapshot">The accepted-quest progress snapshot.</param>
+            <param name="fieldName">The translated field name.</param>
+            <returns>The diagnostic surface identity.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.DispatchAcceptedQuestPrefetchTranslation(System.String,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.TryGetPrefetchTranslationDelegate,Echoglossian.QueuePrefetchTranslationDelegate,System.Func{System.String},System.Action{System.String,Echoglossian.TranslationReuseScope,System.Boolean})">
             <summary>
@@ -3974,6 +4089,14 @@
                 Resolves the current live client source for a prefetch operation.
             </summary>
             <returns>The resolved source contract, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildActionDetailOriginContext(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,System.String)">
+            <summary>
+                Builds the diagnostic surface identity for one action-tooltip field.
+            </summary>
+            <param name="payload">The canonical action-tooltip payload.</param>
+            <param name="fieldName">The translated field name.</param>
+            <returns>The diagnostic surface identity.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.BuildTranslationReuseScopedKey(System.String,Echoglossian.TranslationReuseScope)">
             <summary>
@@ -4866,6 +4989,109 @@
             Handles the registration of addon handlers.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickAddonProbeInfrastructure">
+            <summary>
+                Ticks manual and automatic addon-probe watches, including the
+                debug-only login bootstrap for the default watch set.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetActiveAddonProbeWatchCount">
+            <summary>
+                Gets how many addon-probe watches are currently active across manual
+                and managed watch sets.
+            </summary>
+            <returns>The active probe-watch count.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopAllAddonProbeWatches(System.Boolean)">
+            <summary>
+                Stops every active addon-probe watch known to the plugin.
+            </summary>
+            <param name="suppressAutoUntilLogout">
+                Whether the current login session should suppress the default
+                automatic watch set after the stop completes.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManualAddonProbeWatch">
+            <summary>
+                Ticks the currently active manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManagedAddonProbeWatches">
+            <summary>
+                Ticks every managed addon-probe watch and prunes the disposed ones.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic addon-probe watch set when the player
+                logs in, then resets the gate on logout.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartDefaultAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic watch set used to capture early
+                structural state for pooled dialogue addons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartManagedAddonProbeWatch(System.String,System.Int32,System.TimeSpan,System.String)">
+            <summary>
+                Starts one managed addon-probe watch and tracks it for later stop or
+                pruning.
+            </summary>
+            <param name="addonName">The addon name to watch.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay alive.</param>
+            <param name="reason">The debug log reason attached to the startup.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManualAddonProbeWatch">
+            <summary>
+                Stops the current manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManagedAddonProbeWatches">
+            <summary>
+                Stops every managed automatic addon-probe watch.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log so we can
+            inspect its live node tree, component roots, and likely overlay anchors.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
+            <summary>
+            Parses the addon probe command arguments into an addon name, optional index,
+            and optional watch duration.
+            </summary>
+            <param name="args">The raw command arguments.</param>
+            <returns>The addon name, index, and duration to probe.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryParseAddonProbeDuration(System.String,System.TimeSpan@)">
+            <summary>
+            Parses one addon-probe duration token such as "90s" or "15m".
+            </summary>
+            <param name="token">The raw duration token.</param>
+            <param name="duration">Receives the parsed duration.</param>
+            <returns><see langword="true"/> when the token parsed successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LooksLikeAddonProbeDuration(System.String)">
+            <summary>
+            Determines whether a token looks like an addon-probe duration even when the
+            value is outside the accepted range.
+            </summary>
+            <param name="token">The token to inspect.</param>
+            <returns><see langword="true"/> when the token resembles a duration.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatAddonProbeDuration(System.TimeSpan)">
+            <summary>
+            Formats one addon-probe watch duration for chat feedback.
+            </summary>
+            <param name="duration">The duration to format.</param>
+            <returns>The human-readable duration string.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -5068,6 +5294,14 @@
             <param name="payload">The canonical payload.</param>
             <returns>The stable queue key.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.BuildItemDetailOriginContext(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,System.String)">
+            <summary>
+                Builds the diagnostic surface identity for one item-tooltip field.
+            </summary>
+            <param name="payload">The canonical item-tooltip payload.</param>
+            <param name="fieldName">The translated field name.</param>
+            <returns>The diagnostic surface identity.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryCollectTrackedItemIds(System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect tracked item ids from inventory, armory, equipment, and hotbars.
@@ -5137,6 +5371,102 @@
                 Builds the shared dependency bundle for standalone quest handlers.
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
+            <summary>
+                Handles the quest probe command.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
+            <summary>
+                Tries to resolve the quest probe target from either a quest id or a
+                quest name.
+            </summary>
+            <param name="input">The command argument.</param>
+            <param name="questIdText">The resolved quest id as text.</param>
+            <param name="questName">The resolved quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>True when the quest could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the quest data structure for inspection.
+            </summary>
+            <param name="questIdText">The quest id as text.</param>
+            <param name="questName">The quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the raw Lumina quest row properties.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs all rows from the quest text sheet, not just the live todo
+                entries, so we can inspect the full structure of the quest sheet.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
+            <summary>
+                Logs the QuestPlate rows currently stored for the quest.
+            </summary>
+            <param name="questIdText">The quest id text.</param>
+            <param name="questName">The quest name.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Logs the resolved live quest progression snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves a human-readable quest name from a quest row.
+            </summary>
+            <param name="questRow">The quest row.</param>
+            <returns>The resolved quest name, if available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
+            <summary>
+                Converts quest text to a readable string for probe output.
+            </summary>
+            <param name="text">The quest text.</param>
+            <returns>The evaluated text string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
+            <summary>
+                Formats a probe value for log output.
+            </summary>
+            <param name="value">The value to format.</param>
+            <returns>A human-readable value string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Builds the raw quest sheet name used by the game files.
+            </summary>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>The quest text sheet name, if it can be derived.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest row id as text through reflection so the probe
+                stays compatible with generated sheet shapes.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest row id as text, or an empty string if unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest sheet identifier used to mount the quest text
+                sheet path.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -5469,6 +5799,15 @@
             <param name="payloadIdentity">The existing payload identity.</param>
             <param name="scope">The immutable operation reuse scope.</param>
             <returns>The source-scoped broker key.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildReferenceTextOriginContext(System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,System.String)">
+            <summary>
+                Builds the diagnostic surface identity for one reference-text field.
+            </summary>
+            <param name="registrationKey">The reference-text family identity.</param>
+            <param name="payload">The canonical reference-text payload.</param>
+            <param name="fieldName">The translated field name.</param>
+            <returns>The diagnostic surface identity.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.DispatchReferenceTextPrefetchTranslation(System.String,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.TryGetPrefetchTranslationDelegate,Echoglossian.QueuePrefetchTranslationDelegate,System.Func{System.String},System.Action{System.String,Echoglossian.TranslationReuseScope,System.Boolean})">
             <summary>
@@ -6018,6 +6357,14 @@
             <param name="payload">The canonical payload.</param>
             <returns>The stable queue key.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.BuildTraitDetailOriginContext(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,System.String)">
+            <summary>
+                Builds the diagnostic surface identity for one trait-tooltip field.
+            </summary>
+            <param name="payload">The canonical trait-tooltip payload.</param>
+            <param name="fieldName">The translated field name.</param>
+            <returns>The diagnostic surface identity.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryCollectCurrentClassJobTraitIds(System.Byte,System.Collections.Generic.List{System.UInt32}@)">
             <summary>
                 Tries to collect the current class/job trait ids from canonical sheets.
@@ -6053,6 +6400,20 @@
             <param name="onResolved">Optional callback invoked after the text is cached.</param>
             <returns>True if the request was queued, false if one is already in flight.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.QueueTranslation(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String},System.String)">
+            <summary>
+                Enqueues a translation request on the shared broker without blocking
+                the addon lifecycle callback and associates one optional surface
+                identity with broker diagnostics.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="resolver">Function that returns the translated text.</param>
+            <param name="onResolved">Optional callback invoked after the text is cached.</param>
+            <param name="surfaceIdentity">
+                Optional surface identifier used in broker diagnostics.
+            </param>
+            <returns>True if the request was queued, false if one is already in flight.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.QueueTranslation(System.String,System.Func{System.String},System.Action{System.String})">
             <summary>
                 Enqueues a synchronous translation request on the shared broker
@@ -6061,6 +6422,20 @@
             <param name="key">Stable translation key.</param>
             <param name="resolver">Function that returns the translated text.</param>
             <param name="onResolved">Optional callback invoked after the text is cached.</param>
+            <returns>True if the request was queued, false if one is already in flight.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.QueueTranslation(System.String,System.Func{System.String},System.Action{System.String},System.String)">
+            <summary>
+                Enqueues a synchronous translation request on the shared broker
+                without blocking the broker pump thread and associates one optional
+                surface identity with broker diagnostics.
+            </summary>
+            <param name="key">Stable translation key.</param>
+            <param name="resolver">Function that returns the translated text.</param>
+            <param name="onResolved">Optional callback invoked after the text is cached.</param>
+            <param name="surfaceIdentity">
+                Optional surface identifier used in broker diagnostics.
+            </param>
             <returns>True if the request was queued, false if one is already in flight.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.SerializeTranslationPair(System.String,System.String)">
@@ -11132,6 +11507,12 @@
             <param name="fontName">Necessary font name.</param>
             <param name="exclusiveCharsToAdd">List of all the needed chars to be added.</param>
             <param name="supportedEngines">Supported translation engines.</param>
+        </member>
+        <member name="P:Echoglossian.LanguagesHandling.LanguageInfo.SupportsNativeReplacementDiacriticsFallback">
+            <summary>
+                Gets or sets a value indicating whether this language is explicitly
+                eligible for the optional native UI replacement diacritics fallback.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.ActionMenu.ActionMenuWindowHandler">
             <summary>
@@ -19576,12 +19957,26 @@
             </param>
             <returns>A task that completes after the overlay has either been cleared or skipped.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.BeginRequest(System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.BeginRequest(System.String,Dalamud.Game.Gui.Toast.QuestToastOptions)">
             <summary>
                 Starts a new quest-toast request and returns the active request ID.
             </summary>
             <param name="originalText">The original quest toast text.</param>
             <returns>The request identifier associated with the quest toast.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.GetCurrentQuestToastPosition">
+            <summary>
+                Gets the current quest-toast placement reported by the latest active
+                callback-owned quest toast.
+            </summary>
+            <returns>The latest quest-toast placement bucket.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.GetCurrentOverlayConfig">
+            <summary>
+                Gets the placement-specific overlay configuration for the latest
+                callback-owned quest toast.
+            </summary>
+            <returns>The placement-specific overlay configuration.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.IsCurrentRequest(System.Int32,System.String)">
             <summary>
@@ -19633,6 +20028,13 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.GetCurrentDisplayMode">
+            <summary>
+                Gets the placement-specific display mode for the latest callback-owned
+                quest toast.
+            </summary>
+            <returns>The placement-specific display mode.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.SelectOverlayText(System.String,System.String)">
             <summary>
                 Selects the overlay text for the current quest toast state.
@@ -19649,6 +20051,12 @@
             <param name="originalText">The original quest toast text.</param>
             <param name="translatedText">The translated quest toast text.</param>
             <param name="trigger">The log trigger label associated with the call.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.QuestToastRuntime.GetCurrentSurfaceIdentity">
+            <summary>
+                Builds the current quest-toast surface identity including placement.
+            </summary>
+            <returns>The current surface identity.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler">
             <summary>
@@ -19822,7 +20230,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryQueueTranslation(System.String,System.Int32@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.TryQueueTranslation(System.String,System.Int32@,System.String@)">
             <summary>
                 Starts a new translation request when the source line changes or when
                 the current line still has no cached translation available.
@@ -19844,12 +20252,19 @@
                 The translated text normalized for native replacement.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.PublishOverlay(System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.PublishOverlay(System.String,System.String,System.String,System.Boolean)">
             <summary>
                 Publishes translated gimmick-hint content to the configured overlay when
                 overlay mode is enabled.
             </summary>
             <param name="translatedText">The translated gimmick-hint text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.GetSurfaceIdentity">
+            <summary>
+                Builds the compact surface identity used by toast diagnostics for the
+                TextGimmickHint runtime.
+            </summary>
+            <returns>The current TextGimmickHint surface identity.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.TextGimmickHintHandler.RecordDiagnosticsSnapshot(Echoglossian.NativeUI.Helpers.VisibleStorySurfaceProvenanceKind,System.String,System.String,System.Int32)">
             <summary>
@@ -20226,6 +20641,15 @@
                 toasts, currently sourced from the wide-text toast config.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(Echoglossian.Config,Dalamud.Game.Gui.Toast.ToastPosition)">
+            <summary>
+                Gets the placement-specific display mode used by the callback-owned
+                normal-toast runtime.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="position">The runtime toast placement.</param>
+            <returns>The effective display mode for the current placement bucket.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseLegacyNormalToastCapturePrefetch(Echoglossian.Config)">
             <summary>
                 Gets whether the legacy ToastGui prefetch-only path should stay active.
@@ -20333,6 +20757,20 @@
                 <see langword="true" /> when the overlay currently has visible
                 content; otherwise, <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetCurrentNormalToastPosition">
+            <summary>
+                Gets the placement bucket reported by the latest active supported
+                normal-toast callback.
+            </summary>
+            <returns>The latest supported normal-toast placement bucket.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetCurrentNormalOverlayConfig">
+            <summary>
+                Gets the placement-specific overlay configuration for the latest
+                callback-owned normal toast.
+            </summary>
+            <returns>The placement-specific normal-toast overlay configuration.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ApplyResolvedNormalToast(Dalamud.Game.Text.SeStringHandling.SeString@,System.String,System.String,System.Int32)">
             <summary>
@@ -20462,6 +20900,13 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetCurrentNormalToastDisplayMode">
+            <summary>
+                Gets the effective placement-specific display mode for the latest
+                callback-owned normal toast.
+            </summary>
+            <returns>The placement-specific display mode.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.ShouldUseErrorOverlay">
             <summary>
                 Gets whether error toasts should publish overlay text.
@@ -20548,6 +20993,115 @@
             </summary>
             <param name="translatedText">The translated text to normalize.</param>
             <returns>The text that should be written back into the callback payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetCurrentNormalSurfaceIdentity">
+            <summary>
+                Builds the current supported normal-toast surface identity including
+                placement.
+            </summary>
+            <returns>The current supported normal-toast surface identity.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastRuntime.GetErrorSurfaceIdentity">
+            <summary>
+                Builds the current supported error-toast surface identity.
+            </summary>
+            <returns>The current supported error-toast surface identity.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog">
+            <summary>
+                Formats concise surface-aware toast diagnostics for debug builds so
+                translation activity can be traced back to the owning runtime without
+                leaving permanent hot-path noise in release builds.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.Request(System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+                Logs one translation request with the active presentation path.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.Reuse(System.String,System.String,System.String)">
+            <summary>
+                Logs one translation reuse from cache or persisted storage.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.Queued(System.String,System.String,System.Int32)">
+            <summary>
+                Logs one queued translation request.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.Apply(System.String,System.String,System.String,System.String)">
+            <summary>
+                Logs one application target such as overlay or native replacement.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.Skip(System.String,System.String,System.String)">
+            <summary>
+                Logs one intentional skip path.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.Failure(System.String,System.String,System.String)">
+            <summary>
+                Logs one failed translation path.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.FormatRequestMessage(System.String,System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+                Formats one request log payload without the outer surface scope.
+            </summary>
+            <param name="trigger">The runtime trigger label.</param>
+            <param name="originalText">The captured source text.</param>
+            <param name="usesOverlay">Whether the overlay presentation path is active.</param>
+            <param name="writesNative">Whether native replacement is active.</param>
+            <param name="swapsTexts">Whether swap mode is active.</param>
+            <returns>The formatted request payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.FormatReuseMessage(System.String,System.String)">
+            <summary>
+                Formats one reuse log payload without the outer surface scope.
+            </summary>
+            <param name="trigger">The runtime trigger label.</param>
+            <param name="reuseSource">The cache or persistence source label.</param>
+            <returns>The formatted reuse payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.FormatQueuedMessage(System.String,System.Int32)">
+            <summary>
+                Formats one queued-request log payload without the outer surface scope.
+            </summary>
+            <param name="trigger">The runtime trigger label.</param>
+            <param name="requestId">The queued request identifier.</param>
+            <returns>The formatted queued payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.FormatApplyMessage(System.String,System.String,System.String)">
+            <summary>
+                Formats one apply log payload without the outer surface scope.
+            </summary>
+            <param name="trigger">The runtime trigger label.</param>
+            <param name="target">The apply target label.</param>
+            <param name="previewText">Optional preview text for the target payload.</param>
+            <returns>The formatted apply payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.FormatSkipMessage(System.String,System.String)">
+            <summary>
+                Formats one skip log payload without the outer surface scope.
+            </summary>
+            <param name="trigger">The runtime trigger label.</param>
+            <param name="reason">The reason the path was skipped.</param>
+            <returns>The formatted skip payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.FormatFailureMessage(System.String,System.String)">
+            <summary>
+                Formats one failure log payload without the outer surface scope.
+            </summary>
+            <param name="trigger">The runtime trigger label.</param>
+            <param name="reason">The failure reason.</param>
+            <returns>The formatted failure payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.ToastTranslationDebugLog.Preview(System.String)">
+            <summary>
+                Produces one short single-line preview for text-bearing diagnostics.
+            </summary>
+            <param name="text">The text to preview.</param>
+            <returns>The normalized preview text.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Toasts.WideTextToastHandler">
             <summary>
@@ -20826,6 +21380,46 @@
             <param name="addonLifecycle">The add-on lifecycle instance from which logging event listeners will be removed. Cannot be null.</param>
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy">
+            <summary>
+                Encapsulates the login-session gating rules for debug-only automatic
+                addon-probe watches.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldStartForCurrentLogin(System.Boolean,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+                Determines whether the current login session should start the default
+                automatic addon-probe watch set.
+            </summary>
+            <param name="isLoggedIn">Whether the client is currently logged in.</param>
+            <param name="hasStartedForCurrentLogin">
+                Whether the current login session already started its automatic probe
+                set.
+            </param>
+            <param name="isSuppressedUntilLogout">
+                Whether the user explicitly suppressed the automatic probe set until
+                the next logout.
+            </param>
+            <param name="activeManagedWatchCount">
+                How many managed automatic probe watches are currently alive.
+            </param>
+            <returns>
+                <see langword="true" /> when the automatic probe set should start.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldResetForLogout(System.Boolean,System.Boolean)">
+            <summary>
+                Determines whether the automatic login-session gate should reset
+                because the player logged out.
+            </summary>
+            <param name="wasLoggedIn">
+                Whether the client was logged in on the previous tick.
+            </param>
+            <param name="isLoggedIn">Whether the client is logged in now.</param>
+            <returns>
+                <see langword="true" /> when the automatic probe gate should reset.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
             <summary>
@@ -22085,6 +22679,18 @@
             <param name="rightPadding">The current right padding around the text node.</param>
             <returns>The additional width that should be added to the wrap width.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.NamePlateTranslationPolicy">
+            <summary>
+                Provides translation eligibility rules for world-object nameplates.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NamePlateTranslationPolicy.ShouldTranslateKind(Dalamud.Game.Gui.NamePlate.NamePlateKind)">
+            <summary>
+                Determines whether a nameplate kind should be translated.
+            </summary>
+            <param name="kind">The Dalamud nameplate kind.</param>
+            <returns><c>true</c> when the nameplate kind is eligible.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.NativeReplacementTextNormalizationHelper">
             <summary>
                 Normalizes translated payload text for native replacement-only flows.
@@ -22654,6 +23260,37 @@
                 Queues a translation request if one is not already in flight for the key.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Queue(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.String)">
+            <summary>
+                Queues a translation request if one is not already in flight for the
+                key and associates one optional surface identifier with broker
+                diagnostics.
+            </summary>
+            <param name="key">The stable translation cache key.</param>
+            <param name="resolver">The translation resolver to execute.</param>
+            <param name="surfaceIdentity">
+                Optional surface identifier used in diagnostics so failures can be
+                traced back to the owning runtime.
+            </param>
+            <returns>
+                <see langword="true" /> when the request was queued; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Queue(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String},System.String)">
+            <summary>
+                Queues a translation request if one is not already in flight for the
+                key and associates one optional surface identifier with broker
+                diagnostics.
+            </summary>
+            <param name="key">The stable translation cache key.</param>
+            <param name="resolver">The translation resolver to execute.</param>
+            <param name="onResolved">Optional callback invoked after caching.</param>
+            <param name="surfaceIdentity">
+                Optional surface identifier used in diagnostics so failures can be
+                traced back to the owning runtime.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.StartPump">
             <summary>
                 Starts the shared background pump once for the lifetime of the broker.
@@ -22744,6 +23381,20 @@
             </summary>
             <param name="details">The details to format.</param>
             <returns>The preview text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.FormatSurfaceIdentitySuffix(System.String)">
+            <summary>
+                Formats one optional surface suffix for broker diagnostics.
+            </summary>
+            <param name="surfaceIdentity">The surface identifier to append.</param>
+            <returns>The formatted surface suffix or an empty string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.FormatSurfaceIdentityLabel(System.String)">
+            <summary>
+                Formats one optional surface label for free-form diagnostic text.
+            </summary>
+            <param name="surfaceIdentity">The surface identifier to append.</param>
+            <returns>The formatted label or an empty string.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.ResolveMinimumRequestSpacing(Echoglossian.Echoglossian.TransEngines)">
             <summary>
@@ -23643,6 +24294,7 @@
             <param name="sourceText">The source text to translate.</param>
             <param name="sourceLanguage">The captured source language.</param>
             <param name="targetLanguage">The captured target language.</param>
+            <param name="originContext">The surface and element context for diagnostics.</param>
             <returns>The translated text.</returns>
         </member>
         <member name="T:Echoglossian.PrefetchTranslationDispatchResult">
@@ -25151,13 +25803,20 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawToastTypePage(Echoglossian.Config,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.Single@,System.Int64@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.GetToastGuiRouteStateText(Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState)">
             <summary>
                 Maps one effective toast route state to the localized UI label used
                 in the toast general page.
             </summary>
             <param name="routeState">The effective route state.</param>
             <returns>The localized UI label for the route state.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.BuildToastPlacementBucketId(System.String)">
+            <summary>
+                Builds a stable ImGui ID scope for one toast placement bucket.
+            </summary>
+            <param name="sectionTitle">The user-facing placement section title.</param>
+            <returns>The unique ImGui ID scope for the placement bucket.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawMiniTalkOverlay(Echoglossian.Config)">
             <summary>
@@ -27155,6 +27814,41 @@
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayScreenInfoWideTextSectionTitle">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Screen Info (_WideText).
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlaySupportedNormalPlacementDescription">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Supported normal toasts currently share one callback-owned runtime. Configure their top and bottom placement buckets here..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlaySupportedNormalSharedSettingsMessage">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a This toast type currently uses the shared top and bottom supported-normal placement settings from the Screen Info page..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayTopPlacementTitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Top placement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayBottomPlacementTitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Bottom placement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayLeftPlacementTitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Left placement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayCentrePlacementTitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Centre placement.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ToastOverlayRightPlacementTitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Right placement.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ToastOverlayTabAreaText">
@@ -30122,7 +30816,7 @@
             <param name="callerFilePath">The caller file path.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,Echoglossian.SourceClientLanguage,System.String,Echoglossian.Translators.TranslationSurfaceGroup,Echoglossian.Translators.TranslationService.TranslatorResolution)">
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,Echoglossian.SourceClientLanguage,System.String,Echoglossian.Translators.TranslationSurfaceGroup,Echoglossian.Translators.TranslationService.TranslatorResolution,System.String)">
             <summary>
                 Translates text using a translator resolution captured before the
                 owning asynchronous operation began.
@@ -30134,6 +30828,7 @@
             <param name="translatorResolution">
             The engine and translator instance captured for the operation.
             </param>
+            <param name="originContext">Optional explicit origin context.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},System.String,System.String,System.String)">
@@ -30167,7 +30862,7 @@
             <param name="callerFilePath">The caller file path.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,Echoglossian.Translators.TranslationService.TranslatorResolution)">
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,Echoglossian.Translators.TranslationService.TranslatorResolution,System.String)">
             <summary>
                 Translates dialogue text using a translator resolution captured before
                 the owning asynchronous operation began.
@@ -30180,6 +30875,7 @@
             <param name="translatorResolution">
             The engine and translator instance captured for the operation.
             </param>
+            <param name="originContext">Optional explicit origin context.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.TranslateAsync(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,System.String,System.String,System.String)">
@@ -30293,16 +30989,39 @@
             <param name="surfaceGroup">The coarse translation surface group.</param>
             <returns>The effective translation engine identifier.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.TranslationService.ShouldBypassTranslationDueToMissingLanguageAssets">
+        <member name="M:Echoglossian.Translators.TranslationService.ShouldBypassTranslationDueToMissingLanguageAssets(Echoglossian.Translators.TranslationSurfaceGroup,System.String)">
             <summary>
             Determines whether the current selected language depends on missing
             downloaded font assets and should therefore bypass translation work until
             those assets are available.
             </summary>
+            <param name="surfaceGroup">The coarse translation surface group.</param>
+            <param name="originContext">The resolved surface or caller context.</param>
             <returns>
             <c>true</c> when translation should be bypassed because required language
             assets are missing; otherwise, <c>false</c>.
             </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.LogTranslationRequest(System.String,System.String,System.String,System.String,Echoglossian.Translators.TranslationSurfaceGroup,System.String)">
+            <summary>
+                Writes a translation request diagnostic with the best known surface
+                or element identity rendered as a square-bracketed scope.
+            </summary>
+            <param name="operation">The translation-service operation name.</param>
+            <param name="text">The source text requested for translation.</param>
+            <param name="sourceLanguage">The requested provider source code.</param>
+            <param name="targetLanguage">The requested target language code.</param>
+            <param name="surfaceGroup">The coarse translation surface group.</param>
+            <param name="originContext">The resolved surface or caller context.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.GetSurfaceScope(Echoglossian.Translators.TranslationSurfaceGroup,System.String)">
+            <summary>
+                Resolves the square-bracketed diagnostic scope for one translation
+                request.
+            </summary>
+            <param name="surfaceGroup">The coarse translation surface group.</param>
+            <param name="originContext">The resolved surface or caller context.</param>
+            <returns>The best available diagnostic scope.</returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.CheckTextToTranslate(System.String)">
             <summary>
@@ -32058,6 +32777,15 @@
             <param name="config"></param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForSupportedNormalToastPlacement(Echoglossian.Config,Dalamud.Game.Gui.Toast.ToastPosition)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance for one
+            callback-owned normal-toast placement bucket.
+            </summary>
+            <param name="config">The active configuration.</param>
+            <param name="position">The runtime toast placement.</param>
+            <returns>The placement-specific overlay configuration.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForErrorToast(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for error toast translations.
@@ -32089,6 +32817,15 @@
             <param name="config"></param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForQuestToastPlacement(Echoglossian.Config,Dalamud.Game.Gui.Toast.QuestToastPosition)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance for one
+            quest-toast placement bucket.
+            </summary>
+            <param name="config">The active configuration.</param>
+            <param name="position">The runtime quest-toast placement.</param>
+            <returns>The placement-specific overlay configuration.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForChatBubble(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for chat bubble translations.
@@ -32108,6 +32845,508 @@
             <param name="serviceCollection">The service collection.</param>
             <param name="tags">The service registration tags to include.</param>
             <returns>The service collection</returns>
+        </member>
+        <member name="T:Injectio.Attributes.DuplicateStrategy">
+            <summary>
+            Service registration duplicate strategies
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.DuplicateStrategy.Skip">
+            <summary>
+            Skips registrations for services that already exists.
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.DuplicateStrategy.Replace">
+            <summary>
+            Replaces existing service registrations.
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.DuplicateStrategy.Append">
+            <summary>
+            Appends a new registration for existing services.
+            </summary>
+        </member>
+        <member name="T:Injectio.Attributes.RegistrationStrategy">
+            <summary>
+            Register service type strategies
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.Self">
+            <summary>
+            Registers each matching concrete type as itself
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.ImplementedInterfaces">
+            <summary>
+            Registers each matching concrete type as all of its implemented interfaces.
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.SelfWithInterfaces">
+            <summary>
+            Registers each matching concrete type as all of its implemented interfaces and itself
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.SelfWithProxyFactory">
+            <summary>
+            Registers each matching concrete type as all of its implemented interfaces and itself.
+            For the interfaces a proxy-factory resolves the service from its type-name, so only one instance is created per lifetime
+            </summary>
+            <remarks>For open-generic registrations, this behaves like <see cref="F:Injectio.Attributes.RegistrationStrategy.SelfWithInterfaces"/></remarks>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.ServiceType">
+            <summary>
+            The <see cref="T:System.Type"/> of the service
+            </summary>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ServiceType"/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.ImplementationType">
+            <summary>
+            The <see cref="T:System.Type"/> that implements the service.  If not set, the class the interface is on will be used.
+            </summary>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ServiceType"/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.ServiceKey">
+            <summary>
+            Gets or sets the key of the service.
+            </summary>
+            <value>The service key.</value>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ServiceKey "/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Factory">
+            <summary>
+            Name of a factory method to create new instances of the service implementation
+            </summary>
+            <remarks>
+            The method signature must be Func{IServiceProvider, object} and must be static
+            </remarks>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ImplementationFactory"/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Duplicate">
+            <summary>
+            Gets or sets the duplicate.
+            </summary>
+            <value>
+            The duplicate.
+            </value>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Registration">
+            <summary>
+            Gets or sets the registration.
+            </summary>
+            <value>
+            The registration.
+            </value>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Tags">
+            <summary>
+            Gets or sets the comma delimited list of service registration tags.
+            </summary>
+            <value>
+            The comma delimited list of service registration tags.
+            </value>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterScopedAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a scoped service
+            </summary>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterScoped]
+              public class ScopedService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterSingletonAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a singleton service
+            </summary>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterSingleton]
+              public class SingletonService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterTransientAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a transient service
+            </summary>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterTransient]
+              public class TransientService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterServicesAttribute">
+            <summary>Attribute to indicate the method should be called to register services</summary>
+            <example>use the RegisterServices attribute
+              <code>
+              public class RegistrationModule
+              {
+                  [RegisterServices]
+                  public static void Register(IServiceCollection services)
+                  {
+                      services.TryAddTransient&lt;IModuleService, ModuleService&gt;();
+                  }
+              }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterDecoratorAttribute">
+            <summary>
+            Attribute to indicate the target class should be registered as a decorator for an existing service.
+            The decorator wraps the previously registered service implementation and inherits its <see cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Lifetime"/>.
+            </summary>
+            <example>Decorate <c>IService</c> with a logging wrapper
+              <code>
+              [RegisterDecorator(ServiceType = typeof(IService))]
+              public class LoggingDecorator : IService
+              {
+                  public LoggingDecorator(IService inner) { }
+              }
+              </code>
+            </example>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.ServiceType">
+            <summary>
+            The <see cref="T:System.Type"/> of the service to decorate.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.ImplementationType">
+            <summary>
+            The <see cref="T:System.Type"/> that implements the decorator. If not set, the class the attribute is on will be used.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.ServiceKey">
+            <summary>
+            Gets or sets the key of the keyed service to decorate.
+            Leave unset (and <see cref="P:Injectio.Attributes.RegisterDecoratorAttribute.AnyKey"/> false) to decorate the non-keyed registration.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.AnyKey">
+            <summary>
+            When <c>true</c>, the decorator is applied to every keyed registration of <see cref="P:Injectio.Attributes.RegisterDecoratorAttribute.ServiceType"/>,
+            regardless of its key. Equivalent to <c>KeyedService.AnyKey</c>.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.Factory">
+            <summary>
+            Name of a static factory method to construct the decorator.
+            </summary>
+            <remarks>
+            The factory signature must be <c>(IServiceProvider, TService) -&gt; TService</c> for non-keyed services
+            or <c>(IServiceProvider, object?, TService) -&gt; TService</c> for keyed services.
+            </remarks>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.Order">
+            <summary>
+            Gets or sets the order in which the decorator is applied. Lower values are applied first (innermost).
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.Tags">
+            <summary>
+            Gets or sets the comma delimited list of registration tags.
+            </summary>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterScopedAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a scoped service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterScoped&lt;IService&gt;]
+              public class ScopedService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterScopedAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a scoped service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <typeparam name="TImplementation">The type of the implementation to use.</typeparam>
+            <example>Register the ScopedService class as an implementation for IService
+              <code>
+              [RegisterScoped&lt;IService, ScopedService&gt;]
+              public class ScopedService: IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterSingletonAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a singleton service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterSingleton&lt;IService&gt;]
+              public class SingletonService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterSingletonAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a singleton service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <typeparam name="TImplementation">The type of the implementation to use.</typeparam>
+            <example>Register the SingletonService class as an implementation for IService
+              <code>
+              [RegisterSingleton&lt;IService, SingletonService&gt;]
+              public class SingletonService: IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterTransientAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a transient service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterTransient&lt;IService&gt;]
+              public class TransientService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterTransientAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a transient service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <typeparam name="TImplementation">The type of the implementation to use.</typeparam>
+            <example>Register the TransientService class as an implementation for IService
+              <code>
+              [RegisterTransient&lt;IService, TransientService&gt;]
+              public class TransientService: IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterDecoratorAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be registered as a decorator for <typeparamref name="TService"/>.
+            </summary>
+            <typeparam name="TService">The type of the service to decorate.</typeparam>
+            <example>
+              <code>
+              [RegisterDecorator&lt;IService&gt;]
+              public class LoggingDecorator : IService
+              {
+                  public LoggingDecorator(IService inner) { }
+              }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterDecoratorAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be registered as a decorator for <typeparamref name="TService"/>
+            using <typeparamref name="TImplementation"/> as the decorator implementation.
+            </summary>
+            <typeparam name="TService">The type of the service to decorate.</typeparam>
+            <typeparam name="TImplementation">The type of the decorator implementation.</typeparam>
+        </member>
+        <member name="T:Injectio.Extensions.DecorationExtensions">
+             <summary>
+             Provides extension methods for decorating registered services in an <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
+             </summary>
+             <remarks>
+             <para>
+             The <b>Decorator pattern</b> wraps an existing service with additional behavior without modifying the
+             original implementation. Each decorator implements the same interface as the service it wraps, creating
+             a chain of responsibility:
+             </para>
+             <para>
+             These methods work by replacing the <see cref="T:Microsoft.Extensions.DependencyInjection.ServiceDescriptor"/>
+             in-place within the service collection. The original factory, instance, or implementation type is captured
+             so the inner service can still be resolved. The replacement descriptor preserves the original lifetime.
+             Calling a decoration method multiple times stacks decorators, with the last call becoming the outermost layer.
+             </para>
+             <para><b>Usage example — decorating with a factory:</b></para>
+             <code>
+             // Register the original service
+             services.AddScoped&lt;INotificationService, EmailNotificationService&gt;();
+            
+             // Decorate with logging
+             services.Decorate&lt;INotificationService&gt;(
+                 (sp, inner) =&gt; new LoggingNotificationService(inner, sp.GetRequiredService&lt;ILogger&gt;()));
+            
+             // Decorate with retry (stacks on top of logging)
+             services.Decorate&lt;INotificationService&gt;(
+                 (sp, inner) =&gt; new RetryNotificationService(inner));
+            
+             // Resolution chain: Retry → Logging → Email
+             </code>
+             <para><b>Usage example — decorating open generics:</b></para>
+             <code>
+             // Register closed-generic implementations
+             services.AddScoped&lt;IRepository&lt;Order&gt;, OrderRepository&gt;();
+             services.AddScoped&lt;IRepository&lt;Customer&gt;, CustomerRepository&gt;();
+            
+             // Decorate all IRepository&lt;T&gt; with caching
+             services.DecorateOpenGeneric(
+                 typeof(IRepository&lt;&gt;), typeof(CachingRepository&lt;&gt;));
+             </code>
+             </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.Decorate(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Func{System.IServiceProvider,System.Object,System.Object})">
+            <summary>
+            Decorates all non-keyed registrations matching <paramref name="serviceType"/> by wrapping each resolved instance
+            with <paramref name="decoratorFactory"/>.
+            </summary>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceType">The service type to decorate.</param>
+            <param name="decoratorFactory">A factory that receives the service provider and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method replaces matching <see cref="T:Microsoft.Extensions.DependencyInjection.ServiceDescriptor"/> entries in-place,
+            preserving each registration lifetime. Keyed registrations are skipped.
+            </para>
+            <para>
+            Multiple calls stack decorators, with the most recent decoration becoming the outermost layer.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.Decorate``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Func{System.IServiceProvider,``0,``0})">
+            <summary>
+            Decorates all registrations of <typeparamref name="TService"/> by wrapping each resolved instance with <paramref name="decoratorFactory"/>.
+            Keyed service registrations are skipped.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="decoratorFactory">A factory that receives the service provider and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            Decoration replaces each existing <see cref="T:Microsoft.Extensions.DependencyInjection.ServiceDescriptor"/> for
+            <typeparamref name="TService"/> in-place. The original descriptor's factory, instance, or implementation type is
+            captured and used to resolve the inner service, which is then passed to <paramref name="decoratorFactory"/>.
+            The replacement descriptor preserves the original registration's lifetime.
+            </para>
+            <para>
+            Multiple calls stack: each call wraps whatever factory is currently registered, enabling layered decoration.
+            Only non-keyed registrations are affected; use <c>DecorateKeyed</c> for keyed services.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.Decorate``2(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Decorates all registrations of <typeparamref name="TService"/> by wrapping each resolved instance
+            with an automatically constructed instance of <typeparamref name="TDecorator"/>.
+            Keyed service registrations are skipped.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <typeparam name="TDecorator">The decorator type. Its constructor must accept a <typeparamref name="TService"/> parameter for the inner service; additional parameters are resolved from the service provider.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This overload uses <see cref="M:Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(System.IServiceProvider,System.Type,System.Object[])"/>
+            to construct the decorator, passing the inner service instance as an explicit argument. Any remaining
+            constructor parameters are resolved from the <see cref="T:System.IServiceProvider"/>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateKeyed(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Object,System.Func{System.IServiceProvider,System.Object,System.Object,System.Object})">
+            <summary>
+            Decorates keyed registrations matching <paramref name="serviceType"/> and <paramref name="serviceKey"/>
+            by wrapping each resolved instance with <paramref name="decoratorFactory"/>.
+            </summary>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceType">The service type to decorate.</param>
+            <param name="serviceKey">The key to match, or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> for all keys.</param>
+            <param name="decoratorFactory">A factory that receives the service provider, the key, and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method only processes keyed registrations and preserves both the original key and lifetime for each replacement descriptor.
+            </para>
+            <para>
+            Non-keyed registrations are skipped. Multiple calls stack decorators for matching keyed registrations.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateKeyed``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object,System.Func{System.IServiceProvider,System.Object,``0,``0})">
+            <summary>
+            Decorates all keyed registrations of <typeparamref name="TService"/> matching <paramref name="serviceKey"/>
+            by wrapping each resolved instance with <paramref name="decoratorFactory"/>.
+            Pass <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> to match all keys.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceKey">The key to match, or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> for all keys.</param>
+            <param name="decoratorFactory">A factory that receives the service provider, the key, and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method iterates through all service descriptors for <typeparamref name="TService"/> and replaces each
+            keyed registration whose key matches <paramref name="serviceKey"/>. The original keyed factory, instance,
+            or implementation type is captured and used to resolve the inner service, which is then passed to
+            <paramref name="decoratorFactory"/> along with the service provider and key. The replacement descriptor
+            preserves the original registration's lifetime and key.
+            </para>
+            <para>
+            Non-keyed registrations are skipped; use <c>Decorate</c> for those. Multiple calls stack, enabling
+            layered decoration of keyed services.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateKeyed``2(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object)">
+            <summary>
+            Decorates all keyed registrations of <typeparamref name="TService"/> matching <paramref name="serviceKey"/>
+            by wrapping each resolved instance with an automatically constructed instance of <typeparamref name="TDecorator"/>.
+            Pass <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> to match all keys.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <typeparam name="TDecorator">The decorator type. Its constructor must accept a <typeparamref name="TService"/> parameter for the inner service; additional parameters are resolved from the service provider.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceKey">The key to match, or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> for all keys.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This overload uses <see cref="M:Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(System.IServiceProvider,System.Type,System.Object[])"/>
+            to construct the decorator, passing the inner service instance as an explicit argument. Any remaining
+            constructor parameters are resolved from the <see cref="T:System.IServiceProvider"/>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateOpenGeneric(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Type,System.Object)">
+            <summary>
+            Decorates all closed-generic registrations whose generic type definition matches <paramref name="openServiceType"/>
+            by wrapping each resolved instance with an instance of <paramref name="openDecoratorType"/>.
+            </summary>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="openServiceType">The open generic service type (e.g., <c>typeof(IRepository&lt;&gt;)</c>).</param>
+            <param name="openDecoratorType">The open generic decorator type that wraps the original service.</param>
+            <param name="serviceKey">
+            The key of the keyed registrations to decorate. Pass <see langword="null"/> to decorate non-keyed registrations,
+            or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> to decorate all keyed registrations.
+            Keyed registration matching is only available on .NET 8 and later.
+            </param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method scans all service descriptors for closed-generic types whose generic type definition matches
+            <paramref name="openServiceType"/>. For each match, it closes <paramref name="openDecoratorType"/> over the
+            same type arguments and replaces the descriptor with a factory that resolves the original service and passes
+            it to <see cref="M:Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(System.IServiceProvider,System.Type,System.Object[])"/>.
+            The replacement descriptor preserves the original registration's lifetime.
+            </para>
+            <para>
+            Open-generic descriptors (those registered with an open <c>typeof(T&lt;&gt;)</c> service type) are skipped
+            because the DI container resolves them lazily and replacing the implementation type would cause recursive
+            resolution. When <paramref name="serviceKey"/> is <see langword="null"/>, keyed registrations are skipped.
+            When <paramref name="serviceKey"/> is non-null on .NET 8 and later, non-keyed registrations are skipped and
+            only keyed registrations with the matching key are decorated.
+            </para>
+            </remarks>
         </member>
     </members>
 </doc>
