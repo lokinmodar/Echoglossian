@@ -65,6 +65,9 @@ When runtime behavior depends on Dalamud services, plugin startup, plugin-window
 
 - Use `Echoglossian.Mock` and/or the DalaMock-backed harness when necessary and feasible.
 - Prefer `Echoglossian.Mock.Tests` for hosted startup, shutdown, configuration, database-path, and plugin-window validation before relying on manual in-game checks.
+- For behavior that reads real game data, Lumina sheets, FFXIVClientStructs-backed state, addon lifecycle events, `AtkValue`, `AtkUnitBase`, or native UI payload capture/application, validate with `Echoglossian.Mock`/DalaMock whenever feasible before claiming the behavior is covered.
+- If the current harness cannot drive the needed game-data or native UI payload, extend `Echoglossian.Mock` or DalaMock first when the extension is practical; otherwise document the gap and keep the required in-game verification explicit.
+- Do not claim `.Mock` validates capture/application unless the test actually drives the relevant mocked game-data, addon lifecycle, or native UI payload. Startup-only Mock tests prove wiring/load, not text capture or translation application.
 - Use:
   - `dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-restore`
   - `dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1`
@@ -168,7 +171,7 @@ When proposing or applying a change:
 7. Validate with:
    - `dotnet build Echoglossian.sln -c Debug --no-restore`
    - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
-8. Add `Echoglossian.Mock.Tests`/DalaMock validation when the change touches runtime integrations that pure unit tests cannot cover.
+8. Add `Echoglossian.Mock.Tests`/DalaMock validation when the change touches runtime integrations that pure unit tests cannot cover, especially real game data reads, addon lifecycle, or native UI payload capture/application.
 9. If runtime UI behavior changed, note what should be verified in-game.
 
 ## Avoid

@@ -45,6 +45,32 @@ public class RepositoryGuidanceTests
     }
 
     /// <summary>
+    /// Ensures game-data and native addon behavior is explicitly routed through
+    /// the Mock/DalaMock validation rail instead of being treated as unit-only.
+    /// </summary>
+    [Fact]
+    public void AgentsGuidance_requires_mock_validation_for_game_data_behavior()
+    {
+        var root = FindRepositoryRoot();
+        var agentsPath = Path.Combine(root.FullName, "AGENTS.md");
+        var validationPath = Path.Combine(
+            root.FullName,
+            ".github",
+            "instructions",
+            "validation.instructions.md");
+
+        var agentsText = File.ReadAllText(agentsPath);
+        var validationText = File.ReadAllText(validationPath);
+
+        Assert.Contains("real game data", agentsText);
+        Assert.Contains("native UI payload", agentsText);
+        Assert.Contains("extend `Echoglossian.Mock` or DalaMock", agentsText);
+        Assert.Contains("real game data", validationText);
+        Assert.Contains("native UI payload", validationText);
+        Assert.Contains("extend `Echoglossian.Mock` or DalaMock", validationText);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>
