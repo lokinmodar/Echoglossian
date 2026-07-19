@@ -26,28 +26,6 @@ public unsafe partial class Echoglossian
     private static readonly TimeSpan ItemDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
 
-    private static readonly InventoryType[] PrefetchInventoryTypes =
-    [
-        InventoryType.Inventory1,
-        InventoryType.Inventory2,
-        InventoryType.Inventory3,
-        InventoryType.Inventory4,
-        InventoryType.EquippedItems,
-        InventoryType.ArmoryMainHand,
-        InventoryType.ArmoryOffHand,
-        InventoryType.ArmoryHead,
-        InventoryType.ArmoryBody,
-        InventoryType.ArmoryHands,
-        InventoryType.ArmoryWaist,
-        InventoryType.ArmoryLegs,
-        InventoryType.ArmoryFeets,
-        InventoryType.ArmoryEar,
-        InventoryType.ArmoryNeck,
-        InventoryType.ArmoryWrist,
-        InventoryType.ArmoryRings,
-        InventoryType.ArmorySoulCrystal,
-    ];
-
     private readonly List<uint> itemDetailPrefetchQueue = [];
 
     private string itemDetailPrefetchSignature = string.Empty;
@@ -442,10 +420,10 @@ public unsafe partial class Echoglossian
         }
 
         HashSet<uint> uniqueItemIds = [];
-        foreach (var inventoryType in PrefetchInventoryTypes)
+        foreach (var inventoryType in Enum.GetValues<InventoryType>())
         {
             var container = inventoryManager->GetInventoryContainer(inventoryType);
-            if (container == null || !container->IsLoaded || container->Items == null)
+            if (container == null || !container->IsLoaded || container->Size == 0 || container->Items == null)
             {
                 continue;
             }
