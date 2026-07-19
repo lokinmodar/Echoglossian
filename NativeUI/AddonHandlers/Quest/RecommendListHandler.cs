@@ -295,8 +295,6 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
 #endif
       }
 
-      // Then we replace the text in the nodes
-      this.UpdateRecommendList(sourceLanguage);
     }
     catch (Exception e)
     {
