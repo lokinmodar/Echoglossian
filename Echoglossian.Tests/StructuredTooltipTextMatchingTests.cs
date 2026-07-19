@@ -149,6 +149,47 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
+    ///     Ensures cached tooltip node addresses are reused only while they are
+    ///     still present in the current addon tree.
+    /// </summary>
+    [Fact]
+    public void AreStructuredTooltipNodeAddressesCurrent_AcceptsCurrentAddresses()
+    {
+        var currentNodeAddresses = new HashSet<nint>
+        {
+            (nint)100,
+            (nint)200,
+        };
+
+        var result = Echoglossian.AreStructuredTooltipNodeAddressesCurrent(
+            currentNodeAddresses,
+            nameNodeAddress: (nint)100,
+            descriptionNodeAddress: (nint)200);
+
+        Assert.True(result);
+    }
+
+    /// <summary>
+    ///     Ensures cached tooltip node addresses are discarded when an addon
+    ///     refresh removes one of the previously resolved nodes.
+    /// </summary>
+    [Fact]
+    public void AreStructuredTooltipNodeAddressesCurrent_RejectsStaleAddresses()
+    {
+        var currentNodeAddresses = new HashSet<nint>
+        {
+            (nint)100,
+        };
+
+        var result = Echoglossian.AreStructuredTooltipNodeAddressesCurrent(
+            currentNodeAddresses,
+            nameNodeAddress: (nint)100,
+            descriptionNodeAddress: (nint)200);
+
+        Assert.False(result);
+    }
+
+    /// <summary>
     ///     Ensures node matching prefers the plain-text-safe candidate when
     ///     two live nodes have the same text-match score.
     /// </summary>

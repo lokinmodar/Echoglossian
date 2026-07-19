@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+
 namespace Echoglossian;
 
 /// <summary>
@@ -23,6 +25,32 @@ internal static unsafe class FrameworkAccessGuard
   {
     return Echoglossian.ClientStateInterface != null &&
            Echoglossian.ClientStateInterface.IsLoggedIn;
+  }
+
+  /// <summary>
+  /// Determines whether player-scoped native runtime work can safely touch
+  /// game state that may lag behind the login flag during zone transitions.
+  /// </summary>
+  /// <returns>
+  /// <see langword="true" /> when the client is logged in and player state has
+  /// a current class/job id; otherwise, <see langword="false" />.
+  /// </returns>
+  public static bool IsClientReadyForPlayerScopedFrameworkAccess()
+  {
+    if (!IsClientReadyForFrameworkAccess())
+    {
+      return false;
+    }
+
+    try
+    {
+      var playerState = PlayerState.Instance();
+      return playerState != null && playerState->CurrentClassJobId != 0;
+    }
+    catch (InvalidOperationException)
+    {
+      return false;
+    }
   }
 
   /// <summary>

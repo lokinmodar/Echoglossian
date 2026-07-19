@@ -153,7 +153,7 @@ public unsafe partial class Echoglossian
     {
         return this.configuration.Translate &&
                this.configuration.TranslateTooltips &&
-               ClientStateInterface.IsLoggedIn;
+               FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess();
     }
 
     /// <summary>
@@ -164,7 +164,7 @@ public unsafe partial class Echoglossian
     private bool ShouldPrefetchActionAdjacentCanonicalTooltips()
     {
         return this.configuration.Translate &&
-               ClientStateInterface.IsLoggedIn &&
+               FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() &&
                (this.configuration.TranslateTooltips ||
                 this.configuration.TranslateActionMenuWindow);
     }

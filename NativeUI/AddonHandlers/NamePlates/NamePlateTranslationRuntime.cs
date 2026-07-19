@@ -34,6 +34,7 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   private readonly TranslationService translationService;
 
   private bool disposed;
+  private int pendingRedrawRequest;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="NamePlateTranslationRuntime" /> class.
@@ -78,6 +79,7 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
       IReadOnlyList<INamePlateUpdateHandler> handlers)
   {
     if (this.disposed ||
+        !FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() ||
         !this.config.Translate ||
         !this.config.TranslateNamePlates ||
         handlers.Count == 0)
@@ -105,6 +107,8 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     {
       this.ProcessNamePlate(handler, scope, sourceLanguage, effectiveEngine);
     }
+
+    this.FlushPendingRedrawRequest();
   }
 
   /// <summary>
@@ -117,6 +121,8 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     {
       return;
     }
+
+    this.FlushPendingRedrawRequest();
 
     if (!this.ShouldUseOverlay())
     {
@@ -330,7 +336,7 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
             worldPosition);
       }
 
-      NamePlateGuiInterface.RequestRedraw();
+      this.QueueRedrawRequest();
     }
     catch (Exception ex)
     {
@@ -423,6 +429,35 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     {
       entry.Overlay.Semaphore.Release();
     }
+  }
+
+  /// <summary>
+  /// Records that a nameplate redraw should be requested on the next UI-owned
+  /// callback instead of from the background translation task.
+  /// </summary>
+  private void QueueRedrawRequest()
+  {
+    Interlocked.Exchange(ref this.pendingRedrawRequest, 1);
+  }
+
+  /// <summary>
+  /// Flushes one pending nameplate redraw request while the client is ready for
+  /// player-scoped UI work.
+  /// </summary>
+  private void FlushPendingRedrawRequest()
+  {
+    if (this.disposed ||
+        !FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess())
+    {
+      return;
+    }
+
+    if (Interlocked.Exchange(ref this.pendingRedrawRequest, 0) == 0)
+    {
+      return;
+    }
+
+    NamePlateGuiInterface.RequestRedraw();
   }
 
   private void ClearOverlay(ulong gameObjectId)

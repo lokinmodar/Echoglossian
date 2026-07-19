@@ -620,7 +620,7 @@ public unsafe partial class Echoglossian
         return this.configuration.Translate &&
                this.configuration.TranslateTooltips &&
                !GameGuiInterface.GameUiHidden &&
-               ClientStateInterface.IsLoggedIn;
+               FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess();
     }
 
     /// <summary>
@@ -820,9 +820,7 @@ public unsafe partial class Echoglossian
             }
 
             var resolvedAddon = (AtkUnitBase*)addonPtr.Address;
-            if (resolvedAddon == null ||
-                !resolvedAddon->IsVisible ||
-                resolvedAddon->RootNode == null)
+            if (!IsStructuredTooltipAddonReady(resolvedAddon))
             {
                 continue;
             }
@@ -1484,7 +1482,7 @@ public unsafe partial class Echoglossian
         string translatedDescription,
         ref StructuredTooltipNativeState? runtimeState)
     {
-        if (addon == null || contentId == 0)
+        if (!IsStructuredTooltipAddonReady(addon) || contentId == 0)
         {
             this.LogStructuredTooltipState(
                 surfaceName,
@@ -1492,7 +1490,7 @@ public unsafe partial class Echoglossian
                 contentId,
                 contentKind,
                 displayMode: null,
-                reason: "addon-or-content-missing");
+                reason: "addon-not-ready-or-content-missing");
             this.RestoreStructuredTooltipOriginals(ref runtimeState, addon);
             return;
         }
@@ -1526,13 +1524,28 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        var currentRuntimeState = runtimeState;
+        if (currentRuntimeState == null)
+        {
+            this.LogStructuredTooltipState(
+                surfaceName,
+                "native-apply",
+                contentId,
+                contentKind,
+                displayMode: null,
+                reason: "node-resolution-state-missing",
+                name: originalName,
+                description: originalDescription);
+            return;
+        }
+
         var descriptionExpected = !string.IsNullOrWhiteSpace(originalDescription);
         if (!CanApplyStructuredTooltipNative(
                 descriptionExpected,
-                runtimeState.NameNodeAddress != 0,
-                runtimeState.NameNodeSupportsPlainTextMutation,
-                runtimeState.DescriptionNodeAddress != 0,
-                runtimeState.DescriptionNodeSupportsPlainTextMutation))
+                currentRuntimeState.NameNodeAddress != 0,
+                currentRuntimeState.NameNodeSupportsPlainTextMutation,
+                currentRuntimeState.DescriptionNodeAddress != 0,
+                currentRuntimeState.DescriptionNodeSupportsPlainTextMutation))
         {
             this.LogStructuredTooltipState(
                 surfaceName,
@@ -1542,20 +1555,20 @@ public unsafe partial class Echoglossian
                 displayMode: null,
                 reason: GetStructuredTooltipNativeApplyDeferredReason(
                     descriptionExpected,
-                    runtimeState),
+                    currentRuntimeState),
                 name: originalName,
                 description: originalDescription,
-                nameNodeAddress: runtimeState.NameNodeAddress,
-                descriptionNodeAddress: runtimeState.DescriptionNodeAddress);
+                nameNodeAddress: currentRuntimeState.NameNodeAddress,
+                descriptionNodeAddress: currentRuntimeState.DescriptionNodeAddress);
             return;
         }
 
         var nameApplied = false;
         var descriptionApplied = false;
 
-        if (runtimeState.NameNodeAddress != 0)
+        if (currentRuntimeState.NameNodeAddress != 0)
         {
-            var nameNode = (AtkTextNode*)runtimeState.NameNodeAddress;
+            var nameNode = (AtkTextNode*)currentRuntimeState.NameNodeAddress;
             if (nameNode != null &&
                 !this.DoesStructuredTooltipNodeMatchTarget(
                     nameNode,
@@ -1563,17 +1576,18 @@ public unsafe partial class Echoglossian
             {
                 nameNode->SetText(translatedName);
                 nameApplied = true;
-                runtimeState = runtimeState with
+                currentRuntimeState = currentRuntimeState with
                 {
                     NameWasMutated = true,
                 };
+                runtimeState = currentRuntimeState;
             }
         }
 
-        if (runtimeState.DescriptionNodeAddress != 0 &&
+        if (currentRuntimeState.DescriptionNodeAddress != 0 &&
             !string.IsNullOrWhiteSpace(originalDescription))
         {
-            var descriptionNode = (AtkTextNode*)runtimeState.DescriptionNodeAddress;
+            var descriptionNode = (AtkTextNode*)currentRuntimeState.DescriptionNodeAddress;
             if (descriptionNode != null &&
                 !this.DoesStructuredTooltipNodeMatchTarget(
                     descriptionNode,
@@ -1581,10 +1595,11 @@ public unsafe partial class Echoglossian
             {
                 descriptionNode->SetText(translatedDescription);
                 descriptionApplied = true;
-                runtimeState = runtimeState with
+                currentRuntimeState = currentRuntimeState with
                 {
                     DescriptionWasMutated = true,
                 };
+                runtimeState = currentRuntimeState;
             }
         }
 
@@ -1597,8 +1612,8 @@ public unsafe partial class Echoglossian
             reason: "native-apply-attempted",
             name: translatedName,
             description: translatedDescription,
-            nameNodeAddress: runtimeState.NameNodeAddress,
-            descriptionNodeAddress: runtimeState.DescriptionNodeAddress,
+            nameNodeAddress: currentRuntimeState.NameNodeAddress,
+            descriptionNodeAddress: currentRuntimeState.DescriptionNodeAddress,
             nameApplied: nameApplied,
             descriptionApplied: descriptionApplied);
     }
@@ -1670,6 +1685,19 @@ public unsafe partial class Echoglossian
 
             runtimeState = resolvedRuntimeState;
             return true;
+        }
+
+        if (!this.AreStructuredTooltipRuntimeNodesCurrent(addon, runtimeState))
+        {
+            runtimeState = null;
+            return this.TryEnsureStructuredTooltipNodeAddresses(
+                addon,
+                contentId,
+                contentKind,
+                originalName,
+                originalDescription,
+                translatedName,
+                ref runtimeState);
         }
 
         var needsNameNode = runtimeState.NameNodeAddress == 0 ||
@@ -1765,6 +1793,62 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Gets whether cached tooltip text-node addresses are still present in
+    ///     the current addon tree.
+    /// </summary>
+    /// <param name="currentNodeAddresses">The text-node addresses visible in the current tree.</param>
+    /// <param name="nameNodeAddress">The cached name-node address.</param>
+    /// <param name="descriptionNodeAddress">The cached description-node address.</param>
+    /// <returns><see langword="true" /> when every cached non-zero address is current.</returns>
+    internal static bool AreStructuredTooltipNodeAddressesCurrent(
+        IReadOnlySet<nint> currentNodeAddresses,
+        nint nameNodeAddress,
+        nint descriptionNodeAddress)
+    {
+        if (currentNodeAddresses.Count == 0 ||
+            (nameNodeAddress == 0 && descriptionNodeAddress == 0))
+        {
+            return false;
+        }
+
+        return IsStructuredTooltipNodeAddressCurrent(
+                   currentNodeAddresses,
+                   nameNodeAddress) &&
+               IsStructuredTooltipNodeAddressCurrent(
+                   currentNodeAddresses,
+                   descriptionNodeAddress);
+    }
+
+    /// <summary>
+    ///     Gets whether one cached tooltip node address is either unused or
+    ///     still present in the current addon tree.
+    /// </summary>
+    /// <param name="currentNodeAddresses">The current text-node addresses.</param>
+    /// <param name="nodeAddress">The cached node address.</param>
+    /// <returns><see langword="true" /> when the address is safe to reuse.</returns>
+    private static bool IsStructuredTooltipNodeAddressCurrent(
+        IReadOnlySet<nint> currentNodeAddresses,
+        nint nodeAddress)
+    {
+        return nodeAddress == 0 || currentNodeAddresses.Contains(nodeAddress);
+    }
+
+    /// <summary>
+    ///     Gets whether one tooltip addon is ready for native tree traversal or
+    ///     mutation.
+    /// </summary>
+    /// <param name="addon">The candidate tooltip addon.</param>
+    /// <returns><see langword="true" /> when the addon is visible and ready.</returns>
+    private static bool IsStructuredTooltipAddonReady(AtkUnitBase* addon)
+    {
+        return addon != null &&
+               addon->IsReady &&
+               addon->IsVisible &&
+               addon->RootNode != null &&
+               addon->UldManager.NodeList != null;
+    }
+
+    /// <summary>
     ///     Gets the compact reason describing why native structured-tooltip
     ///     mutation was deferred for the current frame.
     /// </summary>
@@ -1813,7 +1897,9 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        if (addon == null || (nint)addon != runtimeState.AddonAddress)
+        if (!IsStructuredTooltipAddonReady(addon) ||
+            (nint)addon != runtimeState.AddonAddress ||
+            !this.AreStructuredTooltipRuntimeNodesCurrent(addon, runtimeState))
         {
             runtimeState = null;
             return;
@@ -1947,7 +2033,7 @@ public unsafe partial class Echoglossian
         uint contentKind)
     {
         List<StructuredTooltipTextNodeCandidate> candidates = [];
-        if (addon == null)
+        if (!IsStructuredTooltipAddonReady(addon))
         {
             return candidates;
         }
@@ -2022,7 +2108,8 @@ public unsafe partial class Echoglossian
         string originalName,
         string? translatedName)
     {
-        if (addon == null || string.IsNullOrWhiteSpace(originalName))
+        if (!IsStructuredTooltipAddonReady(addon) ||
+            string.IsNullOrWhiteSpace(originalName))
         {
             return false;
         }
@@ -2863,14 +2950,14 @@ public unsafe partial class Echoglossian
         string? text)
     {
         if (string.IsNullOrWhiteSpace(text) ||
-            addon == null)
+            !IsStructuredTooltipAddonReady(addon))
         {
             this.ClearStructuredTooltipOverlay(
                 surfaceName,
                 overlay,
                 reason: string.IsNullOrWhiteSpace(text)
                     ? "overlay-text-empty"
-                    : "overlay-addon-missing",
+                    : "overlay-addon-not-ready",
                 contentId: contentId,
                 contentKind: contentKind);
             return;
@@ -3080,6 +3167,36 @@ public unsafe partial class Echoglossian
     private static string FormatStructuredTooltipOptionalBool(bool? value)
     {
         return value?.ToString() ?? "<n/a>";
+    }
+
+    /// <summary>
+    ///     Gets whether the cached native tooltip state still points at nodes
+    ///     present in the addon's current tree.
+    /// </summary>
+    /// <param name="addon">The current visible tooltip addon.</param>
+    /// <param name="runtimeState">The cached native state.</param>
+    /// <returns><see langword="true" /> when cached node addresses are current.</returns>
+    private bool AreStructuredTooltipRuntimeNodesCurrent(
+        AtkUnitBase* addon,
+        StructuredTooltipNativeState runtimeState)
+    {
+        if (!IsStructuredTooltipAddonReady(addon))
+        {
+            return false;
+        }
+
+        var currentNodeAddresses = new HashSet<nint>();
+        foreach (var candidate in this.CollectStructuredTooltipTextNodeCandidates(
+                     addon,
+                     runtimeState.ContentKind))
+        {
+            currentNodeAddresses.Add(candidate.NodeAddress);
+        }
+
+        return AreStructuredTooltipNodeAddressesCurrent(
+            currentNodeAddresses,
+            runtimeState.NameNodeAddress,
+            runtimeState.DescriptionNodeAddress);
     }
 
     /// <summary>

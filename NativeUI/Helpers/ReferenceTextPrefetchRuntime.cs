@@ -105,7 +105,7 @@ public unsafe partial class Echoglossian
     private bool ShouldPrefetchReferenceTexts()
     {
         return this.configuration.Translate &&
-               ClientStateInterface.IsLoggedIn &&
+               FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() &&
                (this.configuration.TranslateActionMenuWindow ||
                 this.configuration.TranslateMainCommandWindow ||
                 this.configuration.TranslateTooltips);

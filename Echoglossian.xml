@@ -4582,6 +4582,33 @@
             <param name="descriptionNodeSupportsPlainTextMutation">Whether the description node can be safely rewritten as plain text.</param>
             <returns><see langword="true" /> when native mutation is safe to perform atomically.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.AreStructuredTooltipNodeAddressesCurrent(System.Collections.Generic.IReadOnlySet{System.IntPtr},System.IntPtr,System.IntPtr)">
+            <summary>
+                Gets whether cached tooltip text-node addresses are still present in
+                the current addon tree.
+            </summary>
+            <param name="currentNodeAddresses">The text-node addresses visible in the current tree.</param>
+            <param name="nameNodeAddress">The cached name-node address.</param>
+            <param name="descriptionNodeAddress">The cached description-node address.</param>
+            <returns><see langword="true" /> when every cached non-zero address is current.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipNodeAddressCurrent(System.Collections.Generic.IReadOnlySet{System.IntPtr},System.IntPtr)">
+            <summary>
+                Gets whether one cached tooltip node address is either unused or
+                still present in the current addon tree.
+            </summary>
+            <param name="currentNodeAddresses">The current text-node addresses.</param>
+            <param name="nodeAddress">The cached node address.</param>
+            <returns><see langword="true" /> when the address is safe to reuse.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipAddonReady(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Gets whether one tooltip addon is ready for native tree traversal or
+                mutation.
+            </summary>
+            <param name="addon">The candidate tooltip addon.</param>
+            <returns><see langword="true" /> when the addon is visible and ready.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.GetStructuredTooltipNativeApplyDeferredReason(System.Boolean,Echoglossian.Echoglossian.StructuredTooltipNativeState)">
             <summary>
                 Gets the compact reason describing why native structured-tooltip
@@ -4962,6 +4989,15 @@
             </summary>
             <param name="value">The optional boolean.</param>
             <returns>The formatted text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.AreStructuredTooltipRuntimeNodesCurrent(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.Echoglossian.StructuredTooltipNativeState)">
+            <summary>
+                Gets whether the cached native tooltip state still points at nodes
+                present in the addon's current tree.
+            </summary>
+            <param name="addon">The current visible tooltip addon.</param>
+            <param name="runtimeState">The cached native state.</param>
+            <returns><see langword="true" /> when cached node addresses are current.</returns>
         </member>
         <member name="T:Echoglossian.Echoglossian.StructuredTooltipNativeState">
             <summary>
@@ -10562,6 +10598,16 @@
             otherwise, <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess">
+            <summary>
+            Determines whether player-scoped native runtime work can safely touch
+            game state that may lag behind the login flag during zone transitions.
+            </summary>
+            <returns>
+            <see langword="true" /> when the client is logged in and player state has
+            a current class/job id; otherwise, <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.FrameworkAccessGuard.TryGetRaptureAtkUnitManager(FFXIVClientStructs.FFXIV.Client.UI.RaptureAtkUnitManager*@)">
             <summary>
             Tries to resolve the live <see cref="T:FFXIVClientStructs.FFXIV.Client.UI.RaptureAtkUnitManager"/> instance
@@ -15685,6 +15731,18 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.Dispose">
             <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.QueueRedrawRequest">
+            <summary>
+            Records that a nameplate redraw should be requested on the next UI-owned
+            callback instead of from the background translation task.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.FlushPendingRedrawRequest">
+            <summary>
+            Flushes one pending nameplate redraw request while the client is ready for
+            player-scoped UI work.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler">
             <summary>

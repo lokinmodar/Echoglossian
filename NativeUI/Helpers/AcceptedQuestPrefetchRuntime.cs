@@ -179,7 +179,7 @@ public partial class Echoglossian
   private bool ShouldPrefetchAcceptedQuests()
   {
     return this.configuration.Translate &&
-           ClientStateInterface.IsLoggedIn &&
+           FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() &&
            (this.configuration.TranslateJournal ||
             this.configuration.TranslateJournalDetail ||
             this.configuration.TranslateJournalAccept ||
