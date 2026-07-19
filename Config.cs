@@ -293,6 +293,11 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode QuestToastRightTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Display mode for world-object nameplates.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode NamePlateTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Always show the BattleTalk overlay title bar.</summary>
   [DefaultValue(false)] public bool BattleTalkForceShowTitle = false;
 
@@ -418,6 +423,13 @@ public class Config : IPluginConfiguration
 
   /// <summary>Width multiplier for right-aligned quest toast overlays.</summary>
   [DefaultValue(1.0f)] public float ImGuiQuestToastRightWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for nameplate overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiNamePlateWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for nameplate overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiNamePlateWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for ImGui overlay windows.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
@@ -600,6 +612,10 @@ public class Config : IPluginConfiguration
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 OverlayQuestToastRightTextColor = new(1f, 1f, 1f);
 
+  /// <summary>Text color used by nameplate overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayNamePlateTextColor = new(1f, 1f, 1f);
+
   /// <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
   [DefaultValue(1f)] public float WideTextToastBackgroundOpacity = 1f;
 
@@ -674,8 +690,14 @@ public class Config : IPluginConfiguration
   /// <summary>Font scale used for MiniTalk overlay.</summary>
   [DefaultValue(1f)] public float MiniTalkFontScale = 1f;
 
+  /// <summary>Font scale used for nameplate overlays.</summary>
+  [DefaultValue(1f)] public float NamePlateFontScale = 1f;
+
   /// <summary>Background opacity used for MiniTalk overlays.</summary>
   [DefaultValue(1f)] public float MiniTalkBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used for nameplate overlays.</summary>
+  [DefaultValue(1f)] public float NamePlateBackgroundOpacity = 1f;
 
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiMiniTalkWindowPosCorrection = new(0, 0);
@@ -1065,6 +1087,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate MiniTalk messages.</summary>
   [DefaultValue(false)] public bool TranslateMiniTalk = false;
+
+  /// <summary>Translate eligible world-object nameplates.</summary>
+  [DefaultValue(false)] public bool TranslateNamePlates = false;
 
   /// <summary>Translate Text Gimmick Hint messages.</summary>
   [DefaultValue(false)] public bool TranslateTextGimmickHint = false;

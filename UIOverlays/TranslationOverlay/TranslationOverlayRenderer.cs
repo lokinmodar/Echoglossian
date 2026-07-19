@@ -461,6 +461,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             TranslationOverlaySurfaceId.AreaToast => this.configuration.AreaToastTranslationDisplayMode,
             TranslationOverlaySurfaceId.ClassChangeToast => this.configuration.ClassChangeToastTranslationDisplayMode,
             TranslationOverlaySurfaceId.QuestToast => this.configuration.QuestToastTranslationDisplayMode,
+            TranslationOverlaySurfaceId.NamePlate => this.configuration.NamePlateTranslationDisplayMode,
             _ => JournalTranslationDisplayMode.TooltipTranslation,
         };
         return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
@@ -553,7 +554,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                    or TranslationOverlaySurfaceId.ErrorToast
                    or TranslationOverlaySurfaceId.AreaToast
                    or TranslationOverlaySurfaceId.ClassChangeToast
-                   or TranslationOverlaySurfaceId.QuestToast;
+                   or TranslationOverlaySurfaceId.QuestToast
+                   or TranslationOverlaySurfaceId.NamePlate;
     }
 
     /// <summary>

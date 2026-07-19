@@ -6,6 +6,8 @@
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
 
+using Dalamud.Game.Gui.NamePlate;
+
 namespace Echoglossian;
 
 /// <summary>
@@ -16,6 +18,8 @@ public partial class Echoglossian
   public static TalkMessage? FoundTalkMessage { get; set; }
 
   public ToastMessage? FoundToastMessage { get; set; }
+
+  public static NamePlateMessage? FoundNamePlateMessage { get; set; }
 
   public static BattleTalkMessage? FoundBattleTalkMessage { get; set; }
 
@@ -282,6 +286,42 @@ public partial class Echoglossian
     catch (Exception e)
     {
       PluginRuntimeLog.Debug($"FindAndReturnToastMessage exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds and returns a translated world-object nameplate row using the
+  ///     shared in-memory nameplate cache.
+  /// </summary>
+  /// <param name="namePlateMessage">Formatted nameplate message to find.</param>
+  /// <returns>The matching row, or <see langword="null" />.</returns>
+  public NamePlateMessage? FindAndReturnNamePlateMessage(
+      NamePlateMessage namePlateMessage)
+  {
+    try
+    {
+      if (namePlateMessage.NamePlateKind == null ||
+          string.IsNullOrWhiteSpace(namePlateMessage.OriginalNamePlateText) ||
+          !TranslationReuseScope.TryCreate(
+              this.configuration,
+              namePlateMessage.TranslationEngine,
+              out var scope))
+      {
+        FoundNamePlateMessage = null;
+        return null;
+      }
+
+      FoundNamePlateMessage = NamePlateCacheManager.TryFindMatch(
+          (NamePlateKind)namePlateMessage.NamePlateKind.Value,
+          namePlateMessage.OriginalNamePlateText,
+          scope);
+      return FoundNamePlateMessage;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindAndReturnNamePlateMessage exception {e}");
+      FoundNamePlateMessage = null;
       return null;
     }
   }
@@ -1480,6 +1520,49 @@ public partial class Echoglossian
       }
 
       return "Data inserted to ToastMessages table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts a world-object nameplate translation record into the database
+  ///     and updates the in-memory nameplate cache.
+  /// </summary>
+  /// <param name="namePlateMessage">Formatted nameplate row to persist.</param>
+  /// <returns>The persistence result message.</returns>
+  public string InsertNamePlateMessageData(NamePlateMessage namePlateMessage)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(namePlateMessage.TranslatedNamePlateText))
+      {
+        return "No data to save.";
+      }
+
+      if (namePlateMessage.NamePlateKind != null &&
+          !string.IsNullOrWhiteSpace(namePlateMessage.OriginalNamePlateText) &&
+          TranslationReuseScope.TryCreate(
+              this.configuration,
+              namePlateMessage.TranslationEngine,
+              out var scope) &&
+          NamePlateCacheManager.TryFindMatch(
+              (NamePlateKind)namePlateMessage.NamePlateKind.Value,
+              namePlateMessage.OriginalNamePlateText,
+              scope) != null)
+      {
+        return "Data already in the Db.";
+      }
+
+      context.NamePlateMessages.Add(namePlateMessage);
+      context.SaveChanges();
+      NamePlateCacheManager.Update(namePlateMessage);
+
+      return "Data inserted to NamePlateMessages table.";
     }
     catch (Exception e)
     {

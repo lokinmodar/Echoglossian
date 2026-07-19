@@ -662,6 +662,43 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="T:Echoglossian.Cache.NamePlateCacheManager">
+            <summary>
+                Manages in-memory nameplate translation rows so the NamePlateGui runtime
+                does not query SQLite during frequent nameplate redraws.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.NamePlateCacheManager.Revision">
+            <summary>
+                Gets the cache revision, incremented after every cache mutation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.NamePlateCacheManager.Preload(System.String)">
+            <summary>
+                Loads all nameplate translation rows into memory.
+            </summary>
+            <param name="configDir">The plugin configuration directory.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.NamePlateCacheManager.Update(Echoglossian.EFCoreSqlite.Models.NamePlateMessage)">
+            <summary>
+                Updates or inserts one cached nameplate translation row.
+            </summary>
+            <param name="newRecord">The row to cache.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.NamePlateCacheManager.TryFindMatch(Dalamud.Game.Gui.NamePlate.NamePlateKind,System.String,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Attempts to find a cached row for the specified nameplate scope.
+            </summary>
+            <param name="kind">The Dalamud nameplate kind.</param>
+            <param name="originalText">The original visible nameplate text.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <returns>The matching cached row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.NamePlateCacheManager.Clear">
+            <summary>
+                Clears the in-memory nameplate cache.
+            </summary>
+        </member>
         <member name="T:Echoglossian.Cache.QuestHoverTranslationCache">
             <summary>
             Stores quest-family hover translations keyed by the node pointer used to anchor the tooltip.
@@ -1813,6 +1850,9 @@
         <member name="F:Echoglossian.Config.QuestToastRightTranslationDisplayMode">
             <summary>Display mode for right-aligned quest toasts.</summary>
         </member>
+        <member name="F:Echoglossian.Config.NamePlateTranslationDisplayMode">
+            <summary>Display mode for world-object nameplates.</summary>
+        </member>
         <member name="F:Echoglossian.Config.BattleTalkForceShowTitle">
             <summary>Always show the BattleTalk overlay title bar.</summary>
         </member>
@@ -1898,6 +1938,12 @@
         </member>
         <member name="F:Echoglossian.Config.ImGuiQuestToastRightWindowWidthMult">
             <summary>Width multiplier for right-aligned quest toast overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiNamePlateWindowPosCorrection">
+            <summary>Position correction for nameplate overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ImGuiNamePlateWindowWidthMult">
+            <summary>Width multiplier for nameplate overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.ImGuiWindowPosCorrection">
             <summary>Position correction for ImGui overlay windows.</summary>
@@ -2041,6 +2087,9 @@
         <member name="F:Echoglossian.Config.OverlayQuestToastRightTextColor">
             <summary>Text color used by right-aligned quest toast overlays.</summary>
         </member>
+        <member name="F:Echoglossian.Config.OverlayNamePlateTextColor">
+            <summary>Text color used by nameplate overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.WideTextToastBackgroundOpacity">
             <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
         </member>
@@ -2113,8 +2162,14 @@
         <member name="F:Echoglossian.Config.MiniTalkFontScale">
             <summary>Font scale used for MiniTalk overlay.</summary>
         </member>
+        <member name="F:Echoglossian.Config.NamePlateFontScale">
+            <summary>Font scale used for nameplate overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.MiniTalkBackgroundOpacity">
             <summary>Background opacity used for MiniTalk overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.NamePlateBackgroundOpacity">
+            <summary>Background opacity used for nameplate overlays.</summary>
         </member>
         <member name="F:Echoglossian.Config.UseImGuiForCutSceneSelectString">
             <summary>Use ImGui for CutSceneSelectString overlays.</summary>
@@ -2337,6 +2392,9 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateMiniTalk">
             <summary>Translate MiniTalk messages.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateNamePlates">
+            <summary>Translate eligible world-object nameplates.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateTextGimmickHint">
             <summary>Translate Text Gimmick Hint messages.</summary>
@@ -2577,6 +2635,9 @@
                 payloads.
             </summary>
             <summary>
+                Handles bootstrap and teardown for the NamePlateGui translation runtime.
+            </summary>
+            <summary>
                 Handles the quest probe command used to inspect the complete quest data
                 shape from Lumina, the live quest progress resolver, and the current
                 QuestPlate database rows.
@@ -2782,6 +2843,14 @@
             <param name="toastMessage">Formatted ToastMessage to be found in the database.</param>
             <returns>The matching <see cref="T:Echoglossian.EFCoreSqlite.Models.ToastMessage" />, or <see langword="null" />.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindAndReturnNamePlateMessage(Echoglossian.EFCoreSqlite.Models.NamePlateMessage)">
+            <summary>
+                Finds and returns a translated world-object nameplate row using the
+                shared in-memory nameplate cache.
+            </summary>
+            <param name="namePlateMessage">Formatted nameplate message to find.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FindErrorToastMessage(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
             <summary>
             Finds and returns an ErrorToastMessage from the database.
@@ -2972,6 +3041,14 @@
             </summary>
             <param name="toastMessage">Formatted ToastMessage to be inserted into the database</param>
             <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertNamePlateMessageData(Echoglossian.EFCoreSqlite.Models.NamePlateMessage)">
+            <summary>
+                Inserts a world-object nameplate translation record into the database
+                and updates the in-memory nameplate cache.
+            </summary>
+            <param name="namePlateMessage">Formatted nameplate row to persist.</param>
+            <returns>The persistence result message.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
@@ -5366,6 +5443,23 @@
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.CreateNamePlateTranslationRuntime">
+            <summary>
+                Creates the NamePlateGui translation runtime using shared translation,
+                persistence, and overlay services.
+            </summary>
+            <returns>The initialized nameplate runtime.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterNamePlateTranslationRuntime">
+            <summary>
+                Registers the NamePlateGui runtime with Dalamud.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.UnregisterNamePlateTranslationRuntime">
+            <summary>
+                Unregisters the NamePlateGui runtime from Dalamud.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestAddonHandlerDependencies">
             <summary>
                 Builds the shared dependency bundle for standalone quest handlers.
@@ -7712,6 +7806,11 @@
             </summary>
             <param name="configDir">Plugin config directory.</param>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.NamePlateMessages">
+            <summary>
+                Gets or sets the translated world-object nameplate rows.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.StringArrayDatas">
             <summary>
                 Gets or sets the translated string array records.
@@ -8117,6 +8216,17 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.RemovePersistedTranslationErrors.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddNamePlateMessages">
+            <summary>
+                Adds persisted world-object nameplate translation rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNamePlateMessages.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNamePlateMessages.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -9329,6 +9439,77 @@
             </summary>
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.MountActionText.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.NamePlateMessage">
+            <summary>
+                Represents one persisted world-object nameplate translation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.#ctor(System.Nullable{System.Int32},System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.NamePlateMessage" /> class.
+            </summary>
+            <param name="namePlateKind">The Dalamud nameplate kind.</param>
+            <param name="originalNamePlateText">The original nameplate text.</param>
+            <param name="originalLang">The original language identity.</param>
+            <param name="translatedNamePlateText">The translated nameplate text.</param>
+            <param name="translationLang">The translated language identity.</param>
+            <param name="translationEngine">The translation engine used.</param>
+            <param name="createdDate">The date the row was created.</param>
+            <param name="updatedDate">The date the row was last updated.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.NamePlateKind">
+            <summary>
+                Gets or sets the Dalamud nameplate kind.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.OriginalNamePlateText">
+            <summary>
+                Gets or sets the original nameplate text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.OriginalLang">
+            <summary>
+                Gets or sets the source language identity.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.TranslatedNamePlateText">
+            <summary>
+                Gets or sets the translated nameplate text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.TranslationLang">
+            <summary>
+                Gets or sets the target language identity.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.TranslationEngine">
+            <summary>
+                Gets or sets the translation engine identifier.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.CreatedDate">
+            <summary>
+                Gets or sets the creation timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.UpdatedDate">
+            <summary>
+                Gets or sets the last update timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.RowVersion">
+            <summary>
+                Gets or sets the optimistic concurrency token.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.NamePlateMessage.ToString">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.NpcNames.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
@@ -15448,6 +15629,45 @@
             <param name="atkValues">The refresh ATK value buffer.</param>
             <param name="atkValueCount">The number of values in the buffer.</param>
             <param name="translatedPayload">The translated payload to apply.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime">
+            <summary>
+                Translates eligible world-object nameplates through Dalamud's
+                <see cref="T:Dalamud.Plugin.Services.INamePlateGui" /> surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IObjectTable,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer,System.Func{Echoglossian.EFCoreSqlite.Models.NamePlateMessage,System.Threading.Tasks.Task{System.String}},System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime" /> class.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="gameGui">The game UI service used for world-to-screen projection.</param>
+            <param name="objectTable">The object table used to resolve live object positions.</param>
+            <param name="renderer">The shared translation overlay renderer.</param>
+            <param name="insertNamePlateMessageAsync">
+                Delegate used to persist a translated nameplate row.
+            </param>
+            <param name="normalizeReplacementText">
+                Delegate used to normalize translated text before native replacement.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.HandleNamePlateUpdate(Dalamud.Game.Gui.NamePlate.INamePlateUpdateContext,System.Collections.Generic.IReadOnlyList{Dalamud.Game.Gui.NamePlate.INamePlateUpdateHandler})">
+            <summary>
+                Handles nameplate updates from Dalamud. Handlers are used only inside
+                this callback because Dalamud marks them valid for one frame.
+            </summary>
+            <param name="context">The current nameplate update context.</param>
+            <param name="handlers">The updated nameplate handlers.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.DrawOverlays">
+            <summary>
+                Draws active nameplate overlays using the shared renderer and RTL
+                presentation stack.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.Dispose">
+            <inheritdoc />
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler">
             <summary>
@@ -27391,6 +27611,11 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a MiniTalk translation.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleNamePlateTranslation">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Nameplate translation.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.OverlayWindowTitleQuestToastTranslation">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Quest toast translation.
@@ -27721,6 +27946,21 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a Echoglossian settings reset to default successfully!.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.NamePlateNativeReplacementHelpText">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.NamePlateOverlayHelpText">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.NamePlateTabTitle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Nameplates.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.ShowInCutscenesLabel">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Show in Cutscenes.
@@ -28004,6 +28244,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslateMiniTalkLabel">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate MiniTalk.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateNamePlatesLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Translate eligible world-object nameplates.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateNpcNamesToggle">
@@ -32699,6 +32944,9 @@
         <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.QuestToast">
             <summary>Quest toast overlay.</summary>
         </member>
+        <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.NamePlate">
+            <summary>Nameplate overlay.</summary>
+        </member>
         <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.ChatBubble">
             <summary>Chat bubble overlay.</summary>
         </member>
@@ -32816,6 +33064,14 @@
             </summary>
             <param name="config"></param>
             <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForNamePlate(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
+            provided <see cref="T:Echoglossian.Config"/> for world-object nameplate translations.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The nameplate overlay configuration.</returns>
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForQuestToastPlacement(Echoglossian.Config,Dalamud.Game.Gui.Toast.QuestToastPosition)">
             <summary>

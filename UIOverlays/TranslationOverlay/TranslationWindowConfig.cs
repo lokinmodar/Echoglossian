@@ -46,6 +46,9 @@ internal enum TranslationOverlaySurfaceId
     /// <summary>Quest toast overlay.</summary>
     QuestToast,
 
+    /// <summary>Nameplate overlay.</summary>
+    NamePlate,
+
     /// <summary>Chat bubble overlay.</summary>
     ChatBubble,
 
@@ -103,6 +106,7 @@ internal record TranslationWindowConfig(
       TranslationOverlaySurfaceId.AreaToast => FromConfigForAreaToast(config),
       TranslationOverlaySurfaceId.ClassChangeToast => FromConfigForClassChangeToast(config),
       TranslationOverlaySurfaceId.QuestToast => FromConfigForQuestToast(config),
+      TranslationOverlaySurfaceId.NamePlate => FromConfigForNamePlate(config),
       TranslationOverlaySurfaceId.ChatBubble => FromConfigForChatBubble(config),
       TranslationOverlaySurfaceId.ActionDetail or TranslationOverlaySurfaceId.ItemDetail =>
           throw new NotSupportedException(
@@ -397,6 +401,29 @@ internal record TranslationWindowConfig(
         ForceShowTitle: false,
         BackgroundOpacity: config.QuestToastBackgroundOpacity,
         NoBackground: config.QuestToastBackgroundOpacity <= 0f,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for world-object nameplate translations.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The nameplate overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForNamePlate(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.NamePlate,
+        DefaultTitle: Resources.OverlayWindowTitleNamePlateTranslation,
+        FontScale: config.NamePlateFontScale,
+        WidthMultiplier: config.ImGuiNamePlateWindowWidthMult,
+        HeightMultiplier: 1.0f,
+        TextColor: new Vector4(config.OverlayNamePlateTextColor.X, config.OverlayNamePlateTextColor.Y, config.OverlayNamePlateTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiNamePlateWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.NamePlateBackgroundOpacity,
+        NoBackground: config.NamePlateBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
         AutoSizeToTextWithMaxWidth: true);
   }
 

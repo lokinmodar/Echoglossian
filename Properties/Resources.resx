@@ -721,6 +721,9 @@
   <data name="GameWindowsTabTitle" xml:space="preserve">
     <value>Game windows</value>
   </data>
+  <data name="NamePlateTabTitle" xml:space="preserve">
+    <value>Nameplates</value>
+  </data>
   <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
     <value>Are you sure you want to reset all settings to default?</value>
   </data>
@@ -997,6 +1000,15 @@
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
     <value>Translate MiniTalk</value>
   </data>
+  <data name="TranslateNamePlatesLabel" xml:space="preserve">
+    <value>Translate eligible world-object nameplates</value>
+  </data>
+  <data name="NamePlateOverlayHelpText" xml:space="preserve">
+    <value>Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped.</value>
+  </data>
+  <data name="NamePlateNativeReplacementHelpText" xml:space="preserve">
+    <value>Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode.</value>
+  </data>
   <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
     <value>The question is used as the window title and the options are rendered one per line.</value>
   </data>
@@ -1122,6 +1134,9 @@
   </data>
   <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
     <value>Quest toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleNamePlateTranslation" xml:space="preserve">
+    <value>Nameplate translation</value>
   </data>
   <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
     <value>ChatBubble translation</value>

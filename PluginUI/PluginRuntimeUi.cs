@@ -61,6 +61,9 @@ public partial class Echoglossian
                 this.configuration.OverlayOnlyLanguage) ||
             NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
                 this.configuration.QuestToastTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.NamePlateTranslationDisplayMode,
                 this.configuration.OverlayOnlyLanguage))
     {
       case true when !this.FontLoaded || this.FontLoadFailed:
@@ -137,6 +140,7 @@ public partial class Echoglossian
     }
 
     this.DrawMiniTalkBubbleOverlays();
+    this.namePlateTranslationRuntime.DrawOverlays();
     this.DrawStructuredTooltipOverlays();
     var shouldDrawHoverTooltips = this.ShouldDrawHoverTooltips;
 

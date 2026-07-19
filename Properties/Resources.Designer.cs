@@ -2649,6 +2649,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Nameplate translation.
+        /// </summary>
+        public static string OverlayWindowTitleNamePlateTranslation
+        {
+            get
+            {
+                return ResourceManager.GetString("OverlayWindowTitleNamePlateTranslation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Quest toast translation.
         /// </summary>
         public static string OverlayWindowTitleQuestToastTranslation
@@ -3377,6 +3388,39 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode..
+        /// </summary>
+        public static string NamePlateNativeReplacementHelpText
+        {
+            get
+            {
+                return ResourceManager.GetString("NamePlateNativeReplacementHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped..
+        /// </summary>
+        public static string NamePlateOverlayHelpText
+        {
+            get
+            {
+                return ResourceManager.GetString("NamePlateOverlayHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Nameplates.
+        /// </summary>
+        public static string NamePlateTabTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("NamePlateTabTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Show in Cutscenes.
         /// </summary>
         public static string ShowInCutscenesLabel
@@ -4000,6 +4044,17 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("TranslateMiniTalkLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate eligible world-object nameplates.
+        /// </summary>
+        public static string TranslateNamePlatesLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateNamePlatesLabel", resourceCulture);
             }
         }
         

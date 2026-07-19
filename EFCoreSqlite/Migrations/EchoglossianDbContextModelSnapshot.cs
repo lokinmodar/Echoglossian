@@ -1563,6 +1563,49 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("textgimmickhintmessages", (string)null);
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.NamePlateMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("NamePlateKind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalNamePlateText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("TranslatedNamePlateText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NamePlateKind", "OriginalNamePlateText", "OriginalLang", "TranslationLang", "TranslationEngine")
+                        .HasDatabaseName("IX_nameplatemessages_lookup");
+
+                    b.ToTable("nameplatemessages", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ToastMessage", b =>
                 {
                     b.Property<int>("Id")

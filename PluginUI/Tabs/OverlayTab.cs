@@ -26,6 +26,7 @@ public static class OverlayTab
         Resources.QuestWindowsTabTitle,
         Resources.SelectionDialogsTabTitle,
         Resources.GameWindowsTabTitle,
+        Resources.NamePlateTabTitle,
     };
 
     private static readonly string[] ToastOverlayTabs =
@@ -110,6 +111,9 @@ public static class OverlayTab
                 break; */
             case 9:
                 changed |= GameWindowsTab.Draw(config);
+                break;
+            case 10:
+                changed |= DrawNamePlateOverlay(config);
                 break;
         }
 
@@ -682,6 +686,57 @@ public static class OverlayTab
     internal static string BuildToastPlacementBucketId(string sectionTitle)
     {
         return $"ToastPlacementBucket:{sectionTitle}";
+    }
+
+    private static bool DrawNamePlateOverlay(Config config)
+    {
+        var changed = false;
+
+        using var scrollingChildNamePlate = ImRaii.Child(
+            "NamePlateOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildNamePlate)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateNamePlatesLabel,
+            ref config.TranslateNamePlates);
+
+        if (!config.TranslateNamePlates)
+        {
+            return changed;
+        }
+
+        ImGui.TextWrapped(Resources.NamePlateOverlayHelpText);
+
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            "NamePlateDisplayMode",
+            ref config.NamePlateTranslationDisplayMode);
+
+        if (!ShouldDrawOverlaySettings(
+                config.NamePlateTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
+        {
+            ImGui.Spacing();
+            ImGui.TextWrapped(Resources.NamePlateNativeReplacementHelpText);
+            return changed;
+        }
+
+        changed |= DrawToastOverlaySettings(
+            ref config.NamePlateFontScale,
+            ref config.ImGuiNamePlateWindowWidthMult,
+            ref config.ImGuiNamePlateWindowPosCorrection,
+            ref config.OverlayNamePlateTextColor,
+            ref config.NamePlateBackgroundOpacity,
+            ref config.FontChangeTime);
+
+        return changed;
     }
 
     private static bool DrawSubtitleOverlay(Config config)

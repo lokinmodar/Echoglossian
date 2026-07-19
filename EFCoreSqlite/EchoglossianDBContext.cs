@@ -49,6 +49,11 @@ public class EchoglossianDbContext : DbContext
 
   public DbSet<TextGimmickHintMessage> TextGimmickHintMessage { get; set; }
 
+  /// <summary>
+  ///     Gets or sets the translated world-object nameplate rows.
+  /// </summary>
+  public DbSet<NamePlateMessage> NamePlateMessages { get; set; }
+
   public DbSet<ToastMessage> ToastMessage { get; set; }
 
   public DbSet<TalkMessage> TalkMessage { get; set; }
@@ -246,6 +251,18 @@ public class EchoglossianDbContext : DbContext
           t.TranslationEngine
         })
         .HasDatabaseName("IX_textgimmickhintmessages_lookup");
+    modelBuilder.Entity<NamePlateMessage>()
+        .ToTable("nameplatemessages");
+    modelBuilder.Entity<NamePlateMessage>()
+        .HasIndex(t => new
+        {
+          t.NamePlateKind,
+          t.OriginalNamePlateText,
+          t.OriginalLang,
+          t.TranslationLang,
+          t.TranslationEngine
+        })
+        .HasDatabaseName("IX_nameplatemessages_lookup");
     modelBuilder.Entity<ToastMessage>().ToTable("toastmessages");
     modelBuilder.Entity<ToastMessage>()
         .HasIndex(t => new

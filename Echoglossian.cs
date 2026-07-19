@@ -136,6 +136,7 @@ public partial class Echoglossian : IDalamudPlugin
 
   private readonly bool pluginAssetsState;
   private QuestToastRuntime questToastRuntime;
+  private NamePlateTranslationRuntime namePlateTranslationRuntime;
   private ToastGuiCaptureRuntime toastGuiCaptureRuntime;
   private ToastGuiSupportedToastRuntime toastGuiSupportedToastRuntime;
   private readonly IDalamudTextureWrap talkImage;
@@ -377,6 +378,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     DbFirstGameWindowAddonHandler.ClearSessionCaches();
     GameWindowCacheManager.Preload(ConfigDirectory);
+    NamePlateCacheManager.Preload(ConfigDirectory);
     StringArrayDataCacheManager.Preload(ConfigDirectory);
     TranslationFailureCacheManager.Preload(ConfigDirectory);
     ActionTooltipCacheManager.Preload(ConfigDirectory);
@@ -395,6 +397,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.RegisterToastGuiSupportedToastRuntime();
     this.toastGuiCaptureRuntime = this.CreateToastGuiCaptureRuntime();
     this.RegisterToastGuiCaptureRuntime();
+    this.namePlateTranslationRuntime = this.CreateNamePlateTranslationRuntime();
+    this.RegisterNamePlateTranslationRuntime();
 
     this.EgloAddonHandler();
     this.startupAudit.Mark(PluginStartupStage.AddonHandlersRegistered);
@@ -452,6 +456,10 @@ public partial class Echoglossian : IDalamudPlugin
   public static IFramework FrameworkInterface { get; set; } = null!;
 
   [PluginService] public static IGameGui GameGuiInterface { get; set; } = null!;
+
+  [PluginService] public static INamePlateGui NamePlateGuiInterface { get; set; } = null!;
+
+  [PluginService] public static IObjectTable ObjectTableInterface { get; set; } = null!;
 
   [PluginService]
   public static IChatGui ChatGuiInterface { get; set; } = null!;
@@ -554,6 +562,7 @@ public partial class Echoglossian : IDalamudPlugin
       QuestHoverTranslationCache.Clear();
       StringArrayDataCacheManager.Clear();
       GameWindowCacheManager.Clear();
+      NamePlateCacheManager.Clear();
       TranslationFailureCacheManager.Clear();
       ActionTooltipCacheManager.Clear();
       TraitCacheManager.Clear();
@@ -574,6 +583,8 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterQuestToastRuntime();
       this.UnregisterToastGuiSupportedToastRuntime();
       this.UnregisterToastGuiCaptureRuntime();
+      this.UnregisterNamePlateTranslationRuntime();
+      this.namePlateTranslationRuntime.Dispose();
       this.queuedTranslationBroker.Dispose();
       this.translationOverlayRenderer.Dispose();
       this.uiFontRuntime.Dispose();
