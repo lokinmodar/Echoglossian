@@ -19609,13 +19609,17 @@
             <param name="nodeCount">The number of nodes in the list.</param>
             <returns>The best visible text node, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32,System.Collections.Generic.HashSet{System.IntPtr},System.Int32)">
             <summary>
                 Resolves the first text node in the addon hierarchy whose content can
                 actually be read as non-empty text.
             </summary>
             <param name="nodeList">The node list to inspect.</param>
             <param name="nodeCount">The number of nodes in the list.</param>
+            <param name="visitedNodes">
+                Receives every structural node address already traversed.
+            </param>
+            <param name="depth">The current traversal depth.</param>
             <returns>The first readable text node, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode**,System.Int32,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
@@ -19651,12 +19655,16 @@
             </param>
             <returns>The first visible, non-empty text node, or <see langword="null" />.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.ResolveFirstReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.HashSet{System.IntPtr},System.Int32)">
             <summary>
                 Resolves the first text node in a subtree whose content can actually
                 be read as non-empty text.
             </summary>
             <param name="node">The node to inspect.</param>
+            <param name="visitedNodes">
+                Receives every structural node address already traversed.
+            </param>
+            <param name="depth">The current traversal depth.</param>
             <returns>The first readable text node, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.CollectReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
@@ -19681,6 +19689,19 @@
             <returns>
                 <see langword="true" /> when the node was not visited before;
                 otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.TryVisitNodeAddress(System.Collections.Generic.HashSet{System.IntPtr},System.IntPtr,System.Int32)">
+            <summary>
+                Records one structural node address for the current traversal until a
+                bounded walk limit has been reached.
+            </summary>
+            <param name="visitedNodes">The addresses already traversed.</param>
+            <param name="nodeAddress">The structural node address to record.</param>
+            <param name="maxVisitedNodes">The maximum number of native nodes to visit.</param>
+            <returns>
+                <see langword="true" /> when the node was not visited before and the
+                walk remains within the limit; otherwise <see langword="false" />.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Toasts.AddonTextNodeResolvers.HasReadableText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
