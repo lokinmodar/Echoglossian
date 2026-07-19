@@ -28,6 +28,8 @@ internal sealed class QuestToastRuntime
 
   private int activeRequestId;
   private string currentOriginalText = string.Empty;
+  private QuestToastPosition currentQuestToastPosition =
+      QuestToastPosition.Centre;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="QuestToastRuntime" />
@@ -98,18 +100,23 @@ internal sealed class QuestToastRuntime
       return;
     }
 
-    // PluginRuntimeLog.Debug(
-    //     $"[QuestToast] trigger=IToastGui.QuestToast captured source='{originalText}' " +
-    //     $"overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} " +
-    //     $"swap={this.ShouldSwapTexts()}");
-    var requestId = this.BeginRequest(originalText);
+    var requestId = this.BeginRequest(originalText, options);
+    ToastTranslationDebugLog.Request(
+        this.GetCurrentSurfaceIdentity(),
+        "IToastGui.QuestToast",
+        originalText,
+        this.ShouldUseOverlay(),
+        this.ShouldApplyNativeText(),
+        this.ShouldSwapTexts());
     var lookupToast = this.BuildLookupMessage(originalText, sourceLanguage);
     var storedToast = this.findToastMessage(lookupToast);
     if (storedToast != null &&
         !string.IsNullOrWhiteSpace(storedToast.TranslatedToastMessage))
     {
-      // PluginRuntimeLog.Debug(
-      //     "[QuestToast] trigger=IToastGui.QuestToast cache-hit -> resolved immediately");
+      ToastTranslationDebugLog.Reuse(
+          this.GetCurrentSurfaceIdentity(),
+          "IToastGui.QuestToast",
+          "db");
       this.ApplyResolvedToast(
           ref message,
           originalText,
@@ -119,6 +126,10 @@ internal sealed class QuestToastRuntime
     }
 
     this.PublishOverlay(originalText, string.Empty, "IToastGui.QuestToast");
+    ToastTranslationDebugLog.Queued(
+        this.GetCurrentSurfaceIdentity(),
+        "IToastGui.QuestToast",
+        requestId);
 
     Task.Run(() => this.ResolveTranslationAsync(
         originalText,
@@ -152,11 +163,13 @@ internal sealed class QuestToastRuntime
 
     if (!this.ShouldApplyNativeText())
     {
+      ToastTranslationDebugLog.Skip(
+          this.GetCurrentSurfaceIdentity(),
+          "IToastGui.QuestToast",
+          "native-disabled");
       return;
     }
 
-    // PluginRuntimeLog.Debug(
-    //     $"[QuestToast] trigger=IToastGui.QuestToast applying native replacement text='{translatedText}'");
     if (!this.ShouldUseOverlay())
     {
       this.clearOverlay();
@@ -166,6 +179,11 @@ internal sealed class QuestToastRuntime
         ? this.normalizeReplacementText(translatedText)
         : translatedText;
 
+    ToastTranslationDebugLog.Apply(
+        this.GetCurrentSurfaceIdentity(),
+        "IToastGui.QuestToast",
+        "native",
+        replacementText);
     message = replacementText;
   }
 
@@ -188,24 +206,27 @@ internal sealed class QuestToastRuntime
       translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code) ?? string.Empty;
+          LangDict[LanguageInt].Code,
+          originContext: this.GetCurrentSurfaceIdentity()) ?? string.Empty;
     }
     catch (Exception ex)
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[QuestToast] trigger=async-resolve exception {ex}");
+      ToastTranslationDebugLog.Failure(
+          this.GetCurrentSurfaceIdentity(),
+          "async-resolve",
+          ex.Message);
       return;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[QuestToast] trigger=async-resolve empty translation for source='{originalText}'");
+      ToastTranslationDebugLog.Failure(
+          this.GetCurrentSurfaceIdentity(),
+          "async-resolve",
+          "empty-translation");
       return;
     }
 
-    // PluginRuntimeLog.Debug(
-    //     $"[QuestToast] trigger=async-resolve translation ready for source='{originalText}'");
     await this.insertToastMessageAsync(
         new ToastMessage(
             QuestToastType,
@@ -262,14 +283,44 @@ internal sealed class QuestToastRuntime
   /// </summary>
   /// <param name="originalText">The original quest toast text.</param>
   /// <returns>The request identifier associated with the quest toast.</returns>
-  private int BeginRequest(string originalText)
+  private int BeginRequest(
+      string originalText,
+      QuestToastOptions options)
   {
     lock (this.stateGate)
     {
       this.activeRequestId++;
       this.currentOriginalText = originalText;
+      this.currentQuestToastPosition = options.Position;
       return this.activeRequestId;
     }
+  }
+
+  /// <summary>
+  ///     Gets the current quest-toast placement reported by the latest active
+  ///     callback-owned quest toast.
+  /// </summary>
+  /// <returns>The latest quest-toast placement bucket.</returns>
+  internal QuestToastPosition GetCurrentQuestToastPosition()
+  {
+    lock (this.stateGate)
+    {
+      return this.currentQuestToastPosition;
+    }
+  }
+
+  /// <summary>
+  ///     Gets the placement-specific overlay configuration for the latest
+  ///     callback-owned quest toast.
+  /// </summary>
+  /// <returns>The placement-specific overlay configuration.</returns>
+  internal UIOverlays.TranslationOverlay.TranslationWindowConfig
+      GetCurrentOverlayConfig()
+  {
+    return UIOverlays.TranslationOverlay.TranslationWindowConfig
+        .FromConfigForQuestToastPlacement(
+            this.config,
+            this.GetCurrentQuestToastPosition());
   }
 
   /// <summary>
@@ -328,7 +379,7 @@ internal sealed class QuestToastRuntime
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
            TranslationDisplayModeHelper.UsesOverlayPresentation(
-               this.config.QuestToastTranslationDisplayMode,
+               this.GetCurrentDisplayMode(),
                this.config.OverlayOnlyLanguage);
   }
 
@@ -345,7 +396,7 @@ internal sealed class QuestToastRuntime
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
            TranslationDisplayModeHelper.ShowsOriginalOverlayText(
-               this.config.QuestToastTranslationDisplayMode,
+               this.GetCurrentDisplayMode(),
                this.config.OverlayOnlyLanguage);
   }
 
@@ -362,8 +413,25 @@ internal sealed class QuestToastRuntime
     return this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
            TranslationDisplayModeHelper.WritesNativeTranslation(
-               this.config.QuestToastTranslationDisplayMode,
+               this.GetCurrentDisplayMode(),
                this.config.OverlayOnlyLanguage);
+  }
+
+  /// <summary>
+  ///     Gets the placement-specific display mode for the latest callback-owned
+  ///     quest toast.
+  /// </summary>
+  /// <returns>The placement-specific display mode.</returns>
+  private JournalTranslationDisplayMode GetCurrentDisplayMode()
+  {
+    return this.GetCurrentQuestToastPosition() switch
+    {
+      QuestToastPosition.Left =>
+          this.config.QuestToastLeftTranslationDisplayMode,
+      QuestToastPosition.Right =>
+          this.config.QuestToastRightTranslationDisplayMode,
+      _ => this.config.QuestToastCentreTranslationDisplayMode,
+    };
   }
 
   /// <summary>
@@ -399,8 +467,10 @@ internal sealed class QuestToastRuntime
   {
     if (!this.ShouldUseOverlay())
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[QuestToast] trigger={trigger} overlay disabled -> clear");
+      ToastTranslationDebugLog.Skip(
+          this.GetCurrentSurfaceIdentity(),
+          trigger,
+          "overlay-disabled");
       this.clearOverlay();
       return;
     }
@@ -408,13 +478,29 @@ internal sealed class QuestToastRuntime
     var overlayText = this.SelectOverlayText(originalText, translatedText);
     if (string.IsNullOrWhiteSpace(overlayText))
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[QuestToast] trigger={trigger} overlay text unavailable -> clear");
+      ToastTranslationDebugLog.Skip(
+          this.GetCurrentSurfaceIdentity(),
+          trigger,
+          "overlay-text-unavailable");
       this.clearOverlay();
       return;
     }
 
+    ToastTranslationDebugLog.Apply(
+        this.GetCurrentSurfaceIdentity(),
+        trigger,
+        "overlay",
+        overlayText);
     this.updateOverlay(string.Empty, overlayText, string.Empty);
+  }
+
+  /// <summary>
+  ///     Builds the current quest-toast surface identity including placement.
+  /// </summary>
+  /// <returns>The current surface identity.</returns>
+  private string GetCurrentSurfaceIdentity()
+  {
+    return $"QuestToast/{this.GetCurrentQuestToastPosition()}";
   }
 }
 

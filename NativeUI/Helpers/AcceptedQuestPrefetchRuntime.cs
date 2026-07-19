@@ -224,11 +224,12 @@ public partial class Echoglossian
         this.configuration,
         this.TryGetQueuedTranslation,
         this.QueueTranslation,
-        (sourceText, capturedSource, targetLanguage) =>
+        (sourceText, capturedSource, targetLanguage, originContext) =>
             translationService.Translate(
                 sourceText,
                 capturedSource,
-                targetLanguage),
+                targetLanguage,
+                originContext: originContext),
         this.FindQuestPlate,
         this.FindQuestPlateByName,
         questPlate =>
@@ -352,7 +353,10 @@ public partial class Echoglossian
         () => translationService.Translate(
             currentQuestSequenceText,
             sourceLanguage,
-            scope.TargetLanguageCode),
+            scope.TargetLanguageCode,
+            originContext: BuildAcceptedQuestOriginContext(
+                questProgressSnapshot,
+                "Message")),
         (translatedQuestMessage, capturedScope, fromCache) =>
         {
           this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -427,7 +431,10 @@ public partial class Echoglossian
           () => translationService.Translate(
               questSequenceEntry.Text,
               sourceLanguage,
-              scope.TargetLanguageCode),
+              scope.TargetLanguageCode,
+              originContext: BuildAcceptedQuestOriginContext(
+                  questProgressSnapshot,
+                  "Summary")),
           (translatedSummaryTextValue, capturedScope, fromCache) =>
           {
               this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -507,7 +514,10 @@ public partial class Echoglossian
           () => translationService.Translate(
               questStep.Text,
               sourceLanguage,
-              scope.TargetLanguageCode),
+              scope.TargetLanguageCode,
+              originContext: BuildAcceptedQuestOriginContext(
+                  questProgressSnapshot,
+                  "Objective")),
           (translatedObjectiveTextValue, capturedScope, fromCache) =>
           {
               this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -587,7 +597,10 @@ public partial class Echoglossian
           () => translationService.Translate(
               questSystemText.Text,
               sourceLanguage,
-              scope.TargetLanguageCode),
+              scope.TargetLanguageCode,
+              originContext: BuildAcceptedQuestOriginContext(
+                  questProgressSnapshot,
+                  "System")),
           (translatedSystemTextValue, capturedScope, fromCache) =>
           {
               this.LogAcceptedQuestPrefetchTranslationEvent(
@@ -818,6 +831,19 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Builds the diagnostic surface identity for one accepted-quest field.
+  /// </summary>
+  /// <param name="questProgressSnapshot">The accepted-quest progress snapshot.</param>
+  /// <param name="fieldName">The translated field name.</param>
+  /// <returns>The diagnostic surface identity.</returns>
+  private static string BuildAcceptedQuestOriginContext(
+      QuestProgressSnapshot questProgressSnapshot,
+      string fieldName)
+  {
+    return $"AcceptedQuest/{questProgressSnapshot.QuestId}/{fieldName}";
+  }
+
+  /// <summary>
   ///     Dispatches accepted-quest work through the production scoped prefetch
   ///     orchestrator.
   /// </summary>
@@ -968,7 +994,10 @@ public partial class Echoglossian
         () => translate(
             questProgressSnapshot.QuestName,
             sourceLanguage,
-            scope.TargetLanguageCode),
+            scope.TargetLanguageCode,
+            BuildAcceptedQuestOriginContext(
+                questProgressSnapshot,
+                "Name")),
         (translatedQuestName, capturedScope, fromCache) =>
         {
           if (string.IsNullOrWhiteSpace(translatedQuestName))

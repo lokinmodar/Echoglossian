@@ -218,11 +218,12 @@ public unsafe partial class Echoglossian
             this.configuration,
             this.TryGetQueuedTranslation,
             this.QueueTranslation,
-            (sourceText, capturedSource, targetLanguage) =>
+            (sourceText, capturedSource, targetLanguage, originContext) =>
                 translationService.Translate(
                     sourceText,
                     capturedSource,
-                    targetLanguage),
+                    targetLanguage,
+                    originContext: originContext),
             registration.CreateRow,
             registration.FindRow,
             registration.InsertRow,
@@ -274,7 +275,11 @@ public unsafe partial class Echoglossian
             () => translationService.Translate(
                 originalPayload.Description,
                 sourceLanguage,
-                scope.TargetLanguageCode),
+                scope.TargetLanguageCode,
+                originContext: BuildReferenceTextOriginContext(
+                    registration.Key,
+                    originalPayload,
+                    "Description")),
             (translatedDescription, capturedScope, _) =>
                 this.ApplyReferenceTextTranslation(
                     registration,
@@ -385,6 +390,21 @@ public unsafe partial class Echoglossian
         TranslationReuseScope scope)
     {
         return BuildTranslationReuseScopedKey(payloadIdentity, scope);
+    }
+
+    /// <summary>
+    ///     Builds the diagnostic surface identity for one reference-text field.
+    /// </summary>
+    /// <param name="registrationKey">The reference-text family identity.</param>
+    /// <param name="payload">The canonical reference-text payload.</param>
+    /// <param name="fieldName">The translated field name.</param>
+    /// <returns>The diagnostic surface identity.</returns>
+    private static string BuildReferenceTextOriginContext(
+        string registrationKey,
+        ReferenceTextCanonicalPayload payload,
+        string fieldName)
+    {
+        return $"ReferenceText/{registrationKey}/{payload.ReferenceId}/{fieldName}";
     }
 
     /// <summary>
@@ -543,7 +563,11 @@ public unsafe partial class Echoglossian
             () => translate(
                 originalPayload.Name,
                 sourceLanguage,
-                scope.TargetLanguageCode),
+                scope.TargetLanguageCode,
+                BuildReferenceTextOriginContext(
+                    registrationKey,
+                    originalPayload,
+                    "Name")),
             (translatedName, capturedScope, _) =>
             {
                 var translatedRow = CreateReferenceTextTranslationRow(

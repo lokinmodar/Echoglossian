@@ -19,6 +19,7 @@ public sealed class QueuedTranslationBroker : IDisposable
         string Key,
         Func<Task<string>> Resolver,
         Action<string>? OnResolved,
+        string? SurfaceIdentity,
         int RateLimitAttempt);
 
     private readonly ConcurrentDictionary<string, string> translationCache = new();
@@ -97,10 +98,65 @@ public sealed class QueuedTranslationBroker : IDisposable
         return this.translationCache.TryGetValue(key, out translatedText!);
     }
 
+  /// <summary>
+  ///     Queues a translation request if one is not already in flight for the key.
+  /// </summary>
+    public bool Queue(
+        string key,
+        Func<Task<string>> resolver,
+        Action<string>? onResolved = null)
+    {
+        return this.Queue(
+            key,
+            resolver,
+            onResolved,
+            surfaceIdentity: null);
+    }
+
     /// <summary>
-    ///     Queues a translation request if one is not already in flight for the key.
+    ///     Queues a translation request if one is not already in flight for the
+    ///     key and associates one optional surface identifier with broker
+    ///     diagnostics.
     /// </summary>
-    public bool Queue(string key, Func<Task<string>> resolver, Action<string>? onResolved = null)
+    /// <param name="key">The stable translation cache key.</param>
+    /// <param name="resolver">The translation resolver to execute.</param>
+    /// <param name="surfaceIdentity">
+    ///     Optional surface identifier used in diagnostics so failures can be
+    ///     traced back to the owning runtime.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the request was queued; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    public bool Queue(
+        string key,
+        Func<Task<string>> resolver,
+        string? surfaceIdentity)
+    {
+        return this.Queue(
+            key,
+            resolver,
+            onResolved: null,
+            surfaceIdentity);
+    }
+
+    /// <summary>
+    ///     Queues a translation request if one is not already in flight for the
+    ///     key and associates one optional surface identifier with broker
+    ///     diagnostics.
+    /// </summary>
+    /// <param name="key">The stable translation cache key.</param>
+    /// <param name="resolver">The translation resolver to execute.</param>
+    /// <param name="onResolved">Optional callback invoked after caching.</param>
+    /// <param name="surfaceIdentity">
+    ///     Optional surface identifier used in diagnostics so failures can be
+    ///     traced back to the owning runtime.
+    /// </param>
+    public bool Queue(
+        string key,
+        Func<Task<string>> resolver,
+        Action<string>? onResolved,
+        string? surfaceIdentity)
     {
         if (this.failedTranslations.TryGetValue(key, out var lastFailureUtc) &&
             DateTime.UtcNow - lastFailureUtc < this.failureRetryCooldown)
@@ -118,6 +174,7 @@ public sealed class QueuedTranslationBroker : IDisposable
                 key,
                 resolver,
                 onResolved,
+                surfaceIdentity,
                 RateLimitAttempt: 0));
         this.pendingRequestsSignal.Release();
         this.StartPump();
@@ -241,7 +298,7 @@ public sealed class QueuedTranslationBroker : IDisposable
         catch (TimeoutException)
         {
             this.warningLog?.Invoke(
-                $"[QueuedTranslationBroker] Translation timed out after {this.requestTimeout.TotalSeconds:F0}s for '{request.Key}'.");
+                $"[QueuedTranslationBroker] Translation timed out after {this.requestTimeout.TotalSeconds:F0}s for '{request.Key}'{FormatSurfaceIdentitySuffix(request.SurfaceIdentity)}.");
             this.failedTranslations[request.Key] = DateTime.UtcNow;
         }
         catch (Exception ex) when (LooksLikeRateLimitException(ex))
@@ -255,7 +312,7 @@ public sealed class QueuedTranslationBroker : IDisposable
         catch (Exception ex)
         {
             this.errorLog?.Invoke(
-                $"[QueuedTranslationBroker] Error resolving '{request.Key}': {ex}");
+                $"[QueuedTranslationBroker] Error resolving '{request.Key}'{FormatSurfaceIdentitySuffix(request.SurfaceIdentity)}: {ex}");
             this.failedTranslations[request.Key] = DateTime.UtcNow;
         }
         finally
@@ -287,14 +344,14 @@ public sealed class QueuedTranslationBroker : IDisposable
         {
             this.warningLog?.Invoke(
                 $"[QueuedTranslationBroker] Rate limit persisted for '{request.Key}' after {request.RateLimitAttempt + 1} attempts. " +
-                $"Cooling queue for {this.rateLimitCooldown.TotalSeconds:F0}s. Details: {FormatDiagnosticPreview(details)}");
+                $"Cooling queue for {this.rateLimitCooldown.TotalSeconds:F0}s{FormatSurfaceIdentitySuffix(request.SurfaceIdentity)}. Details: {FormatDiagnosticPreview(details)}");
             return false;
         }
 
         this.warningLog?.Invoke(
             $"[QueuedTranslationBroker] Rate limit detected for '{request.Key}'. " +
             $"Cooling queue for {this.rateLimitCooldown.TotalSeconds:F0}s before retry {request.RateLimitAttempt + 2}. " +
-            $"Details: {FormatDiagnosticPreview(details)}");
+            $"Details{FormatSurfaceIdentityLabel(request.SurfaceIdentity)}: {FormatDiagnosticPreview(details)}");
 
         this.pendingRequests.Enqueue(
             request with
@@ -457,6 +514,30 @@ public sealed class QueuedTranslationBroker : IDisposable
         }
 
         return preview[..maxLength] + "...";
+    }
+
+    /// <summary>
+    ///     Formats one optional surface suffix for broker diagnostics.
+    /// </summary>
+    /// <param name="surfaceIdentity">The surface identifier to append.</param>
+    /// <returns>The formatted surface suffix or an empty string.</returns>
+    private static string FormatSurfaceIdentitySuffix(string? surfaceIdentity)
+    {
+        return string.IsNullOrWhiteSpace(surfaceIdentity)
+            ? string.Empty
+            : $" on '{surfaceIdentity}'";
+    }
+
+    /// <summary>
+    ///     Formats one optional surface label for free-form diagnostic text.
+    /// </summary>
+    /// <param name="surfaceIdentity">The surface identifier to append.</param>
+    /// <returns>The formatted label or an empty string.</returns>
+    private static string FormatSurfaceIdentityLabel(string? surfaceIdentity)
+    {
+        return string.IsNullOrWhiteSpace(surfaceIdentity)
+            ? string.Empty
+            : $" for '{surfaceIdentity}'";
     }
 
     /// <summary>

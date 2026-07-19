@@ -154,7 +154,8 @@ internal abstract class QuestAddonHandlerBase
     return this.TranslationService.Translate(
         text,
         sourceLanguage,
-        LangDict[LanguageInt].Code);
+        LangDict[LanguageInt].Code,
+        originContext: $"{this.GetType().Name}/Text");
   }
 
   /// <summary>
@@ -171,7 +172,8 @@ internal abstract class QuestAddonHandlerBase
     return this.TranslationService.TranslateAsync(
         text,
         sourceLanguage,
-        LangDict[LanguageInt].Code);
+        LangDict[LanguageInt].Code,
+        originContext: $"{this.GetType().Name}/Text");
   }
 
   /// <summary>

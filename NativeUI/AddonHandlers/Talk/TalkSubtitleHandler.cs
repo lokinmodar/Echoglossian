@@ -197,7 +197,9 @@ public sealed class TalkSubtitleHandler :
           sourceLanguage,
           operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue,
-          translatorResolution).ConfigureAwait(false) ?? string.Empty;
+          translatorResolution,
+          originContext: "TalkSubtitle/Text").ConfigureAwait(false) ??
+                           string.Empty;
 
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
               originalText,
@@ -677,7 +679,8 @@ public sealed class TalkSubtitleHandler :
           sourceLanguage,
           operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue,
-          translatorResolution) ?? string.Empty;
+          translatorResolution,
+          originContext: "TalkSubtitle/Text") ?? string.Empty;
     }
     catch (Exception ex)
     {

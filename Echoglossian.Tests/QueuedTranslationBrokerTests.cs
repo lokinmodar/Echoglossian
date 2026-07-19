@@ -135,4 +135,38 @@ public class QueuedTranslationBrokerTests
         Assert.True(broker.TryGetCached("fast-key", out var cached));
         Assert.Equal("fast", cached);
     }
+
+    /// <summary>
+    ///     Ensures broker failure diagnostics include the initiating surface
+    ///     identity so translation failures can be traced back to the owning
+    ///     runtime.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task Queue_ExceptionLog_IncludesSurfaceIdentity()
+    {
+        var errors = new List<string>();
+
+        using var broker = new QueuedTranslationBroker(
+            TimeSpan.Zero,
+            TimeSpan.FromMilliseconds(10),
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromMilliseconds(25),
+            maxRateLimitRetries: 0,
+            errorLog: errors.Add);
+
+        Assert.True(
+            broker.Queue(
+                "error-key",
+                () => throw new InvalidOperationException("boom"),
+                surfaceIdentity: "QuestToast/Centre"));
+
+        await Task.Delay(100);
+
+        Assert.Contains(
+            errors,
+            message => message.Contains(
+                "QuestToast/Centre",
+                StringComparison.Ordinal));
+    }
 }

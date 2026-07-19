@@ -210,7 +210,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
           sourceLanguage,
           operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue,
-          translatorResolution).ConfigureAwait(false);
+          translatorResolution,
+          originContext: "Talk/Text").ConfigureAwait(false);
       var translatedName = this.ShouldTranslateTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
@@ -218,7 +219,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
               sourceLanguage,
               operationScope.TargetLanguageCode,
               TranslationSurfaceGroup.Dialogue,
-              translatorResolution).ConfigureAwait(false)
+              translatorResolution,
+              originContext: "Talk/Speaker").ConfigureAwait(false)
           : string.Empty;
       var dialogueTranslationEngine = operationScope.TranslationEngine
                                       .GetValueOrDefault();
@@ -1248,7 +1250,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
             operationScope.TargetLanguageCode,
             dialogueContext,
             TranslationSurfaceGroup.Dialogue,
-            translatorResolution).ConfigureAwait(false);
+            translatorResolution,
+            originContext: "Talk/Text").ConfigureAwait(false);
 
         translatedName = this.ShouldTranslateTalkNpcNames() && !originalName.IsNullOrEmpty()
             ? await this.translationService.TranslateAsync(
@@ -1256,7 +1259,8 @@ public sealed class TalkHandler : IAddonTranslationHandler, IVisibleDialogueRetr
                 sourceLanguage,
                 operationScope.TargetLanguageCode,
                 TranslationSurfaceGroup.Dialogue,
-                translatorResolution).ConfigureAwait(false)
+                translatorResolution,
+                originContext: "Talk/Speaker").ConfigureAwait(false)
             : string.Empty;
 
         var existingTranslatedTalkMessage = this.findTalkMessage(lookup);

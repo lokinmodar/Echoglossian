@@ -42,6 +42,31 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Enqueues a translation request on the shared broker without blocking
+  ///     the addon lifecycle callback and associates one optional surface
+  ///     identity with broker diagnostics.
+  /// </summary>
+  /// <param name="key">Stable translation key.</param>
+  /// <param name="resolver">Function that returns the translated text.</param>
+  /// <param name="onResolved">Optional callback invoked after the text is cached.</param>
+  /// <param name="surfaceIdentity">
+  ///     Optional surface identifier used in broker diagnostics.
+  /// </param>
+  /// <returns>True if the request was queued, false if one is already in flight.</returns>
+  private bool QueueTranslation(
+      string key,
+      Func<Task<string>> resolver,
+      Action<string>? onResolved,
+      string? surfaceIdentity)
+  {
+    return this.queuedTranslationBroker.Queue(
+        key,
+        resolver,
+        onResolved,
+        surfaceIdentity);
+  }
+
+  /// <summary>
   ///     Enqueues a synchronous translation request on the shared broker
   ///     without blocking the broker pump thread.
   /// </summary>
@@ -58,6 +83,31 @@ public partial class Echoglossian
         key,
         () => Task.Run(resolver),
         onResolved);
+  }
+
+  /// <summary>
+  ///     Enqueues a synchronous translation request on the shared broker
+  ///     without blocking the broker pump thread and associates one optional
+  ///     surface identity with broker diagnostics.
+  /// </summary>
+  /// <param name="key">Stable translation key.</param>
+  /// <param name="resolver">Function that returns the translated text.</param>
+  /// <param name="onResolved">Optional callback invoked after the text is cached.</param>
+  /// <param name="surfaceIdentity">
+  ///     Optional surface identifier used in broker diagnostics.
+  /// </param>
+  /// <returns>True if the request was queued, false if one is already in flight.</returns>
+  private bool QueueTranslation(
+      string key,
+      Func<string> resolver,
+      Action<string>? onResolved,
+      string? surfaceIdentity)
+  {
+    return this.QueueTranslation(
+        key,
+        () => Task.Run(resolver),
+        onResolved,
+        surfaceIdentity);
   }
 
   /// <summary>

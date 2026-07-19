@@ -39,11 +39,13 @@ internal delegate bool QueuePrefetchTranslationDelegate(
 /// <param name="sourceText">The source text to translate.</param>
 /// <param name="sourceLanguage">The captured source language.</param>
 /// <param name="targetLanguage">The captured target language.</param>
+/// <param name="originContext">The surface and element context for diagnostics.</param>
 /// <returns>The translated text.</returns>
 internal delegate string ResolvePrefetchTranslationDelegate(
     string sourceText,
     SourceClientLanguage sourceLanguage,
-    string targetLanguage);
+    string targetLanguage,
+    string originContext);
 
 /// <summary>
 ///     Describes how one production prefetch dispatch entered the broker.
@@ -233,11 +235,12 @@ public unsafe partial class Echoglossian
             this.configuration,
             this.TryGetQueuedTranslation,
             this.QueueTranslation,
-            (sourceText, capturedSource, targetLanguage) =>
+            (sourceText, capturedSource, targetLanguage, originContext) =>
                 translationService.Translate(
                     sourceText,
                     capturedSource,
-                    targetLanguage),
+                    targetLanguage,
+                    originContext: originContext),
             this.FindActionTooltip,
             row => this.InsertActionTooltip(row),
             out var sourceLanguage,
@@ -284,7 +287,10 @@ public unsafe partial class Echoglossian
             () => translationService.Translate(
                 originalPayload.Description,
                 sourceLanguage,
-                scope.TargetLanguageCode),
+                scope.TargetLanguageCode,
+                originContext: BuildActionDetailOriginContext(
+                    originalPayload,
+                    "Description")),
             (translatedDescription, capturedScope, _) =>
                 this.ApplyActionDetailTranslation(
                     originalPayload.ActionId,
@@ -624,7 +630,8 @@ public unsafe partial class Echoglossian
             () => translate(
                 originalPayload.Name,
                 sourceLanguage,
-                scope.TargetLanguageCode),
+                scope.TargetLanguageCode,
+                BuildActionDetailOriginContext(originalPayload, "Name")),
             (translatedName, capturedScope, _) =>
             {
                 var translatedRow = CreateActionDetailTranslationRow(
@@ -651,6 +658,19 @@ public unsafe partial class Echoglossian
             out var sourceLanguage)
             ? sourceLanguage
             : null;
+    }
+
+    /// <summary>
+    ///     Builds the diagnostic surface identity for one action-tooltip field.
+    /// </summary>
+    /// <param name="payload">The canonical action-tooltip payload.</param>
+    /// <param name="fieldName">The translated field name.</param>
+    /// <returns>The diagnostic surface identity.</returns>
+    private static string BuildActionDetailOriginContext(
+        ActionTooltipCanonicalPayload payload,
+        string fieldName)
+    {
+        return $"ActionTooltip/{payload.ActionId}/{fieldName}";
     }
 
     /// <summary>

@@ -168,7 +168,10 @@ public unsafe partial class Echoglossian
             () => TranslationService.Translate(
                 originalPayload.Name,
                 sourceLanguage,
-                LangDict[LanguageInt].Code),
+                LangDict[LanguageInt].Code,
+                originContext: BuildTraitDetailOriginContext(
+                    originalPayload,
+                    "Name")),
             translatedName => this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,
                 originalPayload.ClassJobId,
@@ -212,7 +215,10 @@ public unsafe partial class Echoglossian
             () => TranslationService.Translate(
                 originalPayload.Description,
                 sourceLanguage,
-                LangDict[LanguageInt].Code),
+                LangDict[LanguageInt].Code,
+                originContext: BuildTraitDetailOriginContext(
+                    originalPayload,
+                    "Description")),
             translatedDescription => this.ApplyTraitDetailTranslation(
                 originalPayload.TraitId,
                 originalPayload.ClassJobId,
@@ -340,6 +346,19 @@ public unsafe partial class Echoglossian
     {
         return
             $"TraitDetailPrefetch|{payload.TraitId}|Description|{payload.Description}";
+    }
+
+    /// <summary>
+    ///     Builds the diagnostic surface identity for one trait-tooltip field.
+    /// </summary>
+    /// <param name="payload">The canonical trait-tooltip payload.</param>
+    /// <param name="fieldName">The translated field name.</param>
+    /// <returns>The diagnostic surface identity.</returns>
+    private static string BuildTraitDetailOriginContext(
+        TraitCanonicalPayload payload,
+        string fieldName)
+    {
+        return $"TraitTooltip/{payload.TraitId}/{fieldName}";
     }
 
     /// <summary>

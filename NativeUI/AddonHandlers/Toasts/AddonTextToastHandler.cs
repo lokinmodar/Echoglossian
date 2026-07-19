@@ -561,7 +561,9 @@ internal class AddonTextToastHandler : IAddonTranslationHandler
       translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code) ?? string.Empty;
+          LangDict[LanguageInt].Code,
+          originContext: $"AddonTextToast/{this.addonName}/{this.toastType}") ??
+                       string.Empty;
     }
     catch (Exception ex)
     {

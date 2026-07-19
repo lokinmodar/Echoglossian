@@ -385,7 +385,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         string Translate(
             string sourceText,
             SourceClientLanguage sourceLanguage,
-            string targetLanguage)
+            string targetLanguage,
+            string originContext)
         {
             onTranslate?.Invoke();
             return "translated text";
