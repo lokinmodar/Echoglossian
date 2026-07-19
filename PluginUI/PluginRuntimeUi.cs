@@ -33,6 +33,7 @@ public partial class Echoglossian
     this.TickTraitDetailPrefetch();
     this.TickReferenceTextPrefetch();
     this.TickItemDetailPrefetch();
+    this.TickNamePlatePrefetch();
 
     switch (NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
                 this.configuration.TalkTranslationDisplayMode,

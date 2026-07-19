@@ -84,13 +84,7 @@ public unsafe partial class Echoglossian
     private static readonly TimeSpan ActionDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
 
-    private static readonly TimeSpan ActionDetailOnDemandPrefetchCooldown =
-        TimeSpan.FromSeconds(10);
-
     private readonly List<uint> actionDetailPrefetchQueue = [];
-
-    private readonly Dictionary<string, DateTime> actionDetailOnDemandPrefetchUtcByScope =
-        [];
 
     private string actionDetailPrefetchSignature = string.Empty;
 
@@ -159,57 +153,9 @@ public unsafe partial class Echoglossian
     private void ClearActionDetailPrefetchState()
     {
         this.actionDetailPrefetchQueue.Clear();
-        this.actionDetailOnDemandPrefetchUtcByScope.Clear();
         this.actionDetailPrefetchQueueIndex = 0;
         this.actionDetailPrefetchSignature = string.Empty;
         this.actionDetailPrefetchLastTickUtc = DateTime.MinValue;
-    }
-
-    /// <summary>
-    ///     Requests one on-demand canonical action-tooltip prefetch when the
-    ///     live tooltip runtime encounters a hovered action that does not yet
-    ///     exist in translated storage.
-    /// </summary>
-    /// <param name="actionId">The hovered action identifier.</param>
-    /// <param name="currentClassJobId">The current class-job identifier.</param>
-    /// <returns>
-    ///     <see langword="true" /> when one prefetch was scheduled for this
-    ///     scope; otherwise <see langword="false" />.
-    /// </returns>
-    private bool TryRequestActionDetailOnDemandPrefetch(
-        uint actionId,
-        byte currentClassJobId)
-    {
-        if (actionId == 0 ||
-            !this.ShouldPrefetchActionAdjacentCanonicalTooltips() ||
-            !TryBuildActionTooltipCanonicalPayload(
-                actionId,
-                currentClassJobId,
-                out _) ||
-            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage) ||
-            !this.TryCreateCapturedTranslationScope(
-                sourceLanguage,
-                out var scope))
-        {
-            return false;
-        }
-
-        var scopeKey = BuildTranslationReuseScopedKey(
-            $"ActionDetailOnDemand|{actionId}|{GetGameVersion() ?? string.Empty}",
-            scope);
-        var utcNow = DateTime.UtcNow;
-        if (this.actionDetailOnDemandPrefetchUtcByScope.TryGetValue(
-                scopeKey,
-                out var lastQueuedUtc) &&
-            utcNow - lastQueuedUtc < ActionDetailOnDemandPrefetchCooldown)
-        {
-            return false;
-        }
-
-        this.actionDetailOnDemandPrefetchUtcByScope[scopeKey] = utcNow;
-        this.PrefetchActionDetail(actionId, currentClassJobId);
-        return true;
     }
 
     /// <summary>

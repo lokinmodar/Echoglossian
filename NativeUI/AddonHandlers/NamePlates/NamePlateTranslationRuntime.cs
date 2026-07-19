@@ -15,26 +15,20 @@ namespace Echoglossian.NativeUI.AddonHandlers.NamePlates;
 /// </summary>
 internal sealed class NamePlateTranslationRuntime : IDisposable
 {
-  private static readonly TimeSpan FailureCooldown = TimeSpan.FromMinutes(1);
   private static readonly TimeSpan MissingObjectOverlayLifetime =
       TimeSpan.FromSeconds(2);
 
   private readonly Config config;
   private readonly IGameGui gameGui;
-  private readonly Func<NamePlateMessage, Task<string>> insertNamePlateMessageAsync;
-  private readonly ConcurrentDictionary<string, byte> inFlightTranslations =
-      new(StringComparer.Ordinal);
   private readonly Func<string, string> normalizeReplacementText;
   private readonly IObjectTable objectTable;
-  private readonly ConcurrentDictionary<string, DateTime> recentFailures =
-      new(StringComparer.Ordinal);
   private readonly ConcurrentDictionary<ulong, NamePlateOverlayEntry> overlays =
       new();
   private readonly TranslationOverlayRenderer renderer;
+  private readonly Action<NamePlatePrefetchCandidate> trackPrefetchCandidate;
   private readonly TranslationService translationService;
 
   private bool disposed;
-  private int pendingRedrawRequest;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="NamePlateTranslationRuntime" /> class.
@@ -44,8 +38,9 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   /// <param name="gameGui">The game UI service used for world-to-screen projection.</param>
   /// <param name="objectTable">The object table used to resolve live object positions.</param>
   /// <param name="renderer">The shared translation overlay renderer.</param>
-  /// <param name="insertNamePlateMessageAsync">
-  ///     Delegate used to persist a translated nameplate row.
+  /// <param name="trackPrefetchCandidate">
+  ///     Delegate used to record stable nameplate source text for background
+  ///     prefetch outside the one-frame handler callback.
   /// </param>
   /// <param name="normalizeReplacementText">
   ///     Delegate used to normalize translated text before native replacement.
@@ -56,7 +51,7 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
       IGameGui gameGui,
       IObjectTable objectTable,
       TranslationOverlayRenderer renderer,
-      Func<NamePlateMessage, Task<string>> insertNamePlateMessageAsync,
+      Action<NamePlatePrefetchCandidate> trackPrefetchCandidate,
       Func<string, string> normalizeReplacementText)
   {
     this.config = config;
@@ -64,7 +59,7 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     this.gameGui = gameGui;
     this.objectTable = objectTable;
     this.renderer = renderer;
-    this.insertNamePlateMessageAsync = insertNamePlateMessageAsync;
+    this.trackPrefetchCandidate = trackPrefetchCandidate;
     this.normalizeReplacementText = normalizeReplacementText;
   }
 
@@ -97,18 +92,10 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
       return;
     }
 
-    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-            out var sourceLanguage))
-    {
-      return;
-    }
-
     foreach (var handler in handlers)
     {
-      this.ProcessNamePlate(handler, scope, sourceLanguage, effectiveEngine);
+      this.ProcessNamePlate(handler, scope);
     }
-
-    this.FlushPendingRedrawRequest();
   }
 
   /// <summary>
@@ -121,8 +108,6 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     {
       return;
     }
-
-    this.FlushPendingRedrawRequest();
 
     if (!this.ShouldUseOverlay())
     {
@@ -183,9 +168,7 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
 
   private void ProcessNamePlate(
       INamePlateUpdateHandler handler,
-      TranslationReuseScope scope,
-      SourceClientLanguage sourceLanguage,
-      int effectiveEngine)
+      TranslationReuseScope scope)
   {
     var kind = handler.NamePlateKind;
     if (!NamePlateTranslationPolicy.ShouldTranslateKind(kind))
@@ -214,13 +197,8 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
       return;
     }
 
-    this.QueueTranslationIfNeeded(
-        handler.GameObjectId,
-        kind,
-        originalText,
-        sourceLanguage,
-        effectiveEngine,
-        worldPosition);
+    this.trackPrefetchCandidate(new NamePlatePrefetchCandidate(kind, originalText));
+    this.ClearOverlay(handler.GameObjectId);
   }
 
   private void ApplyResolvedNamePlate(
@@ -257,98 +235,6 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     handler.SetField(
         NamePlateStringField.Name,
         this.NormalizeForNativeReplacement(translatedText));
-  }
-
-  private void QueueTranslationIfNeeded(
-      ulong gameObjectId,
-      NamePlateKind kind,
-      string originalText,
-      SourceClientLanguage sourceLanguage,
-      int effectiveEngine,
-      Vector3? worldPosition)
-  {
-    var translationKey = BuildTranslationKey(
-        kind,
-        originalText,
-        sourceLanguage.PersistenceCode,
-        LangDict[LanguageInt].Code,
-        effectiveEngine);
-    if (this.IsInFailureCooldown(translationKey) ||
-        !this.inFlightTranslations.TryAdd(translationKey, 0))
-    {
-      return;
-    }
-
-    Task.Run(() => this.ResolveTranslationAsync(
-        translationKey,
-        gameObjectId,
-        kind,
-        originalText,
-        sourceLanguage,
-        effectiveEngine,
-        worldPosition));
-  }
-
-  private async Task ResolveTranslationAsync(
-      string translationKey,
-      ulong gameObjectId,
-      NamePlateKind kind,
-      string originalText,
-      SourceClientLanguage sourceLanguage,
-      int effectiveEngine,
-      Vector3? worldPosition)
-  {
-    try
-    {
-      var originContext = BuildSurfaceIdentity(kind);
-      var translatedText = await this.translationService.TranslateAsync(
-          originalText,
-          sourceLanguage,
-          LangDict[LanguageInt].Code,
-          TranslationSurfaceGroup.Default,
-          originContext: originContext).ConfigureAwait(false);
-
-      if (string.IsNullOrWhiteSpace(translatedText))
-      {
-        this.recentFailures[translationKey] = DateTime.UtcNow;
-        return;
-      }
-
-      var row = new NamePlateMessage(
-          (int)kind,
-          originalText,
-          sourceLanguage.PersistenceCode,
-          translatedText,
-          LangDict[LanguageInt].Code,
-          effectiveEngine,
-          DateTime.Now,
-          DateTime.Now);
-      await this.insertNamePlateMessageAsync(row).ConfigureAwait(false);
-      NamePlateCacheManager.Update(row);
-
-      if (this.ShouldUseOverlay())
-      {
-        this.UpdateOverlay(
-            gameObjectId,
-            kind,
-            originalText,
-            translatedText,
-            worldPosition);
-      }
-
-      this.QueueRedrawRequest();
-    }
-    catch (Exception ex)
-    {
-      this.recentFailures[translationKey] = DateTime.UtcNow;
-      PluginRuntimeLog.Warning(
-          "NamePlateTranslationRuntime",
-          $"Failed to translate {BuildSurfaceIdentity(kind)}: {ex.Message}");
-    }
-    finally
-    {
-      this.inFlightTranslations.TryRemove(translationKey, out _);
-    }
   }
 
   private bool TrySyncOverlayPosition(
@@ -431,35 +317,6 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     }
   }
 
-  /// <summary>
-  /// Records that a nameplate redraw should be requested on the next UI-owned
-  /// callback instead of from the background translation task.
-  /// </summary>
-  private void QueueRedrawRequest()
-  {
-    Interlocked.Exchange(ref this.pendingRedrawRequest, 1);
-  }
-
-  /// <summary>
-  /// Flushes one pending nameplate redraw request while the client is ready for
-  /// player-scoped UI work.
-  /// </summary>
-  private void FlushPendingRedrawRequest()
-  {
-    if (this.disposed ||
-        !FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess())
-    {
-      return;
-    }
-
-    if (Interlocked.Exchange(ref this.pendingRedrawRequest, 0) == 0)
-    {
-      return;
-    }
-
-    NamePlateGuiInterface.RequestRedraw();
-  }
-
   private void ClearOverlay(ulong gameObjectId)
   {
     if (!this.overlays.TryRemove(gameObjectId, out var entry))
@@ -496,22 +353,6 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     }
 
     this.ClearOverlay(gameObjectId);
-  }
-
-  private bool IsInFailureCooldown(string translationKey)
-  {
-    if (!this.recentFailures.TryGetValue(translationKey, out var failedAt))
-    {
-      return false;
-    }
-
-    if (DateTime.UtcNow - failedAt < FailureCooldown)
-    {
-      return true;
-    }
-
-    this.recentFailures.TryRemove(translationKey, out _);
-    return false;
   }
 
   private bool ShouldUseOverlay()
@@ -575,16 +416,6 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   private static string BuildSurfaceIdentity(NamePlateKind kind)
   {
     return $"NamePlate/{kind}";
-  }
-
-  private static string BuildTranslationKey(
-      NamePlateKind kind,
-      string originalText,
-      string sourceLanguage,
-      string targetLanguage,
-      int engine)
-  {
-    return $"{(int)kind}|{sourceLanguage}|{targetLanguage}|{engine}|{originalText}";
   }
 
   private sealed class NamePlateOverlayEntry

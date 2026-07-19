@@ -25,7 +25,7 @@ public partial class Echoglossian
         GameGuiInterface,
         ObjectTableInterface,
         this.translationOverlayRenderer,
-        namePlateMessage => Task.Run(() => this.InsertNamePlateMessageData(namePlateMessage)),
+        this.TrackNamePlatePrefetchCandidate,
         text => this.RemoveDiacritics(
             text,
             this.SpecialCharsSupportedByGameFont));

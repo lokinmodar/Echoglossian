@@ -2635,6 +2635,10 @@
                 payloads.
             </summary>
             <summary>
+                Provides DB-first background prefetch for recently observed NamePlateGui
+                world-object names.
+            </summary>
+            <summary>
                 Handles bootstrap and teardown for the NamePlateGui translation runtime.
             </summary>
             <summary>
@@ -4040,19 +4044,6 @@
             <summary>
                 Clears the action-tooltip prefetch runtime state.
             </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryRequestActionDetailOnDemandPrefetch(System.UInt32,System.Byte)">
-            <summary>
-                Requests one on-demand canonical action-tooltip prefetch when the
-                live tooltip runtime encounters a hovered action that does not yet
-                exist in translated storage.
-            </summary>
-            <param name="actionId">The hovered action identifier.</param>
-            <param name="currentClassJobId">The current class-job identifier.</param>
-            <returns>
-                <see langword="true" /> when one prefetch was scheduled for this
-                scope; otherwise <see langword="false" />.
-            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.PrefetchActionDetail(System.UInt32,System.Byte)">
             <summary>
@@ -5495,6 +5486,117 @@
             </param>
             <param name="payload">The resolved payload.</param>
             <returns>True when the payload resolved successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TrackNamePlatePrefetchCandidate(Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate)">
+            <summary>
+                Records one stable nameplate source observed from the live
+                NamePlateGui callback so background prefetch can translate it later.
+            </summary>
+            <param name="candidate">The candidate source text.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickNamePlatePrefetch">
+            <summary>
+                Ticks the nameplate prefetch runtime so recently observed world-object
+                names are translated into nameplate storage ahead of the next redraw.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ClearNamePlatePrefetchState">
+            <summary>
+                Clears nameplate prefetch state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldPrefetchNamePlates">
+            <summary>
+                Gets whether nameplate prefetch should run in the current runtime
+                state.
+            </summary>
+            <returns><see langword="true" /> when background prefetch should run.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchNamePlate(Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate)">
+            <summary>
+                Prefetches one observed nameplate candidate and schedules any missing
+                translation through the shared paced broker.
+            </summary>
+            <param name="candidate">The observed nameplate candidate.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RunNamePlatePrefetchOperationEntry(Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate,System.Func{System.Nullable{Echoglossian.SourceClientLanguage}},Echoglossian.Config,Echoglossian.TryGetPrefetchTranslationDelegate,Echoglossian.QueuePrefetchTranslationDelegate,Echoglossian.ResolvePrefetchTranslationDelegate,System.Action{Echoglossian.EFCoreSqlite.Models.NamePlateMessage},Echoglossian.SourceClientLanguage@,Echoglossian.TranslationReuseScope@)">
+            <summary>
+                Captures live scope and routes one nameplate prefetch through the
+                shared broker and persistence.
+            </summary>
+            <param name="candidate">The stable nameplate source candidate.</param>
+            <param name="sourceLanguageResolver">Resolves the live client source.</param>
+            <param name="configuration">The live translation configuration.</param>
+            <param name="tryGetTranslation">The shared broker cache lookup.</param>
+            <param name="queueTranslation">The shared broker queue operation.</param>
+            <param name="translate">The production translation operation.</param>
+            <param name="persistRow">The nameplate persistence operation.</param>
+            <param name="sourceLanguage">The captured source contract.</param>
+            <param name="scope">The captured reuse scope.</param>
+            <returns>The production dispatch result.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateTranslatedNamePlateMessage(Dalamud.Game.Gui.NamePlate.NamePlateKind,System.String,System.String,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Creates one translated nameplate row for captured background prefetch
+                scope.
+            </summary>
+            <param name="kind">The nameplate kind.</param>
+            <param name="originalText">The original nameplate text.</param>
+            <param name="translatedText">The translated nameplate text.</param>
+            <param name="scope">The captured translation reuse scope.</param>
+            <returns>The translated nameplate row.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildNamePlatePrefetchScopedTranslationKey(System.String,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Adds the complete operation scope to one nameplate payload key.
+            </summary>
+            <param name="payloadIdentity">The existing payload identity.</param>
+            <param name="scope">The immutable operation reuse scope.</param>
+            <returns>The source-scoped broker key.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildNamePlateOriginContext(Dalamud.Game.Gui.NamePlate.NamePlateKind)">
+            <summary>
+                Builds the diagnostic surface identity for one nameplate name.
+            </summary>
+            <param name="kind">The nameplate kind.</param>
+            <returns>The diagnostic surface identity.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CollectRecentNamePlatePrefetchCandidates">
+            <summary>
+                Collects recent prefetch candidates while pruning stale entries.
+            </summary>
+            <returns>The recent candidates sorted by stable identity.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildNamePlatePrefetchCandidateKey(Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate)">
+            <summary>
+                Builds a stable identity for one nameplate prefetch candidate.
+            </summary>
+            <param name="candidate">The candidate.</param>
+            <returns>The stable candidate key.</returns>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.NamePlatePrefetchCandidateState">
+            <summary>
+                Tracks one recently observed nameplate candidate and its freshness
+                window for background prefetch.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.NamePlatePrefetchCandidateState.#ctor(Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate,System.DateTime)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Echoglossian.NamePlatePrefetchCandidateState" /> class.
+            </summary>
+            <param name="candidate">The stable candidate source.</param>
+            <param name="lastSeenUtc">The last time the source was observed.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.NamePlatePrefetchCandidateState.Candidate">
+            <summary>
+                Gets the stable nameplate candidate.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.NamePlatePrefetchCandidateState.LastSeenUtc">
+            <summary>
+                Gets or sets the last time this candidate was observed.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateNamePlateTranslationRuntime">
             <summary>
@@ -15693,13 +15795,35 @@
             <param name="atkValueCount">The number of values in the buffer.</param>
             <param name="translatedPayload">The translated payload to apply.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate">
+            <summary>
+                Captures the stable data needed to translate one nameplate outside the
+                one-frame <see cref="T:Dalamud.Game.Gui.NamePlate.INamePlateUpdateHandler" /> callback.
+            </summary>
+            <param name="Kind">The Dalamud nameplate kind.</param>
+            <param name="OriginalText">The original visible nameplate text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate.#ctor(Dalamud.Game.Gui.NamePlate.NamePlateKind,System.String)">
+            <summary>
+                Captures the stable data needed to translate one nameplate outside the
+                one-frame <see cref="T:Dalamud.Game.Gui.NamePlate.INamePlateUpdateHandler" /> callback.
+            </summary>
+            <param name="Kind">The Dalamud nameplate kind.</param>
+            <param name="OriginalText">The original visible nameplate text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate.Kind">
+            <summary>The Dalamud nameplate kind.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate.OriginalText">
+            <summary>The original visible nameplate text.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime">
             <summary>
                 Translates eligible world-object nameplates through Dalamud's
                 <see cref="T:Dalamud.Plugin.Services.INamePlateGui" /> surface.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IObjectTable,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer,System.Func{Echoglossian.EFCoreSqlite.Models.NamePlateMessage,System.Threading.Tasks.Task{System.String}},System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IObjectTable,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer,System.Action{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime" /> class.
             </summary>
@@ -15708,8 +15832,9 @@
             <param name="gameGui">The game UI service used for world-to-screen projection.</param>
             <param name="objectTable">The object table used to resolve live object positions.</param>
             <param name="renderer">The shared translation overlay renderer.</param>
-            <param name="insertNamePlateMessageAsync">
-                Delegate used to persist a translated nameplate row.
+            <param name="trackPrefetchCandidate">
+                Delegate used to record stable nameplate source text for background
+                prefetch outside the one-frame handler callback.
             </param>
             <param name="normalizeReplacementText">
                 Delegate used to normalize translated text before native replacement.
@@ -15731,18 +15856,6 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.Dispose">
             <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.QueueRedrawRequest">
-            <summary>
-            Records that a nameplate redraw should be requested on the next UI-owned
-            callback instead of from the background translation task.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.FlushPendingRedrawRequest">
-            <summary>
-            Flushes one pending nameplate redraw request while the client is ready for
-            player-scoped UI work.
-            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler">
             <summary>

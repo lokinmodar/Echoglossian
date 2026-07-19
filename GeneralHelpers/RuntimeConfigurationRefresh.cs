@@ -329,5 +329,6 @@ public partial class Echoglossian
     this.ClearItemDetailPrefetchState();
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
+    this.ClearNamePlatePrefetchState();
   }
 }

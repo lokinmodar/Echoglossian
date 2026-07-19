@@ -575,6 +575,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.ClearAcceptedQuestPrefetchState();
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
+    this.ClearNamePlatePrefetchState();
 
 #if DEBUG
     this.StopAllAddonProbeWatches();

@@ -192,8 +192,6 @@ public unsafe partial class Echoglossian
             !TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
         var useSwapOverlay =
             TranslationDisplayModeHelper.ShowsOriginalTooltips(displayMode);
-        var usedStructuredActionPayload = false;
-
         if (IsTraitHoverActionKind(hoveredActionKind))
         {
             if (!TryBuildTraitCanonicalPayload(
@@ -338,8 +336,6 @@ public unsafe partial class Echoglossian
                     contentKind: StructuredTooltipContentKindAction);
                 return;
             }
-
-            usedStructuredActionPayload = true;
         }
 
         if (!this.TryFindTranslatedActionTooltipPayload(
@@ -348,13 +344,6 @@ public unsafe partial class Echoglossian
                 originalPayload,
                 out var translatedPayload))
         {
-            if (!usedStructuredActionPayload)
-            {
-                _ = this.TryRequestActionDetailOnDemandPrefetch(
-                    hoveredActionId,
-                    currentClassJobId);
-            }
-
             this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
             this.LogStructuredTooltipState(
                 ActionDetailSurfaceName,
