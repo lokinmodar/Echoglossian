@@ -17612,6 +17612,24 @@
                 being written into the native UI.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.CanRenderRecommendListHoverTooltip(System.Boolean)">
+            <summary>
+                Gets whether RecommendList may render a hover tooltip for a payload
+                whose translated content is ready.
+            </summary>
+            <param name="translatedPayloadReady">
+                Whether the translated payload required by the current mode is ready.
+            </param>
+            <returns><c>true</c> when the hover tooltip may be rendered.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.IsTranslatedPayloadReady(System.String)">
+            <summary>
+                Determines whether the translated RecommendList title is ready for
+                native application or tooltip rendering.
+            </summary>
+            <param name="translatedQuestName">The translated quest title.</param>
+            <returns><c>true</c> when the translated title exists.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.UpdateRecommendList(Echoglossian.SourceClientLanguage)">
             <summary>
                 Updates the visible quest names from the shared translation cache.
@@ -17634,8 +17652,8 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.OnRecommendListHoverRefreshEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
-                Refreshes RecommendList hover targets every draw without queueing new
-                translations.
+                Refreshes RecommendList application and hover targets after delayed
+                translations settle.
             </summary>
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
@@ -17659,6 +17677,65 @@
                 Runs the two-pass RecommendList translation flow.
             </summary>
             <param name="sourceLanguage">The operation-captured source identity.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.ProcessRecommendList(Echoglossian.SourceClientLanguage,System.Boolean)">
+            <summary>
+                Processes the visible RecommendList rows by resolving cached or
+                persisted translations, applying the selected display mode, and
+                optionally queueing missing background translations.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="queueMissingTranslations">
+                Whether missing rows should be sent to the shared translation broker.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TryResolveRecommendListTranslation(Echoglossian.SourceClientLanguage,System.String,System.String,System.String@)">
+            <summary>
+                Resolves a translated RecommendList title from local state, the DB, or
+                the shared translation queue.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalQuestNameText">The original quest title.</param>
+            <param name="visibleQuestNameText">The current visible node text.</param>
+            <param name="translatedQuestName">The resolved translated title.</param>
+            <returns><c>true</c> when a translated title exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.QueueRecommendListTranslation(Echoglossian.SourceClientLanguage,System.String)">
+            <summary>
+                Enqueues one RecommendList title through the shared quest broker.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="questNameText">The original quest title.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.BuildRecommendListCacheKey(System.String)">
+            <summary>
+                Builds the shared broker cache key for one RecommendList title.
+            </summary>
+            <param name="questNameText">The original quest title.</param>
+            <returns>The stable cache key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.ResolveOriginalRecommendListText(System.IntPtr,System.String)">
+            <summary>
+                Resolves the original title for a visible RecommendList node, even if
+                the node currently contains text written by a previous native mode.
+            </summary>
+            <param name="questNameNodeKey">The stable node pointer key.</param>
+            <param name="visibleText">The text currently visible in the native node.</param>
+            <returns>The original quest title backing this node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.GetRecommendListTranslatedDisplayText(System.String)">
+            <summary>
+                Normalizes translated RecommendList text before native application.
+            </summary>
+            <param name="translatedText">The translated text.</param>
+            <returns>The translated text as it should be displayed.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TrimRecommendListRuntimeState(System.Collections.Generic.IReadOnlySet{System.IntPtr})">
+            <summary>
+                Removes stale node-scoped runtime state for rows that are no longer
+                visible in the current RecommendList payload.
+            </summary>
+            <param name="visibleQuestNameNodeKeys">The currently visible node keys.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.TryGetRecommendListCachedText(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.RecommendListHandler.RecommendListTextCacheEntry@)">
             <summary>
@@ -17771,6 +17848,14 @@
                 being written into the native UI.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.IsTranslatedPayloadReady(System.String)">
+            <summary>
+                Determines whether translated ScenarioTree slot text is ready for
+                native application or tooltip rendering.
+            </summary>
+            <param name="translatedQuestText">The translated ScenarioTree text.</param>
+            <returns><c>true</c> when the translated text exists.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RefreshScenarioTree">
             <summary>
                 Refreshes the ScenarioTree runtime from canonical quest data and the
@@ -17807,6 +17892,79 @@
                 <c>true</c> when the required translated payload is already stored in
                 the DB.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveScenarioTreeFallbackTranslation(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.SourceClientLanguage,System.String,System.String@)">
+            <summary>
+                Resolves ScenarioTree text from the broker cache or from a legacy
+                visible-text row when canonical quest data is not ready yet.
+            </summary>
+            <param name="visibleEntry">The visible ScenarioTree slot.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="progressKey">The stable quest progress key, if known.</param>
+            <param name="translatedText">The resolved translated text.</param>
+            <returns><c>true</c> when translated text is available.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.QueueScenarioTreeTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,System.String,Echoglossian.QuestCanonicalData,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Enqueues a visible ScenarioTree text row through the shared translation
+                broker without blocking addon rendering.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="visibleEntry">The visible ScenarioTree slot.</param>
+            <param name="progressKey">The stable quest progress key, if known.</param>
+            <param name="questCanonicalData">The canonical quest payload, if resolved.</param>
+            <param name="questPlate">The existing or projected quest plate, if any.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeTranslationCacheKey(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry)">
+            <summary>
+                Builds a stable shared-broker key for one visible ScenarioTree slot.
+            </summary>
+            <param name="progressKey">The stable quest progress key, if known.</param>
+            <param name="visibleEntry">The visible ScenarioTree slot.</param>
+            <returns>The stable translation cache key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ApplyScenarioTreeTranslationToQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String)">
+            <summary>
+                Stores one translated visible ScenarioTree row in the matching
+                canonical quest-plate field.
+            </summary>
+            <param name="questPlate">The quest plate being updated.</param>
+            <param name="questCanonicalData">The canonical quest payload.</param>
+            <param name="originalText">The visible source text.</param>
+            <param name="translatedText">The translated text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryApplyScenarioTreeObjectiveTranslation(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String)">
+            <summary>
+                Applies a ScenarioTree objective-row translation when the source text
+                matches canonical objective rows.
+            </summary>
+            <param name="questPlate">The quest plate being updated.</param>
+            <param name="questCanonicalData">The canonical quest payload.</param>
+            <param name="originalText">The visible source text.</param>
+            <param name="translatedText">The translated text.</param>
+            <returns><c>true</c> when at least one objective row was updated.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryApplyScenarioTreeSummaryTranslation(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String)">
+            <summary>
+                Applies a ScenarioTree summary-row translation when the source text
+                matches canonical summary rows.
+            </summary>
+            <param name="questPlate">The quest plate being updated.</param>
+            <param name="questCanonicalData">The canonical quest payload.</param>
+            <param name="originalText">The visible source text.</param>
+            <param name="translatedText">The translated text.</param>
+            <returns><c>true</c> when at least one summary row was updated.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryApplyScenarioTreeSystemTranslation(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String)">
+            <summary>
+                Applies a ScenarioTree system-row translation when the source text
+                matches canonical system rows.
+            </summary>
+            <param name="questPlate">The quest plate being updated.</param>
+            <param name="questCanonicalData">The canonical quest payload.</param>
+            <param name="originalText">The visible source text.</param>
+            <param name="translatedText">The translated text.</param>
+            <returns><c>true</c> when at least one system row was updated.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CollectScenarioTreeQuestSlots">
             <summary>

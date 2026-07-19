@@ -104,6 +104,18 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures RecommendList captures refresh payloads so all display modes can
+    /// apply translated text after the addon repaints.
+    /// </summary>
+    [Fact]
+    public void RecommendListHandler_RegistersPreRefreshCapture()
+    {
+        var handler = new RecommendListHandler(CreateDependencies());
+
+        Assert.Contains(AddonEvent.PreRefresh, handler.GetEventHandlers().Keys);
+    }
+
+    /// <summary>
     ///     Ensures tooltip-only JournalDetail rendering remains read-only unless
     ///     it must restore native text previously written by this handler.
     /// </summary>
@@ -174,6 +186,40 @@ public class QuestAddonHandlerLifecycleTests
         Assert.Equal(
             expected,
             JournalResultHandler.IsTranslatedPayloadReady(translatedQuestName));
+    }
+
+    /// <summary>
+    /// Ensures RecommendList tooltips wait until translated title text exists.
+    /// </summary>
+    /// <param name="translatedQuestName">The translated quest title.</param>
+    /// <param name="expected">The expected readiness value.</param>
+    [Theory]
+    [InlineData("Titulo traduzido", true)]
+    [InlineData("", false)]
+    public void RecommendListTooltipReadiness_RequiresTranslatedName(
+        string translatedQuestName,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            RecommendListHandler.IsTranslatedPayloadReady(translatedQuestName));
+    }
+
+    /// <summary>
+    /// Ensures ScenarioTree tooltips wait until translated slot text exists.
+    /// </summary>
+    /// <param name="translatedQuestText">The translated ScenarioTree text.</param>
+    /// <param name="expected">The expected readiness value.</param>
+    [Theory]
+    [InlineData("Texto traduzido", true)]
+    [InlineData("", false)]
+    public void ScenarioTreeTooltipReadiness_RequiresTranslatedText(
+        string translatedQuestText,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            ScenarioTreeHandler.IsTranslatedPayloadReady(translatedQuestText));
     }
 
     /// <summary>
