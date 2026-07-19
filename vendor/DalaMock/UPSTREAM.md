@@ -10,27 +10,24 @@ This folder vendors the minimum DalaMock source needed by `Echoglossian.Mock` an
 
 ## Local Patch
 
-This vendored copy currently carries two narrow compatibility fixes required by
+This vendored copy currently carries one narrow compatibility fix required by
 the hosted preview and mock rails:
 
-1. `DalaMock/Mocks/DalamudServices/MockFramework.cs`
-   - upstream `DalaMock.Core` 6.1.7 does not implement
-     `Dalamud.Plugin.Services.IFramework.CreateDebouncer(TimeSpan, Action)`
-   - that causes type loading to fail against the current Dalamud contract
-     before the preview host or mock tests can start
-   - the local patch adds `CreateDebouncer` plus a small `IDebouncer`
-     implementation backed by `RunOnTick`
-2. `DalaMock/Plugin/PluginLoader.cs`
+1. `DalaMock/Plugin/PluginLoader.cs`
    - hosted startup that uses an async adapter plus
      `PluginLoadSettings.AssemblyLocation` can resolve the wrong plugin assembly
      identity
    - the local patch prefers the explicit assembly location and avoids adapter
      base-type resolution that can collapse to `System.Private.CoreLib`
 
+The prior local `MockFramework.CreateDebouncer` patch was removed because stable
+Dalamud 15.0.2.3 does not expose `IDebouncer`; keeping that staging-only member
+breaks builds against stable Dalamud binaries.
+
 ## Upstream Intent
 
-These two fixes are good upstream candidates because they correct DalaMock's
-compatibility with current Dalamud and with hosted-plugin loading patterns. See
+The remaining fix is a good upstream candidate because it corrects DalaMock's
+compatibility with hosted-plugin loading patterns. See
 `docs/dalamock-hosted-preview-boundary.md` for the boundary between upstream
 DalaMock fixes and Echoglossian-specific hosting code.
 

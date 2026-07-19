@@ -93,6 +93,11 @@ be discarded.
 
 ## Hosted DalaMock recovery on 2026-07-18
 
+Status update 2026-07-19: the `CreateDebouncer` part below was a staging-only
+diagnosis. Stable Dalamud 15.0.2.3 does not expose `IDebouncer`, so that local
+patch was removed. The remaining stable DalaMock blocker is hosted plugin
+assembly resolution through `PluginLoadSettings.AssemblyLocation`.
+
 Commands run from
 `C:\Dante\_dalamud\worktrees\Echoglossian\previewer-dalamock-font-builds`:
 
@@ -113,9 +118,9 @@ Observed results:
 - DalaMock mock tests: `11 / 11` passed
 
 The hosted blocker was recovered locally by vendoring a minimal DalaMock source
-copy and applying two narrow compatibility fixes:
+copy and applying the hosted plugin assembly-resolution fix. A prior
+`CreateDebouncer` experiment was removed after stable Dalamud validation:
 
-- `MockFramework.CreateDebouncer(TimeSpan, Action)`
 - plugin assembly resolution in `PluginLoader` when using the async hosted
   adapter plus `AssemblyLocation`
 
@@ -179,9 +184,9 @@ before broadening hosted-runtime scope again.
 
 Recommended scope:
 
-1. upstream the DalaMock fixes for:
-   - `CreateDebouncer`
-   - hosted plugin assembly resolution through `AssemblyLocation`
+1. upstream the DalaMock fix for hosted plugin assembly resolution through
+   `AssemblyLocation`; do not upstream `CreateDebouncer` for stable unless the
+   official Dalamud API changes again
 2. keep using real plugin-window code for plugin windows:
    - do not reimplement the config window in preview-only code
 3. preserve current isolation rules:
