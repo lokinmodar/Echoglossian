@@ -91,6 +91,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         var effectiveFontScale = GetEffectiveOverlayFontScale(config.FontScale);
         var shouldCenterOverlayText = ShouldCenterOverlayText(config.SurfaceId);
         var shouldRightAlignOverlayText =
+            !shouldCenterOverlayText &&
             LanguagePresentationPolicy.ShouldRightAlign(this.configuration.Lang);
         var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2f;
         var preliminaryLayout = TranslationOverlayLayoutCalculator.Calculate(
@@ -503,18 +504,49 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             return;
         }
 
-        var offset = rightAligned
-            ? Math.Max(0f, availableWidth - lineWidth)
-            : Math.Max(0f, (availableWidth - lineWidth) * 0.5f);
+        var offset = CalculateHorizontalTextOffset(
+            availableWidth,
+            lineWidth,
+            centerAligned,
+            rightAligned);
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
         ImGui.TextUnformatted(line);
+    }
+
+    /// <summary>
+    /// Calculates the horizontal text offset for the requested alignment.
+    /// </summary>
+    /// <param name="availableWidth">The available content width.</param>
+    /// <param name="contentWidth">The measured content width.</param>
+    /// <param name="centerAligned">Whether the surface explicitly centers text.</param>
+    /// <param name="rightAligned">Whether the language presentation requests right alignment.</param>
+    /// <returns>The horizontal offset to apply before drawing the content.</returns>
+    internal static float CalculateHorizontalTextOffset(
+        float availableWidth,
+        float contentWidth,
+        bool centerAligned,
+        bool rightAligned)
+    {
+        if (availableWidth <= 0f || contentWidth >= availableWidth)
+        {
+            return 0f;
+        }
+
+        if (centerAligned)
+        {
+            return Math.Max(0f, (availableWidth - contentWidth) * 0.5f);
+        }
+
+        return rightAligned
+            ? Math.Max(0f, availableWidth - contentWidth)
+            : 0f;
     }
 
     /// <summary>
     /// Draws a texture-backed text block with its requested horizontal alignment.
     /// </summary>
     /// <param name="block">The texture-backed text block to draw.</param>
-    /// <param name="centerAligned">Whether to center a non-RTL block.</param>
+    /// <param name="centerAligned">Whether to center the block.</param>
     private static void DrawRenderedTextBlock(
         RenderedTextBlock block,
         bool centerAligned)
@@ -527,11 +559,11 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         var availableWidth = ImGui.GetContentRegionAvail().X;
         if (availableWidth > 0f && block.MeasuredSize.X < availableWidth)
         {
-            var offset = block.RightAligned
-                ? Math.Max(0f, availableWidth - block.MeasuredSize.X)
-                : centerAligned
-                    ? Math.Max(0f, (availableWidth - block.MeasuredSize.X) * 0.5f)
-                    : 0f;
+            var offset = CalculateHorizontalTextOffset(
+                availableWidth,
+                block.MeasuredSize.X,
+                centerAligned,
+                block.RightAligned);
             if (offset > 0f)
             {
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);

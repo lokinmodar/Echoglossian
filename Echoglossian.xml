@@ -15922,6 +15922,23 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.Dispose">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.ResolveNamePlateWorldAnchor(System.Numerics.Vector3,System.Single)">
+            <summary>
+                Resolves the world-space anchor used to project a nameplate overlay.
+            </summary>
+            <param name="objectPosition">The live object world position.</param>
+            <param name="hitboxRadius">The live object hitbox radius.</param>
+            <returns>The world-space anchor projected for overlay placement.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.ResolveCenteredNamePlateOverlayBounds(System.Numerics.Vector2,System.Numerics.Vector2)">
+            <summary>
+                Resolves the screen-space overlay bounds from the projected nameplate
+                center point.
+            </summary>
+            <param name="screenPosition">The projected nameplate center point.</param>
+            <param name="viewportSize">The current viewport size.</param>
+            <returns>The overlay top-left position and initial size.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler">
             <summary>
                 Handles DB-first translation for the operation guide window.
@@ -33061,12 +33078,22 @@
             <param name="centerAligned">Whether to center the line.</param>
             <param name="rightAligned">Whether to right-align the line.</param>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.CalculateHorizontalTextOffset(System.Single,System.Single,System.Boolean,System.Boolean)">
+            <summary>
+            Calculates the horizontal text offset for the requested alignment.
+            </summary>
+            <param name="availableWidth">The available content width.</param>
+            <param name="contentWidth">The measured content width.</param>
+            <param name="centerAligned">Whether the surface explicitly centers text.</param>
+            <param name="rightAligned">Whether the language presentation requests right alignment.</param>
+            <returns>The horizontal offset to apply before drawing the content.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.DrawRenderedTextBlock(Echoglossian.UIOverlays.TextPresentation.RenderedTextBlock,System.Boolean)">
             <summary>
             Draws a texture-backed text block with its requested horizontal alignment.
             </summary>
             <param name="block">The texture-backed text block to draw.</param>
-            <param name="centerAligned">Whether to center a non-RTL block.</param>
+            <param name="centerAligned">Whether to center the block.</param>
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ShouldCenterOverlayText(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
             <summary>
