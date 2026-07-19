@@ -61,6 +61,10 @@ public sealed class EchoglossianAsyncPluginAdapter : IAsyncDalamudPlugin
             this.componentContext.Resolve<IFramework>();
         global::Echoglossian.Echoglossian.GameGuiInterface =
             this.componentContext.Resolve<IGameGui>();
+        global::Echoglossian.Echoglossian.NamePlateGuiInterface =
+            this.componentContext.Resolve<INamePlateGui>();
+        global::Echoglossian.Echoglossian.ObjectTableInterface =
+            this.componentContext.Resolve<IObjectTable>();
         global::Echoglossian.Echoglossian.ChatGuiInterface =
             this.componentContext.Resolve<IChatGui>();
         global::Echoglossian.Echoglossian.ClientStateInterface =
