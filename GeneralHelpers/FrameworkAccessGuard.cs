@@ -14,7 +14,7 @@ namespace Echoglossian;
 internal static unsafe class FrameworkAccessGuard
 {
   private static readonly PlayerScopedFrameworkReadinessGate
-      PlayerScopedReadinessGate = new(TimeSpan.FromSeconds(3));
+      PlayerScopedReadinessGate = new(TimeSpan.FromSeconds(10));
 
   /// <summary>
   /// Determines whether the current client session is ready for native
@@ -49,10 +49,11 @@ internal static unsafe class FrameworkAccessGuard
     try
     {
       var playerState = PlayerState.Instance();
+      var localPlayer = Echoglossian.ObjectTableInterface?.LocalPlayer;
       return PlayerScopedReadinessGate.IsReady(
           Echoglossian.ClientStateInterface.IsLoggedIn,
-          Echoglossian.ClientStateInterface.TerritoryType != 0,
-          Echoglossian.ObjectTableInterface?.LocalPlayer != null,
+          Echoglossian.ClientStateInterface.TerritoryType,
+          localPlayer?.IsValid() == true,
           playerState != null ? playerState->CurrentClassJobId : (byte)0,
           DateTime.UtcNow);
     }

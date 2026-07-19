@@ -10771,17 +10771,17 @@
                 The continuous ready interval required before access is allowed.
             </param>
         </member>
-        <member name="M:Echoglossian.PlayerScopedFrameworkReadinessGate.IsReady(System.Boolean,System.Boolean,System.Boolean,System.Byte,System.DateTime)">
+        <member name="M:Echoglossian.PlayerScopedFrameworkReadinessGate.IsReady(System.Boolean,System.UInt32,System.Boolean,System.Byte,System.DateTime)">
             <summary>
                 Gets whether the current player-scoped framework state is ready and
                 has remained stable long enough for background prefetch runtimes.
             </summary>
             <param name="isLoggedIn">Whether Dalamud reports an active login.</param>
-            <param name="hasTerritory">
-                Whether <c>IClientState.TerritoryType</c> has been populated.
+            <param name="territoryType">
+                The current <c>IClientState.TerritoryType</c> value.
             </param>
-            <param name="hasObjectTableLocalPlayer">
-                Whether <c>IObjectTable.LocalPlayer</c> is available.
+            <param name="hasValidObjectTableLocalPlayer">
+                Whether <c>IObjectTable.LocalPlayer</c> is available and valid.
             </param>
             <param name="currentClassJobId">The current player class/job id.</param>
             <param name="nowUtc">The current UTC timestamp.</param>

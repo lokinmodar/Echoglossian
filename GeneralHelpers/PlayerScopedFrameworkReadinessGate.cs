@@ -17,6 +17,8 @@ internal sealed class PlayerScopedFrameworkReadinessGate
 
   private byte stableClassJobId;
 
+  private uint stableTerritoryType;
+
   /// <summary>
   ///     Initializes a new instance of the
   ///     <see cref="PlayerScopedFrameworkReadinessGate" /> class.
@@ -34,25 +36,25 @@ internal sealed class PlayerScopedFrameworkReadinessGate
   ///     has remained stable long enough for background prefetch runtimes.
   /// </summary>
   /// <param name="isLoggedIn">Whether Dalamud reports an active login.</param>
-  /// <param name="hasTerritory">
-  ///     Whether <c>IClientState.TerritoryType</c> has been populated.
+  /// <param name="territoryType">
+  ///     The current <c>IClientState.TerritoryType</c> value.
   /// </param>
-  /// <param name="hasObjectTableLocalPlayer">
-  ///     Whether <c>IObjectTable.LocalPlayer</c> is available.
+  /// <param name="hasValidObjectTableLocalPlayer">
+  ///     Whether <c>IObjectTable.LocalPlayer</c> is available and valid.
   /// </param>
   /// <param name="currentClassJobId">The current player class/job id.</param>
   /// <param name="nowUtc">The current UTC timestamp.</param>
   /// <returns><see langword="true" /> when access is stable.</returns>
   public bool IsReady(
       bool isLoggedIn,
-      bool hasTerritory,
-      bool hasObjectTableLocalPlayer,
+      uint territoryType,
+      bool hasValidObjectTableLocalPlayer,
       byte currentClassJobId,
       DateTime nowUtc)
   {
     if (!isLoggedIn ||
-        !hasTerritory ||
-        !hasObjectTableLocalPlayer ||
+        territoryType == 0 ||
+        !hasValidObjectTableLocalPlayer ||
         currentClassJobId == 0)
     {
       this.Reset();
@@ -60,9 +62,11 @@ internal sealed class PlayerScopedFrameworkReadinessGate
     }
 
     if (this.readySinceUtc == DateTime.MinValue ||
+        this.stableTerritoryType != territoryType ||
         this.stableClassJobId != currentClassJobId)
     {
       this.readySinceUtc = nowUtc;
+      this.stableTerritoryType = territoryType;
       this.stableClassJobId = currentClassJobId;
       return this.stabilizationWindow <= TimeSpan.Zero;
     }
@@ -77,5 +81,6 @@ internal sealed class PlayerScopedFrameworkReadinessGate
   {
     this.readySinceUtc = DateTime.MinValue;
     this.stableClassJobId = 0;
+    this.stableTerritoryType = 0;
   }
 }

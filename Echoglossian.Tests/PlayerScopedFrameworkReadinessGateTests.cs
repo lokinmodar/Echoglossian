@@ -26,20 +26,20 @@ public sealed class PlayerScopedFrameworkReadinessGateTests
 
         Assert.False(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt));
         Assert.False(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(1)));
         Assert.True(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(2).AddMilliseconds(1)));
     }
@@ -56,33 +56,33 @@ public sealed class PlayerScopedFrameworkReadinessGateTests
 
         Assert.False(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt));
         Assert.True(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(3)));
 
         Assert.False(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: false,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 0,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(4)));
         Assert.False(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(5)));
         Assert.True(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(7).AddMilliseconds(1)));
     }
@@ -99,28 +99,65 @@ public sealed class PlayerScopedFrameworkReadinessGateTests
 
         Assert.False(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt));
         Assert.True(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(3)));
 
         Assert.False(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 38,
             nowUtc: startedAt.AddSeconds(4)));
         Assert.True(gate.IsReady(
             isLoggedIn: true,
-            hasTerritory: true,
-            hasObjectTableLocalPlayer: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
             currentClassJobId: 38,
+            nowUtc: startedAt.AddSeconds(6).AddMilliseconds(1)));
+    }
+
+    /// <summary>
+    ///     Ensures a territory change restarts the readiness window because
+    ///     player-scoped native state is rebuilt across zone transitions.
+    /// </summary>
+    [Fact]
+    public void IsReady_resets_when_territory_changes()
+    {
+        var gate = new PlayerScopedFrameworkReadinessGate(TimeSpan.FromSeconds(2));
+        var startedAt = new DateTime(2026, 7, 19, 14, 31, 33, DateTimeKind.Utc);
+
+        Assert.False(gate.IsReady(
+            isLoggedIn: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
+            currentClassJobId: 37,
+            nowUtc: startedAt));
+        Assert.True(gate.IsReady(
+            isLoggedIn: true,
+            territoryType: 144,
+            hasValidObjectTableLocalPlayer: true,
+            currentClassJobId: 37,
+            nowUtc: startedAt.AddSeconds(3)));
+
+        Assert.False(gate.IsReady(
+            isLoggedIn: true,
+            territoryType: 145,
+            hasValidObjectTableLocalPlayer: true,
+            currentClassJobId: 37,
+            nowUtc: startedAt.AddSeconds(4)));
+        Assert.True(gate.IsReady(
+            isLoggedIn: true,
+            territoryType: 145,
+            hasValidObjectTableLocalPlayer: true,
+            currentClassJobId: 37,
             nowUtc: startedAt.AddSeconds(6).AddMilliseconds(1)));
     }
 }

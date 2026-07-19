@@ -16,7 +16,7 @@ public sealed class FrameworkAccessGuardContractTests
 {
     /// <summary>
     ///     Ensures player-scoped framework access requires a stable readiness
-    ///     gate, territory, and object-table local player.
+    ///     gate, territory, and a valid object-table local player.
     /// </summary>
     [Fact]
     public void PlayerScopedFrameworkAccess_uses_stable_local_player_gate()
@@ -31,10 +31,13 @@ public sealed class FrameworkAccessGuardContractTests
             "PlayerScopedFrameworkReadinessGate",
             source);
         Assert.Contains(
-            "ClientStateInterface.TerritoryType != 0",
+            "TimeSpan.FromSeconds(10)",
             source);
         Assert.Contains(
-            "ObjectTableInterface?.LocalPlayer",
+            "ClientStateInterface.TerritoryType,",
+            source);
+        Assert.Contains(
+            "localPlayer?.IsValid() == true",
             source);
     }
 

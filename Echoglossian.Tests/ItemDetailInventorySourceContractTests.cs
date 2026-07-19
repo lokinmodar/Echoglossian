@@ -36,6 +36,9 @@ public class ItemDetailInventorySourceContractTests
             "PrefetchInventoryTypes",
             source);
         Assert.Contains(
+            "container->IsLoaded",
+            source);
+        Assert.Contains(
             "container->Size == 0",
             source);
         Assert.Contains(
