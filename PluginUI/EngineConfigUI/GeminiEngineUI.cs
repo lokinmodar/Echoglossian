@@ -75,9 +75,9 @@ public static class GeminiEngineUI
 
         var tooltips = new Dictionary<string, string>
         {
-            ["gemini-pro"] = Resources.GeminiModelTooltipPro,
-            ["gemini-1.5-pro"] = Resources.GeminiModelTooltip15Pro,
-            ["gemini-1.5-flash"] = Resources.GeminiModelTooltip15Flash,
+            ["gemini-2.5-flash"] = Resources.GeminiModelTooltip15Flash,
+            ["gemini-2.5-flash-lite"] = Resources.GeminiModelTooltipPro,
+            ["gemini-2.5-pro"] = Resources.GeminiModelTooltip15Pro,
         };
 
         var models = config.UseLiveGeminiModelList

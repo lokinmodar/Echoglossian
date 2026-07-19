@@ -23,7 +23,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
     public GeminiTranslator(IPluginLog pluginLog, Config config)
     {
         this.apiKey = config.GeminiTranslatorApiKey ?? string.Empty;
-        this.model = config.GeminiModel ?? "gemini-pro"; // Default model
+        this.model = config.GeminiModel ?? "gemini-2.5-flash";
         this.temperature = config.GeminiTemperature;
         this.promptTemplate = string.IsNullOrWhiteSpace(config.GeminiPrompt)
             ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Gemini)

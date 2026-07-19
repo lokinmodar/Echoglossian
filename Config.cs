@@ -297,13 +297,14 @@ public class Config : IPluginConfiguration
   [DefaultValue(false)] public bool BattleTalkForceShowTitle = false;
 
   /// <summary>Gemini model ID used for translations.</summary>
-  [DefaultValue("gemini-pro")] public string? GeminiModel = "gemini-pro";
+  [DefaultValue("gemini-2.5-flash")]
+  public string? GeminiModel = "gemini-2.5-flash";
 
   /// <summary>
   ///     Model identifier for Gemini translations.
   /// </summary>
-  [DefaultValue("gemini-pro")]
-  public string GeminiModelId = "gemini-pro"; // or "gemini-1.5-flash"
+  [DefaultValue("gemini-2.5-flash")]
+  public string GeminiModelId = "gemini-2.5-flash";
 
   /// <summary>Prompt passed to Gemini for translation context.</summary>
   [DefaultValue("")] public string? GeminiPrompt = string.Empty;
