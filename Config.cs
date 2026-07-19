@@ -1142,7 +1142,7 @@ public class Config : IPluginConfiguration
       JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Translate UI tooltips.</summary>
-  [DefaultValue(false)] public bool TranslateTooltips = false;
+  [DefaultValue(true)] public bool TranslateTooltips = true;
 
   /// <summary>
   ///     Display mode for action and item tooltips managed by the DB-first

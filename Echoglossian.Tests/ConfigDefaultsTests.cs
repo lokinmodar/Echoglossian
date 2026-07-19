@@ -36,6 +36,21 @@ public class ConfigDefaultsTests
     }
 
     /// <summary>
+    ///     Ensures the validated DB-first ActionDetail / ItemDetail runtime is
+    ///     active by default instead of staying dormant for release builds.
+    /// </summary>
+    [Fact]
+    public void TranslateTooltips_DefaultsToTrue()
+    {
+        var config = new Config();
+
+        Assert.True(config.TranslateTooltips);
+        Assert.Equal(
+            JournalTranslationDisplayMode.NativeUiTranslation,
+            config.TooltipTranslationDisplayMode);
+    }
+
+    /// <summary>
     ///     Ensures hover tooltips use a slightly smaller text scale than the
     ///     global overlay default so dense RTL content remains readable.
     /// </summary>
