@@ -4013,6 +4013,23 @@
             <param name="acceptedQuestIds">The accepted quest ids.</param>
             <returns>The stable accepted-quest signature.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.BuildAcceptedQuestSignature(System.Collections.Generic.IReadOnlyCollection{System.UInt32},System.Func{System.UInt32,System.Byte},System.Func{System.UInt32,System.String})">
+            <summary>
+                Builds a stable accepted-quest signature from supplied live state
+                resolvers.
+            </summary>
+            <param name="acceptedQuestIds">The accepted quest ids.</param>
+            <param name="questSequenceResolver">Resolves the live quest sequence.</param>
+            <param name="todoSignatureResolver">Resolves live TODO progress state.</param>
+            <returns>The stable accepted-quest signature.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveAcceptedQuestTodoSignature(System.UInt32)">
+            <summary>
+                Attempts to resolve live TODO state for an accepted quest.
+            </summary>
+            <param name="questId">The accepted quest id.</param>
+            <returns>The live TODO signature, or null when unavailable.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TickActionDetailPrefetch">
             <summary>
                 Ticks the action-tooltip prefetch runtime so the current class/job actions

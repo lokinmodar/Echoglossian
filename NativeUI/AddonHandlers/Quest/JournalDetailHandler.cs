@@ -212,8 +212,14 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string questName,
       string questMessage)
   {
-    return questProgressSnapshot?.CacheKey ??
-           $"{questName}|{questMessage}";
+    if (questProgressSnapshot is { } snapshot)
+    {
+      return string.IsNullOrWhiteSpace(snapshot.ContentHash)
+          ? snapshot.CacheKey
+          : $"{snapshot.CacheKey}:{snapshot.ContentHash}";
+    }
+
+    return $"{questName}|{questMessage}";
   }
 
   /// <summary>

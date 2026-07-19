@@ -1197,6 +1197,25 @@ public partial class Echoglossian
   private static string BuildAcceptedQuestSignature(
       IReadOnlyCollection<uint> acceptedQuestIds)
   {
+    return BuildAcceptedQuestSignature(
+        acceptedQuestIds,
+        QuestManager.GetQuestSequence,
+        TryResolveAcceptedQuestTodoSignature);
+  }
+
+  /// <summary>
+  ///     Builds a stable accepted-quest signature from supplied live state
+  ///     resolvers.
+  /// </summary>
+  /// <param name="acceptedQuestIds">The accepted quest ids.</param>
+  /// <param name="questSequenceResolver">Resolves the live quest sequence.</param>
+  /// <param name="todoSignatureResolver">Resolves live TODO progress state.</param>
+  /// <returns>The stable accepted-quest signature.</returns>
+  internal static string BuildAcceptedQuestSignature(
+      IReadOnlyCollection<uint> acceptedQuestIds,
+      Func<uint, byte> questSequenceResolver,
+      Func<uint, string?> todoSignatureResolver)
+  {
     if (acceptedQuestIds.Count == 0)
     {
       return string.Empty;
@@ -1205,7 +1224,40 @@ public partial class Echoglossian
     return string.Join(
         "|",
         acceptedQuestIds.Select(questId =>
-            $"{questId}:{QuestManager.GetQuestSequence(questId)}"));
+        {
+          var questSequence = questSequenceResolver(questId);
+          var todoSignature = todoSignatureResolver(questId);
+          return string.IsNullOrWhiteSpace(todoSignature)
+              ? $"{questId}:{questSequence}"
+              : $"{questId}:{questSequence}:{todoSignature}";
+        }));
+  }
+
+  /// <summary>
+  ///     Attempts to resolve live TODO state for an accepted quest.
+  /// </summary>
+  /// <param name="questId">The accepted quest id.</param>
+  /// <returns>The live TODO signature, or null when unavailable.</returns>
+  private static string? TryResolveAcceptedQuestTodoSignature(uint questId)
+  {
+    try
+    {
+      unsafe
+      {
+        return QuestTodoProgressResolver.TryResolveQuestTodoProgress(
+            questId,
+            out var snapshot)
+            ? snapshot.CacheKey
+            : null;
+      }
+    }
+    catch (Exception exception)
+    {
+      PluginRuntimeLog.Debug(
+          "[AcceptedQuestPrefetch] Could not resolve live TODO signature " +
+          $"for quest '{questId}': {exception.Message}");
+      return null;
+    }
   }
 }
 
