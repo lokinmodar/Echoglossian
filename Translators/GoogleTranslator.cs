@@ -266,21 +266,44 @@ public class GoogleTranslator : ITranslator
                 return translatedText;
             }
 
-            PluginRuntimeLog.Error(
+            LogRecoverableResponseFailure(
                 this.pluginLog,
-                $"GoogleTranslator returned no translateResponse.translateText for input '{parsedText}'. " +
-                $"Status={(int)response.StatusCode} {response.ReasonPhrase}. " +
-                $"Content preview: {FormatResponsePreview(content)}");
+                parsedText,
+                (int)response.StatusCode,
+                response.ReasonPhrase,
+                content);
             return string.Empty;
         }
         catch (JsonException ex)
         {
-            PluginRuntimeLog.Error(
+            PluginRuntimeLog.Warning(
                 this.pluginLog,
                 $"GoogleTranslator JSON parse error for input '{parsedText}': {ex.Message}. " +
                 $"Content preview: {FormatResponsePreview(content)}");
             return string.Empty;
         }
+    }
+
+    /// <summary>
+    ///     Logs a recoverable Google response-shape failure.
+    /// </summary>
+    /// <param name="pluginLog">The plugin logger.</param>
+    /// <param name="parsedText">The sanitized request text.</param>
+    /// <param name="statusCode">The HTTP status code.</param>
+    /// <param name="reasonPhrase">The HTTP reason phrase.</param>
+    /// <param name="content">The response content.</param>
+    internal static void LogRecoverableResponseFailure(
+        IPluginLog pluginLog,
+        string parsedText,
+        int statusCode,
+        string? reasonPhrase,
+        string content)
+    {
+        PluginRuntimeLog.Warning(
+            pluginLog,
+            $"GoogleTranslator returned no translateResponse.translateText for input '{parsedText}'. " +
+            $"Status={statusCode.ToString(CultureInfo.InvariantCulture)} {reasonPhrase}. " +
+            $"Content preview: {FormatResponsePreview(content)}");
     }
 
     private static string FormatResponsePreview(string content)

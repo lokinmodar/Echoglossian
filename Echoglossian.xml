@@ -31187,6 +31187,16 @@
         <member name="M:Echoglossian.Translators.GoogleTranslator.TranslateAsync(System.String,System.String,System.String)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.Translators.GoogleTranslator.LogRecoverableResponseFailure(Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.String,System.String)">
+            <summary>
+                Logs a recoverable Google response-shape failure.
+            </summary>
+            <param name="pluginLog">The plugin logger.</param>
+            <param name="parsedText">The sanitized request text.</param>
+            <param name="statusCode">The HTTP status code.</param>
+            <param name="reasonPhrase">The HTTP reason phrase.</param>
+            <param name="content">The response content.</param>
+        </member>
         <member name="T:Echoglossian.Translators.GTranslateTranslator">
             <summary>
                 Provides translation services using GTranslate.
