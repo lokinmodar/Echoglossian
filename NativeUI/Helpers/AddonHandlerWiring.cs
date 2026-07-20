@@ -278,6 +278,16 @@ public partial class Echoglossian
       this.registeredAddonHandlers.Add(
           (AddonName: "AreaMap",
               Handler: new AreaMapHandler(questAddonDependencies)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "AreaMap",
+              Handler: new MapSurfaceStringArrayHandler(
+                  "AreaMap",
+                  questAddonDependencies)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_NaviMap",
+              Handler: new MapSurfaceStringArrayHandler(
+                  "_NaviMap",
+                  questAddonDependencies)));
     }
 
     if (this.configuration.TranslateToDoList)

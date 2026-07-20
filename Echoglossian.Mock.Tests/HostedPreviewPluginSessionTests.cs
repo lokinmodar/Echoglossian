@@ -134,6 +134,12 @@ public sealed class HostedPreviewPluginSessionTests
         registeredHandlers.Should().Contain(entry =>
             entry.AddonName == "AreaMap" &&
             entry.Handler is AreaMapHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "AreaMap" &&
+            entry.Handler is MapSurfaceStringArrayHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "_NaviMap" &&
+            entry.Handler is MapSurfaceStringArrayHandler);
     }
 
     private static IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)>

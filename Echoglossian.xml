@@ -17239,6 +17239,162 @@
                 Gets whether the translated JournalResult payload is complete.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler">
+            <summary>
+                Handles map-family text exposed only through live
+                <see cref="T:FFXIVClientStructs.FFXIV.Component.GUI.StringArrayData" /> payloads.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.#ctor(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler" /> class.
+            </summary>
+            <param name="addonName">The map-family addon name.</param>
+            <param name="dependencies">The shared quest-handler dependencies.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.OnPluginUnload">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.OnMapSurfaceEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles setup and refresh events.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.OnMapSurfacePreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Handles draw-time retries and late background translation completion.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.OnMapSurfaceCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears owned state when the map addon closes.
+            </summary>
+            <param name="type">The addon lifecycle event.</param>
+            <param name="args">The addon lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ProcessMapSurface">
+            <summary>
+                Processes the visible map-family string-array payloads.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ProcessLiveArray(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceLiveArray,Echoglossian.SourceClientLanguage)">
+            <summary>
+                Resolves, applies, or queues one captured map string-array payload.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <param name="liveArray">The captured live string-array payload.</param>
+            <param name="sourceLanguage">The operation-captured source language.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ApplyMapSurfacePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceLiveArray,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection)">
+            <summary>
+                Applies the selected display mode to one map string-array payload.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <param name="liveArray">The captured live string-array payload.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="translatedPayload">The translated structured payload.</param>
+            <param name="projection">The translated live-slot projection.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ApplyTranslatedStringArrayValues(Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceLiveArray,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection)">
+            <summary>
+                Writes translated text into translatable map string-array slots.
+            </summary>
+            <param name="liveArray">The captured live string-array payload.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="projection">The translated live-slot projection.</param>
+            <returns>The exact native strings written by this handler.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.RegisterHoverTooltip(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Int32,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Registers one aggregate hover tooltip for a map string-array payload.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <param name="arrayIndex">The live string-array index.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="translatedPayload">The translated structured payload.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.TryFindTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload@,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection@)">
+            <summary>
+                Resolves a translated payload from in-memory cache or SQLite.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source language.</param>
+            <param name="scope">The captured translation reuse scope.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <param name="projection">The projected translated live values.</param>
+            <returns><c>true</c> when a complete translated payload exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.QueueTranslationIfNeeded(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,System.String)">
+            <summary>
+                Queues one missing map string-array payload for background
+                translation and persistence.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source language.</param>
+            <param name="scope">The captured translation reuse scope.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="payloadKey">The stable in-flight key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.TranslateAndPersistPayloadAsync(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Translates and persists one structured map string-array payload.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source language.</param>
+            <param name="scope">The captured translation reuse scope.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <returns>The persisted row snapshot, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ResolveOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceLiveArray)">
+            <summary>
+                Resolves the original payload when the live string array may already
+                contain a plugin-owned translated payload.
+            </summary>
+            <param name="liveArray">The captured live string-array payload.</param>
+            <returns>The source-facing original payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.TryCaptureLiveMapSurfaceArrays(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Collections.Generic.List{Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceLiveArray}@)">
+            <summary>
+                Captures live map-surface string arrays subscribed by the addon.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <param name="liveArrays">The captured live arrays.</param>
+            <returns><c>true</c> when at least one map payload was captured.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.TryGetVisibleAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Resolves the visible addon by name.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <returns><c>true</c> when the addon is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.RestoreOriginalPayloadsIfNeeded">
+            <summary>
+                Restores all plugin-owned native string-array mutations.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.RestoreOriginalPayloadIfNeeded(Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceRuntimeState)">
+            <summary>
+                Restores one plugin-owned native string-array mutation.
+            </summary>
+            <param name="runtimeState">The runtime state to restore.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.TryResolveLiveStringArrayByIndex(System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.StringArrayData*@)">
+            <summary>
+                Resolves a live string array by array index.
+            </summary>
+            <param name="arrayIndex">The live array index.</param>
+            <param name="stringArrayData">The resolved string array.</param>
+            <returns><c>true</c> when the string array is available.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ClearMapSurfaceState">
+            <summary>
+                Clears hover and native mutation state.
+            </summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase">
             <summary>
                 Shared base implementation for standalone quest addon handlers.
@@ -23310,7 +23466,7 @@
             <param name="originalPayload">The original canonical payload.</param>
             <returns>The projected original payload maps.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslatePayloadAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution})">
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslatePayloadAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution},System.String)">
             <summary>
                 Translates one canonical payload while preserving slot semantics and
                 structure.
@@ -23319,9 +23475,11 @@
             <param name="translationService">The translation service.</param>
             <param name="sourceLanguage">The source language.</param>
             <param name="targetLanguage">The target language.</param>
+            <param name="translatorResolution">The captured translator resolution.</param>
+            <param name="originContext">The diagnostic origin context.</param>
             <returns>The translated canonical payload.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslateAndPersistAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String,System.Nullable{System.Int32},System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslateAndPersistAsync(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.Translators.TranslationService,Echoglossian.SourceClientLanguage,System.String,System.Nullable{System.Int32},System.String,System.String,System.String)">
             <summary>
                 Translates one canonical payload and persists it to the
                 <c>stringarraydatas</c> table.
@@ -23333,6 +23491,7 @@
             <param name="translationEngine">The translation engine id.</param>
             <param name="gameVersion">The game version.</param>
             <param name="configDirectory">The plugin configuration directory.</param>
+            <param name="originContext">The diagnostic origin context.</param>
             <returns>The persisted row snapshot.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.EncodeAtkSlot(System.Int32)">
@@ -23911,6 +24070,66 @@
             <param name="scope">The required translation reuse scope.</param>
             <param name="gameVersion">The current game version.</param>
             <returns>The canonical original text, or the visible text.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema">
+            <summary>
+                Defines the canonical structured payload for map-family
+                <c>StringArrayData</c> surfaces.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.Instance">
+            <summary>
+                Gets the shared map-surface schema instance.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.Type">
+            <inheritdoc />
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.SchemaVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.BuildPayload(System.String,System.Int32,System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String})">
+            <summary>
+                Builds a canonical payload for one map-family string array.
+            </summary>
+            <param name="addonName">The owning addon name.</param>
+            <param name="arrayIndex">The live string-array index.</param>
+            <param name="slotTexts">The captured slot values.</param>
+            <returns>The canonical structured payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.BuildContextKey(System.String)">
+            <summary>
+                Builds the stable context key for one map-surface addon.
+            </summary>
+            <param name="addonName">The owning addon name.</param>
+            <returns>The canonical context key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.IsMapSurfacePayload(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Determines whether one payload is a usable map-surface payload.
+            </summary>
+            <param name="payload">The payload to inspect.</param>
+            <returns>
+                <see langword="true" /> when the payload carries map identity and
+                at least one translatable user-facing slot.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.GetTranslatableSlotIndices(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Returns the translatable slot indices from one map payload.
+            </summary>
+            <param name="payload">The payload to inspect.</param>
+            <returns>The translatable slot indices.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.TryDescribeSlot(System.Int32,System.String,Echoglossian.NativeUI.Helpers.StringArrayStructuredSlotDescription@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.ShouldTranslateMapText(System.String)">
+            <summary>
+                Determines whether one string-array value is user-facing map text.
+            </summary>
+            <param name="text">The captured text.</param>
+            <returns><c>true</c> when the value should be translated.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.MiniTalkWrapWidthHelper">
             <summary>
