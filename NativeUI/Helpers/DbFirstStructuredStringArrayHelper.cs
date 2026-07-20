@@ -264,72 +264,17 @@ public static class DbFirstStructuredStringArrayHelper
             return translatedPayload;
         }
 
-        var builder = new StringBuilder();
         var translatedMap = new Dictionary<string, string>(StringComparer.Ordinal);
+        var translationEntries = BuildTranslationEntries(slotTexts, textNodeTexts);
 
-        foreach (var pair in slotTexts)
-        {
-            var encodedKey = EncodeTranslationKey(pair.Key);
-            var encodedEntry = $"{encodedKey}|{pair.Value.OriginalText}";
-
-            if (builder.Length + encodedEntry.Length + 1 > MaxChunkLength)
-            {
-                await TranslateAndMergeChunkAsync(
-                    translationService,
-                    builder.ToString(),
-                    translatedMap,
-                    sourceLanguage,
-                    targetLanguage,
-                    translatorResolution,
-                    originContext);
-                builder.Clear();
-            }
-
-            if (builder.Length > 0)
-            {
-                builder.Append('|');
-            }
-
-            builder.Append(encodedEntry);
-        }
-
-        foreach (var pair in textNodeTexts)
-        {
-            var encodedKey = EncodeTextNodeTranslationKey(pair.Key);
-            var encodedEntry = $"{encodedKey}|{pair.Value.OriginalText}";
-
-            if (builder.Length + encodedEntry.Length + 1 > MaxChunkLength)
-            {
-                await TranslateAndMergeChunkAsync(
-                    translationService,
-                    builder.ToString(),
-                    translatedMap,
-                    sourceLanguage,
-                    targetLanguage,
-                    translatorResolution,
-                    originContext);
-                builder.Clear();
-            }
-
-            if (builder.Length > 0)
-            {
-                builder.Append('|');
-            }
-
-            builder.Append(encodedEntry);
-        }
-
-        if (builder.Length > 0)
-        {
-            await TranslateAndMergeChunkAsync(
-                translationService,
-                builder.ToString(),
-                translatedMap,
-                sourceLanguage,
-                targetLanguage,
-                translatorResolution,
-                originContext);
-        }
+        await TranslateEntriesInChunksAsync(
+            translationService,
+            translationEntries,
+            translatedMap,
+            sourceLanguage,
+            targetLanguage,
+            translatorResolution,
+            originContext);
 
         await TranslateMissingEntriesIndividuallyAsync(
             translationService,
@@ -463,15 +408,121 @@ public static class DbFirstStructuredStringArrayHelper
         return $"t{textNodeKey}";
     }
 
-    private static async Task TranslateAndMergeChunkAsync(
+    /// <summary>
+    ///     Builds translation entries in deterministic payload order.
+    /// </summary>
+    /// <param name="slotTexts">The structured StringArrayData entries.</param>
+    /// <param name="textNodeTexts">The structured visible text-node entries.</param>
+    /// <returns>The translation entries to batch.</returns>
+    private static List<StructuredTranslationEntry> BuildTranslationEntries(
+        IReadOnlyCollection<KeyValuePair<int, StringArrayStructuredSlot>> slotTexts,
+        IReadOnlyCollection<KeyValuePair<string, StringArrayStructuredSlot>> textNodeTexts)
+    {
+        var entries = new List<StructuredTranslationEntry>(
+            slotTexts.Count + textNodeTexts.Count);
+        foreach (var pair in slotTexts)
+        {
+            entries.Add(new StructuredTranslationEntry(
+                EncodeTranslationKey(pair.Key),
+                pair.Value.OriginalText ?? string.Empty));
+        }
+
+        foreach (var pair in textNodeTexts)
+        {
+            entries.Add(new StructuredTranslationEntry(
+                EncodeTextNodeTranslationKey(pair.Key),
+                pair.Value.OriginalText ?? string.Empty));
+        }
+
+        return entries;
+    }
+
+    /// <summary>
+    ///     Translates structured entries in bounded batches.
+    /// </summary>
+    /// <param name="translationService">The translation service.</param>
+    /// <param name="entries">The entries to translate.</param>
+    /// <param name="translatedMap">The translated text map to populate.</param>
+    /// <param name="sourceLanguage">The source client language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="translatorResolution">The optional translator resolution.</param>
+    /// <param name="originContext">The optional translation origin context.</param>
+    /// <returns>The asynchronous operation.</returns>
+    private static async Task TranslateEntriesInChunksAsync(
         TranslationService translationService,
-        string chunk,
+        IReadOnlyList<StructuredTranslationEntry> entries,
         IDictionary<string, string> translatedMap,
         SourceClientLanguage sourceLanguage,
         string targetLanguage,
         TranslationService.TranslatorResolution? translatorResolution,
         string? originContext)
     {
+        var chunkEntries = new List<StructuredTranslationEntry>();
+        var chunkLength = 0;
+        foreach (var entry in entries)
+        {
+            var encodedEntryLength = GetTransportEntryLength(
+                chunkEntries.Count,
+                entry);
+            if (chunkEntries.Count > 0 &&
+                chunkLength + encodedEntryLength + 1 > MaxChunkLength)
+            {
+                await TranslateAndMergeChunkAsync(
+                    translationService,
+                    chunkEntries,
+                    translatedMap,
+                    sourceLanguage,
+                    targetLanguage,
+                    translatorResolution,
+                    originContext);
+                chunkEntries.Clear();
+                chunkLength = 0;
+                encodedEntryLength = GetTransportEntryLength(0, entry);
+            }
+
+            if (chunkEntries.Count > 0)
+            {
+                chunkLength++;
+            }
+
+            chunkEntries.Add(entry);
+            chunkLength += encodedEntryLength;
+        }
+
+        if (chunkEntries.Count > 0)
+        {
+            await TranslateAndMergeChunkAsync(
+                translationService,
+                chunkEntries,
+                translatedMap,
+                sourceLanguage,
+                targetLanguage,
+                translatorResolution,
+                originContext);
+        }
+    }
+
+    /// <summary>
+    ///     Translates one structured batch and merges any recoverable results.
+    /// </summary>
+    /// <param name="translationService">The translation service.</param>
+    /// <param name="entries">The entries included in the batch.</param>
+    /// <param name="translatedMap">The translated text map to populate.</param>
+    /// <param name="sourceLanguage">The source client language.</param>
+    /// <param name="targetLanguage">The target language.</param>
+    /// <param name="translatorResolution">The optional translator resolution.</param>
+    /// <param name="originContext">The optional translation origin context.</param>
+    /// <returns>The asynchronous operation.</returns>
+    private static async Task TranslateAndMergeChunkAsync(
+        TranslationService translationService,
+        IReadOnlyList<StructuredTranslationEntry> entries,
+        IDictionary<string, string> translatedMap,
+        SourceClientLanguage sourceLanguage,
+        string targetLanguage,
+        TranslationService.TranslatorResolution? translatorResolution,
+        string? originContext)
+    {
+        var chunk = BuildTranslationChunk(entries);
         if (string.IsNullOrWhiteSpace(chunk))
         {
             return;
@@ -495,11 +546,148 @@ public static class DbFirstStructuredStringArrayHelper
             return;
         }
 
+        MergeTranslatedChunk(entries, translatedChunk, translatedMap);
+    }
+
+    /// <summary>
+    ///     Builds the delimited translation chunk sent to the provider.
+    /// </summary>
+    /// <param name="entries">The entries to encode.</param>
+    /// <returns>The encoded chunk.</returns>
+    private static string BuildTranslationChunk(
+        IReadOnlyList<StructuredTranslationEntry> entries)
+    {
+        var builder = new StringBuilder();
+        for (var index = 0; index < entries.Count; index++)
+        {
+            if (builder.Length > 0)
+            {
+                builder.Append('|');
+            }
+
+            var entry = entries[index];
+            builder
+                .Append(GetTransportKey(index))
+                .Append('|')
+                .Append(entry.OriginalText);
+        }
+
+        return builder.ToString();
+    }
+
+    /// <summary>
+    ///     Merges a translated chunk, accepting numeric transport keys,
+    ///     canonical legacy keys, or ordered text-only parts when the provider
+    ///     preserved item order but dropped keys.
+    /// </summary>
+    /// <param name="entries">The entries that were included in the request.</param>
+    /// <param name="translatedChunk">The translated provider response.</param>
+    /// <param name="translatedMap">The translated text map to populate.</param>
+    private static void MergeTranslatedChunk(
+        IReadOnlyList<StructuredTranslationEntry> entries,
+        string translatedChunk,
+        IDictionary<string, string> translatedMap)
+    {
         var parts = translatedChunk.Split('|');
+        var keyedMatches = 0;
         for (var index = 0; index < parts.Length - 1; index += 2)
         {
-            translatedMap[parts[index]] = parts[index + 1];
+            if (!TryGetKeyedEntryIndex(
+                    parts[index].Trim(),
+                    entries,
+                    out var entryIndex))
+            {
+                continue;
+            }
+
+            var translatedText = parts[index + 1].Trim();
+            if (!string.IsNullOrWhiteSpace(translatedText))
+            {
+                translatedMap[entries[entryIndex].ResultKey] = translatedText;
+                keyedMatches++;
+            }
         }
+
+        if (keyedMatches != 0)
+        {
+            return;
+        }
+
+        if (parts.Length != entries.Count)
+        {
+            return;
+        }
+
+        for (var index = 0; index < entries.Count; index++)
+        {
+            var translatedText = parts[index].Trim();
+            if (!string.IsNullOrWhiteSpace(translatedText))
+            {
+                translatedMap[entries[index].ResultKey] = translatedText;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Gets the encoded entry length in the current transport chunk.
+    /// </summary>
+    /// <param name="transportIndex">The chunk-local transport index.</param>
+    /// <param name="entry">The translation entry.</param>
+    /// <returns>The encoded entry length.</returns>
+    private static int GetTransportEntryLength(
+        int transportIndex,
+        StructuredTranslationEntry entry)
+    {
+        return GetTransportKey(transportIndex).Length + 1 +
+               entry.OriginalText.Length;
+    }
+
+    /// <summary>
+    ///     Gets the numeric chunk-local transport key.
+    /// </summary>
+    /// <param name="transportIndex">The chunk-local transport index.</param>
+    /// <returns>The transport key.</returns>
+    private static string GetTransportKey(int transportIndex)
+    {
+        return transportIndex.ToString(CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    ///     Attempts to read a numeric or canonical key from a translated
+    ///     response.
+    /// </summary>
+    /// <param name="responseKey">The translated response key.</param>
+    /// <param name="entries">The entries in the chunk.</param>
+    /// <param name="entryIndex">The decoded entry index.</param>
+    /// <returns><see langword="true" /> when the key is valid.</returns>
+    private static bool TryGetKeyedEntryIndex(
+        string responseKey,
+        IReadOnlyList<StructuredTranslationEntry> entries,
+        out int entryIndex)
+    {
+        if (!int.TryParse(
+                responseKey,
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out entryIndex))
+        {
+            for (var index = 0; index < entries.Count; index++)
+            {
+                if (string.Equals(
+                        responseKey,
+                        entries[index].ResultKey,
+                        StringComparison.Ordinal))
+                {
+                    entryIndex = index;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return entryIndex >= 0 && entryIndex < entries.Count &&
+               responseKey == GetTransportKey(entryIndex);
     }
 
     private static async Task TranslateMissingEntriesIndividuallyAsync(
@@ -615,6 +803,15 @@ public static class DbFirstStructuredStringArrayHelper
 
         return true;
     }
+
+    /// <summary>
+    ///     Represents one key/text pair inside a structured translation batch.
+    /// </summary>
+    /// <param name="ResultKey">The canonical result-map key.</param>
+    /// <param name="OriginalText">The original text to translate.</param>
+    private sealed record StructuredTranslationEntry(
+        string ResultKey,
+        string OriginalText);
 }
 
 /// <summary>

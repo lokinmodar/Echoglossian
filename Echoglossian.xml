@@ -23744,6 +23744,102 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.BuildTranslationEntries(System.Collections.Generic.IReadOnlyCollection{System.Collections.Generic.KeyValuePair{System.Int32,Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot}},System.Collections.Generic.IReadOnlyCollection{System.Collections.Generic.KeyValuePair{System.String,Echoglossian.NativeUI.Helpers.StringArrayStructuredSlot}})">
+            <summary>
+                Builds translation entries in deterministic payload order.
+            </summary>
+            <param name="slotTexts">The structured StringArrayData entries.</param>
+            <param name="textNodeTexts">The structured visible text-node entries.</param>
+            <returns>The translation entries to batch.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslateEntriesInChunksAsync(Echoglossian.Translators.TranslationService,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry},System.Collections.Generic.IDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution},System.String)">
+            <summary>
+                Translates structured entries in bounded batches.
+            </summary>
+            <param name="translationService">The translation service.</param>
+            <param name="entries">The entries to translate.</param>
+            <param name="translatedMap">The translated text map to populate.</param>
+            <param name="sourceLanguage">The source client language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <param name="translatorResolution">The optional translator resolution.</param>
+            <param name="originContext">The optional translation origin context.</param>
+            <returns>The asynchronous operation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TranslateAndMergeChunkAsync(Echoglossian.Translators.TranslationService,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry},System.Collections.Generic.IDictionary{System.String,System.String},Echoglossian.SourceClientLanguage,System.String,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution},System.String)">
+            <summary>
+                Translates one structured batch and merges any recoverable results.
+            </summary>
+            <param name="translationService">The translation service.</param>
+            <param name="entries">The entries included in the batch.</param>
+            <param name="translatedMap">The translated text map to populate.</param>
+            <param name="sourceLanguage">The source client language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <param name="translatorResolution">The optional translator resolution.</param>
+            <param name="originContext">The optional translation origin context.</param>
+            <returns>The asynchronous operation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.BuildTranslationChunk(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry})">
+            <summary>
+                Builds the delimited translation chunk sent to the provider.
+            </summary>
+            <param name="entries">The entries to encode.</param>
+            <returns>The encoded chunk.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.MergeTranslatedChunk(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry},System.String,System.Collections.Generic.IDictionary{System.String,System.String})">
+            <summary>
+                Merges a translated chunk, accepting numeric transport keys,
+                canonical legacy keys, or ordered text-only parts when the provider
+                preserved item order but dropped keys.
+            </summary>
+            <param name="entries">The entries that were included in the request.</param>
+            <param name="translatedChunk">The translated provider response.</param>
+            <param name="translatedMap">The translated text map to populate.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.GetTransportEntryLength(System.Int32,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry)">
+            <summary>
+                Gets the encoded entry length in the current transport chunk.
+            </summary>
+            <param name="transportIndex">The chunk-local transport index.</param>
+            <param name="entry">The translation entry.</param>
+            <returns>The encoded entry length.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.GetTransportKey(System.Int32)">
+            <summary>
+                Gets the numeric chunk-local transport key.
+            </summary>
+            <param name="transportIndex">The chunk-local transport index.</param>
+            <returns>The transport key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.TryGetKeyedEntryIndex(System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry},System.Int32@)">
+            <summary>
+                Attempts to read a numeric or canonical key from a translated
+                response.
+            </summary>
+            <param name="responseKey">The translated response key.</param>
+            <param name="entries">The entries in the chunk.</param>
+            <param name="entryIndex">The decoded entry index.</param>
+            <returns><see langword="true" /> when the key is valid.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry">
+            <summary>
+                Represents one key/text pair inside a structured translation batch.
+            </summary>
+            <param name="ResultKey">The canonical result-map key.</param>
+            <param name="OriginalText">The original text to translate.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry.#ctor(System.String,System.String)">
+            <summary>
+                Represents one key/text pair inside a structured translation batch.
+            </summary>
+            <param name="ResultKey">The canonical result-map key.</param>
+            <param name="OriginalText">The original text to translate.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry.ResultKey">
+            <summary>The canonical result-map key.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayHelper.StructuredTranslationEntry.OriginalText">
+            <summary>The original text to translate.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection">
             <summary>
                 Represents one live addon payload projected from a translated canonical
