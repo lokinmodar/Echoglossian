@@ -36,6 +36,28 @@ public sealed class ScenarioTreeHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures ScenarioTree reads and applies the visible title text node
+    ///     observed by addon probing instead of relying only on AtkValue slots.
+    /// </summary>
+    [Fact]
+    public void ScenarioTree_reads_and_applies_visible_title_text_nodes()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Quest",
+            "ScenarioTreeHandler.cs"));
+
+        Assert.Contains("ScenarioTreeQuestTitleNodeId", source);
+        Assert.Contains("ResolveScenarioTreeVisibleTitleTextNodes", source);
+        Assert.Contains("AddonTextNodeResolvers.ResolveReadableTextNodes", source);
+        Assert.Contains("ApplyScenarioTreeTextNodePresentation", source);
+        Assert.Contains("scenarioTreeNativeMutationTextNodeKeys", source);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

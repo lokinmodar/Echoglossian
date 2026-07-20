@@ -18061,12 +18061,28 @@
             <param name="atkValues">The live ATK value pointer.</param>
             <returns>True when the visible addon was resolved.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CollectVisibleScenarioTreeEntries(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CollectVisibleScenarioTreeEntries(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
             <summary>
                 Collects the currently visible ScenarioTree quest slots.
             </summary>
+            <param name="addon">The live ScenarioTree addon.</param>
             <param name="atkValues">The live addon payload.</param>
             <returns>The visible quest slots.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CollectScenarioTreeAtkValueEntries(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">
+            <summary>
+                Collects visible ScenarioTree rows from the historical AtkValue slots.
+            </summary>
+            <param name="atkValues">The live addon payload.</param>
+            <returns>The visible AtkValue-backed quest slots.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CollectScenarioTreeTitleTextNodeEntries(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Collections.Generic.IReadOnlyCollection{Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry})">
+            <summary>
+                Collects ScenarioTree title nodes observed by addon probing.
+            </summary>
+            <param name="addon">The live ScenarioTree addon.</param>
+            <param name="atkValueEntries">The AtkValue-backed rows, if any.</param>
+            <returns>The visible text-node-backed quest title rows.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveVisibleScenarioTreeEntry(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry@,System.String@)">
             <summary>
@@ -18198,7 +18214,7 @@
             <param name="translatedText">The resolved translated text.</param>
             <returns>True when the translated text was found in the DB.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CreateScenarioTreeRuntimeEntry(System.Int32,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.CreateScenarioTreeRuntimeEntry(System.Int32,System.String,System.String,System.String,System.IntPtr)">
             <summary>
                 Creates the runtime payload for one visible ScenarioTree slot.
             </summary>
@@ -18206,6 +18222,7 @@
             <param name="progressKey">The stable quest progress key.</param>
             <param name="originalText">The original source text.</param>
             <param name="translatedText">The translated text.</param>
+            <param name="textNodeKey">The backing visible text-node key, if any.</param>
             <returns>The runtime entry.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeRuntimeEntryKey(System.String,System.Int32)">
@@ -18240,6 +18257,20 @@
                 tracked in the local runtime state.
             </summary>
             <param name="atkValues">The live addon payload.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ApplyScenarioTreeTextNodePresentation(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry)">
+            <summary>
+                Applies a translated ScenarioTree title directly to the visible text
+                node observed by addon probing.
+            </summary>
+            <param name="runtimeEntry">The text-node-backed runtime entry.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.RestoreScenarioTreeTextNodeOriginal(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry)">
+            <summary>
+                Restores a ScenarioTree text node only if this handler previously
+                wrote translated text into it.
+            </summary>
+            <param name="runtimeEntry">The text-node-backed runtime entry.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.GetScenarioTreeTranslatedDisplayText(System.String)">
             <summary>
@@ -18290,6 +18321,38 @@
             <param name="type">The lifecycle event.</param>
             <param name="args">The lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ResolveScenarioTreeVisibleTitleTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the visible ScenarioTree quest title text nodes observed by
+                addon probing.
+            </summary>
+            <param name="addon">The live ScenarioTree addon.</param>
+            <returns>The visible quest-title text node addresses.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryReadScenarioTreeVisibleTitleText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
+            <summary>
+                Reads a ScenarioTree quest title from the probed visible text node.
+            </summary>
+            <param name="textNode">The candidate text node.</param>
+            <param name="visibleText">The readable visible title text.</param>
+            <returns><c>true</c> when the node contains a quest title.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.IsScenarioTreeQuestTitleCandidate(System.String)">
+            <summary>
+                Determines whether visible ScenarioTree text should be treated as a
+                quest title.
+            </summary>
+            <param name="visibleText">The text read from the native node.</param>
+            <returns><c>true</c> when the text is suitable for translation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ReadScenarioTreeTextNodeText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the best plain-text representation from a ScenarioTree text
+                node.
+            </summary>
+            <param name="textNode">The ScenarioTree text node.</param>
+            <returns>The readable text, or an empty string.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryGetScenarioTreeText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.Int32,System.String@)">
             <summary>
                 Tries to read one visible ScenarioTree string slot.
@@ -18306,14 +18369,16 @@
             <param name="ValueIndex">The addon value index.</param>
             <param name="QuestRowId">The resolved quest row id from AgentScenarioTree.</param>
             <param name="OriginalText">The original visible text.</param>
+            <param name="TextNodeKey">The backing visible text-node key, if any.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.#ctor(System.Int32,System.UInt32,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.#ctor(System.Int32,System.UInt32,System.String,System.IntPtr)">
             <summary>
                 Represents one visible ScenarioTree quest slot.
             </summary>
             <param name="ValueIndex">The addon value index.</param>
             <param name="QuestRowId">The resolved quest row id from AgentScenarioTree.</param>
             <param name="OriginalText">The original visible text.</param>
+            <param name="TextNodeKey">The backing visible text-node key, if any.</param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.ValueIndex">
             <summary>The addon value index.</summary>
@@ -18323,6 +18388,9 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.OriginalText">
             <summary>The original visible text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry.TextNodeKey">
+            <summary>The backing visible text-node key, if any.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeQuestSlot">
             <summary>
@@ -18353,8 +18421,9 @@
             <param name="ValueIndex">The addon value index.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TextNodeKey">The backing visible text-node key, if any.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.String,System.String,System.IntPtr)">
             <summary>
                 Represents one resolved ScenarioTree runtime slot.
             </summary>
@@ -18363,6 +18432,7 @@
             <param name="ValueIndex">The addon value index.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TextNodeKey">The backing visible text-node key, if any.</param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.Key">
             <summary>The stable runtime key.</summary>
@@ -18378,6 +18448,9 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.TranslatedText">
             <summary>The translated text from the DB.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.TextNodeKey">
+            <summary>The backing visible text-node key, if any.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler">
             <summary>
@@ -22699,6 +22772,23 @@
             <param name="pluginLog">The plugin log used for output.</param>
             <param name="snapshot">The probe snapshot being populated.</param>
             <param name="addon">The probed addon pointer.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.BuildStringArrayValueSample(FFXIVClientStructs.FFXIV.Component.GUI.StringArrayData*)">
+            <summary>
+            Builds a bounded, log-safe sample of values from a live
+            <see cref="T:FFXIVClientStructs.FFXIV.Component.GUI.StringArrayData" />.
+            </summary>
+            <param name="stringArrayData">The native string-array data.</param>
+            <returns>A compact sample of indexed string values.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.ReadStringArrayValueForProbe(FFXIVClientStructs.FFXIV.Component.GUI.StringArrayData*,System.Int32)">
+            <summary>
+            Reads one StringArrayData value for debug probing without throwing out of
+            the probe walk.
+            </summary>
+            <param name="stringArrayData">The native string-array data.</param>
+            <param name="index">The value index to read.</param>
+            <returns>The extracted text, or an empty string.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.AddonStructureProbe.BuildLoadedAddonNamesById">
             <summary>
