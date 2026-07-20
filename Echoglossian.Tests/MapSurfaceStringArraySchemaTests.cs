@@ -52,10 +52,75 @@ public sealed class MapSurfaceStringArraySchemaTests
         Assert.False(payload.Slots[4].IsTranslatable);
         Assert.False(payload.Slots[5].IsTranslatable);
         Assert.False(payload.Slots[6].IsTranslatable);
+        Assert.False(payload.Slots[7].IsTranslatable);
         Assert.False(payload.Slots[8].IsTranslatable);
         Assert.Equal(
-            [2, 3, 7],
+            [2, 3],
             MapSurfaceStringArraySchema.GetTranslatableSlotIndices(payload));
+    }
+
+    /// <summary>
+    ///     Ensures visible map labels can be matched back to string-array
+    ///     breadcrumb values that use a leading map marker.
+    /// </summary>
+    [Fact]
+    public void NormalizeVisibleMapText_removes_breadcrumb_markers()
+    {
+        Assert.Equal(
+            "Central Shroud",
+            MapSurfaceStringArraySchema.NormalizeVisibleMapText(
+                "> Central Shroud"));
+        Assert.Equal(
+            "The Black Shroud",
+            MapSurfaceStringArraySchema.NormalizeVisibleMapText(
+                "The Black Shroud"));
+    }
+
+    /// <summary>
+    ///     Ensures AreaMap text-node labels are persisted in the same
+    ///     structured payload while control, coordinate, and quest-row text is
+    ///     filtered out.
+    /// </summary>
+    [Fact]
+    public void BuildPayload_captures_visible_area_map_text_nodes()
+    {
+        var payload = MapSurfaceStringArraySchema.BuildPayload(
+            "AreaMap",
+            53,
+            new Dictionary<int, string?>
+            {
+                [0] = "ui/map/f1f1/00/f1f100_m",
+                [1] = "ui/map/f1f1/00/f1f100m_m",
+                [2] = "> The Black Shroud",
+                [3] = "> Central Shroud",
+                [7] = "Lv. 80 Mind over Manor",
+            },
+            new Dictionary<string, string?>
+            {
+                [MapSurfaceStringArraySchema.BuildVisibleTextNodeKey(
+                    "Bentbranch Meadows")] = "Bentbranch Meadows",
+                [MapSurfaceStringArraySchema.BuildVisibleTextNodeKey(
+                    "X: 27 Y: 17")] = "X: 27 Y: 17",
+                [MapSurfaceStringArraySchema.BuildVisibleTextNodeKey(
+                    "Lv. 80 Mind over Manor")] = "Lv. 80 Mind over Manor",
+                [MapSurfaceStringArraySchema.BuildVisibleTextNodeKey(
+                    "Central Shroud")] = "Central Shroud",
+            });
+
+        Assert.Contains(
+            payload.TextNodes.Values,
+            slot =>
+                slot.OriginalText == "Bentbranch Meadows" &&
+                slot.IsTranslatable);
+        Assert.DoesNotContain(
+            payload.TextNodes.Values,
+            slot => slot.OriginalText == "X: 27 Y: 17");
+        Assert.DoesNotContain(
+            payload.TextNodes.Values,
+            slot => slot.OriginalText == "Lv. 80 Mind over Manor");
+        Assert.DoesNotContain(
+            payload.TextNodes.Values,
+            slot => slot.OriginalText == "Central Shroud");
     }
 
     /// <summary>

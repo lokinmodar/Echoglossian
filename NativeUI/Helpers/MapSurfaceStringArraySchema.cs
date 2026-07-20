@@ -17,6 +17,10 @@ public sealed class MapSurfaceStringArraySchema : IStringArrayStructuredSchema
         @"^\s*X:\s*\S+(?:\s+\S+)?\s+Y:\s*\S+",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private static readonly Regex QuestLevelPattern = new(
+        @"^Lv\.?\s*\d+\s+\S.*$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     /// <summary>
     ///     Gets the shared map-surface schema instance.
     /// </summary>
@@ -38,7 +42,8 @@ public sealed class MapSurfaceStringArraySchema : IStringArrayStructuredSchema
     public static StringArrayStructuredPayload BuildPayload(
         string addonName,
         int arrayIndex,
-        IReadOnlyDictionary<int, string?> slotTexts)
+        IReadOnlyDictionary<int, string?> slotTexts,
+        IReadOnlyDictionary<string, string?>? visibleTextNodes = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(addonName);
         ArgumentNullException.ThrowIfNull(slotTexts);
@@ -72,6 +77,35 @@ public sealed class MapSurfaceStringArraySchema : IStringArrayStructuredSchema
             };
         }
 
+        if (hasMapPath && visibleTextNodes != null)
+        {
+            var slotVisibleTexts = payload.Slots.Values
+                .Where(slot => slot.IsTranslatable)
+                .Select(slot => NormalizeVisibleMapText(slot.OriginalText))
+                .Where(text => !string.IsNullOrWhiteSpace(text))
+                .ToHashSet(StringComparer.Ordinal);
+
+            foreach (var pair in visibleTextNodes.OrderBy(
+                         pair => pair.Key,
+                         StringComparer.Ordinal))
+            {
+                var visibleText = NormalizeVisibleMapText(pair.Value);
+                if (!ShouldTranslateMapText(visibleText) ||
+                    slotVisibleTexts.Contains(visibleText))
+                {
+                    continue;
+                }
+
+                payload.TextNodes[pair.Key] = new StringArrayStructuredSlot
+                {
+                    SemanticKey = $"map:text:{pair.Key}",
+                    OriginalText = visibleText,
+                    IsVisible = true,
+                    IsTranslatable = true,
+                };
+            }
+        }
+
         return payload;
     }
 
@@ -103,7 +137,8 @@ public sealed class MapSurfaceStringArraySchema : IStringArrayStructuredSchema
                    slot.SemanticKey.StartsWith(
                        "map:path:",
                        StringComparison.Ordinal)) &&
-               payload.Slots.Values.Any(slot => slot.IsTranslatable);
+               (payload.Slots.Values.Any(slot => slot.IsTranslatable) ||
+                payload.TextNodes.Values.Any(slot => slot.IsTranslatable));
     }
 
     /// <summary>
@@ -151,20 +186,50 @@ public sealed class MapSurfaceStringArraySchema : IStringArrayStructuredSchema
     /// <returns><c>true</c> when the value should be translated.</returns>
     internal static bool ShouldTranslateMapText(string? text)
     {
+        var trimmed = NormalizeVisibleMapText(text);
         if (string.IsNullOrWhiteSpace(text) ||
             IsMapResourcePath(text) ||
-            CoordinatePattern.IsMatch(text))
+            CoordinatePattern.IsMatch(trimmed) ||
+            QuestLevelPattern.IsMatch(trimmed))
         {
             return false;
         }
 
-        var trimmed = StripMapMarker(text).Trim();
         return !string.IsNullOrWhiteSpace(trimmed) &&
                !string.Equals(trimmed, "--", StringComparison.Ordinal) &&
                !string.Equals(trimmed, "---", StringComparison.Ordinal) &&
                !string.Equals(trimmed, "...", StringComparison.Ordinal) &&
                !string.Equals(trimmed, "???", StringComparison.Ordinal) &&
                !trimmed.All(char.IsPunctuation);
+    }
+
+    /// <summary>
+    ///     Normalizes map text as it is displayed in visible native text
+    ///     nodes, removing breadcrumb markers used by backing string arrays.
+    /// </summary>
+    /// <param name="text">The captured map text.</param>
+    /// <returns>The visible text used for matching and persistence.</returns>
+    internal static string NormalizeVisibleMapText(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        return StripMapMarker(text).Trim();
+    }
+
+    /// <summary>
+    ///     Builds a stable key for a visible map text-node label.
+    /// </summary>
+    /// <param name="visibleText">The visible map text.</param>
+    /// <returns>The stable text-node payload key.</returns>
+    internal static string BuildVisibleTextNodeKey(string visibleText)
+    {
+        var normalizedText = NormalizeVisibleMapText(visibleText);
+        var bytes = System.Security.Cryptography.SHA256.HashData(
+            Encoding.UTF8.GetBytes(normalizedText));
+        return $"label:{Convert.ToHexString(bytes)[..16]}";
     }
 
     private static string BuildSemanticKey(int slotIndex, string slotText)

@@ -331,6 +331,16 @@ public static class DbFirstStructuredStringArrayHelper
                 originContext);
         }
 
+        await TranslateMissingEntriesIndividuallyAsync(
+            translationService,
+            translatedMap,
+            slotTexts,
+            textNodeTexts,
+            sourceLanguage,
+            targetLanguage,
+            translatorResolution,
+            originContext);
+
         foreach (var pair in slotTexts)
         {
             var encodedKey = EncodeTranslationKey(pair.Key);
@@ -489,6 +499,83 @@ public static class DbFirstStructuredStringArrayHelper
         for (var index = 0; index < parts.Length - 1; index += 2)
         {
             translatedMap[parts[index]] = parts[index + 1];
+        }
+    }
+
+    private static async Task TranslateMissingEntriesIndividuallyAsync(
+        TranslationService translationService,
+        IDictionary<string, string> translatedMap,
+        IReadOnlyCollection<KeyValuePair<int, StringArrayStructuredSlot>> slotTexts,
+        IReadOnlyCollection<KeyValuePair<string, StringArrayStructuredSlot>> textNodeTexts,
+        SourceClientLanguage sourceLanguage,
+        string targetLanguage,
+        TranslationService.TranslatorResolution? translatorResolution,
+        string? originContext)
+    {
+        foreach (var pair in slotTexts)
+        {
+            await TranslateMissingEntryIndividuallyAsync(
+                translationService,
+                translatedMap,
+                EncodeTranslationKey(pair.Key),
+                pair.Value.OriginalText,
+                sourceLanguage,
+                targetLanguage,
+                translatorResolution,
+                originContext);
+        }
+
+        foreach (var pair in textNodeTexts)
+        {
+            await TranslateMissingEntryIndividuallyAsync(
+                translationService,
+                translatedMap,
+                EncodeTextNodeTranslationKey(pair.Key),
+                pair.Value.OriginalText,
+                sourceLanguage,
+                targetLanguage,
+                translatorResolution,
+                originContext);
+        }
+    }
+
+    private static async Task TranslateMissingEntryIndividuallyAsync(
+        TranslationService translationService,
+        IDictionary<string, string> translatedMap,
+        string encodedKey,
+        string? originalText,
+        SourceClientLanguage sourceLanguage,
+        string targetLanguage,
+        TranslationService.TranslatorResolution? translatorResolution,
+        string? originContext)
+    {
+        if (translatedMap.TryGetValue(encodedKey, out var translatedText) &&
+            !string.IsNullOrWhiteSpace(translatedText))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(originalText))
+        {
+            return;
+        }
+
+        var individualTranslation = translatorResolution.HasValue
+            ? await translationService.TranslateAsync(
+                originalText,
+                sourceLanguage,
+                targetLanguage,
+                TranslationSurfaceGroup.Default,
+                translatorResolution.Value,
+                originContext)
+            : await translationService.TranslateAsync(
+                originalText,
+                sourceLanguage,
+                targetLanguage,
+                originContext);
+        if (!string.IsNullOrWhiteSpace(individualTranslation))
+        {
+            translatedMap[encodedKey] = individualTranslation;
         }
     }
 

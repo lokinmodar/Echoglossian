@@ -25,8 +25,10 @@ public sealed class MapSurfaceStringArrayHandlerContractTests
     {
         var source = ReadMapSurfaceHandlerSource();
 
+        Assert.Contains("CaptureVisibleMapTextNodes", source);
         Assert.Contains("ApplyTranslatedTextNodeValues", source);
-        Assert.Contains("this.TryFindReadableTextNodeByText", source);
+        Assert.Contains("projection.TextNodes", source);
+        Assert.Contains("FindReadableTextNodeAddressesByText", source);
         Assert.Contains("textNode->NodeText.SetString", source);
         Assert.Contains("mapSurfaceTextNodeMutations", source);
     }
@@ -56,7 +58,24 @@ public sealed class MapSurfaceStringArrayHandlerContractTests
 
         Assert.Contains("RegisterTextNodeHoverTooltips", source);
         Assert.Contains("RegisterAggregateHoverTooltip", source);
-        Assert.Contains("matchedTextNodes.Count == 0", source);
+        Assert.Contains("this.ShouldAllowAggregateHoverTooltip", source);
+    }
+
+    /// <summary>
+    ///     Ensures dense map addons are not fully rescanned on every PreDraw
+    ///     after the payload has already been captured.
+    /// </summary>
+    [Fact]
+    public void MapSurface_uses_predraw_short_circuit_for_stable_payloads()
+    {
+        var source = ReadMapSurfaceHandlerSource();
+
+        Assert.Contains("lastProcessedPayloadSignature", source);
+        Assert.Contains("ShouldSkipStablePreDrawPayload", source);
+        Assert.Contains("ArmPreDrawRefreshWindow", source);
+        Assert.Contains("AgentMap.Instance()", source);
+        Assert.Contains("agentMap->CurrentMapId", source);
+        Assert.Contains("agentMap->CurrentTerritoryId", source);
     }
 
     /// <summary>

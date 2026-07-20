@@ -17277,7 +17277,7 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ProcessMapSurface">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ProcessMapSurface(System.Boolean)">
             <summary>
                 Processes the visible map-family string-array payloads.
             </summary>
@@ -17339,7 +17339,7 @@
             <param name="originalPayload">The original structured payload.</param>
             <param name="translatedPayload">The translated structured payload.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ApplyTranslatedTextNodeValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ApplyTranslatedTextNodeValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection)">
             <summary>
                 Applies translated map string-array values to matching visible text
                 nodes so native and swap modes are visible before the addon refreshes
@@ -17396,6 +17396,71 @@
             <param name="liveArrays">The captured live arrays.</param>
             <returns><c>true</c> when at least one map payload was captured.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.BuildLiveStringArrayPayloadSignature(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Builds a lightweight signature from the current map identity and
+                subscribed string arrays without traversing the full text-node tree.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <returns>A stable signature for the currently visible map payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.AppendAgentMapSignature(System.Text.StringBuilder)">
+            <summary>
+                Appends read-only AgentMap identity values for the currently opened
+                map, matching the safe usage pattern from VanillaPlus.
+            </summary>
+            <param name="signatureBuilder">The signature builder.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ShouldSkipStablePreDrawPayload(System.String)">
+            <summary>
+                Determines whether stable PreDraw processing can be skipped for a
+                dense map payload.
+            </summary>
+            <param name="payloadSignature">The current lightweight payload signature.</param>
+            <returns><c>true</c> when this PreDraw pass should do no work.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ArmPreDrawRefreshWindow">
+            <summary>
+                Arms a short PreDraw processing window after events that can change
+                native map text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.CaptureVisibleMapTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Captures visible map labels from native text nodes so labels that are
+                not mirrored in StringArrayData can still be translated and cached.
+            </summary>
+            <param name="addon">The visible map addon.</param>
+            <returns>Stable text-node payload keys mapped to visible labels.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.BuildReadableTextNodeIndex(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Builds an exact-match index of readable map text nodes for the
+                current processing pass.
+            </summary>
+            <param name="addon">The visible map addon.</param>
+            <returns>Normalized visible text mapped to matching native node addresses.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.FindReadableTextNodeAddressesByText(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Collections.Generic.List{System.IntPtr}},System.String,System.String)">
+            <summary>
+                Finds readable native text nodes whose current text exactly matches
+                either side of a map translation pair.
+            </summary>
+            <param name="textNodeIndex">The per-pass text-node index.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated visible text.</param>
+            <returns>Matching native text-node addresses.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.EnumerateVisibleTextTranslations(Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection)">
+            <summary>
+                Enumerates visible translation pairs from string-array slots and
+                captured map text nodes.
+            </summary>
+            <param name="originalPayload">The original map payload.</param>
+            <param name="translatedPayload">The translated map payload.</param>
+            <param name="projection">The translated live-value projection.</param>
+            <returns>Visible map translation pairs.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.TryGetVisibleAddon(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
             <summary>
                 Resolves the visible addon by name.
@@ -17443,6 +17508,99 @@
             </summary>
             <param name="textNode">The map text node.</param>
             <returns>The readable text, or an empty string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ResolveOriginalVisibleTextNodeText(System.IntPtr,System.String)">
+            <summary>
+                Resolves the source-facing text for a native text node that may
+                currently contain a plugin-owned translated value.
+            </summary>
+            <param name="textNodeAddress">The native text-node address.</param>
+            <param name="currentText">The currently visible native text.</param>
+            <returns>The original visible text for capture and matching.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.BuildVisibleTextTranslation(System.String,System.String,System.String)">
+            <summary>
+                Builds one normalized visible translation pair when both sides have
+                usable map text.
+            </summary>
+            <param name="key">The stable payload key for the source text.</param>
+            <param name="originalText">The original captured text.</param>
+            <param name="translatedText">The translated captured text.</param>
+            <returns>The visible translation pair, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ResolveNativeVisibleMapText(System.String)">
+            <summary>
+                Resolves the exact native text to write for one visible map label.
+            </summary>
+            <param name="translatedText">The translated visible text.</param>
+            <returns>The native-safe text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.AppendSlotTextSignature(System.Text.StringBuilder,System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String})">
+            <summary>
+                Appends string-array slot values to a lightweight payload signature.
+            </summary>
+            <param name="signatureBuilder">The signature builder.</param>
+            <param name="slotTexts">The captured slot values.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.StringArrayValuesMatchRuntimeState(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceRuntimeState)">
+            <summary>
+                Checks whether a live string-array snapshot still represents a known
+                original payload or this handler's applied native translation.
+            </summary>
+            <param name="slotTexts">The live slot values.</param>
+            <param name="runtimeState">The handler-owned runtime state.</param>
+            <returns><c>true</c> when the live values match the runtime state.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.AddTextNodeIndexEntry(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.IntPtr}},System.String,System.IntPtr)">
+            <summary>
+                Adds one readable text-node address to an exact visible-text index.
+            </summary>
+            <param name="index">The text-node index.</param>
+            <param name="text">The visible text.</param>
+            <param name="textNodeAddress">The native text-node address.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.AddIndexedTextNodes(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Collections.Generic.List{System.IntPtr}},System.String,System.Collections.Generic.ICollection{System.IntPtr},System.Collections.Generic.ISet{System.IntPtr})">
+            <summary>
+                Adds all indexed text nodes for one comparable text value.
+            </summary>
+            <param name="textNodeIndex">The per-pass text-node index.</param>
+            <param name="comparableText">The normalized comparable text.</param>
+            <param name="matchedTextNodes">The match collection to append to.</param>
+            <param name="seen">The text-node addresses already returned.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.NormalizeMapSurfaceComparableText(System.String)">
+            <summary>
+                Normalizes map text for exact native text-node matching.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The comparable text.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceVisibleTextTranslation">
+            <summary>
+                Represents one visible map translation pair to apply or expose via
+                hover tooltip.
+            </summary>
+            <param name="Key">The stable source key.</param>
+            <param name="OriginalText">The original visible map text.</param>
+            <param name="TranslatedText">The translated visible map text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceVisibleTextTranslation.#ctor(System.String,System.String,System.String)">
+            <summary>
+                Represents one visible map translation pair to apply or expose via
+                hover tooltip.
+            </summary>
+            <param name="Key">The stable source key.</param>
+            <param name="OriginalText">The original visible map text.</param>
+            <param name="TranslatedText">The translated visible map text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceVisibleTextTranslation.Key">
+            <summary>The stable source key.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceVisibleTextTranslation.OriginalText">
+            <summary>The original visible map text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceVisibleTextTranslation.TranslatedText">
+            <summary>The translated visible map text.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceTextNodeMutationState">
             <summary>
@@ -24162,7 +24320,7 @@
         <member name="P:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.SchemaVersion">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.BuildPayload(System.String,System.Int32,System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String})">
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.BuildPayload(System.String,System.Int32,System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
             <summary>
                 Builds a canonical payload for one map-family string array.
             </summary>
@@ -24204,6 +24362,21 @@
             </summary>
             <param name="text">The captured text.</param>
             <returns><c>true</c> when the value should be translated.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.NormalizeVisibleMapText(System.String)">
+            <summary>
+                Normalizes map text as it is displayed in visible native text
+                nodes, removing breadcrumb markers used by backing string arrays.
+            </summary>
+            <param name="text">The captured map text.</param>
+            <returns>The visible text used for matching and persistence.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.MapSurfaceStringArraySchema.BuildVisibleTextNodeKey(System.String)">
+            <summary>
+                Builds a stable key for a visible map text-node label.
+            </summary>
+            <param name="visibleText">The visible map text.</param>
+            <returns>The stable text-node payload key.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.MiniTalkWrapWidthHelper">
             <summary>

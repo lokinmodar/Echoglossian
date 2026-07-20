@@ -5,6 +5,8 @@
 
 using Echoglossian.NativeUI.AddonHandlers.Common;
 
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
@@ -22,6 +24,16 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
   private static readonly TimeSpan FailureRetryInterval =
       TimeSpan.FromSeconds(30);
 
+  private static readonly TimeSpan StablePreDrawRescanInterval =
+      TimeSpan.FromSeconds(2);
+
+  private static readonly TimeSpan PreDrawRefreshWindow =
+      TimeSpan.FromMilliseconds(100);
+
+  private static readonly Regex WhitespacePattern = new(
+      @"\s+",
+      RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
   private readonly string addonName;
 
   private readonly string hoverPrefix;
@@ -30,6 +42,12 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
 
   private readonly Dictionary<nint, MapSurfaceTextNodeMutationState>
       mapSurfaceTextNodeMutations = [];
+
+  private string? lastProcessedPayloadSignature;
+
+  private DateTime lastStablePreDrawProcessUtc = DateTime.MinValue;
+
+  private DateTime preDrawRefreshUntilUtc = DateTime.MinValue;
 
   /// <summary>
   ///     Initializes a new instance of the
@@ -76,6 +94,9 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       QuestAddonModeHelpers.ShowsOriginalTooltips(
           this.Config.AreaMapTranslationDisplayMode);
 
+  private bool ShouldAllowAggregateHoverTooltip =>
+      !string.Equals(this.addonName, "AreaMap", StringComparison.Ordinal);
+
   private bool ShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.AreaMapTranslationDisplayMode,
@@ -98,6 +119,7 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
     }
 
     this.ProcessMapSurface();
+    this.ArmPreDrawRefreshWindow();
   }
 
   /// <summary>
@@ -112,7 +134,7 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       return;
     }
 
-    this.ProcessMapSurface();
+    this.ProcessMapSurface(isPreDraw: true);
   }
 
   /// <summary>
@@ -131,7 +153,7 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Processes the visible map-family string-array payloads.
   /// </summary>
-  private unsafe void ProcessMapSurface()
+  private unsafe void ProcessMapSurface(bool isPreDraw = false)
   {
     if (!this.Config.TranslateAreaMap ||
         this.DisableTranslationAccordingToState())
@@ -148,6 +170,12 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       return;
     }
 
+    var payloadSignature = this.BuildLiveStringArrayPayloadSignature(addon);
+    if (isPreDraw && this.ShouldSkipStablePreDrawPayload(payloadSignature))
+    {
+      return;
+    }
+
     if (!this.WritesNativeTranslation)
     {
       this.RestoreOriginalPayloadsIfNeeded();
@@ -159,7 +187,13 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       return;
     }
 
+    this.lastProcessedPayloadSignature = payloadSignature;
+
     this.RemoveHoverTooltipsByPrefix(this.hoverPrefix);
+    if (isPreDraw)
+    {
+      this.lastStablePreDrawProcessUtc = DateTime.UtcNow;
+    }
 
     foreach (var liveArray in liveArrays)
     {
@@ -242,7 +276,8 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       var appliedTextNodeKeys = this.ApplyTranslatedTextNodeValues(
           addon,
           originalPayload,
-          translatedPayload);
+          translatedPayload,
+          projection);
       this.RestoreTextNodeMutationsIfNeeded(appliedTextNodeKeys);
       this.runtimeStates[liveArray.ArrayIndex] = new MapSurfaceRuntimeState(
           liveArray.ArrayIndex,
@@ -328,7 +363,7 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
         arrayIndex,
         originalPayload,
         translatedPayload);
-    if (matchedTextNodes.Count == 0)
+    if (matchedTextNodes.Count == 0 && this.ShouldAllowAggregateHoverTooltip)
     {
       this.RegisterAggregateHoverTooltip(
           addon,
@@ -354,41 +389,40 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       StringArrayStructuredPayload translatedPayload)
   {
     HashSet<nint> matchedTextNodes = [];
-    foreach (var (index, originalSlot) in originalPayload.Slots)
+    var textNodeIndex = this.BuildReadableTextNodeIndex(addon);
+    foreach (var translation in this.EnumerateVisibleTextTranslations(
+                 originalPayload,
+                 translatedPayload))
     {
-      if (!originalSlot.IsTranslatable ||
-          !translatedPayload.Slots.TryGetValue(index, out var translatedSlot) ||
-          string.IsNullOrWhiteSpace(translatedSlot.TranslatedText))
+      foreach (var textNodeAddress in FindReadableTextNodeAddressesByText(
+                   textNodeIndex,
+                   translation.OriginalText,
+                   translation.TranslatedText))
       {
-        continue;
-      }
+        var textNode = (AtkTextNode*)textNodeAddress;
+        if (textNode == null)
+        {
+          continue;
+        }
 
-      if (!this.TryFindReadableTextNodeByText(
-              addon,
-              originalSlot.OriginalText,
-              translatedSlot.TranslatedText,
-              out var textNode))
-      {
-        continue;
-      }
+        var textNodeKey = (nint)textNode;
+        if (!matchedTextNodes.Add(textNodeKey))
+        {
+          continue;
+        }
 
-      var textNodeKey = (nint)textNode;
-      if (!matchedTextNodes.Add(textNodeKey))
-      {
-        continue;
+        this.RegisterTranslatedHoverTooltip(
+            $"{this.hoverPrefix}{arrayIndex.ToString(CultureInfo.InvariantCulture)}-TextNode-{textNodeKey:X}-{translation.Key}",
+            textNode,
+            translation.OriginalText,
+            translation.TranslatedText,
+            translatedPayloadReady: QuestAddonModeHelpers.CanRenderHoverTooltip(
+                this.Config.AreaMapTranslationDisplayMode,
+                translatedPayloadReady: true),
+            swapEnabled: this.HoverShowsOriginal,
+            forceEnabled: true,
+            denseHitbox: true);
       }
-
-      this.RegisterTranslatedHoverTooltip(
-          $"{this.hoverPrefix}{arrayIndex.ToString(CultureInfo.InvariantCulture)}-TextNode-{textNodeKey:X}",
-          textNode,
-          originalSlot.OriginalText,
-          translatedSlot.TranslatedText,
-          translatedPayloadReady: QuestAddonModeHelpers.CanRenderHoverTooltip(
-              this.Config.AreaMapTranslationDisplayMode,
-              translatedPayloadReady: true),
-          swapEnabled: this.HoverShowsOriginal,
-          forceEnabled: true,
-          denseHitbox: true);
     }
 
     return matchedTextNodes;
@@ -441,48 +475,52 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
   private unsafe HashSet<nint> ApplyTranslatedTextNodeValues(
       AtkUnitBase* addon,
       StringArrayStructuredPayload originalPayload,
-      StringArrayStructuredPayload translatedPayload)
+      StringArrayStructuredPayload translatedPayload,
+      DbFirstStructuredStringArrayProjection projection)
   {
     HashSet<nint> appliedTextNodeKeys = [];
-    foreach (var (index, originalSlot) in originalPayload.Slots)
+    var textNodeIndex = this.BuildReadableTextNodeIndex(addon);
+    foreach (var translation in this.EnumerateVisibleTextTranslations(
+                 originalPayload,
+                 translatedPayload,
+                 projection))
     {
-      if (!originalSlot.IsTranslatable ||
-          !translatedPayload.Slots.TryGetValue(index, out var translatedSlot) ||
-          string.IsNullOrWhiteSpace(translatedSlot.TranslatedText))
+      var nativeText = this.ResolveNativeVisibleMapText(
+          translation.TranslatedText);
+      if (string.IsNullOrWhiteSpace(nativeText))
       {
         continue;
       }
 
-      var nativeText = this.ShouldRemoveDiacritics
-          ? this.NormalizeQuestText(translatedSlot.TranslatedText)
-          : translatedSlot.TranslatedText;
-      if (string.IsNullOrWhiteSpace(nativeText) ||
-          !this.TryFindReadableTextNodeByText(
-              addon,
-              originalSlot.OriginalText,
-              nativeText,
-              out var textNode))
+      foreach (var textNodeAddress in FindReadableTextNodeAddressesByText(
+                   textNodeIndex,
+                   translation.OriginalText,
+                   nativeText))
       {
-        continue;
-      }
+        var textNode = (AtkTextNode*)textNodeAddress;
+        if (textNode == null)
+        {
+          continue;
+        }
 
-      var textNodeKey = (nint)textNode;
-      if (!appliedTextNodeKeys.Add(textNodeKey))
-      {
-        continue;
-      }
+        var textNodeKey = (nint)textNode;
+        if (!appliedTextNodeKeys.Add(textNodeKey))
+        {
+          continue;
+        }
 
-      var currentText = ReadTextNodeText(textNode);
-      if (!string.Equals(currentText, nativeText, StringComparison.Ordinal))
-      {
-        textNode->NodeText.SetString(nativeText);
-      }
+        var currentText = ReadTextNodeText(textNode);
+        if (!string.Equals(currentText, nativeText, StringComparison.Ordinal))
+        {
+          textNode->NodeText.SetString(nativeText);
+        }
 
-      this.mapSurfaceTextNodeMutations[textNodeKey] =
-          new MapSurfaceTextNodeMutationState(
-              textNodeKey,
-              originalSlot.OriginalText,
-              nativeText);
+        this.mapSurfaceTextNodeMutations[textNodeKey] =
+            new MapSurfaceTextNodeMutationState(
+                textNodeKey,
+                translation.OriginalText,
+                nativeText);
+      }
     }
 
     return appliedTextNodeKeys;
@@ -594,6 +632,7 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
               {
                 StringArrayDataCacheManager.Update(task.Result);
                 ClearFailedPayloadRetry(payloadKey);
+                this.ArmPreDrawRefreshWindow();
                 return;
               }
 
@@ -604,6 +643,7 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
               }
 
               MarkFailedPayloadRetry(payloadKey);
+              this.ArmPreDrawRefreshWindow();
             },
             TaskScheduler.Default);
   }
@@ -697,6 +737,58 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       return false;
     }
 
+    var visibleTextNodes = this.CaptureVisibleMapTextNodes(addon);
+    var arrayHolder = raptureAtkModule->AtkArrayDataHolder;
+    for (var arrayIndex = 0;
+         arrayIndex < arrayHolder.StringArrayCount;
+         arrayIndex++)
+    {
+      var stringArrayData = arrayHolder.StringArrays[arrayIndex];
+      if (!IsUsableSubscribedStringArray(addon, stringArrayData))
+      {
+        continue;
+      }
+
+      var slotTexts = ReadStringArrayValues(stringArrayData);
+      var payload = MapSurfaceStringArraySchema.BuildPayload(
+          this.addonName,
+          arrayIndex,
+          slotTexts,
+          visibleTextNodes);
+      if (!MapSurfaceStringArraySchema.IsMapSurfacePayload(payload))
+      {
+        continue;
+      }
+
+      liveArrays.Add(new MapSurfaceLiveArray(
+          arrayIndex,
+          (nint)stringArrayData,
+          payload));
+    }
+
+    return liveArrays.Count != 0;
+  }
+
+  /// <summary>
+  ///     Builds a lightweight signature from the current map identity and
+  ///     subscribed string arrays without traversing the full text-node tree.
+  /// </summary>
+  /// <param name="addon">The visible addon.</param>
+  /// <returns>A stable signature for the currently visible map payload.</returns>
+  private unsafe string BuildLiveStringArrayPayloadSignature(AtkUnitBase* addon)
+  {
+    var signatureBuilder = new StringBuilder()
+        .Append(this.addonName)
+        .Append('|')
+        .Append(ClientStateInterface.TerritoryType.ToString(CultureInfo.InvariantCulture))
+        .Append('|')
+        .Append(ClientStateInterface.MapId.ToString(CultureInfo.InvariantCulture));
+    AppendAgentMapSignature(signatureBuilder);
+    if (!TryGetRaptureAtkModule(out var raptureAtkModule))
+    {
+      return signatureBuilder.ToString();
+    }
+
     var arrayHolder = raptureAtkModule->AtkArrayDataHolder;
     for (var arrayIndex = 0;
          arrayIndex < arrayHolder.StringArrayCount;
@@ -718,13 +810,249 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
         continue;
       }
 
-      liveArrays.Add(new MapSurfaceLiveArray(
-          arrayIndex,
-          (nint)stringArrayData,
-          payload));
+      signatureBuilder
+          .Append('|')
+          .Append(arrayIndex.ToString(CultureInfo.InvariantCulture))
+          .Append(':');
+      if (this.runtimeStates.TryGetValue(arrayIndex, out var runtimeState) &&
+          StringArrayValuesMatchRuntimeState(slotTexts, runtimeState))
+      {
+        signatureBuilder.Append(
+            runtimeState.OriginalPayload.ComputeSourceContentHash());
+        continue;
+      }
+
+      AppendSlotTextSignature(signatureBuilder, slotTexts);
     }
 
-    return liveArrays.Count != 0;
+    return signatureBuilder.ToString();
+  }
+
+  /// <summary>
+  ///     Appends read-only AgentMap identity values for the currently opened
+  ///     map, matching the safe usage pattern from VanillaPlus.
+  /// </summary>
+  /// <param name="signatureBuilder">The signature builder.</param>
+  private static unsafe void AppendAgentMapSignature(
+      StringBuilder signatureBuilder)
+  {
+    try
+    {
+      var agentMap = AgentMap.Instance();
+      if (agentMap == null)
+      {
+        return;
+      }
+
+      signatureBuilder
+          .Append("|agent:")
+          .Append(agentMap->CurrentTerritoryId.ToString(CultureInfo.InvariantCulture))
+          .Append(':')
+          .Append(agentMap->CurrentMapId.ToString(CultureInfo.InvariantCulture));
+    }
+    catch (InvalidOperationException)
+    {
+      // Native map state can be unavailable during login or zone transitions.
+    }
+  }
+
+  /// <summary>
+  ///     Determines whether stable PreDraw processing can be skipped for a
+  ///     dense map payload.
+  /// </summary>
+  /// <param name="payloadSignature">The current lightweight payload signature.</param>
+  /// <returns><c>true</c> when this PreDraw pass should do no work.</returns>
+  private bool ShouldSkipStablePreDrawPayload(string payloadSignature)
+  {
+    var nowUtc = DateTime.UtcNow;
+    if (!string.Equals(
+            this.lastProcessedPayloadSignature,
+            payloadSignature,
+            StringComparison.Ordinal) ||
+        nowUtc < this.preDrawRefreshUntilUtc)
+    {
+      return false;
+    }
+
+    return nowUtc - this.lastStablePreDrawProcessUtc <
+           StablePreDrawRescanInterval;
+  }
+
+  /// <summary>
+  ///     Arms a short PreDraw processing window after events that can change
+  ///     native map text.
+  /// </summary>
+  private void ArmPreDrawRefreshWindow()
+  {
+    this.preDrawRefreshUntilUtc = DateTime.UtcNow + PreDrawRefreshWindow;
+  }
+
+  /// <summary>
+  ///     Captures visible map labels from native text nodes so labels that are
+  ///     not mirrored in StringArrayData can still be translated and cached.
+  /// </summary>
+  /// <param name="addon">The visible map addon.</param>
+  /// <returns>Stable text-node payload keys mapped to visible labels.</returns>
+  private unsafe SortedDictionary<string, string?> CaptureVisibleMapTextNodes(
+      AtkUnitBase* addon)
+  {
+    var textNodes = new SortedDictionary<string, string?>(
+        StringComparer.Ordinal);
+    var seenTexts = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var textNodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
+    {
+      var textNode = (AtkTextNode*)textNodeAddress;
+      if (textNode == null || !textNode->IsVisible())
+      {
+        continue;
+      }
+
+      var visibleText = this.ResolveOriginalVisibleTextNodeText(
+          textNodeAddress,
+          ReadTextNodeText(textNode));
+      var normalizedText = MapSurfaceStringArraySchema
+          .NormalizeVisibleMapText(visibleText);
+      if (!MapSurfaceStringArraySchema.ShouldTranslateMapText(normalizedText) ||
+          !seenTexts.Add(normalizedText))
+      {
+        continue;
+      }
+
+      textNodes[MapSurfaceStringArraySchema.BuildVisibleTextNodeKey(
+          normalizedText)] = normalizedText;
+    }
+
+    return textNodes;
+  }
+
+  /// <summary>
+  ///     Builds an exact-match index of readable map text nodes for the
+  ///     current processing pass.
+  /// </summary>
+  /// <param name="addon">The visible map addon.</param>
+  /// <returns>Normalized visible text mapped to matching native node addresses.</returns>
+  private unsafe Dictionary<string, List<nint>> BuildReadableTextNodeIndex(
+      AtkUnitBase* addon)
+  {
+    var index = new Dictionary<string, List<nint>>(StringComparer.Ordinal);
+    foreach (var textNodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
+    {
+      var textNode = (AtkTextNode*)textNodeAddress;
+      if (textNode == null || !textNode->IsVisible())
+      {
+        continue;
+      }
+
+      var currentText = ReadTextNodeText(textNode);
+      AddTextNodeIndexEntry(index, currentText, textNodeAddress);
+      if (this.mapSurfaceTextNodeMutations.TryGetValue(
+              textNodeAddress,
+              out var mutation) &&
+          string.Equals(
+              currentText,
+              mutation.AppliedText,
+              StringComparison.Ordinal))
+      {
+        AddTextNodeIndexEntry(index, mutation.OriginalText, textNodeAddress);
+      }
+    }
+
+    return index;
+  }
+
+  /// <summary>
+  ///     Finds readable native text nodes whose current text exactly matches
+  ///     either side of a map translation pair.
+  /// </summary>
+  /// <param name="textNodeIndex">The per-pass text-node index.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated visible text.</param>
+  /// <returns>Matching native text-node addresses.</returns>
+  private static IReadOnlyList<nint> FindReadableTextNodeAddressesByText(
+      IReadOnlyDictionary<string, List<nint>> textNodeIndex,
+      string originalText,
+      string translatedText)
+  {
+    var matchedTextNodes = new List<nint>();
+    var seen = new HashSet<nint>();
+    AddIndexedTextNodes(
+        textNodeIndex,
+        NormalizeMapSurfaceComparableText(originalText),
+        matchedTextNodes,
+        seen);
+    AddIndexedTextNodes(
+        textNodeIndex,
+        NormalizeMapSurfaceComparableText(translatedText),
+        matchedTextNodes,
+        seen);
+    return matchedTextNodes;
+  }
+
+  /// <summary>
+  ///     Enumerates visible translation pairs from string-array slots and
+  ///     captured map text nodes.
+  /// </summary>
+  /// <param name="originalPayload">The original map payload.</param>
+  /// <param name="translatedPayload">The translated map payload.</param>
+  /// <param name="projection">The translated live-value projection.</param>
+  /// <returns>Visible map translation pairs.</returns>
+  private IEnumerable<MapSurfaceVisibleTextTranslation>
+      EnumerateVisibleTextTranslations(
+          StringArrayStructuredPayload originalPayload,
+          StringArrayStructuredPayload translatedPayload,
+          DbFirstStructuredStringArrayProjection? projection = null)
+  {
+    foreach (var (index, originalSlot) in originalPayload.Slots)
+    {
+      if (!originalSlot.IsTranslatable ||
+          !translatedPayload.Slots.TryGetValue(index, out var translatedSlot))
+      {
+        continue;
+      }
+
+      var translatedText =
+          projection != null &&
+          projection.StringArrayValues.TryGetValue(
+              index,
+              out var projectedSlotText)
+              ? projectedSlotText
+              : translatedSlot.TranslatedText;
+      var translation = this.BuildVisibleTextTranslation(
+          $"slot-{index.ToString(CultureInfo.InvariantCulture)}",
+          originalSlot.OriginalText,
+          translatedText);
+      if (translation != null)
+      {
+        yield return translation;
+      }
+    }
+
+    foreach (var (key, originalTextNode) in originalPayload.TextNodes)
+    {
+      if (!originalTextNode.IsTranslatable ||
+          !translatedPayload.TextNodes.TryGetValue(
+              key,
+              out var translatedTextNode))
+      {
+        continue;
+      }
+
+      var translatedText =
+          projection != null &&
+          projection.TextNodes.TryGetValue(
+              key,
+              out var projectedTextNodeText)
+              ? projectedTextNodeText
+              : translatedTextNode.TranslatedText;
+      var translation = this.BuildVisibleTextTranslation(
+          $"text-{key}",
+          originalTextNode.OriginalText,
+          translatedText);
+      if (translation != null)
+      {
+        yield return translation;
+      }
+    }
   }
 
   /// <summary>
@@ -836,6 +1164,9 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
     this.RestoreOriginalPayloadsIfNeeded();
     this.runtimeStates.Clear();
     this.mapSurfaceTextNodeMutations.Clear();
+    this.lastProcessedPayloadSignature = null;
+    this.lastStablePreDrawProcessUtc = DateTime.MinValue;
+    this.preDrawRefreshUntilUtc = DateTime.MinValue;
     this.RemoveHoverTooltipsByPrefix(this.hoverPrefix);
   }
 
@@ -1028,6 +1359,196 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
     }
   }
 
+  /// <summary>
+  ///     Resolves the source-facing text for a native text node that may
+  ///     currently contain a plugin-owned translated value.
+  /// </summary>
+  /// <param name="textNodeAddress">The native text-node address.</param>
+  /// <param name="currentText">The currently visible native text.</param>
+  /// <returns>The original visible text for capture and matching.</returns>
+  private string ResolveOriginalVisibleTextNodeText(
+      nint textNodeAddress,
+      string currentText)
+  {
+    if (this.mapSurfaceTextNodeMutations.TryGetValue(
+            textNodeAddress,
+            out var mutation) &&
+        string.Equals(
+            currentText,
+            mutation.AppliedText,
+            StringComparison.Ordinal))
+    {
+      return mutation.OriginalText;
+    }
+
+    return currentText;
+  }
+
+  /// <summary>
+  ///     Builds one normalized visible translation pair when both sides have
+  ///     usable map text.
+  /// </summary>
+  /// <param name="key">The stable payload key for the source text.</param>
+  /// <param name="originalText">The original captured text.</param>
+  /// <param name="translatedText">The translated captured text.</param>
+  /// <returns>The visible translation pair, or <see langword="null" />.</returns>
+  private MapSurfaceVisibleTextTranslation? BuildVisibleTextTranslation(
+      string key,
+      string? originalText,
+      string? translatedText)
+  {
+    var originalVisibleText = MapSurfaceStringArraySchema
+        .NormalizeVisibleMapText(originalText);
+    var translatedVisibleText = MapSurfaceStringArraySchema
+        .NormalizeVisibleMapText(translatedText);
+    if (string.IsNullOrWhiteSpace(originalVisibleText) ||
+        string.IsNullOrWhiteSpace(translatedVisibleText))
+    {
+      return null;
+    }
+
+    return new MapSurfaceVisibleTextTranslation(
+        key,
+        originalVisibleText,
+        translatedVisibleText);
+  }
+
+  /// <summary>
+  ///     Resolves the exact native text to write for one visible map label.
+  /// </summary>
+  /// <param name="translatedText">The translated visible text.</param>
+  /// <returns>The native-safe text.</returns>
+  private string ResolveNativeVisibleMapText(string translatedText)
+  {
+    var nativeText = MapSurfaceStringArraySchema.NormalizeVisibleMapText(
+        translatedText);
+    return this.ShouldRemoveDiacritics
+        ? this.NormalizeQuestText(nativeText)
+        : nativeText;
+  }
+
+  /// <summary>
+  ///     Appends string-array slot values to a lightweight payload signature.
+  /// </summary>
+  /// <param name="signatureBuilder">The signature builder.</param>
+  /// <param name="slotTexts">The captured slot values.</param>
+  private static void AppendSlotTextSignature(
+      StringBuilder signatureBuilder,
+      IReadOnlyDictionary<int, string?> slotTexts)
+  {
+    foreach (var pair in slotTexts.OrderBy(pair => pair.Key))
+    {
+      signatureBuilder
+          .Append(pair.Key.ToString(CultureInfo.InvariantCulture))
+          .Append('=')
+          .Append(pair.Value ?? string.Empty)
+          .Append(';');
+    }
+  }
+
+  /// <summary>
+  ///     Checks whether a live string-array snapshot still represents a known
+  ///     original payload or this handler's applied native translation.
+  /// </summary>
+  /// <param name="slotTexts">The live slot values.</param>
+  /// <param name="runtimeState">The handler-owned runtime state.</param>
+  /// <returns><c>true</c> when the live values match the runtime state.</returns>
+  private static bool StringArrayValuesMatchRuntimeState(
+      IReadOnlyDictionary<int, string?> slotTexts,
+      MapSurfaceRuntimeState runtimeState)
+  {
+    foreach (var (index, originalSlot) in runtimeState.OriginalPayload.Slots)
+    {
+      if (!slotTexts.TryGetValue(index, out var liveText))
+      {
+        return false;
+      }
+
+      var expectedText = runtimeState.AppliedTranslatedTexts.TryGetValue(
+          index,
+          out var appliedText)
+          ? appliedText
+          : originalSlot.OriginalText;
+      if (!string.Equals(liveText, expectedText, StringComparison.Ordinal) &&
+          !string.Equals(
+              liveText,
+              originalSlot.OriginalText,
+              StringComparison.Ordinal))
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// <summary>
+  ///     Adds one readable text-node address to an exact visible-text index.
+  /// </summary>
+  /// <param name="index">The text-node index.</param>
+  /// <param name="text">The visible text.</param>
+  /// <param name="textNodeAddress">The native text-node address.</param>
+  private static void AddTextNodeIndexEntry(
+      IDictionary<string, List<nint>> index,
+      string text,
+      nint textNodeAddress)
+  {
+    var comparableText = NormalizeMapSurfaceComparableText(text);
+    if (string.IsNullOrWhiteSpace(comparableText))
+    {
+      return;
+    }
+
+    if (!index.TryGetValue(comparableText, out var textNodes))
+    {
+      textNodes = [];
+      index[comparableText] = textNodes;
+    }
+
+    textNodes.Add(textNodeAddress);
+  }
+
+  /// <summary>
+  ///     Adds all indexed text nodes for one comparable text value.
+  /// </summary>
+  /// <param name="textNodeIndex">The per-pass text-node index.</param>
+  /// <param name="comparableText">The normalized comparable text.</param>
+  /// <param name="matchedTextNodes">The match collection to append to.</param>
+  /// <param name="seen">The text-node addresses already returned.</param>
+  private static void AddIndexedTextNodes(
+      IReadOnlyDictionary<string, List<nint>> textNodeIndex,
+      string comparableText,
+      ICollection<nint> matchedTextNodes,
+      ISet<nint> seen)
+  {
+    if (string.IsNullOrWhiteSpace(comparableText) ||
+        !textNodeIndex.TryGetValue(comparableText, out var textNodes))
+    {
+      return;
+    }
+
+    foreach (var textNode in textNodes)
+    {
+      if (seen.Add(textNode))
+      {
+        matchedTextNodes.Add(textNode);
+      }
+    }
+  }
+
+  /// <summary>
+  ///     Normalizes map text for exact native text-node matching.
+  /// </summary>
+  /// <param name="text">The text to normalize.</param>
+  /// <returns>The comparable text.</returns>
+  private static string NormalizeMapSurfaceComparableText(string? text)
+  {
+    var visibleText = MapSurfaceStringArraySchema.NormalizeVisibleMapText(text);
+    return string.IsNullOrWhiteSpace(visibleText)
+        ? string.Empty
+        : WhitespacePattern.Replace(visibleText, " ");
+  }
+
   private static string BuildTooltipText(
       StringArrayStructuredPayload originalPayload,
       StringArrayStructuredPayload? translatedPayload)
@@ -1041,9 +1562,33 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       }
 
       var text = translatedPayload == null
-          ? originalSlot.OriginalText
+          ? MapSurfaceStringArraySchema.NormalizeVisibleMapText(
+              originalSlot.OriginalText)
           : translatedPayload.Slots.TryGetValue(index, out var translatedSlot)
-              ? translatedSlot.TranslatedText
+              ? MapSurfaceStringArraySchema.NormalizeVisibleMapText(
+                  translatedSlot.TranslatedText)
+              : string.Empty;
+      if (!string.IsNullOrWhiteSpace(text))
+      {
+        lines.Add(text);
+      }
+    }
+
+    foreach (var (key, originalTextNode) in originalPayload.TextNodes)
+    {
+      if (!originalTextNode.IsTranslatable)
+      {
+        continue;
+      }
+
+      var text = translatedPayload == null
+          ? MapSurfaceStringArraySchema.NormalizeVisibleMapText(
+              originalTextNode.OriginalText)
+          : translatedPayload.TextNodes.TryGetValue(
+              key,
+              out var translatedTextNode)
+              ? MapSurfaceStringArraySchema.NormalizeVisibleMapText(
+                  translatedTextNode.TranslatedText)
               : string.Empty;
       if (!string.IsNullOrWhiteSpace(text))
       {
@@ -1148,6 +1693,18 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       int ArrayIndex,
       StringArrayStructuredPayload OriginalPayload,
       SortedDictionary<int, string> AppliedTranslatedTexts);
+
+  /// <summary>
+  ///     Represents one visible map translation pair to apply or expose via
+  ///     hover tooltip.
+  /// </summary>
+  /// <param name="Key">The stable source key.</param>
+  /// <param name="OriginalText">The original visible map text.</param>
+  /// <param name="TranslatedText">The translated visible map text.</param>
+  private sealed record MapSurfaceVisibleTextTranslation(
+      string Key,
+      string OriginalText,
+      string TranslatedText);
 
   /// <summary>
   ///     Captures one plugin-owned map text-node mutation for guarded restore.
