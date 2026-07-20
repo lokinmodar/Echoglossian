@@ -248,7 +248,6 @@ public class QuestAddonHandlerLifecycleTests
     [InlineData(typeof(JournalAcceptHandler))]
     [InlineData(typeof(JournalResultHandler))]
     [InlineData(typeof(RecommendListHandler))]
-    [InlineData(typeof(AreaMapHandler))]
     public void RuntimeWiring_RegistersRemainingQuestFamilyHandlers(
         Type handlerType)
     {
@@ -263,6 +262,33 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True(
             MethodReferences(wiringMethod!, handlerConstructor!),
             $"{handlerType.Name} must be constructed by EgloAddonHandler.");
+    }
+
+    /// <summary>
+    ///     Ensures AreaMap uses the map-surface handler without also wiring
+    ///     the legacy single-quest-row handler on the same addon.
+    /// </summary>
+    [Fact]
+    public void RuntimeWiring_AreaMap_UsesOnlyMapSurfaceHandler()
+    {
+        var wiringMethod = typeof(PluginEntry).GetMethod(
+            "EgloAddonHandler",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var mapSurfaceConstructor = typeof(MapSurfaceStringArrayHandler)
+            .GetConstructor(
+                [typeof(string), typeof(QuestAddonHandlerDependencies)]);
+        var legacyConstructor = typeof(AreaMapHandler).GetConstructor(
+            [typeof(QuestAddonHandlerDependencies)]);
+
+        Assert.NotNull(wiringMethod);
+        Assert.NotNull(mapSurfaceConstructor);
+        Assert.NotNull(legacyConstructor);
+        Assert.True(
+            MethodReferences(wiringMethod!, mapSurfaceConstructor!),
+            "AreaMap must be constructed through MapSurfaceStringArrayHandler.");
+        Assert.False(
+            MethodReferences(wiringMethod!, legacyConstructor!),
+            "AreaMapHandler must not be constructed by EgloAddonHandler.");
     }
 
     /// <summary>

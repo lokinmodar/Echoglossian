@@ -275,9 +275,8 @@ public partial class Echoglossian
 
     if (this.configuration.TranslateAreaMap)
     {
-      this.registeredAddonHandlers.Add(
-          (AddonName: "AreaMap",
-              Handler: new AreaMapHandler(questAddonDependencies)));
+      // MapSurfaceStringArrayHandler owns AreaMap labels; the legacy
+      // AreaMapHandler rescans the same dense text-node tree on every PreDraw.
       this.registeredAddonHandlers.Add(
           (AddonName: "AreaMap",
               Handler: new MapSurfaceStringArrayHandler(
