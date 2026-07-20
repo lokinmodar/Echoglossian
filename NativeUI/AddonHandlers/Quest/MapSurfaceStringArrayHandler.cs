@@ -28,6 +28,9 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
 
   private readonly Dictionary<int, MapSurfaceRuntimeState> runtimeStates = [];
 
+  private readonly Dictionary<nint, MapSurfaceTextNodeMutationState>
+      mapSurfaceTextNodeMutations = [];
+
   /// <summary>
   ///     Initializes a new instance of the
   ///     <see cref="MapSurfaceStringArrayHandler" /> class.
@@ -200,6 +203,8 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       return;
     }
 
+    this.RestoreTextNodeMutationsIfNeeded();
+
     if (TryGetFailedPayloadRetryUtc(payloadKey, out _))
     {
       return;
@@ -234,6 +239,11 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
           liveArray,
           originalPayload,
           projection);
+      var appliedTextNodeKeys = this.ApplyTranslatedTextNodeValues(
+          addon,
+          originalPayload,
+          translatedPayload);
+      this.RestoreTextNodeMutationsIfNeeded(appliedTextNodeKeys);
       this.runtimeStates[liveArray.ArrayIndex] = new MapSurfaceRuntimeState(
           liveArray.ArrayIndex,
           originalPayload,
@@ -313,6 +323,91 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       StringArrayStructuredPayload originalPayload,
       StringArrayStructuredPayload translatedPayload)
   {
+    var matchedTextNodes = this.RegisterTextNodeHoverTooltips(
+        addon,
+        arrayIndex,
+        originalPayload,
+        translatedPayload);
+    if (matchedTextNodes.Count == 0)
+    {
+      this.RegisterAggregateHoverTooltip(
+          addon,
+          arrayIndex,
+          originalPayload,
+          translatedPayload);
+    }
+  }
+
+  /// <summary>
+  ///     Registers one hover tooltip per visible text node matching a
+  ///     translated map string-array slot.
+  /// </summary>
+  /// <param name="addon">The visible addon.</param>
+  /// <param name="arrayIndex">The live string-array index.</param>
+  /// <param name="originalPayload">The original structured payload.</param>
+  /// <param name="translatedPayload">The translated structured payload.</param>
+  /// <returns>The text-node keys matched while registering tooltips.</returns>
+  private unsafe HashSet<nint> RegisterTextNodeHoverTooltips(
+      AtkUnitBase* addon,
+      int arrayIndex,
+      StringArrayStructuredPayload originalPayload,
+      StringArrayStructuredPayload translatedPayload)
+  {
+    HashSet<nint> matchedTextNodes = [];
+    foreach (var (index, originalSlot) in originalPayload.Slots)
+    {
+      if (!originalSlot.IsTranslatable ||
+          !translatedPayload.Slots.TryGetValue(index, out var translatedSlot) ||
+          string.IsNullOrWhiteSpace(translatedSlot.TranslatedText))
+      {
+        continue;
+      }
+
+      if (!this.TryFindReadableTextNodeByText(
+              addon,
+              originalSlot.OriginalText,
+              translatedSlot.TranslatedText,
+              out var textNode))
+      {
+        continue;
+      }
+
+      var textNodeKey = (nint)textNode;
+      if (!matchedTextNodes.Add(textNodeKey))
+      {
+        continue;
+      }
+
+      this.RegisterTranslatedHoverTooltip(
+          $"{this.hoverPrefix}{arrayIndex.ToString(CultureInfo.InvariantCulture)}-TextNode-{textNodeKey:X}",
+          textNode,
+          originalSlot.OriginalText,
+          translatedSlot.TranslatedText,
+          translatedPayloadReady: QuestAddonModeHelpers.CanRenderHoverTooltip(
+              this.Config.AreaMapTranslationDisplayMode,
+              translatedPayloadReady: true),
+          swapEnabled: this.HoverShowsOriginal,
+          forceEnabled: true,
+          denseHitbox: true);
+    }
+
+    return matchedTextNodes;
+  }
+
+  /// <summary>
+  ///     Registers one aggregate hover tooltip for map payloads whose strings
+  ///     do not currently map to visible text nodes.
+  /// </summary>
+  /// <param name="addon">The visible addon.</param>
+  /// <param name="arrayIndex">The live string-array index.</param>
+  /// <param name="originalPayload">The original structured payload.</param>
+  /// <param name="translatedPayload">The translated structured payload.</param>
+  private unsafe void RegisterAggregateHoverTooltip(
+      AtkUnitBase* addon,
+      int arrayIndex,
+      StringArrayStructuredPayload originalPayload,
+      StringArrayStructuredPayload translatedPayload)
+  {
     var originalText = BuildTooltipText(originalPayload, null);
     var translatedText = BuildTooltipText(originalPayload, translatedPayload);
     if (string.IsNullOrWhiteSpace(originalText) ||
@@ -332,6 +427,65 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
         swapEnabled: this.HoverShowsOriginal,
         forceEnabled: true,
         denseHitbox: true);
+  }
+
+  /// <summary>
+  ///     Applies translated map string-array values to matching visible text
+  ///     nodes so native and swap modes are visible before the addon refreshes
+  ///     its backing array.
+  /// </summary>
+  /// <param name="addon">The visible addon.</param>
+  /// <param name="originalPayload">The original structured payload.</param>
+  /// <param name="translatedPayload">The translated structured payload.</param>
+  /// <returns>The text-node keys written by this pass.</returns>
+  private unsafe HashSet<nint> ApplyTranslatedTextNodeValues(
+      AtkUnitBase* addon,
+      StringArrayStructuredPayload originalPayload,
+      StringArrayStructuredPayload translatedPayload)
+  {
+    HashSet<nint> appliedTextNodeKeys = [];
+    foreach (var (index, originalSlot) in originalPayload.Slots)
+    {
+      if (!originalSlot.IsTranslatable ||
+          !translatedPayload.Slots.TryGetValue(index, out var translatedSlot) ||
+          string.IsNullOrWhiteSpace(translatedSlot.TranslatedText))
+      {
+        continue;
+      }
+
+      var nativeText = this.ShouldRemoveDiacritics
+          ? this.NormalizeQuestText(translatedSlot.TranslatedText)
+          : translatedSlot.TranslatedText;
+      if (string.IsNullOrWhiteSpace(nativeText) ||
+          !this.TryFindReadableTextNodeByText(
+              addon,
+              originalSlot.OriginalText,
+              nativeText,
+              out var textNode))
+      {
+        continue;
+      }
+
+      var textNodeKey = (nint)textNode;
+      if (!appliedTextNodeKeys.Add(textNodeKey))
+      {
+        continue;
+      }
+
+      var currentText = ReadTextNodeText(textNode);
+      if (!string.Equals(currentText, nativeText, StringComparison.Ordinal))
+      {
+        textNode->NodeText.SetString(nativeText);
+      }
+
+      this.mapSurfaceTextNodeMutations[textNodeKey] =
+          new MapSurfaceTextNodeMutationState(
+              textNodeKey,
+              originalSlot.OriginalText,
+              nativeText);
+    }
+
+    return appliedTextNodeKeys;
   }
 
   /// <summary>
@@ -595,18 +749,16 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
   /// </summary>
   private unsafe void RestoreOriginalPayloadsIfNeeded()
   {
-    if (this.runtimeStates.Count == 0)
+    if (this.runtimeStates.Count != 0)
     {
-      this.runtimeStates.Clear();
-      return;
-    }
-
-    foreach (var runtimeState in this.runtimeStates.Values.ToArray())
-    {
-      this.RestoreOriginalPayloadIfNeeded(runtimeState);
+      foreach (var runtimeState in this.runtimeStates.Values.ToArray())
+      {
+        this.RestoreOriginalPayloadIfNeeded(runtimeState);
+      }
     }
 
     this.runtimeStates.Clear();
+    this.RestoreTextNodeMutationsIfNeeded();
   }
 
   /// <summary>
@@ -683,7 +835,58 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
   {
     this.RestoreOriginalPayloadsIfNeeded();
     this.runtimeStates.Clear();
+    this.mapSurfaceTextNodeMutations.Clear();
     this.RemoveHoverTooltipsByPrefix(this.hoverPrefix);
+  }
+
+  /// <summary>
+  ///     Restores visible map text nodes still containing plugin-owned native
+  ///     translations.
+  /// </summary>
+  /// <param name="retainedTextNodeKeys">
+  ///     Optional text nodes written by the current pass that should not be
+  ///     restored.
+  /// </param>
+  private unsafe void RestoreTextNodeMutationsIfNeeded(
+      IReadOnlySet<nint>? retainedTextNodeKeys = null)
+  {
+    if (this.mapSurfaceTextNodeMutations.Count == 0)
+    {
+      return;
+    }
+
+    if (!this.TryGetVisibleAddon(out var addon))
+    {
+      this.mapSurfaceTextNodeMutations.Clear();
+      return;
+    }
+
+    foreach (var mutation in this.mapSurfaceTextNodeMutations.Values.ToArray())
+    {
+      if (retainedTextNodeKeys?.Contains(mutation.TextNodeKey) == true)
+      {
+        continue;
+      }
+
+      if (this.TryFindReadableTextNodeByText(
+              addon,
+              mutation.OriginalText,
+              mutation.AppliedText,
+              out var textNode))
+      {
+        var textNodeAddress = (nint)textNode;
+        var currentText = ReadTextNodeText(textNode);
+        NativeMutationOwnership.TryRestore(
+            currentText,
+            mutation.AppliedText,
+            mutation.OriginalText,
+            restoredText =>
+                ((AtkTextNode*)textNodeAddress)->NodeText.SetString(
+                    restoredText));
+      }
+
+      this.mapSurfaceTextNodeMutations.Remove(mutation.TextNodeKey);
+    }
   }
 
   private TranslationReuseScope CreateReuseScope(
@@ -773,6 +976,51 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       return stringArrayData->StringArray[index]
           .AsReadOnlySeStringSpan()
           .ExtractText();
+    }
+    catch
+    {
+      return string.Empty;
+    }
+  }
+
+  /// <summary>
+  ///     Reads the best plain-text representation from a map text node.
+  /// </summary>
+  /// <param name="textNode">The map text node.</param>
+  /// <returns>The readable text, or an empty string.</returns>
+  private static unsafe string ReadTextNodeText(AtkTextNode* textNode)
+  {
+    if (textNode == null)
+    {
+      return string.Empty;
+    }
+
+    var currentText = textNode->NodeText.ToString();
+    if (!string.IsNullOrWhiteSpace(currentText))
+    {
+      return currentText;
+    }
+
+    try
+    {
+      var originalText = textNode->OriginalTextPointer
+          .AsReadOnlySeStringSpan()
+          .ExtractText();
+      if (!string.IsNullOrWhiteSpace(originalText))
+      {
+        return originalText;
+      }
+    }
+    catch
+    {
+      // Keep falling through to the legacy buffer read below.
+    }
+
+    try
+    {
+      return MemoryHelper.ReadSeStringAsString(
+          out _,
+          (nint)textNode->NodeText.StringPtr.Value);
     }
     catch
     {
@@ -900,4 +1148,15 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
       int ArrayIndex,
       StringArrayStructuredPayload OriginalPayload,
       SortedDictionary<int, string> AppliedTranslatedTexts);
+
+  /// <summary>
+  ///     Captures one plugin-owned map text-node mutation for guarded restore.
+  /// </summary>
+  /// <param name="TextNodeKey">The visible text-node pointer key.</param>
+  /// <param name="OriginalText">The game-owned original text.</param>
+  /// <param name="AppliedText">The plugin-applied translated text.</param>
+  private sealed record MapSurfaceTextNodeMutationState(
+      nint TextNodeKey,
+      string OriginalText,
+      string AppliedText);
 }

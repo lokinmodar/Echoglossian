@@ -17318,6 +17318,38 @@
             <param name="originalPayload">The original structured payload.</param>
             <param name="translatedPayload">The translated structured payload.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.RegisterTextNodeHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Int32,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Registers one hover tooltip per visible text node matching a
+                translated map string-array slot.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <param name="arrayIndex">The live string-array index.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="translatedPayload">The translated structured payload.</param>
+            <returns>The text-node keys matched while registering tooltips.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.RegisterAggregateHoverTooltip(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Int32,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Registers one aggregate hover tooltip for map payloads whose strings
+                do not currently map to visible text nodes.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <param name="arrayIndex">The live string-array index.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="translatedPayload">The translated structured payload.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ApplyTranslatedTextNodeValues(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Applies translated map string-array values to matching visible text
+                nodes so native and swap modes are visible before the addon refreshes
+                its backing array.
+            </summary>
+            <param name="addon">The visible addon.</param>
+            <param name="originalPayload">The original structured payload.</param>
+            <param name="translatedPayload">The translated structured payload.</param>
+            <returns>The text-node keys written by this pass.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.TryFindTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload@,Echoglossian.NativeUI.Helpers.DbFirstStructuredStringArrayProjection@)">
             <summary>
                 Resolves a translated payload from in-memory cache or SQLite.
@@ -17394,6 +17426,48 @@
             <summary>
                 Clears hover and native mutation state.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.RestoreTextNodeMutationsIfNeeded(System.Collections.Generic.IReadOnlySet{System.IntPtr})">
+            <summary>
+                Restores visible map text nodes still containing plugin-owned native
+                translations.
+            </summary>
+            <param name="retainedTextNodeKeys">
+                Optional text nodes written by the current pass that should not be
+                restored.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.ReadTextNodeText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the best plain-text representation from a map text node.
+            </summary>
+            <param name="textNode">The map text node.</param>
+            <returns>The readable text, or an empty string.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceTextNodeMutationState">
+            <summary>
+                Captures one plugin-owned map text-node mutation for guarded restore.
+            </summary>
+            <param name="TextNodeKey">The visible text-node pointer key.</param>
+            <param name="OriginalText">The game-owned original text.</param>
+            <param name="AppliedText">The plugin-applied translated text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceTextNodeMutationState.#ctor(System.IntPtr,System.String,System.String)">
+            <summary>
+                Captures one plugin-owned map text-node mutation for guarded restore.
+            </summary>
+            <param name="TextNodeKey">The visible text-node pointer key.</param>
+            <param name="OriginalText">The game-owned original text.</param>
+            <param name="AppliedText">The plugin-applied translated text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceTextNodeMutationState.TextNodeKey">
+            <summary>The visible text-node pointer key.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceTextNodeMutationState.OriginalText">
+            <summary>The game-owned original text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.MapSurfaceStringArrayHandler.MapSurfaceTextNodeMutationState.AppliedText">
+            <summary>The plugin-applied translated text.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase">
             <summary>
