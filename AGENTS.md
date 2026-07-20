@@ -149,7 +149,9 @@ Priority references:
 - https://github.com/WorkingRobot/EXDViewer
 - https://exd.camora.dev/sheet/Quest
 - DelvUI / DelvCD
-- MidoriKami repositories including `DailyDuty`, `KamiToolKit`, `VanillaPlus`, `NoTankYou`, `HUDUnlimited`, `SortaKinda`, and `ChillFrames`
+- Exter-N `Dynamis` for Dalamud development, debugging, reverse engineering, and runtime inspection: https://github.com/Exter-N/Dynamis
+- MidoriKami `VanillaPlus` for practical native UI and game-behavior modification patterns: https://github.com/MidoriKami/VanillaPlus
+- MidoriKami repositories including `DailyDuty`, `KamiToolKit`, `NoTankYou`, `HUDUnlimited`, `SortaKinda`, and `ChillFrames`
 - Era-FFXIV `QuestShare.Plugin`, especially `Common/GameQuestManager.cs` for quest progression and active quest tracking patterns
 - OtterGui / OtterGuiInternal
 - https://github.com/Infiziert90 repositories

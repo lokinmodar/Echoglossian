@@ -23,6 +23,8 @@ Use these repo sources first:
 - docs/textnode-clientstructs-analysis.md
 - docs/maincommand-sheet-flow.md
 - docs/action-reference-text-sheet-flow.md
+- https://github.com/Exter-N/Dynamis
+- https://github.com/MidoriKami/VanillaPlus
 
 ## Workflow
 

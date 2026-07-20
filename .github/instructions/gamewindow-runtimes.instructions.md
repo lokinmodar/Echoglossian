@@ -14,6 +14,10 @@ applyTo:
 - Do not redirect GameWindow surfaces through StringArrayData.
 - Keep hover-tooltip registration and native writes tied to the current display mode.
 - If the base flow changes, preserve the current live-addon lifecycle and persistence semantics.
+- For unclear native UI behavior, consult official Dalamud and
+  `FFXIVClientStructs` references first, then use `Exter-N/Dynamis` and
+  `MidoriKami/VanillaPlus` as trusted reverse-engineering and runtime
+  inspection references.
 - Capture one complete `TranslationReuseScope` per operation and carry it
   through lookup, provider work, persistence, and publication; fail closed if
   source resolution fails. It owns source, target, effective engine, and reuse

@@ -25,6 +25,8 @@ Use these repo sources first:
 - docs/textnode-clientstructs-analysis.md
 - NativeUI/Helpers/DbFirstStructuredStringArrayHelper.cs
 - DBHelpers/StringArrayDataPersistenceHelper.cs
+- https://github.com/Exter-N/Dynamis
+- https://github.com/MidoriKami/VanillaPlus
 
 ## Workflow
 
