@@ -36,8 +36,9 @@ public class ConfigDefaultsTests
     }
 
     /// <summary>
-    ///     Ensures the validated DB-first ActionDetail / ItemDetail runtime is
-    ///     active by default instead of staying dormant for release builds.
+    ///     Ensures the DB-first ActionDetail / ItemDetail runtime is active by
+    ///     default while using the safe hover path until native payload writes
+    ///     are explicitly selected.
     /// </summary>
     [Fact]
     public void TranslateTooltips_DefaultsToTrue()
@@ -46,7 +47,7 @@ public class ConfigDefaultsTests
 
         Assert.True(config.TranslateTooltips);
         Assert.Equal(
-            JournalTranslationDisplayMode.NativeUiTranslation,
+            JournalTranslationDisplayMode.TooltipTranslation,
             config.TooltipTranslationDisplayMode);
     }
 

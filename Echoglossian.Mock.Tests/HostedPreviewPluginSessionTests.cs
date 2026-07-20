@@ -62,6 +62,32 @@ public sealed class HostedPreviewPluginSessionTests
     }
 
     /// <summary>
+    /// Verifies that startup does not forcibly disable the ActionDetail /
+    /// ItemDetail runtime after the user enables it in configuration.
+    /// </summary>
+    /// <returns>A task that completes after hosted startup loads the configuration.</returns>
+    [Fact]
+    public async Task StartAsync_preserves_action_item_detail_translation_settings()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(
+            config: new global::Echoglossian.Config
+            {
+                TranslateTooltips = true,
+                TooltipTranslationDisplayMode =
+                    global::Echoglossian.JournalTranslationDisplayMode.TooltipTranslation,
+            });
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            fixture.Options);
+
+        var activeConfiguration = GetActiveConfiguration(session.Plugin);
+
+        activeConfiguration.TranslateTooltips.Should().BeTrue();
+        activeConfiguration.TooltipTranslationDisplayMode.Should().Be(
+            global::Echoglossian.JournalTranslationDisplayMode.TooltipTranslation);
+    }
+
+    /// <summary>
     /// Verifies that hosted startup seeds the database used by the production plugin configuration directory.
     /// </summary>
     /// <returns>A task that completes after hosted startup copies the preview-owned database clone.</returns>
@@ -152,6 +178,24 @@ public sealed class HostedPreviewPluginSessionTests
         return handlersField!.GetValue(plugin)
             .Should()
             .BeAssignableTo<List<(string AddonName, IAddonTranslationHandler Handler)>>()
+            .Subject;
+    }
+
+    /// <summary>
+    /// Gets the active production configuration from the hosted plugin.
+    /// </summary>
+    /// <param name="plugin">The hosted production plugin.</param>
+    /// <returns>The active configuration instance.</returns>
+    private static global::Echoglossian.Config GetActiveConfiguration(
+        global::Echoglossian.Echoglossian plugin)
+    {
+        var configurationField = typeof(global::Echoglossian.Echoglossian).GetField(
+            "configuration",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        configurationField.Should().NotBeNull();
+        return configurationField!.GetValue(plugin)
+            .Should()
+            .BeAssignableTo<global::Echoglossian.Config>()
             .Subject;
     }
 }

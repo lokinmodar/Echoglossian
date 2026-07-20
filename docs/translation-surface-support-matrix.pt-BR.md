@@ -28,7 +28,7 @@ flowchart TD
     I --> K[Superfícies de quest e journal]
     I --> L[Toasts]
     I --> M[Janelas do jogo]
-    I --> N[Família opcional de tooltips quando for reativada]
+    I --> N[Detalhes de ação/item e tooltips de hover]
 ```
 
 ## Famílias de modos de tradução
@@ -82,12 +82,12 @@ flowchart TD
 | HUD windows | `TranslateHudWindow` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
 | Operation Guide | `TranslateOperationGuideWindow` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
+| Action / item detail tooltips | `TranslateTooltips` | Família quest / native-window | Runtime DB-first de tooltip estruturada; o padrão é modo Plugin Tooltip, enquanto gravação nativa é opt-in e limitada a nodes seguros com texto puro | Ativado |
 
 ## Superfícies ocultas ou temporariamente restritas
 
 | Superfície | Toggle de configuração | Modos | Notas | Status da release atual |
 | --- | --- | --- | --- | --- |
-| Action / item detail tooltips | `TranslateTooltips` | Família overlay | A tradução estruturada de tooltips é desativada à força na inicialização enquanto `ActionDetail` / `ItemDetail` continuarem instáveis | Temporariamente desativado para a release |
 | Yes/No dialog | `TranslateYesNoScreen` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
 | SelectString dialog | `TranslateSelectString` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
 | SelectOk dialog | `TranslateSelectOk` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |

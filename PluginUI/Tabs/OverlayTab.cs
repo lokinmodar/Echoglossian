@@ -26,6 +26,7 @@ public static class OverlayTab
         Resources.QuestWindowsTabTitle,
         Resources.SelectionDialogsTabTitle,
         Resources.GameWindowsTabTitle,
+        Resources.TooltipTabTitle,
         Resources.NamePlateTabTitle,
     };
 
@@ -113,6 +114,9 @@ public static class OverlayTab
                 changed |= GameWindowsTab.Draw(config);
                 break;
             case 10:
+                changed |= TooltipTab.Draw(config);
+                break;
+            case 11:
                 changed |= DrawNamePlateOverlay(config);
                 break;
         }

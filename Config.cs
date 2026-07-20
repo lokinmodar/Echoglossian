@@ -1148,9 +1148,9 @@ public class Config : IPluginConfiguration
   ///     Display mode for action and item tooltips managed by the DB-first
   ///     tooltip runtime.
   /// </summary>
-  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  [DefaultValue(JournalTranslationDisplayMode.TooltipTranslation)]
   public JournalTranslationDisplayMode TooltipTranslationDisplayMode =
-      JournalTranslationDisplayMode.NativeUiTranslation;
+      JournalTranslationDisplayMode.TooltipTranslation;
 
   /// <summary>Text color used by Echoglossian hover tooltips.</summary>
   [DefaultValue(typeof(Vector3), "1, 1, 1")]

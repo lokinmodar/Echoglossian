@@ -30,7 +30,7 @@ flowchart TD
     I --> K[Quest and journal surfaces]
     I --> L[Toasts]
     I --> M[Game windows]
-    I --> N[Optional tooltip family when re-enabled]
+    I --> N[Action/item details and hover tooltips]
 ```
 
 ## Translation Mode Families
@@ -84,12 +84,12 @@ flowchart TD
 | HUD windows | `TranslateHudWindow` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Operation Guide | `TranslateOperationGuideWindow` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest / native-window family | DB-first game-window runtime | Enabled |
+| Action / item detail tooltips | `TranslateTooltips` | Quest / native-window family | DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes | Enabled |
 
 ## Hidden or Temporarily Restricted Surfaces
 
 | Surface | Config Toggle | Modes | Notes | Current Release Status |
 | --- | --- | --- | --- | --- |
-| Action / item detail tooltips | `TranslateTooltips` | Overlay family | Structured tooltip translation is force-disabled at startup while `ActionDetail` / `ItemDetail` remain unstable | Temporarily disabled for release |
 | Yes/No dialog | `TranslateYesNoScreen` | Toggle only | Present in config model and tab implementation, but not currently exposed in the active Overlay tab flow | Implemented but hidden in current UI |
 | SelectString dialog | `TranslateSelectString` | Toggle only | Present in config model and tab implementation, but not currently exposed in the active Overlay tab flow | Implemented but hidden in current UI |
 | SelectOk dialog | `TranslateSelectOk` | Toggle only | Present in config model and tab implementation, but not currently exposed in the active Overlay tab flow | Implemented but hidden in current UI |
