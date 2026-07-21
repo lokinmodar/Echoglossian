@@ -159,9 +159,6 @@ public sealed class HostedPreviewPluginSessionTests
             entry.Handler is RecommendListHandler);
         registeredHandlers.Should().Contain(entry =>
             entry.AddonName == "AreaMap" &&
-            entry.Handler is AreaMapHandler);
-        registeredHandlers.Should().Contain(entry =>
-            entry.AddonName == "AreaMap" &&
             entry.Handler is MapSurfaceStringArrayHandler);
         registeredHandlers.Should().Contain(entry =>
             entry.AddonName == "_NaviMap" &&

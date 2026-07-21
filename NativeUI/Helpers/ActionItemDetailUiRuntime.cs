@@ -2036,7 +2036,7 @@ public unsafe partial class Echoglossian
                 seenNodeAddresses);
         }
 
-        foreach (var nodeAddress in AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon))
+        foreach (var nodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
         {
             var textNode = (AtkTextNode*)nodeAddress;
             if (seenNodeAddresses.Contains(nodeAddress))

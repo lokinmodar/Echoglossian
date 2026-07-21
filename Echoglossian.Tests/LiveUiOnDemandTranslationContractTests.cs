@@ -34,6 +34,29 @@ public class LiveUiOnDemandTranslationContractTests
     }
 
     /// <summary>
+    /// Ensures ActionDetail and ItemDetail live-name validation can see direct
+    /// text nodes from the tooltip addon tree before deciding whether an
+    /// overlay is safe to publish.
+    /// </summary>
+    [Fact]
+    public void ActionItemDetailRuntime_uses_full_readable_text_node_resolver()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "ActionItemDetailUiRuntime.cs"));
+
+        Assert.Contains(
+            "AddonTextNodeResolvers.ResolveReadableTextNodes(addon)",
+            source);
+        Assert.DoesNotContain(
+            "AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon)",
+            source);
+    }
+
+    /// <summary>
     /// Ensures NamePlateGui callbacks do not enqueue translation work from
     /// one-frame handler state. Only cached translations may be applied live.
     /// </summary>
