@@ -724,8 +724,32 @@ public static class ReferenceTextCacheRegistry
 
         var resolvedPayload = ReferenceTextCanonicalPayload.Deserialize(
             row.CanonicalPayloadAsText);
-        if (resolvedPayload == null ||
-            string.IsNullOrWhiteSpace(resolvedPayload.TranslatedName) ||
+        if (resolvedPayload == null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.OriginalName))
+        {
+            resolvedPayload.Name = row.OriginalName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.OriginalDescription))
+        {
+            resolvedPayload.Description = row.OriginalDescription;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedName))
+        {
+            resolvedPayload.TranslatedName = row.TranslatedName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedDescription))
+        {
+            resolvedPayload.TranslatedDescription = row.TranslatedDescription;
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedPayload.TranslatedName) ||
             (!string.IsNullOrWhiteSpace(resolvedPayload.Description) &&
              string.IsNullOrWhiteSpace(
                  resolvedPayload.TranslatedDescription)))

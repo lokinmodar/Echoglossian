@@ -337,6 +337,61 @@ public class CanonicalTooltipIdentityLookupTests
     }
 
     /// <summary>
+    ///     Ensures structured ActionDetail lookup rehydrates translated fields
+    ///     stored in dedicated columns when a legacy canonical payload still
+    ///     contains only the original source text.
+    /// </summary>
+    [Fact]
+    public void TryFindTranslatedActionIdentityPayload_BuddyAction_RehydratesPersistedTranslationColumns()
+    {
+        ReferenceTextCacheRegistry.BuddyActionTexts.Clear();
+
+        try
+        {
+            const string gameVersion = "2026.04.27.0000.0000";
+            var originalPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 3,
+                Name = "Follow",
+                Description = "Order your companion to follow you.",
+            };
+
+            ReferenceTextCacheRegistry.BuddyActionTexts.Update(new BuddyActionText
+            {
+                Id = 1,
+                ReferenceId = originalPayload.ReferenceId,
+                OriginalName = originalPayload.Name,
+                OriginalDescription = originalPayload.Description,
+                OriginalLang = "en",
+                TranslatedName = "Seguir",
+                TranslatedDescription = "Ordene ao seu companheiro que o siga.",
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = gameVersion,
+                SourceContentHash = originalPayload.ComputeSourceContentHash(),
+                CanonicalPayloadAsText = originalPayload.Serialize(),
+            });
+
+            var found = ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
+                DetailKind.BuddyAction,
+                originalPayload.ReferenceId,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                gameVersion,
+                out var resolvedPayload);
+
+            Assert.True(found);
+            Assert.Equal("Seguir", resolvedPayload.TranslatedName);
+            Assert.Equal(
+                "Ordene ao seu companheiro que o siga.",
+                resolvedPayload.TranslatedDescription);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.BuddyActionTexts.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures ActionDetail routes structured hover kinds away from the
     ///     overlapping standard Action sheet.
     /// </summary>
@@ -404,6 +459,56 @@ public class CanonicalTooltipIdentityLookupTests
             Assert.True(found);
             Assert.Equal("Bussola Eterea", resolvedPayload.TranslatedName);
             Assert.False(mismatchedSourceFound);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.EventItemTexts.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures ItemDetail can consume a completed EventItem row whose
+    ///     canonical source snapshot predates the translated column values.
+    /// </summary>
+    [Fact]
+    public void TryFindTranslatedItemIdentityPayload_EventItem_RehydratesPersistedTranslationColumns()
+    {
+        ReferenceTextCacheRegistry.EventItemTexts.Clear();
+
+        try
+        {
+            const string gameVersion = "2026.04.27.0000.0000";
+            var originalPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 2002023,
+                ActionId = 1,
+                IconId = 25987,
+                Name = "Wondrous Tails",
+            };
+
+            ReferenceTextCacheRegistry.EventItemTexts.Update(new EventItemText
+            {
+                Id = 1,
+                ReferenceId = originalPayload.ReferenceId,
+                OriginalName = originalPayload.Name,
+                OriginalLang = "en",
+                TranslatedName = "Contos Maravilhosos",
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = gameVersion,
+                SourceContentHash = originalPayload.ComputeSourceContentHash(),
+                CanonicalPayloadAsText = originalPayload.Serialize(),
+            });
+
+            var found = ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(
+                originalPayload.ReferenceId,
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                gameVersion,
+                out var resolvedPayload);
+
+            Assert.True(found);
+            Assert.Equal("Contos Maravilhosos", resolvedPayload.TranslatedName);
+            Assert.Null(resolvedPayload.TranslatedDescription);
         }
         finally
         {
