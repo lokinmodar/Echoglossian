@@ -55,6 +55,40 @@ public sealed class ScenarioTreeHandlerContractTests
         Assert.Contains("AddonTextNodeResolvers.ResolveReadableTextNodes", source);
         Assert.Contains("ApplyScenarioTreeTextNodePresentation", source);
         Assert.Contains("scenarioTreeNativeMutationTextNodeKeys", source);
+        Assert.Contains("TextNodeKey == textNodeKey", source);
+        Assert.Contains("textNodeKey: textNodeAddress", source);
+    }
+
+    /// <summary>
+    ///     Ensures ScenarioTree restores handler-owned native text before
+    ///     discarding the original snapshot at addon cleanup.
+    /// </summary>
+    [Fact]
+    public void ScenarioTree_restores_native_text_before_cleanup_discards_runtime_state()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Quest",
+            "ScenarioTreeHandler.cs"));
+
+        var cleanupStart = source.IndexOf(
+            "private unsafe void OnScenarioTreeCleanupEvent",
+            StringComparison.Ordinal);
+        var restoreCall = source.IndexOf(
+            "this.RestoreScenarioTreeOriginals(atkValues);",
+            cleanupStart,
+            StringComparison.Ordinal);
+        var clearCall = source.IndexOf(
+            "this.scenarioTreeRuntimeEntries.Clear();",
+            cleanupStart,
+            StringComparison.Ordinal);
+
+        Assert.True(cleanupStart >= 0);
+        Assert.True(restoreCall > cleanupStart);
+        Assert.True(clearCall > restoreCall);
     }
 
     /// <summary>

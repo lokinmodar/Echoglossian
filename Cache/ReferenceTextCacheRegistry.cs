@@ -6,6 +6,8 @@
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 
+using DetailKind = Dalamud.Game.Gui.DetailKind;
+
 namespace Echoglossian.Cache;
 
 /// <summary>
@@ -477,7 +479,91 @@ public static class ReferenceTextCacheRegistry
 
     /// <summary>
     ///     Tries to resolve one translated action-adjacent reference payload by
-    ///     stable identity.
+    ///     stable identity within the requested sheet family.
+    /// </summary>
+    /// <param name="actionKind">The hovered action family.</param>
+    /// <param name="referenceId">The sheet-row identifier.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="payload">The translated payload, if any.</param>
+    /// <returns>
+    ///     <see langword="true" /> when one translated payload was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindTranslatedActionIdentityPayload(
+        DetailKind actionKind,
+        uint referenceId,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        out ReferenceTextCanonicalPayload payload)
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        return actionKind switch
+        {
+            DetailKind.GeneralAction => TryFindTranslatedIdentityPayload(
+                GeneralActionTexts,
+                referenceId,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.BuddyAction or DetailKind.Companion or DetailKind.BuddyOrder =>
+                TryFindTranslatedIdentityPayload(
+                    BuddyActionTexts,
+                    referenceId,
+                    scope,
+                    gameVersion,
+                    out payload),
+            DetailKind.CompanyAction => TryFindTranslatedIdentityPayload(
+                CompanyActionTexts,
+                referenceId,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.CraftingAction => TryFindTranslatedIdentityPayload(
+                CraftActionTexts,
+                referenceId,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.PetOrder => TryFindTranslatedIdentityPayload(
+                PetActionTexts,
+                referenceId,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.Mount => TryFindTranslatedIdentityPayload(
+                MountActionTexts,
+                referenceId,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.BgcArmyAction => TryFindTranslatedIdentityPayload(
+                BgcArmyActionTexts,
+                referenceId,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.EurekaMagiaAction => TryFindTranslatedIdentityPayload(
+                EurekaMagiaActionTexts,
+                referenceId,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.MainCommand or DetailKind.ExtraCommand =>
+                TryFindTranslatedIdentityPayload(
+                    MainCommandTexts,
+                    referenceId,
+                    scope,
+                    gameVersion,
+                    out payload),
+            _ => false,
+        };
+    }
+
+    /// <summary>
+    ///     Tries to resolve one translated action-adjacent reference payload by
+    ///     stable identity across all action-adjacent families.
     /// </summary>
     /// <param name="referenceId">The sheet-row identifier.</param>
     /// <param name="scope">The required translation reuse scope.</param>

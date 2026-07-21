@@ -7,6 +7,7 @@ using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.Helpers;
 
+using DetailKind = Dalamud.Game.Gui.DetailKind;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -17,6 +18,48 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class CanonicalTooltipIdentityLookupTests
 {
+    /// <summary>
+    ///     Creates one translated reference-text cache row for identity tests.
+    /// </summary>
+    /// <typeparam name="TRow">The persisted reference-text row type.</typeparam>
+    /// <param name="id">The row primary key.</param>
+    /// <param name="referenceId">The stable sheet-row identifier.</param>
+    /// <param name="originalName">The canonical source name.</param>
+    /// <param name="translatedName">The translated name.</param>
+    /// <param name="gameVersion">The source game version.</param>
+    /// <returns>The populated cache row.</returns>
+    private static TRow CreateReferenceTextRow<TRow>(
+        int id,
+        uint referenceId,
+        string originalName,
+        string translatedName,
+        string gameVersion)
+        where TRow : ReferenceTextRowBase, new()
+    {
+        var payload = new ReferenceTextCanonicalPayload
+        {
+            ReferenceId = referenceId,
+            Name = originalName,
+            Description = null,
+            TranslatedName = translatedName,
+            TranslatedDescription = null,
+        };
+
+        return new TRow
+        {
+            Id = id,
+            ReferenceId = referenceId,
+            OriginalName = originalName,
+            OriginalLang = "English",
+            TranslatedName = translatedName,
+            TranslationLang = "pt",
+            TranslationEngine = 0,
+            GameVersion = gameVersion,
+            SourceContentHash = payload.ComputeSourceContentHash(),
+            CanonicalPayloadAsText = payload.Serialize(),
+        };
+    }
+
     /// <summary>
     ///     Ensures action fallback prefers the row scoped to the requested
     ///     class/job when multiple translated rows share the same action id.
@@ -242,6 +285,70 @@ public class CanonicalTooltipIdentityLookupTests
         {
             ReferenceTextCacheRegistry.EventActionTexts.Clear();
         }
+    }
+
+    /// <summary>
+    ///     Ensures structured ActionDetail lookup keeps colliding sheet-row
+    ///     identifiers within the hovered action family.
+    /// </summary>
+    [Fact]
+    public void TryFindTranslatedActionIdentityPayload_BuddyAction_DoesNotReuseGeneralAction()
+    {
+        ReferenceTextCacheRegistry.GeneralActionTexts.Clear();
+        ReferenceTextCacheRegistry.BuddyActionTexts.Clear();
+
+        try
+        {
+            var scope = new TranslationReuseScope("en", "pt-BR", 0, true);
+            const string gameVersion = "2026.04.27.0000.0000";
+            const uint sharedReferenceId = 20;
+
+            ReferenceTextCacheRegistry.GeneralActionTexts.Update(
+                CreateReferenceTextRow<GeneralActionText>(
+                    1,
+                    sharedReferenceId,
+                    "Dig",
+                    "Escavar",
+                    gameVersion));
+            ReferenceTextCacheRegistry.BuddyActionTexts.Update(
+                CreateReferenceTextRow<BuddyActionText>(
+                    2,
+                    sharedReferenceId,
+                    "Follow",
+                    "Seguir",
+                    gameVersion));
+
+            var found = ReferenceTextCacheRegistry
+                .TryFindTranslatedActionIdentityPayload(
+                    DetailKind.BuddyAction,
+                    sharedReferenceId,
+                    scope,
+                    gameVersion,
+                    out var resolvedPayload);
+
+            Assert.True(found);
+            Assert.Equal("Seguir", resolvedPayload.TranslatedName);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.GeneralActionTexts.Clear();
+            ReferenceTextCacheRegistry.BuddyActionTexts.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures ActionDetail routes structured hover kinds away from the
+    ///     overlapping standard Action sheet.
+    /// </summary>
+    [Fact]
+    public void RequiresStructuredActionReferencePayload_RoutesStructuredFamilies()
+    {
+        Assert.True(Echoglossian.RequiresStructuredActionReferencePayload(
+            DetailKind.GeneralAction));
+        Assert.True(Echoglossian.RequiresStructuredActionReferencePayload(
+            DetailKind.BuddyAction));
+        Assert.False(Echoglossian.RequiresStructuredActionReferencePayload(
+            DetailKind.Action));
     }
 
     /// <summary>

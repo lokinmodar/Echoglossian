@@ -940,10 +940,25 @@
                 the specific reference-text caches; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(Dalamud.Game.Gui.DetailKind,System.UInt32,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated action-adjacent reference payload by
+                stable identity within the requested sheet family.
+            </summary>
+            <param name="actionKind">The hovered action family.</param>
+            <param name="referenceId">The sheet-row identifier.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when one translated payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(System.UInt32,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated action-adjacent reference payload by
-                stable identity.
+                stable identity across all action-adjacent families.
             </summary>
             <param name="referenceId">The sheet-row identifier.</param>
             <param name="scope">The required translation reuse scope.</param>
@@ -4455,12 +4470,16 @@
             </param>
             <returns><see langword="true" /> when one structured payload was built.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedActionTooltipPayload(Echoglossian.SourceClientLanguage,System.UInt32,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedActionTooltipPayload(Echoglossian.SourceClientLanguage,Dalamud.Game.Gui.DetailKind,System.Boolean,System.UInt32,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated action-tooltip payload from
                 canonical storage.
             </summary>
             <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="hoverActionKind">The hovered action family.</param>
+            <param name="usesStructuredActionPayload">
+                Whether the payload belongs to a structured reference-text family.
+            </param>
             <param name="referenceId">The hovered action or command identifier.</param>
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated payload, if any.</param>
@@ -4883,6 +4902,17 @@
             <param name="hoverActionKind">The hovered action kind.</param>
             <returns><see langword="true" /> when the hover kind represents a trait.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RequiresStructuredActionReferencePayload(Dalamud.Game.Gui.DetailKind)">
+            <summary>
+                Gets whether an ActionDetail hover must resolve its canonical text
+                from a structured reference-text sheet instead of <c>Action</c>.
+            </summary>
+            <param name="hoverActionKind">The active hover action kind.</param>
+            <returns>
+                <see langword="true" /> when numeric identifiers must stay scoped
+                to a structured reference-text family.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryBuildStructuredReferencePayload(System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to build one structured action-adjacent reference payload for
@@ -5015,6 +5045,19 @@
             <param name="hoveredItemId">The direct hovered item identifier.</param>
             <param name="hoveredActionId">The direct hovered action identifier.</param>
             <returns><see langword="true" /> when agent fallback is safe.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldSuppressItemDetailDuringActionHover(System.UInt32,System.Boolean)">
+            <summary>
+                Gets whether a live action hover takes precedence over a lingering
+                direct ItemDetail hover value.
+            </summary>
+            <param name="hoveredActionId">The live action identifier.</param>
+            <param name="isActionDetailActive">
+                Whether the ActionDetail surface is currently visible.
+            </param>
+            <returns>
+                <see langword="true" /> when ItemDetail must clear its presentation.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ComputeStructuredTooltipDiagnosticHash(System.String)">
             <summary>
@@ -18481,6 +18524,9 @@
             </summary>
             <param name="dependencies">The shared quest-handler dependencies.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.OnPluginUnload">
+            <inheritdoc />
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeUsesHoverTooltips">
             <summary>
                 Gets whether the ScenarioTree family should use hover tooltips.
@@ -18690,15 +18736,16 @@
             <param name="textNodeKey">The backing visible text-node key, if any.</param>
             <returns>The runtime entry.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeRuntimeEntryKey(System.String,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeRuntimeEntryKey(System.String,System.Int32,System.IntPtr)">
             <summary>
                 Builds the stable runtime key for one ScenarioTree slot.
             </summary>
             <param name="progressKey">The quest progress key.</param>
             <param name="valueIndex">The addon value index.</param>
+            <param name="textNodeKey">The backing visible text-node key, if any.</param>
             <returns>The stable runtime key.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ResolveOriginalScenarioTreeText(System.Int32,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ResolveOriginalScenarioTreeText(System.Int32,System.String,System.IntPtr)">
             <summary>
                 Resolves the original visible text for a ScenarioTree slot, even if
                 the addon currently shows translated text from a previously applied
@@ -18706,6 +18753,7 @@
             </summary>
             <param name="valueIndex">The addon value index.</param>
             <param name="visibleText">The current visible text.</param>
+            <param name="textNodeKey">The backing visible text-node key, if any.</param>
             <returns>The original source text for that slot.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ApplyScenarioTreePresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*)">

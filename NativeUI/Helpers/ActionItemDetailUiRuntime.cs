@@ -316,11 +316,10 @@ public unsafe partial class Echoglossian
         }
 
         var translatedLookupReferenceId = hoveredActionId;
-        var usedStructuredActionPayload = false;
-        if (!TryBuildActionTooltipCanonicalPayload(
-                hoveredActionId,
-                currentClassJobId,
-                out var originalPayload))
+        var usedStructuredActionPayload =
+            RequiresStructuredActionReferencePayload(hoveredActionKind);
+        ActionTooltipCanonicalPayload originalPayload;
+        if (usedStructuredActionPayload)
         {
             if (!TryBuildStructuredActionTooltipCanonicalPayload(
                     hoveredActionId,
@@ -345,12 +344,33 @@ public unsafe partial class Echoglossian
                     contentKind: StructuredTooltipContentKindAction);
                 return;
             }
-
-            usedStructuredActionPayload = true;
+        }
+        else if (!TryBuildActionTooltipCanonicalPayload(
+                     hoveredActionId,
+                     currentClassJobId,
+                     out originalPayload))
+        {
+            this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
+            this.LogStructuredTooltipState(
+                ActionDetailSurfaceName,
+                "lookup",
+                hoveredActionId,
+                StructuredTooltipContentKindAction,
+                displayMode: null,
+                reason: "action-payload-build-miss");
+            this.ClearStructuredTooltipOverlay(
+                ActionDetailSurfaceName,
+                this.actionDetailOverlay,
+                reason: "action-payload-build-miss",
+                contentId: hoveredActionId,
+                contentKind: StructuredTooltipContentKindAction);
+            return;
         }
 
         if (!this.TryFindTranslatedActionTooltipPayload(
                 sourceLanguage,
+                hoveredActionKind,
+                usedStructuredActionPayload,
                 translatedLookupReferenceId,
                 originalPayload,
                 out var translatedPayload))
@@ -459,14 +479,33 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        var hoveredAction = GameGuiInterface.HoveredAction;
+        var hoveredActionId = hoveredAction.ActionId;
+        if (ShouldSuppressItemDetailDuringActionHover(
+                hoveredActionId,
+                this.actionDetailLifecycleState.IsActive))
+        {
+            this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, addon);
+            this.LogStructuredTooltipState(
+                ItemDetailSurfaceName,
+                "state",
+                0,
+                StructuredTooltipContentKindItem,
+                displayMode: null,
+                reason: "hovered-item-suppressed-by-action");
+            this.ClearStructuredTooltipOverlay(
+                ItemDetailSurfaceName,
+                this.itemDetailOverlay,
+                reason: "hovered-item-suppressed-by-action");
+            return;
+        }
+
         if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
                 out var sourceLanguage))
         {
             return;
         }
 
-        var hoveredAction = GameGuiInterface.HoveredAction;
-        var hoveredActionId = hoveredAction.ActionId;
         var hoveredItemKind = hoveredAction.DetailKind;
         var hoveredItemId = (uint)GameGuiInterface.HoveredItem;
         if (hoveredItemId == 0 &&
@@ -486,15 +525,11 @@ public unsafe partial class Echoglossian
                 0,
                 StructuredTooltipContentKindItem,
                 displayMode: null,
-                reason: hoveredActionId != 0
-                    ? "hovered-item-suppressed-by-action"
-                    : "hovered-item-missing");
+                reason: "hovered-item-missing");
             this.ClearStructuredTooltipOverlay(
                 ItemDetailSurfaceName,
                 this.itemDetailOverlay,
-                reason: hoveredActionId != 0
-                    ? "hovered-item-suppressed-by-action"
-                    : "hovered-item-missing");
+                reason: "hovered-item-missing");
             return;
         }
 
@@ -1196,12 +1231,18 @@ public unsafe partial class Echoglossian
     ///     canonical storage.
     /// </summary>
     /// <param name="sourceLanguage">The operation-captured source identity.</param>
+    /// <param name="hoverActionKind">The hovered action family.</param>
+    /// <param name="usesStructuredActionPayload">
+    ///     Whether the payload belongs to a structured reference-text family.
+    /// </param>
     /// <param name="referenceId">The hovered action or command identifier.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
     /// <param name="translatedPayload">The translated payload, if any.</param>
     /// <returns><see langword="true" /> when a complete translation is available.</returns>
     private bool TryFindTranslatedActionTooltipPayload(
         SourceClientLanguage sourceLanguage,
+        DetailKind hoverActionKind,
+        bool usesStructuredActionPayload,
         uint referenceId,
         ActionTooltipCanonicalPayload originalPayload,
         out ActionTooltipCanonicalPayload translatedPayload)
@@ -1216,6 +1257,20 @@ public unsafe partial class Echoglossian
             targetLanguage,
             engine,
             this.configuration.TranslateAlreadyTranslatedTexts);
+        if (usesStructuredActionPayload)
+        {
+            return ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
+                       hoverActionKind,
+                       referenceId,
+                       scope,
+                       gameVersion,
+                       out var translatedReferencePayload) &&
+                   TryBuildTranslatedActionTooltipPayloadFromReferencePayload(
+                       translatedReferencePayload,
+                       originalPayload,
+                       out translatedPayload);
+        }
+
         var row = ActionTooltipCacheManager.TryFindIdentityMatch(
             originalPayload.ActionId,
             scope,
@@ -1250,33 +1305,6 @@ public unsafe partial class Echoglossian
                 out translatedPayload))
         {
             return true;
-        }
-
-        if (ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
-                referenceId,
-                scope,
-                gameVersion,
-                out var translatedReferencePayload) &&
-            TryBuildTranslatedActionTooltipPayloadFromReferencePayload(
-                translatedReferencePayload,
-                originalPayload,
-                out translatedPayload))
-        {
-            return true;
-        }
-
-        if (string.IsNullOrWhiteSpace(originalPayload.Description) &&
-            ReferenceTextCacheRegistry.TryFindTranslatedText(
-                scope,
-                gameVersion,
-                originalPayload.Name,
-                out var translatedName))
-        {
-            translatedPayload = CreateTranslatedActionTooltipPayload(
-                originalPayload,
-                translatedName,
-                translatedDescription: null);
-            return translatedPayload.HasCompleteTranslation;
         }
 
         return false;
@@ -2922,6 +2950,32 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Gets whether an ActionDetail hover must resolve its canonical text
+    ///     from a structured reference-text sheet instead of <c>Action</c>.
+    /// </summary>
+    /// <param name="hoverActionKind">The active hover action kind.</param>
+    /// <returns>
+    ///     <see langword="true" /> when numeric identifiers must stay scoped
+    ///     to a structured reference-text family.
+    /// </returns>
+    internal static bool RequiresStructuredActionReferencePayload(
+        DetailKind hoverActionKind)
+    {
+        return hoverActionKind is DetailKind.GeneralAction or
+               DetailKind.BuddyAction or
+               DetailKind.Companion or
+               DetailKind.BuddyOrder or
+               DetailKind.CompanyAction or
+               DetailKind.CraftingAction or
+               DetailKind.PetOrder or
+               DetailKind.Mount or
+               DetailKind.BgcArmyAction or
+               DetailKind.EurekaMagiaAction or
+               DetailKind.MainCommand or
+               DetailKind.ExtraCommand;
+    }
+
+    /// <summary>
     ///     Tries to build one structured action-adjacent reference payload for
     ///     the requested hover family.
     /// </summary>
@@ -3357,6 +3411,24 @@ public unsafe partial class Echoglossian
     {
         return hoveredItemId == 0 &&
                hoveredActionId == 0;
+    }
+
+    /// <summary>
+    ///     Gets whether a live action hover takes precedence over a lingering
+    ///     direct ItemDetail hover value.
+    /// </summary>
+    /// <param name="hoveredActionId">The live action identifier.</param>
+    /// <param name="isActionDetailActive">
+    ///     Whether the ActionDetail surface is currently visible.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when ItemDetail must clear its presentation.
+    /// </returns>
+    internal static bool ShouldSuppressItemDetailDuringActionHover(
+        uint hoveredActionId,
+        bool isActionDetailActive)
+    {
+        return hoveredActionId != 0 && isActionDetailActive;
     }
 
     /// <summary>

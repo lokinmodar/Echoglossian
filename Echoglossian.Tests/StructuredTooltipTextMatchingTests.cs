@@ -282,4 +282,25 @@ public class StructuredTooltipTextMatchingTests
                 hoveredItemId: 0,
                 hoveredActionId: 0));
     }
+
+    /// <summary>
+    ///     Ensures a live action hover suppresses a lingering direct item
+    ///     hover before ItemDetail can render a stale overlay.
+    /// </summary>
+    [Fact]
+    public void ShouldSuppressItemDetailDuringActionHover_BlocksLingeringItemState()
+    {
+        Assert.True(
+            Echoglossian.ShouldSuppressItemDetailDuringActionHover(
+                hoveredActionId: 20,
+                isActionDetailActive: true));
+        Assert.False(
+            Echoglossian.ShouldSuppressItemDetailDuringActionHover(
+                hoveredActionId: 20,
+                isActionDetailActive: false));
+        Assert.False(
+            Echoglossian.ShouldSuppressItemDetailDuringActionHover(
+                hoveredActionId: 0,
+                isActionDetailActive: true));
+    }
 }

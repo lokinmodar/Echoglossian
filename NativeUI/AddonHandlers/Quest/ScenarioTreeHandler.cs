@@ -66,6 +66,24 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         this.OnScenarioTreeCleanupEvent);
   }
 
+  /// <inheritdoc />
+  public override unsafe void OnPluginUnload()
+  {
+    if (TryGetVisibleScenarioTree(out _, out var atkValues))
+    {
+      this.RestoreScenarioTreeOriginals(atkValues);
+    }
+
+    this.scenarioTreeRuntimeEntries.Clear();
+    this.scenarioTreeNativeMutationIndices.Clear();
+    this.scenarioTreeNativeMutationTextNodeKeys.Clear();
+    this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
+    this.currentScenarioTreeDataReady = false;
+    this.lastAppliedDisplayMode = null;
+    this.nextScenarioTreeRetryUtc = DateTime.MinValue;
+    this.ClearScenarioTreeWaitingState();
+  }
+
   /// <summary>
   ///     Gets whether the ScenarioTree family should use hover tooltips.
   /// </summary>
@@ -316,7 +334,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       var valueIndex = nextValueIndex++;
       var originalText = this.ResolveOriginalScenarioTreeText(
           valueIndex,
-          visibleText);
+          visibleText,
+          textNodeKey: textNodeAddress);
       if (string.IsNullOrWhiteSpace(originalText))
       {
         continue;
@@ -971,7 +990,10 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       nint textNodeKey)
   {
     return new ScenarioTreeRuntimeEntry(
-        this.BuildScenarioTreeRuntimeEntryKey(progressKey, valueIndex),
+        this.BuildScenarioTreeRuntimeEntryKey(
+            progressKey,
+            valueIndex,
+            textNodeKey),
         progressKey,
         valueIndex,
         originalText,
@@ -984,15 +1006,20 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="progressKey">The quest progress key.</param>
   /// <param name="valueIndex">The addon value index.</param>
+  /// <param name="textNodeKey">The backing visible text-node key, if any.</param>
   /// <returns>The stable runtime key.</returns>
   private string BuildScenarioTreeRuntimeEntryKey(
       string progressKey,
-      int valueIndex)
+      int valueIndex,
+      nint textNodeKey)
   {
     var effectiveProgressKey = string.IsNullOrWhiteSpace(progressKey)
         ? "pending"
         : progressKey;
-    return $"{ScenarioTreeHoverPrefix}{effectiveProgressKey}-{valueIndex}";
+    var stableNodeKey = textNodeKey == nint.Zero
+        ? valueIndex.ToString(CultureInfo.InvariantCulture)
+        : $"node-{textNodeKey:X}";
+    return $"{ScenarioTreeHoverPrefix}{effectiveProgressKey}-{stableNodeKey}";
   }
 
   /// <summary>
@@ -1002,12 +1029,27 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="valueIndex">The addon value index.</param>
   /// <param name="visibleText">The current visible text.</param>
+  /// <param name="textNodeKey">The backing visible text-node key, if any.</param>
   /// <returns>The original source text for that slot.</returns>
   private string ResolveOriginalScenarioTreeText(
       int valueIndex,
-      string visibleText)
+      string visibleText,
+      nint textNodeKey = 0)
   {
-    if (this.scenarioTreeRuntimeEntries.TryGetValue(valueIndex, out var previousEntry) &&
+    ScenarioTreeRuntimeEntry? previousEntry = null;
+    if (textNodeKey != nint.Zero)
+    {
+      previousEntry = this.scenarioTreeRuntimeEntries.Values.FirstOrDefault(
+          entry => entry.TextNodeKey == textNodeKey);
+    }
+    else
+    {
+      this.scenarioTreeRuntimeEntries.TryGetValue(
+          valueIndex,
+          out previousEntry);
+    }
+
+    if (previousEntry is not null &&
         !string.IsNullOrWhiteSpace(previousEntry.OriginalText))
     {
       return QuestAddonOriginalTextHelper.ResolveOriginalVisibleText(
@@ -1344,7 +1386,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="type">The lifecycle event.</param>
   /// <param name="args">The lifecycle arguments.</param>
-  private void OnScenarioTreeCleanupEvent(AddonEvent type, AddonArgs args)
+  private unsafe void OnScenarioTreeCleanupEvent(AddonEvent type, AddonArgs args)
   {
     if (!string.Equals(
             args.AddonName,
@@ -1352,6 +1394,11 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
             StringComparison.Ordinal))
     {
       return;
+    }
+
+    if (TryGetVisibleScenarioTree(out _, out var atkValues))
+    {
+      this.RestoreScenarioTreeOriginals(atkValues);
     }
 
     this.scenarioTreeRuntimeEntries.Clear();
