@@ -4290,6 +4290,19 @@
             </summary>
             <returns><see langword="true" /> when the runtime should execute.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RequiresStructuredTooltipLiveNameMatch(System.Boolean)">
+            <summary>
+                Gets whether the current tooltip mode must prove that the live
+                tooltip still exposes the expected name before continuing.
+            </summary>
+            <param name="useOverlayOnly">
+                Whether the selected mode renders only our overlay and does not
+                write translated text into the native tooltip.
+            </param>
+            <returns>
+                <see langword="true" /> when live-name validation is required.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryRequestActionDetailOnDemandPrefetch(Echoglossian.SourceClientLanguage,System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,System.Byte,System.Boolean)">
             <summary>
                 Queues non-blocking background work for one visible ActionDetail

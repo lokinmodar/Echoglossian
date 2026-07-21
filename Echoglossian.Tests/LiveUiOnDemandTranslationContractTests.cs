@@ -66,6 +66,29 @@ public class LiveUiOnDemandTranslationContractTests
     }
 
     /// <summary>
+    /// Ensures overlay-only ActionDetail and ItemDetail rendering is keyed by
+    /// the hovered ID and translated payload rather than blocked by live
+    /// tooltip text nodes that rich tooltips often do not expose.
+    /// </summary>
+    [Fact]
+    public void StructuredTooltipRuntime_does_not_gate_overlay_only_on_live_name_match()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "ActionItemDetailUiRuntime.cs"));
+
+        Assert.Contains(
+            "RequiresStructuredTooltipLiveNameMatch(useOverlayOnly)",
+            source);
+        Assert.DoesNotContain(
+            "if (!this.HasStructuredTooltipLiveNameMatch(",
+            source);
+    }
+
+    /// <summary>
     /// Ensures NamePlateGui callbacks do not enqueue translation work from
     /// one-frame handler state. Only cached translations may be applied live.
     /// </summary>

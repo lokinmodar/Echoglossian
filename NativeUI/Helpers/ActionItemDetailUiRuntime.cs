@@ -261,7 +261,8 @@ public unsafe partial class Echoglossian
                 addon,
                 originalTraitPayload.TraitId,
                 StructuredTooltipContentKindTrait);
-            if (!this.HasStructuredTooltipLiveNameMatch(
+            if (RequiresStructuredTooltipLiveNameMatch(useOverlayOnly) &&
+                !this.HasStructuredTooltipLiveNameMatch(
                     addon,
                     StructuredTooltipContentKindTrait,
                     originalTraitPayload.Name,
@@ -394,7 +395,8 @@ public unsafe partial class Echoglossian
             addon,
             originalPayload.ActionId,
             StructuredTooltipContentKindAction);
-        if (!this.HasStructuredTooltipLiveNameMatch(
+        if (RequiresStructuredTooltipLiveNameMatch(useOverlayOnly) &&
+            !this.HasStructuredTooltipLiveNameMatch(
                 addon,
                 StructuredTooltipContentKindAction,
                 originalPayload.Name,
@@ -570,7 +572,8 @@ public unsafe partial class Echoglossian
             addon,
             originalPayload.ItemId,
             StructuredTooltipContentKindItem);
-        if (!this.HasStructuredTooltipLiveNameMatch(
+        if (RequiresStructuredTooltipLiveNameMatch(useOverlayOnly) &&
+            !this.HasStructuredTooltipLiveNameMatch(
                 addon,
                 StructuredTooltipContentKindItem,
                 originalPayload.Name,
@@ -631,6 +634,23 @@ public unsafe partial class Echoglossian
                this.configuration.TranslateTooltips &&
                !GameGuiInterface.GameUiHidden &&
                FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess();
+    }
+
+    /// <summary>
+    ///     Gets whether the current tooltip mode must prove that the live
+    ///     tooltip still exposes the expected name before continuing.
+    /// </summary>
+    /// <param name="useOverlayOnly">
+    ///     Whether the selected mode renders only our overlay and does not
+    ///     write translated text into the native tooltip.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when live-name validation is required.
+    /// </returns>
+    internal static bool RequiresStructuredTooltipLiveNameMatch(
+        bool useOverlayOnly)
+    {
+        return !useOverlayOnly;
     }
 
     /// <summary>
