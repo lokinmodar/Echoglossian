@@ -496,21 +496,87 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         bool rightAligned)
     {
         var availableWidth = ImGui.GetContentRegionAvail().X;
-        var lineWidth = ImGui.CalcTextSize(line).X;
-        if ((!centerAligned && !rightAligned) || availableWidth <= 0f ||
-            lineWidth >= availableWidth)
+        if ((!centerAligned && !rightAligned) || availableWidth <= 0f)
         {
             ImGui.TextWrapped(line);
             return;
         }
 
-        var offset = CalculateHorizontalTextOffset(
-            availableWidth,
-            lineWidth,
-            centerAligned,
-            rightAligned);
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
-        ImGui.TextUnformatted(line);
+        foreach (var visualLine in SplitOverlayLineForAlignment(
+                     line,
+                     availableWidth,
+                     text => ImGui.CalcTextSize(text).X))
+        {
+            var lineWidth = ImGui.CalcTextSize(visualLine).X;
+            var offset = CalculateHorizontalTextOffset(
+                availableWidth,
+                lineWidth,
+                centerAligned,
+                rightAligned);
+            if (offset > 0f)
+            {
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+            }
+
+            ImGui.TextUnformatted(visualLine);
+        }
+    }
+
+    /// <summary>
+    /// Splits one logical overlay line into visual lines that can be aligned
+    /// individually without hyphenating words.
+    /// </summary>
+    /// <param name="line">The logical source line.</param>
+    /// <param name="availableWidth">The available content width.</param>
+    /// <param name="measureTextWidth">The active-font text measurement delegate.</param>
+    /// <returns>The visual lines to draw.</returns>
+    internal static IReadOnlyList<string> SplitOverlayLineForAlignment(
+        string line,
+        float availableWidth,
+        Func<string, float> measureTextWidth)
+    {
+        if (string.IsNullOrWhiteSpace(line) ||
+            availableWidth <= 0f ||
+            measureTextWidth(line) <= availableWidth)
+        {
+            return [line];
+        }
+
+        var words = line.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length <= 1)
+        {
+            return [line];
+        }
+
+        var visualLines = new List<string>();
+        var currentLine = string.Empty;
+        foreach (var word in words)
+        {
+            if (string.IsNullOrEmpty(currentLine))
+            {
+                currentLine = word;
+                continue;
+            }
+
+            var candidateLine = $"{currentLine} {word}";
+            if (measureTextWidth(candidateLine) <= availableWidth)
+            {
+                currentLine = candidateLine;
+                continue;
+            }
+
+            visualLines.Add(currentLine);
+            currentLine = word;
+        }
+
+        if (!string.IsNullOrEmpty(currentLine))
+        {
+            visualLines.Add(currentLine);
+        }
+
+        return visualLines.Count > 0 ? visualLines : [line];
     }
 
     /// <summary>
@@ -578,7 +644,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
     /// </summary>
     /// <param name="surfaceId">The overlay surface identifier.</param>
     /// <returns><see langword="true" /> when text is centered.</returns>
-    private static bool ShouldCenterOverlayText(TranslationOverlaySurfaceId surfaceId)
+    internal static bool ShouldCenterOverlayText(TranslationOverlaySurfaceId surfaceId)
     {
         return surfaceId == TranslationOverlaySurfaceId.TalkSubtitle ||
                surfaceId is TranslationOverlaySurfaceId.TextGimmickHint

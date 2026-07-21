@@ -15,11 +15,11 @@ namespace Echoglossian.Tests;
 public class LiveUiOnDemandTranslationContractTests
 {
     /// <summary>
-    /// Ensures ActionDetail live hover processing does not trigger canonical
-    /// action-tooltip prefetch. Background batch prefetch owns that work.
+    /// Ensures ActionDetail and ItemDetail live hover processing only requests
+    /// non-blocking prefetch when DB-first payloads are missing.
     /// </summary>
     [Fact]
-    public void ActionDetailRuntime_does_not_request_on_demand_prefetch()
+    public void StructuredTooltipRuntime_requests_missing_payload_prefetch_without_direct_translation()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -28,8 +28,17 @@ public class LiveUiOnDemandTranslationContractTests
             "Helpers",
             "ActionItemDetailUiRuntime.cs"));
 
-        Assert.DoesNotContain(
+        Assert.Contains(
             "TryRequestActionDetailOnDemandPrefetch(",
+            source);
+        Assert.Contains(
+            "TryRequestItemDetailOnDemandPrefetch(",
+            source);
+        Assert.DoesNotContain(
+            "TranslationService.Translate(",
+            source);
+        Assert.DoesNotContain(
+            "TranslateAsync(",
             source);
     }
 

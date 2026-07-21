@@ -4290,6 +4290,76 @@
             </summary>
             <returns><see langword="true" /> when the runtime should execute.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryRequestActionDetailOnDemandPrefetch(Echoglossian.SourceClientLanguage,System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,System.Byte,System.Boolean)">
+            <summary>
+                Queues non-blocking background work for one visible ActionDetail
+                payload that was not translated by the batch prefetch yet.
+            </summary>
+            <param name="sourceLanguage">The captured source identity.</param>
+            <param name="referenceId">The action or structured reference row id.</param>
+            <param name="hoverActionKind">The active hover action kind.</param>
+            <param name="originalPayload">The canonical source payload.</param>
+            <param name="currentClassJobId">The current class/job identifier.</param>
+            <param name="usedStructuredActionPayload">
+                Whether the payload came from a structured reference-text sheet.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryRequestItemDetailOnDemandPrefetch(Echoglossian.SourceClientLanguage,Echoglossian.Echoglossian.StructuredTooltipItemSourceKind,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Queues non-blocking background work for one visible ItemDetail
+                payload that was not translated by the batch prefetch yet.
+            </summary>
+            <param name="sourceLanguage">The captured source identity.</param>
+            <param name="sourceKind">The sheet family that produced the payload.</param>
+            <param name="originalPayload">The canonical source payload.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildStructuredTooltipOnDemandPrefetchKey(System.String,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.UInt32,System.UInt32,System.String)">
+            <summary>
+                Builds a source-scoped identity for one tooltip on-demand prefetch
+                cooldown entry.
+            </summary>
+            <param name="surfaceName">The logical tooltip surface.</param>
+            <param name="sourceLanguage">The captured source identity.</param>
+            <param name="scope">The target and engine reuse scope.</param>
+            <param name="contentId">The source content identifier.</param>
+            <param name="contentKind">The source content family.</param>
+            <param name="sourceHash">The canonical source-content hash.</param>
+            <returns>The cooldown identity.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryAcquireStructuredTooltipOnDemandPrefetchSlot(System.String)">
+            <summary>
+                Reserves one on-demand prefetch slot while suppressing per-frame
+                duplicate requests for the same tooltip payload.
+            </summary>
+            <param name="prefetchKey">The source-scoped payload identity.</param>
+            <returns><see langword="true" /> when new work may be requested.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveReferenceTextPrefetchRegistration(Dalamud.Game.Gui.DetailKind,Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration@)">
+            <summary>
+                Resolves the reference-text prefetch registration for one structured
+                action hover kind.
+            </summary>
+            <param name="hoverActionKind">The active hover action kind.</param>
+            <param name="registration">The resolved registration.</param>
+            <returns><see langword="true" /> when a registration is enabled.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveReferenceTextPrefetchRegistration(Echoglossian.Echoglossian.StructuredTooltipItemSourceKind,Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration@)">
+            <summary>
+                Resolves the reference-text prefetch registration for one
+                item-adjacent tooltip family.
+            </summary>
+            <param name="sourceKind">The item source family.</param>
+            <param name="registration">The resolved registration.</param>
+            <returns><see langword="true" /> when a registration is enabled.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveReferenceTextPrefetchRegistration(System.String,Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration@)">
+            <summary>
+                Resolves one enabled reference-text prefetch registration by key.
+            </summary>
+            <param name="registrationKey">The registration key.</param>
+            <param name="registration">The resolved registration.</param>
+            <returns><see langword="true" /> when a registration is enabled.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.HandleStructuredTooltipRuntimeDisabled">
             <summary>
                 Handles the shared structured-tooltip runtime transition from enabled
@@ -34384,6 +34454,16 @@
             <param name="line">The text line to draw.</param>
             <param name="centerAligned">Whether to center the line.</param>
             <param name="rightAligned">Whether to right-align the line.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.SplitOverlayLineForAlignment(System.String,System.Single,System.Func{System.String,System.Single})">
+            <summary>
+            Splits one logical overlay line into visual lines that can be aligned
+            individually without hyphenating words.
+            </summary>
+            <param name="line">The logical source line.</param>
+            <param name="availableWidth">The available content width.</param>
+            <param name="measureTextWidth">The active-font text measurement delegate.</param>
+            <returns>The visual lines to draw.</returns>
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.CalculateHorizontalTextOffset(System.Single,System.Single,System.Boolean,System.Boolean)">
             <summary>

@@ -63,6 +63,13 @@ public unsafe partial class Echoglossian
     private IAddonLifecycle.AddonEventDelegate? structuredTooltipLifecycleDelegate;
     private bool structuredTooltipRuntimeWasEnabled;
 
+    private static readonly TimeSpan StructuredTooltipOnDemandPrefetchCooldown =
+        TimeSpan.FromSeconds(30);
+
+    private readonly Dictionary<string, DateTime>
+        structuredTooltipOnDemandPrefetchLastRequestedUtc =
+            new(StringComparer.Ordinal);
+
     /// <summary>
     ///     Updates live action/item tooltip state before tooltip overlays are drawn.
     /// </summary>
@@ -308,6 +315,7 @@ public unsafe partial class Echoglossian
         }
 
         var translatedLookupReferenceId = hoveredActionId;
+        var usedStructuredActionPayload = false;
         if (!TryBuildActionTooltipCanonicalPayload(
                 hoveredActionId,
                 currentClassJobId,
@@ -336,6 +344,8 @@ public unsafe partial class Echoglossian
                     contentKind: StructuredTooltipContentKindAction);
                 return;
             }
+
+            usedStructuredActionPayload = true;
         }
 
         if (!this.TryFindTranslatedActionTooltipPayload(
@@ -344,6 +354,13 @@ public unsafe partial class Echoglossian
                 originalPayload,
                 out var translatedPayload))
         {
+            this.TryRequestActionDetailOnDemandPrefetch(
+                sourceLanguage,
+                translatedLookupReferenceId,
+                hoveredActionKind,
+                originalPayload,
+                currentClassJobId,
+                usedStructuredActionPayload);
             this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
             this.LogStructuredTooltipState(
                 ActionDetailSurfaceName,
@@ -516,6 +533,10 @@ public unsafe partial class Echoglossian
                 originalPayload,
                 out var translatedPayload))
         {
+            this.TryRequestItemDetailOnDemandPrefetch(
+                sourceLanguage,
+                itemSourceKind,
+                originalPayload);
             this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, addon);
             this.LogStructuredTooltipState(
                 ItemDetailSurfaceName,
@@ -610,6 +631,252 @@ public unsafe partial class Echoglossian
                this.configuration.TranslateTooltips &&
                !GameGuiInterface.GameUiHidden &&
                FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess();
+    }
+
+    /// <summary>
+    ///     Queues non-blocking background work for one visible ActionDetail
+    ///     payload that was not translated by the batch prefetch yet.
+    /// </summary>
+    /// <param name="sourceLanguage">The captured source identity.</param>
+    /// <param name="referenceId">The action or structured reference row id.</param>
+    /// <param name="hoverActionKind">The active hover action kind.</param>
+    /// <param name="originalPayload">The canonical source payload.</param>
+    /// <param name="currentClassJobId">The current class/job identifier.</param>
+    /// <param name="usedStructuredActionPayload">
+    ///     Whether the payload came from a structured reference-text sheet.
+    /// </param>
+    private void TryRequestActionDetailOnDemandPrefetch(
+        SourceClientLanguage sourceLanguage,
+        uint referenceId,
+        DetailKind hoverActionKind,
+        ActionTooltipCanonicalPayload originalPayload,
+        byte currentClassJobId,
+        bool usedStructuredActionPayload)
+    {
+        if (!this.ShouldPrefetchActionAdjacentCanonicalTooltips() ||
+            !this.TryCreateCapturedTranslationScope(sourceLanguage, out var scope))
+        {
+            return;
+        }
+
+        var prefetchKey = BuildStructuredTooltipOnDemandPrefetchKey(
+            ActionDetailSurfaceName,
+            sourceLanguage,
+            scope,
+            referenceId,
+            StructuredTooltipContentKindAction,
+            originalPayload.ComputeSourceContentHash());
+        if (!this.TryAcquireStructuredTooltipOnDemandPrefetchSlot(prefetchKey))
+        {
+            return;
+        }
+
+        if (usedStructuredActionPayload)
+        {
+            if (this.TryResolveReferenceTextPrefetchRegistration(
+                    hoverActionKind,
+                    out var registration))
+            {
+                this.PrefetchReferenceText(registration, referenceId);
+            }
+
+            return;
+        }
+
+        this.PrefetchActionDetail(originalPayload.ActionId, currentClassJobId);
+    }
+
+    /// <summary>
+    ///     Queues non-blocking background work for one visible ItemDetail
+    ///     payload that was not translated by the batch prefetch yet.
+    /// </summary>
+    /// <param name="sourceLanguage">The captured source identity.</param>
+    /// <param name="sourceKind">The sheet family that produced the payload.</param>
+    /// <param name="originalPayload">The canonical source payload.</param>
+    private void TryRequestItemDetailOnDemandPrefetch(
+        SourceClientLanguage sourceLanguage,
+        StructuredTooltipItemSourceKind sourceKind,
+        ItemTooltipCanonicalPayload originalPayload)
+    {
+        if (!this.ShouldPrefetchStructuredTooltips() ||
+            !this.TryCreateCapturedTranslationScope(sourceLanguage, out var scope))
+        {
+            return;
+        }
+
+        var prefetchKey = BuildStructuredTooltipOnDemandPrefetchKey(
+            ItemDetailSurfaceName,
+            sourceLanguage,
+            scope,
+            originalPayload.ItemId,
+            (uint)sourceKind,
+            originalPayload.ComputeSourceContentHash());
+        if (!this.TryAcquireStructuredTooltipOnDemandPrefetchSlot(prefetchKey))
+        {
+            return;
+        }
+
+        if (sourceKind == StructuredTooltipItemSourceKind.Item)
+        {
+            this.PrefetchItemDetail(originalPayload.ItemId);
+            return;
+        }
+
+        if (this.TryResolveReferenceTextPrefetchRegistration(
+                sourceKind,
+                out var registration))
+        {
+            this.PrefetchReferenceText(registration, originalPayload.ItemId);
+        }
+    }
+
+    /// <summary>
+    ///     Builds a source-scoped identity for one tooltip on-demand prefetch
+    ///     cooldown entry.
+    /// </summary>
+    /// <param name="surfaceName">The logical tooltip surface.</param>
+    /// <param name="sourceLanguage">The captured source identity.</param>
+    /// <param name="scope">The target and engine reuse scope.</param>
+    /// <param name="contentId">The source content identifier.</param>
+    /// <param name="contentKind">The source content family.</param>
+    /// <param name="sourceHash">The canonical source-content hash.</param>
+    /// <returns>The cooldown identity.</returns>
+    private static string BuildStructuredTooltipOnDemandPrefetchKey(
+        string surfaceName,
+        SourceClientLanguage sourceLanguage,
+        TranslationReuseScope scope,
+        uint contentId,
+        uint contentKind,
+        string sourceHash)
+    {
+        var engineKey =
+            scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture) ??
+            "<none>";
+        return $"{surfaceName}|{sourceLanguage.PersistenceCode}|{scope.TargetLanguageCode}|{engineKey}|{contentKind}|{contentId}|{sourceHash}";
+    }
+
+    /// <summary>
+    ///     Reserves one on-demand prefetch slot while suppressing per-frame
+    ///     duplicate requests for the same tooltip payload.
+    /// </summary>
+    /// <param name="prefetchKey">The source-scoped payload identity.</param>
+    /// <returns><see langword="true" /> when new work may be requested.</returns>
+    private bool TryAcquireStructuredTooltipOnDemandPrefetchSlot(
+        string prefetchKey)
+    {
+        var now = DateTime.UtcNow;
+        if (this.structuredTooltipOnDemandPrefetchLastRequestedUtc.TryGetValue(
+                prefetchKey,
+                out var lastRequestedUtc) &&
+            now - lastRequestedUtc < StructuredTooltipOnDemandPrefetchCooldown)
+        {
+            return false;
+        }
+
+        this.structuredTooltipOnDemandPrefetchLastRequestedUtc[prefetchKey] = now;
+        if (this.structuredTooltipOnDemandPrefetchLastRequestedUtc.Count > 512)
+        {
+            foreach (var staleKey in this.structuredTooltipOnDemandPrefetchLastRequestedUtc
+                         .Where(entry =>
+                             now - entry.Value >
+                             StructuredTooltipOnDemandPrefetchCooldown * 2)
+                         .Select(entry => entry.Key)
+                         .ToList())
+            {
+                this.structuredTooltipOnDemandPrefetchLastRequestedUtc.Remove(
+                    staleKey);
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Resolves the reference-text prefetch registration for one structured
+    ///     action hover kind.
+    /// </summary>
+    /// <param name="hoverActionKind">The active hover action kind.</param>
+    /// <param name="registration">The resolved registration.</param>
+    /// <returns><see langword="true" /> when a registration is enabled.</returns>
+    private bool TryResolveReferenceTextPrefetchRegistration(
+        DetailKind hoverActionKind,
+        out ReferenceTextPrefetchRegistration registration)
+    {
+        var key = hoverActionKind switch
+        {
+            DetailKind.GeneralAction => "GeneralActionPrefetch",
+            DetailKind.BuddyAction or DetailKind.Companion or
+                DetailKind.BuddyOrder => "BuddyActionPrefetch",
+            DetailKind.CompanyAction => "CompanyActionPrefetch",
+            DetailKind.CraftingAction => "CraftActionPrefetch",
+            DetailKind.PetOrder => "PetActionPrefetch",
+            DetailKind.Mount => "MountActionPrefetch",
+            DetailKind.BgcArmyAction => "BgcArmyActionPrefetch",
+            DetailKind.EurekaMagiaAction => "EurekaMagiaActionPrefetch",
+            DetailKind.MainCommand or DetailKind.ExtraCommand =>
+                "MainCommandPrefetch",
+            _ => null,
+        };
+
+        return this.TryResolveReferenceTextPrefetchRegistration(
+            key,
+            out registration);
+    }
+
+    /// <summary>
+    ///     Resolves the reference-text prefetch registration for one
+    ///     item-adjacent tooltip family.
+    /// </summary>
+    /// <param name="sourceKind">The item source family.</param>
+    /// <param name="registration">The resolved registration.</param>
+    /// <returns><see langword="true" /> when a registration is enabled.</returns>
+    private bool TryResolveReferenceTextPrefetchRegistration(
+        StructuredTooltipItemSourceKind sourceKind,
+        out ReferenceTextPrefetchRegistration registration)
+    {
+        var key = sourceKind switch
+        {
+            StructuredTooltipItemSourceKind.EventItem => "EventItemPrefetch",
+            StructuredTooltipItemSourceKind.DeepDungeonItem =>
+                "DeepDungeonItemPrefetch",
+            _ => null,
+        };
+
+        return this.TryResolveReferenceTextPrefetchRegistration(
+            key,
+            out registration);
+    }
+
+    /// <summary>
+    ///     Resolves one enabled reference-text prefetch registration by key.
+    /// </summary>
+    /// <param name="registrationKey">The registration key.</param>
+    /// <param name="registration">The resolved registration.</param>
+    /// <returns><see langword="true" /> when a registration is enabled.</returns>
+    private bool TryResolveReferenceTextPrefetchRegistration(
+        string? registrationKey,
+        out ReferenceTextPrefetchRegistration registration)
+    {
+        registration = null!;
+        if (string.IsNullOrWhiteSpace(registrationKey))
+        {
+            return false;
+        }
+
+        foreach (var candidate in this.GetReferenceTextPrefetchRegistrations())
+        {
+            if (string.Equals(
+                    candidate.Key,
+                    registrationKey,
+                    StringComparison.Ordinal) &&
+                candidate.IsEnabled())
+            {
+                registration = candidate;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
