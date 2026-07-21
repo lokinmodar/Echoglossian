@@ -4616,7 +4616,7 @@
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated canonical payload.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyStructuredTooltipNative(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+        <member name="M:Echoglossian.Echoglossian.ApplyStructuredTooltipNative(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
             <summary>
                 Applies translated native text to the name and description nodes of a tooltip.
             </summary>
@@ -4624,13 +4624,14 @@
             <param name="addon">The visible tooltip addon.</param>
             <param name="contentId">The logical content identifier.</param>
             <param name="contentKind">The logical content kind.</param>
+            <param name="sourceContentHash">The canonical source-payload identity.</param>
             <param name="originalName">The original name text.</param>
             <param name="originalDescription">The original description text.</param>
             <param name="translatedName">The translated name text.</param>
             <param name="translatedDescription">The translated description text.</param>
             <param name="runtimeState">The active native-runtime state.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RestoreStructuredTooltipOriginalsIfContentChanged(Echoglossian.Echoglossian.StructuredTooltipNativeState@,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32)">
+        <member name="M:Echoglossian.Echoglossian.RestoreStructuredTooltipOriginalsIfContentChanged(Echoglossian.Echoglossian.StructuredTooltipNativeState@,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String)">
             <summary>
                 Restores prior native mutations immediately when the visible tooltip
                 surface transitions to different logical content on the same addon.
@@ -4639,8 +4640,9 @@
             <param name="addon">The visible tooltip addon.</param>
             <param name="contentId">The logical content identifier.</param>
             <param name="contentKind">The logical content kind.</param>
+            <param name="sourceContentHash">The canonical source-payload identity.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryEnsureStructuredTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+        <member name="M:Echoglossian.Echoglossian.TryEnsureStructuredTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
             <summary>
                 Ensures the native runtime has the best currently available tooltip
                 node addresses for the active content, enriching partial state after
@@ -4649,6 +4651,7 @@
             <param name="addon">The visible tooltip addon.</param>
             <param name="contentId">The logical content identifier.</param>
             <param name="contentKind">The logical content kind.</param>
+            <param name="sourceContentHash">The canonical source-payload identity.</param>
             <param name="originalName">The canonical original name.</param>
             <param name="originalDescription">The canonical original description.</param>
             <param name="translatedName">
@@ -4712,13 +4715,14 @@
             <param name="runtimeState">The runtime state to restore.</param>
             <param name="addon">The current visible tooltip addon, if any.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
+        <member name="M:Echoglossian.Echoglossian.TryResolveTooltipNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
             <summary>
                 Tries to resolve tooltip text-node addresses that match the canonical name and description.
             </summary>
             <param name="addon">The visible tooltip addon.</param>
             <param name="contentId">The logical content identifier.</param>
             <param name="contentKind">The logical content kind.</param>
+            <param name="sourceContentHash">The canonical source-payload identity.</param>
             <param name="originalName">The canonical original name.</param>
             <param name="originalDescription">The canonical original description.</param>
             <param name="translatedName">
@@ -4858,6 +4862,28 @@
             <param name="visibleText">The visible live text.</param>
             <param name="canonicalText">The canonical source text.</param>
             <returns>The match score, or zero when the texts do not match.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.HasStructuredTooltipContentIdentity(System.UInt32,System.UInt32,System.String,System.UInt32,System.UInt32,System.String)">
+            <summary>
+                Gets whether two structured-tooltip payload identities refer to the
+                same source content on a potentially recycled native addon.
+            </summary>
+            <param name="leftContentId">The first logical content identifier.</param>
+            <param name="leftContentKind">The first logical content kind.</param>
+            <param name="leftSourceContentHash">The first canonical source-payload hash.</param>
+            <param name="rightContentId">The second logical content identifier.</param>
+            <param name="rightContentKind">The second logical content kind.</param>
+            <param name="rightSourceContentHash">The second canonical source-payload hash.</param>
+            <returns><see langword="true" /> when both identities refer to the same source payload.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldRestoreStructuredTooltipNodeText(System.String,System.String)">
+            <summary>
+                Gets whether a native tooltip node still contains the exact
+                translation written by this runtime and is therefore safe to restore.
+            </summary>
+            <param name="liveText">The current text read from the native node.</param>
+            <param name="translatedText">The translation previously written by this runtime.</param>
+            <returns><see langword="true" /> when restoring the original text is safe.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.IsStructuredTooltipExactTextMatch(System.String,System.String)">
             <summary>
@@ -5116,21 +5142,29 @@
             </summary>
             <param name="AddonAddress">The visible tooltip addon address.</param>
             <param name="ContentId">The logical item/action identifier.</param>
+            <param name="ContentKind">The logical item/action content kind.</param>
+            <param name="SourceContentHash">The canonical source-payload identity.</param>
             <param name="NameNodeAddress">The resolved name-node address.</param>
             <param name="OriginalNameText">The original name-node text.</param>
+            <param name="AppliedNameText">The translation written to the name node.</param>
             <param name="DescriptionNodeAddress">The resolved description-node address.</param>
             <param name="OriginalDescriptionText">The original description-node text.</param>
+            <param name="AppliedDescriptionText">The translation written to the description node.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.StructuredTooltipNativeState.#ctor(System.IntPtr,System.UInt32,System.UInt32,System.IntPtr,System.String,System.IntPtr,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipNativeState.#ctor(System.IntPtr,System.UInt32,System.UInt32,System.String,System.IntPtr,System.String,System.String,System.IntPtr,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
                 Captures the minimal mutable state for one structured tooltip instance.
             </summary>
             <param name="AddonAddress">The visible tooltip addon address.</param>
             <param name="ContentId">The logical item/action identifier.</param>
+            <param name="ContentKind">The logical item/action content kind.</param>
+            <param name="SourceContentHash">The canonical source-payload identity.</param>
             <param name="NameNodeAddress">The resolved name-node address.</param>
             <param name="OriginalNameText">The original name-node text.</param>
+            <param name="AppliedNameText">The translation written to the name node.</param>
             <param name="DescriptionNodeAddress">The resolved description-node address.</param>
             <param name="OriginalDescriptionText">The original description-node text.</param>
+            <param name="AppliedDescriptionText">The translation written to the description node.</param>
         </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.AddonAddress">
             <summary>The visible tooltip addon address.</summary>
@@ -5138,17 +5172,29 @@
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.ContentId">
             <summary>The logical item/action identifier.</summary>
         </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.ContentKind">
+            <summary>The logical item/action content kind.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.SourceContentHash">
+            <summary>The canonical source-payload identity.</summary>
+        </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.NameNodeAddress">
             <summary>The resolved name-node address.</summary>
         </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.OriginalNameText">
             <summary>The original name-node text.</summary>
         </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.AppliedNameText">
+            <summary>The translation written to the name node.</summary>
+        </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.DescriptionNodeAddress">
             <summary>The resolved description-node address.</summary>
         </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.OriginalDescriptionText">
             <summary>The original description-node text.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipNativeState.AppliedDescriptionText">
+            <summary>The translation written to the description node.</summary>
         </member>
         <member name="T:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate">
             <summary>

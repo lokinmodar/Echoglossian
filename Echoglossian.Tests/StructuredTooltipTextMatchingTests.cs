@@ -190,6 +190,70 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
+    ///     Ensures identical numeric action ids from different source payloads
+    ///     do not reuse the same mutable native-tooltip state.
+    /// </summary>
+    [Fact]
+    public void HasStructuredTooltipContentIdentity_RejectsCollidingIdsWithDifferentSourceHashes()
+    {
+        var result = Echoglossian.HasStructuredTooltipContentIdentity(
+            leftContentId: 3,
+            leftContentKind: 1,
+            leftSourceContentHash: "LIMIT_BREAK",
+            rightContentId: 3,
+            rightContentKind: 1,
+            rightSourceContentHash: "FOLLOW");
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures native-tooltip state remains reusable for the exact same
+    ///     canonical source payload.
+    /// </summary>
+    [Fact]
+    public void HasStructuredTooltipContentIdentity_AcceptsMatchingSourceHashes()
+    {
+        var result = Echoglossian.HasStructuredTooltipContentIdentity(
+            leftContentId: 3,
+            leftContentKind: 1,
+            leftSourceContentHash: "FOLLOW",
+            rightContentId: 3,
+            rightContentKind: 1,
+            rightSourceContentHash: "FOLLOW");
+
+        Assert.True(result);
+    }
+
+    /// <summary>
+    ///     Ensures restoration never replaces text that the game has already
+    ///     repopulated for a different tooltip on a recycled native node.
+    /// </summary>
+    [Fact]
+    public void ShouldRestoreStructuredTooltipNodeText_RejectsRecycledGameText()
+    {
+        var result = Echoglossian.ShouldRestoreStructuredTooltipNodeText(
+            liveText: "Follow",
+            translatedText: "Limit Break");
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures restoration remains available while the node still contains
+    ///     the translated text written by this runtime.
+    /// </summary>
+    [Fact]
+    public void ShouldRestoreStructuredTooltipNodeText_AcceptsOwnedTranslatedText()
+    {
+        var result = Echoglossian.ShouldRestoreStructuredTooltipNodeText(
+            liveText: "Quebra de limite",
+            translatedText: "Quebra de limite");
+
+        Assert.True(result);
+    }
+
+    /// <summary>
     ///     Ensures node matching prefers the plain-text-safe candidate when
     ///     two live nodes have the same text-match score.
     /// </summary>

@@ -260,7 +260,8 @@ public unsafe partial class Echoglossian
                 ref this.currentActionDetailState,
                 addon,
                 originalTraitPayload.TraitId,
-                StructuredTooltipContentKindTrait);
+                StructuredTooltipContentKindTrait,
+                originalTraitPayload.ComputeSourceContentHash());
             if (RequiresStructuredTooltipLiveNameMatch(useOverlayOnly) &&
                 !this.HasStructuredTooltipLiveNameMatch(
                     addon,
@@ -414,7 +415,8 @@ public unsafe partial class Echoglossian
             ref this.currentActionDetailState,
             addon,
             originalPayload.ActionId,
-            StructuredTooltipContentKindAction);
+            StructuredTooltipContentKindAction,
+            originalPayload.ComputeSourceContentHash());
         if (RequiresStructuredTooltipLiveNameMatch(useOverlayOnly) &&
             !this.HasStructuredTooltipLiveNameMatch(
                 addon,
@@ -606,7 +608,8 @@ public unsafe partial class Echoglossian
             ref this.currentItemDetailState,
             addon,
             originalPayload.ItemId,
-            StructuredTooltipContentKindItem);
+            StructuredTooltipContentKindItem,
+            originalPayload.ComputeSourceContentHash());
         if (RequiresStructuredTooltipLiveNameMatch(useOverlayOnly) &&
             !this.HasStructuredTooltipLiveNameMatch(
                 addon,
@@ -1710,6 +1713,7 @@ public unsafe partial class Echoglossian
             addon,
             originalPayload.ActionId,
             StructuredTooltipContentKindAction,
+            originalPayload.ComputeSourceContentHash(),
             originalPayload.Name,
             originalPayload.Description,
             translatedPayload.TranslatedName ?? originalPayload.Name,
@@ -1733,6 +1737,7 @@ public unsafe partial class Echoglossian
             addon,
             originalPayload.TraitId,
             StructuredTooltipContentKindTrait,
+            originalPayload.ComputeSourceContentHash(),
             originalPayload.Name,
             originalPayload.Description,
             translatedPayload.TranslatedName ?? originalPayload.Name,
@@ -1756,6 +1761,7 @@ public unsafe partial class Echoglossian
             addon,
             originalPayload.ItemId,
             StructuredTooltipContentKindItem,
+            originalPayload.ComputeSourceContentHash(),
             originalPayload.Name,
             originalPayload.Description,
             translatedPayload.TranslatedName ?? originalPayload.Name,
@@ -1770,6 +1776,7 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <param name="contentId">The logical content identifier.</param>
     /// <param name="contentKind">The logical content kind.</param>
+    /// <param name="sourceContentHash">The canonical source-payload identity.</param>
     /// <param name="originalName">The original name text.</param>
     /// <param name="originalDescription">The original description text.</param>
     /// <param name="translatedName">The translated name text.</param>
@@ -1780,6 +1787,7 @@ public unsafe partial class Echoglossian
         AtkUnitBase* addon,
         uint contentId,
         uint contentKind,
+        string sourceContentHash,
         string originalName,
         string originalDescription,
         string translatedName,
@@ -1801,8 +1809,13 @@ public unsafe partial class Echoglossian
 
         if (runtimeState != null &&
             ((nint)addon != runtimeState.AddonAddress ||
-             runtimeState.ContentId != contentId ||
-             runtimeState.ContentKind != contentKind))
+             !HasStructuredTooltipContentIdentity(
+                 runtimeState.ContentId,
+                 runtimeState.ContentKind,
+                 runtimeState.SourceContentHash,
+                 contentId,
+                 contentKind,
+                 sourceContentHash)))
         {
             this.RestoreStructuredTooltipOriginals(ref runtimeState, addon);
         }
@@ -1811,6 +1824,7 @@ public unsafe partial class Echoglossian
                 addon,
                 contentId,
                 contentKind,
+                sourceContentHash,
                 originalName,
                 originalDescription,
                 translatedName,
@@ -1883,6 +1897,7 @@ public unsafe partial class Echoglossian
                 currentRuntimeState = currentRuntimeState with
                 {
                     NameWasMutated = true,
+                    AppliedNameText = translatedName,
                 };
                 runtimeState = currentRuntimeState;
             }
@@ -1902,6 +1917,7 @@ public unsafe partial class Echoglossian
                 currentRuntimeState = currentRuntimeState with
                 {
                     DescriptionWasMutated = true,
+                    AppliedDescriptionText = translatedDescription,
                 };
                 runtimeState = currentRuntimeState;
             }
@@ -1930,11 +1946,13 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <param name="contentId">The logical content identifier.</param>
     /// <param name="contentKind">The logical content kind.</param>
+    /// <param name="sourceContentHash">The canonical source-payload identity.</param>
     private void RestoreStructuredTooltipOriginalsIfContentChanged(
         ref StructuredTooltipNativeState? runtimeState,
         AtkUnitBase* addon,
         uint contentId,
-        uint contentKind)
+        uint contentKind,
+        string sourceContentHash)
     {
         if (runtimeState == null)
         {
@@ -1942,8 +1960,13 @@ public unsafe partial class Echoglossian
         }
 
         if ((nint)addon != runtimeState.AddonAddress ||
-            runtimeState.ContentId != contentId ||
-            runtimeState.ContentKind != contentKind)
+            !HasStructuredTooltipContentIdentity(
+                runtimeState.ContentId,
+                runtimeState.ContentKind,
+                runtimeState.SourceContentHash,
+                contentId,
+                contentKind,
+                sourceContentHash))
         {
             this.RestoreStructuredTooltipOriginals(ref runtimeState, addon);
         }
@@ -1957,6 +1980,7 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <param name="contentId">The logical content identifier.</param>
     /// <param name="contentKind">The logical content kind.</param>
+    /// <param name="sourceContentHash">The canonical source-payload identity.</param>
     /// <param name="originalName">The canonical original name.</param>
     /// <param name="originalDescription">The canonical original description.</param>
     /// <param name="translatedName">
@@ -1968,6 +1992,7 @@ public unsafe partial class Echoglossian
         AtkUnitBase* addon,
         uint contentId,
         uint contentKind,
+        string sourceContentHash,
         string originalName,
         string originalDescription,
         string translatedName,
@@ -1979,6 +2004,7 @@ public unsafe partial class Echoglossian
                     addon,
                     contentId,
                     contentKind,
+                    sourceContentHash,
                     originalName,
                     originalDescription,
                     translatedName,
@@ -1998,6 +2024,7 @@ public unsafe partial class Echoglossian
                 addon,
                 contentId,
                 contentKind,
+                sourceContentHash,
                 originalName,
                 originalDescription,
                 translatedName,
@@ -2214,9 +2241,9 @@ public unsafe partial class Echoglossian
         {
             var nameNode = (AtkTextNode*)runtimeState.NameNodeAddress;
             if (nameNode != null &&
-                !this.DoesStructuredTooltipNodeMatchTarget(
-                    nameNode,
-                    runtimeState.OriginalNameText))
+                ShouldRestoreStructuredTooltipNodeText(
+                    this.ReadTooltipTextNode(nameNode),
+                    runtimeState.AppliedNameText))
             {
                 nameNode->SetText(runtimeState.OriginalNameText);
             }
@@ -2227,9 +2254,9 @@ public unsafe partial class Echoglossian
         {
             var descriptionNode = (AtkTextNode*)runtimeState.DescriptionNodeAddress;
             if (descriptionNode != null &&
-                !this.DoesStructuredTooltipNodeMatchTarget(
-                    descriptionNode,
-                    runtimeState.OriginalDescriptionText))
+                ShouldRestoreStructuredTooltipNodeText(
+                    this.ReadTooltipTextNode(descriptionNode),
+                    runtimeState.AppliedDescriptionText))
             {
                 descriptionNode->SetText(runtimeState.OriginalDescriptionText);
             }
@@ -2244,6 +2271,7 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <param name="contentId">The logical content identifier.</param>
     /// <param name="contentKind">The logical content kind.</param>
+    /// <param name="sourceContentHash">The canonical source-payload identity.</param>
     /// <param name="originalName">The canonical original name.</param>
     /// <param name="originalDescription">The canonical original description.</param>
     /// <param name="translatedName">
@@ -2255,6 +2283,7 @@ public unsafe partial class Echoglossian
         AtkUnitBase* addon,
         uint contentId,
         uint contentKind,
+        string sourceContentHash,
         string originalName,
         string originalDescription,
         string translatedName,
@@ -2264,10 +2293,13 @@ public unsafe partial class Echoglossian
             (nint)addon,
             contentId,
             contentKind,
+            sourceContentHash,
             0,
             originalName,
+            null,
             0,
             originalDescription,
+            null,
             false,
             false,
             false,
@@ -2859,6 +2891,49 @@ public unsafe partial class Echoglossian
         }
 
         return 0;
+    }
+
+    /// <summary>
+    ///     Gets whether two structured-tooltip payload identities refer to the
+    ///     same source content on a potentially recycled native addon.
+    /// </summary>
+    /// <param name="leftContentId">The first logical content identifier.</param>
+    /// <param name="leftContentKind">The first logical content kind.</param>
+    /// <param name="leftSourceContentHash">The first canonical source-payload hash.</param>
+    /// <param name="rightContentId">The second logical content identifier.</param>
+    /// <param name="rightContentKind">The second logical content kind.</param>
+    /// <param name="rightSourceContentHash">The second canonical source-payload hash.</param>
+    /// <returns><see langword="true" /> when both identities refer to the same source payload.</returns>
+    internal static bool HasStructuredTooltipContentIdentity(
+        uint leftContentId,
+        uint leftContentKind,
+        string? leftSourceContentHash,
+        uint rightContentId,
+        uint rightContentKind,
+        string? rightSourceContentHash)
+    {
+        return leftContentId == rightContentId &&
+               leftContentKind == rightContentKind &&
+               !string.IsNullOrWhiteSpace(leftSourceContentHash) &&
+               string.Equals(
+                   leftSourceContentHash,
+                   rightSourceContentHash,
+                   StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Gets whether a native tooltip node still contains the exact
+    ///     translation written by this runtime and is therefore safe to restore.
+    /// </summary>
+    /// <param name="liveText">The current text read from the native node.</param>
+    /// <param name="translatedText">The translation previously written by this runtime.</param>
+    /// <returns><see langword="true" /> when restoring the original text is safe.</returns>
+    internal static bool ShouldRestoreStructuredTooltipNodeText(
+        string liveText,
+        string? translatedText)
+    {
+        return !string.IsNullOrWhiteSpace(translatedText) &&
+               IsStructuredTooltipExactTextMatch(liveText, translatedText);
     }
 
     /// <summary>
@@ -3552,18 +3627,25 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="AddonAddress">The visible tooltip addon address.</param>
     /// <param name="ContentId">The logical item/action identifier.</param>
+    /// <param name="ContentKind">The logical item/action content kind.</param>
+    /// <param name="SourceContentHash">The canonical source-payload identity.</param>
     /// <param name="NameNodeAddress">The resolved name-node address.</param>
     /// <param name="OriginalNameText">The original name-node text.</param>
+    /// <param name="AppliedNameText">The translation written to the name node.</param>
     /// <param name="DescriptionNodeAddress">The resolved description-node address.</param>
     /// <param name="OriginalDescriptionText">The original description-node text.</param>
+    /// <param name="AppliedDescriptionText">The translation written to the description node.</param>
     private sealed record StructuredTooltipNativeState(
         nint AddonAddress,
         uint ContentId,
         uint ContentKind,
+        string SourceContentHash,
         nint NameNodeAddress,
         string OriginalNameText,
+        string? AppliedNameText,
         nint DescriptionNodeAddress,
         string OriginalDescriptionText,
+        string? AppliedDescriptionText,
         bool NameNodeSupportsPlainTextMutation,
         bool NameWasMutated,
         bool DescriptionNodeSupportsPlainTextMutation,
