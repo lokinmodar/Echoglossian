@@ -115,18 +115,18 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
-    ///     Ensures native tooltip mutation is blocked when the live node is not
-    ///     plain-text safe.
+    ///     Ensures native tooltip mutation is blocked when the canonical
+    ///     payload cannot cover the visible description.
     /// </summary>
     [Fact]
-    public void CanApplyStructuredTooltipNative_BlocksNonTextOnlyNodes()
+    public void CanApplyStructuredTooltipNative_BlocksTitleOnlyPayloads()
     {
         var result = Echoglossian.CanApplyStructuredTooltipNative(
             descriptionExpected: false,
             nameNodeResolved: true,
-            nameNodeSupportsPlainTextMutation: false,
-            descriptionNodeResolved: false,
-            descriptionNodeSupportsPlainTextMutation: false);
+            nameNodeSupportsPlainTextMutation: true,
+            descriptionNodeResolved: true,
+            descriptionNodeSupportsPlainTextMutation: true);
 
         Assert.False(result);
     }
@@ -149,18 +149,35 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
-    ///     Ensures native UI mode falls back to the plugin tooltip when the
-    ///     game's formatted description cannot be replaced safely.
+    ///     Ensures native UI mode does not mix plugin-overlay text with an
+    ///     unmodified native tooltip when native mutation is unsafe.
     /// </summary>
     [Fact]
-    public void ShouldShowStructuredTooltipOverlay_NativeMutationUnavailable_ShowsFallback()
+    public void ShouldShowStructuredTooltipOverlay_NativeMutationUnavailable_HidesFallback()
     {
         var result = Echoglossian.ShouldShowStructuredTooltipOverlay(
             useOverlayOnly: false,
             useSwapOverlay: false,
             nativeApplySucceeded: false);
 
-        Assert.True(result);
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures native tooltip mutation is blocked when a resolved live
+    ///     node contains formatting payloads that plain-text writes would lose.
+    /// </summary>
+    [Fact]
+    public void CanApplyStructuredTooltipNative_BlocksNonTextOnlyNodes()
+    {
+        var result = Echoglossian.CanApplyStructuredTooltipNative(
+            descriptionExpected: true,
+            nameNodeResolved: true,
+            nameNodeSupportsPlainTextMutation: false,
+            descriptionNodeResolved: true,
+            descriptionNodeSupportsPlainTextMutation: true);
+
+        Assert.False(result);
     }
 
     /// <summary>

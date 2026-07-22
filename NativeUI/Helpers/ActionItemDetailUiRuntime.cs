@@ -326,6 +326,7 @@ public unsafe partial class Echoglossian
         var translatedLookupReferenceId = hoveredActionId;
         var usedStructuredActionPayload =
             RequiresStructuredActionReferencePayload(hoveredActionKind);
+        ReferenceTextCanonicalPayload? originalReferencePayload = null;
         ActionTooltipCanonicalPayload originalPayload;
         if (usedStructuredActionPayload)
         {
@@ -334,7 +335,8 @@ public unsafe partial class Echoglossian
                     hoveredActionKind,
                     currentClassJobId,
                     out originalPayload,
-                    out translatedLookupReferenceId))
+                    out translatedLookupReferenceId,
+                    out originalReferencePayload))
             {
                 this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
                 this.LogStructuredTooltipState(
@@ -379,8 +381,8 @@ public unsafe partial class Echoglossian
                 sourceLanguage,
                 hoveredActionKind,
                 usedStructuredActionPayload,
-                translatedLookupReferenceId,
                 originalPayload,
+                originalReferencePayload,
                 out var translatedPayload))
         {
             this.TryRequestActionDetailOnDemandPrefetch(
@@ -717,16 +719,15 @@ public unsafe partial class Echoglossian
     ///     tooltip fields.
     /// </param>
     /// <returns>
-    ///     <see langword="true" /> when the plugin tooltip should be shown.
+    ///     <see langword="true" /> when the selected display mode requires a
+    ///     plugin tooltip.
     /// </returns>
     internal static bool ShouldShowStructuredTooltipOverlay(
         bool useOverlayOnly,
         bool useSwapOverlay,
         bool nativeApplySucceeded)
     {
-        return useOverlayOnly ||
-               useSwapOverlay ||
-               !nativeApplySucceeded;
+        return useOverlayOnly || useSwapOverlay;
     }
 
     /// <summary>
@@ -1228,16 +1229,22 @@ public unsafe partial class Echoglossian
     /// <param name="resolvedReferenceId">
     ///     The stable structured row identifier actually used for lookup.
     /// </param>
+    /// <param name="referencePayload">
+    ///     The original structured reference payload used to validate a cached
+    ///     translation before it is displayed.
+    /// </param>
     /// <returns><see langword="true" /> when one structured payload was built.</returns>
     private static bool TryBuildStructuredActionTooltipCanonicalPayload(
         uint referenceId,
         DetailKind hoverActionKind,
         byte currentClassJobId,
         out ActionTooltipCanonicalPayload payload,
-        out uint resolvedReferenceId)
+        out uint resolvedReferenceId,
+        out ReferenceTextCanonicalPayload? referencePayload)
     {
         payload = new ActionTooltipCanonicalPayload();
         resolvedReferenceId = referenceId;
+        referencePayload = null;
 
         var normalizedReferenceId = NormalizeStructuredActionReferenceId(
             referenceId,
@@ -1252,15 +1259,16 @@ public unsafe partial class Echoglossian
             if (!TryBuildStructuredReferencePayload(
                     candidateReferenceId,
                     hoverActionKind,
-                    out var referencePayload))
+                    out var candidateReferencePayload))
             {
                 continue;
             }
 
             payload = CreateActionTooltipPayloadFromReferencePayload(
-                referencePayload,
+                candidateReferencePayload,
                 currentClassJobId);
             resolvedReferenceId = candidateReferenceId;
+            referencePayload = candidateReferencePayload;
             return true;
         }
 
@@ -1276,16 +1284,19 @@ public unsafe partial class Echoglossian
     /// <param name="usesStructuredActionPayload">
     ///     Whether the payload belongs to a structured reference-text family.
     /// </param>
-    /// <param name="referenceId">The hovered action or command identifier.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
+    /// <param name="originalReferencePayload">
+    ///     The original structured reference payload, when the action belongs
+    ///     to an action-adjacent sheet family.
+    /// </param>
     /// <param name="translatedPayload">The translated payload, if any.</param>
     /// <returns><see langword="true" /> when a complete translation is available.</returns>
     private bool TryFindTranslatedActionTooltipPayload(
         SourceClientLanguage sourceLanguage,
         DetailKind hoverActionKind,
         bool usesStructuredActionPayload,
-        uint referenceId,
         ActionTooltipCanonicalPayload originalPayload,
+        ReferenceTextCanonicalPayload? originalReferencePayload,
         out ActionTooltipCanonicalPayload translatedPayload)
     {
         translatedPayload = new ActionTooltipCanonicalPayload();
@@ -1298,11 +1309,11 @@ public unsafe partial class Echoglossian
             targetLanguage,
             engine,
             this.configuration.TranslateAlreadyTranslatedTexts);
-        if (usesStructuredActionPayload)
+        if (usesStructuredActionPayload && originalReferencePayload != null)
         {
-            return ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(
+            return ReferenceTextCacheRegistry.TryFindTranslatedActionCanonicalPayload(
                        hoverActionKind,
-                       referenceId,
+                       originalReferencePayload,
                        scope,
                        gameVersion,
                        out var translatedReferencePayload) &&
@@ -1312,12 +1323,11 @@ public unsafe partial class Echoglossian
                        out translatedPayload);
         }
 
-        var row = ActionTooltipCacheManager.TryFindIdentityMatch(
+        var row = ActionTooltipCacheManager.TryFindCanonicalMatch(
             originalPayload.ActionId,
             scope,
             gameVersion,
-            originalPayload.ClassJobId,
-            originalPayload.ClassJobCategoryId);
+            originalPayload.ComputeSourceContentHash());
         if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
                 row?.OriginalLang,
                 sourceLanguage) &&
@@ -1374,12 +1384,11 @@ public unsafe partial class Echoglossian
             targetLanguage,
             engine,
             this.configuration.TranslateAlreadyTranslatedTexts);
-        var row = TraitCacheManager.TryFindIdentityMatch(
+        var row = TraitCacheManager.TryFindCanonicalMatch(
             originalPayload.TraitId,
             scope,
             gameVersion,
-            originalPayload.ClassJobId,
-            originalPayload.ClassJobCategoryId);
+            originalPayload.ComputeSourceContentHash());
         if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
                 row?.OriginalLang,
                 sourceLanguage) &&
@@ -1435,11 +1444,11 @@ public unsafe partial class Echoglossian
             this.configuration.TranslateAlreadyTranslatedTexts);
         if (sourceKind == StructuredTooltipItemSourceKind.Item)
         {
-            var row = ItemTooltipCacheManager.TryFindIdentityMatch(
+            var row = ItemTooltipCacheManager.TryFindCanonicalMatch(
                 originalPayload.ItemId,
                 scope,
                 gameVersion,
-                originalPayload.ClassJobCategoryId);
+                originalPayload.ComputeSourceContentHash());
             if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
                     row?.OriginalLang,
                     sourceLanguage) &&
@@ -1470,8 +1479,8 @@ public unsafe partial class Echoglossian
 
         return (sourceKind is StructuredTooltipItemSourceKind.EventItem or
             StructuredTooltipItemSourceKind.DeepDungeonItem) &&
-            ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(
-                originalPayload.ItemId,
+            ReferenceTextCacheRegistry.TryFindTranslatedItemCanonicalPayload(
+                CreateStructuredItemReferencePayload(originalPayload),
                 scope,
                 gameVersion,
                 out var translatedReferencePayload) &&
@@ -1479,6 +1488,30 @@ public unsafe partial class Echoglossian
                 translatedReferencePayload,
                 originalPayload,
                 out translatedPayload);
+    }
+
+    /// <summary>
+    ///     Creates the reference-text source identity corresponding to one
+    ///     EventItem or DeepDungeonItem tooltip payload.
+    /// </summary>
+    /// <param name="itemPayload">The original ItemDetail payload.</param>
+    /// <returns>The matching reference-text payload.</returns>
+    private static ReferenceTextCanonicalPayload
+        CreateStructuredItemReferencePayload(
+            ItemTooltipCanonicalPayload itemPayload)
+    {
+        return new ReferenceTextCanonicalPayload
+        {
+            ReferenceId = itemPayload.ItemId,
+            ActionId = itemPayload.ItemActionId == 0
+                ? null
+                : itemPayload.ItemActionId,
+            IconId = itemPayload.IconId == 0 ? null : itemPayload.IconId,
+            Name = itemPayload.Name,
+            Description = string.IsNullOrWhiteSpace(itemPayload.Description)
+                ? null
+                : itemPayload.Description,
+        };
     }
 
     /// <summary>
@@ -2127,9 +2160,7 @@ public unsafe partial class Echoglossian
         if (needsDescriptionNode &&
             TryFindBestStructuredTooltipDescriptionNodeCandidate(
                 textNodeCandidates,
-                contentKind,
                 originalDescription,
-                runtimeState.NameNodeAddress,
                 runtimeState.NameNodeAddress,
                 out var descriptionCandidate))
         {
@@ -2151,7 +2182,10 @@ public unsafe partial class Echoglossian
     ///     Gets whether the structured-tooltip native path can safely mutate
     ///     the active tooltip without partial or markup-corrupt writes.
     /// </summary>
-    /// <param name="descriptionExpected">Whether the tooltip is expected to have a description node.</param>
+    /// <param name="descriptionExpected">
+    ///     Whether the canonical payload provides a description that can be
+    ///     matched against the visible tooltip.
+    /// </param>
     /// <param name="nameNodeResolved">Whether the name node was resolved.</param>
     /// <param name="nameNodeSupportsPlainTextMutation">Whether the name node can be safely rewritten as plain text.</param>
     /// <param name="descriptionNodeResolved">Whether the description node was resolved.</param>
@@ -2164,14 +2198,11 @@ public unsafe partial class Echoglossian
         bool descriptionNodeResolved,
         bool descriptionNodeSupportsPlainTextMutation)
     {
-        if (!nameNodeResolved || !nameNodeSupportsPlainTextMutation)
+        if (!descriptionExpected ||
+            !nameNodeResolved ||
+            !nameNodeSupportsPlainTextMutation)
         {
             return false;
-        }
-
-        if (!descriptionExpected)
-        {
-            return true;
         }
 
         return descriptionNodeResolved &&
@@ -2393,9 +2424,7 @@ public unsafe partial class Echoglossian
         if (!string.IsNullOrWhiteSpace(originalDescription) &&
             TryFindBestStructuredTooltipDescriptionNodeCandidate(
                 textNodeCandidates,
-                contentKind,
                 originalDescription,
-                runtimeState.NameNodeAddress,
                 runtimeState.NameNodeAddress,
                 out var descriptionCandidate))
         {
@@ -2728,140 +2757,26 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
-    ///     Tries to find the best description candidate, preferring nodes that
-    ///     appear after the resolved name node for ActionDetail/Trait surfaces.
+    ///     Tries to find the exact visible description candidate for one
+    ///     canonical tooltip payload.
     /// </summary>
     /// <param name="candidates">The candidate nodes.</param>
-    /// <param name="contentKind">The logical content kind.</param>
     /// <param name="canonicalText">The canonical description text.</param>
     /// <param name="excludedNodeAddress">One node address to exclude.</param>
-    /// <param name="nameNodeAddress">The already-resolved name node address.</param>
     /// <param name="bestCandidate">The best matching candidate, if any.</param>
     /// <returns><see langword="true" /> when a description candidate was found.</returns>
     private static bool TryFindBestStructuredTooltipDescriptionNodeCandidate(
         IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
-        uint contentKind,
         string canonicalText,
         nint excludedNodeAddress,
-        nint nameNodeAddress,
         out StructuredTooltipTextNodeCandidate bestCandidate)
     {
         bestCandidate = default;
-        if ((contentKind == StructuredTooltipContentKindAction ||
-             contentKind == StructuredTooltipContentKindTrait) &&
-            nameNodeAddress != 0)
-        {
-            var nameCandidateIndex = FindStructuredTooltipCandidateIndex(
-                candidates,
-                nameNodeAddress);
-            if (nameCandidateIndex >= 0 &&
-                TryFindBestStructuredTooltipTextNodeCandidateInRange(
-                    candidates,
-                    canonicalText,
-                    excludedNodeAddress,
-                    nameCandidateIndex + 1,
-                    candidates.Count,
-                    out bestCandidate))
-            {
-                return true;
-            }
-        }
-
-        return TryFindBestStructuredTooltipTextNodeCandidate(
+        return TryFindBestStructuredTooltipExactTextNodeCandidate(
             candidates,
             canonicalText,
             excludedNodeAddress,
             out bestCandidate);
-    }
-
-    /// <summary>
-    ///     Gets the index of one candidate node address within the collected
-    ///     tooltip candidate list.
-    /// </summary>
-    /// <param name="candidates">The candidate nodes.</param>
-    /// <param name="nodeAddress">The node address to locate.</param>
-    /// <returns>The candidate index, or <c>-1</c> when not present.</returns>
-    private static int FindStructuredTooltipCandidateIndex(
-        IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
-        nint nodeAddress)
-    {
-        for (var index = 0; index < candidates.Count; index++)
-        {
-            if (candidates[index].NodeAddress == nodeAddress)
-            {
-                return index;
-            }
-        }
-
-        return -1;
-    }
-
-    /// <summary>
-    ///     Tries to find the best matching text-node candidate inside one slice
-    ///     of the collected tooltip tree order.
-    /// </summary>
-    /// <param name="candidates">The candidate nodes.</param>
-    /// <param name="canonicalText">The canonical source text.</param>
-    /// <param name="excludedNodeAddress">One node address to exclude.</param>
-    /// <param name="startIndex">The inclusive start index.</param>
-    /// <param name="endIndex">The exclusive end index.</param>
-    /// <param name="bestCandidate">The best matching candidate, if any.</param>
-    /// <returns><see langword="true" /> when a candidate was found in range.</returns>
-    private static bool TryFindBestStructuredTooltipTextNodeCandidateInRange(
-        IReadOnlyList<StructuredTooltipTextNodeCandidate> candidates,
-        string canonicalText,
-        nint excludedNodeAddress,
-        int startIndex,
-        int endIndex,
-        out StructuredTooltipTextNodeCandidate bestCandidate)
-    {
-        bestCandidate = default;
-        if (candidates.Count == 0 ||
-            string.IsNullOrWhiteSpace(canonicalText) ||
-            startIndex < 0 ||
-            startIndex >= endIndex)
-        {
-            return false;
-        }
-
-        var bestScore = 0;
-        for (var index = startIndex; index < endIndex; index++)
-        {
-            var candidate = candidates[index];
-            if (candidate.NodeAddress == excludedNodeAddress)
-            {
-                continue;
-            }
-
-            var score = ComputeStructuredTooltipTextMatchScore(
-                candidate.NormalizedVisibleText,
-                canonicalText);
-            if (score < bestScore)
-            {
-                continue;
-            }
-
-            if (score == bestScore &&
-                bestScore > 0 &&
-                !candidate.SupportsPlainTextMutation &&
-                bestCandidate.SupportsPlainTextMutation)
-            {
-                continue;
-            }
-
-            if (score == bestScore &&
-                candidate.SupportsPlainTextMutation ==
-                bestCandidate.SupportsPlainTextMutation &&
-                bestCandidate.NodeAddress != 0)
-            {
-                continue;
-            }
-
-            bestScore = score;
-            bestCandidate = candidate;
-        }
-
-        return bestScore > 0;
     }
 
     /// <summary>

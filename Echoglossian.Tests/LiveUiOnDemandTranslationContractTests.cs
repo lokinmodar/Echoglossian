@@ -89,6 +89,53 @@ public class LiveUiOnDemandTranslationContractTests
     }
 
     /// <summary>
+    ///     Ensures native ActionDetail and ItemDetail mutation consumes only
+    ///     rows whose source-content hash matches the currently hovered
+    ///     payload, rather than reusing another row with the same numeric id.
+    /// </summary>
+    [Fact]
+    public void StructuredTooltipRuntime_uses_canonical_cache_matches_for_native_payloads()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "ActionItemDetailUiRuntime.cs"));
+
+        Assert.Contains(
+            "ActionTooltipCacheManager.TryFindCanonicalMatch(",
+            source);
+        Assert.Contains(
+            "TraitCacheManager.TryFindCanonicalMatch(",
+            source);
+        Assert.Contains(
+            "ItemTooltipCacheManager.TryFindCanonicalMatch(",
+            source);
+        Assert.Contains(
+            "ReferenceTextCacheRegistry.TryFindTranslatedActionCanonicalPayload(",
+            source);
+        Assert.Contains(
+            "ReferenceTextCacheRegistry.TryFindTranslatedItemCanonicalPayload(",
+            source);
+        Assert.DoesNotContain(
+            "ActionTooltipCacheManager.TryFindIdentityMatch(",
+            source);
+        Assert.DoesNotContain(
+            "TraitCacheManager.TryFindIdentityMatch(",
+            source);
+        Assert.DoesNotContain(
+            "ItemTooltipCacheManager.TryFindIdentityMatch(",
+            source);
+        Assert.DoesNotContain(
+            "ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(",
+            source);
+        Assert.DoesNotContain(
+            "ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(",
+            source);
+    }
+
+    /// <summary>
     /// Ensures NamePlateGui callbacks do not enqueue translation work from
     /// one-frame handler state. Only cached translations may be applied live.
     /// </summary>

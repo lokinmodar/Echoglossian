@@ -955,6 +955,21 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionCanonicalPayload(Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated action-adjacent reference payload
+                whose canonical source content exactly matches the active tooltip.
+            </summary>
+            <param name="actionKind">The hovered action family.</param>
+            <param name="originalPayload">The active canonical reference payload.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when an exact canonical payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(System.UInt32,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated action-adjacent reference payload by
@@ -983,6 +998,20 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedItemCanonicalPayload(Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated item-adjacent reference payload
+                whose canonical source content exactly matches the active tooltip.
+            </summary>
+            <param name="originalPayload">The active canonical reference payload.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when an exact canonical payload was found;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedIdentityPayload``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},System.UInt32,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated payload by exact row identity from a
@@ -997,6 +1026,22 @@
             <returns>
                 <see langword="true" /> when one translated payload was found;
                 otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.ReferenceTextCacheRegistry.TryFindTranslatedCanonicalPayload``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.TranslationReuseScope,System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
+            <summary>
+                Tries to resolve one translated payload by exact canonical source
+                content from a specific reference-text cache.
+            </summary>
+            <typeparam name="TRow">The specific persisted row type.</typeparam>
+            <param name="cacheStore">The cache store to query.</param>
+            <param name="originalPayload">The active canonical source payload.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The current game version.</param>
+            <param name="payload">The translated payload, if any.</param>
+            <returns>
+                <see langword="true" /> when a complete exact canonical payload was
+                found; otherwise <see langword="false" />.
             </returns>
         </member>
         <member name="T:Echoglossian.Cache.ReferenceTextCacheStore`1">
@@ -4330,7 +4375,8 @@
                 tooltip fields.
             </param>
             <returns>
-                <see langword="true" /> when the plugin tooltip should be shown.
+                <see langword="true" /> when the selected display mode requires a
+                plugin tooltip.
             </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryRequestActionDetailOnDemandPrefetch(Echoglossian.SourceClientLanguage,System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,System.Byte,System.Boolean)">
@@ -4470,7 +4516,7 @@
             </summary>
             <returns>The active item id, or zero when unavailable.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredActionTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.DetailKind,System.Byte,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@,System.UInt32@)">
+        <member name="M:Echoglossian.Echoglossian.TryBuildStructuredActionTooltipCanonicalPayload(System.UInt32,Dalamud.Game.Gui.DetailKind,System.Byte,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@,System.UInt32@,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>
                 Tries to build one runtime action-detail payload from one
                 structured reference-text family when the standard
@@ -4483,9 +4529,13 @@
             <param name="resolvedReferenceId">
                 The stable structured row identifier actually used for lookup.
             </param>
+            <param name="referencePayload">
+                The original structured reference payload used to validate a cached
+                translation before it is displayed.
+            </param>
             <returns><see langword="true" /> when one structured payload was built.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedActionTooltipPayload(Echoglossian.SourceClientLanguage,Dalamud.Game.Gui.DetailKind,System.Boolean,System.UInt32,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
+        <member name="M:Echoglossian.Echoglossian.TryFindTranslatedActionTooltipPayload(Echoglossian.SourceClientLanguage,Dalamud.Game.Gui.DetailKind,System.Boolean,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
             <summary>
                 Tries to resolve one translated action-tooltip payload from
                 canonical storage.
@@ -4495,8 +4545,11 @@
             <param name="usesStructuredActionPayload">
                 Whether the payload belongs to a structured reference-text family.
             </param>
-            <param name="referenceId">The hovered action or command identifier.</param>
             <param name="originalPayload">The original canonical payload.</param>
+            <param name="originalReferencePayload">
+                The original structured reference payload, when the action belongs
+                to an action-adjacent sheet family.
+            </param>
             <param name="translatedPayload">The translated payload, if any.</param>
             <returns><see langword="true" /> when a complete translation is available.</returns>
         </member>
@@ -4520,6 +4573,14 @@
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated payload, if any.</param>
             <returns><see langword="true" /> when a complete translation is available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CreateStructuredItemReferencePayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Creates the reference-text source identity corresponding to one
+                EventItem or DeepDungeonItem tooltip payload.
+            </summary>
+            <param name="itemPayload">The original ItemDetail payload.</param>
+            <returns>The matching reference-text payload.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryBuildTranslatedActionTooltipPayloadFromRow(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload@)">
             <summary>
@@ -4696,7 +4757,10 @@
                 Gets whether the structured-tooltip native path can safely mutate
                 the active tooltip without partial or markup-corrupt writes.
             </summary>
-            <param name="descriptionExpected">Whether the tooltip is expected to have a description node.</param>
+            <param name="descriptionExpected">
+                Whether the canonical payload provides a description that can be
+                matched against the visible tooltip.
+            </param>
             <param name="nameNodeResolved">Whether the name node was resolved.</param>
             <param name="nameNodeSupportsPlainTextMutation">Whether the name node can be safely rewritten as plain text.</param>
             <param name="descriptionNodeResolved">Whether the description node was resolved.</param>
@@ -4842,40 +4906,16 @@
             <param name="bestCandidate">The best exact-match candidate, if any.</param>
             <returns><see langword="true" /> when an exact-match candidate was found.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipDescriptionNodeCandidate(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.UInt32,System.String,System.IntPtr,System.IntPtr,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
+        <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipDescriptionNodeCandidate(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.String,System.IntPtr,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
             <summary>
-                Tries to find the best description candidate, preferring nodes that
-                appear after the resolved name node for ActionDetail/Trait surfaces.
+                Tries to find the exact visible description candidate for one
+                canonical tooltip payload.
             </summary>
             <param name="candidates">The candidate nodes.</param>
-            <param name="contentKind">The logical content kind.</param>
             <param name="canonicalText">The canonical description text.</param>
             <param name="excludedNodeAddress">One node address to exclude.</param>
-            <param name="nameNodeAddress">The already-resolved name node address.</param>
             <param name="bestCandidate">The best matching candidate, if any.</param>
             <returns><see langword="true" /> when a description candidate was found.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FindStructuredTooltipCandidateIndex(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.IntPtr)">
-            <summary>
-                Gets the index of one candidate node address within the collected
-                tooltip candidate list.
-            </summary>
-            <param name="candidates">The candidate nodes.</param>
-            <param name="nodeAddress">The node address to locate.</param>
-            <returns>The candidate index, or <c>-1</c> when not present.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipTextNodeCandidateInRange(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.String,System.IntPtr,System.Int32,System.Int32,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
-            <summary>
-                Tries to find the best matching text-node candidate inside one slice
-                of the collected tooltip tree order.
-            </summary>
-            <param name="candidates">The candidate nodes.</param>
-            <param name="canonicalText">The canonical source text.</param>
-            <param name="excludedNodeAddress">One node address to exclude.</param>
-            <param name="startIndex">The inclusive start index.</param>
-            <param name="endIndex">The exclusive end index.</param>
-            <param name="bestCandidate">The best matching candidate, if any.</param>
-            <returns><see langword="true" /> when a candidate was found in range.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.NormalizeStructuredTooltipLookupText(System.String)">
             <summary>

@@ -392,6 +392,81 @@ public class CanonicalTooltipIdentityLookupTests
     }
 
     /// <summary>
+    ///     Ensures structured ActionDetail lookup rejects a translated row
+    ///     when its numeric reference id matches but its live source content
+    ///     does not.
+    /// </summary>
+    [Fact]
+    public void TryFindTranslatedActionCanonicalPayload_BuddyAction_RejectsDifferentSourceContent()
+    {
+        ReferenceTextCacheRegistry.BuddyActionTexts.Clear();
+
+        try
+        {
+            const string gameVersion = "2026.04.27.0000.0000";
+            var cachedPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 3,
+                Name = "Follow",
+                Description = "Order your companion to follow you.",
+                TranslatedName = "Seguir",
+                TranslatedDescription = "Ordene ao seu companheiro que o siga.",
+            };
+            var activePayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = cachedPayload.ReferenceId,
+                Name = cachedPayload.Name,
+                Description = "Order your companion to remain nearby.",
+            };
+
+            ReferenceTextCacheRegistry.BuddyActionTexts.Update(new BuddyActionText
+            {
+                Id = 1,
+                ReferenceId = cachedPayload.ReferenceId,
+                OriginalName = cachedPayload.Name,
+                OriginalDescription = cachedPayload.Description,
+                OriginalLang = "en",
+                TranslatedName = cachedPayload.TranslatedName,
+                TranslatedDescription = cachedPayload.TranslatedDescription,
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = gameVersion,
+                SourceContentHash = cachedPayload.ComputeSourceContentHash(),
+                CanonicalPayloadAsText = cachedPayload.Serialize(),
+            });
+
+            var matchingPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = cachedPayload.ReferenceId,
+                Name = cachedPayload.Name,
+                Description = cachedPayload.Description,
+            };
+            var matchingFound = ReferenceTextCacheRegistry
+                .TryFindTranslatedActionCanonicalPayload(
+                    DetailKind.BuddyAction,
+                    matchingPayload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    gameVersion,
+                    out var resolvedPayload);
+            var mismatchedFound = ReferenceTextCacheRegistry
+                .TryFindTranslatedActionCanonicalPayload(
+                    DetailKind.BuddyAction,
+                    activePayload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    gameVersion,
+                    out _);
+
+            Assert.True(matchingFound);
+            Assert.Equal("Seguir", resolvedPayload.TranslatedName);
+            Assert.False(mismatchedFound);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.BuddyActionTexts.Clear();
+        }
+    }
+
+    /// <summary>
     ///     Ensures ActionDetail routes structured hover kinds away from the
     ///     overlapping standard Action sheet.
     /// </summary>
@@ -541,6 +616,79 @@ public class CanonicalTooltipIdentityLookupTests
             Assert.True(found);
             Assert.Equal("Contos Maravilhosos", resolvedPayload.TranslatedName);
             Assert.Null(resolvedPayload.TranslatedDescription);
+        }
+        finally
+        {
+            ReferenceTextCacheRegistry.EventItemTexts.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures structured ItemDetail lookup rejects a translated row when
+    ///     its numeric reference id matches but its live source content does
+    ///     not.
+    /// </summary>
+    [Fact]
+    public void TryFindTranslatedItemCanonicalPayload_EventItem_RejectsDifferentSourceContent()
+    {
+        ReferenceTextCacheRegistry.EventItemTexts.Clear();
+
+        try
+        {
+            const string gameVersion = "2026.04.27.0000.0000";
+            var cachedPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = 2002023,
+                ActionId = 1,
+                IconId = 25987,
+                Name = "Wondrous Tails",
+                TranslatedName = "Contos Maravilhosos",
+            };
+            var activePayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = cachedPayload.ReferenceId,
+                ActionId = cachedPayload.ActionId,
+                IconId = cachedPayload.IconId,
+                Name = "Aetherial Lamp",
+            };
+
+            ReferenceTextCacheRegistry.EventItemTexts.Update(new EventItemText
+            {
+                Id = 1,
+                ReferenceId = cachedPayload.ReferenceId,
+                OriginalName = cachedPayload.Name,
+                OriginalLang = "en",
+                TranslatedName = cachedPayload.TranslatedName,
+                TranslationLang = "pt",
+                TranslationEngine = 0,
+                GameVersion = gameVersion,
+                SourceContentHash = cachedPayload.ComputeSourceContentHash(),
+                CanonicalPayloadAsText = cachedPayload.Serialize(),
+            });
+
+            var matchingPayload = new ReferenceTextCanonicalPayload
+            {
+                ReferenceId = cachedPayload.ReferenceId,
+                ActionId = cachedPayload.ActionId,
+                IconId = cachedPayload.IconId,
+                Name = cachedPayload.Name,
+            };
+            var matchingFound = ReferenceTextCacheRegistry
+                .TryFindTranslatedItemCanonicalPayload(
+                    matchingPayload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    gameVersion,
+                    out var resolvedPayload);
+            var mismatchedFound = ReferenceTextCacheRegistry
+                .TryFindTranslatedItemCanonicalPayload(
+                    activePayload,
+                    new TranslationReuseScope("en", "pt-BR", 0, true),
+                    gameVersion,
+                    out _);
+
+            Assert.True(matchingFound);
+            Assert.Equal("Contos Maravilhosos", resolvedPayload.TranslatedName);
+            Assert.False(mismatchedFound);
         }
         finally
         {

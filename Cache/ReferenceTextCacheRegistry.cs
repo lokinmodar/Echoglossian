@@ -562,6 +562,90 @@ public static class ReferenceTextCacheRegistry
     }
 
     /// <summary>
+    ///     Tries to resolve one translated action-adjacent reference payload
+    ///     whose canonical source content exactly matches the active tooltip.
+    /// </summary>
+    /// <param name="actionKind">The hovered action family.</param>
+    /// <param name="originalPayload">The active canonical reference payload.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="payload">The translated payload, if any.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact canonical payload was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindTranslatedActionCanonicalPayload(
+        DetailKind actionKind,
+        ReferenceTextCanonicalPayload originalPayload,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        out ReferenceTextCanonicalPayload payload)
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        return actionKind switch
+        {
+            DetailKind.GeneralAction => TryFindTranslatedCanonicalPayload(
+                GeneralActionTexts,
+                originalPayload,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.BuddyAction or DetailKind.Companion or DetailKind.BuddyOrder =>
+                TryFindTranslatedCanonicalPayload(
+                    BuddyActionTexts,
+                    originalPayload,
+                    scope,
+                    gameVersion,
+                    out payload),
+            DetailKind.CompanyAction => TryFindTranslatedCanonicalPayload(
+                CompanyActionTexts,
+                originalPayload,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.CraftingAction => TryFindTranslatedCanonicalPayload(
+                CraftActionTexts,
+                originalPayload,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.PetOrder => TryFindTranslatedCanonicalPayload(
+                PetActionTexts,
+                originalPayload,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.Mount => TryFindTranslatedCanonicalPayload(
+                MountActionTexts,
+                originalPayload,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.BgcArmyAction => TryFindTranslatedCanonicalPayload(
+                BgcArmyActionTexts,
+                originalPayload,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.EurekaMagiaAction => TryFindTranslatedCanonicalPayload(
+                EurekaMagiaActionTexts,
+                originalPayload,
+                scope,
+                gameVersion,
+                out payload),
+            DetailKind.MainCommand or DetailKind.ExtraCommand =>
+                TryFindTranslatedCanonicalPayload(
+                    MainCommandTexts,
+                    originalPayload,
+                    scope,
+                    gameVersion,
+                    out payload),
+            _ => false,
+        };
+    }
+
+    /// <summary>
     ///     Tries to resolve one translated action-adjacent reference payload by
     ///     stable identity across all action-adjacent families.
     /// </summary>
@@ -686,6 +770,40 @@ public static class ReferenceTextCacheRegistry
                    referenceId,
                    scope,
                    gameVersion,
+               out payload);
+    }
+
+    /// <summary>
+    ///     Tries to resolve one translated item-adjacent reference payload
+    ///     whose canonical source content exactly matches the active tooltip.
+    /// </summary>
+    /// <param name="originalPayload">The active canonical reference payload.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="payload">The translated payload, if any.</param>
+    /// <returns>
+    ///     <see langword="true" /> when an exact canonical payload was found;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public static bool TryFindTranslatedItemCanonicalPayload(
+        ReferenceTextCanonicalPayload originalPayload,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        out ReferenceTextCanonicalPayload payload)
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        return TryFindTranslatedCanonicalPayload(
+                   EventItemTexts,
+                   originalPayload,
+                   scope,
+                   gameVersion,
+                   out payload) ||
+               TryFindTranslatedCanonicalPayload(
+                   DeepDungeonItemTexts,
+                   originalPayload,
+                   scope,
+                   gameVersion,
                    out payload);
     }
 
@@ -717,6 +835,79 @@ public static class ReferenceTextCacheRegistry
             referenceId,
             scope,
             gameVersion);
+        if (row == null)
+        {
+            return false;
+        }
+
+        var resolvedPayload = ReferenceTextCanonicalPayload.Deserialize(
+            row.CanonicalPayloadAsText);
+        if (resolvedPayload == null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.OriginalName))
+        {
+            resolvedPayload.Name = row.OriginalName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.OriginalDescription))
+        {
+            resolvedPayload.Description = row.OriginalDescription;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedName))
+        {
+            resolvedPayload.TranslatedName = row.TranslatedName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.TranslatedDescription))
+        {
+            resolvedPayload.TranslatedDescription = row.TranslatedDescription;
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedPayload.TranslatedName) ||
+            (!string.IsNullOrWhiteSpace(resolvedPayload.Description) &&
+             string.IsNullOrWhiteSpace(
+                 resolvedPayload.TranslatedDescription)))
+        {
+            return false;
+        }
+
+        payload = resolvedPayload;
+        return true;
+    }
+
+    /// <summary>
+    ///     Tries to resolve one translated payload by exact canonical source
+    ///     content from a specific reference-text cache.
+    /// </summary>
+    /// <typeparam name="TRow">The specific persisted row type.</typeparam>
+    /// <param name="cacheStore">The cache store to query.</param>
+    /// <param name="originalPayload">The active canonical source payload.</param>
+    /// <param name="scope">The required translation reuse scope.</param>
+    /// <param name="gameVersion">The current game version.</param>
+    /// <param name="payload">The translated payload, if any.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a complete exact canonical payload was
+    ///     found; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryFindTranslatedCanonicalPayload<TRow>(
+        ReferenceTextCacheStore<TRow> cacheStore,
+        ReferenceTextCanonicalPayload originalPayload,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        out ReferenceTextCanonicalPayload payload)
+        where TRow : ReferenceTextRowBase
+    {
+        payload = new ReferenceTextCanonicalPayload();
+
+        var row = cacheStore.TryFindCanonicalMatch(
+            originalPayload.ReferenceId,
+            scope,
+            gameVersion,
+            originalPayload.ComputeSourceContentHash());
         if (row == null)
         {
             return false;
