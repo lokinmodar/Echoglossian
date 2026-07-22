@@ -5,6 +5,7 @@
 
 using Autofac;
 using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.NamePlate;
 using Dalamud.Plugin.Services;
 using Echoglossian.Mock.Hosting;
@@ -133,5 +134,29 @@ public sealed class MockRuntimeScenarioTests
 
         gameGui.GetAddonByName("JournalAccept", 1).Should().Be(addonAddress);
         gameGui.GetAddonByName("JournalAccept", 2).Should().Be(IntPtr.Zero);
+    }
+
+    /// <summary>
+    /// Verifies that a scenario can reproduce the raw and adjusted action ids
+    /// that the live game reports for one ActionDetail hover.
+    /// </summary>
+    [Fact]
+    public void ScenarioGameGui_can_publish_distinct_raw_and_resolved_action_ids()
+    {
+        var gameGui = new ScenarioGameGui();
+        HoveredAction? received = null;
+        gameGui.HoveredActionChanged += (_, action) => received = action;
+
+        gameGui.SetHoveredAction(
+            baseActionId: 20,
+            resolvedActionId: 1695,
+            detailKind: DetailKind.GeneralAction);
+
+        gameGui.HoveredAction.BaseActionId.Should().Be(20);
+        gameGui.HoveredAction.ActionId.Should().Be(1695);
+        gameGui.HoveredAction.DetailKind.Should().Be(DetailKind.GeneralAction);
+        received.Should().NotBeNull();
+        received!.BaseActionId.Should().Be(20);
+        received.ActionId.Should().Be(1695);
     }
 }

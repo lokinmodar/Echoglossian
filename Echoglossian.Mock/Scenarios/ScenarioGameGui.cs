@@ -62,7 +62,7 @@ public sealed class ScenarioGameGui : IGameGui, IMockService
     }
 
     /// <inheritdoc/>
-    public HoveredAction HoveredAction { get; private set; } = default!;
+    public HoveredAction HoveredAction { get; private set; } = new();
 
     /// <summary>
     /// Registers an addon address for later lookup through <see cref="GetAddonByName(string, int)"/>.
@@ -223,6 +223,27 @@ public sealed class ScenarioGameGui : IGameGui, IMockService
 
         this.HoveredAction = hoveredAction;
         this.HoveredActionChanged?.Invoke(this, hoveredAction);
+    }
+
+    /// <summary>
+    /// Sets one hovered action using both the raw source identifier received by
+    /// the game hover handler and its resolved upgrade identifier.
+    /// </summary>
+    /// <param name="baseActionId">The raw action identifier supplied by the game.</param>
+    /// <param name="resolvedActionId">The automatically adjusted action identifier.</param>
+    /// <param name="detailKind">The action family rendered by the detail surface.</param>
+    public void SetHoveredAction(
+        uint baseActionId,
+        uint resolvedActionId,
+        DetailKind detailKind)
+    {
+        this.SetHoveredAction(
+            new HoveredAction
+            {
+                BaseActionId = baseActionId,
+                ActionId = resolvedActionId,
+                DetailKind = detailKind,
+            });
     }
 
     /// <summary>
