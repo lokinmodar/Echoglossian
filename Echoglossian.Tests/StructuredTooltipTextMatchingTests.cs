@@ -313,10 +313,14 @@ public class StructuredTooltipTextMatchingTests
                 "Standard Step",
                 Echoglossian.NormalizeStructuredTooltipLookupText(
                     "Standard Step"),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Standard Step"),
                 false),
             new Echoglossian.StructuredTooltipTextNodeCandidate(
                 (nint)2,
                 "Standard Step",
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Standard Step"),
                 Echoglossian.NormalizeStructuredTooltipLookupText(
                     "Standard Step"),
                 true),
@@ -347,6 +351,8 @@ public class StructuredTooltipTextMatchingTests
                 "Enhanced En Avant",
                 Echoglossian.NormalizeStructuredTooltipLookupText(
                     "Enhanced En Avant"),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Enhanced En Avant"),
                 true),
         ];
 
@@ -357,6 +363,76 @@ public class StructuredTooltipTextMatchingTests
             out _);
 
         Assert.False(found);
+    }
+
+    /// <summary>
+    ///     Ensures native description matching uses the evaluated source text
+    ///     when the live node retains SeString formatting that differs from the
+    ///     canonical sheet payload.
+    /// </summary>
+    [Fact]
+    public void TryFindBestStructuredTooltipExactTextNodeCandidate_MatchesEvaluatedSourceText()
+    {
+        const string canonicalDescription =
+            "Increases movement speed. Duration: 10s (20s when not in combat).";
+        IReadOnlyList<Echoglossian.StructuredTooltipTextNodeCandidate> candidates =
+        [
+            new Echoglossian.StructuredTooltipTextNodeCandidate(
+                (nint)1,
+                "Increases movement speed. Duration: <If(Combat,10,20)>s.",
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Increases movement speed. Duration: <If(Combat,10,20)>s."),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                true),
+        ];
+
+        var found = Echoglossian.TryFindBestStructuredTooltipExactTextNodeCandidate(
+            candidates,
+            canonicalDescription,
+            excludedNodeAddress: 0,
+            out var bestCandidate);
+
+        Assert.True(found);
+        Assert.Equal((nint)1, bestCandidate.NodeAddress);
+    }
+
+    /// <summary>
+    ///     Ensures the currently visible exact match wins over a different node
+    ///     that can only be explained by its retained source payload.
+    /// </summary>
+    [Fact]
+    public void TryFindBestStructuredTooltipExactTextNodeCandidate_PrefersVisibleTextOverEvaluatedSource()
+    {
+        const string canonicalDescription = "Delivers an attack with a potency of 300.";
+        IReadOnlyList<Echoglossian.StructuredTooltipTextNodeCandidate> candidates =
+        [
+            new Echoglossian.StructuredTooltipTextNodeCandidate(
+                (nint)1,
+                "Unrelated current node.",
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Unrelated current node."),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                true),
+            new Echoglossian.StructuredTooltipTextNodeCandidate(
+                (nint)2,
+                canonicalDescription,
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                true),
+        ];
+
+        var found = Echoglossian.TryFindBestStructuredTooltipExactTextNodeCandidate(
+            candidates,
+            canonicalDescription,
+            excludedNodeAddress: 0,
+            out var bestCandidate);
+
+        Assert.True(found);
+        Assert.Equal((nint)2, bestCandidate.NodeAddress);
     }
 
     /// <summary>

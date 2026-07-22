@@ -11,6 +11,7 @@ using Dalamud.Plugin.Services;
 using Echoglossian.Mock.Hosting;
 using Echoglossian.Mock.Scenarios;
 using FluentAssertions;
+using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -158,5 +159,45 @@ public sealed class MockRuntimeScenarioTests
         received.Should().NotBeNull();
         received!.BaseActionId.Should().Be(20);
         received.ActionId.Should().Be(1695);
+    }
+
+    /// <summary>
+    ///     Verifies that the evaluator used by ActionDetail live-node matching
+    ///     produces the same canonical text and fallback as the production
+    ///     action capture path for game-provided ActionTransient data.
+    /// </summary>
+    /// <returns>A task that completes after the real game sheet is evaluated.</returns>
+    [Fact]
+    public async Task StartAsync_evaluates_action_transient_source_text_consistently()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create();
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(fixture.Options);
+
+        var container = session.Container.GetContainer();
+        var dataManager = container.Resolve<IDataManager>();
+        var actionTransientSheet = dataManager.GetExcelSheet<ActionTransient>(
+            global::Echoglossian.Echoglossian.ClientStateInterface.ClientLanguage);
+        actionTransientSheet.TryGetRow(15997, out var standardStep).Should().BeTrue();
+
+        var actual = global::Echoglossian.Echoglossian.EvaluateStructuredTooltipSourceText(
+            standardStep.Description.AsSpan());
+
+        var expected = standardStep.Description.ExtractText();
+
+        try
+        {
+            expected = global::Echoglossian.Echoglossian.SeStringEvaluator.Evaluate(
+                    standardStep.Description,
+                    language: global::Echoglossian.Echoglossian.ClientStateInterface.ClientLanguage)
+                .ExtractText();
+        }
+        catch (InvalidOperationException)
+        {
+            // DalaMock cannot resolve dynamic game values outside a Framework instance.
+        }
+
+        actual.Should().NotBeNullOrWhiteSpace();
+        actual.Should().Be(expected);
     }
 }

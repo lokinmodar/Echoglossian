@@ -865,23 +865,7 @@ public unsafe partial class Echoglossian
     /// <returns>The evaluated visible text.</returns>
     private static string EvaluateSheetText(ReadOnlySeString text)
     {
-        var evaluator = SeStringEvaluator;
-        if (evaluator == null)
-        {
-            return text.ExtractText();
-        }
-
-        try
-        {
-            return evaluator.Evaluate(
-                    text,
-                    language: ClientStateInterface.ClientLanguage)
-                .ExtractText();
-        }
-        catch
-        {
-            return text.ExtractText();
-        }
+        return EvaluateStructuredTooltipSourceText(text.AsSpan());
     }
 
     /// <summary>

@@ -13,6 +13,7 @@ using Dalamud.Utility;
 using DetailKind = Dalamud.Game.Gui.DetailKind;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using Lumina.Text.ReadOnly;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -2614,10 +2615,13 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        var sourceText = this.ReadStructuredTooltipSourceText(textNode, visibleText);
+
         candidates.Add(new StructuredTooltipTextNodeCandidate(
             nodeAddress,
             visibleText,
             normalizedVisibleText,
+            NormalizeStructuredTooltipLookupText(sourceText),
             trustPlainTextMutation ||
             this.IsStructuredTooltipNodePlainTextMutable(textNode)));
     }
@@ -2676,9 +2680,13 @@ public unsafe partial class Echoglossian
                 continue;
             }
 
-            var score = ComputeStructuredTooltipTextMatchScore(
-                candidate.NormalizedVisibleText,
-                canonicalText);
+            var score = Math.Max(
+                ComputeStructuredTooltipTextMatchScore(
+                    candidate.NormalizedVisibleText,
+                    canonicalText),
+                ComputeStructuredTooltipTextMatchScore(
+                    candidate.NormalizedSourceText,
+                    canonicalText));
             if (score < bestScore)
             {
                 continue;
@@ -2735,25 +2743,61 @@ public unsafe partial class Echoglossian
             return false;
         }
 
+        var bestMatchPriority = 0;
         foreach (var candidate in candidates)
         {
-            if (candidate.NodeAddress == excludedNodeAddress ||
-                !IsStructuredTooltipExactNormalizedTextMatch(
-                    candidate.NormalizedVisibleText,
-                    normalizedCanonicalText))
+            if (candidate.NodeAddress == excludedNodeAddress)
+            {
+                continue;
+            }
+
+            var matchPriority = GetStructuredTooltipExactMatchPriority(
+                candidate,
+                normalizedCanonicalText);
+            if (matchPriority == 0)
             {
                 continue;
             }
 
             if (bestCandidate.NodeAddress == 0 ||
-                (candidate.SupportsPlainTextMutation &&
+                matchPriority > bestMatchPriority ||
+                (matchPriority == bestMatchPriority &&
+                 candidate.SupportsPlainTextMutation &&
                  !bestCandidate.SupportsPlainTextMutation))
             {
                 bestCandidate = candidate;
+                bestMatchPriority = matchPriority;
             }
         }
 
         return bestCandidate.NodeAddress != 0;
+    }
+
+    /// <summary>
+    ///     Gets the confidence of one exact structured-tooltip candidate
+    ///     match. The visible text is preferred because it proves that the
+    ///     current node is rendered for the active tooltip; evaluated source
+    ///     text is the fallback for dynamic SeString descriptions.
+    /// </summary>
+    /// <param name="candidate">The candidate node to inspect.</param>
+    /// <param name="normalizedCanonicalText">The normalized canonical text.</param>
+    /// <returns>A nonzero confidence value when the candidate is exact.</returns>
+    private static int GetStructuredTooltipExactMatchPriority(
+        StructuredTooltipTextNodeCandidate candidate,
+        string normalizedCanonicalText)
+    {
+        if (IsStructuredTooltipExactNormalizedTextMatch(
+                candidate.NormalizedVisibleText,
+                normalizedCanonicalText))
+        {
+            return 2;
+        }
+
+        return IsStructuredTooltipExactNormalizedTextMatch(
+            candidate.NormalizedSourceText,
+            normalizedCanonicalText)
+            ? 1
+            : 0;
     }
 
     /// <summary>
@@ -3233,6 +3277,72 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Reads the canonical source representation retained by one tooltip
+    ///     node. Dynamic ActionDetail descriptions are evaluated here with the
+    ///     same Dalamud service used while their sheet payload is captured.
+    /// </summary>
+    /// <param name="textNode">The native tooltip text node.</param>
+    /// <param name="visibleText">The current visible node text.</param>
+    /// <returns>The evaluated source text, or the visible fallback text.</returns>
+    private string ReadStructuredTooltipSourceText(
+        AtkTextNode* textNode,
+        string visibleText)
+    {
+        if (textNode == null)
+        {
+            return visibleText;
+        }
+
+        try
+        {
+            var sourceText = EvaluateStructuredTooltipSourceText(
+                textNode->OriginalTextPointer.AsReadOnlySeStringSpan());
+            if (!string.IsNullOrWhiteSpace(sourceText))
+            {
+                return sourceText;
+            }
+        }
+        catch
+        {
+            // Keep the current text as the safe comparison fallback.
+        }
+
+        return visibleText;
+    }
+
+    /// <summary>
+    ///     Evaluates one structured-tooltip source SeString with the same
+    ///     runtime service used when ActionDetail sheet payloads are captured.
+    /// </summary>
+    /// <param name="sourceText">The original source SeString.</param>
+    /// <returns>The evaluated visible text, or extracted source text on failure.</returns>
+    internal static string EvaluateStructuredTooltipSourceText(
+        ReadOnlySeStringSpan sourceText)
+    {
+        var extractedText = sourceText.ExtractText();
+        var evaluator = SeStringEvaluator;
+        if (evaluator == null)
+        {
+            return extractedText;
+        }
+
+        try
+        {
+            var evaluatedText = evaluator.Evaluate(
+                    sourceText,
+                    language: ClientStateInterface.ClientLanguage)
+                .ExtractText();
+            return string.IsNullOrWhiteSpace(evaluatedText)
+                ? extractedText
+                : evaluatedText;
+        }
+        catch
+        {
+            return extractedText;
+        }
+    }
+
+    /// <summary>
     ///     Gets whether one live tooltip text node already exposes the desired
     ///     target text after normalization.
     /// </summary>
@@ -3667,10 +3777,17 @@ public unsafe partial class Echoglossian
     /// <param name="NodeAddress">The text-node address.</param>
     /// <param name="VisibleText">The visible text read from the node.</param>
     /// <param name="NormalizedVisibleText">The normalized visible text.</param>
+    /// <param name="NormalizedSourceText">
+    ///     The normalized source text evaluated from the original node payload.
+    /// </param>
+    /// <param name="SupportsPlainTextMutation">
+    ///     Whether a plain-text write preserves the original node payload.
+    /// </param>
     internal readonly record struct StructuredTooltipTextNodeCandidate(
         nint NodeAddress,
         string VisibleText,
         string NormalizedVisibleText,
+        string NormalizedSourceText,
         bool SupportsPlainTextMutation);
 
     /// <summary>

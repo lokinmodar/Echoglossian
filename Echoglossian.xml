@@ -4906,6 +4906,17 @@
             <param name="bestCandidate">The best exact-match candidate, if any.</param>
             <returns><see langword="true" /> when an exact-match candidate was found.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.GetStructuredTooltipExactMatchPriority(Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate,System.String)">
+            <summary>
+                Gets the confidence of one exact structured-tooltip candidate
+                match. The visible text is preferred because it proves that the
+                current node is rendered for the active tooltip; evaluated source
+                text is the fallback for dynamic SeString descriptions.
+            </summary>
+            <param name="candidate">The candidate node to inspect.</param>
+            <param name="normalizedCanonicalText">The normalized canonical text.</param>
+            <returns>A nonzero confidence value when the candidate is exact.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryFindBestStructuredTooltipDescriptionNodeCandidate(System.Collections.Generic.IReadOnlyList{Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate},System.String,System.IntPtr,Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate@)">
             <summary>
                 Tries to find the exact visible description candidate for one
@@ -5061,6 +5072,24 @@
             </summary>
             <param name="textNode">The text node to read.</param>
             <returns>The resolved text, or <see cref="F:System.String.Empty" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReadStructuredTooltipSourceText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <summary>
+                Reads the canonical source representation retained by one tooltip
+                node. Dynamic ActionDetail descriptions are evaluated here with the
+                same Dalamud service used while their sheet payload is captured.
+            </summary>
+            <param name="textNode">The native tooltip text node.</param>
+            <param name="visibleText">The current visible node text.</param>
+            <returns>The evaluated source text, or the visible fallback text.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateStructuredTooltipSourceText(Lumina.Text.ReadOnly.ReadOnlySeStringSpan)">
+            <summary>
+                Evaluates one structured-tooltip source SeString with the same
+                runtime service used when ActionDetail sheet payloads are captured.
+            </summary>
+            <param name="sourceText">The original source SeString.</param>
+            <returns>The evaluated visible text, or extracted source text on failure.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.DoesStructuredTooltipNodeMatchTarget(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
             <summary>
@@ -5292,8 +5321,14 @@
             <param name="NodeAddress">The text-node address.</param>
             <param name="VisibleText">The visible text read from the node.</param>
             <param name="NormalizedVisibleText">The normalized visible text.</param>
+            <param name="NormalizedSourceText">
+                The normalized source text evaluated from the original node payload.
+            </param>
+            <param name="SupportsPlainTextMutation">
+                Whether a plain-text write preserves the original node payload.
+            </param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.#ctor(System.IntPtr,System.String,System.String,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.#ctor(System.IntPtr,System.String,System.String,System.String,System.Boolean)">
             <summary>
                 Captures one readable structured-tooltip text node together with its
                 normalized comparison text.
@@ -5301,6 +5336,12 @@
             <param name="NodeAddress">The text-node address.</param>
             <param name="VisibleText">The visible text read from the node.</param>
             <param name="NormalizedVisibleText">The normalized visible text.</param>
+            <param name="NormalizedSourceText">
+                The normalized source text evaluated from the original node payload.
+            </param>
+            <param name="SupportsPlainTextMutation">
+                Whether a plain-text write preserves the original node payload.
+            </param>
         </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.NodeAddress">
             <summary>The text-node address.</summary>
@@ -5310,6 +5351,16 @@
         </member>
         <member name="P:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.NormalizedVisibleText">
             <summary>The normalized visible text.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.NormalizedSourceText">
+            <summary>
+                The normalized source text evaluated from the original node payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.StructuredTooltipTextNodeCandidate.SupportsPlainTextMutation">
+            <summary>
+                Whether a plain-text write preserves the original node payload.
+            </summary>
         </member>
         <member name="T:Echoglossian.Echoglossian.StructuredTooltipLifecycleState">
             <summary>
