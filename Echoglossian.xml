@@ -4318,6 +4318,21 @@
                 <see langword="true" /> when live-name validation is required.
             </returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldShowStructuredTooltipOverlay(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+                Gets whether a translated overlay must remain visible when native
+                tooltip mutation is unavailable for the current rendered payload.
+            </summary>
+            <param name="useOverlayOnly">Whether the selected mode is overlay-only.</param>
+            <param name="useSwapOverlay">Whether the selected mode requests swap presentation.</param>
+            <param name="nativeApplySucceeded">
+                Whether native presentation completed without omitting structured
+                tooltip fields.
+            </param>
+            <returns>
+                <see langword="true" /> when the plugin tooltip should be shown.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.TryRequestActionDetailOnDemandPrefetch(Echoglossian.SourceClientLanguage,System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,System.Byte,System.Boolean)">
             <summary>
                 Queues non-blocking background work for one visible ActionDetail
@@ -4599,6 +4614,10 @@
             <param name="addon">The visible tooltip addon.</param>
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated canonical payload.</param>
+            <returns>
+                <see langword="true" /> when the complete tooltip was safely
+                presented through native nodes.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ApplyStructuredTraitTooltipNative(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
             <summary>
@@ -4607,6 +4626,10 @@
             <param name="addon">The visible tooltip addon.</param>
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated canonical payload.</param>
+            <returns>
+                <see langword="true" /> when the complete tooltip was safely
+                presented through native nodes.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ApplyStructuredItemTooltipNative(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
             <summary>
@@ -4615,6 +4638,10 @@
             <param name="addon">The visible tooltip addon.</param>
             <param name="originalPayload">The original canonical payload.</param>
             <param name="translatedPayload">The translated canonical payload.</param>
+            <returns>
+                <see langword="true" /> when the complete tooltip was safely
+                presented through native nodes.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ApplyStructuredTooltipNative(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String,System.String,System.String,System.String,System.String,Echoglossian.Echoglossian.StructuredTooltipNativeState@)">
             <summary>
@@ -4630,6 +4657,10 @@
             <param name="translatedName">The translated name text.</param>
             <param name="translatedDescription">The translated description text.</param>
             <param name="runtimeState">The active native-runtime state.</param>
+            <returns>
+                <see langword="true" /> when the complete tooltip was safely
+                presented through native nodes.
+            </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.RestoreStructuredTooltipOriginalsIfContentChanged(Echoglossian.Echoglossian.StructuredTooltipNativeState@,FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,System.UInt32,System.String)">
             <summary>
@@ -4938,6 +4969,23 @@
                 <see langword="true" /> when numeric identifiers must stay scoped
                 to a structured reference-text family.
             </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResolveActionDetailReferenceId(Dalamud.Game.Gui.DetailKind,System.UInt32,System.UInt32,System.UInt32)">
+            <summary>
+                Resolves the source row identity for the currently displayed
+                ActionDetail payload.
+            </summary>
+            <param name="hoverActionKind">The action family captured by Dalamud.</param>
+            <param name="baseActionId">
+                The unadjusted identifier supplied to the game's hover handler.
+            </param>
+            <param name="resolvedActionId">
+                The adjusted identifier exposed by the live action-detail agent.
+            </param>
+            <param name="agentFallbackActionId">
+                The agent-backed fallback identifier when no direct hover exists.
+            </param>
+            <returns>The best source row identity, or zero when none is available.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryBuildStructuredReferencePayload(System.UInt32,Dalamud.Game.Gui.DetailKind,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload@)">
             <summary>

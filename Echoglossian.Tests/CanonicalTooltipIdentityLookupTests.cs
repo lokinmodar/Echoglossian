@@ -407,6 +407,38 @@ public class CanonicalTooltipIdentityLookupTests
     }
 
     /// <summary>
+    ///     Ensures structured ActionDetail families preserve the raw hover id
+    ///     instead of resolving their numerically overlapping adjusted action.
+    /// </summary>
+    [Fact]
+    public void ResolveActionDetailReferenceId_StructuredActionPrefersBaseActionId()
+    {
+        var result = Echoglossian.ResolveActionDetailReferenceId(
+            DetailKind.GeneralAction,
+            baseActionId: 20,
+            resolvedActionId: 1695,
+            agentFallbackActionId: 0);
+
+        Assert.Equal<uint>(20, result);
+    }
+
+    /// <summary>
+    ///     Ensures normal actions retain the adjusted action id currently
+    ///     rendered by the game's ActionDetail surface.
+    /// </summary>
+    [Fact]
+    public void ResolveActionDetailReferenceId_StandardActionPrefersResolvedActionId()
+    {
+        var result = Echoglossian.ResolveActionDetailReferenceId(
+            DetailKind.Action,
+            baseActionId: 20,
+            resolvedActionId: 1695,
+            agentFallbackActionId: 0);
+
+        Assert.Equal<uint>(1695, result);
+    }
+
+    /// <summary>
     ///     Ensures item-detail fallback can resolve one translated
     ///     <c>EventItem</c> payload by stable identity from the dedicated
     ///     reference-text cache.

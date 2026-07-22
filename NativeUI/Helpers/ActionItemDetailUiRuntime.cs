@@ -158,14 +158,17 @@ public unsafe partial class Echoglossian
 
         var hoveredAction = GameGuiInterface.HoveredAction;
         var hoveredItemId = (uint)GameGuiInterface.HoveredItem;
-        var hoveredActionId = hoveredAction.ActionId != 0
-            ? hoveredAction.ActionId
-            : ShouldUseActionDetailAgentFallback(
-                hoveredAction.ActionId,
-                hoveredItemId)
-                ? this.GetActiveActionDetailId()
-                : 0;
         var hoveredActionKind = hoveredAction.DetailKind;
+        var agentFallbackActionId = ShouldUseActionDetailAgentFallback(
+            hoveredAction.ActionId,
+            hoveredItemId)
+            ? this.GetActiveActionDetailId()
+            : 0;
+        var hoveredActionId = ResolveActionDetailReferenceId(
+            hoveredActionKind,
+            hoveredAction.BaseActionId,
+            hoveredAction.ActionId,
+            agentFallbackActionId);
         if (hoveredActionId == 0 ||
             !TryGetCurrentClassJobId(out var currentClassJobId))
         {
@@ -278,23 +281,27 @@ public unsafe partial class Echoglossian
                 return;
             }
 
+            var traitNativeApplySucceeded = false;
             if (useOverlayOnly)
             {
                 this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
             }
             else
             {
-                this.ApplyStructuredTraitTooltipNative(
+                traitNativeApplySucceeded = this.ApplyStructuredTraitTooltipNative(
                     addon,
                     originalTraitPayload,
                     translatedTraitPayload);
             }
 
-            if (useOverlayOnly || useSwapOverlay)
+            if (ShouldShowStructuredTooltipOverlay(
+                    useOverlayOnly,
+                    useSwapOverlay,
+                    traitNativeApplySucceeded))
             {
-                var overlayText = useOverlayOnly
-                    ? translatedTraitPayload.BuildTranslatedTooltipText()
-                    : originalTraitPayload.BuildOriginalTooltipText();
+                var overlayText = useSwapOverlay && traitNativeApplySucceeded
+                    ? originalTraitPayload.BuildOriginalTooltipText()
+                    : translatedTraitPayload.BuildTranslatedTooltipText();
                 this.UpdateStructuredTooltipOverlay(
                     ActionDetailSurfaceName,
                     this.actionDetailOverlay,
@@ -433,23 +440,27 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        var nativeApplySucceeded = false;
         if (useOverlayOnly)
         {
             this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
         }
         else
         {
-            this.ApplyStructuredActionTooltipNative(
+            nativeApplySucceeded = this.ApplyStructuredActionTooltipNative(
                 addon,
                 originalPayload,
                 translatedPayload);
         }
 
-        if (useOverlayOnly || useSwapOverlay)
+        if (ShouldShowStructuredTooltipOverlay(
+                useOverlayOnly,
+                useSwapOverlay,
+                nativeApplySucceeded))
         {
-            var overlayText = useOverlayOnly
-                ? translatedPayload.BuildTranslatedTooltipText()
-                : originalPayload.BuildOriginalTooltipText();
+            var overlayText = useSwapOverlay && nativeApplySucceeded
+                ? originalPayload.BuildOriginalTooltipText()
+                : translatedPayload.BuildTranslatedTooltipText();
             this.UpdateStructuredTooltipOverlay(
                 ActionDetailSurfaceName,
                 this.actionDetailOverlay,
@@ -626,23 +637,27 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        var nativeApplySucceeded = false;
         if (useOverlayOnly)
         {
             this.RestoreStructuredTooltipOriginals(ref this.currentItemDetailState, addon);
         }
         else
         {
-            this.ApplyStructuredItemTooltipNative(
+            nativeApplySucceeded = this.ApplyStructuredItemTooltipNative(
                 addon,
                 originalPayload,
                 translatedPayload);
         }
 
-        if (useOverlayOnly || useSwapOverlay)
+        if (ShouldShowStructuredTooltipOverlay(
+                useOverlayOnly,
+                useSwapOverlay,
+                nativeApplySucceeded))
         {
-            var overlayText = useOverlayOnly
-                ? translatedPayload.BuildTranslatedTooltipText()
-                : originalPayload.BuildOriginalTooltipText();
+            var overlayText = useSwapOverlay && nativeApplySucceeded
+                ? originalPayload.BuildOriginalTooltipText()
+                : translatedPayload.BuildTranslatedTooltipText();
             this.UpdateStructuredTooltipOverlay(
                 ItemDetailSurfaceName,
                 this.itemDetailOverlay,
@@ -689,6 +704,29 @@ public unsafe partial class Echoglossian
         bool useOverlayOnly)
     {
         return !useOverlayOnly;
+    }
+
+    /// <summary>
+    ///     Gets whether a translated overlay must remain visible when native
+    ///     tooltip mutation is unavailable for the current rendered payload.
+    /// </summary>
+    /// <param name="useOverlayOnly">Whether the selected mode is overlay-only.</param>
+    /// <param name="useSwapOverlay">Whether the selected mode requests swap presentation.</param>
+    /// <param name="nativeApplySucceeded">
+    ///     Whether native presentation completed without omitting structured
+    ///     tooltip fields.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when the plugin tooltip should be shown.
+    /// </returns>
+    internal static bool ShouldShowStructuredTooltipOverlay(
+        bool useOverlayOnly,
+        bool useSwapOverlay,
+        bool nativeApplySucceeded)
+    {
+        return useOverlayOnly ||
+               useSwapOverlay ||
+               !nativeApplySucceeded;
     }
 
     /// <summary>
@@ -1703,12 +1741,16 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
     /// <param name="translatedPayload">The translated canonical payload.</param>
-    private void ApplyStructuredActionTooltipNative(
+    /// <returns>
+    ///     <see langword="true" /> when the complete tooltip was safely
+    ///     presented through native nodes.
+    /// </returns>
+    private bool ApplyStructuredActionTooltipNative(
         AtkUnitBase* addon,
         ActionTooltipCanonicalPayload originalPayload,
         ActionTooltipCanonicalPayload translatedPayload)
     {
-        this.ApplyStructuredTooltipNative(
+        return this.ApplyStructuredTooltipNative(
             ActionDetailSurfaceName,
             addon,
             originalPayload.ActionId,
@@ -1727,12 +1769,16 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
     /// <param name="translatedPayload">The translated canonical payload.</param>
-    private void ApplyStructuredTraitTooltipNative(
+    /// <returns>
+    ///     <see langword="true" /> when the complete tooltip was safely
+    ///     presented through native nodes.
+    /// </returns>
+    private bool ApplyStructuredTraitTooltipNative(
         AtkUnitBase* addon,
         TraitCanonicalPayload originalPayload,
         TraitCanonicalPayload translatedPayload)
     {
-        this.ApplyStructuredTooltipNative(
+        return this.ApplyStructuredTooltipNative(
             ActionDetailSurfaceName,
             addon,
             originalPayload.TraitId,
@@ -1751,12 +1797,16 @@ public unsafe partial class Echoglossian
     /// <param name="addon">The visible tooltip addon.</param>
     /// <param name="originalPayload">The original canonical payload.</param>
     /// <param name="translatedPayload">The translated canonical payload.</param>
-    private void ApplyStructuredItemTooltipNative(
+    /// <returns>
+    ///     <see langword="true" /> when the complete tooltip was safely
+    ///     presented through native nodes.
+    /// </returns>
+    private bool ApplyStructuredItemTooltipNative(
         AtkUnitBase* addon,
         ItemTooltipCanonicalPayload originalPayload,
         ItemTooltipCanonicalPayload translatedPayload)
     {
-        this.ApplyStructuredTooltipNative(
+        return this.ApplyStructuredTooltipNative(
             ItemDetailSurfaceName,
             addon,
             originalPayload.ItemId,
@@ -1782,7 +1832,11 @@ public unsafe partial class Echoglossian
     /// <param name="translatedName">The translated name text.</param>
     /// <param name="translatedDescription">The translated description text.</param>
     /// <param name="runtimeState">The active native-runtime state.</param>
-    private void ApplyStructuredTooltipNative(
+    /// <returns>
+    ///     <see langword="true" /> when the complete tooltip was safely
+    ///     presented through native nodes.
+    /// </returns>
+    private bool ApplyStructuredTooltipNative(
         string surfaceName,
         AtkUnitBase* addon,
         uint contentId,
@@ -1804,7 +1858,7 @@ public unsafe partial class Echoglossian
                 displayMode: null,
                 reason: "addon-not-ready-or-content-missing");
             this.RestoreStructuredTooltipOriginals(ref runtimeState, addon);
-            return;
+            return false;
         }
 
         if (runtimeState != null &&
@@ -1839,7 +1893,7 @@ public unsafe partial class Echoglossian
                 reason: "node-resolution-miss",
                 name: originalName,
                 description: originalDescription);
-            return;
+            return false;
         }
 
         var currentRuntimeState = runtimeState;
@@ -1854,7 +1908,7 @@ public unsafe partial class Echoglossian
                 reason: "node-resolution-state-missing",
                 name: originalName,
                 description: originalDescription);
-            return;
+            return false;
         }
 
         var descriptionExpected = !string.IsNullOrWhiteSpace(originalDescription);
@@ -1878,7 +1932,7 @@ public unsafe partial class Echoglossian
                 description: originalDescription,
                 nameNodeAddress: currentRuntimeState.NameNodeAddress,
                 descriptionNodeAddress: currentRuntimeState.DescriptionNodeAddress);
-            return;
+            return false;
         }
 
         var nameApplied = false;
@@ -1936,6 +1990,7 @@ public unsafe partial class Echoglossian
             descriptionNodeAddress: currentRuntimeState.DescriptionNodeAddress,
             nameApplied: nameApplied,
             descriptionApplied: descriptionApplied);
+        return true;
     }
 
     /// <summary>
@@ -2420,13 +2475,11 @@ public unsafe partial class Echoglossian
         this.TryAddStructuredTooltipTextNodeCandidate(
             addon->ItemNameText,
             candidates,
-            seenNodeAddresses,
-            trustPlainTextMutation: true);
+            seenNodeAddresses);
         this.TryAddStructuredTooltipTextNodeCandidate(
             addon->DescriptionText,
             candidates,
-            seenNodeAddresses,
-            trustPlainTextMutation: true);
+            seenNodeAddresses);
     }
 
     /// <summary>
@@ -3048,6 +3101,47 @@ public unsafe partial class Echoglossian
                DetailKind.EurekaMagiaAction or
                DetailKind.MainCommand or
                DetailKind.ExtraCommand;
+    }
+
+    /// <summary>
+    ///     Resolves the source row identity for the currently displayed
+    ///     ActionDetail payload.
+    /// </summary>
+    /// <param name="hoverActionKind">The action family captured by Dalamud.</param>
+    /// <param name="baseActionId">
+    ///     The unadjusted identifier supplied to the game's hover handler.
+    /// </param>
+    /// <param name="resolvedActionId">
+    ///     The adjusted identifier exposed by the live action-detail agent.
+    /// </param>
+    /// <param name="agentFallbackActionId">
+    ///     The agent-backed fallback identifier when no direct hover exists.
+    /// </param>
+    /// <returns>The best source row identity, or zero when none is available.</returns>
+    internal static uint ResolveActionDetailReferenceId(
+        DetailKind hoverActionKind,
+        uint baseActionId,
+        uint resolvedActionId,
+        uint agentFallbackActionId)
+    {
+        if ((RequiresStructuredActionReferencePayload(hoverActionKind) ||
+             IsTraitHoverActionKind(hoverActionKind)) &&
+            baseActionId != 0)
+        {
+            return baseActionId;
+        }
+
+        if (resolvedActionId != 0)
+        {
+            return resolvedActionId;
+        }
+
+        if (baseActionId != 0)
+        {
+            return baseActionId;
+        }
+
+        return agentFallbackActionId;
     }
 
     /// <summary>

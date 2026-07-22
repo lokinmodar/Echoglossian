@@ -149,6 +149,35 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
+    ///     Ensures native UI mode falls back to the plugin tooltip when the
+    ///     game's formatted description cannot be replaced safely.
+    /// </summary>
+    [Fact]
+    public void ShouldShowStructuredTooltipOverlay_NativeMutationUnavailable_ShowsFallback()
+    {
+        var result = Echoglossian.ShouldShowStructuredTooltipOverlay(
+            useOverlayOnly: false,
+            useSwapOverlay: false,
+            nativeApplySucceeded: false);
+
+        Assert.True(result);
+    }
+
+    /// <summary>
+    ///     Ensures successful native UI mode leaves the plugin tooltip hidden.
+    /// </summary>
+    [Fact]
+    public void ShouldShowStructuredTooltipOverlay_NativeMutationSucceeded_HidesFallback()
+    {
+        var result = Echoglossian.ShouldShowStructuredTooltipOverlay(
+            useOverlayOnly: false,
+            useSwapOverlay: false,
+            nativeApplySucceeded: true);
+
+        Assert.False(result);
+    }
+
+    /// <summary>
     ///     Ensures cached tooltip node addresses are reused only while they are
     ///     still present in the current addon tree.
     /// </summary>
