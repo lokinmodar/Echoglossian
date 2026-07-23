@@ -11,13 +11,6 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class TooltipTab
 {
-    private static readonly string[] DetailDisplayModes =
-    [
-        Resources.QuestDisplayModeNativeUiTranslation,
-        Resources.OverlayDisplayModeOverlayTranslationOnly,
-        Resources.OverlayDisplayModeNativeUiTranslationWithOriginalOverlay,
-    ];
-
     /// <summary>
     ///     Draws the tooltip settings tab.
     /// </summary>
@@ -32,6 +25,8 @@ public static class TooltipTab
             return false;
         }
 
+        changed |= config.NormalizeStructuredTooltipPresentationSettings();
+
         ImGui.TextUnformatted(Resources.ActionAndItemTooltipsSectionLabel);
         ImGui.Separator();
 
@@ -41,13 +36,7 @@ public static class TooltipTab
 
         if (config.TranslateTooltips)
         {
-            changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
-                nameof(config.TooltipTranslationDisplayMode),
-                ref config.TooltipTranslationDisplayMode,
-                config.OverlayOnlyLanguage,
-                Resources.ActionAndItemTooltipsDisplayModeLabel,
-                Resources.ActionAndItemTooltipsDisplayModeDescription,
-                DetailDisplayModes);
+            ImGui.TextWrapped(Resources.ActionAndItemTooltipsOverlayOnlyDescription);
         }
 
         ImGui.Spacing();

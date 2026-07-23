@@ -884,6 +884,31 @@ public class Config : IPluginConfiguration
   }
 
   /// <summary>
+  ///     Normalizes action and item detail presentation to Plugin Tooltips.
+  /// </summary>
+  /// <remarks>
+  ///     Native mutation stays disabled until the required ActionDetail and
+  ///     ItemDetail mappings are shipped by the FFXIVClientStructs version
+  ///     consumed by this plugin.
+  /// </remarks>
+  /// <returns>
+  ///     <see langword="true" /> when the persisted display mode changed;
+  ///     otherwise <see langword="false" />.
+  /// </returns>
+  public bool NormalizeStructuredTooltipPresentationSettings()
+  {
+    if (this.TooltipTranslationDisplayMode ==
+        JournalTranslationDisplayMode.TooltipTranslation)
+    {
+      return false;
+    }
+
+    this.TooltipTranslationDisplayMode =
+        JournalTranslationDisplayMode.TooltipTranslation;
+    return true;
+  }
+
+  /// <summary>
   ///     Sets the unified diacritics-removal toggle for native UI replacement
   ///     flows across quest and non-quest surfaces.
   /// </summary>
@@ -1145,8 +1170,9 @@ public class Config : IPluginConfiguration
   [DefaultValue(true)] public bool TranslateTooltips = true;
 
   /// <summary>
-  ///     Display mode for action and item tooltips managed by the DB-first
-  ///     tooltip runtime.
+  ///     Persisted display mode for action and item tooltips managed by the
+  ///     DB-first tooltip runtime. Native modes are normalized to Plugin
+  ///     Tooltips until verified native mappings are available.
   /// </summary>
   [DefaultValue(JournalTranslationDisplayMode.TooltipTranslation)]
   public JournalTranslationDisplayMode TooltipTranslationDisplayMode =

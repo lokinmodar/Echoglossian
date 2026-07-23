@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.Helpers;
+
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -13,6 +15,19 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class StructuredTooltipTextMatchingTests
 {
+    /// <summary>
+    ///     Ensures detail tooltip native mutation stays disabled until the
+    ///     required FFXIVClientStructs mappings are available.
+    /// </summary>
+    [Fact]
+    public void GetStructuredTooltipDisplayMode_UsesPluginTooltipsOnly()
+    {
+        var result = Echoglossian.GetStructuredTooltipDisplayMode();
+
+        Assert.Equal(JournalTranslationDisplayMode.TooltipTranslation, result);
+        Assert.False(TranslationDisplayModeHelper.WritesNativeTranslation(result));
+    }
+
     /// <summary>
     ///     Ensures structured-tooltip matching collapses wrapped whitespace and
     ///     strips control-format noise before comparing live and canonical text.

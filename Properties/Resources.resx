@@ -1060,6 +1060,9 @@
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
     <value>This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, Plugin Overlay translation only keeps the native addon intact and uses Plugin Overlays, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in our Plugin Overlay.</value>
   </data>
+  <data name="ActionAndItemTooltipsOverlayOnlyDescription" xml:space="preserve">
+    <value>ActionDetail and ItemDetail currently use Plugin Tooltips only. Native UI translation remains disabled until verified agent and addon mappings are available through FFXIVClientStructs.</value>
+  </data>
   <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
     <value>Hover Plugin Tooltip appearance</value>
   </data>

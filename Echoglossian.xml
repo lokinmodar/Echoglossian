@@ -2348,6 +2348,20 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Config.NormalizeStructuredTooltipPresentationSettings">
+            <summary>
+                Normalizes action and item detail presentation to Plugin Tooltips.
+            </summary>
+            <remarks>
+                Native mutation stays disabled until the required ActionDetail and
+                ItemDetail mappings are shipped by the FFXIVClientStructs version
+                consumed by this plugin.
+            </remarks>
+            <returns>
+                <see langword="true" /> when the persisted display mode changed;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Config.SetNativeReplacementDiacriticsEnabled(System.Boolean)">
             <summary>
                 Sets the unified diacritics-removal toggle for native UI replacement
@@ -2503,8 +2517,9 @@
         </member>
         <member name="F:Echoglossian.Config.TooltipTranslationDisplayMode">
             <summary>
-                Display mode for action and item tooltips managed by the DB-first
-                tooltip runtime.
+                Persisted display mode for action and item tooltips managed by the
+                DB-first tooltip runtime. Native modes are normalized to Plugin
+                Tooltips until verified native mappings are available.
             </summary>
         </member>
         <member name="F:Echoglossian.Config.HoverTooltipTextColor">
@@ -4318,6 +4333,18 @@
             </summary>
             <param name="currentClassJobId">The current class/job id.</param>
             <returns>True when the current class/job was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetStructuredTooltipDisplayMode">
+            <summary>
+                Gets the safe presentation mode for ActionDetail and ItemDetail.
+            </summary>
+            <remarks>
+                The game recycles detail addon state between hovers. Native mutation
+                remains disabled until the verified agent and node mappings from
+                <c>aers/FFXIVClientStructs#1891</c> are available in the pinned
+                Dalamud dependency.
+            </remarks>
+            <returns>The Plugin Tooltip-only presentation mode.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.UpdateStructuredTooltipUiRuntime">
             <summary>
@@ -28363,6 +28390,11 @@
         <member name="P:Echoglossian.Properties.Resources.ActionAndItemTooltipsDisplayModeDescription">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, Plugin Overlay translation only keeps the native addon intact and uses Plugin Overlays, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in our Plugin Overlay..
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ActionAndItemTooltipsOverlayOnlyDescription">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a ActionDetail and ItemDetail currently use Plugin Tooltips only. Native UI translation remains disabled until verified agent and addon mappings are available through FFXIVClientStructs.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ActionAndItemTooltipsDisplayModeLabel">

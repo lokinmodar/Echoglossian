@@ -67,6 +67,22 @@ public unsafe partial class Echoglossian
     private static readonly TimeSpan StructuredTooltipOnDemandPrefetchCooldown =
         TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    ///     Gets the safe presentation mode for ActionDetail and ItemDetail.
+    /// </summary>
+    /// <remarks>
+    ///     The game recycles detail addon state between hovers. Native mutation
+    ///     remains disabled until the verified agent and node mappings from
+    ///     <c>aers/FFXIVClientStructs#1891</c> are available in the pinned
+    ///     Dalamud dependency.
+    /// </remarks>
+    /// <returns>The Plugin Tooltip-only presentation mode.</returns>
+    internal static JournalTranslationDisplayMode
+        GetStructuredTooltipDisplayMode()
+    {
+        return JournalTranslationDisplayMode.TooltipTranslation;
+    }
+
     private readonly Dictionary<string, DateTime>
         structuredTooltipOnDemandPrefetchLastRequestedUtc =
             new(StringComparer.Ordinal);
@@ -196,9 +212,7 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
-            this.configuration.TooltipTranslationDisplayMode,
-            this.configuration.OverlayOnlyLanguage);
+        var displayMode = GetStructuredTooltipDisplayMode();
         var useOverlayOnly =
             !TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
         var useSwapOverlay =
@@ -572,9 +586,7 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var displayMode = TranslationDisplayModeHelper.GetEffectiveDisplayMode(
-            this.configuration.TooltipTranslationDisplayMode,
-            this.configuration.OverlayOnlyLanguage);
+        var displayMode = GetStructuredTooltipDisplayMode();
         var useOverlayOnly =
             !TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
         var useSwapOverlay =
@@ -2310,6 +2322,13 @@ public unsafe partial class Echoglossian
         ref StructuredTooltipNativeState? runtimeState,
         AtkUnitBase* addon)
     {
+        if (GetStructuredTooltipDisplayMode() ==
+            JournalTranslationDisplayMode.TooltipTranslation)
+        {
+            runtimeState = null;
+            return;
+        }
+
         if (runtimeState == null)
         {
             return;

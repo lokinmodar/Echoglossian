@@ -280,7 +280,11 @@ public partial class Echoglossian : IDalamudPlugin
     this.MigrateToastPlacementSettings();
     this.MigrateGameMainMenuTranslationSettings();
     this.MigrateTranslationEngineSelection(loadedConfigVersion);
-    if (this.configuration.NormalizeNativeReplacementDiacriticsSettings())
+    var normalizedTooltipSettings =
+        this.configuration.NormalizeNativeReplacementDiacriticsSettings();
+    normalizedTooltipSettings |= this.configuration
+        .NormalizeStructuredTooltipPresentationSettings();
+    if (normalizedTooltipSettings)
     {
       SaveConfig(this.configuration);
     }

@@ -111,6 +111,17 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("ActionAndItemTooltipsDisplayModeDescription", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a ActionDetail and ItemDetail currently use Plugin Tooltips only. Native UI translation remains disabled until verified agent and addon mappings are available through FFXIVClientStructs.
+        /// </summary>
+        public static string ActionAndItemTooltipsOverlayOnlyDescription
+        {
+            get
+            {
+                return ResourceManager.GetString("ActionAndItemTooltipsOverlayOnlyDescription", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Detail display mode.

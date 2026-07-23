@@ -509,6 +509,7 @@ public partial class Echoglossian
   {
     config.NormalizeGameMainMenuTranslationSettings();
     config.NormalizeNativeReplacementDiacriticsSettings();
+    config.NormalizeStructuredTooltipPresentationSettings();
     TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
         config,
         config.Version);
@@ -541,6 +542,7 @@ public partial class Echoglossian
   {
     this.configuration.NormalizeGameMainMenuTranslationSettings();
     this.configuration.NormalizeNativeReplacementDiacriticsSettings();
+    this.configuration.NormalizeStructuredTooltipPresentationSettings();
     TranslationEngineSelectionMigrationHelper.NormalizeAndSyncSelection(
         this.configuration,
         this.configuration.Version,

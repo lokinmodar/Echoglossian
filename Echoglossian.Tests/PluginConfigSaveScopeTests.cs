@@ -30,6 +30,31 @@ public sealed class PluginConfigSaveScopeTests
     }
 
     /// <summary>
+    ///     Ensures legacy native ActionDetail and ItemDetail display modes are
+    ///     persisted as the safe Plugin Tooltip presentation mode.
+    /// </summary>
+    /// <param name="configuredDisplayMode">The legacy mode to normalize.</param>
+    [Theory]
+    [InlineData(JournalTranslationDisplayMode.NativeUiTranslation)]
+    [InlineData(JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips)]
+    public void SaveConfig_NormalizesStructuredTooltipNativePresentation(
+        JournalTranslationDisplayMode configuredDisplayMode)
+    {
+        var config = new Config
+        {
+            TooltipTranslationDisplayMode = configuredDisplayMode,
+        };
+
+        using var scope = PluginConfigSaveScope.Push(_ => { });
+
+        Echoglossian.SaveConfig(config);
+
+        Assert.Equal(
+            JournalTranslationDisplayMode.TooltipTranslation,
+            config.TooltipTranslationDisplayMode);
+    }
+
+    /// <summary>
     /// Ensures nested scopes use the innermost override and restore the outer
     /// override afterward.
     /// </summary>
