@@ -16856,18 +16856,44 @@
                 being written into the native UI.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ResolveNativeMutationAction(System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.ResolveNativeMutationAction(System.Boolean,System.Boolean,System.Boolean)">
             <summary>
-                Resolves the only native mutation action allowed for the current
-                JournalDetail display mode and mutation ownership state.
+                Resolves the native mutation action allowed for the current
+                JournalDetail display mode, payload readiness, and mutation ownership
+                state.
             </summary>
             <param name="writesNativeTranslation">
                 Whether the current mode writes translated text into the addon.
+            </param>
+            <param name="nativeTranslationReady">
+                Whether every visible native text section has a translation.
             </param>
             <param name="ownsNativeMutation">
                 Whether this handler previously wrote the visible native state.
             </param>
             <returns>The native mutation action allowed for this refresh.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.IsNativeSummaryTranslationReady(System.Boolean,System.Boolean,System.Int32,System.Boolean)">
+            <summary>
+                Determines whether the native summary can be replaced without
+                leaving untranslated supplemental source text in the visible pane.
+            </summary>
+            <param name="primarySummaryReady">
+                Whether the primary summary has a translation.
+            </param>
+            <param name="additionalCanonicalSummariesReady">
+                Whether every additional canonical summary has a translation.
+            </param>
+            <param name="canonicalSummaryCount">
+                The canonical summary rows backing the visible pane.
+            </param>
+            <param name="hasVisibleAdditionalSummaryText">
+                Whether the pane includes supplemental visible summary text.
+            </param>
+            <returns>
+                <c>true</c> when all visible native summary text is covered by a
+                translated canonical or primary payload.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.GetCurrentQuestSequenceText(Echoglossian.QuestProgressSnapshot)">
             <summary>
@@ -17050,10 +17076,11 @@
             <param name="bottomRight">The bottom-right screen coordinate of the node.</param>
             <returns>True when the node is visible and the bounds are usable.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Boolean@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateQuestOnJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Nullable{Echoglossian.QuestProgressSnapshot},System.String,System.String,System.String,System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Boolean@)">
             <summary>
                 Applies translations to the active Journal detail box.
             </summary>
+            <param name="journalDetail">The live JournalDetail addon.</param>
             <param name="journalBox">The journal detail component.</param>
             <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
             <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
@@ -24449,6 +24476,15 @@
             <param name="config">The live plugin configuration.</param>
             <param name="viewportWidth">The current main-viewport width.</param>
             <returns>The clamped tooltip width.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipLayoutPolicy.ResolveRichOriginalImGuiMaxWidth(Echoglossian.Config,System.Single)">
+            <summary>
+                Resolves a stable maximum width for rich original SeString text
+                rendered directly by ImGui inside an auto-sized hover tooltip.
+            </summary>
+            <param name="config">The live plugin configuration.</param>
+            <param name="viewportWidth">The current main-viewport width.</param>
+            <returns>The stable rich-text wrap width.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipLayoutPolicy.ResolveTextureMaxWidth(Echoglossian.Config,System.Single,System.String,System.Func{System.Single,System.Single})">
             <summary>

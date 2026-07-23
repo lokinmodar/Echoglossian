@@ -116,11 +116,15 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
-    ///     Ensures tooltip-only JournalDetail rendering remains read-only unless
-    ///     it must restore native text previously written by this handler.
+    ///     Ensures JournalDetail native output is atomic: pending sections
+    ///     restore the source snapshot rather than mixing source and translated
+    ///     text in the same detail pane.
     /// </summary>
     /// <param name="writesNativeTranslation">
     ///     Whether the active display mode writes native translations.
+    /// </param>
+    /// <param name="nativeTranslationReady">
+    ///     Whether every visible native JournalDetail section is translated.
     /// </param>
     /// <param name="ownsNativeMutation">
     ///     Whether this handler previously wrote the visible native state.
@@ -129,15 +133,32 @@ public class QuestAddonHandlerLifecycleTests
     [Theory]
     [InlineData(
         true,
+        true,
         false,
         nameof(JournalDetailNativeMutationAction.ApplyTranslation))]
     [InlineData(
+        true,
         false,
         true,
         nameof(JournalDetailNativeMutationAction.RestoreOriginal))]
-    [InlineData(false, false, nameof(JournalDetailNativeMutationAction.None))]
-    public void ResolveNativeMutationAction_PreservesTooltipOnlyNativeState(
+    [InlineData(
+        true,
+        false,
+        false,
+        nameof(JournalDetailNativeMutationAction.None))]
+    [InlineData(
+        false,
+        false,
+        true,
+        nameof(JournalDetailNativeMutationAction.RestoreOriginal))]
+    [InlineData(
+        false,
+        false,
+        false,
+        nameof(JournalDetailNativeMutationAction.None))]
+    public void ResolveNativeMutationAction_AvoidsMixedNativeQuestText(
         bool writesNativeTranslation,
+        bool nativeTranslationReady,
         bool ownsNativeMutation,
         string expectedAction)
     {
@@ -145,7 +166,47 @@ public class QuestAddonHandlerLifecycleTests
             Enum.Parse<JournalDetailNativeMutationAction>(expectedAction),
             JournalDetailHandler.ResolveNativeMutationAction(
                 writesNativeTranslation,
+                nativeTranslationReady,
                 ownsNativeMutation));
+    }
+
+    /// <summary>
+    ///     Ensures a detail pane with visible supplemental summary text is not
+    ///     considered native-ready when no canonical summary rows can translate
+    ///     that text.
+    /// </summary>
+    /// <param name="primarySummaryReady">
+    ///     Whether the primary summary is translated.
+    /// </param>
+    /// <param name="additionalCanonicalSummariesReady">
+    ///     Whether every additional canonical summary is translated.
+    /// </param>
+    /// <param name="canonicalSummaryCount">
+    ///     The number of canonical summary rows that back the visible pane.
+    /// </param>
+    /// <param name="hasVisibleAdditionalSummaryText">
+    ///     Whether the pane has supplemental source summary text.
+    /// </param>
+    /// <param name="expected">The expected native-summary readiness.</param>
+    [Theory]
+    [InlineData(true, true, 0, true, false)]
+    [InlineData(true, true, 0, false, true)]
+    [InlineData(true, true, 2, true, true)]
+    [InlineData(false, true, 2, false, false)]
+    public void IsNativeSummaryTranslationReady_RequiresCoverageOfVisibleText(
+        bool primarySummaryReady,
+        bool additionalCanonicalSummariesReady,
+        int canonicalSummaryCount,
+        bool hasVisibleAdditionalSummaryText,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            JournalDetailHandler.IsNativeSummaryTranslationReady(
+                primarySummaryReady,
+                additionalCanonicalSummariesReady,
+                canonicalSummaryCount,
+                hasVisibleAdditionalSummaryText));
     }
 
     /// <summary>

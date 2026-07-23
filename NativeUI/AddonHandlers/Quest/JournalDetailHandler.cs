@@ -105,11 +105,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
 
   /// <summary>
-  ///     Resolves the only native mutation action allowed for the current
-  ///     JournalDetail display mode and mutation ownership state.
+  ///     Resolves the native mutation action allowed for the current
+  ///     JournalDetail display mode, payload readiness, and mutation ownership
+  ///     state.
   /// </summary>
   /// <param name="writesNativeTranslation">
   ///     Whether the current mode writes translated text into the addon.
+  /// </param>
+  /// <param name="nativeTranslationReady">
+  ///     Whether every visible native text section has a translation.
   /// </param>
   /// <param name="ownsNativeMutation">
   ///     Whether this handler previously wrote the visible native state.
@@ -117,9 +121,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <returns>The native mutation action allowed for this refresh.</returns>
   internal static JournalDetailNativeMutationAction ResolveNativeMutationAction(
       bool writesNativeTranslation,
+      bool nativeTranslationReady,
       bool ownsNativeMutation)
   {
-    if (writesNativeTranslation)
+    if (writesNativeTranslation && nativeTranslationReady)
     {
       return JournalDetailNativeMutationAction.ApplyTranslation;
     }
@@ -127,6 +132,37 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     return ownsNativeMutation
         ? JournalDetailNativeMutationAction.RestoreOriginal
         : JournalDetailNativeMutationAction.None;
+  }
+
+  /// <summary>
+  ///     Determines whether the native summary can be replaced without
+  ///     leaving untranslated supplemental source text in the visible pane.
+  /// </summary>
+  /// <param name="primarySummaryReady">
+  ///     Whether the primary summary has a translation.
+  /// </param>
+  /// <param name="additionalCanonicalSummariesReady">
+  ///     Whether every additional canonical summary has a translation.
+  /// </param>
+  /// <param name="canonicalSummaryCount">
+  ///     The canonical summary rows backing the visible pane.
+  /// </param>
+  /// <param name="hasVisibleAdditionalSummaryText">
+  ///     Whether the pane includes supplemental visible summary text.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when all visible native summary text is covered by a
+  ///     translated canonical or primary payload.
+  /// </returns>
+  internal static bool IsNativeSummaryTranslationReady(
+      bool primarySummaryReady,
+      bool additionalCanonicalSummariesReady,
+      int canonicalSummaryCount,
+      bool hasVisibleAdditionalSummaryText)
+  {
+    return primarySummaryReady &&
+           additionalCanonicalSummariesReady &&
+           (canonicalSummaryCount > 0 || !hasVisibleAdditionalSummaryText);
   }
 
   /// <summary>
@@ -780,6 +816,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Applies translations to the active Journal detail box.
   /// </summary>
+  /// <param name="journalDetail">The live JournalDetail addon.</param>
   /// <param name="journalBox">The journal detail component.</param>
   /// <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
   /// <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
@@ -796,6 +833,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   ///     Whether one or more translated payloads are still pending.
   /// </param>
   private unsafe void TranslateQuestOnJournalBox(
+      AtkUnitBase* journalDetail,
       AtkComponentBase* journalBox,
       QuestPlate? foundQuestPlate,
       QuestProgressSnapshot? questProgressSnapshot,
@@ -1017,9 +1055,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         originalSummarySections);
     var translatedSummaryDisplayText = BuildQuestPlateSummarySection(
         translatedSummarySections);
-    var translatedQuestSummaryReady =
-        translatedPrimarySummaryReady &&
+    var hasVisibleAdditionalSummaryText = originalAdditionalSummaryTexts.Any(
+        text => !string.IsNullOrWhiteSpace(text));
+    var additionalCanonicalSummariesReady =
         additionalCanonicalSummaryRows.All(summary => summary.IsTranslated);
+    var translatedQuestSummaryReady = IsNativeSummaryTranslationReady(
+        translatedPrimarySummaryReady,
+        additionalCanonicalSummariesReady,
+        canonicalSummaryRows.Count,
+        hasVisibleAdditionalSummaryText);
 
     if (this.JournalDetailShouldRemoveDiacritics)
     {
@@ -1039,7 +1083,23 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
     }
 
-    if (this.JournalDetailWritesNativeTranslation)
+    var nativeTranslationReady =
+        translatedQuestNameReady &&
+        translatedQuestDescriptionReady &&
+        translatedQuestObjectiveReady &&
+        translatedQuestSummaryReady;
+    var nativeMutationAction = ResolveNativeMutationAction(
+        this.JournalDetailWritesNativeTranslation,
+        nativeTranslationReady,
+        this.ownsJournalDetailNativeMutation);
+    if (nativeMutationAction ==
+        JournalDetailNativeMutationAction.RestoreOriginal)
+    {
+      this.RestoreJournalDetailOriginals(journalDetail);
+    }
+
+    if (nativeMutationAction ==
+        JournalDetailNativeMutationAction.ApplyTranslation)
     {
       this.ownsJournalDetailNativeMutation = true;
       questNameNode->SetText(translatedQuestName);
@@ -1289,11 +1349,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     var operationSourceLanguage = sourceLanguage.Value;
 
-    var nativeMutationAction = ResolveNativeMutationAction(
-        this.JournalDetailWritesNativeTranslation,
-        this.ownsJournalDetailNativeMutation);
-    if (nativeMutationAction ==
-        JournalDetailNativeMutationAction.RestoreOriginal)
+    if (!this.JournalDetailWritesNativeTranslation &&
+        this.ownsJournalDetailNativeMutation)
     {
       this.RestoreJournalDetailOriginals(journalDetail);
     }
@@ -1461,7 +1518,20 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             translatedQuestMessage ?? string.Empty);
       }
 
-      if (this.JournalDetailWritesNativeTranslation)
+      var nativeTranslationReady =
+          translatedQuestNameReady && translatedQuestMessageReady;
+      var nativeMutationAction = ResolveNativeMutationAction(
+          this.JournalDetailWritesNativeTranslation,
+          nativeTranslationReady,
+          this.ownsJournalDetailNativeMutation);
+      if (nativeMutationAction ==
+          JournalDetailNativeMutationAction.RestoreOriginal)
+      {
+        this.RestoreJournalDetailOriginals(journalDetail);
+      }
+
+      if (nativeMutationAction ==
+          JournalDetailNativeMutationAction.ApplyTranslation)
       {
         this.ownsJournalDetailNativeMutation = true;
         questNameNode->SetText(translatedQuestName);
@@ -1683,6 +1753,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           questProgressSnapshot);
 
       this.TranslateQuestOnJournalBox(
+          journalDetail,
           journalBox,
           foundQuestPlate,
           questProgressSnapshot,
