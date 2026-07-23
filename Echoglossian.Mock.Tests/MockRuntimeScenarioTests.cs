@@ -10,8 +10,10 @@ using Dalamud.Game.Gui.NamePlate;
 using Dalamud.Plugin.Services;
 using Echoglossian.Mock.Hosting;
 using Echoglossian.Mock.Scenarios;
+using Echoglossian.UIOverlays.TextPresentation;
 using FluentAssertions;
 using Lumina.Excel.Sheets;
+using Lumina.Text.ReadOnly;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -199,5 +201,78 @@ public sealed class MockRuntimeScenarioTests
 
         actual.Should().NotBeNullOrWhiteSpace();
         actual.Should().Be(expected);
+    }
+
+    /// <summary>
+    /// Verifies that DalaMock sheet data can supply a copied formatted SeString
+    /// payload for swap presentation without a live game text-node pointer.
+    /// </summary>
+    /// <returns>A task that completes after the formatted sheet source is loaded.</returns>
+    [Fact]
+    public async Task StartAsync_copies_formatted_action_transient_payload_for_swap_presentation()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create();
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(fixture.Options);
+
+        var container = session.Container.GetContainer();
+        var dataManager = container.Resolve<IDataManager>();
+        var actionTransientSheet = dataManager.GetExcelSheet<ActionTransient>(
+            global::Echoglossian.Echoglossian.ClientStateInterface.ClientLanguage);
+        ActionTransient? formattedRow = null;
+
+        foreach (var row in actionTransientSheet)
+        {
+            if (string.IsNullOrWhiteSpace(row.Description.ExtractText()) ||
+                !HasSeStringPayload(row.Description))
+            {
+                continue;
+            }
+
+            formattedRow = row;
+            break;
+        }
+
+        formattedRow.Should().NotBeNull("the game sheet should contain formatted action descriptions");
+        var sourceRow = formattedRow.GetValueOrDefault();
+        var sourcePayload = CopyPayload(sourceRow.Description);
+        var presentation = new RichOriginalTextPresentation(
+            sourceRow.Description.ExtractText(),
+            sourcePayload);
+
+        presentation.TryGetSeStringPayload(out var copiedPayload).Should().BeTrue();
+        copiedPayload.ToArray().Should().Equal(sourcePayload);
+        RichOriginalTextPresentationPolicy.CanUseFormattedSeString(
+                TextPresentationBackendKind.PlainImGui,
+                showsOriginalSwapText: true,
+                presentation)
+            .Should()
+            .BeTrue();
+        RichOriginalTextPresentationPolicy.CanUseFormattedSeString(
+                TextPresentationBackendKind.RtlTexture,
+                showsOriginalSwapText: true,
+                presentation)
+            .Should()
+            .BeFalse();
+    }
+
+    /// <summary>
+    /// Gets whether the source contains at least one non-text SeString payload.
+    /// </summary>
+    /// <param name="source">The game sheet source value.</param>
+    /// <returns><see langword="true" /> when the source includes payload markers.</returns>
+    private static bool HasSeStringPayload(ReadOnlySeString source)
+    {
+        return ((ReadOnlySpan<byte>)source).Contains((byte)0x02);
+    }
+
+    /// <summary>
+    /// Copies the raw source bytes into managed storage for verification.
+    /// </summary>
+    /// <param name="source">The game sheet source value.</param>
+    /// <returns>A managed copy of the source payload bytes.</returns>
+    private static byte[] CopyPayload(ReadOnlySeString source)
+    {
+        return ((ReadOnlySpan<byte>)source).ToArray();
     }
 }

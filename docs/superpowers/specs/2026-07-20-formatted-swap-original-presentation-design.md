@@ -2,8 +2,13 @@
 
 ## Status
 
-Written on 2026-07-20 after discussion. Pending final user review before
-implementation planning.
+Implemented and validated on 2026-07-23.
+
+The initial delivery enables copied formatted originals for the shared
+text-node-backed hover-tooltip registration path. The shared overlay state and
+renderer also support the same model, but no persistent-overlay producer
+supplies a formatted payload yet. That keeps current overlay visuals unchanged
+until a surface can safely provide one.
 
 ## Summary
 
@@ -83,6 +88,31 @@ Swap mode already follows the correct high-level rule: translated text can be
 written into the native UI while the plugin-owned presentation shows the
 original. This spec only improves the presentation of that original payload
 when the original payload is available in a safe owned form.
+
+## Implemented Coverage
+
+The shared owned value and eligibility policy live in
+`UIOverlays/TextPresentation/RichOriginalTextPresentation.cs` and
+`UIOverlays/TextPresentation/RichOriginalTextPresentationPolicy.cs`.
+
+The current live producer is
+`NativeUI/Helpers/HoverTooltipRegistration.cs`. During a text-node-backed swap
+tooltip registration, it evaluates the original text synchronously, verifies
+that the evaluated plain text matches the selected original fallback, and
+copies the raw `SeString` bytes before the native text-node scope ends. The
+tooltip manager reuses the copied result while its source body is unchanged.
+
+`TranslationOverlay` and `TranslationOverlayRenderer` carry and render the
+same optional owned value. Rich rendering is deliberately limited to normal,
+left-aligned ImGui presentation. Centered, right-aligned, RTL/texture, missing,
+or malformed payload cases retain the existing plain or texture rendering path
+because the current `SeStringWrapped` path cannot preserve those geometry
+contracts safely.
+
+`ActionDetail` and `ItemDetail` remain Plugin Tooltip-only. Their native UI
+mode is still disabled pending the required ActionDetail and ItemDetail
+signatures in FFXIVClientStructs pull request #1891; this work does not change
+that safety boundary.
 
 ## Proposed Architecture
 
@@ -179,12 +209,11 @@ Eligibility is not a hardcoded surface allowlist. A surface participates when
 it can provide an owned formatted original payload and already uses the shared
 overlay or hover-tooltip presentation layer.
 
-Expected early surfaces include:
-
-- `ActionDetail`
-- `ItemDetail`
-- quest or journal surfaces where the original text is captured from text nodes
-- map or recommendation surfaces if a formatted original payload is available
+Potential future producers include quest or journal surfaces that capture
+original text from text nodes, map or recommendation surfaces with an owned
+formatted source, and detail surfaces after their supported native mappings are
+available. `ActionDetail` and `ItemDetail` are not exceptions to the shared
+model and must not bypass their native-mode safety boundary.
 
 Surfaces that only expose plain strings continue unchanged.
 

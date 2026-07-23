@@ -6,7 +6,7 @@
 
 **Architecture:** Presentation gets an owned `RichOriginalTextPresentation` value containing plain fallback text and optional copied `SeString` bytes. Capture copies bytes synchronously while a native text node is valid; it never stores pointers, spans, delegates, or unmanaged references. The shared hover-tooltip and overlay renderers use that value only for original swap presentation in the normal ImGui backend. All other cases retain their existing rendering behavior.
 
-**Tech Stack:** C#/.NET 10, Dalamud `ReadOnlySeString`, `ISeStringEvaluator`, `ImGuiHelpers.SeStringWrapped`, ImGui.NET, Echoglossian.Mock, NUnit.
+**Tech Stack:** C#/.NET 10, Dalamud `ReadOnlySeString`, `ISeStringEvaluator`, `ImGuiHelpers.SeStringWrapped`, ImGui.NET, Echoglossian.Mock, xUnit.
 
 ## Constraints
 
@@ -19,10 +19,12 @@
 
 ## Task 1: Add Owned Rich Presentation Model And Policy
 
+**Status:** Completed in commit `325bc46`.
+
 **Files:**
-- Create: `PluginUI/Runtime/RichOriginalTextPresentation.cs`
-- Create: `PluginUI/Runtime/RichOriginalTextPresentationPolicy.cs`
-- Create: `Echoglossian.Tests/PluginUI/Runtime/RichOriginalTextPresentationTests.cs`
+- Create: `UIOverlays/TextPresentation/RichOriginalTextPresentation.cs`
+- Create: `UIOverlays/TextPresentation/RichOriginalTextPresentationPolicy.cs`
+- Create: `Echoglossian.Tests/RichOriginalTextPresentationTests.cs`
 
 1. Write tests that prove the model clones supplied bytes and exposes only immutable byte memory.
 2. Write tests that prove the policy permits rich rendering only for original swap content in the normal ImGui backend and rejects RTL / missing payloads.
@@ -33,13 +35,15 @@
 
 ## Task 2: Add Rich Body Rendering To Shared Hover Tooltips
 
+**Status:** Completed in commit `747744d`. The implementation uses the shared
+text-node registration overload as the initial safe capture point; it does not
+add surface-specific capture paths.
+
 **Files:**
 - Modify: `NativeUI/Helpers/HoverTooltipManager.cs`
 - Modify: `NativeUI/Helpers/HoverTooltipRegistration.cs`
-- Modify: `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`
-- Modify: `NativeUI/AddonHandlers/Quest/QuestAddonHandlerBase.cs`
-- Modify: `NativeUI/AddonHandlers/Quest/QuestAddonHandlerDependencies.cs`
-- Create or modify: focused hover-tooltip presentation tests under `Echoglossian.Tests/NativeUI/Helpers/`
+- Create: `NativeUI/Helpers/HoverTooltipRichOriginalPresentationResolver.cs`
+- Create: `Echoglossian.Tests/HoverTooltipRichOriginalPresentationResolverTests.cs`
 
 1. Write tests for a hover entry that carries an optional rich original-body presentation and keeps the plain body as its fallback.
 2. Write tests for registration policy: only swap registration may supply the rich payload; overlay-only and native translated presentation must supply none.
@@ -52,12 +56,15 @@
 
 ## Task 3: Make Shared Overlay Rendering Rich-Presentation Ready
 
+**Status:** Completed in commit `a5a822a`. No live persistent-overlay producer
+was added, and special-alignment or RTL overlays deliberately retain their
+existing fallback rendering.
+
 **Files:**
 - Modify: `UIOverlays/TranslationOverlay/TranslationOverlay.cs`
 - Modify: `UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs`
 - Modify: `UIOverlays/TranslationOverlay/TranslationOverlayRenderer.cs`
-- Modify: `UIOverlays/TranslationOverlay/TranslationOverlayRenderRequest.cs` only if necessary
-- Create or modify: focused overlay renderer tests under `Echoglossian.Tests/UIOverlays/TranslationOverlay/`
+- Create: `Echoglossian.Tests/TranslationOverlayRichOriginalPresentationTests.cs`
 
 1. Write tests for `UpdateOverlayContent` retaining a rich original presentation only when the overlay is showing original swap content, and clearing it with the overlay state.
 2. Write tests for renderer selection: formatted bytes are eligible only under the shared policy; normal plain, translated, RTL, and missing-data cases remain plain/texture.
@@ -70,13 +77,17 @@
 
 ## Task 4: Validate Runtime Contracts And Documentation
 
+**Status:** Completed. The Mock validation reads actual formatted
+`ActionTransient` sheet data, copies its raw `SeString` payload, and validates
+the normal-ImGui/RTL eligibility boundary without a game process.
+
 **Files:**
 - Modify: `docs/superpowers/specs/2026-07-20-formatted-swap-original-presentation-design.md`
 - Modify: `Echoglossian.Mock.Tests/` only if the current mock can represent a copied SeString payload without a game process
 - Modify: `AGENTS.md` only if a new reusable validation rule is discovered
 
 1. Update the design status to implemented/validated and record the initial producer coverage.
-2. Add or extend mock tests that create a `ReadOnlySeString` with formatting payloads, verify that capture clones bytes, and verify fallback behavior when rendering is ineligible.
+2. Add or extend mock tests that select a game-sheet `ReadOnlySeString` with formatting payloads, verify that capture clones bytes, and verify fallback behavior when rendering is ineligible.
 3. Run:
    - `dotnet build Echoglossian.sln -c Debug --no-restore`
    - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
