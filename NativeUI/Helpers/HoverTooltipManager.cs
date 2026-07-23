@@ -274,7 +274,11 @@ public sealed class HoverTooltipManager
                     hoveredEntry.DisplaysOriginalSwapText,
                     hoveredEntry.RichOriginalBodyPresentation);
             if (!canDrawRichOriginalBody ||
-                !DrawRichTooltipText(hoveredEntry.RichOriginalBodyPresentation!))
+                !DrawRichTooltipText(
+                    hoveredEntry.RichOriginalBodyPresentation!,
+                    HoverTooltipLayoutPolicy.ResolveRichOriginalImGuiMaxWidth(
+                        this.config,
+                        ImGui.GetMainViewport().Size.X)))
             {
                 DrawPlainTooltipText(body, shouldRightAlign);
             }
@@ -421,7 +425,8 @@ public sealed class HoverTooltipManager
     }
 
     private static bool DrawRichTooltipText(
-        RichOriginalTextPresentation presentation)
+        RichOriginalTextPresentation presentation,
+        float maximumWidth)
     {
         if (!presentation.TryGetSeStringPayload(out var payload))
         {
@@ -430,15 +435,24 @@ public sealed class HoverTooltipManager
 
         try
         {
-            var drawParams = new SeStringDrawParams
+            var wrapWidth = Math.Max(1f, maximumWidth);
+            ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + wrapWidth);
+            try
             {
-                Font = ImGui.GetFont(),
-                ScreenOffset = ImGui.GetCursorScreenPos(),
-                FontSize = ImGui.GetFontSize(),
-                WrapWidth = Math.Max(1f, ImGui.GetContentRegionAvail().X),
-            };
-            ImGuiHelpers.SeStringWrapped(payload.Span, drawParams);
-            return true;
+                var drawParams = new SeStringDrawParams
+                {
+                    Font = ImGui.GetFont(),
+                    ScreenOffset = ImGui.GetCursorScreenPos(),
+                    FontSize = ImGui.GetFontSize(),
+                    WrapWidth = wrapWidth,
+                };
+                ImGuiHelpers.SeStringWrapped(payload.Span, drawParams);
+                return true;
+            }
+            finally
+            {
+                ImGui.PopTextWrapPos();
+            }
         }
         catch
         {
