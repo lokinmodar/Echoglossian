@@ -7189,7 +7189,7 @@
                 plugin config values.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.UpdateOverlayContent(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Echoglossian.UpdateOverlayContent(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String,System.String,System.String,System.Boolean,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation)">
             <summary>
             Updates an overlay with translated content.
             </summary>
@@ -7197,6 +7197,12 @@
             <param name="translatedName">Translated speaker or title.</param>
             <param name="translatedText">Translated content.</param>
             <param name="originalName">Original speaker or title.</param>
+            <param name="displaysOriginalSwapText">
+            Whether the current text is original content displayed in swap mode.
+            </param>
+            <param name="richOriginalTextPresentation">
+            The optional copied original SeString payload for swap presentation.
+            </param>
         </member>
         <member name="M:Echoglossian.Echoglossian.GetOrCreateMiniTalkBubbleOverlay(System.IntPtr)">
             <summary>
@@ -34592,6 +34598,33 @@
             <param name="request">The presentation request.</param>
             <returns>The resolved backend kind.</returns>
         </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.DisplaysOriginalSwapText">
+            <summary>
+            Gets whether the current content is original text shown through swap
+            presentation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.RichOriginalTextPresentation">
+            <summary>
+            Gets the owned rich original-text payload for the current swap content.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.UpdateContentPresentation(System.Boolean,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation)">
+            <summary>
+            Updates the optional rich original-text state while the caller owns
+            <see cref="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.Semaphore" />.
+            </summary>
+            <param name="displaysOriginalSwapText">
+            Whether the overlay displays original content through swap presentation.
+            </param>
+            <param name="presentation">The copied original SeString payload, if available.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.ClearContentPresentation">
+            <summary>
+            Clears the retained original swap presentation while the caller owns
+            <see cref="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.Semaphore" />.
+            </summary>
+        </member>
         <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayBoundsCalculator">
             <summary>
             Calculates overlay anchor bounds from native node geometry without relying on
@@ -34783,6 +34816,21 @@
             <param name="hasTitleBlock">Whether the RTL title texture is ready.</param>
             <returns><see langword="true"/> when the inline RTL title path is ready.</returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ShouldRenderRichOriginalText(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.Boolean,System.Boolean,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation)">
+            <summary>
+            Gets whether an overlay can render its copied original SeString payload
+            without changing the existing RTL or aligned-layout behavior.
+            </summary>
+            <param name="backendKind">The resolved text presentation backend.</param>
+            <param name="displaysOriginalSwapText">
+            Whether the overlay currently displays original swap content.
+            </param>
+            <param name="hasSpecialAlignment">
+            Whether the plain overlay path requires centered or right-aligned text.
+            </param>
+            <param name="presentation">The optional owned original-text payload.</param>
+            <returns><see langword="true" /> when rich ImGui drawing is safe.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.BuildWindowLabel(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.String,System.String,System.Int32,System.Boolean)">
             <summary>
             Builds the ImGui window label while preserving stable overlay identity.
@@ -34841,6 +34889,13 @@
             <param name="line">The text line to draw.</param>
             <param name="centerAligned">Whether to center the line.</param>
             <param name="rightAligned">Whether to right-align the line.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.DrawRichOverlayText(Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation)">
+            <summary>
+            Draws one copied original SeString through Dalamud's ImGui renderer.
+            </summary>
+            <param name="presentation">The owned original-text payload to draw.</param>
+            <returns><see langword="true" /> when the rich payload was drawn.</returns>
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.SplitOverlayLineForAlignment(System.String,System.Single,System.Func{System.String,System.Single})">
             <summary>

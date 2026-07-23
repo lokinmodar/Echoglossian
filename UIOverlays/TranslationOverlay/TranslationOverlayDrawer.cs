@@ -3,6 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
 namespace Echoglossian
@@ -21,11 +22,19 @@ namespace Echoglossian
     /// <param name="translatedName">Translated speaker or title.</param>
     /// <param name="translatedText">Translated content.</param>
     /// <param name="originalName">Original speaker or title.</param>
+    /// <param name="displaysOriginalSwapText">
+    /// Whether the current text is original content displayed in swap mode.
+    /// </param>
+    /// <param name="richOriginalTextPresentation">
+    /// The optional copied original SeString payload for swap presentation.
+    /// </param>
     private void UpdateOverlayContent(
         TranslationOverlay overlay,
         string translatedName,
         string translatedText,
-        string originalName = "")
+        string originalName = "",
+        bool displaysOriginalSwapText = false,
+        RichOriginalTextPresentation? richOriginalTextPresentation = null)
     {
       if (overlay == null || overlay.IsDisposed)
       {
@@ -73,6 +82,9 @@ namespace Echoglossian
 
         overlay.CurrentText =
             normalizedText;
+        overlay.UpdateContentPresentation(
+            displaysOriginalSwapText,
+            richOriginalTextPresentation);
         overlay.Display = hasValidText;
         overlay.CurrentTextId++;
       }
@@ -130,6 +142,7 @@ namespace Echoglossian
         if (clearText)
         {
           overlay.CurrentText = string.Empty;
+          overlay.ClearContentPresentation();
         }
       }
       finally

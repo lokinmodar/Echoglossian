@@ -3,7 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Interface.ImGuiSeStringRenderer;
 using Echoglossian.PluginUI.Runtime;
+using Echoglossian.UIOverlays.TextPresentation;
 
 namespace Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -64,6 +66,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
 
         string overlayText;
         bool shouldDraw;
+        bool displaysOriginalSwapText;
+        RichOriginalTextPresentation? richOriginalTextPresentation;
         overlay.Semaphore.Wait();
         try
         {
@@ -71,6 +75,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 overlay.CurrentText);
             shouldDraw = !string.IsNullOrEmpty(overlayText) &&
                          overlayText != Resources.WaitingForTranslation;
+            displaysOriginalSwapText = overlay.DisplaysOriginalSwapText;
+            richOriginalTextPresentation = overlay.RichOriginalTextPresentation;
         }
         finally
         {
@@ -121,6 +127,11 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             config.SurfaceId,
             shouldCenterOverlayText);
         var backendKind = TextPresentationResolver.ResolveBackendKind(textRequest);
+        var shouldRenderRichOriginalText = ShouldRenderRichOriginalText(
+            backendKind,
+            displaysOriginalSwapText && shouldUseGeneralFont,
+            shouldCenterOverlayText || shouldRightAlignOverlayText,
+            richOriginalTextPresentation);
         string[] overlayTextLines = [];
         RenderedTextBlock? bodyBlock = null;
         RenderedTextBlock? titleBlock = null;
@@ -261,18 +272,26 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 }
                 else
                 {
-                    foreach (var line in overlayTextLines)
+                    if (shouldRenderRichOriginalText &&
+                        DrawRichOverlayText(richOriginalTextPresentation!))
                     {
-                        if (string.IsNullOrEmpty(line))
+                        // The shared SeString renderer advances the ImGui layout.
+                    }
+                    else
+                    {
+                        foreach (var line in overlayTextLines)
                         {
-                            ImGui.Spacing();
-                            continue;
-                        }
+                            if (string.IsNullOrEmpty(line))
+                            {
+                                ImGui.Spacing();
+                                continue;
+                            }
 
-                        DrawOverlayLine(
-                            line,
-                            shouldCenterOverlayText,
-                            shouldRightAlignOverlayText);
+                            DrawOverlayLine(
+                                line,
+                                shouldCenterOverlayText,
+                                shouldRightAlignOverlayText);
+                        }
                     }
                 }
             }
@@ -333,6 +352,32 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                forceShowTitle &&
                hasTitleBlock &&
                !string.IsNullOrWhiteSpace(resolvedTitle);
+    }
+
+    /// <summary>
+    /// Gets whether an overlay can render its copied original SeString payload
+    /// without changing the existing RTL or aligned-layout behavior.
+    /// </summary>
+    /// <param name="backendKind">The resolved text presentation backend.</param>
+    /// <param name="displaysOriginalSwapText">
+    /// Whether the overlay currently displays original swap content.
+    /// </param>
+    /// <param name="hasSpecialAlignment">
+    /// Whether the plain overlay path requires centered or right-aligned text.
+    /// </param>
+    /// <param name="presentation">The optional owned original-text payload.</param>
+    /// <returns><see langword="true" /> when rich ImGui drawing is safe.</returns>
+    internal static bool ShouldRenderRichOriginalText(
+        TextPresentationBackendKind backendKind,
+        bool displaysOriginalSwapText,
+        bool hasSpecialAlignment,
+        RichOriginalTextPresentation? presentation)
+    {
+        return !hasSpecialAlignment &&
+               RichOriginalTextPresentationPolicy.CanUseFormattedSeString(
+                   backendKind,
+                   displaysOriginalSwapText,
+                   presentation);
     }
 
     /// <summary>
@@ -519,6 +564,37 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             }
 
             ImGui.TextUnformatted(visualLine);
+        }
+    }
+
+    /// <summary>
+    /// Draws one copied original SeString through Dalamud's ImGui renderer.
+    /// </summary>
+    /// <param name="presentation">The owned original-text payload to draw.</param>
+    /// <returns><see langword="true" /> when the rich payload was drawn.</returns>
+    private static bool DrawRichOverlayText(
+        RichOriginalTextPresentation presentation)
+    {
+        if (!presentation.TryGetSeStringPayload(out var payload))
+        {
+            return false;
+        }
+
+        try
+        {
+            var drawParams = new SeStringDrawParams
+            {
+                Font = ImGui.GetFont(),
+                ScreenOffset = ImGui.GetCursorScreenPos(),
+                FontSize = ImGui.GetFontSize(),
+                WrapWidth = Math.Max(1f, ImGui.GetContentRegionAvail().X),
+            };
+            ImGuiHelpers.SeStringWrapped(payload.Span, drawParams);
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 
