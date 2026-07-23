@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Collections.Concurrent;
+using Dalamud.Interface.ImGuiSeStringRenderer;
 using Echoglossian.PluginUI.Helpers;
 
 namespace Echoglossian.NativeUI.Helpers;
@@ -20,6 +21,8 @@ public sealed class HoverTooltipManager
     private readonly Config config;
     private readonly UINewFontHandler fontHandler;
     private readonly RtlTexturePresentationService rtlTexturePresentationService;
+    private readonly Func<RichOriginalTextCaptureRequest, RichOriginalTextPresentation?>
+        richOriginalTextPresentationCapturer;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="HoverTooltipManager" />
@@ -31,25 +34,43 @@ public sealed class HoverTooltipManager
     internal HoverTooltipManager(
         Config config,
         UINewFontHandler fontHandler,
-        RtlTexturePresentationService rtlTexturePresentationService)
+        RtlTexturePresentationService rtlTexturePresentationService,
+        Func<RichOriginalTextCaptureRequest, RichOriginalTextPresentation?>
+            richOriginalTextPresentationCapturer)
     {
         this.config = config;
         this.fontHandler = fontHandler;
         this.rtlTexturePresentationService = rtlTexturePresentationService;
+        this.richOriginalTextPresentationCapturer =
+            richOriginalTextPresentationCapturer;
     }
 
     /// <summary>
     ///     Registers or updates a tooltip target.
     /// </summary>
-    public void Register(
+    internal void Register(
         string key,
         Vector2 topLeft,
         Vector2 bottomRight,
         string title,
         string body,
         bool enabled = true,
-        bool useGeneralFont = false)
+        bool useGeneralFont = false,
+        bool displaysOriginalSwapText = false,
+        RichOriginalTextCaptureRequest? richOriginalTextCaptureRequest = null)
     {
+        this.entries.TryGetValue(key, out var previousEntry);
+        var richOriginalBodyPresentation =
+            HoverTooltipRichOriginalPresentationResolver.Resolve(
+                previousEntry?.Body,
+                previousEntry?.DisplaysOriginalSwapText ?? false,
+                previousEntry?.RichOriginalBodyCaptureResolved ?? false,
+                previousEntry?.RichOriginalBodyPresentation,
+                body,
+                displaysOriginalSwapText,
+                richOriginalTextCaptureRequest,
+                this.richOriginalTextPresentationCapturer,
+                out var richOriginalBodyCaptureResolved);
         var newEntry = new HoverTooltipEntry(
             topLeft,
             bottomRight,
@@ -57,6 +78,9 @@ public sealed class HoverTooltipManager
             body,
             enabled,
             useGeneralFont,
+            displaysOriginalSwapText,
+            richOriginalBodyCaptureResolved,
+            richOriginalBodyPresentation,
             DateTime.UtcNow);
 
         this.entries[key] = newEntry;
@@ -244,7 +268,16 @@ public sealed class HoverTooltipManager
                 ImGui.Separator();
             }
 
-            DrawPlainTooltipText(body, shouldRightAlign);
+            var canDrawRichOriginalBody =
+                RichOriginalTextPresentationPolicy.CanUseFormattedSeString(
+                    TextPresentationBackendKind.PlainImGui,
+                    hoveredEntry.DisplaysOriginalSwapText,
+                    hoveredEntry.RichOriginalBodyPresentation);
+            if (!canDrawRichOriginalBody ||
+                !DrawRichTooltipText(hoveredEntry.RichOriginalBodyPresentation!))
+            {
+                DrawPlainTooltipText(body, shouldRightAlign);
+            }
         }
         finally
         {
@@ -387,6 +420,32 @@ public sealed class HoverTooltipManager
         }
     }
 
+    private static bool DrawRichTooltipText(
+        RichOriginalTextPresentation presentation)
+    {
+        if (!presentation.TryGetSeStringPayload(out var payload))
+        {
+            return false;
+        }
+
+        try
+        {
+            var drawParams = new SeStringDrawParams
+            {
+                Font = ImGui.GetFont(),
+                ScreenOffset = ImGui.GetCursorScreenPos(),
+                FontSize = ImGui.GetFontSize(),
+                WrapWidth = Math.Max(1f, ImGui.GetContentRegionAvail().X),
+            };
+            ImGuiHelpers.SeStringWrapped(payload.Span, drawParams);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private RenderedTextBlock? TryRenderTooltipTextBlock(
         string text,
         bool useGeneralFont,
@@ -432,6 +491,9 @@ public sealed class HoverTooltipManager
         string Body,
         bool Enabled,
         bool UseGeneralFont,
+        bool DisplaysOriginalSwapText,
+        bool RichOriginalBodyCaptureResolved,
+        RichOriginalTextPresentation? RichOriginalBodyPresentation,
         DateTime LastUpdatedUtc);
 }
 

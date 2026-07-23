@@ -5550,7 +5550,7 @@
                 Parses the UI elements from the Addon sheet in the game data.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest})">
             <summary>
             Registers a hover tooltip for a text node using its current screen bounds.
             </summary>
@@ -5643,6 +5643,23 @@
             </param>
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CaptureRichOriginalTextPresentation(Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest)">
+            <summary>
+            Copies a matching original text-node SeString for a plugin-owned rich
+            swap presentation without retaining the native text-node pointer.
+            </summary>
+            <param name="captureRequest">The current synchronous native capture request.</param>
+            <returns>The owned rich presentation, or <see langword="null" /> for the plain fallback.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.MatchesExpectedOriginalText(System.String,System.String)">
+            <summary>
+            Compares a captured SeString value with the plain original text selected
+            for tooltip swap presentation.
+            </summary>
+            <param name="capturedText">The evaluated or extracted SeString text.</param>
+            <param name="expectedOriginalText">The original plain text selected for display.</param>
+            <returns><see langword="true" /> when both values match after native-text normalization.</returns>
         </member>
         <member name="T:Echoglossian.Echoglossian.StructuredTooltipItemSourceKind">
             <summary>
@@ -24447,7 +24464,7 @@
                 Tracks hover rectangles and draws DelvUI-style tooltips on the cursor.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.#ctor(Echoglossian.Config,Echoglossian.PluginUI.Helpers.UINewFontHandler,Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService)">
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.#ctor(Echoglossian.Config,Echoglossian.PluginUI.Helpers.UINewFontHandler,Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService,System.Func{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.HoverTooltipManager" />
                 class.
@@ -24456,7 +24473,7 @@
                 The live plugin configuration used to style hover tooltips.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Register(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Register(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest})">
             <summary>
                 Registers or updates a tooltip target.
             </summary>
@@ -24488,6 +24505,49 @@
             <summary>
                 Draws a tooltip for the first hovered target.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest">
+            <summary>
+            Identifies one native text-node payload that may be copied for rich
+            original swap presentation.
+            </summary>
+            <param name="TextNodeAddress">The live text-node address used only during synchronous capture.</param>
+            <param name="ExpectedOriginalText">The plain original text selected for display.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest.#ctor(System.IntPtr,System.String)">
+            <summary>
+            Identifies one native text-node payload that may be copied for rich
+            original swap presentation.
+            </summary>
+            <param name="TextNodeAddress">The live text-node address used only during synchronous capture.</param>
+            <param name="ExpectedOriginalText">The plain original text selected for display.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest.TextNodeAddress">
+            <summary>The live text-node address used only during synchronous capture.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest.ExpectedOriginalText">
+            <summary>The plain original text selected for display.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.HoverTooltipRichOriginalPresentationResolver">
+            <summary>
+            Reuses or captures rich original payloads for hover tooltip entries without
+            retrying native reads while their displayed text is unchanged.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRichOriginalPresentationResolver.Resolve(System.String,System.Boolean,System.Boolean,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation,System.String,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest},System.Func{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation},System.Boolean@)">
+            <summary>
+            Resolves the rich original payload for one tooltip body.
+            </summary>
+            <param name="previousBody">The previously displayed tooltip body.</param>
+            <param name="previousDisplaysOriginalSwapText">Whether the previous entry displayed original swap text.</param>
+            <param name="previousCaptureResolved">Whether the previous rich capture has already been attempted.</param>
+            <param name="previousPresentation">The previously captured owned presentation, if any.</param>
+            <param name="currentBody">The tooltip body selected for the current frame.</param>
+            <param name="displaysOriginalSwapText">Whether the current body displays original swap text.</param>
+            <param name="captureRequest">The synchronous native capture request, if available.</param>
+            <param name="capture">The capture function that owns payload bytes before returning.</param>
+            <param name="captureResolved">Whether the caller should retain the capture result, including a failure.</param>
+            <returns>The owned rich original presentation, or <see langword="null" /> for plain fallback.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.IStringArrayStructuredSchema">
             <summary>
@@ -33823,6 +33883,55 @@
             <summary>
             Gets a value indicating whether the block should align to the right edge.
             </summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation">
+            <summary>
+            Holds the plain fallback and an owned copy of an original game
+            <c>SeString</c> payload for plugin-owned presentation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation.#ctor(System.String,System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation" /> class.
+            </summary>
+            <param name="plainText">The plain-text fallback displayed when rich rendering is unavailable.</param>
+            <param name="seStringPayload">The original SeString payload to copy and own.</param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation.PlainText">
+            <summary>
+            Gets the plain-text fallback for this presentation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation.HasSeStringPayload">
+            <summary>
+            Gets a value indicating whether an owned SeString payload is available.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation.TryGetSeStringPayload(System.ReadOnlyMemory{System.Byte}@)">
+            <summary>
+            Gets the owned SeString payload as read-only memory when it is available.
+            </summary>
+            <param name="payload">The copied SeString payload.</param>
+            <returns><see langword="true" /> when a payload is available; otherwise, <see langword="false" />.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentationPolicy">
+            <summary>
+            Determines whether an original SeString payload can be rendered by the
+            normal ImGui presentation backend.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentationPolicy.CanUseFormattedSeString(Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind,System.Boolean,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation)">
+            <summary>
+            Gets whether formatted SeString rendering is safe for the current
+            plugin-owned presentation.
+            </summary>
+            <param name="backendKind">The selected text presentation backend.</param>
+            <param name="showsOriginalSwapText">Whether the surface is displaying the original text for swap mode.</param>
+            <param name="presentation">The optional captured original presentation.</param>
+            <returns>
+            <see langword="true" /> when the normal ImGui backend can render the
+            original SeString bytes; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest">
             <summary>

@@ -369,7 +369,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.hoverTooltipManager = new HoverTooltipManager(
         this.configuration,
         UINewFontHandler,
-        this.rtlTexturePresentationService);
+        this.rtlTexturePresentationService,
+        CaptureRichOriginalTextPresentation);
     this.RegisterStructuredTooltipLifecycleHandlers();
     this.startupAudit.Mark(PluginStartupStage.RuntimeServicesBuilt);
 

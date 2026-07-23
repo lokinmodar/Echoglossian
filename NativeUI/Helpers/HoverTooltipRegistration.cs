@@ -23,7 +23,9 @@ public partial class Echoglossian
       string body,
       bool forceEnabled = false,
       bool denseHitbox = false,
-      bool useGeneralFont = false)
+      bool useGeneralFont = false,
+      bool displaysOriginalSwapText = false,
+      RichOriginalTextCaptureRequest? richOriginalTextCaptureRequest = null)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -58,7 +60,9 @@ public partial class Echoglossian
         title,
         body,
         true,
-        useGeneralFont);
+        useGeneralFont,
+        displaysOriginalSwapText,
+        richOriginalTextCaptureRequest);
   }
 
   /// <summary>
@@ -247,7 +251,11 @@ public partial class Echoglossian
         displayText,
         forceEnabled,
         denseHitbox,
-        useGeneralFont: shouldSwap);
+        useGeneralFont: shouldSwap,
+        displaysOriginalSwapText: shouldSwap,
+        richOriginalTextCaptureRequest: shouldSwap
+            ? new RichOriginalTextCaptureRequest((nint)textNode, originalText)
+            : null);
   }
 
   /// <summary>
@@ -410,6 +418,87 @@ public partial class Echoglossian
         displayText,
         forceEnabled,
         useGeneralFont: shouldSwap);
+  }
+
+  /// <summary>
+  /// Copies a matching original text-node SeString for a plugin-owned rich
+  /// swap presentation without retaining the native text-node pointer.
+  /// </summary>
+  /// <param name="captureRequest">The current synchronous native capture request.</param>
+  /// <returns>The owned rich presentation, or <see langword="null" /> for the plain fallback.</returns>
+  private static unsafe RichOriginalTextPresentation? CaptureRichOriginalTextPresentation(
+      RichOriginalTextCaptureRequest captureRequest)
+  {
+    if (captureRequest.TextNodeAddress == 0 ||
+        string.IsNullOrWhiteSpace(captureRequest.ExpectedOriginalText))
+    {
+      return null;
+    }
+
+    var textNode = (AtkTextNode*)captureRequest.TextNodeAddress;
+    if (textNode == null)
+    {
+      return null;
+    }
+
+    try
+    {
+      var sourceText = textNode->OriginalTextPointer.AsReadOnlySeStringSpan();
+      var evaluator = SeStringEvaluator;
+      if (evaluator != null)
+      {
+        try
+        {
+          var evaluatedText = evaluator.Evaluate(
+              sourceText,
+              language: ClientStateInterface.ClientLanguage);
+          if (MatchesExpectedOriginalText(
+                  evaluatedText.ExtractText(),
+                  captureRequest.ExpectedOriginalText))
+          {
+            return new RichOriginalTextPresentation(
+                captureRequest.ExpectedOriginalText,
+                (ReadOnlySpan<byte>)evaluatedText);
+          }
+        }
+        catch
+        {
+          // Keep the raw source payload as the next safe fallback.
+        }
+      }
+
+      if (!MatchesExpectedOriginalText(
+              sourceText.ExtractText(),
+              captureRequest.ExpectedOriginalText))
+      {
+        return null;
+      }
+
+      return new RichOriginalTextPresentation(
+          captureRequest.ExpectedOriginalText,
+          (ReadOnlySpan<byte>)sourceText);
+    }
+    catch
+    {
+      return null;
+    }
+  }
+
+  /// <summary>
+  /// Compares a captured SeString value with the plain original text selected
+  /// for tooltip swap presentation.
+  /// </summary>
+  /// <param name="capturedText">The evaluated or extracted SeString text.</param>
+  /// <param name="expectedOriginalText">The original plain text selected for display.</param>
+  /// <returns><see langword="true" /> when both values match after native-text normalization.</returns>
+  private static bool MatchesExpectedOriginalText(
+      string capturedText,
+      string expectedOriginalText)
+  {
+    return string.Equals(
+        NativeTextComparisonNormalizationHelper.NormalizeForComparison(capturedText),
+        NativeTextComparisonNormalizationHelper.NormalizeForComparison(expectedOriginalText),
+        StringComparison.Ordinal);
   }
 
 }
