@@ -538,35 +538,59 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Determines whether a JournalDetail sibling follows the primary summary
+  ///     component template. Supplemental rows deliberately have zero-width
+  ///     text nodes, so their text width is not a valid discriminator.
+  /// </summary>
+  /// <param name="summaryContainerX">The primary summary container x coordinate.</param>
+  /// <param name="summaryContainerWidth">The primary summary container width.</param>
+  /// <param name="summaryTextX">The primary summary text x coordinate.</param>
+  /// <param name="summaryTextY">The primary summary text y coordinate.</param>
+  /// <param name="candidateContainerX">The candidate summary container x coordinate.</param>
+  /// <param name="candidateContainerWidth">The candidate summary container width.</param>
+  /// <param name="candidateTextX">The candidate summary text x coordinate.</param>
+  /// <param name="candidateTextY">The candidate summary text y coordinate.</param>
+  /// <returns><c>true</c> when the candidate has the supplemental summary layout.</returns>
+  internal static bool IsSupplementalSummaryNodeLayout(
+      float summaryContainerX,
+      float summaryContainerWidth,
+      float summaryTextX,
+      float summaryTextY,
+      float candidateContainerX,
+      float candidateContainerWidth,
+      float candidateTextX,
+      float candidateTextY)
+  {
+    const float layoutTolerance = 1f;
+
+    return Math.Abs(candidateContainerX - summaryContainerX) <= layoutTolerance &&
+           Math.Abs(candidateContainerWidth - summaryContainerWidth) <= layoutTolerance &&
+           Math.Abs(candidateTextX - summaryTextX) <= layoutTolerance &&
+           Math.Abs(candidateTextY - summaryTextY) <= layoutTolerance;
+  }
+
+  /// <summary>
   ///     Collects the visible JournalDetail supplemental summary nodes in their
   ///     current display order.
   /// </summary>
-  /// <param name="journalBox">The live JournalDetail box component.</param>
-  /// <param name="descriptionNode">The live description text node.</param>
-  /// <param name="objectiveNode">The live objective text node.</param>
+  /// <param name="summaryBox">The live primary summary component.</param>
   /// <param name="summaryNode">The live primary summary text node, if any.</param>
   /// <returns>The visible supplemental summary text nodes.</returns>
   private unsafe List<nint> CollectVisibleAdditionalSummaryNodes(
-      AtkComponentBase* journalBox,
-      AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
+      AtkResNode* summaryBox,
       AtkTextNode* summaryNode)
   {
     List<nint> summaryNodes = [];
-    var descriptionNodeAddress = (nint)descriptionNode;
-    var objectiveNodeAddress = (nint)objectiveNode;
-    var summaryNodeAddress = (nint)summaryNode;
-    var summaryAnchorX = summaryNode != null ? summaryNode->ScreenX : 0f;
-    var summaryAnchorY = summaryNode != null ? summaryNode->ScreenY : 0f;
-    var summaryAnchorWidth = summaryNode != null
-        ? Math.Max(1f, summaryNode->GetWidth())
-        : 0f;
-
-    for (var i = 0; i < journalBox->UldManager.NodeListCount; i++)
+    if (summaryBox == null || summaryNode == null)
     {
-      var node = journalBox->UldManager.NodeList[i];
-      if (node == null ||
-          !node->IsVisible())
+      return summaryNodes;
+    }
+
+    for (var node = summaryBox->NextSiblingNode;
+         node != null;
+         node = node->NextSiblingNode)
+    {
+      if (!node->IsVisible() || node->Type != summaryBox->Type)
       {
         continue;
       }
@@ -587,30 +611,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
 
       var summaryTextNode = summaryTextResNode->GetAsAtkTextNode();
-      if (summaryTextNode == null)
-      {
-        continue;
-      }
-
-      var summaryTextNodeAddress = (nint)summaryTextNode;
-      if (summaryTextNodeAddress == descriptionNodeAddress ||
-          summaryTextNodeAddress == objectiveNodeAddress ||
-          summaryTextNodeAddress == summaryNodeAddress)
-      {
-        continue;
-      }
-
-      var matchesLegacySummaryRange =
-          node->NodeId >= 480700 && node->NodeId <= 481200;
-      var matchesSummaryLayout = summaryNode != null &&
-                                 summaryTextNode->ScreenY >= summaryAnchorY - 4f &&
-                                 summaryTextNode->ScreenX >= summaryAnchorX - 24f &&
-                                 summaryTextNode->ScreenX <= summaryAnchorX + 64f &&
-                                 Math.Abs(
-                                     Math.Max(1f, summaryTextNode->GetWidth()) -
-                                     summaryAnchorWidth) <=
-                                 Math.Max(96f, summaryAnchorWidth * 0.75f);
-      if (!matchesLegacySummaryRange && !matchesSummaryLayout)
+      if (summaryTextNode == null || summaryTextNode == summaryNode ||
+          !IsSupplementalSummaryNodeLayout(
+              summaryBox->X,
+              summaryBox->Width,
+              summaryNode->X,
+              summaryNode->Y,
+              node->X,
+              node->Width,
+              summaryTextNode->X,
+              summaryTextNode->Y))
       {
         continue;
       }
@@ -869,9 +879,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     var visibleAdditionalSummaryNodes =
         this.CollectVisibleAdditionalSummaryNodes(
-            journalBox,
-            descriptionNode,
-            objectiveNode,
+            summaryContainerNode,
             summaryNode);
 
     if (!this.TryGetJournalDetailOriginalSnapshot(

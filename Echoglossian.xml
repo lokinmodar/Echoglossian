@@ -17017,14 +17017,28 @@
             <param name="sections">The summary sections to join.</param>
             <returns>A deduplicated summary block for the JournalDetail body.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.IsSupplementalSummaryNodeLayout(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+                Determines whether a JournalDetail sibling follows the primary summary
+                component template. Supplemental rows deliberately have zero-width
+                text nodes, so their text width is not a valid discriminator.
+            </summary>
+            <param name="summaryContainerX">The primary summary container x coordinate.</param>
+            <param name="summaryContainerWidth">The primary summary container width.</param>
+            <param name="summaryTextX">The primary summary text x coordinate.</param>
+            <param name="summaryTextY">The primary summary text y coordinate.</param>
+            <param name="candidateContainerX">The candidate summary container x coordinate.</param>
+            <param name="candidateContainerWidth">The candidate summary container width.</param>
+            <param name="candidateTextX">The candidate summary text x coordinate.</param>
+            <param name="candidateTextY">The candidate summary text y coordinate.</param>
+            <returns><c>true</c> when the candidate has the supplemental summary layout.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.CollectVisibleAdditionalSummaryNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Collects the visible JournalDetail supplemental summary nodes in their
                 current display order.
             </summary>
-            <param name="journalBox">The live JournalDetail box component.</param>
-            <param name="descriptionNode">The live description text node.</param>
-            <param name="objectiveNode">The live objective text node.</param>
+            <param name="summaryBox">The live primary summary component.</param>
             <param name="summaryNode">The live primary summary text node, if any.</param>
             <returns>The visible supplemental summary text nodes.</returns>
         </member>

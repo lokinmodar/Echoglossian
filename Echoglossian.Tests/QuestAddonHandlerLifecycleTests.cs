@@ -210,6 +210,49 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures supplemental JournalDetail summary rows are identified by
+    ///     their sibling component template rather than the text-node width.
+    ///     The game leaves those supplemental text nodes at width zero.
+    /// </summary>
+    /// <param name="summaryContainerX">The primary summary container x coordinate.</param>
+    /// <param name="summaryContainerWidth">The primary summary container width.</param>
+    /// <param name="summaryTextX">The primary summary text x coordinate.</param>
+    /// <param name="summaryTextY">The primary summary text y coordinate.</param>
+    /// <param name="candidateContainerX">The supplemental container x coordinate.</param>
+    /// <param name="candidateContainerWidth">The supplemental container width.</param>
+    /// <param name="candidateTextX">The supplemental text x coordinate.</param>
+    /// <param name="candidateTextY">The supplemental text y coordinate.</param>
+    /// <param name="expected">The expected template match result.</param>
+    [Theory]
+    [InlineData(0f, 390f, 21f, 6f, 0f, 390f, 21f, 6f, true)]
+    [InlineData(0f, 390f, 21f, 6f, 2f, 390f, 21f, 6f, false)]
+    [InlineData(0f, 390f, 21f, 6f, 0f, 350f, 21f, 6f, false)]
+    [InlineData(0f, 390f, 21f, 6f, 0f, 390f, 21f, 8f, false)]
+    public void IsSupplementalSummaryNodeLayout_UsesSiblingTemplateInsteadOfTextWidth(
+        float summaryContainerX,
+        float summaryContainerWidth,
+        float summaryTextX,
+        float summaryTextY,
+        float candidateContainerX,
+        float candidateContainerWidth,
+        float candidateTextX,
+        float candidateTextY,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            JournalDetailHandler.IsSupplementalSummaryNodeLayout(
+                summaryContainerX,
+                summaryContainerWidth,
+                summaryTextX,
+                summaryTextY,
+                candidateContainerX,
+                candidateContainerWidth,
+                candidateTextX,
+                candidateTextY));
+    }
+
+    /// <summary>
     /// Ensures JournalAccept tooltips wait until both title and body
     /// translations are available.
     /// </summary>
