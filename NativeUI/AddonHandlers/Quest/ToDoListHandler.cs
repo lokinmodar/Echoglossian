@@ -440,29 +440,6 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
             originalQuestText,
             foundQuestPlate.TranslatedQuestName));
 
-    var canonicalObjectiveRows = todoProgressSnapshot.QuestProgress.QuestSteps
-        .Where(step => !string.IsNullOrWhiteSpace(step.Text))
-        .ToArray();
-    var trackedObjectiveRows = visibleQuest.Objectives
-        .Where(item => this.ShouldTrackObjectiveRow(this.ResolveOriginalToDoText(item)))
-        .ToArray();
-    if (trackedObjectiveRows.Length > canonicalObjectiveRows.Length)
-    {
-      foreach (var objectiveRow in visibleQuest.Objectives)
-      {
-        var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
-        runtimeEntries.Add(
-            this.CreateObjectiveRuntimeEntry(
-                objectiveRow,
-                todoProgressSnapshot.CacheKey,
-                originalObjectiveText,
-                originalObjectiveText));
-      }
-
-      return false;
-    }
-
-    var trackedObjectiveIndex = 0;
     foreach (var objectiveRow in visibleQuest.Objectives)
     {
       var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
@@ -477,12 +454,25 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         continue;
       }
 
-      var canonicalObjectiveRow = canonicalObjectiveRows[trackedObjectiveIndex++];
-      if (!foundQuestPlate.TryGetTranslatedObjectiveText(
-              canonicalObjectiveRow.KeyText,
-              canonicalObjectiveRow.Text,
-              out var translatedObjectiveText) ||
-          string.IsNullOrWhiteSpace(translatedObjectiveText))
+      var translatedObjectiveText = string.Empty;
+      var foundTranslatedObjective = false;
+      foreach (var canonicalObjectiveRowKey in questCanonicalData
+                   .EnumerateObjectiveRowKeysByText(originalObjectiveText))
+      {
+        if (!foundQuestPlate.TryGetTranslatedObjectiveText(
+                canonicalObjectiveRowKey,
+                originalObjectiveText,
+                out translatedObjectiveText) ||
+            string.IsNullOrWhiteSpace(translatedObjectiveText))
+        {
+          continue;
+        }
+
+        foundTranslatedObjective = true;
+        break;
+      }
+
+      if (!foundTranslatedObjective)
       {
         runtimeEntries.Add(
             this.CreateObjectiveRuntimeEntry(

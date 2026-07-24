@@ -256,7 +256,7 @@ internal static class QuestProgressResolver
 /// <param name="QuestSequence">The live quest sequence.</param>
 /// <param name="QuestName">The quest name resolved from Lumina.</param>
 /// <param name="QuestSheetName">The text sheet name used for the quest.</param>
-/// <param name="QuestSteps">The TODO row texts (active objectives).</param>
+/// <param name="QuestSteps">The complete canonical TODO row texts from the quest sheet.</param>
 /// <param name="QuestSeqTexts">The SEQ row texts (journal summaries per phase).</param>
 /// <param name="QuestSystemTexts">The SYSTEM row texts (cinematic captions).</param>
 /// <param name="ContentHash">A stable content fingerprint of all translatable row texts.</param>
