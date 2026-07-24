@@ -43,6 +43,12 @@ internal delegate bool QueueTranslationBatchDelegate(
     Action<string[]>? onResolved = null);
 
 /// <summary>
+///     Delegate used to request background prefetch for an accepted quest.
+/// </summary>
+/// <param name="questId">The accepted quest identifier to prefetch.</param>
+internal delegate void RequestAcceptedQuestPrefetchDelegate(uint questId);
+
+/// <summary>
 ///     Delegate used to remove quest hover tooltips by prefix.
 /// </summary>
 /// <param name="prefix">The tooltip key prefix to remove.</param>
@@ -181,6 +187,10 @@ internal sealed class QuestAddonHandlerDependencies
 
   /// <summary>Gets or sets the queued batch translation delegate.</summary>
   public required QueueTranslationBatchDelegate QueueTranslationBatch { get; init; }
+
+  /// <summary>Gets or sets the accepted-quest prefetch request delegate.</summary>
+  public required RequestAcceptedQuestPrefetchDelegate
+      RequestAcceptedQuestPrefetch { get; init; }
 
   /// <summary>Gets or sets the hover tooltip prefix removal delegate.</summary>
   public required RemoveHoverTooltipByPrefixDelegate RemoveHoverTooltipByPrefix { get; init; }

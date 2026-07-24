@@ -116,6 +116,28 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures ToDoList requests the shared accepted-quest prefetch when
+    ///     a visible quest has not yet been persisted with every required
+    ///     translation.
+    /// </summary>
+    [Fact]
+    public void ToDoListHandler_RequestsAcceptedQuestPrefetchForPendingTranslations()
+    {
+        var resolver = typeof(ToDoListHandler).GetMethod(
+            "TryResolveVisibleQuestEntries",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var request = typeof(QuestAddonHandlerBase).GetMethod(
+            "RequestAcceptedQuestPrefetch",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(request);
+        Assert.True(
+            MethodReferences(resolver!, request!),
+            "ToDoList must request the shared accepted-quest prefetch instead of owning a translation queue.");
+    }
+
+    /// <summary>
     ///     Ensures JournalDetail native output is atomic: pending sections
     ///     restore the source snapshot rather than mixing source and translated
     ///     text in the same detail pane.
@@ -420,6 +442,7 @@ public class QuestAddonHandlerLifecycleTests
             },
             QueueTranslation = static (_, _, _) => false,
             QueueTranslationBatch = static (_, _, _, _) => false,
+            RequestAcceptedQuestPrefetch = static _ => { },
             RemoveHoverTooltipByPrefix = static _ => { },
             RegisterTranslatedHoverTooltipAddon = null!,
             RegisterTranslatedHoverTooltipTextNode = null!,

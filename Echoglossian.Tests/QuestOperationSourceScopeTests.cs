@@ -281,6 +281,7 @@ public class QuestOperationSourceScopeTests
             },
             QueueTranslation = recorder.QueueTranslation,
             QueueTranslationBatch = static (_, _, _, _) => false,
+            RequestAcceptedQuestPrefetch = static _ => { },
             RemoveHoverTooltipByPrefix = static _ => { },
             RegisterTranslatedHoverTooltipAddon = null!,
             RegisterTranslatedHoverTooltipTextNode = null!,

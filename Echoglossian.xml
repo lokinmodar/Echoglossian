@@ -3827,6 +3827,21 @@
                 render them.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RequestAcceptedQuestPrefetch(System.UInt32)">
+            <summary>
+                Requests a prioritized background prefetch for an accepted quest.
+                This only schedules work; translation and persistence remain owned by
+                the framework-update prefetch runtime.
+            </summary>
+            <param name="questId">The accepted quest identifier to prefetch.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryDequeueAcceptedQuestPrefetchRequest(System.UInt32@)">
+            <summary>
+                Dequeues one deduplicated accepted-quest prefetch request.
+            </summary>
+            <param name="questId">The requested accepted quest identifier.</param>
+            <returns>True when one request was available.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ClearAcceptedQuestPrefetchState">
             <summary>
                 Clears the accepted-quest prefetch runtime state.
@@ -18132,6 +18147,13 @@
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True if the request was queued.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RequestAcceptedQuestPrefetch(System.UInt32)">
+            <summary>
+                Requests that the shared accepted-quest prefetch runtime resolve and
+                persist any missing canonical translations for the specified quest.
+            </summary>
+            <param name="questId">The accepted quest identifier to prefetch.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RemoveHoverTooltipsByPrefix(System.String)">
             <summary>
                 Removes quest hover tooltips whose keys share the specified prefix.
@@ -18330,6 +18352,12 @@
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True when the request was queued.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RequestAcceptedQuestPrefetchDelegate">
+            <summary>
+                Delegate used to request background prefetch for an accepted quest.
+            </summary>
+            <param name="questId">The accepted quest identifier to prefetch.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RemoveHoverTooltipByPrefixDelegate">
             <summary>
                 Delegate used to remove quest hover tooltips by prefix.
@@ -18437,6 +18465,9 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.QueueTranslationBatch">
             <summary>Gets or sets the queued batch translation delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RequestAcceptedQuestPrefetch">
+            <summary>Gets or sets the accepted-quest prefetch request delegate.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RemoveHoverTooltipByPrefix">
             <summary>Gets or sets the hover tooltip prefix removal delegate.</summary>
@@ -26535,6 +26566,38 @@
         </member>
         <member name="M:Echoglossian.ToDoItem.ToString">
             <inheritdoc/>
+        </member>
+        <member name="T:Echoglossian.AcceptedQuestPrefetchRequestQueue">
+            <summary>
+                Stores deduplicated priority requests for the accepted-quest prefetch
+                runtime.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.AcceptedQuestPrefetchRequestQueue.Count">
+            <summary>
+                Gets the number of priority requests waiting to be prefetched.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.Request(System.UInt32)">
+            <summary>
+                Adds an accepted quest to the priority queue if it is not already
+                waiting to be processed.
+            </summary>
+            <param name="questId">The accepted quest identifier.</param>
+            <returns>True when the request was added.</returns>
+        </member>
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.TryDequeue(System.UInt32@)">
+            <summary>
+                Tries to dequeue the next accepted quest requested by a visible
+                quest surface.
+            </summary>
+            <param name="questId">The requested accepted quest identifier.</param>
+            <returns>True when a request was available.</returns>
+        </member>
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.Clear">
+            <summary>
+                Clears every pending priority request.
+            </summary>
         </member>
         <member name="T:Echoglossian.TryGetPrefetchTranslationDelegate">
             <summary>

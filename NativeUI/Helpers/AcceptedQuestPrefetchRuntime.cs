@@ -20,6 +20,9 @@ public partial class Echoglossian
 
   private readonly List<uint> acceptedQuestPrefetchQueue = [];
 
+  private readonly AcceptedQuestPrefetchRequestQueue
+      acceptedQuestPrefetchRequestedQuestQueue = new();
+
   private string acceptedQuestPrefetchSignature = string.Empty;
 
   private DateTime acceptedQuestPrefetchLastTickUtc = DateTime.MinValue;
@@ -52,50 +55,89 @@ public partial class Echoglossian
 
     this.acceptedQuestPrefetchLastTickUtc = DateTime.UtcNow;
 
-    if (!TryCollectAcceptedQuestIds(out var acceptedQuestIds))
+    var hasAcceptedQuestIds = TryCollectAcceptedQuestIds(
+        out var acceptedQuestIds);
+    if (!hasAcceptedQuestIds)
     {
-      this.TryCompleteAcceptedQuestPrefetchNotification();
-      this.ClearAcceptedQuestPrefetchState();
-      return;
-    }
-
-    var acceptedQuestSignature = BuildAcceptedQuestSignature(acceptedQuestIds);
-    if (!string.Equals(
-            this.acceptedQuestPrefetchSignature,
-            acceptedQuestSignature,
-            StringComparison.Ordinal))
-    {
-      this.acceptedQuestPrefetchSignature = acceptedQuestSignature;
       this.acceptedQuestPrefetchQueue.Clear();
-      this.acceptedQuestPrefetchQueue.AddRange(acceptedQuestIds);
       this.acceptedQuestPrefetchQueueIndex = 0;
-      this.NotifyAcceptedQuestPrefetchStarted(
-          this.acceptedQuestPrefetchQueue.Count);
+      this.acceptedQuestPrefetchSignature = string.Empty;
     }
-
-    if (this.acceptedQuestPrefetchQueueIndex >=
-        this.acceptedQuestPrefetchQueue.Count)
+    else
     {
-      this.TryCompleteAcceptedQuestPrefetchNotification();
-      return;
+      var acceptedQuestSignature = BuildAcceptedQuestSignature(acceptedQuestIds);
+      if (!string.Equals(
+              this.acceptedQuestPrefetchSignature,
+              acceptedQuestSignature,
+              StringComparison.Ordinal))
+      {
+        this.acceptedQuestPrefetchSignature = acceptedQuestSignature;
+        this.acceptedQuestPrefetchQueue.Clear();
+        this.acceptedQuestPrefetchQueue.AddRange(acceptedQuestIds);
+        this.acceptedQuestPrefetchQueueIndex = 0;
+        this.NotifyAcceptedQuestPrefetchStarted(
+            this.acceptedQuestPrefetchQueue.Count);
+      }
     }
 
     var processedQuestCount = 0;
+    HashSet<uint> processedQuestIds = [];
+    while (processedQuestCount < AcceptedQuestPrefetchQuestsPerTick &&
+           this.TryDequeueAcceptedQuestPrefetchRequest(out var requestedQuestId))
+    {
+      this.PrefetchAcceptedQuest(requestedQuestId);
+      processedQuestIds.Add(requestedQuestId);
+      processedQuestCount++;
+    }
+
     while (processedQuestCount < AcceptedQuestPrefetchQuestsPerTick &&
            this.acceptedQuestPrefetchQueueIndex <
            this.acceptedQuestPrefetchQueue.Count)
     {
       var questId =
           this.acceptedQuestPrefetchQueue[this.acceptedQuestPrefetchQueueIndex++];
+      if (!processedQuestIds.Add(questId))
+      {
+        continue;
+      }
+
       this.PrefetchAcceptedQuest(questId);
       processedQuestCount++;
     }
 
-    if (this.acceptedQuestPrefetchQueueIndex >=
-        this.acceptedQuestPrefetchQueue.Count)
+    if (this.acceptedQuestPrefetchRequestedQuestQueue.Count == 0 &&
+        (!hasAcceptedQuestIds ||
+         this.acceptedQuestPrefetchQueueIndex >=
+         this.acceptedQuestPrefetchQueue.Count))
     {
       this.TryCompleteAcceptedQuestPrefetchNotification();
     }
+  }
+
+  /// <summary>
+  ///     Requests a prioritized background prefetch for an accepted quest.
+  ///     This only schedules work; translation and persistence remain owned by
+  ///     the framework-update prefetch runtime.
+  /// </summary>
+  /// <param name="questId">The accepted quest identifier to prefetch.</param>
+  private void RequestAcceptedQuestPrefetch(uint questId)
+  {
+    if (!this.acceptedQuestPrefetchRequestedQuestQueue.Request(questId))
+    {
+      return;
+    }
+  }
+
+  /// <summary>
+  ///     Dequeues one deduplicated accepted-quest prefetch request.
+  /// </summary>
+  /// <param name="questId">The requested accepted quest identifier.</param>
+  /// <returns>True when one request was available.</returns>
+  private bool TryDequeueAcceptedQuestPrefetchRequest(out uint questId)
+  {
+    questId = 0;
+    return this.acceptedQuestPrefetchRequestedQuestQueue.TryDequeue(
+        out questId);
   }
 
   /// <summary>
@@ -104,6 +146,7 @@ public partial class Echoglossian
   private void ClearAcceptedQuestPrefetchState()
   {
     this.acceptedQuestPrefetchQueue.Clear();
+    this.acceptedQuestPrefetchRequestedQuestQueue.Clear();
     this.acceptedQuestPrefetchQueueIndex = 0;
     this.acceptedQuestPrefetchSignature = string.Empty;
     this.acceptedQuestPrefetchLastTickUtc = DateTime.MinValue;

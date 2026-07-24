@@ -412,6 +412,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     if (foundQuestPlate == null ||
         string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestName))
     {
+      this.RequestAcceptedQuestPrefetch(
+          todoProgressSnapshot.QuestProgress.QuestId);
       runtimeEntries.Add(
           this.CreateQuestRuntimeEntry(
               visibleQuest.QuestRow,
@@ -474,6 +476,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
 
       if (!foundTranslatedObjective)
       {
+        this.RequestAcceptedQuestPrefetch(
+            todoProgressSnapshot.QuestProgress.QuestId);
         runtimeEntries.Add(
             this.CreateObjectiveRuntimeEntry(
                 objectiveRow,

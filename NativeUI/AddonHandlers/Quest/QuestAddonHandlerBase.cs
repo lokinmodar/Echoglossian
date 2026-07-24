@@ -227,6 +227,16 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Requests that the shared accepted-quest prefetch runtime resolve and
+  ///     persist any missing canonical translations for the specified quest.
+  /// </summary>
+  /// <param name="questId">The accepted quest identifier to prefetch.</param>
+  protected void RequestAcceptedQuestPrefetch(uint questId)
+  {
+    this.Dependencies.RequestAcceptedQuestPrefetch(questId);
+  }
+
+  /// <summary>
   ///     Removes quest hover tooltips whose keys share the specified prefix.
   /// </summary>
   /// <param name="prefix">The tooltip key prefix to remove.</param>
