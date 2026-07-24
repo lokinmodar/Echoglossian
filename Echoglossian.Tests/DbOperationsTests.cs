@@ -58,6 +58,98 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Ensures a hash-valid regional quest row is found when an older
+    ///     provider-alias row exists for the same quest.
+    /// </summary>
+    [Fact]
+    public void FindQuestPlate_RegionalTargetPrefersHashValidCurrentRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = new Dictionary<int, LanguageInfo>
+            {
+                [81] = new LanguageInfo(
+                    "pt",
+                    "Portuguese",
+                    string.Empty,
+                    string.Empty,
+                    []),
+            };
+            var plugin = CreateFormattingPlugin(
+                new Config
+                {
+                    Lang = 81,
+                    ChosenTransEngine = 0,
+                    TranslateAlreadyTranslatedTexts = true,
+                });
+            var timestamp = new DateTime(
+                2026,
+                7,
+                23,
+                12,
+                0,
+                0,
+                DateTimeKind.Utc);
+            var legacyRow = CreateQuestPlate("en", 0, timestamp);
+            legacyRow.QuestId = "69768";
+            legacyRow.TranslationLang = "pt";
+            legacyRow.SourceContentHash = null;
+            var currentRow = CreateQuestPlate("en", 0, timestamp.AddMinutes(1));
+            currentRow.QuestId = "69768";
+            currentRow.TranslationLang = "pt-BR";
+            currentRow.SourceContentHash = "known-content-hash";
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.QuestPlate.AddRange(legacyRow, currentRow);
+                context.SaveChanges();
+            }
+
+            var lookup = new QuestPlate(
+                "A Test of Resolve",
+                "Speak with the attendant.",
+                "en",
+                string.Empty,
+                string.Empty,
+                "69768",
+                "pt",
+                0,
+                timestamp,
+                timestamp,
+                "test-version")
+            {
+                SourceContentHash = "known-content-hash",
+            };
+
+            var result = plugin.FindQuestPlate(lookup);
+
+            Assert.NotNull(result);
+            Assert.Equal("pt-BR", result.TranslationLang);
+            Assert.Equal("known-content-hash", result.SourceContentHash);
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = previousClientState;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.LangDict = previousLanguages;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures formatting fails closed when the current client language
     ///     has no resolved source identity.
     /// </summary>

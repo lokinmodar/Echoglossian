@@ -491,7 +491,7 @@ public partial class Echoglossian
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
         localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
             scope.Matches(
@@ -513,7 +513,7 @@ public partial class Echoglossian
         var questMessageMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
             t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
         localFoundQuestPlate = questMessageMatch.AsEnumerable().FirstOrDefault(t =>
             scope.Matches(
@@ -528,7 +528,7 @@ public partial class Echoglossian
       {
         var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
         localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
             scope.Matches(
@@ -631,7 +631,7 @@ public partial class Echoglossian
       {
         var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
         localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
             scope.Matches(
@@ -652,7 +652,7 @@ public partial class Echoglossian
       {
         var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
         localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
             scope.Matches(

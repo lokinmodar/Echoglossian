@@ -115,6 +115,13 @@ public partial class Echoglossian
       return null;
     }
 
+    var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+        this.configuration.Lang);
+    if (string.IsNullOrWhiteSpace(targetLanguage))
+    {
+      return null;
+    }
+
     return new QuestPlate(
         questName,
         questMessage,
@@ -122,7 +129,7 @@ public partial class Echoglossian
         string.Empty,
         string.Empty,
         string.Empty,
-        this.languagesDictionary[this.configuration.Lang].Code,
+        targetLanguage,
         this.configuration.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now,
