@@ -1168,11 +1168,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
     }
 
-    this.RememberJournalDetailCachedText(
-        journalDetailScopeKey,
-        originalQuestName,
-        translatedQuestName);
-    if (!string.IsNullOrWhiteSpace(originalQuestDescription) &&
+    if (translatedQuestNameReady)
+    {
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          originalQuestName,
+          translatedQuestName);
+    }
+
+    if (translatedQuestDescriptionReady &&
+        !string.IsNullOrWhiteSpace(originalQuestDescription) &&
         !string.IsNullOrWhiteSpace(translatedQuestDescription))
     {
       this.RememberJournalDetailCachedText(
@@ -1181,12 +1186,17 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           translatedQuestDescription);
     }
 
-    this.RememberJournalDetailCachedText(
-        journalDetailScopeKey,
-        originalObjectiveText,
-        translatedQuestObjective);
+    if (translatedQuestObjectiveReady)
+    {
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          originalObjectiveText,
+          translatedQuestObjective);
+    }
+
     if (primaryCanonicalSummary == null &&
-        originalSummaryText != string.Empty)
+        originalSummaryText != string.Empty &&
+        translatedPrimarySummaryReady)
     {
       this.RememberJournalDetailCachedText(
           journalDetailScopeKey,
@@ -1775,6 +1785,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           summaryBox,
           summaryNode,
           out hasPendingTranslations);
+
+      if (hasPendingTranslations && questProgressSnapshot.HasValue)
+      {
+        this.RequestAcceptedQuestPrefetch(
+            questProgressSnapshot.Value.QuestId);
+      }
     }
     catch (Exception e)
     {
