@@ -22,13 +22,16 @@ public class AcceptedQuestPrefetchRequestQueueTests
   {
     var requests = new AcceptedQuestPrefetchRequestQueue();
 
-    Assert.True(requests.Request(68799));
-    Assert.False(requests.Request(68799));
+    Assert.True(requests.Request(68799, "JournalHandler.Translate", out var sources));
+    Assert.Equal("JournalHandler.Translate", sources);
+    Assert.False(requests.Request(68799, "JournalHandler.Translate", out sources));
+    Assert.Equal("JournalHandler.Translate", sources);
     Assert.Equal(1, requests.Count);
-    Assert.True(requests.TryDequeue(out var questId));
+    Assert.True(requests.TryDequeue(out var questId, out sources));
     Assert.Equal(68799u, questId);
+    Assert.Equal("JournalHandler.Translate", sources);
     Assert.Equal(0, requests.Count);
-    Assert.True(requests.Request(68799));
+    Assert.True(requests.Request(68799, "JournalHandler.Translate", out sources));
   }
 
   /// <summary>
@@ -40,8 +43,32 @@ public class AcceptedQuestPrefetchRequestQueueTests
   {
     var requests = new AcceptedQuestPrefetchRequestQueue();
 
-    Assert.False(requests.Request(0));
+    Assert.False(requests.Request(0, "JournalHandler.Translate", out var sources));
+    Assert.Equal(string.Empty, sources);
     Assert.Equal(0, requests.Count);
-    Assert.False(requests.TryDequeue(out _));
+    Assert.False(requests.TryDequeue(out _, out _));
+  }
+
+  /// <summary>
+  ///     Ensures deduplicated requests preserve every visible quest surface
+  ///     that asked for the same accepted quest before the runtime dequeues it.
+  /// </summary>
+  [Fact]
+  public void Request_MergesDistinctSourcesUntilDequeued()
+  {
+    var requests = new AcceptedQuestPrefetchRequestQueue();
+
+    Assert.True(requests.Request(68799, "JournalHandler.Translate", out var sources));
+    Assert.Equal("JournalHandler.Translate", sources);
+    Assert.False(requests.Request(68799, "ToDoListHandler.Refresh", out sources));
+    Assert.Equal(
+        "JournalHandler.Translate|ToDoListHandler.Refresh",
+        sources);
+
+    Assert.True(requests.TryDequeue(out var questId, out sources));
+    Assert.Equal(68799u, questId);
+    Assert.Equal(
+        "JournalHandler.Translate|ToDoListHandler.Refresh",
+        sources);
   }
 }

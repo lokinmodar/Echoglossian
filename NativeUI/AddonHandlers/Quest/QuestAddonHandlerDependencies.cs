@@ -46,7 +46,12 @@ internal delegate bool QueueTranslationBatchDelegate(
 ///     Delegate used to request background prefetch for an accepted quest.
 /// </summary>
 /// <param name="questId">The accepted quest identifier to prefetch.</param>
-internal delegate void RequestAcceptedQuestPrefetchDelegate(uint questId);
+/// <param name="source">
+///     The quest surface requesting the prioritized prefetch.
+/// </param>
+internal delegate void RequestAcceptedQuestPrefetchDelegate(
+    uint questId,
+    string? source = null);
 
 /// <summary>
 ///     Delegate used to remove quest hover tooltips by prefix.

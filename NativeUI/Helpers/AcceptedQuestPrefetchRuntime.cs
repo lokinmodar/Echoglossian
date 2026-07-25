@@ -13,7 +13,7 @@ public partial class Echoglossian
 {
   private const int AcceptedQuestPrefetchQuestsPerTick = 2;
 
-  private const bool AcceptedQuestPrefetchEmitDalamudLog = false;
+  private const bool AcceptedQuestPrefetchEmitDalamudLog = true;
 
   private static readonly TimeSpan AcceptedQuestPrefetchTickInterval =
       TimeSpan.FromSeconds(2);
@@ -83,9 +83,13 @@ public partial class Echoglossian
     var processedQuestCount = 0;
     HashSet<uint> processedQuestIds = [];
     while (processedQuestCount < AcceptedQuestPrefetchQuestsPerTick &&
-           this.TryDequeueAcceptedQuestPrefetchRequest(out var requestedQuestId))
+           this.TryDequeueAcceptedQuestPrefetchRequest(
+               out var requestedQuestId,
+               out var requestSources))
     {
-      this.PrefetchAcceptedQuest(requestedQuestId);
+      this.PrefetchAcceptedQuest(
+          requestedQuestId,
+          requestSources);
       processedQuestIds.Add(requestedQuestId);
       processedQuestCount++;
     }
@@ -120,24 +124,49 @@ public partial class Echoglossian
   ///     the framework-update prefetch runtime.
   /// </summary>
   /// <param name="questId">The accepted quest identifier to prefetch.</param>
-  private void RequestAcceptedQuestPrefetch(uint questId)
+  /// <param name="source">The quest surface requesting the prefetch.</param>
+  private void RequestAcceptedQuestPrefetch(
+      uint questId,
+      string? source = null)
   {
-    if (!this.acceptedQuestPrefetchRequestedQuestQueue.Request(questId))
+    if (!this.acceptedQuestPrefetchRequestedQuestQueue.Request(
+            questId,
+            source,
+            out var requestSources))
     {
+      this.LogAcceptedQuestPrefetchEvent(
+          "request-skip-duplicate",
+          questId,
+          detail:
+          $"source={requestSources}; Accepted-quest prefetch request already queued.");
       return;
     }
+
+    this.LogAcceptedQuestPrefetchEvent(
+        "request-queued",
+        questId,
+        detail:
+        $"source={requestSources}; Quest addon requested prioritized accepted-quest prefetch.");
   }
 
   /// <summary>
   ///     Dequeues one deduplicated accepted-quest prefetch request.
   /// </summary>
   /// <param name="questId">The requested accepted quest identifier.</param>
+  /// <param name="requestSources">
+  ///     The normalized set of visible request sources currently associated
+  ///     with this quest.
+  /// </param>
   /// <returns>True when one request was available.</returns>
-  private bool TryDequeueAcceptedQuestPrefetchRequest(out uint questId)
+  private bool TryDequeueAcceptedQuestPrefetchRequest(
+      out uint questId,
+      out string requestSources)
   {
     questId = 0;
+    requestSources = string.Empty;
     return this.acceptedQuestPrefetchRequestedQuestQueue.TryDequeue(
-        out questId);
+        out questId,
+        out requestSources);
   }
 
   /// <summary>
@@ -238,12 +267,22 @@ public partial class Echoglossian
   ///     missing translations through the shared paced broker.
   /// </summary>
   /// <param name="questId">The accepted quest identifier.</param>
-  private void PrefetchAcceptedQuest(uint questId)
+  /// <param name="requestSources">
+  ///     The visible quest surfaces that explicitly requested this prioritized
+  ///     prefetch cycle.
+  /// </param>
+  private void PrefetchAcceptedQuest(
+      uint questId,
+      string? requestSources = null)
   {
+    var requestSourceLabel = string.IsNullOrWhiteSpace(requestSources)
+        ? "accepted-quest-scan"
+        : requestSources;
     this.LogAcceptedQuestPrefetchEvent(
         "quest-start",
         questId,
-        detail: "Accepted-quest prefetch tick picked this quest for processing.");
+        detail:
+        $"source={requestSourceLabel}; Accepted-quest prefetch tick picked this quest for processing.");
 
     if (!QuestProgressResolver.TryResolveQuestProgress(
             questId.ToString(CultureInfo.InvariantCulture),
@@ -1148,22 +1187,43 @@ public partial class Echoglossian
         : $"{questId}:{questName}";
     var content =
         $"phase={phase}{Environment.NewLine}quest={questLabel}{Environment.NewLine}detail={detail ?? string.Empty}";
-    var logLine =
-        $"[AcceptedQuestPrefetch] phase={phase} quest='{questLabel}' detail='{detail ?? string.Empty}'";
     if (AcceptedQuestPrefetchEmitDalamudLog &&
+        ShouldEmitAcceptedQuestPrefetchDalamudLog(phase) &&
         string.Equals(phase, "resolve-failed", StringComparison.Ordinal))
     {
-      PluginRuntimeLog.Warning(logLine);
+      PluginRuntimeLog.Debug(
+          "AcceptedQuestPrefetch",
+          $"phase={phase} quest='{questLabel}' detail='{detail ?? string.Empty}'");
     }
-    else if (AcceptedQuestPrefetchEmitDalamudLog)
+    else if (AcceptedQuestPrefetchEmitDalamudLog &&
+             ShouldEmitAcceptedQuestPrefetchDalamudLog(phase))
     {
-      PluginRuntimeLog.Debug(logLine);
+      PluginRuntimeLog.Debug(
+          "AcceptedQuestPrefetch",
+          $"phase={phase} quest='{questLabel}' detail='{detail ?? string.Empty}'");
     }
 
     DiagnosticFileEmitter.Emit(
         "accepted-quest-prefetch-activity",
         questLabel,
         content);
+  }
+
+  /// <summary>
+  /// Determines whether one accepted-quest prefetch phase should be mirrored
+  /// to the main Dalamud log in addition to the diagnostic file.
+  /// </summary>
+  /// <param name="phase">The lifecycle phase being logged.</param>
+  /// <returns><c>true</c> when the phase should appear in the Dalamud log.</returns>
+  private static bool ShouldEmitAcceptedQuestPrefetchDalamudLog(string phase)
+  {
+    return phase is "request-queued" or
+        "request-skip-duplicate" or
+        "quest-start" or
+        "resolve-failed" or
+        "resolved" or
+        "existing-row" ||
+        phase.StartsWith("translation-", StringComparison.Ordinal);
   }
 
   /// <summary>

@@ -160,6 +160,97 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures Journal sends unresolved list titles to the shared
+    ///     accepted-quest prefetch rather than waiting for an unrelated
+    ///     refresh to populate the persisted canonical row.
+    /// </summary>
+    [Fact]
+    public void JournalHandler_RequestsAcceptedQuestPrefetchForPendingTranslations()
+    {
+        var resolver = typeof(JournalHandler).GetMethod(
+            "TranslateJournalQuests",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var request = typeof(QuestAddonHandlerBase).GetMethod(
+            "RequestAcceptedQuestPrefetch",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(request);
+        Assert.True(
+            MethodReferences(resolver!, request!),
+            "Journal must request the shared accepted-quest prefetch instead of owning a translation queue.");
+    }
+
+    /// <summary>
+    ///     Ensures Journal list titles are gated through the accepted-quest
+    ///     runtime before the handler treats a visible row as retryable.
+    /// </summary>
+    [Fact]
+    public void JournalHandler_GatesVisibleTitlesToAcceptedQuestState()
+    {
+        var resolver = typeof(JournalHandler).GetMethod(
+            "TryResolveJournalQuestPlate",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var acceptedGate = typeof(QuestProgressResolver).GetMethod(
+            "TryResolveAcceptedQuestId",
+            BindingFlags.Static | BindingFlags.NonPublic,
+            binder: null,
+            [typeof(string), typeof(uint).MakeByRefType()],
+            modifiers: null);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(acceptedGate);
+        Assert.True(
+            MethodReferences(resolver!, acceptedGate!),
+            "Journal list rows must resolve through accepted-quest state before they are treated as pending.");
+    }
+
+    /// <summary>
+    ///     Ensures ScenarioTree sends unresolved visible quest slots to the
+    ///     shared accepted-quest prefetch instead of owning a separate
+    ///     translation queue for quest-family data.
+    /// </summary>
+    [Fact]
+    public void ScenarioTreeHandler_RequestsAcceptedQuestPrefetchForPendingTranslations()
+    {
+        var resolver = typeof(ScenarioTreeHandler).GetMethod(
+            "TryResolveVisibleScenarioTreeEntry",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var request = typeof(QuestAddonHandlerBase).GetMethod(
+            "RequestAcceptedQuestPrefetch",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(request);
+        Assert.True(
+            MethodReferences(resolver!, request!),
+            "ScenarioTree must request the shared accepted-quest prefetch instead of owning a translation queue.");
+    }
+
+    /// <summary>
+    ///     Ensures recycled Journal list nodes do not retain the previous
+    ///     row's source or translated title.
+    /// </summary>
+    [Fact]
+    public void JournalListNodeSnapshot_RejectsARecycledNodeText()
+    {
+        var matcher = typeof(JournalHandler).GetMethod(
+            "MatchesJournalListNodeSnapshot",
+            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+        Assert.NotNull(matcher);
+        Assert.False((bool)matcher!.Invoke(
+            null,
+            ["Different quest", "Previous quest", "Quest anterior"])!);
+        Assert.True((bool)matcher.Invoke(
+            null,
+            ["Previous quest", "Previous quest", "Quest anterior"])!);
+        Assert.True((bool)matcher.Invoke(
+            null,
+            ["Quest anterior", "Previous quest", "Quest anterior"])!);
+    }
+
+    /// <summary>
     ///     Ensures JournalDetail native output is atomic: pending sections
     ///     restore the source snapshot rather than mixing source and translated
     ///     text in the same detail pane.
@@ -464,7 +555,7 @@ public class QuestAddonHandlerLifecycleTests
             },
             QueueTranslation = static (_, _, _) => false,
             QueueTranslationBatch = static (_, _, _, _) => false,
-            RequestAcceptedQuestPrefetch = static _ => { },
+            RequestAcceptedQuestPrefetch = static (_, _) => { },
             RemoveHoverTooltipByPrefix = static _ => { },
             RegisterTranslatedHoverTooltipAddon = null!,
             RegisterTranslatedHoverTooltipTextNode = null!,

@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Runtime.CompilerServices;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
@@ -231,9 +233,16 @@ internal abstract class QuestAddonHandlerBase
   ///     persist any missing canonical translations for the specified quest.
   /// </summary>
   /// <param name="questId">The accepted quest identifier to prefetch.</param>
-  protected void RequestAcceptedQuestPrefetch(uint questId)
+  /// <param name="callerMemberName">
+  ///     The calling quest-handler member used to tag diagnostic output.
+  /// </param>
+  protected void RequestAcceptedQuestPrefetch(
+      uint questId,
+      [CallerMemberName] string? callerMemberName = null)
   {
-    this.Dependencies.RequestAcceptedQuestPrefetch(questId);
+    var source =
+        $"{this.GetType().Name}.{callerMemberName ?? nameof(this.RequestAcceptedQuestPrefetch)}";
+    this.Dependencies.RequestAcceptedQuestPrefetch(questId, source);
   }
 
   /// <summary>

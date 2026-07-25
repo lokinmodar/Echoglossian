@@ -3152,6 +3152,55 @@
             <param name="questPlate">The quest plate being saved.</param>
             <returns>The existing quest plate if one should be merged; otherwise null.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.SelectPreferredQuestPlate(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate},Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Selects the preferred persisted quest plate for runtime reads,
+                favoring canonical rows with a matching hash and the most complete
+                translated payload when duplicates exist.
+            </summary>
+            <param name="candidateQuestPlates">The candidate persisted quest plates.</param>
+            <param name="requestedQuestPlate">The requested quest plate.</param>
+            <param name="scope">The resolved translation reuse scope.</param>
+            <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SelectPreferredQuestPlateForSave(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate},Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Selects the preferred persisted quest plate for save/merge
+                operations, favoring canonical rows and the most complete payload when
+                duplicate candidates exist.
+            </summary>
+            <param name="candidateQuestPlates">The candidate persisted quest plates.</param>
+            <param name="requestedQuestPlate">The incoming quest plate.</param>
+            <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeQuestPlateIdentityScore(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Gets the identity score for one candidate quest plate relative to the
+                requested quest plate.
+            </summary>
+            <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+            <param name="requestedQuestPlate">The requested quest plate.</param>
+            <returns>The identity score. Higher values are preferred.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeQuestPlateCompletenessScore(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Gets the completeness score for one candidate quest plate.
+            </summary>
+            <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+            <returns>The completeness score. Higher values are preferred.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.IsQuestPlateContentHashCompatible(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Gets whether one persisted quest plate is compatible with the
+                requested quest plate's content hash semantics.
+            </summary>
+            <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+            <param name="requestedQuestPlate">The requested quest plate.</param>
+            <returns>
+                <see langword="true" /> when the candidate may be reused; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.LegacyWriteSourceLanguagesMatch(System.String,System.String)">
             <summary>
                 Compares write-side source identities while recognizing only the four
@@ -3827,19 +3876,24 @@
                 render them.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RequestAcceptedQuestPrefetch(System.UInt32)">
+        <member name="M:Echoglossian.Echoglossian.RequestAcceptedQuestPrefetch(System.UInt32,System.String)">
             <summary>
                 Requests a prioritized background prefetch for an accepted quest.
                 This only schedules work; translation and persistence remain owned by
                 the framework-update prefetch runtime.
             </summary>
             <param name="questId">The accepted quest identifier to prefetch.</param>
+            <param name="source">The quest surface requesting the prefetch.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TryDequeueAcceptedQuestPrefetchRequest(System.UInt32@)">
+        <member name="M:Echoglossian.Echoglossian.TryDequeueAcceptedQuestPrefetchRequest(System.UInt32@,System.String@)">
             <summary>
                 Dequeues one deduplicated accepted-quest prefetch request.
             </summary>
             <param name="questId">The requested accepted quest identifier.</param>
+            <param name="requestSources">
+                The normalized set of visible request sources currently associated
+                with this quest.
+            </param>
             <returns>True when one request was available.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ClearAcceptedQuestPrefetchState">
@@ -3867,12 +3921,16 @@
             </summary>
             <returns>True when the background prefetch should run.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuest(System.UInt32)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuest(System.UInt32,System.String)">
             <summary>
                 Prefetches the canonical text for one accepted quest and schedules any
                 missing translations through the shared paced broker.
             </summary>
             <param name="questId">The accepted quest identifier.</param>
+            <param name="requestSources">
+                The visible quest surfaces that explicitly requested this prioritized
+                prefetch cycle.
+            </param>
         </member>
         <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
             <summary>
@@ -4073,6 +4131,14 @@
             <param name="questId">The quest id.</param>
             <param name="questName">The quest name when available.</param>
             <param name="detail">Additional structured detail.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ShouldEmitAcceptedQuestPrefetchDalamudLog(System.String)">
+            <summary>
+            Determines whether one accepted-quest prefetch phase should be mirrored
+            to the main Dalamud log in addition to the diagnostic file.
+            </summary>
+            <param name="phase">The lifecycle phase being logged.</param>
+            <returns><c>true</c> when the phase should appear in the Dalamud log.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.LogAcceptedQuestPrefetchTranslationEvent(Echoglossian.QuestProgressSnapshot,System.String,System.String,System.String,System.String,System.String)">
             <summary>
@@ -17374,6 +17440,19 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryComputeVisibleJournalSignature(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Int32@)">
+            <summary>
+                Computes one stable signature for the currently visible Journal quest
+                rows so refresh work only runs when the visible list changes.
+            </summary>
+            <param name="journal">The visible Journal addon.</param>
+            <param name="visibleJournalSignature">
+                The stable signature for the currently visible quest rows.
+            </param>
+            <returns>
+                True when the visible Journal quest-list component was available.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnJournalPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Retries Journal quest-list application after delayed DB persistence
@@ -17391,23 +17470,6 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.OnPluginUnload">
             <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListCachedText(System.String,System.String@)">
-            <summary>
-                Attempts to get translated text for a visible Journal quest-list
-                entry from the current list runtime cache.
-            </summary>
-            <param name="originalText">The original quest name.</param>
-            <param name="translatedText">The cached translated quest name.</param>
-            <returns>True when the current visible Journal list already cached the quest.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListCachedText(System.String,System.String)">
-            <summary>
-                Remembers a translated quest name inside the current Journal visible
-                list runtime cache.
-            </summary>
-            <param name="originalText">The original quest name.</param>
-            <param name="translatedText">The translated quest name.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListHover(System.IntPtr,Echoglossian.Cache.QuestHoverTranslationSnapshot@)">
             <summary>
@@ -17435,6 +17497,53 @@
             <param name="nodeKey">The live quest-name node key.</param>
             <param name="originalText">The cached original quest title.</param>
             <returns>True when an original quest title is cached for that node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalListOriginalTextForLiveText(System.IntPtr,System.String,System.String@)">
+            <summary>
+                Tries to get the original quest title associated with a live Journal
+                list node, discarding stale state when the game's recycled node now
+                displays another quest title.
+            </summary>
+            <param name="nodeKey">The live quest-name node key.</param>
+            <param name="liveText">The text currently rendered by the game.</param>
+            <param name="originalText">The validated original quest title.</param>
+            <returns>True when the cached snapshot still belongs to this live node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.MatchesJournalListNodeSnapshot(System.String,System.String,System.String)">
+            <summary>
+                Gets whether one live Journal list text still belongs to a cached
+                source-and-translation snapshot for the same node.
+            </summary>
+            <param name="liveText">The text currently rendered by the game.</param>
+            <param name="originalText">The cached source title.</param>
+            <param name="translatedText">The cached translated title.</param>
+            <returns>True when the live text belongs to the cached snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ForgetJournalListNodeState(System.IntPtr)">
+            <summary>
+                Removes state owned by one Journal list node after the game recycles
+                that node for another visible quest row.
+            </summary>
+            <param name="nodeKey">The recycled quest-name node key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryResolveJournalQuestPlate(Echoglossian.SourceClientLanguage,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate@,System.UInt32@)">
+            <summary>
+                Resolves one visible Journal title through the same canonical
+                quest-and-progress path used by JournalDetail and ToDoList.
+            </summary>
+            <param name="sourceLanguage">The captured source client language.</param>
+            <param name="originalQuestName">The visible original quest title.</param>
+            <param name="foundQuestPlate">
+                The persisted canonical quest row, if any.
+            </param>
+            <param name="questId">
+                The accepted live quest identifier that should feed the shared
+                accepted-quest prefetch runtime.
+            </param>
+            <returns>
+                True when the visible title resolves to one of the player's accepted
+                quests, even if canonical progress data is still pending.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListOriginalText(System.IntPtr,System.String)">
             <summary>
@@ -17472,12 +17581,11 @@
                 restored.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TrimJournalListRuntimeState(System.Collections.Generic.HashSet{System.String},System.Collections.Generic.HashSet{System.IntPtr})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TrimJournalListRuntimeState(System.Collections.Generic.HashSet{System.IntPtr})">
             <summary>
-                Trims Journal quest-list runtime caches so they only keep the quest
-                names and node anchors visible in the current list snapshot.
+                Trims Journal quest-list runtime caches so they only keep the node
+                anchors visible in the current list snapshot.
             </summary>
-            <param name="visibleQuestNames">The currently visible quest names.</param>
             <param name="visibleQuestNodeKeys">The currently visible quest node keys.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler">
@@ -18147,12 +18255,15 @@
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True if the request was queued.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RequestAcceptedQuestPrefetch(System.UInt32)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RequestAcceptedQuestPrefetch(System.UInt32,System.String)">
             <summary>
                 Requests that the shared accepted-quest prefetch runtime resolve and
                 persist any missing canonical translations for the specified quest.
             </summary>
             <param name="questId">The accepted quest identifier to prefetch.</param>
+            <param name="callerMemberName">
+                The calling quest-handler member used to tag diagnostic output.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RemoveHoverTooltipsByPrefix(System.String)">
             <summary>
@@ -18357,6 +18468,9 @@
                 Delegate used to request background prefetch for an accepted quest.
             </summary>
             <param name="questId">The accepted quest identifier to prefetch.</param>
+            <param name="source">
+                The quest surface requesting the prioritized prefetch.
+            </param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RemoveHoverTooltipByPrefixDelegate">
             <summary>
@@ -18918,7 +19032,7 @@
                 the DB.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveScenarioTreeFallbackTranslation(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.SourceClientLanguage,System.String,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryResolveScenarioTreeFallbackTranslation(Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,Echoglossian.SourceClientLanguage,System.String@)">
             <summary>
                 Resolves ScenarioTree text from the broker cache or from a legacy
                 visible-text row when canonical quest data is not ready yet.
@@ -18928,35 +19042,6 @@
             <param name="progressKey">The stable quest progress key, if known.</param>
             <param name="translatedText">The resolved translated text.</param>
             <returns><c>true</c> when translated text is available.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.QueueScenarioTreeTranslation(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry,System.String,Echoglossian.QuestCanonicalData,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
-            <summary>
-                Enqueues a visible ScenarioTree text row through the shared translation
-                broker without blocking addon rendering.
-            </summary>
-            <param name="sourceLanguage">The operation-captured source identity.</param>
-            <param name="visibleEntry">The visible ScenarioTree slot.</param>
-            <param name="progressKey">The stable quest progress key, if known.</param>
-            <param name="questCanonicalData">The canonical quest payload, if resolved.</param>
-            <param name="questPlate">The existing or projected quest plate, if any.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.BuildScenarioTreeTranslationCacheKey(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeVisibleEntry)">
-            <summary>
-                Builds a stable shared-broker key for one visible ScenarioTree slot.
-            </summary>
-            <param name="progressKey">The stable quest progress key, if known.</param>
-            <param name="visibleEntry">The visible ScenarioTree slot.</param>
-            <returns>The stable translation cache key.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ApplyScenarioTreeTranslationToQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String)">
-            <summary>
-                Stores one translated visible ScenarioTree row in the matching
-                canonical quest-plate field.
-            </summary>
-            <param name="questPlate">The quest plate being updated.</param>
-            <param name="questCanonicalData">The canonical quest payload.</param>
-            <param name="originalText">The visible source text.</param>
-            <param name="translatedText">The translated text.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.TryApplyScenarioTreeObjectiveTranslation(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,System.String,System.String)">
             <summary>
@@ -23302,7 +23387,8 @@
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.HasCompleteTranslation">
             <summary>
-                Gets whether the canonical payload has every translated field required for UI usage.
+                Gets whether the canonical payload has every translated field required
+                for UI usage and does not retain source text as translated content.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload.Serialize">
@@ -24748,7 +24834,8 @@
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.HasCompleteTranslation">
             <summary>
-                Gets whether the payload has every translated field required for UI usage.
+                Gets whether the payload has every translated field required for UI
+                usage and does not retain source text as translated content.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload.Serialize">
@@ -26004,6 +26091,47 @@
             <param name="slot">The slot to clone.</param>
             <returns>The cloned slot.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipTranslationValidation">
+            <summary>
+                Validates whether one structured tooltip contains a complete, meaningful
+                translation rather than source text copied into translated fields.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StructuredTooltipTranslationValidation.HasCompleteMeaningfulTranslation(System.String,System.String,System.String,System.String)">
+            <summary>
+                Gets whether the translated name and description fully cover the
+                source payload without preserving a required source description.
+            </summary>
+            <param name="originalName">The canonical source name.</param>
+            <param name="originalDescription">The canonical source description.</param>
+            <param name="translatedName">The candidate translated name.</param>
+            <param name="translatedDescription">The candidate translated description.</param>
+            <returns>
+                <see langword="true" /> when the candidate is complete and differs
+                meaningfully from the source payload; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(System.String,System.String)">
+            <summary>
+                Returns a translated field only when it contains meaningful text
+                distinct from its canonical source field.
+            </summary>
+            <param name="sourceText">The canonical source text.</param>
+            <param name="candidateText">The candidate translated text.</param>
+            <returns>
+                The candidate translated text, or <see langword="null" /> when it
+                is blank or source-equivalent.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StructuredTooltipTranslationValidation.MatchesSourceText(System.String,System.String)">
+            <summary>
+                Gets whether two values represent the same visible text after native
+                SeString formatting noise has been removed.
+            </summary>
+            <param name="sourceText">The canonical source text.</param>
+            <param name="candidateText">The translated candidate text.</param>
+            <returns><see langword="true" /> when both values are source-equivalent.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.TraitCanonicalPayload">
             <summary>
                 Represents one canonical trait-tooltip payload resolved from game data.
@@ -26056,7 +26184,8 @@
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.TraitCanonicalPayload.HasCompleteTranslation">
             <summary>
-                Gets whether the canonical payload has every translated field required for UI usage.
+                Gets whether the canonical payload has every translated field required
+                for UI usage and does not retain source text as translated content.
             </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.TraitCanonicalPayload.Serialize">
@@ -26578,26 +26707,49 @@
                 Gets the number of priority requests waiting to be prefetched.
             </summary>
         </member>
-        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.Request(System.UInt32)">
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.Request(System.UInt32,System.String,System.String@)">
             <summary>
                 Adds an accepted quest to the priority queue if it is not already
                 waiting to be processed.
             </summary>
             <param name="questId">The accepted quest identifier.</param>
+            <param name="source">The quest surface requesting the prefetch.</param>
+            <param name="requestSources">
+                The normalized set of visible request sources currently associated
+                with this quest.
+            </param>
             <returns>True when the request was added.</returns>
         </member>
-        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.TryDequeue(System.UInt32@)">
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.TryDequeue(System.UInt32@,System.String@)">
             <summary>
                 Tries to dequeue the next accepted quest requested by a visible
                 quest surface.
             </summary>
             <param name="questId">The requested accepted quest identifier.</param>
+            <param name="requestSources">
+                The normalized set of visible request sources currently associated
+                with this quest.
+            </param>
             <returns>True when a request was available.</returns>
         </member>
         <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.Clear">
             <summary>
                 Clears every pending priority request.
             </summary>
+        </member>
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.NormalizeSource(System.String)">
+            <summary>
+                Normalizes one request source label for compact diagnostic output.
+            </summary>
+            <param name="source">The raw request source.</param>
+            <returns>The normalized source label.</returns>
+        </member>
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.FormatSources(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+                Formats the merged request sources for logging.
+            </summary>
+            <param name="sources">The merged request sources.</param>
+            <returns>A compact source string.</returns>
         </member>
         <member name="T:Echoglossian.TryGetPrefetchTranslationDelegate">
             <summary>
@@ -26862,6 +27014,13 @@
             <param name="quest">The Lumina quest row.</param>
             <returns>The trimmed internal quest sheet id, or an empty string.</returns>
         </member>
+        <member name="M:Echoglossian.QuestLuminaResolver.NormalizeQuestNameForLookup(System.String)">
+            <summary>
+                Normalizes one visible quest title for a Lumina title lookup.
+            </summary>
+            <param name="questName">The raw visible or sheet-backed title.</param>
+            <returns>The normalized title without private-use icon glyphs.</returns>
+        </member>
         <member name="T:Echoglossian.QuestProgressResolver">
             <summary>
                 Resolves quest progression data from Lumina and the live quest manager
@@ -26873,6 +27032,28 @@
             <summary>
                 Clears cached quest progression lookups.
             </summary>
+        </member>
+        <member name="M:Echoglossian.QuestProgressResolver.TryResolveAcceptedQuestId(System.String,System.UInt32@)">
+            <summary>
+                Tries to resolve the currently accepted live quest identifier that
+                corresponds to one Lumina or runtime quest id.
+            </summary>
+            <param name="questIdText">The quest id resolved from Lumina or the runtime.</param>
+            <param name="acceptedQuestId">
+                The accepted live quest id used by <see cref="T:FFXIVClientStructs.FFXIV.Client.Game.QuestManager" />.
+            </param>
+            <returns>True when the quest is currently accepted by the player.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestProgressResolver.TryResolveAcceptedQuestId(System.UInt32,System.UInt32@)">
+            <summary>
+                Tries to resolve the currently accepted live quest identifier that
+                corresponds to one Lumina or runtime quest id.
+            </summary>
+            <param name="questId">The quest id resolved from Lumina or the runtime.</param>
+            <param name="acceptedQuestId">
+                The accepted live quest id used by <see cref="T:FFXIVClientStructs.FFXIV.Client.Game.QuestManager" />.
+            </param>
+            <returns>True when the quest is currently accepted by the player.</returns>
         </member>
         <member name="M:Echoglossian.QuestProgressResolver.TryResolveQuestProgress(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot@)">
             <summary>
