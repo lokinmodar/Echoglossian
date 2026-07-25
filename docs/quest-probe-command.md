@@ -46,7 +46,8 @@ The resolver then tries to:
 
 ## Output It Produces
 
-The command logs the following categories to `dalamud.log`:
+The command logs the following categories through `PluginRuntimeLog`, which
+means the lines are mirrored to both `Echoglossian.log` and the Dalamud log:
 
 - quest metadata from Lumina
 - the raw quest row properties
@@ -101,3 +102,4 @@ This probe gives a direct way to inspect the quest data sources before deciding 
 - The command is intentionally verbose because it is meant for one-off inspection.
 - It should be used when validating quest data shape or database behavior, not during normal gameplay.
 - The logs it produces are helpful when deciding whether to keep the current quest table shape or move to a different persistence strategy.
+- Inspect `C:\Users\lokin\AppData\Roaming\XIVLauncher\pluginConfigs\Echoglossian\Echoglossian.log` first when reviewing the output.

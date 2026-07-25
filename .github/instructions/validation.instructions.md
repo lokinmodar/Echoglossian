@@ -12,6 +12,8 @@ applyTo:
 - Keep the standard validation path as the baseline:
   - `dotnet build Echoglossian.sln -c Debug --no-restore`
   - `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`
+- For plugin-runtime investigations, inspect `C:\Users\lokin\AppData\Roaming\XIVLauncher\pluginConfigs\Echoglossian\Echoglossian.log` first. Use `dalamud.log` only when cross-plugin or launcher context is needed.
+- Purpose-built diagnostic files such as `accepted-quest-prefetch-activity.log` and `accepted-quest-prefetch-canonical.log` follow the same timestamped rollover policy; inspect the active file first and only then the archived timestamped file when needed.
 - Use `Echoglossian.Mock` and/or DalaMock when a change depends on Dalamud service wiring, plugin startup/shutdown, configuration paths, plugin-window hosting, font/ImGui behavior, or other runtime integration that pure unit tests cannot model.
 - For behavior that reads real game data, Lumina sheets, FFXIVClientStructs-backed state, addon lifecycle events, `AtkValue`, `AtkUnitBase`, or native UI payload capture/application, validate with `Echoglossian.Mock`/DalaMock whenever feasible before claiming the behavior is covered.
 - If the current harness cannot drive the needed game-data or native UI payload, extend `Echoglossian.Mock` or DalaMock first when the extension is practical; otherwise document the gap and keep the required in-game verification explicit.

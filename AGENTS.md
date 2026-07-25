@@ -115,6 +115,9 @@ Be especially careful with dense or frequently repainted windows such as `Journa
 ## Debugging
 
 - Prefer existing lifecycle logging helpers and addon probe tools over ad hoc debug spam.
+- Route all plugin-owned runtime log lines through `PluginRuntimeLog`. Use `DiagnosticFileEmitter` only for purpose-built structured dump files.
+- Inspect `<PluginConfigDirectory>\Echoglossian.log` first. Use `dalamud.log` only when cross-plugin or launcher context is required.
+- Keep the same timestamped line-cap rotation policy for large diagnostic files such as `accepted-quest-prefetch-activity.log` and `accepted-quest-prefetch-canonical.log`.
 - Use `/egloaddonprobe <addon>` when relevant.
 - Remove or silence hot-path diagnostics after investigation.
 - Do not leave long-lived debug logging in hot paths.
