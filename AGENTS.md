@@ -88,6 +88,7 @@ For release submissions that update `DalamudPluginsD17` manifests:
 - When issue work is not ready for release, extract or keep it on its issue branch and keep `v4-series` focused on releasable changes.
 - Submit issue work back to `v4-series` through a pull request, even when the branch lives in the same repository.
 - Keep commits for issue work clearly labeled with the issue number when possible.
+- Commit in short, reviewable increments. Do not leave validated or behaviorally stable work uncommitted for hours; when a sub-scope is working, commit it before continuing.
 - If one branch must touch multiple issues, split the work back into issue-specific branches as early as practical.
 
 ## UI Rules
