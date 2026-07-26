@@ -1718,11 +1718,21 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       var questName = liveQuestName;
       var questMessage = liveQuestMessage;
       var objectiveText = liveObjectiveText;
+      if (!QuestLuminaResolver.TryResolveQuestId(
+              questName,
+              out var acceptedQuestIdText) ||
+          !QuestProgressResolver.TryResolveAcceptedQuestId(
+              acceptedQuestIdText,
+              out _))
+      {
+        return false;
+      }
+
       var questPlate = this.CreateQuestPlate(
           sourceLanguage,
           questName,
           questMessage,
-          string.Empty);
+          acceptedQuestIdText);
 
       QuestProgressSnapshot? questProgressSnapshot = null;
       if (QuestProgressResolver.TryResolveQuestProgress(
