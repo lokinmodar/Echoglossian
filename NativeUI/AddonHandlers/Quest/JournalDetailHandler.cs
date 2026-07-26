@@ -1379,25 +1379,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     }
 
     var hasPendingTranslations = false;
-    var handledCurrentQuest = this.TranslateJournalBox(
-        journalDetail,
-        operationSourceLanguage,
-        out hasPendingTranslations);
-    var handledCompletedQuest = !handledCurrentQuest &&
-        this.TranslateCompletedQuest(
+    if (!this.TranslateJournalBox(
             journalDetail,
             operationSourceLanguage,
-            out hasPendingTranslations);
-    if (!handledCurrentQuest && !handledCompletedQuest)
+            out hasPendingTranslations))
     {
-      if (this.ownsJournalDetailNativeMutation)
-      {
-        this.RestoreJournalDetailOriginals(journalDetail);
-      }
-      else
-      {
-        this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
-      }
+      this.TranslateCompletedQuest(
+          journalDetail,
+          operationSourceLanguage,
+          out hasPendingTranslations);
     }
 
     this.hasPendingJournalDetailTranslations = hasPendingTranslations;
@@ -1415,11 +1405,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="hasPendingTranslations">
   ///     Whether one or more translated payloads are still pending.
   /// </param>
-  /// <returns>
-  ///     <c>true</c> when the completed-quest layout handled the visible
-  ///     JournalDetail pane.
-  /// </returns>
-  private unsafe bool TranslateCompletedQuest(
+  private unsafe void TranslateCompletedQuest(
       AtkUnitBase* journalDetail,
       SourceClientLanguage sourceLanguage,
       out bool hasPendingTranslations)
@@ -1430,18 +1416,18 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       var questNameNode = journalDetail->GetTextNodeById(38);
       if (questNameNode == null || questNameNode->NodeText.IsEmpty)
       {
-        return false;
+        return;
       }
 
       if (!journalDetail->GetNodeById(46)->IsVisible())
       {
-        return false;
+        return;
       }
 
       var description = journalDetail->GetNodeById(46);
       if (description == null || description->Type != NodeType.Text)
       {
-        return false;
+        return;
       }
 
       var questName = MemoryHelper.ReadSeStringAsString(
@@ -1650,12 +1636,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       hasPendingTranslations =
           !translatedQuestNameReady ||
           !translatedQuestMessageReady;
-      return true;
     }
     catch (Exception e)
     {
       PluginRuntimeLog.Error($"Error in UiJournalDetailHandler: {e}");
-      return false;
     }
   }
 
@@ -1734,21 +1718,11 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       var questName = liveQuestName;
       var questMessage = liveQuestMessage;
       var objectiveText = liveObjectiveText;
-      if (!QuestLuminaResolver.TryResolveQuestId(
-              questName,
-              out var acceptedQuestIdText) ||
-          !QuestProgressResolver.TryResolveAcceptedQuestId(
-              acceptedQuestIdText,
-              out _))
-      {
-        return false;
-      }
-
       var questPlate = this.CreateQuestPlate(
           sourceLanguage,
           questName,
           questMessage,
-          acceptedQuestIdText);
+          string.Empty);
 
       QuestProgressSnapshot? questProgressSnapshot = null;
       if (QuestProgressResolver.TryResolveQuestProgress(

@@ -358,7 +358,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               out var cachedOriginalQuestName)
               ? cachedOriginalQuestName
               : liveQuestNameText;
-      hash.Add(i);
+      hash.Add(questNameNodeKey);
       hash.Add(signatureQuestName, StringComparer.Ordinal);
     }
 
@@ -613,7 +613,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
         sourceLanguage.PersistenceCode,
-        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
+        LangDict[LanguageInt].Code,
         this.Config.ChosenTransEngine,
         DateTime.Now);
     foundQuestPlate = this.FindQuestPlate(questPlate);

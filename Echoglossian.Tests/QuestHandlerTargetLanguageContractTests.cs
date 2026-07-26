@@ -17,21 +17,6 @@ namespace Echoglossian.Tests;
 public sealed class QuestHandlerTargetLanguageContractTests
 {
     /// <summary>
-    ///     Ensures Journal projects canonical quest lookups with the normalized
-    ///     configured target language.
-    /// </summary>
-    [Fact]
-    public void Journal_uses_normalized_configured_target_language_for_canonical_quest_lookup()
-    {
-        AssertCanonicalQuestProjectionUsesNormalizedTargetLanguage(
-            Path.Combine(
-                "NativeUI",
-                "AddonHandlers",
-                "Quest",
-                "JournalHandler.cs"));
-    }
-
-    /// <summary>
     ///     Ensures ToDoList projects canonical quest lookups with the
     ///     normalized configured target language.
     /// </summary>

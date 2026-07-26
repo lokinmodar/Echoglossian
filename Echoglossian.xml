@@ -17299,10 +17299,6 @@
             <param name="hasPendingTranslations">
                 Whether one or more translated payloads are still pending.
             </param>
-            <returns>
-                <c>true</c> when the completed-quest layout handled the visible
-                JournalDetail pane.
-            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.SourceClientLanguage,System.Boolean@)">
             <summary>
