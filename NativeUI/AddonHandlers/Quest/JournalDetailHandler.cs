@@ -1379,15 +1379,25 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     }
 
     var hasPendingTranslations = false;
-    if (!this.TranslateJournalBox(
+    var handledCurrentQuest = this.TranslateJournalBox(
+        journalDetail,
+        operationSourceLanguage,
+        out hasPendingTranslations);
+    var handledCompletedQuest = !handledCurrentQuest &&
+        this.TranslateCompletedQuest(
             journalDetail,
             operationSourceLanguage,
-            out hasPendingTranslations))
+            out hasPendingTranslations);
+    if (!handledCurrentQuest && !handledCompletedQuest)
     {
-      this.TranslateCompletedQuest(
-          journalDetail,
-          operationSourceLanguage,
-          out hasPendingTranslations);
+      if (this.ownsJournalDetailNativeMutation)
+      {
+        this.RestoreJournalDetailOriginals(journalDetail);
+      }
+      else
+      {
+        this.RemoveHoverTooltipsByPrefix(JournalDetailHoverPrefix);
+      }
     }
 
     this.hasPendingJournalDetailTranslations = hasPendingTranslations;
@@ -1405,7 +1415,11 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <param name="hasPendingTranslations">
   ///     Whether one or more translated payloads are still pending.
   /// </param>
-  private unsafe void TranslateCompletedQuest(
+  /// <returns>
+  ///     <c>true</c> when the completed-quest layout handled the visible
+  ///     JournalDetail pane.
+  /// </returns>
+  private unsafe bool TranslateCompletedQuest(
       AtkUnitBase* journalDetail,
       SourceClientLanguage sourceLanguage,
       out bool hasPendingTranslations)
@@ -1416,18 +1430,18 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       var questNameNode = journalDetail->GetTextNodeById(38);
       if (questNameNode == null || questNameNode->NodeText.IsEmpty)
       {
-        return;
+        return false;
       }
 
       if (!journalDetail->GetNodeById(46)->IsVisible())
       {
-        return;
+        return false;
       }
 
       var description = journalDetail->GetNodeById(46);
       if (description == null || description->Type != NodeType.Text)
       {
-        return;
+        return false;
       }
 
       var questName = MemoryHelper.ReadSeStringAsString(
@@ -1636,10 +1650,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       hasPendingTranslations =
           !translatedQuestNameReady ||
           !translatedQuestMessageReady;
+      return true;
     }
     catch (Exception e)
     {
       PluginRuntimeLog.Error($"Error in UiJournalDetailHandler: {e}");
+      return false;
     }
   }
 
