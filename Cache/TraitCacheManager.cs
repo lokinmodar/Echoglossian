@@ -5,6 +5,7 @@
 
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.Cache;
 
@@ -904,10 +905,12 @@ public static class TraitCacheManager
     /// </returns>
     private static bool HasCompleteTranslation(Trait row)
     {
-        return !string.IsNullOrWhiteSpace(row.TranslatedTraitName) &&
-               (string.IsNullOrWhiteSpace(row.TraitDescription) ||
-                !string.IsNullOrWhiteSpace(
-                    row.TranslatedTraitDescription));
+        return StructuredTooltipTranslationValidation
+            .HasCompleteMeaningfulTranslation(
+                row.TraitName,
+                row.TraitDescription,
+                row.TranslatedTraitName,
+                row.TranslatedTraitDescription);
     }
 
     /// <summary>

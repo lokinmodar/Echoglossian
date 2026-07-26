@@ -11120,6 +11120,18 @@
             <param name="content">The structured content to append.</param>
             <returns>The absolute path of the emitted file, or an empty string when unavailable.</returns>
         </member>
+        <member name="M:Echoglossian.DiagnosticFileEmitter.ResetForTests">
+            <summary>
+                Clears cached line counts and restores the default line cap for
+                isolated tests.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DiagnosticFileEmitter.SetMaxLineCountForTests(System.Int32)">
+            <summary>
+                Overrides the line-count rotation threshold for isolated tests.
+            </summary>
+            <param name="maxLineCount">The maximum active-file line count.</param>
+        </member>
         <member name="T:Echoglossian.FrameworkAccessGuard">
             <summary>
             Provides safe access guards for native framework-backed singleton entry points
@@ -11227,6 +11239,39 @@
             <summary>
                 Clears the tracked stable-ready interval.
             </summary>
+        </member>
+        <member name="T:Echoglossian.PluginRuntimeFileLog">
+            <summary>
+                Mirrors plugin runtime logs into an Echoglossian-exclusive file so
+                runtime investigations can read a focused log stream outside
+                <c>dalamud.log</c>.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeFileLog.Write(Echoglossian.PluginRuntimeLogLevel,System.String)">
+            <summary>
+                Writes a formatted runtime log line into the dedicated plugin log
+                file.
+            </summary>
+            <param name="level">The runtime log level.</param>
+            <param name="message">The already-rendered message.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeFileLog.ResetForTests">
+            <summary>
+                Releases the active writer and clears static state for isolated
+                tests.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeFileLog.SetMaxLineCountForTests(System.Int32)">
+            <summary>
+                Overrides the line-count rotation threshold for isolated tests.
+            </summary>
+            <param name="maxLineCount">The maximum active-file line count.</param>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeFileLog.GetCurrentFilePathForTests">
+            <summary>
+                Gets the current runtime log file path for tests and diagnostics.
+            </summary>
+            <returns>The absolute path of the active runtime log file.</returns>
         </member>
         <member name="T:Echoglossian.PluginRuntimeLogLevel">
             <summary>
@@ -11452,6 +11497,51 @@
         </member>
         <member name="M:Echoglossian.ReentrantCallbackGuard.ReentrantCallbackLease.Dispose">
             <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.RotatingLogFileSupport">
+            <summary>
+                Shared helpers for plain-text log files that rotate by line count while
+                keeping a stable active file name.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.RotatingLogFileSupport.DefaultMaxLineCount">
+            <summary>
+                Gets the default maximum number of lines permitted in one active log
+                file before archival rotation occurs.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.RotatingLogFileSupport.EnumerateLines(System.String)">
+            <summary>
+                Splits the supplied text into logical lines using normalized newline
+                handling.
+            </summary>
+            <param name="text">The text to split.</param>
+            <returns>The logical lines that should be written individually.</returns>
+        </member>
+        <member name="M:Echoglossian.RotatingLogFileSupport.CountExistingLines(System.String)">
+            <summary>
+                Counts the number of existing lines in a log file while allowing
+                concurrent readers.
+            </summary>
+            <param name="filePath">The log file path.</param>
+            <returns>The number of lines currently stored in the file.</returns>
+        </member>
+        <member name="M:Echoglossian.RotatingLogFileSupport.CountExistingLinesUpTo(System.String,System.Nullable{System.Int64})">
+            <summary>
+                Counts the number of existing lines in a log file while allowing
+                concurrent readers, stopping once the supplied ceiling is reached.
+            </summary>
+            <param name="filePath">The log file path.</param>
+            <param name="maxLineCount">The optional maximum line count to inspect.</param>
+            <returns>The number of lines currently stored in the file, capped when requested.</returns>
+        </member>
+        <member name="M:Echoglossian.RotatingLogFileSupport.RotateActiveFile(System.String)">
+            <summary>
+                Archives the active log file by moving it to a timestamped sibling
+                path that preserves the original file stem.
+            </summary>
+            <param name="activeFilePath">The active file path.</param>
+            <returns>The archive path, or an empty string when no active file existed.</returns>
         </member>
         <member name="T:Echoglossian.RuntimeLanguageHelper">
             <summary>
@@ -17209,6 +17299,10 @@
             <param name="hasPendingTranslations">
                 Whether one or more translated payloads are still pending.
             </param>
+            <returns>
+                <c>true</c> when the completed-quest layout handled the visible
+                JournalDetail pane.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalDetailHandler.TranslateJournalBox(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.SourceClientLanguage,System.Boolean@)">
             <summary>
@@ -18254,6 +18348,14 @@
             <param name="sourceLanguage">The captured source client language.</param>
             <param name="onResolved">Optional callback invoked with the translated batch.</param>
             <returns>True if the request was queued.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.SummarizeDiagnosticText(System.String,System.Int32)">
+            <summary>
+                Normalizes one visible quest text for concise runtime diagnostics.
+            </summary>
+            <param name="text">The source text to normalize.</param>
+            <param name="maxLength">The maximum diagnostic length.</param>
+            <returns>The normalized and truncated diagnostic text.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RequestAcceptedQuestPrefetch(System.UInt32,System.String)">
             <summary>
@@ -19437,6 +19539,21 @@
                 <c>true</c> when every required translated payload is already stored
                 in the DB.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryResolveTranslatedObjectiveText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,Echoglossian.QuestTodoProgressSnapshot,System.String,System.Int32,System.Int32,System.String@)">
+            <summary>
+                Tries to resolve the translated text for one visible ToDoList
+                objective row, preferring canonical text matches and then falling
+                back to the live objective-progress window.
+            </summary>
+            <param name="questPlate">The persisted quest plate.</param>
+            <param name="questCanonicalData">The canonical quest data.</param>
+            <param name="todoProgressSnapshot">The live todo progress snapshot.</param>
+            <param name="originalObjectiveText">The visible source objective text.</param>
+            <param name="objectiveIndex">The objective index within the visible quest block.</param>
+            <param name="visibleObjectiveCount">The number of visible objective rows.</param>
+            <param name="translatedObjectiveText">The resolved translated objective text.</param>
+            <returns><c>true</c> when a translated objective row was resolved.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateQuestRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String)">
             <summary>
@@ -26919,6 +27036,24 @@
             </summary>
             <param name="sourceText">The visible objective text.</param>
             <returns>The matching canonical objective row keys.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.EnumerateObjectiveEntriesByVisibleText(System.String)">
+            <summary>
+                Enumerates canonical objective entries whose source text matches the
+                supplied visible text, including a normalized fallback for
+                live-progress surfaces that append counters like <c>0/4</c>.
+            </summary>
+            <param name="sourceText">The visible objective text.</param>
+            <returns>The matching canonical objective entries.</returns>
+        </member>
+        <member name="M:Echoglossian.QuestCanonicalData.GetActiveObjectiveEntries(System.Int32,System.Int32)">
+            <summary>
+                Gets the currently active canonical objective entries using the live
+                todo progress window reported by the game.
+            </summary>
+            <param name="objectiveProgress">The current live objective start index.</param>
+            <param name="objectiveCount">The number of live visible objectives.</param>
+            <returns>The ordered active objective entries.</returns>
         </member>
         <member name="M:Echoglossian.QuestCanonicalData.EnumerateSystemRowKeysByText(System.String)">
             <summary>

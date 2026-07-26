@@ -303,6 +303,71 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         }
     }
 
+    /// <summary>
+    ///     Ensures one ActionDetail persistence merge replaces a source-
+    ///     equivalent description with the queued translated description
+    ///     instead of treating the stale payload as complete.
+    /// </summary>
+    [Fact]
+    public void ActionDetailPrefetch_SourceEquivalentDescription_IsReplacedDuringCanonicalMerge()
+    {
+        var originalPayload = new ActionTooltipCanonicalPayload
+        {
+            ActionId = 15997,
+            Name = "Standard Step",
+            Description = "Begin dancing, granting yourself Standard Step.",
+        };
+        var stalePayload = new ActionTooltipCanonicalPayload
+        {
+            ActionId = originalPayload.ActionId,
+            Name = originalPayload.Name,
+            Description = originalPayload.Description,
+            TranslatedName = "Passo padrão",
+            TranslatedDescription = originalPayload.Description,
+        };
+        var staleRow = new ActionTooltip
+        {
+            CanonicalPayloadAsText = stalePayload.Serialize(),
+        };
+        var scope = new TranslationReuseScope("chs", "pt-BR", 4, true);
+        var createRow = typeof(PluginEntry).GetMethod(
+            "CreateActionDetailTranslationRow",
+            System.Reflection.BindingFlags.NonPublic |
+            System.Reflection.BindingFlags.Static);
+
+        Assert.NotNull(createRow);
+
+        var mergedRow = (ActionTooltip?)createRow!.Invoke(
+            null,
+            [
+                originalPayload,
+                "test-version",
+                scope,
+                (Func<ActionTooltip, ActionTooltip?>)(_ => staleRow),
+                (TryGetPrefetchTranslationDelegate)((string key, out string translatedText) =>
+                {
+                    if (key.Contains("|Description|", StringComparison.Ordinal))
+                    {
+                        translatedText = "Comece a dancar e conceda a si mesmo Passo padrao.";
+                        return true;
+                    }
+
+                    translatedText = string.Empty;
+                    return false;
+                }),
+                null,
+                null,
+            ]);
+
+        Assert.NotNull(mergedRow);
+        Assert.Equal(
+            "Passo padrão",
+            mergedRow!.TranslatedActionName);
+        Assert.Equal(
+            "Comece a dancar e conceda a si mesmo Passo padrao.",
+            mergedRow.TranslatedActionDescription);
+    }
+
     private static PrefetchTranslationDispatchResult RunOperation(
         PrefetchFamily family,
         Func<SourceClientLanguage?> sourceLanguageResolver,

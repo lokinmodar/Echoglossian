@@ -16,11 +16,12 @@ namespace Echoglossian.Tests;
 public sealed class ScenarioTreeHandlerContractTests
 {
     /// <summary>
-    ///     Ensures ScenarioTree queues visible text translations instead of only
-    ///     waiting for a pre-warmed quest database row.
+    ///     Ensures ScenarioTree falls back to visible-text lookups first and
+    ///     then requests the shared accepted-quest prefetch when canonical
+    ///     payload is still missing.
     /// </summary>
     [Fact]
-    public void ScenarioTree_queues_visible_text_when_payload_is_missing()
+    public void ScenarioTree_requests_shared_prefetch_when_payload_is_missing()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -31,8 +32,8 @@ public sealed class ScenarioTreeHandlerContractTests
             "ScenarioTreeHandler.cs"));
 
         Assert.Contains("TryResolveScenarioTreeFallbackTranslation", source);
-        Assert.Contains("QueueScenarioTreeTranslation", source);
-        Assert.Contains("this.QueueTranslation(", source);
+        Assert.Contains("this.RequestAcceptedQuestPrefetch(", source);
+        Assert.DoesNotContain("QueueScenarioTreeTranslation", source);
     }
 
     /// <summary>

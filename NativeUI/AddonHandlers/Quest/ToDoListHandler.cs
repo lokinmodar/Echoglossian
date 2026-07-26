@@ -379,6 +379,28 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
             originalQuestText,
             out var todoProgressSnapshot))
     {
+      if (QuestLuminaResolver.TryResolveQuestId(
+              originalQuestText,
+              out var pendingQuestIdText) &&
+          QuestProgressResolver.TryResolveAcceptedQuestId(
+              pendingQuestIdText,
+              out var acceptedQuestId))
+      {
+        PluginRuntimeLog.Debug(
+            ToDoListAddonName,
+            "request-prefetch questId={QuestId} title='{QuestTitle}' reason='todo-progress-unavailable'",
+            acceptedQuestId,
+            this.SummarizeDiagnosticText(originalQuestText));
+        this.RequestAcceptedQuestPrefetch(acceptedQuestId);
+      }
+      else
+      {
+        PluginRuntimeLog.Debug(
+            ToDoListAddonName,
+            "resolve-pending title='{QuestTitle}' reason='todo-progress-unavailable'",
+            this.SummarizeDiagnosticText(originalQuestText));
+      }
+
       runtimeEntries.Add(
           this.CreateQuestRuntimeEntry(
               visibleQuest.QuestRow,
@@ -405,13 +427,19 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
         sourceLanguage.PersistenceCode,
-        LangDict[LanguageInt].Code,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now);
     var foundQuestPlate = this.FindQuestPlate(questPlate);
     if (foundQuestPlate == null ||
         string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestName))
     {
+      PluginRuntimeLog.Debug(
+          ToDoListAddonName,
+          "resolve-pending questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' reason='quest-translation-missing'",
+          todoProgressSnapshot.QuestProgress.QuestId,
+          todoProgressSnapshot.CacheKey,
+          this.SummarizeDiagnosticText(originalQuestText));
       this.RequestAcceptedQuestPrefetch(
           todoProgressSnapshot.QuestProgress.QuestId);
       runtimeEntries.Add(
@@ -442,8 +470,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
             originalQuestText,
             foundQuestPlate.TranslatedQuestName));
 
-    foreach (var objectiveRow in visibleQuest.Objectives)
+    for (var objectiveIndex = 0;
+         objectiveIndex < visibleQuest.Objectives.Count;
+         objectiveIndex++)
     {
+      var objectiveRow = visibleQuest.Objectives[objectiveIndex];
       var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
       if (!this.ShouldTrackObjectiveRow(originalObjectiveText))
       {
@@ -456,26 +487,23 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         continue;
       }
 
-      var translatedObjectiveText = string.Empty;
-      var foundTranslatedObjective = false;
-      foreach (var canonicalObjectiveRowKey in questCanonicalData
-                   .EnumerateObjectiveRowKeysByText(originalObjectiveText))
+      if (!this.TryResolveTranslatedObjectiveText(
+              foundQuestPlate,
+              questCanonicalData,
+              todoProgressSnapshot,
+              originalObjectiveText,
+              objectiveIndex,
+              visibleQuest.Objectives.Count,
+              out var translatedObjectiveText))
       {
-        if (!foundQuestPlate.TryGetTranslatedObjectiveText(
-                canonicalObjectiveRowKey,
-                originalObjectiveText,
-                out translatedObjectiveText) ||
-            string.IsNullOrWhiteSpace(translatedObjectiveText))
-        {
-          continue;
-        }
-
-        foundTranslatedObjective = true;
-        break;
-      }
-
-      if (!foundTranslatedObjective)
-      {
+        PluginRuntimeLog.Debug(
+            ToDoListAddonName,
+            "resolve-pending questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' objectiveIndex={ObjectiveIndex} objective='{ObjectiveText}' reason='objective-translation-missing'",
+            todoProgressSnapshot.QuestProgress.QuestId,
+            todoProgressSnapshot.CacheKey,
+            this.SummarizeDiagnosticText(originalQuestText),
+            objectiveIndex,
+            this.SummarizeDiagnosticText(originalObjectiveText));
         this.RequestAcceptedQuestPrefetch(
             todoProgressSnapshot.QuestProgress.QuestId);
         runtimeEntries.Add(
@@ -495,7 +523,87 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               translatedObjectiveText));
     }
 
+    PluginRuntimeLog.Debug(
+        ToDoListAddonName,
+        "resolve questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' objectiveCount={ObjectiveCount}",
+        todoProgressSnapshot.QuestProgress.QuestId,
+        todoProgressSnapshot.CacheKey,
+        this.SummarizeDiagnosticText(originalQuestText),
+        visibleQuest.Objectives.Count);
     return true;
+  }
+
+  /// <summary>
+  ///     Tries to resolve the translated text for one visible ToDoList
+  ///     objective row, preferring canonical text matches and then falling
+  ///     back to the live objective-progress window.
+  /// </summary>
+  /// <param name="questPlate">The persisted quest plate.</param>
+  /// <param name="questCanonicalData">The canonical quest data.</param>
+  /// <param name="todoProgressSnapshot">The live todo progress snapshot.</param>
+  /// <param name="originalObjectiveText">The visible source objective text.</param>
+  /// <param name="objectiveIndex">The objective index within the visible quest block.</param>
+  /// <param name="visibleObjectiveCount">The number of visible objective rows.</param>
+  /// <param name="translatedObjectiveText">The resolved translated objective text.</param>
+  /// <returns><c>true</c> when a translated objective row was resolved.</returns>
+  private bool TryResolveTranslatedObjectiveText(
+      QuestPlate questPlate,
+      QuestCanonicalData questCanonicalData,
+      QuestTodoProgressSnapshot todoProgressSnapshot,
+      string originalObjectiveText,
+      int objectiveIndex,
+      int visibleObjectiveCount,
+      out string translatedObjectiveText)
+  {
+    translatedObjectiveText = string.Empty;
+    HashSet<string> triedRowKeys = new(StringComparer.Ordinal);
+
+    foreach (var objectiveEntry in questCanonicalData
+                 .EnumerateObjectiveEntriesByVisibleText(originalObjectiveText))
+    {
+      if (string.IsNullOrWhiteSpace(objectiveEntry.KeyText) ||
+          !triedRowKeys.Add(objectiveEntry.KeyText))
+      {
+        continue;
+      }
+
+      if (!questPlate.TryGetTranslatedObjectiveText(
+              objectiveEntry.KeyText,
+              objectiveEntry.Text,
+              out translatedObjectiveText) ||
+          string.IsNullOrWhiteSpace(translatedObjectiveText))
+      {
+        continue;
+      }
+
+      return true;
+    }
+
+    var activeObjectiveEntries = questCanonicalData.GetActiveObjectiveEntries(
+        todoProgressSnapshot.ObjectiveProgress,
+        todoProgressSnapshot.ObjectiveCount);
+    if (activeObjectiveEntries.Count == 0)
+    {
+      return false;
+    }
+
+    if (visibleObjectiveCount == activeObjectiveEntries.Count &&
+        objectiveIndex >= 0 &&
+        objectiveIndex < activeObjectiveEntries.Count)
+    {
+      var activeObjectiveEntry = activeObjectiveEntries[objectiveIndex];
+      if (!string.IsNullOrWhiteSpace(activeObjectiveEntry.KeyText) &&
+          questPlate.TryGetTranslatedObjectiveText(
+              activeObjectiveEntry.KeyText,
+              activeObjectiveEntry.Text,
+              out translatedObjectiveText) &&
+          !string.IsNullOrWhiteSpace(translatedObjectiveText))
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /// <summary>

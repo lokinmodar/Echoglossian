@@ -484,81 +484,62 @@ public partial class Echoglossian
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
 
       QuestPlate? localFoundQuestPlate = null;
-      var matchedByQuestId = false;
+      var hasQuestId = !string.IsNullOrWhiteSpace(questPlate.QuestId);
 
       // Look up without GameVersion so that cross-patch reuse is possible.
-      if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
+      if (hasQuestId)
       {
-        var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questIdMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
             t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
-        matchedByQuestId = localFoundQuestPlate != null;
-
-        if (localFoundQuestPlate == null)
-        {
-          return null;
-        }
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questIdMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
       if (localFoundQuestPlate == null &&
-          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
           !string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
       {
-        var questMessageMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questMessageMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
             t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
             t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questMessageMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
+        if (hasQuestId)
+        {
+          questMessageMatches = questMessageMatches.Where(t =>
+              t.QuestId == questPlate.QuestId ||
+              t.QuestId == null ||
+              t.QuestId == string.Empty);
+        }
+
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questMessageMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
       if (localFoundQuestPlate == null &&
-          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
+          !hasQuestId &&
           !string.IsNullOrWhiteSpace(questPlate.QuestName))
       {
-        var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questNameMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
             t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questNameMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
-      if (localFoundQuestPlate == null ||
-          (!matchedByQuestId &&
-           localFoundQuestPlate.OriginalQuestMessage !=
-           questPlate.OriginalQuestMessage))
+      if (localFoundQuestPlate == null)
       {
         return null;
       }
 
-      // Content-hash check: when the incoming plate carries a hash (meaning the
-      // snapshot was resolved from the live sheet) compare it with what is stored.
-      // A mismatch means quest content changed in a patch → need retranslation.
-      // An empty stored hash means a legacy row → retranslate once to populate it.
-      var incomingHash = questPlate.SourceContentHash;
-      var storedHash = localFoundQuestPlate.SourceContentHash;
-      if (!string.IsNullOrEmpty(incomingHash) &&
-          !string.Equals(incomingHash, storedHash, StringComparison.Ordinal))
-      {
-        // Content changed or missing — signal the caller to retranslate.
-        return null;
-      }
-
-      localFoundQuestPlate.UpdateFieldsFromText();
       return localFoundQuestPlate;
     }
     catch (Exception e)
@@ -621,66 +602,45 @@ public partial class Echoglossian
       questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
 
-      // Prefer QuestId lookup (stable primary key) when available so that two
-      // quests sharing a display name are never confused. Fall back to name-only
-      // match for legacy rows that were stored before QuestId was populated.
       QuestPlate? localFoundQuestPlate = null;
-      var matchedByQuestId = false;
+      var hasQuestId = !string.IsNullOrWhiteSpace(questPlate.QuestId);
 
-      if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
+      // Prefer QuestId lookup (stable primary key) when available so that two
+      // quests sharing a display name are never confused. Fall back to a
+      // legacy-compatible name lookup when only pre-canonical rows exist.
+      if (hasQuestId)
       {
-        var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questIdMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
             t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
-        matchedByQuestId = localFoundQuestPlate != null;
-
-        if (localFoundQuestPlate == null)
-        {
-          return null;
-        }
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questIdMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
       if (localFoundQuestPlate == null &&
-          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
           !string.IsNullOrWhiteSpace(questPlate.QuestName))
       {
-        var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questNameMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
             t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
+        if (hasQuestId)
+        {
+          questNameMatches = questNameMatches.Where(t =>
+              t.QuestId == questPlate.QuestId ||
+              t.QuestId == null ||
+              t.QuestId == string.Empty);
+        }
+
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questNameMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
-      if (localFoundQuestPlate == null ||
-          (!matchedByQuestId &&
-           localFoundQuestPlate.QuestName != questPlate.QuestName))
-      {
-        return null;
-      }
-
-      // Content-hash check: same semantics as FindQuestPlate.
-      // When the caller sets SourceContentHash on the incoming plate, a mismatch
-      // means quest content changed → retranslate. Empty incoming hash is a
-      // no-op so callers that don't resolve a snapshot still get the old behavior.
-      var incomingHash = questPlate.SourceContentHash;
-      var storedHash = localFoundQuestPlate.SourceContentHash;
-      if (!string.IsNullOrEmpty(incomingHash) &&
-          !string.Equals(incomingHash, storedHash, StringComparison.Ordinal))
-      {
-        return null;
-      }
-
-      localFoundQuestPlate.UpdateFieldsFromText();
       return localFoundQuestPlate;
     }
     catch (Exception e)
@@ -1677,27 +1637,22 @@ public partial class Echoglossian
   {
     questPlate.GameVersion ??= GetGameVersion();
     var hasGameVersion = !string.IsNullOrWhiteSpace(questPlate.GameVersion);
+    var hasQuestId = !string.IsNullOrWhiteSpace(questPlate.QuestId);
 
-    if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
+    if (hasQuestId)
     {
       var questIdMatches = context.QuestPlate.Where(t =>
           t.QuestId == questPlate.QuestId &&
-          t.TranslationLang == questPlate.TranslationLang &&
           t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
-      var questIdMatch = questIdMatches
-          .AsEnumerable()
-          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
-              t.OriginalLang,
-              questPlate.OriginalLang));
+      var questIdMatch = SelectPreferredQuestPlateForSave(
+          questIdMatches.AsEnumerable(),
+          questPlate);
 
       if (questIdMatch != null)
       {
-        questIdMatch.UpdateFieldsFromText();
         return questIdMatch;
       }
-
-      return null;
     }
 
     if (!string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
@@ -1705,39 +1660,365 @@ public partial class Echoglossian
       var questMessageMatches = context.QuestPlate.Where(t =>
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
-          t.TranslationLang == questPlate.TranslationLang &&
           t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
-      var questMessageMatch = questMessageMatches
-          .AsEnumerable()
-          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
-              t.OriginalLang,
-              questPlate.OriginalLang));
+      if (hasQuestId)
+      {
+        questMessageMatches = questMessageMatches.Where(t =>
+            t.QuestId == questPlate.QuestId ||
+            t.QuestId == null ||
+            t.QuestId == string.Empty);
+      }
+
+      var questMessageMatch = SelectPreferredQuestPlateForSave(
+          questMessageMatches.AsEnumerable(),
+          questPlate);
 
       if (questMessageMatch != null)
       {
-        questMessageMatch.UpdateFieldsFromText();
         return questMessageMatch;
       }
     }
 
     var questNameMatches = context.QuestPlate.Where(t =>
         t.QuestName == questPlate.QuestName &&
-        t.TranslationLang == questPlate.TranslationLang &&
         t.TranslationEngine == questPlate.TranslationEngine &&
         (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
-    var questNameMatch = questNameMatches
-        .AsEnumerable()
-        .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
-            t.OriginalLang,
-            questPlate.OriginalLang));
-
-    if (questNameMatch != null)
+    if (hasQuestId)
     {
-      questNameMatch.UpdateFieldsFromText();
+      questNameMatches = questNameMatches.Where(t =>
+          t.QuestId == questPlate.QuestId ||
+          t.QuestId == null ||
+          t.QuestId == string.Empty);
     }
 
-    return questNameMatch;
+    return SelectPreferredQuestPlateForSave(
+        questNameMatches.AsEnumerable(),
+        questPlate);
+  }
+
+  /// <summary>
+  ///     Selects the preferred persisted quest plate for runtime reads,
+  ///     favoring canonical rows with a matching hash and the most complete
+  ///     translated payload when duplicates exist.
+  /// </summary>
+  /// <param name="candidateQuestPlates">The candidate persisted quest plates.</param>
+  /// <param name="requestedQuestPlate">The requested quest plate.</param>
+  /// <param name="scope">The resolved translation reuse scope.</param>
+  /// <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
+  private static QuestPlate? SelectPreferredQuestPlate(
+      IEnumerable<QuestPlate> candidateQuestPlates,
+      QuestPlate requestedQuestPlate,
+      TranslationReuseScope scope)
+  {
+    QuestPlate? preferredQuestPlate = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPlate in candidateQuestPlates)
+    {
+      if (!scope.Matches(
+              candidateQuestPlate.OriginalLang,
+              candidateQuestPlate.TranslationLang,
+              candidateQuestPlate.TranslationEngine) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPlate.OriginalLang,
+              requestedQuestPlate.OriginalLang) ||
+          !IsQuestPlateContentHashCompatible(
+              candidateQuestPlate,
+              requestedQuestPlate))
+      {
+        continue;
+      }
+
+      candidateQuestPlate.UpdateFieldsFromText();
+
+      var identityScore = ComputeQuestPlateIdentityScore(
+          candidateQuestPlate,
+          requestedQuestPlate);
+      var completenessScore = ComputeQuestPlateCompletenessScore(
+          candidateQuestPlate);
+      var updatedDate = candidateQuestPlate.UpdatedDate ??
+                        candidateQuestPlate.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPlate != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPlate.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPlate = candidateQuestPlate;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPlate.Id;
+    }
+
+    return preferredQuestPlate;
+  }
+
+  /// <summary>
+  ///     Selects the preferred persisted quest plate for save/merge
+  ///     operations, favoring canonical rows and the most complete payload when
+  ///     duplicate candidates exist.
+  /// </summary>
+  /// <param name="candidateQuestPlates">The candidate persisted quest plates.</param>
+  /// <param name="requestedQuestPlate">The incoming quest plate.</param>
+  /// <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
+  private static QuestPlate? SelectPreferredQuestPlateForSave(
+      IEnumerable<QuestPlate> candidateQuestPlates,
+      QuestPlate requestedQuestPlate)
+  {
+    QuestPlate? preferredQuestPlate = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPlate in candidateQuestPlates)
+    {
+      if (!RuntimeLanguageHelper.LanguagesMatch(
+              candidateQuestPlate.TranslationLang,
+              requestedQuestPlate.TranslationLang) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPlate.OriginalLang,
+              requestedQuestPlate.OriginalLang))
+      {
+        continue;
+      }
+
+      candidateQuestPlate.UpdateFieldsFromText();
+
+      var identityScore = ComputeQuestPlateIdentityScore(
+          candidateQuestPlate,
+          requestedQuestPlate);
+      var completenessScore = ComputeQuestPlateCompletenessScore(
+          candidateQuestPlate);
+      var updatedDate = candidateQuestPlate.UpdatedDate ??
+                        candidateQuestPlate.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPlate != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPlate.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPlate = candidateQuestPlate;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPlate.Id;
+    }
+
+    return preferredQuestPlate;
+  }
+
+  /// <summary>
+  ///     Gets the identity score for one candidate quest plate relative to the
+  ///     requested quest plate.
+  /// </summary>
+  /// <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+  /// <param name="requestedQuestPlate">The requested quest plate.</param>
+  /// <returns>The identity score. Higher values are preferred.</returns>
+  private static int ComputeQuestPlateIdentityScore(
+      QuestPlate candidateQuestPlate,
+      QuestPlate requestedQuestPlate)
+  {
+    var identityScore = 0;
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.QuestId) &&
+        string.Equals(
+            candidateQuestPlate.QuestId,
+            requestedQuestPlate.QuestId,
+            StringComparison.Ordinal))
+    {
+      identityScore += 256;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.SourceContentHash) &&
+        string.Equals(
+            candidateQuestPlate.SourceContentHash,
+            requestedQuestPlate.SourceContentHash,
+            StringComparison.Ordinal))
+    {
+      identityScore += 128;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.QuestTextSheetName) &&
+        string.Equals(
+            candidateQuestPlate.QuestTextSheetName,
+            requestedQuestPlate.QuestTextSheetName,
+            StringComparison.Ordinal))
+    {
+      identityScore += 64;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.GameVersion) &&
+        string.Equals(
+            candidateQuestPlate.GameVersion,
+            requestedQuestPlate.GameVersion,
+            StringComparison.Ordinal))
+    {
+      identityScore += 32;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.OriginalQuestMessage) &&
+        string.Equals(
+            candidateQuestPlate.OriginalQuestMessage,
+            requestedQuestPlate.OriginalQuestMessage,
+            StringComparison.Ordinal))
+    {
+      identityScore += 16;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.QuestName) &&
+        string.Equals(
+            candidateQuestPlate.QuestName,
+            requestedQuestPlate.QuestName,
+            StringComparison.Ordinal))
+    {
+      identityScore += 8;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.QuestId))
+    {
+      identityScore += 4;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.SourceContentHash))
+    {
+      identityScore += 2;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.QuestTextSheetName))
+    {
+      identityScore += 1;
+    }
+
+    return identityScore;
+  }
+
+  /// <summary>
+  ///     Gets the completeness score for one candidate quest plate.
+  /// </summary>
+  /// <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+  /// <returns>The completeness score. Higher values are preferred.</returns>
+  private static int ComputeQuestPlateCompletenessScore(
+      QuestPlate candidateQuestPlate)
+  {
+    var completenessScore = 0;
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.TranslatedQuestName))
+    {
+      completenessScore += 64;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.TranslatedQuestMessage))
+    {
+      completenessScore += 64;
+    }
+
+    completenessScore += Math.Min(
+        candidateQuestPlate.TranslatedObjectiveRowsByKey.Count,
+        32) * 4;
+    completenessScore += Math.Min(
+        candidateQuestPlate.TranslatedSummaryRowsByKey.Count,
+        32) * 4;
+    completenessScore += Math.Min(
+        candidateQuestPlate.TranslatedSystemRowsByKey.Count,
+        32) * 4;
+    completenessScore += Math.Min(
+        candidateQuestPlate.CanonicalRows.Count,
+        32) * 2;
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.QuestTextSheetName))
+    {
+      completenessScore += 8;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.SourceContentHash))
+    {
+      completenessScore += 8;
+    }
+
+    return completenessScore;
+  }
+
+  /// <summary>
+  ///     Gets whether one persisted quest plate is compatible with the
+  ///     requested quest plate's content hash semantics.
+  /// </summary>
+  /// <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+  /// <param name="requestedQuestPlate">The requested quest plate.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the candidate may be reused; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private static bool IsQuestPlateContentHashCompatible(
+      QuestPlate candidateQuestPlate,
+      QuestPlate requestedQuestPlate)
+  {
+    if (string.IsNullOrWhiteSpace(requestedQuestPlate.SourceContentHash))
+    {
+      return true;
+    }
+
+    return string.Equals(
+        candidateQuestPlate.SourceContentHash,
+        requestedQuestPlate.SourceContentHash,
+        StringComparison.Ordinal);
   }
 
   /// <summary>

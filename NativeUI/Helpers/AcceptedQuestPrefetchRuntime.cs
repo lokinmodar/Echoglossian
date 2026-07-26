@@ -316,9 +316,6 @@ public partial class Echoglossian
         this.FindQuestPlateByName,
         questPlate =>
         {
-          this.EmitAcceptedQuestPrefetchDiagnostic(
-              questCanonicalData,
-              questPlate);
           this.InsertQuestPlate(questPlate);
         },
         (questPlate, fromCache) =>
@@ -349,6 +346,9 @@ public partial class Echoglossian
         questProgressSnapshot.QuestId,
         questProgressSnapshot.QuestName,
         $"translatedName={(!string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestName)).ToString()}, translatedMessage={(!string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestMessage)).ToString()}, translatedObjectives={existingQuestPlate.TranslatedObjectives.Count}, translatedSummaries={existingQuestPlate.TranslatedSummaries.Count}, translatedSystem={existingQuestPlate.TranslatedSystemRows.Count}");
+    this.EmitAcceptedQuestPrefetchDiagnostic(
+        questCanonicalData,
+        existingQuestPlate);
 
     if (!string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestName))
     {
@@ -1218,12 +1218,8 @@ public partial class Echoglossian
   private static bool ShouldEmitAcceptedQuestPrefetchDalamudLog(string phase)
   {
     return phase is "request-queued" or
-        "request-skip-duplicate" or
-        "quest-start" or
-        "resolve-failed" or
-        "resolved" or
-        "existing-row" ||
-        phase.StartsWith("translation-", StringComparison.Ordinal);
+        "resolve-failed" ||
+        phase.EndsWith("-failed", StringComparison.Ordinal);
   }
 
   /// <summary>

@@ -613,7 +613,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
         sourceLanguage.PersistenceCode,
-        LangDict[LanguageInt].Code,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now);
     foundQuestPlate = this.FindQuestPlate(questPlate);

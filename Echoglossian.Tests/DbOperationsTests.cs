@@ -150,6 +150,336 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Ensures duplicate canonical quest rows prefer the most complete
+    ///     translated payload instead of an older partial row.
+    /// </summary>
+    [Fact]
+    public void FindQuestPlate_DuplicateQuestIdRowsPreferMostCompleteCanonicalPayload()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = CreateTargetLanguages();
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 0,
+                TranslateAlreadyTranslatedTexts = true,
+            });
+            var timestamp = new DateTime(
+                2026,
+                7,
+                25,
+                12,
+                0,
+                0,
+                DateTimeKind.Utc);
+            const string questId = "69929";
+            const string sourceContentHash = "e6746c90e9d04427";
+            const string questTextSheetName = "quest/042/AktKzd008_04232";
+
+            var staleRow = CreateQuestPlate("en", 0, timestamp);
+            staleRow.QuestId = questId;
+            staleRow.SourceContentHash = sourceContentHash;
+            staleRow.QuestTextSheetName = null;
+            staleRow.TranslatedQuestMessage = string.Empty;
+            staleRow.TranslatedObjectives.Clear();
+            staleRow.TranslatedObjectiveRowsByKey.Clear();
+            staleRow.TranslatedSummaries.Clear();
+            staleRow.TranslatedSummaryRowsByKey.Clear();
+            staleRow.TranslatedSystemRows.Clear();
+            staleRow.TranslatedSystemRowsByKey.Clear();
+            staleRow.UpdateFieldsAsText();
+
+            var canonicalRow = CreateQuestPlate("en", 0, timestamp.AddMinutes(1));
+            canonicalRow.QuestId = questId;
+            canonicalRow.SourceContentHash = sourceContentHash;
+            canonicalRow.QuestTextSheetName = questTextSheetName;
+            canonicalRow.TranslatedQuestMessage = "Lucia busca entender melhor a crise atual.";
+            canonicalRow.ObjectiveRowsByKey["TODO#0"] =
+                "Investigate the designated locations.";
+            canonicalRow.SetTranslatedObjectiveText(
+                "TODO#0",
+                "Investigate the designated locations.",
+                "Investigue os locais designados.");
+            canonicalRow.SummaryRowsByKey["SEQ#0"] =
+                "The immediate crisis has been contained.";
+            canonicalRow.SetTranslatedSummaryText(
+                "SEQ#0",
+                "The immediate crisis has been contained.",
+                "A crise imediata foi contida.");
+            canonicalRow.SystemRowsByKey["SYSTEM#0"] =
+                "Attention: proceed to the next area.";
+            canonicalRow.SetTranslatedSystemText(
+                "SYSTEM#0",
+                "Attention: proceed to the next area.",
+                "Atenção: siga para a próxima área.");
+            canonicalRow.UpdateFieldsAsText();
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.QuestPlate.AddRange(staleRow, canonicalRow);
+                context.SaveChanges();
+            }
+
+            var lookup = new QuestPlate(
+                canonicalRow.QuestName,
+                canonicalRow.OriginalQuestMessage,
+                canonicalRow.OriginalLang,
+                string.Empty,
+                string.Empty,
+                questId,
+                canonicalRow.TranslationLang,
+                canonicalRow.TranslationEngine,
+                timestamp,
+                timestamp,
+                canonicalRow.GameVersion)
+            {
+                QuestTextSheetName = questTextSheetName,
+                SourceContentHash = sourceContentHash,
+            };
+
+            var result = plugin.FindQuestPlate(lookup);
+
+            Assert.NotNull(result);
+            Assert.Equal(
+                canonicalRow.TranslatedQuestMessage,
+                result!.TranslatedQuestMessage);
+            Assert.Equal(
+                canonicalRow.TranslatedObjectiveRowsByKey["TODO#0"],
+                result.TranslatedObjectiveRowsByKey["TODO#0"]);
+            Assert.Equal(
+                canonicalRow.TranslatedSummaryRowsByKey["SEQ#0"],
+                result.TranslatedSummaryRowsByKey["SEQ#0"]);
+            Assert.Equal(
+                canonicalRow.TranslatedSystemRowsByKey["SYSTEM#0"],
+                result.TranslatedSystemRowsByKey["SYSTEM#0"]);
+            Assert.Equal(questTextSheetName, result.QuestTextSheetName);
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = previousClientState;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.LangDict = previousLanguages;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures canonical quest writes promote legacy rows without
+    ///     <c>QuestId</c> instead of creating a duplicate canonical row.
+    /// </summary>
+    [Fact]
+    public void InsertQuestPlate_QuestIdPromotesLegacyNameRowInsteadOfCreatingDuplicate()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = CreateTargetLanguages();
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 0,
+                TranslateAlreadyTranslatedTexts = true,
+            });
+            var timestamp = new DateTime(
+                2026,
+                7,
+                25,
+                13,
+                0,
+                0,
+                DateTimeKind.Utc);
+            const string questId = "69768";
+            const string sourceContentHash = "afa17a0939b31cd1";
+            const string questTextSheetName = "quest/042/AktKzd008_04232";
+
+            var legacyRow = CreateQuestPlate("en", 0, timestamp);
+            legacyRow.QuestId = null;
+            legacyRow.SourceContentHash = null;
+            legacyRow.QuestTextSheetName = null;
+            legacyRow.UpdateFieldsAsText();
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.QuestPlate.Add(legacyRow);
+                context.SaveChanges();
+            }
+
+            var canonicalRow = CreateQuestPlate("en", 0, timestamp.AddMinutes(1));
+            canonicalRow.QuestId = questId;
+            canonicalRow.SourceContentHash = sourceContentHash;
+            canonicalRow.QuestTextSheetName = questTextSheetName;
+            canonicalRow.ObjectiveRowsByKey["TODO#0"] = "Speak with the designated target.";
+            canonicalRow.SetTranslatedObjectiveText(
+                "TODO#0",
+                "Speak with the designated target.",
+                "Fale com o alvo designado.");
+            canonicalRow.SummaryRowsByKey["SEQ#0"] = "The search has begun.";
+            canonicalRow.SetTranslatedSummaryText(
+                "SEQ#0",
+                "The search has begun.",
+                "A busca começou.");
+            canonicalRow.UpdateFieldsAsText();
+
+            plugin.InsertQuestPlate(canonicalRow);
+
+            using var verification = new EchoglossianDbContext(configDir);
+            var questRows = verification.QuestPlate.ToList();
+            var persistedRow = Assert.Single(questRows);
+            persistedRow.UpdateFieldsFromText();
+
+            Assert.Equal(questId, persistedRow.QuestId);
+            Assert.Equal(sourceContentHash, persistedRow.SourceContentHash);
+            Assert.Equal(questTextSheetName, persistedRow.QuestTextSheetName);
+            Assert.Equal(
+                canonicalRow.TranslatedQuestName,
+                persistedRow.TranslatedQuestName);
+            Assert.Equal(
+                canonicalRow.TranslatedObjectiveRowsByKey["TODO#0"],
+                persistedRow.TranslatedObjectiveRowsByKey["TODO#0"]);
+            Assert.Equal(
+                canonicalRow.TranslatedSummaryRowsByKey["SEQ#0"],
+                persistedRow.TranslatedSummaryRowsByKey["SEQ#0"]);
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = previousClientState;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.LangDict = previousLanguages;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures canonical quest saves merge into legacy regional-alias rows
+    ///     instead of creating a duplicate <c>QuestPlate</c> entry.
+    /// </summary>
+    [Fact]
+    public void InsertQuestPlate_RegionalTargetAliasPromotesLegacyQuestRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = CreateTargetLanguages();
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 0,
+                TranslateAlreadyTranslatedTexts = true,
+            });
+            var timestamp = new DateTime(
+                2026,
+                7,
+                25,
+                14,
+                0,
+                0,
+                DateTimeKind.Utc);
+            const string questId = "70391";
+            const string sourceContentHash = "70391-content-hash";
+            const string questTextSheetName = "quest/050/ManFst001_05010";
+
+            var legacyAliasRow = CreateQuestPlate("en", 0, timestamp);
+            legacyAliasRow.QuestId = questId;
+            legacyAliasRow.TranslationLang = "pt";
+            legacyAliasRow.SourceContentHash = sourceContentHash;
+            legacyAliasRow.QuestTextSheetName = questTextSheetName;
+            legacyAliasRow.TranslatedQuestName = "Mente sobre Mansão";
+            legacyAliasRow.TranslatedQuestMessage = "A isca de Ogul foi roubada.";
+            legacyAliasRow.UpdateFieldsAsText();
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.QuestPlate.Add(legacyAliasRow);
+                context.SaveChanges();
+            }
+
+            var canonicalRow = CreateQuestPlate("en", 0, timestamp.AddMinutes(1));
+            canonicalRow.QuestId = questId;
+            canonicalRow.TranslationLang = "pt-BR";
+            canonicalRow.SourceContentHash = sourceContentHash;
+            canonicalRow.QuestTextSheetName = questTextSheetName;
+            canonicalRow.TranslatedQuestName = "Mente Sobre Mansão";
+            canonicalRow.TranslatedQuestMessage =
+                "O batedor de carteiras aparece e toma a isca de Ogul.";
+            canonicalRow.ObjectiveRowsByKey["TODO#0"] =
+                "Wait at the designated location, then follow the boy thief without being seen.";
+            canonicalRow.SetTranslatedObjectiveText(
+                "TODO#0",
+                canonicalRow.ObjectiveRowsByKey["TODO#0"],
+                "Espere no local designado e siga o menino ladrão sem ser visto.");
+            canonicalRow.UpdateFieldsAsText();
+
+            var result = plugin.InsertQuestPlate(canonicalRow);
+
+            Assert.Equal("Data merged into QuestPlate table.", result);
+
+            using var verification = new EchoglossianDbContext(configDir);
+            var questRows = verification.QuestPlate.ToList();
+            var persistedRow = Assert.Single(questRows);
+            persistedRow.UpdateFieldsFromText();
+
+            Assert.Equal(questId, persistedRow.QuestId);
+            Assert.Equal("pt-BR", persistedRow.TranslationLang);
+            Assert.Equal(sourceContentHash, persistedRow.SourceContentHash);
+            Assert.Equal(questTextSheetName, persistedRow.QuestTextSheetName);
+            Assert.Equal(
+                canonicalRow.TranslatedQuestName,
+                persistedRow.TranslatedQuestName);
+            Assert.Equal(
+                canonicalRow.TranslatedQuestMessage,
+                persistedRow.TranslatedQuestMessage);
+            Assert.Equal(
+                canonicalRow.TranslatedObjectiveRowsByKey["TODO#0"],
+                persistedRow.TranslatedObjectiveRowsByKey["TODO#0"]);
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = previousClientState;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.LangDict = previousLanguages;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures formatting fails closed when the current client language
     ///     has no resolved source identity.
     /// </summary>

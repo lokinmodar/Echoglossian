@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Reflection;
+using System.IO;
 
 using Dalamud.Game.Addon.Lifecycle;
 
@@ -138,6 +139,41 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures ToDoList can still recover an accepted quest id from the
+    ///     visible quest title when the live todo-progress snapshot has not
+    ///     loaded yet.
+    /// </summary>
+    [Fact]
+    public void ToDoListHandler_RecoversAcceptedQuestIdWhenTodoProgressSnapshotIsUnavailable()
+    {
+        var resolver = typeof(ToDoListHandler).GetMethod(
+            "TryResolveVisibleQuestEntries",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var questIdResolver = typeof(QuestLuminaResolver).GetMethod(
+            "TryResolveQuestId",
+            BindingFlags.Static | BindingFlags.Public,
+            binder: null,
+            [typeof(string), typeof(string).MakeByRefType()],
+            modifiers: null);
+        var acceptedGate = typeof(QuestProgressResolver).GetMethod(
+            "TryResolveAcceptedQuestId",
+            BindingFlags.Static | BindingFlags.NonPublic,
+            binder: null,
+            [typeof(string), typeof(uint).MakeByRefType()],
+            modifiers: null);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(questIdResolver);
+        Assert.NotNull(acceptedGate);
+        Assert.True(
+            MethodReferences(resolver!, questIdResolver!),
+            "ToDoList must recover the quest id from the visible title when the live todo-progress snapshot is still unavailable.");
+        Assert.True(
+            MethodReferences(resolver!, acceptedGate!),
+            "ToDoList must gate fallback prefetches through accepted-quest state.");
+    }
+
+    /// <summary>
     ///     Ensures JournalDetail sends unresolved active quest text to the
     ///     shared accepted-quest prefetch instead of waiting for an unrelated
     ///     refresh to populate the persisted canonical row.
@@ -157,6 +193,126 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True(
             MethodReferences(resolver!, request!),
             "JournalDetail must request the shared accepted-quest prefetch instead of owning a translation queue.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalDetail can still recover an accepted quest id from
+    ///     the visible title when progression data is not yet available.
+    /// </summary>
+    [Fact]
+    public void JournalDetailHandler_RecoversAcceptedQuestIdWhenProgressSnapshotIsUnavailable()
+    {
+        var resolver = typeof(JournalDetailHandler).GetMethod(
+            "TranslateJournalBox",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var questIdResolver = typeof(QuestLuminaResolver).GetMethod(
+            "TryResolveQuestId",
+            BindingFlags.Static | BindingFlags.Public,
+            binder: null,
+            [typeof(string), typeof(string).MakeByRefType()],
+            modifiers: null);
+        var acceptedGate = typeof(QuestProgressResolver).GetMethod(
+            "TryResolveAcceptedQuestId",
+            BindingFlags.Static | BindingFlags.NonPublic,
+            binder: null,
+            [typeof(string), typeof(uint).MakeByRefType()],
+            modifiers: null);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(questIdResolver);
+        Assert.NotNull(acceptedGate);
+        Assert.True(
+            MethodReferences(resolver!, questIdResolver!),
+            "JournalDetail must recover the quest id from the visible title when the progress snapshot is still unavailable.");
+        Assert.True(
+            MethodReferences(resolver!, acceptedGate!),
+            "JournalDetail must gate fallback prefetches through accepted-quest state.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalDetail refresh events continue to resolve the
+    ///     current source language and translate immediately instead of
+    ///     routing through a separate visible-signature invalidation layer.
+    /// </summary>
+    [Fact]
+    public void JournalDetailHandler_TranslatesDirectlyFromEventRefresh()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Quest",
+            "JournalDetailHandler.cs"));
+        var eventHandlerStart = source.IndexOf(
+            "private unsafe void OnJournalDetailEvent(",
+            StringComparison.Ordinal);
+        var preDrawHandlerStart = source.IndexOf(
+            "private unsafe void OnJournalDetailPreDrawEvent(",
+            eventHandlerStart,
+            StringComparison.Ordinal);
+
+        Assert.True(
+            eventHandlerStart >= 0,
+            "JournalDetail should keep its direct event refresh path in OnJournalDetailEvent.");
+        Assert.True(
+            preDrawHandlerStart > eventHandlerStart,
+            "JournalDetail pre-draw retry handling should remain separate from the direct event refresh path.");
+
+        var methodBody = source.Substring(
+            eventHandlerStart,
+            preDrawHandlerStart - eventHandlerStart);
+
+        Assert.Contains(
+            "RuntimeLanguageHelper.TryResolveCurrentSourceLanguage",
+            methodBody,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.TranslateJournalDetail(sourceLanguage);",
+            methodBody,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "TryComputeVisibleJournalDetailSignature",
+            methodBody,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the current-quest JournalDetail pane only enters the active
+    ///     quest translation path after the visible title is gated through the
+    ///     accepted-quest runtime.
+    /// </summary>
+    [Fact]
+    public void JournalDetailHandler_GatesCurrentQuestPaneToAcceptedQuestStateBeforeDbLookup()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Quest",
+            "JournalDetailHandler.cs"));
+        var translateJournalBoxStart = source.IndexOf(
+            "private unsafe bool TranslateJournalBox(",
+            StringComparison.Ordinal);
+        var acceptedGate = source.IndexOf(
+            "QuestProgressResolver.TryResolveAcceptedQuestId",
+            translateJournalBoxStart,
+            StringComparison.Ordinal);
+        var dbLookup = source.IndexOf(
+            "var foundQuestPlate = this.FindQuestPlate(questPlate);",
+            translateJournalBoxStart,
+            StringComparison.Ordinal);
+
+        Assert.True(
+            translateJournalBoxStart >= 0,
+            "JournalDetail current-quest translation path should remain in TranslateJournalBox.");
+        Assert.True(
+            dbLookup > translateJournalBoxStart,
+            "JournalDetail current-quest translation path should keep its canonical DB lookup inside TranslateJournalBox.");
+        Assert.True(
+            acceptedGate > translateJournalBoxStart && acceptedGate < dbLookup,
+            "JournalDetail current-quest translation must gate the visible title through accepted-quest state before reusing DB rows or scheduling prefetch.");
     }
 
     /// <summary>
@@ -570,6 +726,26 @@ public class QuestAddonHandlerLifecycleTests
                 _,
                 _) => { },
         };
+    }
+
+    /// <summary>
+    /// Finds the repository root from the test output directory.
+    /// </summary>
+    /// <returns>The repository root directory.</returns>
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Echoglossian.sln")))
+            {
+                return current;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Unable to locate repository root.");
     }
 
     /// <summary>

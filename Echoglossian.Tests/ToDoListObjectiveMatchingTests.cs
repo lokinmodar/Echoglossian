@@ -49,6 +49,39 @@ public class ToDoListObjectiveMatchingTests
     }
 
     /// <summary>
+    /// Ensures a visible objective that appends live progress counters still
+    /// resolves to the correct canonical TODO row.
+    /// </summary>
+    [Fact]
+    public void EnumerateObjectiveEntriesByVisibleText_WithLiveCounterSuffix_ReturnsMatchingTodoRow()
+    {
+        var canonicalData = this.CreateCanonicalData();
+
+        var objectiveEntries = canonicalData.EnumerateObjectiveEntriesByVisibleText(
+            "Sneak with Radovan at Spineless Basin. 0/1").ToArray();
+
+        Assert.Single(objectiveEntries);
+        Assert.Equal("_TODO_01", objectiveEntries[0].KeyText);
+    }
+
+    /// <summary>
+    /// Ensures the live ToDoList progress window can target the active
+    /// canonical TODO row even when the visible text is not an exact match.
+    /// </summary>
+    [Fact]
+    public void GetActiveObjectiveEntries_LaterObjectiveProgress_ReturnsCurrentSlice()
+    {
+        var canonicalData = this.CreateCanonicalData();
+
+        var objectiveEntries = canonicalData.GetActiveObjectiveEntries(
+            objectiveProgress: 1,
+            objectiveCount: 1);
+
+        Assert.Single(objectiveEntries);
+        Assert.Equal("_TODO_01", objectiveEntries[0].KeyText);
+    }
+
+    /// <summary>
     /// Ensures the ToDoList does not infer a TODO row from order when the live
     /// objective is not part of the canonical quest payload.
     /// </summary>

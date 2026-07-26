@@ -5,6 +5,7 @@
 
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.Cache;
 
@@ -781,9 +782,12 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// </returns>
     private static bool HasCompleteTranslation(TRow row)
     {
-        return !string.IsNullOrWhiteSpace(row.TranslatedName) &&
-               (string.IsNullOrWhiteSpace(row.OriginalDescription) ||
-                !string.IsNullOrWhiteSpace(row.TranslatedDescription));
+        return StructuredTooltipTranslationValidation
+            .HasCompleteMeaningfulTranslation(
+                row.OriginalName,
+                row.OriginalDescription,
+                row.TranslatedName,
+                row.TranslatedDescription);
     }
 
     /// <summary>

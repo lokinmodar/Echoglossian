@@ -386,9 +386,14 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       if (this.TryResolveScenarioTreeFallbackTranslation(
               visibleEntry,
               sourceLanguage,
-              progressKey: string.Empty,
               out var fallbackTranslatedText))
       {
+        PluginRuntimeLog.Debug(
+            ScenarioTreeAddonName,
+            "resolve-fallback valueIndex={ValueIndex} questRowId={QuestRowId} text='{QuestText}' translatedReady=true",
+            visibleEntry.ValueIndex,
+            visibleEntry.QuestRowId,
+            this.SummarizeDiagnosticText(visibleEntry.OriginalText));
         runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
             visibleEntry.ValueIndex,
             progressKey: string.Empty,
@@ -398,12 +403,17 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         return true;
       }
 
-      this.QueueScenarioTreeTranslation(
-          sourceLanguage,
-          visibleEntry,
-          progressKey: string.Empty,
-          questCanonicalData: null,
-          questPlate: null);
+      if (visibleEntry.QuestRowId != 0)
+      {
+        PluginRuntimeLog.Debug(
+            ScenarioTreeAddonName,
+            "resolve-pending valueIndex={ValueIndex} questRowId={QuestRowId} text='{QuestText}' reason='todo-progress-unavailable'",
+            visibleEntry.ValueIndex,
+            visibleEntry.QuestRowId,
+            this.SummarizeDiagnosticText(visibleEntry.OriginalText));
+        this.RequestAcceptedQuestPrefetch(visibleEntry.QuestRowId);
+      }
+
       runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
           visibleEntry.ValueIndex,
           progressKey: string.Empty,
@@ -418,7 +428,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
         sourceLanguage.PersistenceCode,
-        LangDict[LanguageInt].Code,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now);
     var foundQuestPlate = this.FindQuestPlate(questPlate);
@@ -429,6 +439,13 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
             foundQuestPlate,
             out var translatedText))
     {
+      PluginRuntimeLog.Debug(
+          ScenarioTreeAddonName,
+          "resolve valueIndex={ValueIndex} questId={QuestId} cacheKey='{CacheKey}' text='{QuestText}' translatedReady=true",
+          visibleEntry.ValueIndex,
+          todoProgressSnapshot.QuestProgress.QuestId,
+          todoProgressSnapshot.CacheKey,
+          this.SummarizeDiagnosticText(visibleEntry.OriginalText));
       runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
           visibleEntry.ValueIndex,
           todoProgressSnapshot.CacheKey,
@@ -438,27 +455,15 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       return true;
     }
 
-    if (this.TryResolveScenarioTreeFallbackTranslation(
-            visibleEntry,
-            sourceLanguage,
-            todoProgressSnapshot.CacheKey,
-            out var queuedOrFallbackTranslatedText))
-    {
-      runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
-          visibleEntry.ValueIndex,
-          todoProgressSnapshot.CacheKey,
-          visibleEntry.OriginalText,
-          queuedOrFallbackTranslatedText,
-          visibleEntry.TextNodeKey);
-      return true;
-    }
-
-    this.QueueScenarioTreeTranslation(
-        sourceLanguage,
-        visibleEntry,
+    PluginRuntimeLog.Debug(
+        ScenarioTreeAddonName,
+        "resolve-pending valueIndex={ValueIndex} questId={QuestId} cacheKey='{CacheKey}' text='{QuestText}' reason='translation-missing'",
+        visibleEntry.ValueIndex,
+        todoProgressSnapshot.QuestProgress.QuestId,
         todoProgressSnapshot.CacheKey,
-        questCanonicalData,
-        foundQuestPlate ?? questPlate);
+        this.SummarizeDiagnosticText(visibleEntry.OriginalText));
+    this.RequestAcceptedQuestPrefetch(
+        todoProgressSnapshot.QuestProgress.QuestId);
 
     runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
         visibleEntry.ValueIndex,
@@ -481,18 +486,9 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   private bool TryResolveScenarioTreeFallbackTranslation(
       ScenarioTreeVisibleEntry visibleEntry,
       SourceClientLanguage sourceLanguage,
-      string progressKey,
       out string translatedText)
   {
     translatedText = string.Empty;
-    if (this.TryGetQueuedTranslation(
-            BuildScenarioTreeTranslationCacheKey(progressKey, visibleEntry),
-            out var cachedTranslatedText) &&
-        IsTranslatedPayloadReady(cachedTranslatedText))
-    {
-      translatedText = cachedTranslatedText;
-      return true;
-    }
 
     var fallbackQuestPlate = this.CreateQuestPlate(
         sourceLanguage,
@@ -502,172 +498,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     if (foundFallbackQuestPlate != null &&
         IsTranslatedPayloadReady(foundFallbackQuestPlate.TranslatedQuestName))
     {
-      translatedText = foundFallbackQuestPlate.TranslatedQuestName ?? string.Empty;
+      translatedText =
+          foundFallbackQuestPlate.TranslatedQuestName ?? string.Empty;
       return true;
     }
 
     return false;
-  }
-
-  /// <summary>
-  ///     Enqueues a visible ScenarioTree text row through the shared translation
-  ///     broker without blocking addon rendering.
-  /// </summary>
-  /// <param name="sourceLanguage">The operation-captured source identity.</param>
-  /// <param name="visibleEntry">The visible ScenarioTree slot.</param>
-  /// <param name="progressKey">The stable quest progress key, if known.</param>
-  /// <param name="questCanonicalData">The canonical quest payload, if resolved.</param>
-  /// <param name="questPlate">The existing or projected quest plate, if any.</param>
-  private void QueueScenarioTreeTranslation(
-      SourceClientLanguage sourceLanguage,
-      ScenarioTreeVisibleEntry visibleEntry,
-      string progressKey,
-      QuestCanonicalData? questCanonicalData,
-      QuestPlate? questPlate)
-  {
-    if (string.IsNullOrWhiteSpace(visibleEntry.OriginalText))
-    {
-      return;
-    }
-
-    this.QueueTranslation(
-        BuildScenarioTreeTranslationCacheKey(progressKey, visibleEntry),
-        () => this.Translate(visibleEntry.OriginalText, sourceLanguage),
-        translatedText =>
-        {
-          if (!IsTranslatedPayloadReady(translatedText))
-          {
-            return;
-          }
-
-          if (questCanonicalData == null)
-          {
-            var translatedQuestPlate = this.CreateTranslatedQuestPlate(
-                sourceLanguage,
-                visibleEntry.OriginalText,
-                string.Empty,
-                translatedText,
-                string.Empty,
-                string.Empty);
-            this.InsertQuestPlate(translatedQuestPlate);
-            return;
-          }
-
-          var questPlateToUpdate = questPlate?.Clone() ??
-                                   questCanonicalData.ToQuestPlate(
-                                       sourceLanguage.PersistenceCode,
-                                       LangDict[LanguageInt].Code,
-                                       this.Config.ChosenTransEngine,
-                                       DateTime.Now);
-          questPlateToUpdate.ApplyCanonicalPayload(questCanonicalData);
-          this.ApplyScenarioTreeTranslationToQuestPlate(
-              questPlateToUpdate,
-              questCanonicalData,
-              visibleEntry.OriginalText,
-              translatedText);
-          this.UpdateQuestPlate(questPlateToUpdate);
-        });
-  }
-
-  /// <summary>
-  ///     Builds a stable shared-broker key for one visible ScenarioTree slot.
-  /// </summary>
-  /// <param name="progressKey">The stable quest progress key, if known.</param>
-  /// <param name="visibleEntry">The visible ScenarioTree slot.</param>
-  /// <returns>The stable translation cache key.</returns>
-  private static string BuildScenarioTreeTranslationCacheKey(
-      string progressKey,
-      ScenarioTreeVisibleEntry visibleEntry)
-  {
-    var effectiveProgressKey = string.IsNullOrWhiteSpace(progressKey)
-        ? "fallback"
-        : progressKey;
-    return
-        $"ScenarioTree|{effectiveProgressKey}|{visibleEntry.ValueIndex}|{visibleEntry.OriginalText}";
-  }
-
-  /// <summary>
-  ///     Stores one translated visible ScenarioTree row in the matching
-  ///     canonical quest-plate field.
-  /// </summary>
-  /// <param name="questPlate">The quest plate being updated.</param>
-  /// <param name="questCanonicalData">The canonical quest payload.</param>
-  /// <param name="originalText">The visible source text.</param>
-  /// <param name="translatedText">The translated text.</param>
-  private void ApplyScenarioTreeTranslationToQuestPlate(
-      QuestPlate questPlate,
-      QuestCanonicalData questCanonicalData,
-      string originalText,
-      string translatedText)
-  {
-    if (string.Equals(
-            originalText,
-            questCanonicalData.QuestProgressSnapshot.QuestName,
-            StringComparison.Ordinal))
-    {
-      questPlate.TranslatedQuestName = translatedText;
-      return;
-    }
-
-    if (string.Equals(
-            originalText,
-            questCanonicalData.CurrentSequenceText,
-            StringComparison.Ordinal))
-    {
-      questPlate.TranslatedQuestMessage = translatedText;
-      var appliedCurrentSequenceRow = false;
-      foreach (var rowKey in questCanonicalData.EnumerateSummaryRowKeysByText(
-                   originalText))
-      {
-        questPlate.SetTranslatedSummaryText(
-            rowKey,
-            originalText,
-            translatedText);
-        appliedCurrentSequenceRow = true;
-      }
-
-      if (!appliedCurrentSequenceRow)
-      {
-        questPlate.SetTranslatedSummaryText(
-            rowKey: null,
-            sourceText: originalText,
-            translatedText);
-      }
-
-      return;
-    }
-
-    if (this.TryApplyScenarioTreeObjectiveTranslation(
-            questPlate,
-            questCanonicalData,
-            originalText,
-            translatedText))
-    {
-      return;
-    }
-
-    if (this.TryApplyScenarioTreeSummaryTranslation(
-            questPlate,
-            questCanonicalData,
-            originalText,
-            translatedText))
-    {
-      return;
-    }
-
-    if (this.TryApplyScenarioTreeSystemTranslation(
-            questPlate,
-            questCanonicalData,
-            originalText,
-            translatedText))
-    {
-      return;
-    }
-
-    questPlate.SetTranslatedSummaryText(
-        rowKey: null,
-        sourceText: originalText,
-        translatedText);
   }
 
   /// <summary>

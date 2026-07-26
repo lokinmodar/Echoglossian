@@ -218,7 +218,10 @@ public unsafe partial class Echoglossian
         TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedActionDescription))
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Description,
+                    existingRow.TranslatedActionDescription) != null)
         {
             return;
         }
@@ -335,6 +338,16 @@ public unsafe partial class Echoglossian
             !string.IsNullOrWhiteSpace(translatedDescription)
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
+        translatedPayload.TranslatedName =
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Name,
+                    translatedPayload.TranslatedName);
+        translatedPayload.TranslatedDescription =
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Description,
+                    translatedPayload.TranslatedDescription);
         TryPopulatePendingActionDetailTranslations(
             originalPayload,
             translatedPayload,

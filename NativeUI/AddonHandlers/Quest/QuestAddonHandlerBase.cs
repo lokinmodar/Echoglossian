@@ -229,6 +229,30 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Normalizes one visible quest text for concise runtime diagnostics.
+  /// </summary>
+  /// <param name="text">The source text to normalize.</param>
+  /// <param name="maxLength">The maximum diagnostic length.</param>
+  /// <returns>The normalized and truncated diagnostic text.</returns>
+  protected string SummarizeDiagnosticText(
+      string? text,
+      int maxLength = 96)
+  {
+    if (string.IsNullOrWhiteSpace(text))
+    {
+      return string.Empty;
+    }
+
+    var normalizedText = text.ReplaceLineEndings(" ").Trim();
+    if (normalizedText.Length <= maxLength)
+    {
+      return normalizedText;
+    }
+
+    return normalizedText[..Math.Max(0, maxLength - 3)] + "...";
+  }
+
+  /// <summary>
   ///     Requests that the shared accepted-quest prefetch runtime resolve and
   ///     persist any missing canonical translations for the specified quest.
   /// </summary>
