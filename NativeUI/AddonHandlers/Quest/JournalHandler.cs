@@ -358,7 +358,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               out var cachedOriginalQuestName)
               ? cachedOriginalQuestName
               : liveQuestNameText;
-      hash.Add(questNameNodeKey);
+      hash.Add(i);
       hash.Add(signatureQuestName, StringComparer.Ordinal);
     }
 
