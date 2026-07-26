@@ -53,6 +53,8 @@ Use these repo sources first:
    capture, apply, stale recovery, and restore; filtered visible nodes consume
    an ordinal.
 13. Invalidate old scope-owned state before publishing a new generation.
+14. Route temporary runtime diagnostics through `PluginRuntimeLog` and inspect
+    `Echoglossian.log` before filtering `dalamud.log`.
 
 ## Completion checks
 
