@@ -68,6 +68,30 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures Journal refresh events resolve the live source language so the
+    /// visible list can be reapplied before draw after a list refresh.
+    /// </summary>
+    [Fact]
+    public void JournalHandler_RefreshEvent_ReappliesVisibleListImmediately()
+    {
+        var refresh = typeof(JournalHandler).GetMethod(
+            "OnJournalQuestEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var sourceResolver = typeof(RuntimeLanguageHelper).GetMethod(
+            nameof(RuntimeLanguageHelper.TryResolveCurrentSourceLanguage),
+            BindingFlags.Static | BindingFlags.Public,
+            binder: null,
+            [typeof(SourceClientLanguage).MakeByRefType()],
+            modifiers: null);
+
+        Assert.NotNull(refresh);
+        Assert.NotNull(sourceResolver);
+        Assert.True(
+            MethodReferences(refresh!, sourceResolver!),
+            "Journal refresh events must resolve the live source language so list updates can reapply translations before draw.");
+    }
+
+    /// <summary>
     /// Ensures JournalDetail registers a pre-draw retry path so delayed quest
     /// translations can still surface without a new addon update event.
     /// </summary>

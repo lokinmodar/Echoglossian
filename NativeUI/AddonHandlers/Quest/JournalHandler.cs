@@ -291,6 +291,14 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     this.hasPendingJournalTranslations = true;
     this.nextJournalRetryUtc = DateTime.MinValue;
     this.lastAppliedDisplayMode = null;
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
+    this.TranslateJournalQuests(sourceLanguage);
   }
 
   /// <summary>
