@@ -113,6 +113,87 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures Journal resolves visible rows through the accepted-quest
+    /// snapshot before mutating the visible list.
+    /// </summary>
+    [Fact]
+    public void JournalHandler_UsesAcceptedQuestSnapshotForVisibleRows()
+    {
+        var translator = typeof(JournalHandler).GetMethod(
+            "TranslateJournalQuests",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var snapshotResolver = typeof(JournalHandler).GetMethod(
+            "TryResolveAcceptedJournalQuestEntry",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(translator);
+        Assert.NotNull(snapshotResolver);
+        Assert.True(
+            MethodReferences(translator!, snapshotResolver!),
+            "Journal must reconcile visible rows through the accepted-quest snapshot instead of relying on recycled node history alone.");
+    }
+
+    /// <summary>
+    /// Ensures one visible translated Journal title resolves back to the
+    /// accepted quest entry that owns the original source title.
+    /// </summary>
+    [Fact]
+    public void TryResolveAcceptedJournalQuestEntry_RecoversOriginalFromRenderedTranslatedTitle()
+    {
+        JournalHandler.AcceptedJournalQuestEntry[] entries =
+        [
+            new(
+                70315,
+                "Remembering the Past",
+                "Recordando o passado",
+                null),
+            new(
+                68799,
+                "For Better or Worse",
+                "Para o bem ou para o mal",
+                null),
+        ];
+
+        Assert.True(
+            JournalHandler.TryResolveAcceptedJournalQuestEntry(
+                entries,
+                "Para o bem ou para o mal",
+                out var resolvedEntry));
+        Assert.Equal((uint)68799, resolvedEntry.AcceptedQuestId);
+        Assert.Equal(
+            "For Better or Worse",
+            resolvedEntry.OriginalQuestName);
+    }
+
+    /// <summary>
+    /// Ensures one visible translated Journal title is rejected when multiple
+    /// accepted quests would map to the same rendered text.
+    /// </summary>
+    [Fact]
+    public void TryResolveAcceptedJournalQuestEntry_RejectsAmbiguousTranslatedTitle()
+    {
+        JournalHandler.AcceptedJournalQuestEntry[] entries =
+        [
+            new(
+                1001,
+                "Quest Alpha",
+                "Titulo repetido",
+                null),
+            new(
+                1002,
+                "Quest Beta",
+                "Titulo repetido",
+                null),
+        ];
+
+        Assert.False(
+            JournalHandler.TryResolveAcceptedJournalQuestEntry(
+                entries,
+                "Titulo repetido",
+                out _));
+    }
+
+    /// <summary>
     /// Ensures Journal hover geometry stays aligned to the row bounds without
     /// vertically expanding into neighboring rows.
     /// </summary>

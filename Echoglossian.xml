@@ -17477,6 +17477,47 @@
                 quest-handler model.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry">
+            <summary>
+                Represents one accepted Journal quest entry projected from live quest
+                state and the persisted canonical quest row.
+            </summary>
+            <param name="AcceptedQuestId">The accepted live quest identifier.</param>
+            <param name="OriginalQuestName">The source quest title.</param>
+            <param name="RenderedTranslatedQuestName">
+                The translated quest title exactly as Journal would render it in the
+                current display mode.
+            </param>
+            <param name="FoundQuestPlate">The persisted canonical quest row.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry.#ctor(System.UInt32,System.String,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>
+                Represents one accepted Journal quest entry projected from live quest
+                state and the persisted canonical quest row.
+            </summary>
+            <param name="AcceptedQuestId">The accepted live quest identifier.</param>
+            <param name="OriginalQuestName">The source quest title.</param>
+            <param name="RenderedTranslatedQuestName">
+                The translated quest title exactly as Journal would render it in the
+                current display mode.
+            </param>
+            <param name="FoundQuestPlate">The persisted canonical quest row.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry.AcceptedQuestId">
+            <summary>The accepted live quest identifier.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry.OriginalQuestName">
+            <summary>The source quest title.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry.RenderedTranslatedQuestName">
+            <summary>
+                The translated quest title exactly as Journal would render it in the
+                current display mode.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry.FoundQuestPlate">
+            <summary>The persisted canonical quest row.</summary>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies)">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler" /> class.
@@ -17634,6 +17675,52 @@
                 True when the visible title resolves to one of the player's accepted
                 quests, even if canonical progress data is still pending.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryCollectAcceptedJournalQuestEntries(Echoglossian.SourceClientLanguage,System.Collections.Generic.List{Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry}@)">
+            <summary>
+                Collects the currently accepted Journal quest entries from live quest
+                state and the persisted canonical quest table.
+            </summary>
+            <param name="sourceLanguage">The captured source client language.</param>
+            <param name="acceptedJournalQuestEntries">
+                The accepted Journal quest entries for the current frame.
+            </param>
+            <returns>True when at least one accepted Journal entry was collected.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryResolveAcceptedJournalQuestEntry(System.Collections.Generic.IReadOnlyCollection{Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry},System.String,Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry@)">
+            <summary>
+                Tries to resolve one visible Journal row against the accepted quest
+                snapshot for the current frame.
+            </summary>
+            <param name="acceptedJournalQuestEntries">
+                The accepted Journal quest entries for the current frame.
+            </param>
+            <param name="visibleQuestName">The currently visible Journal title.</param>
+            <param name="acceptedJournalQuestEntry">The uniquely resolved entry.</param>
+            <returns>
+                True when the visible Journal title maps uniquely to one accepted
+                quest by source title or rendered translated title.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryFindUniqueAcceptedJournalQuestEntry(System.Collections.Generic.IReadOnlyCollection{Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry},System.String,System.Func{Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry,System.String},Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.AcceptedJournalQuestEntry@)">
+            <summary>
+                Tries to find exactly one accepted Journal quest entry whose projected
+                title matches the visible Journal title.
+            </summary>
+            <param name="acceptedJournalQuestEntries">
+                The accepted Journal quest entries for the current frame.
+            </param>
+            <param name="visibleQuestName">The currently visible Journal title.</param>
+            <param name="titleSelector">Selects the title to compare for one entry.</param>
+            <param name="acceptedJournalQuestEntry">The uniquely resolved entry.</param>
+            <returns>True when exactly one accepted entry matched the visible title.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.NormalizeJournalQuestTitleForMatch(System.String)">
+            <summary>
+                Normalizes one Journal title for accepted-quest snapshot matching.
+            </summary>
+            <param name="questTitle">The raw visible or projected Journal title.</param>
+            <returns>The normalized Journal title.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RememberJournalListOriginalText(System.IntPtr,System.String)">
             <summary>
@@ -27190,6 +27277,14 @@
             <summary>
                 Clears cached quest progression lookups.
             </summary>
+        </member>
+        <member name="M:Echoglossian.QuestProgressResolver.TryCollectAcceptedQuestIds(System.Collections.Generic.List{System.UInt32}@)">
+            <summary>
+                Collects the currently accepted live quest identifiers from the
+                quest manager.
+            </summary>
+            <param name="acceptedQuestIds">The accepted live quest identifiers.</param>
+            <returns>True when at least one accepted quest was collected.</returns>
         </member>
         <member name="M:Echoglossian.QuestProgressResolver.TryResolveAcceptedQuestId(System.String,System.UInt32@)">
             <summary>

@@ -35,6 +35,46 @@ internal static class QuestProgressResolver
     }
 
     /// <summary>
+    ///     Collects the currently accepted live quest identifiers from the
+    ///     quest manager.
+    /// </summary>
+    /// <param name="acceptedQuestIds">The accepted live quest identifiers.</param>
+    /// <returns>True when at least one accepted quest was collected.</returns>
+    internal static unsafe bool TryCollectAcceptedQuestIds(
+        out List<uint> acceptedQuestIds)
+    {
+        acceptedQuestIds = [];
+
+        var questManager = QuestManager.Instance();
+        if (questManager == null)
+        {
+            return false;
+        }
+
+        HashSet<uint> seenQuestIds = [];
+        foreach (ref QuestWork questWork in questManager->NormalQuests)
+        {
+            if (questWork.QuestId != 0 &&
+                seenQuestIds.Add(questWork.QuestId))
+            {
+                acceptedQuestIds.Add(questWork.QuestId);
+            }
+        }
+
+        foreach (ref DailyQuestWork dailyQuestWork in questManager->DailyQuests)
+        {
+            if (dailyQuestWork.QuestId != 0 &&
+                seenQuestIds.Add(dailyQuestWork.QuestId))
+            {
+                acceptedQuestIds.Add(dailyQuestWork.QuestId);
+            }
+        }
+
+        acceptedQuestIds.Sort();
+        return acceptedQuestIds.Count > 0;
+    }
+
+    /// <summary>
     ///     Tries to resolve the currently accepted live quest identifier that
     ///     corresponds to one Lumina or runtime quest id.
     /// </summary>
