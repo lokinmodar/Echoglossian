@@ -92,6 +92,48 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures Journal hover registration uses explicit row bounds instead of
+    /// the inflated text-node hitbox alone.
+    /// </summary>
+    [Fact]
+    public void JournalHandler_UsesExplicitHoverBoundsForVisibleRows()
+    {
+        var translator = typeof(JournalHandler).GetMethod(
+            "TranslateJournalQuests",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var hoverBoundsResolver = typeof(JournalHandler).GetMethod(
+            "TryGetJournalHoverBounds",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(translator);
+        Assert.NotNull(hoverBoundsResolver);
+        Assert.True(
+            MethodReferences(translator!, hoverBoundsResolver!),
+            "Journal hover registration must resolve explicit row bounds before registering a tooltip target.");
+    }
+
+    /// <summary>
+    /// Ensures Journal hover geometry stays aligned to the row bounds without
+    /// vertically expanding into neighboring rows.
+    /// </summary>
+    [Fact]
+    public void JournalHoverBounds_UseRowGeometryWithoutVerticalInflation()
+    {
+        var resolvedBounds = JournalHandler.ResolveJournalHoverBounds(
+            100f,
+            200f,
+            680f,
+            40f,
+            120f,
+            206f,
+            220f,
+            28f);
+
+        Assert.Equal(new System.Numerics.Vector2(92f, 202f), resolvedBounds.TopLeft);
+        Assert.Equal(new System.Numerics.Vector2(788f, 238f), resolvedBounds.BottomRight);
+    }
+
+    /// <summary>
     /// Ensures JournalDetail registers a pre-draw retry path so delayed quest
     /// translations can still surface without a new addon update event.
     /// </summary>

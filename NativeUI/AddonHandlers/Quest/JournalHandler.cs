@@ -137,21 +137,20 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
       for (var i = 0; i < questListNode->UldManager.NodeListCount; i++)
       {
-        if (!questListNode->UldManager.NodeList[i]->IsVisible() ||
-            questListNode->UldManager.NodeList[i]->NodeId == 5)
+        var rowNode = questListNode->UldManager.NodeList[i];
+        if (!rowNode->IsVisible() ||
+            rowNode->NodeId == 5)
         {
           continue;
         }
 
-        if (questListNode->UldManager.NodeList[i]->Type ==
-            NodeType.Collision ||
-            questListNode->UldManager.NodeList[i]->Type == NodeType.Res)
+        if (rowNode->Type == NodeType.Collision ||
+            rowNode->Type == NodeType.Res)
         {
           continue;
         }
 
-        var questItemNode =
-            questListNode->UldManager.NodeList[i]->GetAsAtkComponentNode();
+        var questItemNode = rowNode->GetAsAtkComponentNode();
         var questNameNode =
             questItemNode->Component->UldManager.SearchNodeById(3);
         if (questNameNode == null || !questNameNode->IsVisible() ||
@@ -222,16 +221,23 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
           if (this.JournalUsesHoverTooltips)
           {
-            this.RegisterTranslatedHoverTooltip(
-                $"JournalList-{questNameNodeKey:X}",
-                questName,
-                originalQuestName,
-                translatedQuestName,
-                translatedPayloadReady: this.CanRenderJournalHoverTooltip(
-                    translatedQuestNameReady),
-                swapEnabled: this.JournalHoverShowsOriginal,
-                forceEnabled: true,
-                denseHitbox: true);
+            if (TryGetJournalHoverBounds(
+                    rowNode,
+                    questName,
+                    out var topLeft,
+                    out var bottomRight))
+            {
+              this.RegisterTranslatedHoverTooltip(
+                  $"JournalList-{questNameNodeKey:X}",
+                  topLeft,
+                  bottomRight,
+                  originalQuestName,
+                  translatedQuestName,
+                  translatedPayloadReady: this.CanRenderJournalHoverTooltip(
+                      translatedQuestNameReady),
+                  swapEnabled: this.JournalHoverShowsOriginal,
+                  forceEnabled: true);
+            }
           }
 
           continue;
@@ -688,6 +694,90 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
 
     questListNode = questListComponentNode->Component;
     return true;
+  }
+
+  /// <summary>
+  ///     Tries to resolve one stable hover rectangle for a visible Journal row
+  ///     using the row geometry instead of only the text-node glyph bounds.
+  /// </summary>
+  /// <param name="rowNode">The visible Journal row node.</param>
+  /// <param name="questName">The visible Journal title node.</param>
+  /// <param name="topLeft">The resolved top-left screen coordinate.</param>
+  /// <param name="bottomRight">The resolved bottom-right screen coordinate.</param>
+  /// <returns>True when stable hover bounds were resolved.</returns>
+  private static unsafe bool TryGetJournalHoverBounds(
+      AtkResNode* rowNode,
+      AtkTextNode* questName,
+      out Vector2 topLeft,
+      out Vector2 bottomRight)
+  {
+    topLeft = default;
+    bottomRight = default;
+
+    if (rowNode == null ||
+        questName == null ||
+        !rowNode->IsVisible() ||
+        !questName->AtkResNode.IsVisible())
+    {
+      return false;
+    }
+
+    (topLeft, bottomRight) = ResolveJournalHoverBounds(
+        rowNode->ScreenX,
+        rowNode->ScreenY,
+        rowNode->Width,
+        rowNode->Height,
+        questName->ScreenX,
+        questName->ScreenY,
+        questName->GetWidth(),
+        questName->GetHeight());
+    return bottomRight.X > topLeft.X &&
+           bottomRight.Y > topLeft.Y;
+  }
+
+  /// <summary>
+  ///     Resolves the Journal hover rectangle from the live row and title
+  ///     bounds, keeping the hitbox aligned to the row without vertically
+  ///     overlapping adjacent recycled entries.
+  /// </summary>
+  /// <param name="rowLeft">The Journal row left screen coordinate.</param>
+  /// <param name="rowTop">The Journal row top screen coordinate.</param>
+  /// <param name="rowWidth">The Journal row width.</param>
+  /// <param name="rowHeight">The Journal row height.</param>
+  /// <param name="textLeft">The title-node left screen coordinate.</param>
+  /// <param name="textTop">The title-node top screen coordinate.</param>
+  /// <param name="textWidth">The title-node width.</param>
+  /// <param name="textHeight">The title-node height.</param>
+  /// <returns>The resolved Journal hover rectangle.</returns>
+  internal static (Vector2 TopLeft, Vector2 BottomRight)
+      ResolveJournalHoverBounds(
+          float rowLeft,
+          float rowTop,
+          float rowWidth,
+          float rowHeight,
+          float textLeft,
+          float textTop,
+          float textWidth,
+          float textHeight)
+  {
+    var resolvedRowWidth = Math.Max(1f, rowWidth);
+    var resolvedRowHeight = Math.Max(1f, rowHeight);
+    var resolvedTextWidth = Math.Max(1f, textWidth);
+    var resolvedTextHeight = Math.Max(1f, textHeight);
+
+    var left = Math.Max(0f, Math.Min(rowLeft, textLeft) - 8f);
+    var top = Math.Max(0f, Math.Min(rowTop, textTop) + 2f);
+    var right = Math.Max(
+        left + 1f,
+        Math.Max(
+            rowLeft + resolvedRowWidth,
+            textLeft + resolvedTextWidth) + 8f);
+    var bottom = Math.Max(
+        top + 1f,
+        Math.Max(
+            rowTop + resolvedRowHeight,
+            textTop + resolvedTextHeight) - 2f);
+    return (new Vector2(left, top), new Vector2(right, bottom));
   }
 
   /// <summary>

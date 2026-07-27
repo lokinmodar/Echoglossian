@@ -17658,6 +17658,33 @@
             <param name="questListNode">The visible quest-list component.</param>
             <returns>True when the visible quest-list component was resolved.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
+            <summary>
+                Tries to resolve one stable hover rectangle for a visible Journal row
+                using the row geometry instead of only the text-node glyph bounds.
+            </summary>
+            <param name="rowNode">The visible Journal row node.</param>
+            <param name="questName">The visible Journal title node.</param>
+            <param name="topLeft">The resolved top-left screen coordinate.</param>
+            <param name="bottomRight">The resolved bottom-right screen coordinate.</param>
+            <returns>True when stable hover bounds were resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ResolveJournalHoverBounds(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+                Resolves the Journal hover rectangle from the live row and title
+                bounds, keeping the hitbox aligned to the row without vertically
+                overlapping adjacent recycled entries.
+            </summary>
+            <param name="rowLeft">The Journal row left screen coordinate.</param>
+            <param name="rowTop">The Journal row top screen coordinate.</param>
+            <param name="rowWidth">The Journal row width.</param>
+            <param name="rowHeight">The Journal row height.</param>
+            <param name="textLeft">The title-node left screen coordinate.</param>
+            <param name="textTop">The title-node top screen coordinate.</param>
+            <param name="textWidth">The title-node width.</param>
+            <param name="textHeight">The title-node height.</param>
+            <returns>The resolved Journal hover rectangle.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.RestoreJournalOriginals(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
                 Restores original Journal quest-list text for any row that is
