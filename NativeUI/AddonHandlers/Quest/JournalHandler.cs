@@ -287,6 +287,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     }
 
     this.lastVisibleJournalSignature = visibleJournalSignature;
+    this.RestoreJournalOriginals(journal);
     this.hasPendingJournalTranslations = true;
     this.nextJournalRetryUtc = DateTime.MinValue;
     this.lastAppliedDisplayMode = null;

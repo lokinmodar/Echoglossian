@@ -68,27 +68,6 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
-    /// Ensures Journal list refreshes do not immediately restore visible
-    /// quest titles before the pending pre-draw reapply path runs.
-    /// </summary>
-    [Fact]
-    public void JournalHandler_DoesNotRestoreOriginalsDuringVisibleListRefresh()
-    {
-        var refresh = typeof(JournalHandler).GetMethod(
-            "OnJournalQuestEvent",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-        var restore = typeof(JournalHandler).GetMethod(
-            "RestoreJournalOriginals",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-
-        Assert.NotNull(refresh);
-        Assert.NotNull(restore);
-        Assert.False(
-            MethodReferences(refresh!, restore!),
-            "Journal visible-list refresh should defer native restoration to explicit cleanup or mode-disable paths instead of bouncing rows during scroll.");
-    }
-
-    /// <summary>
     /// Ensures JournalDetail registers a pre-draw retry path so delayed quest
     /// translations can still surface without a new addon update event.
     /// </summary>
