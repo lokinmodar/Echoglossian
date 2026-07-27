@@ -159,29 +159,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       for (var i = 0; i < questListNode->UldManager.NodeListCount; i++)
       {
         var rowNode = questListNode->UldManager.NodeList[i];
-        if (!rowNode->IsVisible() ||
-            rowNode->NodeId == 5)
-        {
-          continue;
-        }
-
-        if (rowNode->Type == NodeType.Collision ||
-            rowNode->Type == NodeType.Res)
-        {
-          continue;
-        }
-
-        var questItemNode = rowNode->GetAsAtkComponentNode();
-        var questNameNode =
-            questItemNode->Component->UldManager.SearchNodeById(3);
-        if (questNameNode == null || !questNameNode->IsVisible() ||
-            questNameNode->Type != NodeType.Text)
-        {
-          continue;
-        }
-
-        var questName = questNameNode->GetAsAtkTextNode();
-        if (questName->NodeText.IsEmpty)
+        if (!TryGetJournalQuestTitleNode(
+                rowNode,
+                out var questName))
         {
           continue;
         }
@@ -189,7 +169,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         var liveQuestNameText = MemoryHelper.ReadSeStringAsString(
             out _,
             (nint)questName->NodeText.StringPtr.Value);
-        var questNameNodeKey = (nint)questNameNode;
+        var questNameNodeKey = (nint)questName;
         visibleJournalQuestNodeKeys.Add(questNameNodeKey);
         var originalQuestName = liveQuestNameText;
         var foundQuestPlate = default(QuestPlate?);
@@ -381,31 +361,9 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     for (var i = 0; i < questListNode->UldManager.NodeListCount; i++)
     {
       var rowNode = questListNode->UldManager.NodeList[i];
-      if (rowNode == null ||
-          !rowNode->IsVisible() ||
-          rowNode->NodeId == 5 ||
-          rowNode->Type == NodeType.Collision ||
-          rowNode->Type == NodeType.Res)
-      {
-        continue;
-      }
-
-      var questItemNode = rowNode->GetAsAtkComponentNode();
-      if (questItemNode == null || questItemNode->Component == null)
-      {
-        continue;
-      }
-
-      var questNameNode = questItemNode->Component->UldManager.SearchNodeById(3);
-      if (questNameNode == null ||
-          !questNameNode->IsVisible() ||
-          questNameNode->Type != NodeType.Text)
-      {
-        continue;
-      }
-
-      var questName = questNameNode->GetAsAtkTextNode();
-      if (questName == null || questName->NodeText.IsEmpty)
+      if (!TryGetJournalQuestTitleNode(
+              rowNode,
+              out var questName))
       {
         continue;
       }
@@ -413,7 +371,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
       var liveQuestNameText = MemoryHelper.ReadSeStringAsString(
           out _,
           (nint)questName->NodeText.StringPtr.Value);
-      var questNameNodeKey = (nint)questNameNode;
+      var questNameNodeKey = (nint)questName;
       var signatureQuestName =
           this.TryGetJournalListOriginalTextForLiveText(
               questNameNodeKey,
@@ -865,6 +823,85 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Tries to resolve the direct quest-title text node from one Journal
+  ///     quest row, rejecting category headers and nested icon subnodes that
+  ///     reuse the same recursive node identifiers.
+  /// </summary>
+  /// <param name="rowNode">The visible Journal row candidate.</param>
+  /// <param name="questName">The direct quest-title text node.</param>
+  /// <returns>True when the row matches the quest-row shape.</returns>
+  private static unsafe bool TryGetJournalQuestTitleNode(
+      AtkResNode* rowNode,
+      out AtkTextNode* questName)
+  {
+    questName = null;
+    if (rowNode == null ||
+        !rowNode->IsVisible() ||
+        rowNode->NodeId == 5 ||
+        rowNode->Type == NodeType.Collision ||
+        rowNode->Type == NodeType.Res)
+    {
+      return false;
+    }
+
+    var questItemNode = rowNode->GetAsAtkComponentNode();
+    if (questItemNode == null || questItemNode->Component == null)
+    {
+      return false;
+    }
+
+    return TryGetJournalQuestTitleNode(
+        questItemNode,
+        out questName);
+  }
+
+  /// <summary>
+  ///     Tries to resolve the direct quest-title text node from one Journal
+  ///     quest row component, ignoring recursive matches under the icon
+  ///     subcomponent.
+  /// </summary>
+  /// <param name="questItemNode">The quest-row component node.</param>
+  /// <param name="questName">The direct quest-title text node.</param>
+  /// <returns>True when the component matches the quest-row shape.</returns>
+  private static unsafe bool TryGetJournalQuestTitleNode(
+      AtkComponentNode* questItemNode,
+      out AtkTextNode* questName)
+  {
+    questName = null;
+    if (questItemNode == null || questItemNode->Component == null)
+    {
+      return false;
+    }
+
+    AtkTextNode* levelNode = null;
+    for (var i = 0; i < questItemNode->Component->UldManager.NodeListCount; i++)
+    {
+      var childNode = questItemNode->Component->UldManager.NodeList[i];
+      if (childNode == null ||
+          !childNode->IsVisible() ||
+          childNode->Type != NodeType.Text)
+      {
+        continue;
+      }
+
+      if (childNode->NodeId == 3)
+      {
+        questName = childNode->GetAsAtkTextNode();
+        continue;
+      }
+
+      if (childNode->NodeId == 4)
+      {
+        levelNode = childNode->GetAsAtkTextNode();
+      }
+    }
+
+    return questName != null &&
+           levelNode != null &&
+           !questName->NodeText.IsEmpty;
+  }
+
+  /// <summary>
   ///     Tries to resolve the visible Journal quest-list component.
   /// </summary>
   /// <param name="journal">The live Journal addon.</param>
@@ -996,30 +1033,14 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
     for (var i = 0; i < questListNode->UldManager.NodeListCount; i++)
     {
       var rowNode = questListNode->UldManager.NodeList[i];
-      if (rowNode == null ||
-          !rowNode->IsVisible() ||
-          rowNode->NodeId == 5 ||
-          rowNode->Type == NodeType.Collision ||
-          rowNode->Type == NodeType.Res)
+      if (!TryGetJournalQuestTitleNode(
+              rowNode,
+              out var questName))
       {
         continue;
       }
 
-      var questItemNode = rowNode->GetAsAtkComponentNode();
-      if (questItemNode == null || questItemNode->Component == null)
-      {
-        continue;
-      }
-
-      var questNameNode = questItemNode->Component->UldManager.SearchNodeById(3);
-      if (questNameNode == null ||
-          !questNameNode->IsVisible() ||
-          questNameNode->Type != NodeType.Text)
-      {
-        continue;
-      }
-
-      var questNameNodeKey = (nint)questNameNode;
+      var questNameNodeKey = (nint)questName;
       if (!this.journalListNativeMutationNodeKeys.Remove(questNameNodeKey) ||
           !this.TryGetJournalListOriginalText(
               questNameNodeKey,
@@ -1028,7 +1049,6 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
         continue;
       }
 
-      var questName = questNameNode->GetAsAtkTextNode();
       var liveQuestNameText = MemoryHelper.ReadSeStringAsString(
           out _,
           (nint)questName->NodeText.StringPtr.Value);

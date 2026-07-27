@@ -134,6 +134,41 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Ensures Journal resolves the direct quest-title text node from the row
+    /// shape instead of recursively searching for any reused node identifier.
+    /// </summary>
+    [Fact]
+    public void JournalHandler_UsesDirectQuestTitleNodeResolver()
+    {
+        var translator = typeof(JournalHandler).GetMethod(
+            "TranslateJournalQuests",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var titleResolver = typeof(JournalHandler).GetMethods(
+                BindingFlags.Static | BindingFlags.NonPublic)
+            .Single(method =>
+            {
+                if (method.Name != "TryGetJournalQuestTitleNode")
+                {
+                    return false;
+                }
+
+                var parameters = method.GetParameters();
+                return parameters.Length == 2 &&
+                       parameters[0].ParameterType.IsPointer &&
+                       string.Equals(
+                           parameters[0].ParameterType.GetElementType()?.Name,
+                           "AtkResNode",
+                           StringComparison.Ordinal);
+            });
+
+        Assert.NotNull(translator);
+        Assert.NotNull(titleResolver);
+        Assert.True(
+            MethodReferences(translator!, titleResolver!),
+            "Journal must resolve the direct quest title node from the row shape so hover and native translation do not bind to reused icon subnodes.");
+    }
+
+    /// <summary>
     /// Ensures one visible translated Journal title resolves back to the
     /// accepted quest entry that owns the original source title.
     /// </summary>

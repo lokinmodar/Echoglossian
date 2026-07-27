@@ -17737,6 +17737,26 @@
             <param name="journal">The visible Journal addon.</param>
             <returns>True when the Journal addon is visible.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalQuestTitleNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Tries to resolve the direct quest-title text node from one Journal
+                quest row, rejecting category headers and nested icon subnodes that
+                reuse the same recursive node identifiers.
+            </summary>
+            <param name="rowNode">The visible Journal row candidate.</param>
+            <param name="questName">The direct quest-title text node.</param>
+            <returns>True when the row matches the quest-row shape.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalQuestTitleNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Tries to resolve the direct quest-title text node from one Journal
+                quest row component, ignoring recursive matches under the icon
+                subcomponent.
+            </summary>
+            <param name="questItemNode">The quest-row component node.</param>
+            <param name="questName">The direct quest-title text node.</param>
+            <returns>True when the component matches the quest-row shape.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.TryGetJournalQuestListNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentBase*@)">
             <summary>
                 Tries to resolve the visible Journal quest-list component.
