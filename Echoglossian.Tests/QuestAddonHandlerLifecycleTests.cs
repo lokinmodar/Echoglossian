@@ -449,10 +449,10 @@ public class QuestAddonHandlerLifecycleTests
     ///     row's source or translated title.
     /// </summary>
     [Fact]
-    public void JournalListNodeSnapshot_RejectsARecycledNodeText()
+    public void JournalListOriginalSnapshot_RejectsTranslatedTextFromARecycledNode()
     {
         var matcher = typeof(JournalHandler).GetMethod(
-            "MatchesJournalListNodeSnapshot",
+            "MatchesJournalListOriginalSnapshot",
             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
         Assert.NotNull(matcher);
@@ -462,9 +462,32 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True((bool)matcher.Invoke(
             null,
             ["Previous quest", "Previous quest", "Quest anterior"])!);
+        Assert.False((bool)matcher.Invoke(
+            null,
+            ["Quest anterior", "Previous quest", "Quest anterior"])!);
+    }
+
+    /// <summary>
+    ///     Ensures Journal can still recognize translated text that this
+    ///     handler itself wrote when restoring a visible native mutation.
+    /// </summary>
+    [Fact]
+    public void JournalListOwnedMutationSnapshot_AcceptsTheTranslatedTextWeWrote()
+    {
+        var matcher = typeof(JournalHandler).GetMethod(
+            "MatchesJournalListOwnedMutationSnapshot",
+            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+        Assert.NotNull(matcher);
+        Assert.True((bool)matcher!.Invoke(
+            null,
+            ["Previous quest", "Previous quest", "Quest anterior"])!);
         Assert.True((bool)matcher.Invoke(
             null,
             ["Quest anterior", "Previous quest", "Quest anterior"])!);
+        Assert.False((bool)matcher.Invoke(
+            null,
+            ["Different quest", "Previous quest", "Quest anterior"])!);
     }
 
     /// <summary>

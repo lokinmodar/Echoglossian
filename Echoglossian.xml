@@ -17640,7 +17640,7 @@
             <param name="originalText">The validated original quest title.</param>
             <returns>True when the cached snapshot still belongs to this live node.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.MatchesJournalListNodeSnapshot(System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.MatchesJournalListOriginalSnapshot(System.String,System.String,System.String)">
             <summary>
                 Gets whether one live Journal list text still belongs to a cached
                 source-and-translation snapshot for the same node.
@@ -17649,6 +17649,20 @@
             <param name="originalText">The cached source title.</param>
             <param name="translatedText">The cached translated title.</param>
             <returns>True when the live text belongs to the cached snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.MatchesJournalListOwnedMutationSnapshot(System.String,System.String,System.String)">
+            <summary>
+                Gets whether one live Journal list text still belongs to a native
+                mutation owned by this handler so the original source title can be
+                restored safely.
+            </summary>
+            <param name="liveText">The text currently rendered by the game.</param>
+            <param name="originalText">The cached source title.</param>
+            <param name="translatedText">The cached translated title.</param>
+            <returns>
+                True when the live text still matches the source title or the
+                translated title previously written by this handler.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalHandler.ForgetJournalListNodeState(System.IntPtr)">
             <summary>

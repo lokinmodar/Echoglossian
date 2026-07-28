@@ -543,7 +543,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
             out var snapshot)
         ? snapshot.TranslatedText
         : string.Empty;
-    if (MatchesJournalListNodeSnapshot(
+    if (MatchesJournalListOriginalSnapshot(
             liveText,
             originalText,
             translatedText))
@@ -564,7 +564,27 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   /// <param name="originalText">The cached source title.</param>
   /// <param name="translatedText">The cached translated title.</param>
   /// <returns>True when the live text belongs to the cached snapshot.</returns>
-  internal static bool MatchesJournalListNodeSnapshot(
+  internal static bool MatchesJournalListOriginalSnapshot(
+      string? liveText,
+      string? originalText,
+      string? translatedText)
+  {
+    return string.Equals(liveText, originalText, StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Gets whether one live Journal list text still belongs to a native
+  ///     mutation owned by this handler so the original source title can be
+  ///     restored safely.
+  /// </summary>
+  /// <param name="liveText">The text currently rendered by the game.</param>
+  /// <param name="originalText">The cached source title.</param>
+  /// <param name="translatedText">The cached translated title.</param>
+  /// <returns>
+  ///     True when the live text still matches the source title or the
+  ///     translated title previously written by this handler.
+  /// </returns>
+  internal static bool MatchesJournalListOwnedMutationSnapshot(
       string? liveText,
       string? originalText,
       string? translatedText)
@@ -1057,7 +1077,7 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
               out var snapshot)
           ? snapshot.TranslatedText
           : string.Empty;
-      if (MatchesJournalListNodeSnapshot(
+      if (MatchesJournalListOwnedMutationSnapshot(
               liveQuestNameText,
               originalQuestName,
               translatedQuestName))
