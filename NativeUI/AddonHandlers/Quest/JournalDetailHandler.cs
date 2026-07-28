@@ -236,6 +236,42 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Tries to resolve the canonical TODO row key for one visible
+  ///     JournalDetail objective, tolerating native UI line wraps inserted by
+  ///     the game while the text node repaints.
+  /// </summary>
+  /// <param name="questCanonicalData">The canonical quest payload.</param>
+  /// <param name="visibleObjectiveText">The visible JournalDetail objective text.</param>
+  /// <param name="objectiveRowKey">The matching canonical TODO row key.</param>
+  /// <returns>True when one canonical TODO row could be resolved.</returns>
+  private static bool TryResolveObjectiveRowKeyByVisibleText(
+      QuestCanonicalData? questCanonicalData,
+      string? visibleObjectiveText,
+      out string objectiveRowKey)
+  {
+    objectiveRowKey = string.Empty;
+    if (questCanonicalData == null ||
+        string.IsNullOrWhiteSpace(visibleObjectiveText))
+    {
+      return false;
+    }
+
+    foreach (var objectiveEntry in questCanonicalData
+                 .EnumerateObjectiveEntriesByVisibleText(visibleObjectiveText))
+    {
+      if (string.IsNullOrWhiteSpace(objectiveEntry.KeyText))
+      {
+        continue;
+      }
+
+      objectiveRowKey = objectiveEntry.KeyText;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
   ///     Builds the current JournalDetail cache scope key so each quest detail
   ///     view can keep its own local runtime state.
   /// </summary>
@@ -872,9 +908,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             questProgressSnapshot.Value,
             GetGameVersion())
         : null;
-    var objectiveRowKeys = questCanonicalData == null
-        ? []
-        : questCanonicalData.EnumerateObjectiveRowKeysByText(objectiveText).ToArray();
+    var objectiveRowKey = TryResolveObjectiveRowKeyByVisibleText(
+        questCanonicalData,
+        objectiveText,
+        out var resolvedObjectiveRowKey)
+        ? resolvedObjectiveRowKey
+        : string.Empty;
     this.EnsureJournalDetailScope(journalDetailScopeKey);
 
     var visibleAdditionalSummaryNodes =
@@ -999,7 +1038,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         translatedQuestObjectiveReady = true;
       }
       else if (foundQuestPlate.TryGetTranslatedObjectiveText(
-                   objectiveRowKeys.FirstOrDefault(),
+                   objectiveRowKey,
                    originalObjectiveText,
                    out var storedObjectiveText))
       {
