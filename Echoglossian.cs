@@ -640,6 +640,8 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     this.startupAudit.Mark(PluginStartupStage.DisposeComplete);
+    DiagnosticFileEmitter.Shutdown();
+    PluginRuntimeFileLog.Shutdown();
   }
 
 }

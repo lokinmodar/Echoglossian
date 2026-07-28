@@ -32,6 +32,7 @@ public sealed class DiagnosticFileEmitterTests : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        DiagnosticFileEmitter.FlushForTests();
         DiagnosticFileEmitter.ResetForTests();
 
         try
@@ -62,6 +63,7 @@ public sealed class DiagnosticFileEmitterTests : IDisposable
             "accepted-quest-prefetch-activity",
             "quest-two",
             "phase=translated");
+        DiagnosticFileEmitter.FlushForTests();
 
         var activeLogPath = Path.Combine(
             this.configDirectory,
@@ -105,6 +107,7 @@ public sealed class DiagnosticFileEmitterTests : IDisposable
             "accepted-quest-prefetch-canonical",
             "quest-three",
             "phase=resolved");
+        DiagnosticFileEmitter.FlushForTests();
 
         var archivePaths = Directory.GetFiles(
             this.configDirectory,
@@ -119,6 +122,29 @@ public sealed class DiagnosticFileEmitterTests : IDisposable
         var archiveContent = File.ReadAllText(archivePaths[0]);
         Assert.Contains("legacy-one", archiveContent);
         Assert.Contains("legacy-five", archiveContent);
+    }
+
+    /// <summary>
+    ///     Ensures queued diagnostic blocks are flushed before shutdown returns
+    ///     so plugin unload does not drop the tail of purpose-specific dumps.
+    /// </summary>
+    [Fact]
+    public void Shutdown_FlushesQueuedDiagnosticBlocksBeforeReturning()
+    {
+        DiagnosticFileEmitter.Emit(
+            "accepted-quest-prefetch-activity",
+            "quest-four",
+            "phase=shutdown");
+
+        DiagnosticFileEmitter.Shutdown();
+
+        var activeLogPath = Path.Combine(
+            this.configDirectory,
+            "accepted-quest-prefetch-activity.log");
+        var activeContent = File.ReadAllText(activeLogPath);
+
+        Assert.Contains("quest-four", activeContent);
+        Assert.Contains("phase=shutdown", activeContent);
     }
 
     private static string CreateTempConfigDirectory()

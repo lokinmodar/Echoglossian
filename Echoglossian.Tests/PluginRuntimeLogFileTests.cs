@@ -38,6 +38,7 @@ public sealed class PluginRuntimeLogFileTests : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        PluginRuntimeFileLog.FlushForTests();
         PluginRuntimeFileLog.ResetForTests();
 
         try
@@ -65,6 +66,7 @@ public sealed class PluginRuntimeLogFileTests : IDisposable
             PluginRuntimeFileLog.GetCurrentFilePathForTests());
 
         PluginRuntimeLog.Information("Quest prefetch started.");
+        PluginRuntimeFileLog.FlushForTests();
 
         var content = ReadAllTextShared(
             PluginRuntimeFileLog.GetCurrentFilePathForTests());
@@ -84,6 +86,7 @@ public sealed class PluginRuntimeLogFileTests : IDisposable
             "phase={Phase} quest={QuestId}",
             "request-queued",
             67011);
+        PluginRuntimeFileLog.FlushForTests();
 
         var content = ReadAllTextShared(
             PluginRuntimeFileLog.GetCurrentFilePathForTests());
@@ -103,6 +106,7 @@ public sealed class PluginRuntimeLogFileTests : IDisposable
         var exception = new InvalidOperationException("duplicate queue");
 
         PluginRuntimeLog.Warning(exception, "Quest prefetch warning.");
+        PluginRuntimeFileLog.FlushForTests();
 
         var content = ReadAllTextShared(
             PluginRuntimeFileLog.GetCurrentFilePathForTests());
@@ -123,6 +127,7 @@ public sealed class PluginRuntimeLogFileTests : IDisposable
         PluginRuntimeLog.Information("line one");
         PluginRuntimeLog.Information("line two");
         PluginRuntimeLog.Information("line three");
+        PluginRuntimeFileLog.FlushForTests();
 
         var activeLogPath = PluginRuntimeFileLog.GetCurrentFilePathForTests();
         var activeContent = ReadAllTextShared(activeLogPath);
@@ -160,6 +165,7 @@ public sealed class PluginRuntimeLogFileTests : IDisposable
             ]);
 
         PluginRuntimeLog.Information("fresh line");
+        PluginRuntimeFileLog.FlushForTests();
 
         var activeContent = ReadAllTextShared(activeLogPath);
         var archivePaths = Directory.GetFiles(
@@ -173,6 +179,23 @@ public sealed class PluginRuntimeLogFileTests : IDisposable
         var archiveContent = ReadAllTextShared(archivePaths[0]);
         Assert.Contains("legacy-one", archiveContent);
         Assert.Contains("legacy-three", archiveContent);
+    }
+
+    /// <summary>
+    ///     Ensures queued runtime log lines are flushed before shutdown returns
+    ///     so plugin unload does not drop the tail of the dedicated log file.
+    /// </summary>
+    [Fact]
+    public void Shutdown_FlushesQueuedRuntimeLogLinesBeforeReturning()
+    {
+        PluginRuntimeLog.Information("shutdown line");
+
+        PluginRuntimeFileLog.Shutdown();
+
+        var content = ReadAllTextShared(
+            PluginRuntimeFileLog.GetCurrentFilePathForTests());
+
+        Assert.Contains("[INF] shutdown line", content);
     }
 
     private static string ReadAllTextShared(string filePath)

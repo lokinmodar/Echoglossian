@@ -11103,6 +11103,36 @@
             <param name="index">The asset index to download.</param>
             <returns><c>true</c> if the asset was downloaded successfully; otherwise, <c>false</c>.</returns>
         </member>
+        <member name="T:Echoglossian.AsyncSerialActionPump">
+            <summary>
+                Runs queued actions on a dedicated background worker so hot-path callers
+                can hand off blocking work without doing file I/O inline.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.AsyncSerialActionPump.Enqueue(System.Action)">
+            <summary>
+                Enqueues an action for serialized background execution.
+            </summary>
+            <param name="action">The action to run on the worker thread.</param>
+        </member>
+        <member name="M:Echoglossian.AsyncSerialActionPump.Flush(System.TimeSpan)">
+            <summary>
+                Waits for the currently queued actions to finish.
+            </summary>
+            <param name="timeout">The maximum time to wait.</param>
+            <returns><see langword="true" /> when the queue drained in time.</returns>
+        </member>
+        <member name="M:Echoglossian.AsyncSerialActionPump.Shutdown(System.TimeSpan)">
+            <summary>
+                Stops accepting new actions and waits for the worker to drain the
+                queue before returning.
+            </summary>
+            <param name="timeout">The maximum time to wait.</param>
+            <returns><see langword="true" /> when shutdown completed in time.</returns>
+        </member>
+        <member name="M:Echoglossian.AsyncSerialActionPump.Dispose">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.DiagnosticFileEmitter">
             <summary>
                 Emits purpose-specific diagnostic files into the plugin config
@@ -11131,6 +11161,16 @@
                 Overrides the line-count rotation threshold for isolated tests.
             </summary>
             <param name="maxLineCount">The maximum active-file line count.</param>
+        </member>
+        <member name="M:Echoglossian.DiagnosticFileEmitter.FlushForTests">
+            <summary>
+                Waits for the background diagnostic writer to flush queued blocks.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DiagnosticFileEmitter.Shutdown">
+            <summary>
+                Stops accepting new diagnostic blocks and drains the pending queue.
+            </summary>
         </member>
         <member name="T:Echoglossian.FrameworkAccessGuard">
             <summary>
@@ -11272,6 +11312,16 @@
                 Gets the current runtime log file path for tests and diagnostics.
             </summary>
             <returns>The absolute path of the active runtime log file.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeFileLog.FlushForTests">
+            <summary>
+                Waits for the background runtime log writer to flush queued lines.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginRuntimeFileLog.Shutdown">
+            <summary>
+                Stops accepting new runtime log writes and drains the pending queue.
+            </summary>
         </member>
         <member name="T:Echoglossian.PluginRuntimeLogLevel">
             <summary>

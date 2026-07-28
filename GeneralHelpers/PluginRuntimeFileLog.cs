@@ -13,8 +13,10 @@ namespace Echoglossian;
 internal static class PluginRuntimeFileLog
 {
     private const string ActiveLogFileName = "Echoglossian.log";
+    private static readonly TimeSpan FlushTimeout = TimeSpan.FromSeconds(5);
 
     private static readonly Lock SyncRoot = new();
+    private static AsyncSerialActionPump actionPump = new();
 
     private static StreamWriter? writer;
     private static string? currentConfigDirectory;
@@ -32,38 +34,23 @@ internal static class PluginRuntimeFileLog
         PluginRuntimeLogLevel level,
         string message)
     {
-        if (string.IsNullOrWhiteSpace(message) ||
-            string.IsNullOrWhiteSpace(Echoglossian.ConfigDirectory))
-        {
-            return;
-        }
-
         try
         {
-            lock (SyncRoot)
+            var configDirectory = Echoglossian.ConfigDirectory;
+            if (string.IsNullOrWhiteSpace(message) ||
+                string.IsNullOrWhiteSpace(configDirectory))
             {
-                EnsureWriter();
-                if (writer == null)
-                {
-                    return;
-                }
-
-                var timestamp = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture);
-                var levelTag = GetLevelTag(level);
-                var renderedLines = RotatingLogFileSupport
-                    .EnumerateLines(message)
-                    .Select(line => $"{timestamp} [{levelTag}] {line}")
-                    .ToArray();
-
-                RotateIfCurrentFileWouldOverflow(renderedLines.Length);
-                foreach (var line in renderedLines)
-                {
-                    writer.WriteLine(line);
-                }
-
-                writer.Flush();
-                currentLineCount += renderedLines.Length;
+                return;
             }
+
+            var timestamp = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture);
+            var levelTag = GetLevelTag(level);
+            var renderedLines = RotatingLogFileSupport
+                .EnumerateLines(message)
+                .Select(line => $"{timestamp} [{levelTag}] {line}")
+                .ToArray();
+
+            actionPump.Enqueue(() => WriteRenderedLines(configDirectory, renderedLines));
         }
         catch
         {
@@ -77,13 +64,13 @@ internal static class PluginRuntimeFileLog
     /// </summary>
     internal static void ResetForTests()
     {
+        var previousPump = actionPump;
+        actionPump = new AsyncSerialActionPump();
+        previousPump.Dispose();
+
         lock (SyncRoot)
         {
-            writer?.Dispose();
-            writer = null;
-            currentConfigDirectory = null;
-            currentLogFilePath = null;
-            currentLineCount = 0;
+            ResetWriterStateNoLock();
             maxLineCountOverride = null;
         }
     }
@@ -115,14 +102,55 @@ internal static class PluginRuntimeFileLog
         }
     }
 
-    private static void EnsureWriter()
+    /// <summary>
+    ///     Waits for the background runtime log writer to flush queued lines.
+    /// </summary>
+    internal static void FlushForTests()
     {
-        var configDirectory = Echoglossian.ConfigDirectory;
-        if (string.IsNullOrWhiteSpace(configDirectory))
+        if (!actionPump.Flush(FlushTimeout))
         {
-            return;
+            throw new TimeoutException("Timed out while flushing PluginRuntimeFileLog.");
         }
+    }
 
+    /// <summary>
+    ///     Stops accepting new runtime log writes and drains the pending queue.
+    /// </summary>
+    internal static void Shutdown()
+    {
+        _ = actionPump.Shutdown(FlushTimeout);
+
+        lock (SyncRoot)
+        {
+            ResetWriterStateNoLock();
+        }
+    }
+
+    private static void WriteRenderedLines(
+        string configDirectory,
+        string[] renderedLines)
+    {
+        lock (SyncRoot)
+        {
+            EnsureWriter(configDirectory);
+            if (writer == null)
+            {
+                return;
+            }
+
+            RotateIfCurrentFileWouldOverflow(renderedLines.Length);
+            foreach (var line in renderedLines)
+            {
+                writer.WriteLine(line);
+            }
+
+            writer.Flush();
+            currentLineCount += renderedLines.Length;
+        }
+    }
+
+    private static void EnsureWriter(string configDirectory)
+    {
         if (writer != null &&
             string.Equals(
                 currentConfigDirectory,
@@ -214,5 +242,14 @@ internal static class PluginRuntimeFileLog
     private static int GetMaxLineCount()
     {
         return maxLineCountOverride ?? RotatingLogFileSupport.DefaultMaxLineCount;
+    }
+
+    private static void ResetWriterStateNoLock()
+    {
+        writer?.Dispose();
+        writer = null;
+        currentConfigDirectory = null;
+        currentLogFilePath = null;
+        currentLineCount = 0;
     }
 }
