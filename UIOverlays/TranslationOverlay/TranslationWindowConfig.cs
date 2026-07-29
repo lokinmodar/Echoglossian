@@ -28,6 +28,15 @@ internal enum TranslationOverlaySurfaceId
     /// <summary>CutSceneSelectString overlay.</summary>
     CutSceneSelectString,
 
+    /// <summary>SelectYesNo overlay.</summary>
+    SelectYesNo,
+
+    /// <summary>SelectOk overlay.</summary>
+    SelectOk,
+
+    /// <summary>SelectString overlay.</summary>
+    SelectString,
+
     /// <summary>Text Gimmick Hint overlay.</summary>
     TextGimmickHint,
 
@@ -100,6 +109,9 @@ internal record TranslationWindowConfig(
       TranslationOverlaySurfaceId.TalkSubtitle => FromConfigTalkSubtitle(config),
       TranslationOverlaySurfaceId.MiniTalk => FromConfigForMiniTalk(config),
       TranslationOverlaySurfaceId.CutSceneSelectString => FromConfigForCutSceneSelectString(config),
+      TranslationOverlaySurfaceId.SelectYesNo => FromConfigForSelectYesNo(config),
+      TranslationOverlaySurfaceId.SelectOk => FromConfigForSelectOk(config),
+      TranslationOverlaySurfaceId.SelectString => FromConfigForSelectString(config),
       TranslationOverlaySurfaceId.TextGimmickHint => FromConfigForTextGimmickHint(config),
       TranslationOverlaySurfaceId.WideTextToast => FromConfigForWideTextToast(config),
       TranslationOverlaySurfaceId.ErrorToast => FromConfigForErrorToast(config),
@@ -207,6 +219,72 @@ internal record TranslationWindowConfig(
     return new TranslationWindowConfig(
         SurfaceId: TranslationOverlaySurfaceId.CutSceneSelectString,
         DefaultTitle: Resources.OverlayWindowTitleCutSceneSelectStringTranslation,
+        FontScale: config.CutSceneSelectStringFontScale,
+        WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
+        HeightMultiplier: 1.5f,
+        TextColor: new Vector4(config.OverlayCutSceneSelectStringTextColor.X, config.OverlayCutSceneSelectStringTextColor.Y, config.OverlayCutSceneSelectStringTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiCutSceneSelectStringWindowPosCorrection,
+        ForceShowTitle: true,
+        BackgroundOpacity: config.CutSceneSelectStringBackgroundOpacity,
+        NoBackground: config.CutSceneSelectStringBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for SelectYesNo overlays.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForSelectYesNo(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.SelectYesNo,
+        DefaultTitle: Resources.SelectionDialogsTabTitle,
+        FontScale: config.CutSceneSelectStringFontScale,
+        WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
+        HeightMultiplier: 1.5f,
+        TextColor: new Vector4(config.OverlayCutSceneSelectStringTextColor.X, config.OverlayCutSceneSelectStringTextColor.Y, config.OverlayCutSceneSelectStringTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiCutSceneSelectStringWindowPosCorrection,
+        ForceShowTitle: true,
+        BackgroundOpacity: config.CutSceneSelectStringBackgroundOpacity,
+        NoBackground: config.CutSceneSelectStringBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for SelectOk overlays.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForSelectOk(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.SelectOk,
+        DefaultTitle: Resources.SelectionDialogsTabTitle,
+        FontScale: config.CutSceneSelectStringFontScale,
+        WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
+        HeightMultiplier: 1.5f,
+        TextColor: new Vector4(config.OverlayCutSceneSelectStringTextColor.X, config.OverlayCutSceneSelectStringTextColor.Y, config.OverlayCutSceneSelectStringTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiCutSceneSelectStringWindowPosCorrection,
+        ForceShowTitle: true,
+        BackgroundOpacity: config.CutSceneSelectStringBackgroundOpacity,
+        NoBackground: config.CutSceneSelectStringBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for SelectString overlays.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForSelectString(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.SelectString,
+        DefaultTitle: Resources.SelectionDialogsTabTitle,
         FontScale: config.CutSceneSelectStringFontScale,
         WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
         HeightMultiplier: 1.5f,

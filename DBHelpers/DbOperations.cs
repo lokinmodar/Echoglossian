@@ -31,6 +31,8 @@ public partial class Echoglossian
 
   public static SelectString? FoundSelectStringMessage { get; set; }
 
+  public static SelectionDialogText? FoundSelectionDialogText { get; set; }
+
   public static GameWindow? FoundGameWindow { get; set; }
 
   /// <summary>
@@ -916,6 +918,70 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds and returns a generic selection-dialog payload from the
+  ///     dedicated selection-dialog table.
+  /// </summary>
+  /// <param name="selectionDialogText">
+  ///     The formatted selection-dialog payload to find.
+  /// </param>
+  /// <returns>
+  ///     The found <see cref="SelectionDialogText" />, or
+  ///     <see langword="null" />.
+  /// </returns>
+  public SelectionDialogText? FindSelectionDialogText(
+      SelectionDialogText selectionDialogText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              selectionDialogText.TranslationEngine,
+              out var scope) ||
+          string.IsNullOrWhiteSpace(selectionDialogText.AddonName) ||
+          string.IsNullOrWhiteSpace(selectionDialogText.OriginalTextsAsText))
+      {
+        FoundSelectionDialogText = null;
+        return null;
+      }
+
+      var candidates = context.SelectionDialogTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == selectionDialogText.AddonName &&
+              t.OriginalTextsAsText == selectionDialogText.OriginalTextsAsText)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  selectionDialogText.TranslationLang) &&
+              scope.Matches(
+                  t.OriginalLang,
+                  t.TranslationLang,
+                  t.TranslationEngine));
+      var localFoundSelectionDialogText = SelectPreferredSelectionDialogText(
+          candidates,
+          selectionDialogText);
+      if (localFoundSelectionDialogText == null ||
+          !ShouldSaveToDB(localFoundSelectionDialogText.TranslatedTextsAsText))
+      {
+        FoundSelectionDialogText = null;
+        return null;
+      }
+
+      FoundSelectionDialogText = localFoundSelectionDialogText;
+      return localFoundSelectionDialogText;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindSelectionDialogText exception {e}");
+      FoundSelectionDialogText = null;
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Inserts a TalkMessage record into the database.
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
@@ -1436,6 +1502,50 @@ public partial class Echoglossian
     catch (Exception e)
     {
       PluginRuntimeLog.Error($"DB Save Failed: {e.Message}\n{e.StackTrace}");
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or refreshes one generic selection-dialog row in the
+  ///     dedicated selection-dialog table.
+  /// </summary>
+  /// <param name="selectionDialogText">
+  ///     The generic selection-dialog row to save.
+  /// </param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertSelectionDialogTextData(
+      SelectionDialogText selectionDialogText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(selectionDialogText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      selectionDialogText.GameVersion ??= GetGameVersion();
+      var existingSelectionDialogText = TryFindSelectionDialogTextForSave(
+          context,
+          selectionDialogText);
+      if (existingSelectionDialogText != null)
+      {
+        MergeSelectionDialogTextValues(
+            existingSelectionDialogText,
+            selectionDialogText);
+        existingSelectionDialogText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data merged into SelectionDialogTexts table.";
+      }
+
+      context.SelectionDialogTexts.Attach(selectionDialogText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to SelectionDialogTexts table.";
+    }
+    catch (Exception e)
+    {
       return $"ErrorSavingData: {e}";
     }
   }
@@ -2420,6 +2530,149 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds an existing generic selection-dialog row that should be merged
+  ///     with the incoming save payload instead of creating a duplicate row.
+  /// </summary>
+  /// <param name="context">The active database context.</param>
+  /// <param name="selectionDialogText">The incoming selection-dialog row.</param>
+  /// <returns>
+  ///     The existing row to merge, or <see langword="null" /> when no
+  ///     reusable row exists.
+  /// </returns>
+  private static SelectionDialogText? TryFindSelectionDialogTextForSave(
+      EchoglossianDbContext context,
+      SelectionDialogText selectionDialogText)
+  {
+    return context.SelectionDialogTexts
+        .Where(t =>
+            t.AddonName == selectionDialogText.AddonName &&
+            t.OriginalTextsAsText == selectionDialogText.OriginalTextsAsText)
+        .AsEnumerable()
+        .Where(t =>
+            RuntimeLanguageHelper.LanguagesMatch(
+                t.TranslationLang,
+                selectionDialogText.TranslationLang) &&
+            LegacyWriteSourceLanguagesMatch(
+                t.OriginalLang,
+                selectionDialogText.OriginalLang))
+        .OrderByDescending(t =>
+            !string.IsNullOrWhiteSpace(selectionDialogText.SourceContentHash) &&
+            string.Equals(
+                t.SourceContentHash,
+                selectionDialogText.SourceContentHash,
+                StringComparison.Ordinal))
+        .ThenByDescending(t =>
+            !string.IsNullOrWhiteSpace(selectionDialogText.GameVersion) &&
+            string.Equals(
+                t.GameVersion,
+                selectionDialogText.GameVersion,
+                StringComparison.Ordinal))
+        .ThenByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+        .ThenByDescending(t => t.Id)
+        .FirstOrDefault();
+  }
+
+  /// <summary>
+  ///     Selects the preferred generic selection-dialog lookup candidate.
+  /// </summary>
+  /// <param name="candidateSelectionDialogTexts">
+  ///     The candidate selection-dialog rows.
+  /// </param>
+  /// <param name="requestedSelectionDialogText">
+  ///     The requested selection-dialog row.
+  /// </param>
+  /// <returns>The preferred row, or <see langword="null" />.</returns>
+  private static SelectionDialogText? SelectPreferredSelectionDialogText(
+      IEnumerable<SelectionDialogText> candidateSelectionDialogTexts,
+      SelectionDialogText requestedSelectionDialogText)
+  {
+    SelectionDialogText? preferredSelectionDialogText = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateSelectionDialogText in candidateSelectionDialogTexts)
+    {
+      if (!RuntimeLanguageHelper.LanguagesMatch(
+              candidateSelectionDialogText.TranslationLang,
+              requestedSelectionDialogText.TranslationLang) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateSelectionDialogText.OriginalLang,
+              requestedSelectionDialogText.OriginalLang))
+      {
+        continue;
+      }
+
+      var identityScore = 0;
+      if (!string.IsNullOrWhiteSpace(requestedSelectionDialogText.SourceContentHash) &&
+          string.Equals(
+              candidateSelectionDialogText.SourceContentHash,
+              requestedSelectionDialogText.SourceContentHash,
+              StringComparison.Ordinal))
+      {
+        identityScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedSelectionDialogText.GameVersion) &&
+          string.Equals(
+              candidateSelectionDialogText.GameVersion,
+              requestedSelectionDialogText.GameVersion,
+              StringComparison.Ordinal))
+      {
+        identityScore += 4;
+      }
+
+      var completenessScore = 0;
+      if (ShouldSaveToDB(candidateSelectionDialogText.TranslatedTextsAsText))
+      {
+        completenessScore += 4;
+      }
+
+      var updatedDate = candidateSelectionDialogText.UpdatedDate ??
+                        candidateSelectionDialogText.CreatedDate ??
+                        DateTime.MinValue;
+      if (preferredSelectionDialogText != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredSelectionDialogText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredSelectionDialogText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredSelectionDialogText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateSelectionDialogText.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredSelectionDialogText = candidateSelectionDialogText;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateSelectionDialogText.Id;
+    }
+
+    return preferredSelectionDialogText;
+  }
+
+  /// <summary>
   ///     Compares write-side source identities while recognizing only the four
   ///     historical display names persisted by supported game languages.
   /// </summary>
@@ -2540,6 +2793,50 @@ public partial class Echoglossian
 
       target.PruneTranslatedRowsToCanonicalPayload();
     }
+
+  /// <summary>
+  ///     Merges generic selection-dialog values without overwriting populated
+  ///     translated fields with empties.
+  /// </summary>
+  /// <param name="target">The existing selection-dialog row.</param>
+  /// <param name="source">The incoming selection-dialog row.</param>
+  private static void MergeSelectionDialogTextValues(
+      SelectionDialogText target,
+      SelectionDialogText source)
+  {
+    if (target == null || source == null)
+    {
+      return;
+    }
+
+    target.AddonName = string.IsNullOrWhiteSpace(source.AddonName)
+        ? target.AddonName
+        : source.AddonName;
+    target.OriginalTextsAsText =
+        string.IsNullOrWhiteSpace(source.OriginalTextsAsText)
+            ? target.OriginalTextsAsText
+            : source.OriginalTextsAsText;
+    target.OriginalLang = string.IsNullOrWhiteSpace(source.OriginalLang)
+        ? target.OriginalLang
+        : source.OriginalLang;
+    target.TranslatedTextsAsText =
+        string.IsNullOrWhiteSpace(source.TranslatedTextsAsText)
+            ? target.TranslatedTextsAsText
+            : source.TranslatedTextsAsText;
+    target.TranslationLang = string.IsNullOrWhiteSpace(source.TranslationLang)
+        ? target.TranslationLang
+        : source.TranslationLang;
+    target.TranslationEngine = source.TranslationEngine ??
+                               target.TranslationEngine;
+    target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion)
+        ? target.GameVersion
+        : source.GameVersion;
+    target.SourceContentHash = string.IsNullOrWhiteSpace(source.SourceContentHash)
+        ? target.SourceContentHash
+        : source.SourceContentHash;
+    target.CreatedDate ??= source.CreatedDate;
+    target.UpdatedDate = DateTime.Now;
+  }
 
   /// <summary>
   ///     Merges popup-table values without overwriting already populated

@@ -499,6 +499,9 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             TranslationOverlaySurfaceId.TalkSubtitle => this.configuration.TalkSubtitleTranslationDisplayMode,
             TranslationOverlaySurfaceId.MiniTalk => this.configuration.MiniTalkTranslationDisplayMode,
             TranslationOverlaySurfaceId.CutSceneSelectString => this.configuration.CutSceneSelectStringTranslationDisplayMode,
+            TranslationOverlaySurfaceId.SelectYesNo => this.configuration.SelectYesNoTranslationDisplayMode,
+            TranslationOverlaySurfaceId.SelectOk => this.configuration.SelectOkTranslationDisplayMode,
+            TranslationOverlaySurfaceId.SelectString => this.configuration.SelectStringTranslationDisplayMode,
             TranslationOverlaySurfaceId.TextGimmickHint => this.configuration.TextGimmickHintTranslationDisplayMode,
             TranslationOverlaySurfaceId.WideTextToast => ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(this.configuration)
                 ? ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(this.configuration)

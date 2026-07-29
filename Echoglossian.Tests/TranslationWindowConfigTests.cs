@@ -158,6 +158,21 @@ public class TranslationWindowConfigTests
         ];
         yield return
         [
+            TranslationOverlaySurfaceId.SelectYesNo,
+            (Func<Config, TranslationWindowConfig>)TranslationWindowConfig.FromConfigForSelectYesNo,
+        ];
+        yield return
+        [
+            TranslationOverlaySurfaceId.SelectOk,
+            (Func<Config, TranslationWindowConfig>)TranslationWindowConfig.FromConfigForSelectOk,
+        ];
+        yield return
+        [
+            TranslationOverlaySurfaceId.SelectString,
+            (Func<Config, TranslationWindowConfig>)TranslationWindowConfig.FromConfigForSelectString,
+        ];
+        yield return
+        [
             TranslationOverlaySurfaceId.TextGimmickHint,
             (Func<Config, TranslationWindowConfig>)TranslationWindowConfig.FromConfigForTextGimmickHint,
         ];

@@ -3029,6 +3029,19 @@
             <param name="selectString">Formatted SelectString to be found in the database.</param>
             <returns>The found <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> or <see langword="null" />.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindSelectionDialogText(Echoglossian.EFCoreSqlite.Models.SelectionDialogText)">
+            <summary>
+                Finds and returns a generic selection-dialog payload from the
+                dedicated selection-dialog table.
+            </summary>
+            <param name="selectionDialogText">
+                The formatted selection-dialog payload to find.
+            </param>
+            <returns>
+                The found <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectionDialogText" />, or
+                <see langword="null" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken)">
             <summary>
             Inserts a TalkMessage record into the database.
@@ -3123,6 +3136,16 @@
             </summary>
             <param name="selectString">Formatted SelectString to be inserted into the database.</param>
             <returns></returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertSelectionDialogTextData(Echoglossian.EFCoreSqlite.Models.SelectionDialogText)">
+            <summary>
+                Inserts or refreshes one generic selection-dialog row in the
+                dedicated selection-dialog table.
+            </summary>
+            <param name="selectionDialogText">
+                The generic selection-dialog row to save.
+            </param>
+            <returns>A status message describing the persistence result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
             <summary>
@@ -3251,6 +3274,30 @@
             <param name="requestedQuestPopupText">The incoming popup row.</param>
             <returns>The preferred popup row, or <see langword="null" />.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindSelectionDialogTextForSave(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.SelectionDialogText)">
+            <summary>
+                Finds an existing generic selection-dialog row that should be merged
+                with the incoming save payload instead of creating a duplicate row.
+            </summary>
+            <param name="context">The active database context.</param>
+            <param name="selectionDialogText">The incoming selection-dialog row.</param>
+            <returns>
+                The existing row to merge, or <see langword="null" /> when no
+                reusable row exists.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SelectPreferredSelectionDialogText(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.SelectionDialogText},Echoglossian.EFCoreSqlite.Models.SelectionDialogText)">
+            <summary>
+                Selects the preferred generic selection-dialog lookup candidate.
+            </summary>
+            <param name="candidateSelectionDialogTexts">
+                The candidate selection-dialog rows.
+            </param>
+            <param name="requestedSelectionDialogText">
+                The requested selection-dialog row.
+            </param>
+            <returns>The preferred row, or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.LegacyWriteSourceLanguagesMatch(System.String,System.String)">
             <summary>
                 Compares write-side source identities while recognizing only the four
@@ -3273,6 +3320,14 @@
             </summary>
             <param name="target">The database record to be enriched.</param>
             <param name="source">The newer quest plate values.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.MergeSelectionDialogTextValues(Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText)">
+            <summary>
+                Merges generic selection-dialog values without overwriting populated
+                translated fields with empties.
+            </summary>
+            <param name="target">The existing selection-dialog row.</param>
+            <param name="source">The incoming selection-dialog row.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.MergeQuestPopupTextValues(Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText,Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
             <summary>
@@ -3400,6 +3455,19 @@
             <returns>
                 The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" />, or <see langword="null" />
                 when the current source language cannot be resolved.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatSelectionDialogText(System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Formats a generic selection-dialog payload for the dedicated
+                selection-dialog table.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="texts">The captured text payload in display order.</param>
+            <returns>
+                The formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectionDialogText" />, or
+                <see langword="null" /> when the current source language cannot be
+                resolved.
             </returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.FormatGameWindow(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32})">
@@ -8455,6 +8523,11 @@
             </summary>
             <param name="configDir">Plugin config directory.</param>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.SelectionDialogTexts">
+            <summary>
+                Gets or sets the generic selection-dialog translation rows.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.NamePlateMessages">
             <summary>
                 Gets or sets the translated world-object nameplate rows.
@@ -8894,6 +8967,18 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestPopupTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddSelectionDialogTexts">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSelectionDialogTexts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSelectionDialogTexts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSelectionDialogTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -10450,6 +10535,120 @@
             <summary>
                 Gets or sets the optimistic-concurrency token.
             </summary>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.SelectionDialogText">
+            <summary>
+                Stores generic translated selection-dialog payloads for addon surfaces
+                that are not safely representable through the cutscene-specific
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectString" /> table.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.#ctor">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectionDialogText" />
+                class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.SelectionDialogText" />
+                class.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="originalTextsAsText">The serialized original payload.</param>
+            <param name="originalLang">The source language.</param>
+            <param name="translatedTextsAsText">The serialized translated payload.</param>
+            <param name="translationLang">The target language.</param>
+            <param name="translationEngine">The translation engine id.</param>
+            <param name="gameVersion">The stored game version.</param>
+            <param name="sourceContentHash">The optional source content hash.</param>
+            <param name="createdDate">The created timestamp.</param>
+            <param name="updatedDate">The updated timestamp.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.AddonName">
+            <summary>
+                Gets or sets the addon name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.OriginalTextsAsText">
+            <summary>
+                Gets or sets the serialized original payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.OriginalLang">
+            <summary>
+                Gets or sets the original source language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.TranslatedTextsAsText">
+            <summary>
+                Gets or sets the serialized translated payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.TranslationLang">
+            <summary>
+                Gets or sets the target translation language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.TranslationEngine">
+            <summary>
+                Gets or sets the translation engine id.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.GameVersion">
+            <summary>
+                Gets or sets the stored game version.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.SourceContentHash">
+            <summary>
+                Gets or sets the optional source content hash.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.CreatedDate">
+            <summary>
+                Gets or sets the created timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.UpdatedDate">
+            <summary>
+                Gets or sets the updated timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.RowVersion">
+            <summary>
+                Gets or sets the optimistic concurrency token.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.OriginalTexts">
+            <summary>
+                Gets or sets the original payload as a materialized list.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.TranslatedTexts">
+            <summary>
+                Gets or sets the translated payload as a materialized list.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.UpdateFieldsAsText(System.Boolean)">
+            <summary>
+                Updates the serialized payload fields from the current in-memory
+                lists.
+            </summary>
+            <param name="prettyPrint">Whether JSON should be indented.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.UpdateFieldsFromText">
+            <summary>
+                Forces reloading the materialized lists from the stored JSON fields.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.SelectionDialogText.ToString">
+            <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.SelectString">
             <summary>
@@ -20366,6 +20565,52 @@
             The number of visible quests still waiting on translated data.
             </param>
             <returns>The derived availability snapshot.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy">
+            <summary>
+                Resolves the preferred capture path for generic selection-dialog
+                surfaces while keeping UI collection ordered from the most structured
+                source to the loosest fallback.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy.ResolveBestSource(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+                Resolves the best available selection-dialog capture source.
+            </summary>
+            <param name="hasAtkValueText">Whether <c>AtkValue</c> text exists.</param>
+            <param name="hasStringArrayText">
+                Whether <c>StringArrayData</c> text exists.
+            </param>
+            <param name="hasReadableTextNodes">
+                Whether readable text nodes exist.
+            </param>
+            <returns>The preferred capture source kind.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind">
+            <summary>
+                Identifies which live addon data surface supplied the current
+                selection-dialog text payload.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind.None">
+            <summary>
+                No usable capture source was available.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind.AtkValues">
+            <summary>
+                Text was captured directly from <c>AtkValue</c> slots.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind.StringArrayData">
+            <summary>
+                Text was captured from <c>StringArrayData</c>.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind.TextNodes">
+            <summary>
+                Text was scraped from readable text nodes.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
             <summary>
@@ -36067,6 +36312,15 @@
         <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.CutSceneSelectString">
             <summary>CutSceneSelectString overlay.</summary>
         </member>
+        <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.SelectYesNo">
+            <summary>SelectYesNo overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.SelectOk">
+            <summary>SelectOk overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.SelectString">
+            <summary>SelectString overlay.</summary>
+        </member>
         <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.TextGimmickHint">
             <summary>Text Gimmick Hint overlay.</summary>
         </member>
@@ -36139,6 +36393,27 @@
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForCutSceneSelectString(Echoglossian.Config)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for CutSceneSelectString overlays.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForSelectYesNo(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for SelectYesNo overlays.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForSelectOk(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for SelectOk overlays.
+            </summary>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForSelectString(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the provided <see cref="T:Echoglossian.Config"/> for SelectString overlays.
             </summary>
             <param name="config"></param>
             <returns></returns>

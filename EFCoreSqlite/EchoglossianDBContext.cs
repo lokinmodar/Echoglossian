@@ -41,6 +41,11 @@ public class EchoglossianDbContext : DbContext
 
   public DbSet<SelectString> SelectString { get; set; }
 
+  /// <summary>
+  ///     Gets or sets the generic selection-dialog translation rows.
+  /// </summary>
+  public DbSet<SelectionDialogText> SelectionDialogTexts { get; set; }
+
   public DbSet<GameWindow> GameWindow { get; set; }
 
   public DbSet<TalkSubtitleMessage> TalkSubtitleMessage { get; set; }
@@ -210,6 +215,15 @@ public class EchoglossianDbContext : DbContext
           s.TranslationEngine
         })
         .HasDatabaseName("IX_selectstrings_lookup");
+    modelBuilder.Entity<SelectionDialogText>().ToTable("selectiondialogtexts");
+    modelBuilder.Entity<SelectionDialogText>()
+        .HasIndex(s => new
+        {
+          s.AddonName,
+          s.TranslationLang,
+          s.TranslationEngine
+        })
+        .HasDatabaseName("IX_selectiondialogtexts_lookup");
     modelBuilder.Entity<GameWindow>().ToTable("gamewindows");
     modelBuilder.Entity<GameWindow>()
         .HasIndex(g => new

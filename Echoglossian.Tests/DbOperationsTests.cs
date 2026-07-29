@@ -16,6 +16,7 @@ using Echoglossian.EFCoreSqlite.Models.Journal;
 using Echoglossian.LanguagesHandling;
 using Echoglossian.Translators;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 using PluginEntry = Echoglossian.Echoglossian;
 
@@ -594,6 +595,100 @@ public class DbOperationsTests
             Assert.Equal(
                 "Aceite a caçada.",
                 GetObjectProperty<string>(result!, "TranslatedBody"));
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = previousClientState;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.LangDict = previousLanguages;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures generic selection-dialog reuse works for `SelectOk`
+    ///     payloads that should not route through the cutscene-specific
+    ///     select-string table.
+    /// </summary>
+    [Fact]
+    public void FindSelectionDialogText_ReusesGenericSelectOkRow()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = CreateTargetLanguages();
+            var plugin = CreateFormattingPlugin(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                    TranslateAlreadyTranslatedTexts = true,
+                });
+            var selectionDialogType = ResolveSelectionDialogTextType();
+            var timestamp = new DateTime(
+                2026,
+                7,
+                29,
+                14,
+                30,
+                0,
+                DateTimeKind.Utc);
+            var originalTexts = JsonConvert.SerializeObject(
+                new[] { "Duty registration complete.", "OK" });
+            var translatedTexts = JsonConvert.SerializeObject(
+                new[] { "Registro de conteudo concluido.", "OK" });
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.Add(CreateSelectionDialogText(
+                    selectionDialogType,
+                    "SelectOk",
+                    originalTexts,
+                    "en",
+                    translatedTexts,
+                    "pt-BR",
+                    0,
+                    "test-version",
+                    timestamp));
+                context.SaveChanges();
+            }
+
+            var lookup = CreateSelectionDialogText(
+                selectionDialogType,
+                "SelectOk",
+                originalTexts,
+                "en",
+                string.Empty,
+                "pt-BR",
+                0,
+                "test-version",
+                timestamp);
+            var findMethod = typeof(PluginEntry).GetMethod(
+                "FindSelectionDialogText",
+                BindingFlags.Instance | BindingFlags.Public,
+                binder: null,
+                [selectionDialogType],
+                modifiers: null);
+
+            Assert.NotNull(findMethod);
+            var result = findMethod!.Invoke(plugin, [lookup]);
+
+            Assert.NotNull(result);
+            Assert.Equal(
+                translatedTexts,
+                GetObjectProperty<string>(result!, "TranslatedTextsAsText"));
         }
         finally
         {
@@ -1854,6 +1949,19 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Resolves the dedicated generic selection-dialog type from the
+    ///     compiled plugin assembly.
+    /// </summary>
+    /// <returns>The resolved generic selection-dialog type.</returns>
+    private static Type ResolveSelectionDialogTextType()
+    {
+        var selectionDialogType = typeof(PluginEntry).Assembly.GetType(
+            "Echoglossian.EFCoreSqlite.Models.SelectionDialogText");
+        Assert.NotNull(selectionDialogType);
+        return selectionDialogType!;
+    }
+
+    /// <summary>
     ///     Creates one reflective quest-popup instance for DB tests.
     /// </summary>
     /// <param name="questPopupType">The quest-popup runtime type.</param>
@@ -1898,6 +2006,45 @@ public class DbOperationsTests
         SetObjectProperty(instance!, "TranslationEngine", translationEngine);
         SetObjectProperty(instance!, "GameVersion", gameVersion);
         SetObjectProperty(instance!, "SourceContentHash", sourceContentHash);
+        SetObjectProperty(instance!, "CreatedDate", timestamp);
+        SetObjectProperty(instance!, "UpdatedDate", timestamp);
+        return instance!;
+    }
+
+    /// <summary>
+    ///     Creates one reflective generic selection-dialog instance for DB
+    ///     tests.
+    /// </summary>
+    /// <param name="selectionDialogType">The runtime selection-dialog type.</param>
+    /// <param name="addonName">The addon name.</param>
+    /// <param name="originalTextsAsText">The serialized original payload.</param>
+    /// <param name="originalLang">The original source language.</param>
+    /// <param name="translatedTextsAsText">The serialized translated payload.</param>
+    /// <param name="translationLang">The target translation language.</param>
+    /// <param name="translationEngine">The translation engine.</param>
+    /// <param name="gameVersion">The stored game version.</param>
+    /// <param name="timestamp">The created/updated timestamp.</param>
+    /// <returns>The configured selection-dialog row instance.</returns>
+    private static object CreateSelectionDialogText(
+        Type selectionDialogType,
+        string addonName,
+        string originalTextsAsText,
+        string originalLang,
+        string translatedTextsAsText,
+        string translationLang,
+        int translationEngine,
+        string gameVersion,
+        DateTime timestamp)
+    {
+        var instance = Activator.CreateInstance(selectionDialogType);
+        Assert.NotNull(instance);
+        SetObjectProperty(instance!, "AddonName", addonName);
+        SetObjectProperty(instance!, "OriginalTextsAsText", originalTextsAsText);
+        SetObjectProperty(instance!, "OriginalLang", originalLang);
+        SetObjectProperty(instance!, "TranslatedTextsAsText", translatedTextsAsText);
+        SetObjectProperty(instance!, "TranslationLang", translationLang);
+        SetObjectProperty(instance!, "TranslationEngine", translationEngine);
+        SetObjectProperty(instance!, "GameVersion", gameVersion);
         SetObjectProperty(instance!, "CreatedDate", timestamp);
         SetObjectProperty(instance!, "UpdatedDate", timestamp);
         return instance!;

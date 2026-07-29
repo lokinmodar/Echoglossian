@@ -222,6 +222,46 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Formats a generic selection-dialog payload for the dedicated
+  ///     selection-dialog table.
+  /// </summary>
+  /// <param name="addonName">The addon name.</param>
+  /// <param name="texts">The captured text payload in display order.</param>
+  /// <returns>
+  ///     The formatted <see cref="SelectionDialogText" />, or
+  ///     <see langword="null" /> when the current source language cannot be
+  ///     resolved.
+  /// </returns>
+  public SelectionDialogText? FormatSelectionDialogText(
+      string addonName,
+      IReadOnlyList<string> texts)
+  {
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return null;
+    }
+
+    var targetLanguage = this.languagesDictionary[this.configuration.Lang].Code;
+    if (string.IsNullOrWhiteSpace(targetLanguage))
+    {
+      return null;
+    }
+
+    return new SelectionDialogText(
+        addonName,
+        JsonConvert.SerializeObject(texts),
+        sourceLanguage.PersistenceCode,
+        string.Empty,
+        targetLanguage,
+        this.configuration.ChosenTransEngine,
+        GetGameVersion(),
+        sourceContentHash: null,
+        DateTime.Now,
+        DateTime.Now);
+  }
+
+  /// <summary>
   ///     Formats a <see cref="GameWindow" />.
   /// </summary>
   /// <param name="windowAddonName"></param>

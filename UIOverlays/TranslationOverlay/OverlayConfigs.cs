@@ -16,6 +16,9 @@ public partial class Echoglossian
     private readonly TranslationOverlay chatBubbleOverlay = new();
     private readonly TranslationOverlay errorToastOverlay = new();
     private readonly TranslationOverlay cutSceneSelectStringOverlay = new();
+    private readonly TranslationOverlay selectYesNoOverlay = new();
+    private readonly TranslationOverlay selectOkOverlay = new();
+    private readonly TranslationOverlay selectStringOverlay = new();
     private readonly TranslationOverlay textGimmickHintOverlay = new();
     private readonly TranslationOverlay questToastOverlay = new();
 
@@ -87,6 +90,51 @@ public partial class Echoglossian
                     this.TrySyncOverlayToAddon(
                         "CutSceneSelectString",
                         this.cutSceneSelectStringOverlay)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.selectYesNoOverlay,
+                () => TranslationWindowConfig.FromConfigForSelectYesNo(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateYesNoScreen &&
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.SelectYesNoTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
+                syncBeforeDraw: () =>
+                    this.TrySyncOverlayToAddon(
+                        "SelectYesNo",
+                        this.selectYesNoOverlay)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.selectOkOverlay,
+                () => TranslationWindowConfig.FromConfigForSelectOk(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateSelectOk &&
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.SelectOkTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
+                syncBeforeDraw: () =>
+                    this.TrySyncOverlayToAddon(
+                        "SelectOk",
+                        this.selectOkOverlay)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.selectStringOverlay,
+                () => TranslationWindowConfig.FromConfigForSelectString(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateSelectString &&
+                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                        this.configuration.SelectStringTranslationDisplayMode,
+                        this.configuration.OverlayOnlyLanguage),
+                syncBeforeDraw: () =>
+                    this.TrySyncOverlayToAddon(
+                        "SelectString",
+                        this.selectStringOverlay)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
