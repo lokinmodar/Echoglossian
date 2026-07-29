@@ -8,6 +8,7 @@ using System.Reflection;
 using Dalamud.Game.Addon.Lifecycle;
 
 using Echoglossian.NativeUI.AddonHandlers.Quest;
+using Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
 using Echoglossian.NativeUI.Handlers;
 
 using Xunit;
@@ -811,6 +812,9 @@ public class QuestAddonHandlerLifecycleTests
     [InlineData(typeof(JournalAcceptHandler))]
     [InlineData(typeof(JournalResultHandler))]
     [InlineData(typeof(RecommendListHandler))]
+    [InlineData(typeof(SelectYesNoHandler))]
+    [InlineData(typeof(SelectOkHandler))]
+    [InlineData(typeof(SelectStringHandler))]
     public void RuntimeWiring_RegistersRemainingQuestFamilyHandlers(
         Type handlerType)
     {

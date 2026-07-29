@@ -1,0 +1,78 @@
+// <copyright file="SelectOkHandler.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+namespace Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
+
+/// <summary>
+///     Handles the generic confirmation dialog runtime.
+/// </summary>
+public sealed class SelectOkHandler : SelectionDialogHandlerBase
+{
+    private readonly Func<SelectionDialogText, SelectionDialogText?>
+        findSelectionDialogText;
+    private readonly Func<SelectionDialogText, Task<string>>
+        insertSelectionDialogTextAsync;
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="SelectOkHandler" />
+    ///     class.
+    /// </summary>
+    public SelectOkHandler(
+        Config config,
+        TranslationService translationService,
+        Func<SelectionDialogText, SelectionDialogText?> findSelectionDialogText,
+        Func<SelectionDialogText, Task<string>> insertSelectionDialogTextAsync,
+        Action<string, string, string> updateOverlay,
+        Action clearOverlay,
+        SyncSelectionDialogOverlayBoundsDelegate syncOverlayBounds,
+        Func<string, string> normalizeReplacementText)
+        : base(
+            "SelectOk",
+            config,
+            translationService,
+            () => config.TranslateSelectOk,
+            () => config.SelectOkTranslationDisplayMode,
+            updateOverlay,
+            clearOverlay,
+            syncOverlayBounds,
+            normalizeReplacementText)
+    {
+        this.findSelectionDialogText = findSelectionDialogText;
+        this.insertSelectionDialogTextAsync = insertSelectionDialogTextAsync;
+    }
+
+    /// <inheritdoc />
+    protected override bool TryFindStoredTranslation(
+        SourceClientLanguage sourceLanguage,
+        IReadOnlyList<string> originalTexts,
+        out List<string> translatedTexts)
+    {
+        var lookup = this.BuildSelectionDialogLookup(sourceLanguage, originalTexts);
+        var found = lookup != null ? this.findSelectionDialogText(lookup) : null;
+        if (found == null || found.TranslatedTexts.Count != originalTexts.Count)
+        {
+            translatedTexts = [];
+            return false;
+        }
+
+        translatedTexts = [.. found.TranslatedTexts];
+        return true;
+    }
+
+    /// <inheritdoc />
+    protected override Task<string> PersistTranslationAsync(
+        SourceClientLanguage sourceLanguage,
+        IReadOnlyList<string> originalTexts,
+        IReadOnlyList<string> translatedTexts)
+    {
+        var row = this.BuildSelectionDialogRow(
+            sourceLanguage,
+            originalTexts,
+            translatedTexts);
+        return row == null
+            ? Task.FromResult("No data to save.")
+            : this.insertSelectionDialogTextAsync(row);
+    }
+}

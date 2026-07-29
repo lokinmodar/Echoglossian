@@ -103,7 +103,7 @@ public partial class Echoglossian
                         this.configuration.OverlayOnlyLanguage),
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon(
-                        "SelectYesNo",
+                        "SelectYesno",
                         this.selectYesNoOverlay)));
 
         this.registeredOverlays.Add(

@@ -5,6 +5,7 @@
 
 using Echoglossian.Mock.Hosting;
 using Echoglossian.NativeUI.AddonHandlers.Quest;
+using Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
 using Echoglossian.NativeUI.Handlers;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
@@ -163,6 +164,37 @@ public sealed class HostedPreviewPluginSessionTests
         registeredHandlers.Should().Contain(entry =>
             entry.AddonName == "_NaviMap" &&
             entry.Handler is MapSurfaceStringArrayHandler);
+    }
+
+    /// <summary>
+    /// Verifies that hosted startup wires the generic selection-dialog
+    /// handlers when their config toggles are enabled.
+    /// </summary>
+    /// <returns>A task that completes after hosted startup wires the addon handlers.</returns>
+    [Fact]
+    public async Task StartAsync_registers_selection_dialog_handlers_when_enabled()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(
+            config: new global::Echoglossian.Config
+            {
+                TranslateYesNoScreen = true,
+                TranslateSelectOk = true,
+                TranslateSelectString = true,
+            });
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            fixture.Options);
+
+        var registeredHandlers = GetRegisteredAddonHandlers(session.Plugin);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectYesno" &&
+            entry.Handler is SelectYesNoHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectOk" &&
+            entry.Handler is SelectOkHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectString" &&
+            entry.Handler is SelectStringHandler);
     }
 
     private static IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)>

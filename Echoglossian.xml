@@ -20612,6 +20612,323 @@
                 Text was scraped from readable text nodes.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate">
+            <summary>
+                Synchronizes overlay bounds for a visible selection-dialog addon.
+            </summary>
+            <param name="addon">The visible addon instance.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase">
+            <summary>
+                Shared runtime for generic selection-dialog add-ons that can capture
+                text from <c>AtkValues</c>, <c>StringArrayData</c>, or readable text
+                nodes and then apply translation through the active display mode.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.DialogState">
+            <summary>
+                In-memory state for the currently visible selection dialog.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{System.Boolean},System.Func{Echoglossian.JournalTranslationDisplayMode},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase" /> class.
+            </summary>
+            <param name="addonName">The native addon name.</param>
+            <param name="config">The plugin configuration.</param>
+            <param name="translationService">The translation service.</param>
+            <param name="isTranslationEnabled">
+                Resolves whether the handler is enabled.
+            </param>
+            <param name="resolveDisplayMode">Resolves the active display mode.</param>
+            <param name="updateOverlay">Publishes overlay content.</param>
+            <param name="clearOverlay">Clears the overlay state.</param>
+            <param name="syncOverlayBounds">Synchronizes overlay bounds.</param>
+            <param name="normalizeReplacementText">
+                Normalizes translated text for native replacement.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.AddonName">
+            <summary>
+                Gets the native addon name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.TargetLanguageCode">
+            <summary>
+                Gets the active target language code.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.GetEventHandlers">
+            <summary>
+                Returns the event handlers required to drive the selection-dialog
+                flow.
+            </summary>
+            <returns>The stable event-handler map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.OnPluginUnload">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.TryFindStoredTranslation(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.List{System.String}@)">
+            <summary>
+                Tries to resolve a persisted translation for the captured payload.
+            </summary>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="originalTexts">The ordered source payload.</param>
+            <param name="translatedTexts">Receives the translated payload.</param>
+            <returns>
+                <see langword="true" /> when a translated payload was found;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.PersistTranslationAsync(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Persists one translated payload.
+            </summary>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="originalTexts">The ordered source payload.</param>
+            <param name="translatedTexts">The ordered translated payload.</param>
+            <returns>A task that completes with the persistence result message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.BuildSelectionDialogLookup(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Builds one selection-dialog lookup row for the dedicated generic
+                selection-dialog table.
+            </summary>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="originalTexts">The ordered source payload.</param>
+            <returns>The lookup row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.BuildSelectionDialogRow(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Builds one selection-dialog persistence row for the dedicated
+                generic selection-dialog table.
+            </summary>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="originalTexts">The ordered source payload.</param>
+            <param name="translatedTexts">The ordered translated payload.</param>
+            <returns>The persistence row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.BuildSelectStringLookup(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Builds one select-string lookup row when the payload shape matches
+                the normal select-string dialog contract.
+            </summary>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="originalTexts">The ordered source payload.</param>
+            <returns>The lookup row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.BuildSelectStringRow(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Builds one select-string persistence row when the payload shape
+                matches the normal select-string dialog contract.
+            </summary>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="originalTexts">The ordered source payload.</param>
+            <param name="translatedTexts">The ordered translated payload.</param>
+            <returns>The persistence row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.DeserializeOptions(System.String)">
+            <summary>
+                Deserializes stored option payloads from the select-string table.
+            </summary>
+            <param name="optionsJson">The serialized options.</param>
+            <returns>The materialized options list.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.CanPersistAsSelectString(System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Determines whether the captured payload shape can safely reuse the
+                select-string table.
+            </summary>
+            <param name="texts">The ordered source payload.</param>
+            <returns>
+                <see langword="true" /> when the payload can reuse the
+                select-string table; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogNodeResolvers">
+            <summary>
+                Shared node walkers for generic selection-dialog add-ons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogNodeResolvers.ResolveReadableTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves all readable text nodes in tree order.
+            </summary>
+            <param name="addon">The live addon.</param>
+            <returns>The readable text-node addresses.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogNodeResolvers.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the visible text from one text node.
+            </summary>
+            <param name="textNode">The text node to inspect.</param>
+            <returns>The readable text, or an empty string.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload">
+            <summary>
+                Represents one captured generic selection-dialog payload together with
+                the live addon surface that produced it.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.#ctor(Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.Int32},System.Nullable{System.Int32},System.Collections.Generic.IReadOnlyList{System.Int32},System.Collections.Generic.IReadOnlyList{System.IntPtr})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload" />
+                class.
+            </summary>
+            <param name="sourceKind">The capture source kind.</param>
+            <param name="texts">The ordered captured texts.</param>
+            <param name="atkValueIndices">The captured ATK value indices.</param>
+            <param name="stringArrayIndex">
+                The captured string-array index, when any.
+            </param>
+            <param name="stringArrayValueIndices">
+                The captured string-array value indices.
+            </param>
+            <param name="textNodeAddresses">The captured text-node addresses.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.SourceKind">
+            <summary>
+                Gets the capture source kind.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.Texts">
+            <summary>
+                Gets the captured texts in display order.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.AtkValueIndices">
+            <summary>
+                Gets the ATK value indices captured for this payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.StringArrayIndex">
+            <summary>
+                Gets the string-array index captured for this payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.StringArrayValueIndices">
+            <summary>
+                Gets the string-array value indices captured for this payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.TextNodeAddresses">
+            <summary>
+                Gets the text-node addresses captured for this payload.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.FromAtkValues(System.Collections.Generic.IReadOnlyList{System.Int32},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Creates one ATK-value-backed selection-dialog payload.
+            </summary>
+            <param name="indices">The ordered ATK value indices.</param>
+            <param name="texts">The ordered texts.</param>
+            <returns>The created payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.FromStringArrayData(System.Int32,System.Collections.Generic.IReadOnlyList{System.Int32},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Creates one string-array-backed selection-dialog payload.
+            </summary>
+            <param name="stringArrayIndex">The live string-array index.</param>
+            <param name="indices">The ordered string-array value indices.</param>
+            <param name="texts">The ordered texts.</param>
+            <returns>The created payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.FromTextNodes(System.Collections.Generic.IReadOnlyList{System.IntPtr},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Creates one text-node-backed selection-dialog payload.
+            </summary>
+            <param name="textNodeAddresses">The ordered text-node addresses.</param>
+            <param name="texts">The ordered texts.</param>
+            <returns>The created payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.MatchesStructure(Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload)">
+            <summary>
+                Determines whether this payload describes the same live capture
+                surface as another payload.
+            </summary>
+            <param name="other">The other payload.</param>
+            <returns>
+                <see langword="true" /> when both payloads describe the same live
+                capture structure; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.TextsMatch(System.Collections.Generic.IReadOnlyList{System.String},System.Func{System.String,System.String,System.Boolean})">
+            <summary>
+                Determines whether this payload's ordered texts match another text
+                sequence according to the supplied comparer.
+            </summary>
+            <param name="otherTexts">The other ordered texts.</param>
+            <param name="matches">The string comparison delegate.</param>
+            <returns>
+                <see langword="true" /> when both sequences match; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.BuildSourceKey(System.Func{System.String,System.String})">
+            <summary>
+                Builds one retry-suppression key for the payload.
+            </summary>
+            <param name="normalize">The text normalization delegate.</param>
+            <returns>The stable payload key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.ToOverlayParts">
+            <summary>
+                Splits the payload into an overlay title and body.
+            </summary>
+            <returns>The overlay title/body pair.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler">
+            <summary>
+                Handles the generic confirmation dialog runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler" />
+                class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler.TryFindStoredTranslation(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.List{System.String}@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler.PersistTranslationAsync(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler">
+            <summary>
+                Handles the generic select-string dialog runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,Echoglossian.EFCoreSqlite.Models.SelectString},System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,System.Threading.Tasks.Task{System.String}},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler" />
+                class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler.TryFindStoredTranslation(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.List{System.String}@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler.PersistTranslationAsync(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler">
+            <summary>
+                Handles the generic yes/no dialog runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler" />
+                class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler.TryFindStoredTranslation(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.List{System.String}@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler.PersistTranslationAsync(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SingleText.ResolveMiniTalkBubbleNodesDelegate">
             <summary>
                 Resolves the live MiniTalk bubble text-node instances that are currently
