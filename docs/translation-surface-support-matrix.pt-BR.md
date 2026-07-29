@@ -47,6 +47,9 @@ flowchart TD
 | TalkSubtitle | `TranslateTalkSubtitle` | Família overlay | Apresentação em overlay sem barra de título quando o modo overlay está ativo | Ativado |
 | MiniTalk | `TranslateMiniTalk` | Família overlay | Superfície nativa pequena; textos mais verbosos ainda exigem native reflow cuidadoso | Ativado |
 | CutSceneSelectString | `TranslateCutSceneSelectString` | Família overlay | A pergunta vira o título e as opções viram o corpo no modo overlay | Ativado |
+| Yes/No dialog | `TranslateYesNoScreen` | Família overlay | Suporta apresentação nativa, somente overlay e swap pelo runtime compartilhado de selection dialogs | Ativado |
+| SelectOk dialog | `TranslateSelectOk` | Família overlay | Suporta apresentação nativa, somente overlay e swap pelo runtime compartilhado de selection dialogs | Ativado |
+| SelectString dialog | `TranslateSelectString` | Família overlay | Suporta apresentação nativa, somente overlay e swap pelo runtime compartilhado de selection dialogs | Ativado |
 
 ## Superfícies de quest e journal
 
@@ -56,8 +59,8 @@ flowchart TD
 | JournalDetail | `TranslateJournalDetail` | Família quest / native-window | Layout de corpo denso; o modo nativo exige block reflow explícito | Ativado |
 | ToDoList | `TranslateToDoList` | Família quest / native-window | Rastreador de quest / lista de objetivos | Ativado |
 | ScenarioTree | `TranslateScenarioTree` | Família quest / native-window | Rastreador do cenário principal | Ativado |
-| JournalAccept | `TranslateJournalAccept` | Família quest / native-window | Janela de aceite de quest | Ativado |
-| JournalResult | `TranslateJournalResult` | Família quest / native-window | Janela de resultado / conclusão de quest | Ativado |
+| JournalAccept | `TranslateJournalAccept` | Família quest / native-window | Janela de aceite de quest; usa captura do popup em runtime com persistência dedicada quando não há quest id seguro | Ativado |
+| JournalResult | `TranslateJournalResult` | Família quest / native-window | Janela de resultado / conclusão de quest; prioriza lookup canônico de quest e cai para persistência de popup enquanto linhas ausentes são traduzidas em runtime | Ativado |
 | RecommendList | `TranslateRecommendList` | Família quest / native-window | Lista de recomendações | Ativado |
 | AreaMap | `TranslateAreaMap` | Família quest / native-window | Texto de quest dentro da UI de quests relacionada ao mapa | Ativado |
 
@@ -88,9 +91,7 @@ flowchart TD
 
 | Superfície | Toggle de configuração | Modos | Notas | Status da release atual |
 | --- | --- | --- | --- | --- |
-| Yes/No dialog | `TranslateYesNoScreen` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
-| SelectString dialog | `TranslateSelectString` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
-| SelectOk dialog | `TranslateSelectOk` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
+| Nenhuma atualmente rastreada | N/A | N/A | Atualize esta seção quando uma superfície voltar a ficar intencionalmente oculta ou desativada à força | N/A |
 
 ## Notas operacionais
 

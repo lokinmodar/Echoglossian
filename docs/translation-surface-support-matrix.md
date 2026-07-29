@@ -49,6 +49,9 @@ flowchart TD
 | TalkSubtitle | `TranslateTalkSubtitle` | Overlay family | Titleless overlay presentation when overlay mode is active | Enabled |
 | MiniTalk | `TranslateMiniTalk` | Overlay family | Small native surface; verbose text still requires careful native reflow | Enabled |
 | CutSceneSelectString | `TranslateCutSceneSelectString` | Overlay family | Question becomes the title and options become the body in overlay mode | Enabled |
+| Yes/No dialog | `TranslateYesNoScreen` | Overlay family | Supports native, overlay-only, and swap presentation through the shared selection-dialog runtime | Enabled |
+| SelectOk dialog | `TranslateSelectOk` | Overlay family | Supports native, overlay-only, and swap presentation through the shared selection-dialog runtime | Enabled |
+| SelectString dialog | `TranslateSelectString` | Overlay family | Supports native, overlay-only, and swap presentation through the shared selection-dialog runtime | Enabled |
 
 ## Quest and Journal Surfaces
 
@@ -58,8 +61,8 @@ flowchart TD
 | JournalDetail | `TranslateJournalDetail` | Quest / native-window family | Dense body layout; native mode requires explicit block reflow | Enabled |
 | ToDoList | `TranslateToDoList` | Quest / native-window family | Quest tracker / objective list | Enabled |
 | ScenarioTree | `TranslateScenarioTree` | Quest / native-window family | Main scenario tracker | Enabled |
-| JournalAccept | `TranslateJournalAccept` | Quest / native-window family | Quest accept window | Enabled |
-| JournalResult | `TranslateJournalResult` | Quest / native-window family | Quest result / completion window | Enabled |
+| JournalAccept | `TranslateJournalAccept` | Quest / native-window family | Quest accept window; uses live popup capture with dedicated popup persistence when no safe quest id is available | Enabled |
+| JournalResult | `TranslateJournalResult` | Quest / native-window family | Quest result / completion window; prefers canonical quest lookup and falls back to popup persistence while missing rows are translated live | Enabled |
 | RecommendList | `TranslateRecommendList` | Quest / native-window family | Recommendation list | Enabled |
 | AreaMap | `TranslateAreaMap` | Quest / native-window family | Quest text inside map-related quest UI | Enabled |
 
@@ -90,9 +93,7 @@ flowchart TD
 
 | Surface | Config Toggle | Modes | Notes | Current Release Status |
 | --- | --- | --- | --- | --- |
-| Yes/No dialog | `TranslateYesNoScreen` | Toggle only | Present in config model and tab implementation, but not currently exposed in the active Overlay tab flow | Implemented but hidden in current UI |
-| SelectString dialog | `TranslateSelectString` | Toggle only | Present in config model and tab implementation, but not currently exposed in the active Overlay tab flow | Implemented but hidden in current UI |
-| SelectOk dialog | `TranslateSelectOk` | Toggle only | Present in config model and tab implementation, but not currently exposed in the active Overlay tab flow | Implemented but hidden in current UI |
+| None currently tracked | N/A | N/A | Update this section when a surface is intentionally hidden or force-disabled again | N/A |
 
 ## Operational Notes
 
