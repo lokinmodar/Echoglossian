@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-07-18
+Snapshot date: 2026-07-29
 
 This document is the operational snapshot for open issues in
 [`lokinmodar/Echoglossian`](https://github.com/lokinmodar/Echoglossian/issues).
@@ -9,33 +9,30 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 
 ## Published Release Baseline
 
-- Release: [`v4.2601.0715.1114`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0715.1114)
-- Product commit: `b584115640c5b9b9bda53001652007a710d892b3`
-- Official submission: [`goatcorp/DalamudPluginsD17#9026`](https://github.com/goatcorp/DalamudPluginsD17/pull/9026)
-- D17 status: approved and merged on 2026-07-16
-- D17 merge commit: `c18449a14f89ff94184516bd3f9e4229bd66c8fb`
-- Validation: manifest lint and official build checks passed
-- Open issues in the previous snapshot: 27
-- Independently closed before this release pass: #215 through PR #223
-- Release-pass closures: 6
-- Open issues after the post-publication pass: 20
+- Release: [`v4.2601.0718.2006`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0718.2006)
+- Product commit: `f0b4dec9265b5cf350464974329d4dae4fbc1dd8`
+- Official submission: [`goatcorp/DalamudPluginsD17#9031`](https://github.com/goatcorp/DalamudPluginsD17/pull/9031)
+- D17 status: approved and merged on 2026-07-19
+- D17 merge commit: `a265f794041887c9848b81dcd30a310d5863f8bc`
+- Open issues at the published-release baseline: 25
 - Open issues at the current audit head: 25
+- Focused open issues besides the living tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12): 24
 
 ## Current `v4-series` Delta
 
-- Audit head: `origin/v4-series` at `0b30d30cd27ac97ad4d65087f7b0a0d88f775466`
-- Latest tagged runtime build on `v4-series`: `v4.2601.0717.0008` at `578bce65cc09deeb23571e0e58ed6306f871d859`
-- No new runtime code merged after PR [#228](https://github.com/lokinmodar/Echoglossian/pull/228); the repository baseline for this audit is still the same 2026-07-17 `v4-series` head.
-- Issue [#12](https://github.com/lokinmodar/Echoglossian/issues/12) was reopened on 2026-07-18 and should remain the living known-issues tracker, updated whenever focused issue state changes materially.
-- GitHub issue triage on 2026-07-18 updated [#15](https://github.com/lokinmodar/Echoglossian/issues/15), [#68](https://github.com/lokinmodar/Echoglossian/issues/68), [#171](https://github.com/lokinmodar/Echoglossian/issues/171), and [#172](https://github.com/lokinmodar/Echoglossian/issues/172).
-- GitHub issue triage on 2026-07-18 also created focused follow-up issues [#230](https://github.com/lokinmodar/Echoglossian/issues/230), [#231](https://github.com/lokinmodar/Echoglossian/issues/231), [#232](https://github.com/lokinmodar/Echoglossian/issues/232), [#233](https://github.com/lokinmodar/Echoglossian/issues/233), and [#234](https://github.com/lokinmodar/Echoglossian/issues/234).
-- Issue [#181](https://github.com/lokinmodar/Echoglossian/issues/181) was closed as resolved on 2026-07-18. Draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) remains open only as a separate follow-up if the narrower native `JournalDetail` reflow work is still wanted.
-- The open-issue inventory is now grouped by problem type instead of by workflow state so the remaining work is easier to prioritize by subsystem.
+- Audit head: `origin/v4-series` at `647d86fd6f5140880a9edc3e69791e525152ee2b`
+- Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0718.2006` at `f0b4dec9265b5cf350464974329d4dae4fbc1dd8`
+- The only newer commit on `v4-series` is `647d86f` (`chore: ignore local worktrees`), which is repository hygiene and does not change the shipped runtime baseline.
+- Issue [#12](https://github.com/lokinmodar/Echoglossian/issues/12) remains the living known-issues tracker and should stay aligned with this document whenever focused issue state changes materially.
+- The 2026-07-18 focused triage pass remains the latest material issue-state change: it narrowed [#15](https://github.com/lokinmodar/Echoglossian/issues/15), [#68](https://github.com/lokinmodar/Echoglossian/issues/68), [#171](https://github.com/lokinmodar/Echoglossian/issues/171), and [#172](https://github.com/lokinmodar/Echoglossian/issues/172), created [#230](https://github.com/lokinmodar/Echoglossian/issues/230) through [#234](https://github.com/lokinmodar/Echoglossian/issues/234), and closed [#181](https://github.com/lokinmodar/Echoglossian/issues/181).
+- As of 2026-07-29, no additional issues have opened or closed since that pass; the grouped inventory below remains the current countable backlog.
+- Draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) remains open only as a separate follow-up if the narrower native `JournalDetail` translated-text reflow work is still wanted.
+- The open-issue inventory remains grouped by problem type instead of by workflow state so the remaining work is easier to prioritize by subsystem.
 
-## Closed After Publication
+## Recently Resolved Fronts
 
-The release-bound closure comments were posted and these issues were closed on
-2026-07-16.
+These closures still define the current known-issues baseline and remain the
+most relevant resolved fronts to reference during follow-up triage.
 
 | Issue | Published resolution |
 | --- | --- |
@@ -45,7 +42,7 @@ The release-bound closure comments were posted and these issues were closed on
 | [#204 OpenRouter not translating](https://github.com/lokinmodar/Echoglossian/issues/204) | Shared prompt expansion performs one safe placeholder pass and no longer reinterprets placeholder-like content introduced by an earlier replacement. |
 | [#207 ToDoList not translating](https://github.com/lokinmodar/Echoglossian/issues/207) | `ToDoList` applies available translations without waiting for every visible quest and scopes runtime state to the current source and target languages. |
 
-## Other Closure Since The Previous Snapshot
+## Additional Recent Closures
 
 | Issue | Resolution |
 | --- | --- |
