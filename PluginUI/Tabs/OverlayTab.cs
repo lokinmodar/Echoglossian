@@ -107,9 +107,9 @@ public static class OverlayTab
             case 7:
                 changed |= QuestWindowsTab.Draw(config);
                 break;
-           /*  case 8:
+            case 8:
                 changed |= SelectionDialogsTab.Draw(config);
-                break; */
+                break;
             case 9:
                 changed |= GameWindowsTab.Draw(config);
                 break;

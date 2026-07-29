@@ -238,6 +238,21 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode CutSceneSelectStringTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Display mode for SelectYesNo.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectYesNoTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for SelectOk.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectOkTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for SelectString.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectStringTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Display mode for ScreenInfo/WideText toasts.</summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode WideTextToastTranslationDisplayMode =

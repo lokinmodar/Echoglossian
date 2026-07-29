@@ -10,6 +10,13 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class SelectionDialogsTab
 {
+    private static readonly string[] OverlayDisplayModes =
+    {
+        Resources.QuestDisplayModeNativeUiTranslation,
+        Resources.OverlayDisplayModeOverlayTranslationOnly,
+        Resources.OverlayDisplayModeNativeUiTranslationWithOriginalOverlay,
+    };
+
     /// <summary>
     ///     Draws the selection-dialog settings tab.
     /// </summary>
@@ -19,15 +26,21 @@ public static class SelectionDialogsTab
     {
         var changed = false;
 
-        changed |= ImGui.Checkbox(
+        changed |= DrawSelectionDialogSection(
+            "SelectYesNoDisplayMode",
             Resources.TranslateYesNoScreenLabel,
-            ref config.TranslateYesNoScreen);
-        changed |= ImGui.Checkbox(
+            ref config.TranslateYesNoScreen,
+            ref config.SelectYesNoTranslationDisplayMode);
+        changed |= DrawSelectionDialogSection(
+            "SelectStringDisplayMode",
             Resources.TranslateSelectStringLabel,
-            ref config.TranslateSelectString);
-        changed |= ImGui.Checkbox(
+            ref config.TranslateSelectString,
+            ref config.SelectStringTranslationDisplayMode);
+        changed |= DrawSelectionDialogSection(
+            "SelectOkDisplayMode",
             Resources.TranslateSelectOkLabel,
-            ref config.TranslateSelectOk);
+            ref config.TranslateSelectOk,
+            ref config.SelectOkTranslationDisplayMode);
 
         if (changed)
         {
@@ -36,5 +49,56 @@ public static class SelectionDialogsTab
         }
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Draws one selection-dialog enable toggle and display-mode combo.
+    /// </summary>
+    /// <param name="comboId">The stable ImGui ID for the display-mode combo.</param>
+    /// <param name="sectionLabel">The translated checkbox label.</param>
+    /// <param name="enabled">Whether the surface is enabled.</param>
+    /// <param name="displayMode">The selected translation display mode.</param>
+    /// <returns><c>true</c> when any setting changed.</returns>
+    private static bool DrawSelectionDialogSection(
+        string comboId,
+        string sectionLabel,
+        ref bool enabled,
+        ref JournalTranslationDisplayMode displayMode)
+    {
+        var changed = false;
+
+        changed |= ImGui.Checkbox(sectionLabel, ref enabled);
+        if (!enabled)
+        {
+            return changed;
+        }
+
+        changed |= DrawDisplayModeCombo(comboId, ref displayMode);
+        ImGui.Separator();
+        return changed;
+    }
+
+    /// <summary>
+    ///     Draws the shared selection-dialog display-mode combo.
+    /// </summary>
+    /// <param name="comboId">The stable ImGui ID for the combo.</param>
+    /// <param name="displayMode">The selected display mode.</param>
+    /// <returns><c>true</c> when the mode changed.</returns>
+    private static bool DrawDisplayModeCombo(
+        string comboId,
+        ref JournalTranslationDisplayMode displayMode)
+    {
+        var selectedIndex = (int)displayMode;
+        if (!ImGui.Combo(
+                $"##{comboId}",
+                ref selectedIndex,
+                OverlayDisplayModes,
+                OverlayDisplayModes.Length))
+        {
+            return false;
+        }
+
+        displayMode = (JournalTranslationDisplayMode)selectedIndex;
+        return true;
     }
 }

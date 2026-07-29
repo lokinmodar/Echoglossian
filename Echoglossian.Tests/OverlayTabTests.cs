@@ -52,6 +52,24 @@ public sealed class OverlayTabTests
     }
 
     /// <summary>
+    ///     Ensures the selection-dialog settings remain reachable from the
+    ///     visible overlay tab flow.
+    /// </summary>
+    [Fact]
+    public void OverlayTab_RendersSelectionDialogsTab()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "PluginUI",
+            "Tabs",
+            "OverlayTab.cs"));
+
+        Assert.Contains("Resources.SelectionDialogsTabTitle", source);
+        Assert.Contains("changed |= SelectionDialogsTab.Draw(config);", source);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

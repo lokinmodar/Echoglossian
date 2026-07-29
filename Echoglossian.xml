@@ -1877,6 +1877,15 @@
         <member name="F:Echoglossian.Config.CutSceneSelectStringTranslationDisplayMode">
             <summary>Display mode for CutSceneSelectString.</summary>
         </member>
+        <member name="F:Echoglossian.Config.SelectYesNoTranslationDisplayMode">
+            <summary>Display mode for SelectYesNo.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.SelectOkTranslationDisplayMode">
+            <summary>Display mode for SelectOk.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.SelectStringTranslationDisplayMode">
+            <summary>Display mode for SelectString.</summary>
+        </member>
         <member name="F:Echoglossian.Config.WideTextToastTranslationDisplayMode">
             <summary>Display mode for ScreenInfo/WideText toasts.</summary>
         </member>
@@ -29123,6 +29132,24 @@
             </summary>
             <param name="config">The current plugin configuration.</param>
             <returns><c>true</c> when a setting changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.SelectionDialogsTab.DrawSelectionDialogSection(System.String,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@)">
+            <summary>
+                Draws one selection-dialog enable toggle and display-mode combo.
+            </summary>
+            <param name="comboId">The stable ImGui ID for the display-mode combo.</param>
+            <param name="sectionLabel">The translated checkbox label.</param>
+            <param name="enabled">Whether the surface is enabled.</param>
+            <param name="displayMode">The selected translation display mode.</param>
+            <returns><c>true</c> when any setting changed.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.SelectionDialogsTab.DrawDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@)">
+            <summary>
+                Draws the shared selection-dialog display-mode combo.
+            </summary>
+            <param name="comboId">The stable ImGui ID for the combo.</param>
+            <param name="displayMode">The selected display mode.</param>
+            <returns><c>true</c> when the mode changed.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TooltipTab">
             <summary>
