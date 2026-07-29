@@ -592,7 +592,7 @@
     <value>Este modo controla as superfícies ActionDetail e ItemDetail. Native UI grava o texto detalhado traduzido no complemento do jogo, o modo somente Plugin Overlay mantém o complemento nativo intacto e usa Plugin Overlays, e Tradução de Native UI + Plugin Overlay original grava a tradução nativamente enquanto mostra o original na nossa Plugin Overlay.</value>
   </data>
   <data name="ActionAndItemTooltipsOverlayOnlyDescription" xml:space="preserve">
-    <value>ActionDetail e ItemDetail usam apenas as Plugin Tooltips no momento. A tradução na UI nativa permanece desativada até que as assinaturas verificadas dos agents e addons estejam disponíveis pelo FFXIVClientStructs.</value>
+    <value>ActionDetail e ItemDetail usam apenas as Plugin Tooltips no momento. A tradução na UI nativa para essas superfícies ainda não está disponível.</value>
   </data>
   <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
     <value>Habilitar tradução de detalhes de ação/item</value>

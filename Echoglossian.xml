@@ -11641,6 +11641,14 @@
             <param name="languageIndex">The configured target-language index.</param>
             <returns>The normalized configured target language code.</returns>
         </member>
+        <member name="M:Echoglossian.RuntimeLanguageHelper.GetConfiguredTargetLanguageDisplayName(System.Int32)">
+            <summary>
+                Gets the configured translation target language as the user-facing
+                display name currently registered at runtime.
+            </summary>
+            <param name="languageIndex">The configured target-language index.</param>
+            <returns>The configured target language display name.</returns>
+        </member>
         <member name="M:Echoglossian.RuntimeLanguageHelper.LanguagesMatch(System.String,System.String)">
             <summary>
                 Determines whether two language values represent the same effective

@@ -30,6 +30,9 @@ public static class PromptEditorUI
       string label)
   {
     var state = PromptEditorStateManager.Get(label);
+    var previewTargetLanguage =
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageDisplayName(
+            Echoglossian.LanguageInt);
 
     if (string.IsNullOrWhiteSpace(state.EditedPrompt))
     {
@@ -101,7 +104,7 @@ public static class PromptEditorUI
         state.EditedPrompt,
         state.PreviewSampleText,
         state.PreviewSourceLang,
-        state.PreviewTargetLang);
+        previewTargetLanguage);
 
     ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 1f, 0.5f, 1f));
     ImGui.InputTextMultiline(

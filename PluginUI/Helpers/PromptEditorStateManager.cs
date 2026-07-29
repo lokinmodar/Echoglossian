@@ -31,7 +31,6 @@ public class PromptEditorState
 {
     public readonly string PreviewSampleText = "My blade is for the Fury.";
     public readonly string PreviewSourceLang = "English";
-    public readonly string PreviewTargetLang = "Japanese";
     public string EditedPrompt = string.Empty;
     public string PreviewResult = string.Empty;
     public bool ShowPromptInvalidWarning = false;
