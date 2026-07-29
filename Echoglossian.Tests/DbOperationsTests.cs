@@ -505,6 +505,106 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Ensures popup-table reuse works for quest popups that do not have a
+    ///     safe canonical quest identity yet.
+    /// </summary>
+    [Fact]
+    public void FindQuestPopupText_AllowsPopupReuseWithoutQuestPlateIdentity()
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(ClientLanguage.English);
+            PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = CreateTargetLanguages();
+            var plugin = CreateFormattingPlugin(
+                new Config
+                {
+                    Lang = 28,
+                    ChosenTransEngine = 0,
+                    TranslateAlreadyTranslatedTexts = true,
+                });
+            var questPopupType = ResolveQuestPopupTextType();
+            var timestamp = new DateTime(
+                2026,
+                7,
+                29,
+                12,
+                0,
+                0,
+                DateTimeKind.Utc);
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.Add(CreateQuestPopupText(
+                    questPopupType,
+                    "JournalAccept",
+                    null,
+                    "The Yedlihmad Hunt",
+                    "Accept the hunt.",
+                    "en",
+                    "A Caçada de Yedlihmad",
+                    "Aceite a caçada.",
+                    "pt-BR",
+                    0,
+                    "test-version",
+                    "popup-hash",
+                    timestamp));
+                context.SaveChanges();
+            }
+
+            var lookup = CreateQuestPopupText(
+                questPopupType,
+                "JournalAccept",
+                null,
+                "The Yedlihmad Hunt",
+                "Accept the hunt.",
+                "en",
+                string.Empty,
+                string.Empty,
+                "pt-BR",
+                0,
+                "test-version",
+                "popup-hash",
+                timestamp);
+            var findMethod = typeof(PluginEntry).GetMethod(
+                "FindQuestPopupText",
+                BindingFlags.Instance | BindingFlags.Public,
+                binder: null,
+                [questPopupType],
+                modifiers: null);
+
+            Assert.NotNull(findMethod);
+            var result = findMethod!.Invoke(plugin, [lookup]);
+
+            Assert.NotNull(result);
+            Assert.Equal(
+                "A Caçada de Yedlihmad",
+                GetObjectProperty<string>(result!, "TranslatedTitle"));
+            Assert.Equal(
+                "Aceite a caçada.",
+                GetObjectProperty<string>(result!, "TranslatedBody"));
+        }
+        finally
+        {
+            PluginEntry.ClientStateInterface = previousClientState;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.LangDict = previousLanguages;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures translation-failure cache preload keeps EF filtering SQL-safe
     ///     and only loads failure reasons that are meant to persist.
     /// </summary>
@@ -1738,6 +1838,103 @@ public class DbOperationsTests
             engine,
             updatedDate,
             updatedDate);
+    }
+
+    /// <summary>
+    ///     Resolves the dedicated quest-popup type from the compiled plugin
+    ///     assembly.
+    /// </summary>
+    /// <returns>The resolved quest-popup type.</returns>
+    private static Type ResolveQuestPopupTextType()
+    {
+        var questPopupType = typeof(PluginEntry).Assembly.GetType(
+            "Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText");
+        Assert.NotNull(questPopupType);
+        return questPopupType!;
+    }
+
+    /// <summary>
+    ///     Creates one reflective quest-popup instance for DB tests.
+    /// </summary>
+    /// <param name="questPopupType">The quest-popup runtime type.</param>
+    /// <param name="surfaceName">The popup surface name.</param>
+    /// <param name="questId">The optional quest id.</param>
+    /// <param name="originalTitle">The original popup title.</param>
+    /// <param name="originalBody">The original popup body.</param>
+    /// <param name="originalLang">The original source language.</param>
+    /// <param name="translatedTitle">The translated popup title.</param>
+    /// <param name="translatedBody">The translated popup body.</param>
+    /// <param name="translationLang">The target translation language.</param>
+    /// <param name="translationEngine">The translation engine.</param>
+    /// <param name="gameVersion">The stored game version.</param>
+    /// <param name="sourceContentHash">The stored source content hash.</param>
+    /// <param name="timestamp">The created/updated timestamp.</param>
+    /// <returns>The configured popup row instance.</returns>
+    private static object CreateQuestPopupText(
+        Type questPopupType,
+        string surfaceName,
+        string? questId,
+        string originalTitle,
+        string originalBody,
+        string originalLang,
+        string translatedTitle,
+        string translatedBody,
+        string translationLang,
+        int translationEngine,
+        string gameVersion,
+        string sourceContentHash,
+        DateTime timestamp)
+    {
+        var instance = Activator.CreateInstance(questPopupType);
+        Assert.NotNull(instance);
+        SetObjectProperty(instance!, "SurfaceName", surfaceName);
+        SetObjectProperty(instance!, "QuestId", questId);
+        SetObjectProperty(instance!, "OriginalTitle", originalTitle);
+        SetObjectProperty(instance!, "OriginalBody", originalBody);
+        SetObjectProperty(instance!, "OriginalLang", originalLang);
+        SetObjectProperty(instance!, "TranslatedTitle", translatedTitle);
+        SetObjectProperty(instance!, "TranslatedBody", translatedBody);
+        SetObjectProperty(instance!, "TranslationLang", translationLang);
+        SetObjectProperty(instance!, "TranslationEngine", translationEngine);
+        SetObjectProperty(instance!, "GameVersion", gameVersion);
+        SetObjectProperty(instance!, "SourceContentHash", sourceContentHash);
+        SetObjectProperty(instance!, "CreatedDate", timestamp);
+        SetObjectProperty(instance!, "UpdatedDate", timestamp);
+        return instance!;
+    }
+
+    /// <summary>
+    ///     Reads one reflected property value from a popup-row instance.
+    /// </summary>
+    /// <typeparam name="T">The expected property type.</typeparam>
+    /// <param name="instance">The source object.</param>
+    /// <param name="propertyName">The property name.</param>
+    /// <returns>The resolved property value.</returns>
+    private static T? GetObjectProperty<T>(object instance, string propertyName)
+    {
+        var property = instance.GetType().GetProperty(
+            propertyName,
+            BindingFlags.Instance | BindingFlags.Public);
+        Assert.NotNull(property);
+        return (T?)property!.GetValue(instance);
+    }
+
+    /// <summary>
+    ///     Writes one reflected property value onto a popup-row instance.
+    /// </summary>
+    /// <param name="instance">The target object.</param>
+    /// <param name="propertyName">The property name.</param>
+    /// <param name="value">The value to assign.</param>
+    private static void SetObjectProperty(
+        object instance,
+        string propertyName,
+        object? value)
+    {
+        var property = instance.GetType().GetProperty(
+            propertyName,
+            BindingFlags.Instance | BindingFlags.Public);
+        Assert.NotNull(property);
+        property!.SetValue(instance, value);
     }
 
     private static void TryDeleteDirectory(string path)

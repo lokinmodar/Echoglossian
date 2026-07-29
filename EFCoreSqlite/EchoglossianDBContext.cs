@@ -62,6 +62,12 @@ public class EchoglossianDbContext : DbContext
 
   public DbSet<QuestPlate> QuestPlate { get; set; }
 
+  /// <summary>
+  ///     Gets or sets dedicated quest-popup text rows that are not yet safe to
+  ///     reconcile into canonical quest tables.
+  /// </summary>
+  public DbSet<QuestPopupText> QuestPopupTexts { get; set; }
+
   public DbSet<NpcNames> NpcName { get; set; }
 
   public DbSet<LocationName> LocationNames { get; set; }
@@ -309,6 +315,15 @@ public class EchoglossianDbContext : DbContext
           q.GameVersion
         })
         .HasDatabaseName("IX_questplates_questid_lookup");
+    modelBuilder.Entity<QuestPopupText>().ToTable("questpopuptexts");
+    modelBuilder.Entity<QuestPopupText>()
+        .HasIndex(q => new
+        {
+          q.SurfaceName,
+          q.TranslationLang,
+          q.TranslationEngine
+        })
+        .HasDatabaseName("IX_questpopuptexts_lookup");
     modelBuilder.Entity<NpcNames>().ToTable("npcnames");
     modelBuilder.Entity<LocationName>().ToTable("locationnames");
     modelBuilder.Entity<TranslationFailure>().ToTable("translationfailures");

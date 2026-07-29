@@ -144,6 +144,43 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Creates a dedicated quest-popup snapshot using the captured source
+  ///     language and current engine settings.
+  /// </summary>
+  /// <param name="surfaceName">The popup surface name.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
+  /// <param name="originalTitle">The original popup title.</param>
+  /// <param name="originalBody">The original popup body.</param>
+  /// <param name="translatedTitle">The translated popup title.</param>
+  /// <param name="translatedBody">The translated popup body.</param>
+  /// <param name="questId">The optional canonical quest id.</param>
+  /// <returns>A dedicated quest-popup row.</returns>
+  protected QuestPopupText CreateQuestPopupText(
+      string surfaceName,
+      SourceClientLanguage sourceLanguage,
+      string originalTitle,
+      string originalBody,
+      string translatedTitle = "",
+      string translatedBody = "",
+      string? questId = null)
+  {
+    return new QuestPopupText(
+        surfaceName,
+        questId,
+        originalTitle,
+        originalBody,
+        sourceLanguage.PersistenceCode,
+        translatedTitle,
+        translatedBody,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
+        this.Config.ChosenTransEngine,
+        GetGameVersion(),
+        sourceContentHash: null,
+        DateTime.Now,
+        DateTime.Now);
+  }
+
+  /// <summary>
   ///     Translates the given text using the shared translation service.
   /// </summary>
   /// <param name="text">Text to translate.</param>
@@ -502,6 +539,16 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Resolves dedicated popup text using the popup lookup delegate.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to look up.</param>
+  /// <returns>The matching popup row, if one exists.</returns>
+  protected QuestPopupText? FindQuestPopupText(QuestPopupText questPopupText)
+  {
+    return this.Dependencies.FindQuestPopupText(questPopupText);
+  }
+
+  /// <summary>
   ///     Persists a quest plate insert into the database.
   /// </summary>
   /// <param name="questPlate">The quest plate to insert.</param>
@@ -509,6 +556,16 @@ internal abstract class QuestAddonHandlerBase
   protected string InsertQuestPlate(QuestPlate questPlate)
   {
     return this.Dependencies.InsertQuestPlate(questPlate);
+  }
+
+  /// <summary>
+  ///     Persists a quest-popup insert into the database asynchronously.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to insert.</param>
+  /// <returns>The persistence result.</returns>
+  protected Task<string> InsertQuestPopupTextAsync(QuestPopupText questPopupText)
+  {
+    return this.Dependencies.InsertQuestPopupTextAsync(questPopupText);
   }
 
   /// <summary>

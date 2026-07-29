@@ -650,6 +650,71 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds dedicated quest-popup text without requiring a canonical quest
+  ///     row to exist.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to look up.</param>
+  /// <returns>The matching popup row, if one exists.</returns>
+  public QuestPopupText? FindQuestPopupText(QuestPopupText questPopupText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              questPopupText.TranslationEngine,
+              out var scope) ||
+          string.IsNullOrWhiteSpace(questPopupText.SurfaceName))
+      {
+        return null;
+      }
+
+      var surfaceMatches = context.QuestPopupTexts.AsNoTracking().Where(t =>
+          t.SurfaceName == questPopupText.SurfaceName &&
+          t.TranslationLang == scope.TargetLanguageCode);
+      QuestPopupText? localFoundQuestPopupText = null;
+      var hasQuestId = !string.IsNullOrWhiteSpace(questPopupText.QuestId);
+
+      if (hasQuestId)
+      {
+        var questIdMatches = surfaceMatches.Where(t =>
+            t.QuestId == questPopupText.QuestId);
+        localFoundQuestPopupText = SelectPreferredQuestPopupText(
+            questIdMatches.AsEnumerable(),
+            questPopupText,
+            scope);
+      }
+
+      if (localFoundQuestPopupText == null)
+      {
+        var popupTextMatches = surfaceMatches.Where(t =>
+            t.OriginalTitle == questPopupText.OriginalTitle &&
+            t.OriginalBody == questPopupText.OriginalBody);
+
+        if (hasQuestId)
+        {
+          popupTextMatches = popupTextMatches.Where(t =>
+              t.QuestId == questPopupText.QuestId ||
+              t.QuestId == null ||
+              t.QuestId == string.Empty);
+        }
+
+        localFoundQuestPopupText = SelectPreferredQuestPopupText(
+            popupTextMatches.AsEnumerable(),
+            questPopupText,
+            scope);
+      }
+
+      return localFoundQuestPopupText;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindQuestPopupText exception: {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Finds and returns a TalkSubtitleMessage from the database.
   /// </summary>
   /// <param name="talkSubtitleMessage">Formatted TalkSubtitleMessage to be found in the database</param>
@@ -1578,6 +1643,39 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Inserts or merges dedicated quest-popup text without blocking the
+  ///     caller's UI lifecycle path.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to persist.</param>
+  /// <returns>The persistence result.</returns>
+  public async Task<string> InsertQuestPopupTextData(QuestPopupText questPopupText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      var existingQuestPopupText = TryFindQuestPopupTextForSave(
+          context,
+          questPopupText);
+      if (existingQuestPopupText != null)
+      {
+        MergeQuestPopupTextValues(existingQuestPopupText, questPopupText);
+        existingQuestPopupText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data merged into QuestPopupTexts table.";
+      }
+
+      context.QuestPopupTexts.Attach(questPopupText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to QuestPopupTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
   ///  Updates an existing QuestPlate record in the database.
   /// </summary>
   /// <param name="questPlate">QuestPlate to be updated</param>
@@ -1997,6 +2095,134 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Selects the preferred dedicated quest-popup row for runtime reads.
+  /// </summary>
+  /// <param name="candidateQuestPopupTexts">The candidate popup rows.</param>
+  /// <param name="requestedQuestPopupText">The requested popup row.</param>
+  /// <param name="scope">The resolved translation reuse scope.</param>
+  /// <returns>The preferred popup row, or <see langword="null" />.</returns>
+  private static QuestPopupText? SelectPreferredQuestPopupText(
+      IEnumerable<QuestPopupText> candidateQuestPopupTexts,
+      QuestPopupText requestedQuestPopupText,
+      TranslationReuseScope scope)
+  {
+    QuestPopupText? preferredQuestPopupText = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPopupText in candidateQuestPopupTexts)
+    {
+      if (!scope.Matches(
+              candidateQuestPopupText.OriginalLang,
+              candidateQuestPopupText.TranslationLang,
+              candidateQuestPopupText.TranslationEngine) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPopupText.OriginalLang,
+              requestedQuestPopupText.OriginalLang))
+      {
+        continue;
+      }
+
+      var identityScore = 0;
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.QuestId) &&
+          string.Equals(
+              candidateQuestPopupText.QuestId,
+              requestedQuestPopupText.QuestId,
+              StringComparison.Ordinal))
+      {
+        identityScore += 16;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.SourceContentHash) &&
+          string.Equals(
+              candidateQuestPopupText.SourceContentHash,
+              requestedQuestPopupText.SourceContentHash,
+              StringComparison.Ordinal))
+      {
+        identityScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalBody) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalBody,
+              requestedQuestPopupText.OriginalBody,
+              StringComparison.Ordinal))
+      {
+        identityScore += 4;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalTitle) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalTitle,
+              requestedQuestPopupText.OriginalTitle,
+              StringComparison.Ordinal))
+      {
+        identityScore += 2;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.QuestId))
+      {
+        identityScore += 1;
+      }
+
+      var completenessScore = 0;
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedTitle))
+      {
+        completenessScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedBody))
+      {
+        completenessScore += 8;
+      }
+
+      var updatedDate = candidateQuestPopupText.UpdatedDate ??
+                        candidateQuestPopupText.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPopupText != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPopupText.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPopupText = candidateQuestPopupText;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPopupText.Id;
+    }
+
+    return preferredQuestPopupText;
+  }
+
+  /// <summary>
   ///     Gets whether one persisted quest plate is compatible with the
   ///     requested quest plate's content hash semantics.
   /// </summary>
@@ -2019,6 +2245,178 @@ public partial class Echoglossian
         candidateQuestPlate.SourceContentHash,
         requestedQuestPlate.SourceContentHash,
         StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Finds an existing popup row to merge into during save operations.
+  /// </summary>
+  /// <param name="context">The active DB context.</param>
+  /// <param name="questPopupText">The incoming popup row.</param>
+  /// <returns>The preferred existing popup row, if one exists.</returns>
+  private static QuestPopupText? TryFindQuestPopupTextForSave(
+      EchoglossianDbContext context,
+      QuestPopupText questPopupText)
+  {
+    var surfaceMatches = context.QuestPopupTexts.Where(t =>
+        t.SurfaceName == questPopupText.SurfaceName &&
+        RuntimeLanguageHelper.LanguagesMatch(
+            t.TranslationLang,
+            questPopupText.TranslationLang));
+    var hasQuestId = !string.IsNullOrWhiteSpace(questPopupText.QuestId);
+
+    if (hasQuestId)
+    {
+      var questIdMatches = surfaceMatches.Where(t =>
+          t.QuestId == questPopupText.QuestId);
+      var exactQuestIdMatch = SelectPreferredQuestPopupTextForSave(
+          questIdMatches.AsEnumerable(),
+          questPopupText);
+      if (exactQuestIdMatch != null)
+      {
+        return exactQuestIdMatch;
+      }
+    }
+
+    var popupTextMatches = surfaceMatches.Where(t =>
+        t.OriginalTitle == questPopupText.OriginalTitle &&
+        t.OriginalBody == questPopupText.OriginalBody);
+
+    if (hasQuestId)
+    {
+      popupTextMatches = popupTextMatches.Where(t =>
+          t.QuestId == questPopupText.QuestId ||
+          t.QuestId == null ||
+          t.QuestId == string.Empty);
+    }
+
+    return SelectPreferredQuestPopupTextForSave(
+        popupTextMatches.AsEnumerable(),
+        questPopupText);
+  }
+
+  /// <summary>
+  ///     Selects the preferred popup row for save/merge operations.
+  /// </summary>
+  /// <param name="candidateQuestPopupTexts">The candidate popup rows.</param>
+  /// <param name="requestedQuestPopupText">The incoming popup row.</param>
+  /// <returns>The preferred popup row, or <see langword="null" />.</returns>
+  private static QuestPopupText? SelectPreferredQuestPopupTextForSave(
+      IEnumerable<QuestPopupText> candidateQuestPopupTexts,
+      QuestPopupText requestedQuestPopupText)
+  {
+    QuestPopupText? preferredQuestPopupText = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPopupText in candidateQuestPopupTexts)
+    {
+      if (!RuntimeLanguageHelper.LanguagesMatch(
+              candidateQuestPopupText.TranslationLang,
+              requestedQuestPopupText.TranslationLang) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPopupText.OriginalLang,
+              requestedQuestPopupText.OriginalLang))
+      {
+        continue;
+      }
+
+      var identityScore = 0;
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.QuestId) &&
+          string.Equals(
+              candidateQuestPopupText.QuestId,
+              requestedQuestPopupText.QuestId,
+              StringComparison.Ordinal))
+      {
+        identityScore += 16;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.SourceContentHash) &&
+          string.Equals(
+              candidateQuestPopupText.SourceContentHash,
+              requestedQuestPopupText.SourceContentHash,
+              StringComparison.Ordinal))
+      {
+        identityScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalBody) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalBody,
+              requestedQuestPopupText.OriginalBody,
+              StringComparison.Ordinal))
+      {
+        identityScore += 4;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalTitle) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalTitle,
+              requestedQuestPopupText.OriginalTitle,
+              StringComparison.Ordinal))
+      {
+        identityScore += 2;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.QuestId))
+      {
+        identityScore += 1;
+      }
+
+      var completenessScore = 0;
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedTitle))
+      {
+        completenessScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedBody))
+      {
+        completenessScore += 8;
+      }
+
+      var updatedDate = candidateQuestPopupText.UpdatedDate ??
+                        candidateQuestPopupText.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPopupText != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPopupText.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPopupText = candidateQuestPopupText;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPopupText.Id;
+    }
+
+    return preferredQuestPopupText;
   }
 
   /// <summary>
@@ -2142,6 +2540,57 @@ public partial class Echoglossian
 
       target.PruneTranslatedRowsToCanonicalPayload();
     }
+
+  /// <summary>
+  ///     Merges popup-table values without overwriting already populated
+  ///     translated fields with empties.
+  /// </summary>
+  /// <param name="target">The existing popup row.</param>
+  /// <param name="source">The incoming popup row.</param>
+  private static void MergeQuestPopupTextValues(
+      QuestPopupText target,
+      QuestPopupText source)
+  {
+    if (target == null || source == null)
+    {
+      return;
+    }
+
+    target.SurfaceName = string.IsNullOrWhiteSpace(source.SurfaceName)
+        ? target.SurfaceName
+        : source.SurfaceName;
+    target.QuestId = string.IsNullOrWhiteSpace(source.QuestId)
+        ? target.QuestId
+        : source.QuestId;
+    target.OriginalTitle = string.IsNullOrWhiteSpace(source.OriginalTitle)
+        ? target.OriginalTitle
+        : source.OriginalTitle;
+    target.OriginalBody = string.IsNullOrWhiteSpace(source.OriginalBody)
+        ? target.OriginalBody
+        : source.OriginalBody;
+    target.OriginalLang = string.IsNullOrWhiteSpace(source.OriginalLang)
+        ? target.OriginalLang
+        : source.OriginalLang;
+    target.TranslatedTitle = string.IsNullOrWhiteSpace(source.TranslatedTitle)
+        ? target.TranslatedTitle
+        : source.TranslatedTitle;
+    target.TranslatedBody = string.IsNullOrWhiteSpace(source.TranslatedBody)
+        ? target.TranslatedBody
+        : source.TranslatedBody;
+    target.TranslationLang = string.IsNullOrWhiteSpace(source.TranslationLang)
+        ? target.TranslationLang
+        : source.TranslationLang;
+    target.TranslationEngine = source.TranslationEngine ??
+                               target.TranslationEngine;
+    target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion)
+        ? target.GameVersion
+        : source.GameVersion;
+    target.SourceContentHash = string.IsNullOrWhiteSpace(source.SourceContentHash)
+        ? target.SourceContentHash
+        : source.SourceContentHash;
+    target.CreatedDate ??= source.CreatedDate;
+    target.UpdatedDate = DateTime.Now;
+  }
 
   /// <summary>
   /// Inserts or updates a GameWindow record in the database, ensuring uniqueness

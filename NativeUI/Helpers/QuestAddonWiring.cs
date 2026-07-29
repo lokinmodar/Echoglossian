@@ -19,7 +19,9 @@ public partial class Echoglossian
       TranslationService = TranslationService,
       FindQuestPlate = this.FindQuestPlate,
       FindQuestPlateByName = this.FindQuestPlateByName,
+      FindQuestPopupText = this.FindQuestPopupText,
       InsertQuestPlate = this.InsertQuestPlate,
+      InsertQuestPopupTextAsync = this.InsertQuestPopupTextData,
       UpdateQuestPlate = this.UpdateQuestPlate,
       UpdateQuestPlateGameVersion = this.UpdateQuestPlateGameVersion,
       NormalizeText = text => this.RemoveDiacritics(

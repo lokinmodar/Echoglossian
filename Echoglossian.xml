@@ -2984,6 +2984,14 @@
             <param name="questPlate">Formatted QuestPlate to be found in the database</param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindQuestPopupText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
+            <summary>
+                Finds dedicated quest-popup text without requiring a canonical quest
+                row to exist.
+            </summary>
+            <param name="questPopupText">The popup row to look up.</param>
+            <returns>The matching popup row, if one exists.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FindAndReturnTalkSubtitleMessage(Echoglossian.EFCoreSqlite.Models.TalkSubtitleMessage)">
             <summary>
             Finds and returns a TalkSubtitleMessage from the database.
@@ -3136,6 +3144,14 @@
             <param name="questPlate">Formatted QuestPlate to be inserted into the database</param>
             <returns></returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.InsertQuestPopupTextData(Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
+            <summary>
+                Inserts or merges dedicated quest-popup text without blocking the
+                caller's UI lifecycle path.
+            </summary>
+            <param name="questPopupText">The popup row to persist.</param>
+            <returns>The persistence result.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.UpdateQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
              Updates an existing QuestPlate record in the database.
@@ -3189,6 +3205,15 @@
             <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
             <returns>The completeness score. Higher values are preferred.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.SelectPreferredQuestPopupText(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText},Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Selects the preferred dedicated quest-popup row for runtime reads.
+            </summary>
+            <param name="candidateQuestPopupTexts">The candidate popup rows.</param>
+            <param name="requestedQuestPopupText">The requested popup row.</param>
+            <param name="scope">The resolved translation reuse scope.</param>
+            <returns>The preferred popup row, or <see langword="null" />.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.IsQuestPlateContentHashCompatible(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
                 Gets whether one persisted quest plate is compatible with the
@@ -3200,6 +3225,22 @@
                 <see langword="true" /> when the candidate may be reused; otherwise,
                 <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryFindQuestPopupTextForSave(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
+            <summary>
+                Finds an existing popup row to merge into during save operations.
+            </summary>
+            <param name="context">The active DB context.</param>
+            <param name="questPopupText">The incoming popup row.</param>
+            <returns>The preferred existing popup row, if one exists.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SelectPreferredQuestPopupTextForSave(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText},Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
+            <summary>
+                Selects the preferred popup row for save/merge operations.
+            </summary>
+            <param name="candidateQuestPopupTexts">The candidate popup rows.</param>
+            <param name="requestedQuestPopupText">The incoming popup row.</param>
+            <returns>The preferred popup row, or <see langword="null" />.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.LegacyWriteSourceLanguagesMatch(System.String,System.String)">
             <summary>
@@ -3223,6 +3264,14 @@
             </summary>
             <param name="target">The database record to be enriched.</param>
             <param name="source">The newer quest plate values.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.MergeQuestPopupTextValues(Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText,Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
+            <summary>
+                Merges popup-table values without overwriting already populated
+                translated fields with empties.
+            </summary>
+            <param name="target">The existing popup row.</param>
+            <param name="source">The incoming popup row.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
@@ -8402,6 +8451,12 @@
                 Gets or sets the translated world-object nameplate rows.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.QuestPopupTexts">
+            <summary>
+                Gets or sets dedicated quest-popup text rows that are not yet safe to
+                reconcile into canonical quest tables.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.StringArrayDatas">
             <summary>
                 Gets or sets the translated string array records.
@@ -8818,6 +8873,18 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddNamePlateMessages.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddQuestPopupTexts">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestPopupTexts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestPopupTexts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddQuestPopupTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -9904,6 +9971,157 @@
             <param name="original">The QuestPlate to clone.</param>
             <param name="resetIdentifiers">If true, resets Id to prepare for new insertion.</param>
             <returns>A deep-cloned QuestPlate object.</returns>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText">
+            <summary>
+                Stores dedicated translated quest-popup text for surfaces that cannot
+                yet be reconciled safely into canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.#ctor">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText" />
+                class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText" />
+                class.
+            </summary>
+            <param name="surfaceName">The popup surface name.</param>
+            <param name="questId">The optional canonical quest id.</param>
+            <param name="originalTitle">The original popup title.</param>
+            <param name="originalBody">The original popup body.</param>
+            <param name="originalLang">The original source language.</param>
+            <param name="translatedTitle">The translated popup title.</param>
+            <param name="translatedBody">The translated popup body.</param>
+            <param name="translationLang">The target translation language.</param>
+            <param name="translationEngine">The translation engine id.</param>
+            <param name="gameVersion">The stored game version.</param>
+            <param name="sourceContentHash">The optional source content hash.</param>
+            <param name="createdDate">The created timestamp.</param>
+            <param name="updatedDate">The updated timestamp.</param>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SurfaceName">
+            <summary>
+                Gets or sets the popup surface name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.QuestId">
+            <summary>
+                Gets or sets the optional canonical quest id.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.OriginalTitle">
+            <summary>
+                Gets or sets the original popup title.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.OriginalBody">
+            <summary>
+                Gets or sets the original popup body.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.OriginalLang">
+            <summary>
+                Gets or sets the original source language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.TranslatedTitle">
+            <summary>
+                Gets or sets the translated popup title.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.TranslatedBody">
+            <summary>
+                Gets or sets the translated popup body.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.TranslationLang">
+            <summary>
+                Gets or sets the target translation language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.TranslationEngine">
+            <summary>
+                Gets or sets the translation engine id.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GameVersion">
+            <summary>
+                Gets or sets the stored game version.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SourceContentHash">
+            <summary>
+                Gets or sets the optional source content hash.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.CreatedDate">
+            <summary>
+                Gets or sets the created timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.UpdatedDate">
+            <summary>
+                Gets or sets the updated timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.RowVersion">
+            <summary>
+                Gets or sets the optimistic concurrency token.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GetOriginalText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SetOriginalText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GetOriginalLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SetOriginalLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GetTranslatedText">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SetTranslatedText(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GetTranslationLang">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SetTranslationLang(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GetTranslationEngine">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SetTranslationEngine(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GetEntityKey">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SetEntityKey(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.GetGameVersion">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.SetGameVersion(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText.ToString">
+            <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.LocationName.#ctor(System.Int32,System.String,System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
@@ -18517,6 +18735,20 @@
             <param name="questId">Optional quest id.</param>
             <returns>A translated quest plate snapshot.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.CreateQuestPopupText(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+                Creates a dedicated quest-popup snapshot using the captured source
+                language and current engine settings.
+            </summary>
+            <param name="surfaceName">The popup surface name.</param>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalTitle">The original popup title.</param>
+            <param name="originalBody">The original popup body.</param>
+            <param name="translatedTitle">The translated popup title.</param>
+            <param name="translatedBody">The translated popup body.</param>
+            <param name="questId">The optional canonical quest id.</param>
+            <returns>A dedicated quest-popup row.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.Translate(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
                 Translates the given text using the shared translation service.
@@ -18666,11 +18898,25 @@
             <param name="questPlate">The quest plate to look up.</param>
             <returns>The matching quest plate, if one exists.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.FindQuestPopupText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
+            <summary>
+                Resolves dedicated popup text using the popup lookup delegate.
+            </summary>
+            <param name="questPopupText">The popup row to look up.</param>
+            <returns>The matching popup row, if one exists.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.InsertQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
             <summary>
                 Persists a quest plate insert into the database.
             </summary>
             <param name="questPlate">The quest plate to insert.</param>
+            <returns>The persistence result.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.InsertQuestPopupTextAsync(Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
+            <summary>
+                Persists a quest-popup insert into the database asynchronously.
+            </summary>
+            <param name="questPopupText">The popup row to insert.</param>
             <returns>The persistence result.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.UpdateQuestPlate(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
@@ -18871,8 +19117,14 @@
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.FindQuestPlateByName">
             <summary>Gets or sets the name-only quest lookup delegate.</summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.FindQuestPopupText">
+            <summary>Gets or sets the dedicated popup-text lookup delegate.</summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.InsertQuestPlate">
             <summary>Gets or sets the quest insert delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.InsertQuestPopupTextAsync">
+            <summary>Gets or sets the popup insert delegate.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.UpdateQuestPlate">
             <summary>Gets or sets the quest update delegate.</summary>
@@ -18988,6 +19240,51 @@
             <returns>
                 The original source text that should back the current visible row.
             </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupIdentity">
+            <summary>
+                Reads explicit quest identity from quest popup setup payloads only when
+                a proven contract exists for that popup surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupIdentity.TryReadJournalAcceptQuestId(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String@)">
+            <summary>
+                Attempts to read a canonical quest id from JournalAccept setup
+                payload values.
+            </summary>
+            <param name="setupAtkValues">The popup setup values.</param>
+            <param name="questId">The resolved quest id, if any.</param>
+            <returns>
+                <see langword="true" /> when a validated quest id contract exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupIdentity.TryReadJournalResultQuestId(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String@)">
+            <summary>
+                Attempts to read a canonical quest id from JournalResult setup
+                payload values.
+            </summary>
+            <param name="setupAtkValues">The popup setup values.</param>
+            <param name="questId">The resolved quest id, if any.</param>
+            <returns>
+                <see langword="true" /> when a validated quest id contract exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget">
+            <summary>
+                Identifies which persistence bucket a quest popup should use.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget.CanonicalQuestPlate">
+            <summary>
+                Persist to the canonical quest plate table.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget.DedicatedPopupTable">
+            <summary>
+                Persist to the dedicated quest popup table.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestWaitingNotificationGate">
             <summary>

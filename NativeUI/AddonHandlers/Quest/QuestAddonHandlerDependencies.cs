@@ -169,8 +169,14 @@ internal sealed class QuestAddonHandlerDependencies
   /// <summary>Gets or sets the name-only quest lookup delegate.</summary>
   public required Func<QuestPlate, QuestPlate?> FindQuestPlateByName { get; init; }
 
+  /// <summary>Gets or sets the dedicated popup-text lookup delegate.</summary>
+  public required Func<QuestPopupText, QuestPopupText?> FindQuestPopupText { get; init; }
+
   /// <summary>Gets or sets the quest insert delegate.</summary>
   public required Func<QuestPlate, string> InsertQuestPlate { get; init; }
+
+  /// <summary>Gets or sets the popup insert delegate.</summary>
+  public required Func<QuestPopupText, Task<string>> InsertQuestPopupTextAsync { get; init; }
 
   /// <summary>Gets or sets the quest update delegate.</summary>
   public required Func<QuestPlate, string> UpdateQuestPlate { get; init; }
