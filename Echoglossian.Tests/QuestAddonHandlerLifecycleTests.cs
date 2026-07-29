@@ -328,6 +328,48 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures JournalResult reads explicit quest identity through the
+    ///     dedicated popup identity helper.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_UsesQuestIdReader()
+    {
+        var handler = typeof(JournalResultHandler).GetMethod(
+            "OnJournalResultEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var reader = typeof(QuestPopupIdentity).GetMethod(
+            "TryReadJournalResultQuestId",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(handler);
+        Assert.NotNull(reader);
+        Assert.True(
+            MethodReferences(handler!, reader!),
+            "JournalResult must resolve quest identity through QuestPopupIdentity before falling back to title-only lookup.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult can refresh pending translations from the
+    ///     dedicated popup table after canonical lookup paths miss.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_UsesPopupPersistenceFallback()
+    {
+        var refresh = typeof(JournalResultHandler).GetMethod(
+            "TryRefreshJournalResultPendingTranslation",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var popupLookup = typeof(QuestAddonHandlerBase).GetMethod(
+            "FindQuestPopupText",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(refresh);
+        Assert.NotNull(popupLookup);
+        Assert.True(
+            MethodReferences(refresh!, popupLookup!),
+            "JournalResult must check the dedicated popup table when canonical lookup does not yield a translated title.");
+    }
+
+    /// <summary>
     /// Ensures RecommendList captures refresh payloads so all display modes can
     /// apply translated text after the addon repaints.
     /// </summary>

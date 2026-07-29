@@ -18201,7 +18201,17 @@
             <param name="questNameText">The captured quest title.</param>
             <returns><c>true</c> when the title is a readable string.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryResolveJournalResultTranslation(System.String,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.FindJournalResultQuestPlate(Echoglossian.SourceClientLanguage,System.String,System.String)">
+            <summary>
+                Resolves the preferred canonical JournalResult quest row lookup
+                using quest id when proven and title-only matching otherwise.
+            </summary>
+            <param name="sourceLanguage">The captured source language.</param>
+            <param name="questNameText">The original quest title.</param>
+            <param name="questId">The optional canonical quest id.</param>
+            <returns>The preferred canonical quest row, if one exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryResolveJournalResultTranslation(System.String,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText,System.String@)">
             <summary>
                 Resolves a translated JournalResult title from the session cache,
                 persisted quest row, or completed broker result.
@@ -18209,10 +18219,13 @@
             <param name="cacheKey">The stable translation cache key.</param>
             <param name="questNameText">The original quest title.</param>
             <param name="foundQuestPlate">The matching persisted quest row, if any.</param>
+            <param name="foundQuestPopupText">
+                The matching dedicated popup row, if any.
+            </param>
             <param name="translatedNameText">The translated quest title.</param>
             <returns><c>true</c> when a translated title exists.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.QueueJournalResultTranslation(System.String,Echoglossian.SourceClientLanguage,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.QueueJournalResultTranslation(System.String,Echoglossian.SourceClientLanguage,System.String,System.String)">
             <summary>
                 Enqueues the JournalResult title translation through the shared quest
                 broker.
@@ -18220,6 +18233,7 @@
             <param name="cacheKey">The stable translation cache key.</param>
             <param name="sourceLanguage">The captured source language.</param>
             <param name="questNameText">The original quest title.</param>
+            <param name="questId">The optional canonical quest id.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryRefreshJournalResultPendingTranslation">
             <summary>
@@ -18228,7 +18242,7 @@
             </summary>
             <returns><c>true</c> when a translated title became available.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.RememberJournalResultHoverState(System.String,Echoglossian.SourceClientLanguage,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.RememberJournalResultHoverState(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String)">
             <summary>
                 Stores the current JournalResult hover payload and retry state.
             </summary>
@@ -18236,6 +18250,7 @@
             <param name="sourceLanguage">The captured source language.</param>
             <param name="originalQuestName">The original quest title.</param>
             <param name="translatedQuestName">The translated quest title.</param>
+            <param name="questId">The optional canonical quest id.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.RegisterJournalResultHoverTooltip">
             <summary>
@@ -18272,8 +18287,9 @@
             <param name="SourceLanguage">The captured source language.</param>
             <param name="OriginalQuestName">The original quest title.</param>
             <param name="TranslatedQuestName">The translated quest title.</param>
+            <param name="QuestId">The optional canonical quest id.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.#ctor(System.String,Echoglossian.SourceClientLanguage,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.#ctor(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String)">
             <summary>
                 Local JournalResult payload retained between setup and visible draw
                 passes.
@@ -18282,6 +18298,7 @@
             <param name="SourceLanguage">The captured source language.</param>
             <param name="OriginalQuestName">The original quest title.</param>
             <param name="TranslatedQuestName">The translated quest title.</param>
+            <param name="QuestId">The optional canonical quest id.</param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.CacheKey">
             <summary>The stable translation cache key.</summary>
@@ -18294,6 +18311,9 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.TranslatedQuestName">
             <summary>The translated quest title.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.QuestId">
+            <summary>The optional canonical quest id.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.TranslatedPayloadReady">
             <summary>

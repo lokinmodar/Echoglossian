@@ -150,28 +150,50 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         return;
       }
 
-      var questPlate = this.CreateQuestPlate(
+      var hasCanonicalQuestId =
+          QuestPopupIdentity.TryReadJournalResultQuestId(
+              setupAtkValues,
+              out var questId) &&
+          !string.IsNullOrWhiteSpace(questId);
+      questId = hasCanonicalQuestId ? questId : string.Empty;
+
+      var foundQuestPlate = this.FindJournalResultQuestPlate(
           sourceLanguage,
           questNameText,
-          string.Empty);
-      var foundQuestPlate = this.FindQuestPlateByName(questPlate);
-      var cacheKey = $"JournalResult|{questNameText}";
+          questId);
+      QuestPopupText? foundQuestPopupText = null;
+      if (!hasCanonicalQuestId)
+      {
+        foundQuestPopupText = this.FindQuestPopupText(
+            this.CreateQuestPopupText(
+                JournalResultAddonName,
+                sourceLanguage,
+                questNameText,
+                string.Empty));
+      }
+
+      var cacheKey = hasCanonicalQuestId
+          ? $"JournalResult|QuestId:{questId}|{questNameText}"
+          : $"JournalResult|{questNameText}";
 
       if (!this.TryResolveJournalResultTranslation(
               cacheKey,
               questNameText,
               foundQuestPlate,
+              foundQuestPopupText,
               out var translatedNameText))
       {
         this.RememberJournalResultHoverState(
             cacheKey,
             sourceLanguage,
             questNameText,
-            string.Empty);
+            string.Empty,
+            questId);
         this.QueueJournalResultTranslation(
             cacheKey,
             sourceLanguage,
-            questNameText);
+            questNameText,
+            questId);
         this.RegisterJournalResultHoverTooltip();
         return;
       }
@@ -186,7 +208,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
           cacheKey,
           sourceLanguage,
           questNameText,
-          translatedNameText);
+          translatedNameText,
+          questId);
 
       if (this.JournalResultWritesNativeTranslation)
       {
@@ -289,18 +312,46 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Resolves the preferred canonical JournalResult quest row lookup
+  ///     using quest id when proven and title-only matching otherwise.
+  /// </summary>
+  /// <param name="sourceLanguage">The captured source language.</param>
+  /// <param name="questNameText">The original quest title.</param>
+  /// <param name="questId">The optional canonical quest id.</param>
+  /// <returns>The preferred canonical quest row, if one exists.</returns>
+  private QuestPlate? FindJournalResultQuestPlate(
+      SourceClientLanguage sourceLanguage,
+      string questNameText,
+      string? questId)
+  {
+    var questPlate = this.CreateQuestPlate(
+        sourceLanguage,
+        questNameText,
+        string.Empty,
+        questId);
+
+    return !string.IsNullOrWhiteSpace(questId)
+        ? this.FindQuestPlate(questPlate)
+        : this.FindQuestPlateByName(questPlate);
+  }
+
+  /// <summary>
   ///     Resolves a translated JournalResult title from the session cache,
   ///     persisted quest row, or completed broker result.
   /// </summary>
   /// <param name="cacheKey">The stable translation cache key.</param>
   /// <param name="questNameText">The original quest title.</param>
   /// <param name="foundQuestPlate">The matching persisted quest row, if any.</param>
+  /// <param name="foundQuestPopupText">
+  ///     The matching dedicated popup row, if any.
+  /// </param>
   /// <param name="translatedNameText">The translated quest title.</param>
   /// <returns><c>true</c> when a translated title exists.</returns>
   private bool TryResolveJournalResultTranslation(
       string cacheKey,
       string questNameText,
       QuestPlate? foundQuestPlate,
+      QuestPopupText? foundQuestPopupText,
       out string translatedNameText)
   {
     translatedNameText = string.Empty;
@@ -337,6 +388,13 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       return true;
     }
 
+    if (foundQuestPopupText != null &&
+        IsTranslatedPayloadReady(foundQuestPopupText.TranslatedTitle))
+    {
+      translatedNameText = foundQuestPopupText.TranslatedTitle ?? string.Empty;
+      return true;
+    }
+
     if (this.TryGetQueuedTranslation(cacheKey, out var cachedTranslatedName) &&
         IsTranslatedPayloadReady(cachedTranslatedName))
     {
@@ -358,10 +416,12 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// <param name="cacheKey">The stable translation cache key.</param>
   /// <param name="sourceLanguage">The captured source language.</param>
   /// <param name="questNameText">The original quest title.</param>
+  /// <param name="questId">The optional canonical quest id.</param>
   private void QueueJournalResultTranslation(
       string cacheKey,
       SourceClientLanguage sourceLanguage,
-      string questNameText)
+      string questNameText,
+      string? questId)
   {
     this.QueueTranslation(
         cacheKey,
@@ -373,19 +433,33 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
             return;
           }
 
-          var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+          if (!string.IsNullOrWhiteSpace(questId))
+          {
+            var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+                sourceLanguage,
+                questNameText,
+                string.Empty,
+                translatedNameText,
+                string.Empty,
+                questId);
+
+            var result = this.InsertQuestPlate(translatedQuestPlate);
+#if DEBUG
+            PluginRuntimeLog.Debug(
+                $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+            return;
+          }
+
+          var translatedQuestPopupText = this.CreateQuestPopupText(
+              JournalResultAddonName,
               sourceLanguage,
               questNameText,
               string.Empty,
               translatedNameText,
-              string.Empty,
               string.Empty);
-
-          var result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-          PluginRuntimeLog.Debug(
-              $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
-#endif
+          _ = Task.Run(
+              () => this.InsertQuestPopupTextAsync(translatedQuestPopupText));
         });
   }
 
@@ -415,16 +489,33 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 
     if (!translatedPayloadReady)
     {
-      var questPlate = this.CreateQuestPlate(
+      var foundQuestPlate = this.FindJournalResultQuestPlate(
           state.SourceLanguage,
           state.OriginalQuestName,
-          string.Empty);
-      var foundQuestPlate = this.FindQuestPlateByName(questPlate);
+          state.QuestId);
       if (foundQuestPlate != null &&
           IsTranslatedPayloadReady(foundQuestPlate.TranslatedQuestName))
       {
         translatedNameText =
             foundQuestPlate.TranslatedQuestName ?? string.Empty;
+        translatedPayloadReady = true;
+      }
+    }
+
+    if (!translatedPayloadReady &&
+        string.IsNullOrWhiteSpace(state.QuestId))
+    {
+      var foundQuestPopupText = this.FindQuestPopupText(
+          this.CreateQuestPopupText(
+              JournalResultAddonName,
+              state.SourceLanguage,
+              state.OriginalQuestName,
+              string.Empty));
+      if (foundQuestPopupText != null &&
+          IsTranslatedPayloadReady(foundQuestPopupText.TranslatedTitle))
+      {
+        translatedNameText =
+            foundQuestPopupText.TranslatedTitle ?? string.Empty;
         translatedPayloadReady = true;
       }
     }
@@ -448,7 +539,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         state.CacheKey,
         state.SourceLanguage,
         state.OriginalQuestName,
-        translatedNameText);
+        translatedNameText,
+        state.QuestId);
     return true;
   }
 
@@ -459,17 +551,20 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// <param name="sourceLanguage">The captured source language.</param>
   /// <param name="originalQuestName">The original quest title.</param>
   /// <param name="translatedQuestName">The translated quest title.</param>
+  /// <param name="questId">The optional canonical quest id.</param>
   private void RememberJournalResultHoverState(
       string cacheKey,
       SourceClientLanguage sourceLanguage,
       string originalQuestName,
-      string translatedQuestName)
+      string translatedQuestName,
+      string? questId)
   {
     this.currentJournalResultHoverState = new JournalResultHoverState(
         cacheKey,
         sourceLanguage,
         originalQuestName,
-        translatedQuestName);
+        translatedQuestName,
+        questId);
     this.hasPendingJournalResultTranslation =
         !this.currentJournalResultHoverState.TranslatedPayloadReady;
     this.nextJournalResultRetryUtc = this.hasPendingJournalResultTranslation
@@ -625,11 +720,13 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// <param name="SourceLanguage">The captured source language.</param>
   /// <param name="OriginalQuestName">The original quest title.</param>
   /// <param name="TranslatedQuestName">The translated quest title.</param>
+  /// <param name="QuestId">The optional canonical quest id.</param>
   private sealed record JournalResultHoverState(
       string CacheKey,
       SourceClientLanguage SourceLanguage,
       string OriginalQuestName,
-      string TranslatedQuestName)
+      string TranslatedQuestName,
+      string? QuestId)
   {
     /// <summary>
     ///     Gets whether the translated JournalResult payload is complete.
