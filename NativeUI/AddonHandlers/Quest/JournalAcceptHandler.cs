@@ -162,10 +162,18 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
         return;
       }
 
+      var hasCanonicalQuestId =
+          QuestPopupIdentity.TryReadJournalAcceptQuestId(
+              setupAtkValues,
+              out var questId) &&
+          !string.IsNullOrWhiteSpace(questId);
+      questId = hasCanonicalQuestId ? questId : string.Empty;
+
       var questPlate = this.CreateQuestPlate(
           sourceLanguage,
           questName,
-          questMessage);
+          questMessage,
+          questId);
       if (QuestProgressResolver.TryResolveQuestProgress(
               questPlate,
               out var resolvedAcceptSnapshot))
@@ -173,25 +181,47 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
         questPlate.SourceContentHash = resolvedAcceptSnapshot.ContentHash;
       }
 
-      var foundQuestPlate = this.FindQuestPlate(questPlate);
-      if (foundQuestPlate != null &&
-          !string.Equals(
-              foundQuestPlate.GameVersion,
-              GetGameVersion(),
-              StringComparison.Ordinal))
+      var persistenceTarget = hasCanonicalQuestId
+          ? QuestPopupPersistenceTarget.CanonicalQuestPlate
+          : QuestPopupPersistenceTarget.DedicatedPopupTable;
+      QuestPlate? foundQuestPlate = null;
+      QuestPopupText? foundQuestPopupText = null;
+      if (persistenceTarget == QuestPopupPersistenceTarget.CanonicalQuestPlate)
       {
-        this.UpdateQuestPlateGameVersion(
-            foundQuestPlate.Id,
-            GetGameVersion());
+        foundQuestPlate = this.FindQuestPlate(questPlate);
+        if (foundQuestPlate != null &&
+            !string.Equals(
+                foundQuestPlate.GameVersion,
+                GetGameVersion(),
+                StringComparison.Ordinal))
+        {
+          this.UpdateQuestPlateGameVersion(
+              foundQuestPlate.Id,
+              GetGameVersion());
+        }
+      }
+      else
+      {
+        var questPopupText = this.CreateQuestPopupText(
+            JournalAcceptAddonName,
+            sourceLanguage,
+            questName,
+            questMessage,
+            questId: questId);
+        questPopupText.SourceContentHash = questPlate.SourceContentHash;
+        foundQuestPopupText = this.FindQuestPopupText(questPopupText);
       }
 
-      var cacheKey = $"JournalAccept|{questName}|{questMessage}";
+      var cacheKey = hasCanonicalQuestId
+          ? $"JournalAccept|QuestId:{questId}|{questName}|{questMessage}"
+          : $"JournalAccept|Popup|{questName}|{questMessage}";
 
       if (!this.TryResolveJournalAcceptTranslation(
               cacheKey,
               questName,
               questMessage,
               foundQuestPlate,
+              foundQuestPopupText,
               out var translatedQuestName,
               out var translatedQuestMessage))
       {
@@ -202,13 +232,17 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             questMessage,
             string.Empty,
             string.Empty,
-            questPlate.SourceContentHash);
+            questPlate.SourceContentHash,
+            persistenceTarget,
+            questId);
         this.QueueJournalAcceptTranslation(
             cacheKey,
             sourceLanguage,
             questName,
             questMessage,
-            questPlate.SourceContentHash);
+            questPlate.SourceContentHash,
+            persistenceTarget,
+            questId);
         this.RegisterJournalAcceptHoverTooltip();
         return;
       }
@@ -233,7 +267,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
           questMessage,
           translatedQuestName,
           translatedQuestMessage,
-          questPlate.SourceContentHash);
+          questPlate.SourceContentHash,
+          persistenceTarget,
+          questId);
 
       if (this.JournalAcceptWritesNativeTranslation)
       {
@@ -354,6 +390,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// <param name="questName">The original quest title.</param>
   /// <param name="questMessage">The original quest message.</param>
   /// <param name="foundQuestPlate">The matching persisted quest row, if any.</param>
+  /// <param name="foundQuestPopupText">
+  ///     The matching dedicated popup row, if any.
+  /// </param>
   /// <param name="translatedQuestName">The translated quest title.</param>
   /// <param name="translatedQuestMessage">The translated quest message.</param>
   /// <returns><c>true</c> when a complete translated payload exists.</returns>
@@ -362,6 +401,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       string questName,
       string questMessage,
       QuestPlate? foundQuestPlate,
+      QuestPopupText? foundQuestPopupText,
       out string translatedQuestName,
       out string translatedQuestMessage)
   {
@@ -411,6 +451,17 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       return true;
     }
 
+    if (foundQuestPopupText != null &&
+        IsTranslatedPayloadReady(
+            foundQuestPopupText.TranslatedTitle,
+            foundQuestPopupText.TranslatedBody))
+    {
+      translatedQuestName = foundQuestPopupText.TranslatedTitle ?? string.Empty;
+      translatedQuestMessage =
+          foundQuestPopupText.TranslatedBody ?? string.Empty;
+      return true;
+    }
+
     if (this.TryGetQueuedTranslation(
             cacheKey,
             out var cachedTranslatedPayload) &&
@@ -441,12 +492,16 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// <param name="questName">The original quest title.</param>
   /// <param name="questMessage">The original quest message.</param>
   /// <param name="sourceContentHash">The resolved quest source hash.</param>
+  /// <param name="persistenceTarget">The persistence bucket to update.</param>
+  /// <param name="questId">The optional canonical quest id.</param>
   private void QueueJournalAcceptTranslation(
       string cacheKey,
       SourceClientLanguage sourceLanguage,
       string questName,
       string questMessage,
-      string? sourceContentHash)
+      string? sourceContentHash,
+      QuestPopupPersistenceTarget persistenceTarget,
+      string? questId)
   {
     this.QueueTranslation(
         cacheKey,
@@ -466,20 +521,37 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             return;
           }
 
-          var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+          if (persistenceTarget ==
+              QuestPopupPersistenceTarget.CanonicalQuestPlate)
+          {
+            var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+                sourceLanguage,
+                questName,
+                questMessage,
+                resolvedQuestName,
+                resolvedQuestMessage,
+                questId);
+            translatedQuestPlate.SourceContentHash = sourceContentHash;
+
+            var result = this.InsertQuestPlate(translatedQuestPlate);
+#if DEBUG
+            PluginRuntimeLog.Debug(
+                $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+            return;
+          }
+
+          var translatedQuestPopupText = this.CreateQuestPopupText(
+              JournalAcceptAddonName,
               sourceLanguage,
               questName,
               questMessage,
               resolvedQuestName,
               resolvedQuestMessage,
-              string.Empty);
-          translatedQuestPlate.SourceContentHash = sourceContentHash;
-
-          var result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-          PluginRuntimeLog.Debug(
-              $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
-#endif
+              questId);
+          translatedQuestPopupText.SourceContentHash = sourceContentHash;
+          _ = Task.Run(
+              () => this.InsertQuestPopupTextAsync(translatedQuestPopupText));
         });
   }
 
@@ -514,21 +586,49 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
 
     if (!translatedPayloadReady)
     {
-      var questPlate = this.CreateQuestPlate(
-          state.SourceLanguage,
-          state.OriginalQuestName,
-          state.OriginalQuestMessage);
-      var foundQuestPlate = this.FindQuestPlate(questPlate);
-      if (foundQuestPlate != null &&
-          IsTranslatedPayloadReady(
-              foundQuestPlate.TranslatedQuestName,
-              foundQuestPlate.TranslatedQuestMessage))
+      if (state.PersistenceTarget ==
+          QuestPopupPersistenceTarget.CanonicalQuestPlate)
       {
-        translatedQuestName =
-            foundQuestPlate.TranslatedQuestName ?? string.Empty;
-        translatedQuestMessage =
-            foundQuestPlate.TranslatedQuestMessage ?? string.Empty;
-        translatedPayloadReady = true;
+        var questPlate = this.CreateQuestPlate(
+            state.SourceLanguage,
+            state.OriginalQuestName,
+            state.OriginalQuestMessage,
+            state.QuestId);
+        questPlate.SourceContentHash = state.SourceContentHash;
+        var foundQuestPlate = this.FindQuestPlate(questPlate);
+        if (foundQuestPlate != null &&
+            IsTranslatedPayloadReady(
+                foundQuestPlate.TranslatedQuestName,
+                foundQuestPlate.TranslatedQuestMessage))
+        {
+          translatedQuestName =
+              foundQuestPlate.TranslatedQuestName ?? string.Empty;
+          translatedQuestMessage =
+              foundQuestPlate.TranslatedQuestMessage ?? string.Empty;
+          translatedPayloadReady = true;
+        }
+      }
+      else
+      {
+        var questPopupText = this.CreateQuestPopupText(
+            JournalAcceptAddonName,
+            state.SourceLanguage,
+            state.OriginalQuestName,
+            state.OriginalQuestMessage,
+            questId: state.QuestId);
+        questPopupText.SourceContentHash = state.SourceContentHash;
+        var foundQuestPopupText = this.FindQuestPopupText(questPopupText);
+        if (foundQuestPopupText != null &&
+            IsTranslatedPayloadReady(
+                foundQuestPopupText.TranslatedTitle,
+                foundQuestPopupText.TranslatedBody))
+        {
+          translatedQuestName =
+              foundQuestPopupText.TranslatedTitle ?? string.Empty;
+          translatedQuestMessage =
+              foundQuestPopupText.TranslatedBody ?? string.Empty;
+          translatedPayloadReady = true;
+        }
       }
     }
 
@@ -558,7 +658,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
         state.OriginalQuestMessage,
         translatedQuestName,
         translatedQuestMessage,
-        state.SourceContentHash);
+        state.SourceContentHash,
+        state.PersistenceTarget,
+        state.QuestId);
     return true;
   }
 
@@ -572,6 +674,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// <param name="translatedQuestName">The translated quest title.</param>
   /// <param name="translatedQuestMessage">The translated quest message.</param>
   /// <param name="sourceContentHash">The resolved quest source hash.</param>
+  /// <param name="persistenceTarget">The persistence bucket in use.</param>
+  /// <param name="questId">The optional canonical quest id.</param>
   private void RememberJournalAcceptHoverState(
       string cacheKey,
       SourceClientLanguage sourceLanguage,
@@ -579,7 +683,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       string originalQuestMessage,
       string translatedQuestName,
       string translatedQuestMessage,
-      string? sourceContentHash)
+      string? sourceContentHash,
+      QuestPopupPersistenceTarget persistenceTarget,
+      string? questId)
   {
     this.currentJournalAcceptHoverState = new JournalAcceptHoverState(
         cacheKey,
@@ -588,7 +694,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
         originalQuestMessage,
         translatedQuestName,
         translatedQuestMessage,
-        sourceContentHash);
+        sourceContentHash,
+        persistenceTarget,
+        questId);
     this.hasPendingJournalAcceptTranslations =
         !this.currentJournalAcceptHoverState.TranslatedPayloadReady;
     this.nextJournalAcceptRetryUtc = this.hasPendingJournalAcceptTranslations
@@ -802,6 +910,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// <param name="TranslatedQuestName">The translated quest title.</param>
   /// <param name="TranslatedQuestMessage">The translated quest message.</param>
   /// <param name="SourceContentHash">The resolved source content hash.</param>
+  /// <param name="PersistenceTarget">The persistence bucket in use.</param>
+  /// <param name="QuestId">The optional canonical quest id.</param>
   private sealed record JournalAcceptHoverState(
       string CacheKey,
       SourceClientLanguage SourceLanguage,
@@ -809,7 +919,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       string OriginalQuestMessage,
       string TranslatedQuestName,
       string TranslatedQuestMessage,
-      string? SourceContentHash)
+      string? SourceContentHash,
+      QuestPopupPersistenceTarget PersistenceTarget,
+      string? QuestId)
   {
     /// <summary>
     ///     Gets whether the translated JournalAccept payload is complete.

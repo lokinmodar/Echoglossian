@@ -274,6 +274,48 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures JournalAccept reads explicit quest identity only through the
+    ///     dedicated popup identity helper.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_UsesPopupIdentityReader()
+    {
+        var handler = typeof(JournalAcceptHandler).GetMethod(
+            "OnJournalAcceptEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var identityReader = typeof(QuestPopupIdentity).GetMethod(
+            "TryReadJournalAcceptQuestId",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(handler);
+        Assert.NotNull(identityReader);
+        Assert.True(
+            MethodReferences(handler!, identityReader!),
+            "JournalAccept must resolve quest identity through QuestPopupIdentity instead of inferring popup payload ownership inline.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalAccept can refresh pending translations from the
+    ///     dedicated popup table when no safe canonical quest identity exists.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_UsesPopupPersistenceFallback()
+    {
+        var refresh = typeof(JournalAcceptHandler).GetMethod(
+            "TryRefreshJournalAcceptPendingTranslation",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var popupLookup = typeof(QuestAddonHandlerBase).GetMethod(
+            "FindQuestPopupText",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(refresh);
+        Assert.NotNull(popupLookup);
+        Assert.True(
+            MethodReferences(refresh!, popupLookup!),
+            "JournalAccept must check the dedicated popup table while pending translations settle.");
+    }
+
+    /// <summary>
     /// Ensures JournalResult refreshes tooltip targets after setup so queued
     /// translations can surface while the result dialog remains open.
     /// </summary>
