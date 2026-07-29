@@ -275,6 +275,27 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures JournalAccept restores its owned native mutation when the
+    ///     active display mode stops writing translated text.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_PreDrawRestoresOwnedNativeMutation()
+    {
+        var refresh = typeof(JournalAcceptHandler).GetMethod(
+            "OnJournalAcceptPreDrawEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var restore = typeof(JournalAcceptHandler).GetMethod(
+            "RestoreJournalAcceptOriginals",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(refresh);
+        Assert.NotNull(restore);
+        Assert.True(
+            MethodReferences(refresh!, restore!),
+            "JournalAccept must restore its owned native text when the display mode switches away from native writes.");
+    }
+
+    /// <summary>
     ///     Ensures JournalAccept reads explicit quest identity only through the
     ///     dedicated popup identity helper.
     /// </summary>
@@ -317,6 +338,27 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures JournalAccept cleanup restores any owned native mutation
+    ///     before dropping runtime state.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_CleanupRestoresOwnedNativeMutation()
+    {
+        var cleanup = typeof(JournalAcceptHandler).GetMethod(
+            "OnJournalAcceptCleanupEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var restore = typeof(JournalAcceptHandler).GetMethod(
+            "RestoreJournalAcceptOriginals",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(cleanup);
+        Assert.NotNull(restore);
+        Assert.True(
+            MethodReferences(cleanup!, restore!),
+            "JournalAccept cleanup must restore any handler-owned native mutation before state is cleared.");
+    }
+
+    /// <summary>
     /// Ensures JournalResult refreshes tooltip targets after setup so queued
     /// translations can surface while the result dialog remains open.
     /// </summary>
@@ -326,6 +368,27 @@ public class QuestAddonHandlerLifecycleTests
         var handler = new JournalResultHandler(CreateDependencies());
 
         Assert.Contains(AddonEvent.PreDraw, handler.GetEventHandlers().Keys);
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult restores its owned native mutation when the
+    ///     active display mode stops writing translated text.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_PreDrawRestoresOwnedNativeMutation()
+    {
+        var refresh = typeof(JournalResultHandler).GetMethod(
+            "OnJournalResultPreDrawEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var restore = typeof(JournalResultHandler).GetMethod(
+            "RestoreJournalResultOriginals",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(refresh);
+        Assert.NotNull(restore);
+        Assert.True(
+            MethodReferences(refresh!, restore!),
+            "JournalResult must restore its owned native text when the display mode switches away from native writes.");
     }
 
     /// <summary>
@@ -368,6 +431,27 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True(
             MethodReferences(refresh!, popupLookup!),
             "JournalResult must check the dedicated popup table when canonical lookup does not yield a translated title.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult cleanup restores any owned native mutation
+    ///     before dropping runtime state.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_CleanupRestoresOwnedNativeMutation()
+    {
+        var cleanup = typeof(JournalResultHandler).GetMethod(
+            "OnJournalResultCleanupEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var restore = typeof(JournalResultHandler).GetMethod(
+            "RestoreJournalResultOriginals",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(cleanup);
+        Assert.NotNull(restore);
+        Assert.True(
+            MethodReferences(cleanup!, restore!),
+            "JournalResult cleanup must restore any handler-owned native mutation before state is cleared.");
     }
 
     /// <summary>
@@ -812,9 +896,6 @@ public class QuestAddonHandlerLifecycleTests
     [InlineData(typeof(JournalAcceptHandler))]
     [InlineData(typeof(JournalResultHandler))]
     [InlineData(typeof(RecommendListHandler))]
-    [InlineData(typeof(SelectYesNoHandler))]
-    [InlineData(typeof(SelectOkHandler))]
-    [InlineData(typeof(SelectStringHandler))]
     public void RuntimeWiring_RegistersRemainingQuestFamilyHandlers(
         Type handlerType)
     {

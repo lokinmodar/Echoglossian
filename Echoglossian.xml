@@ -17402,6 +17402,12 @@
             <param name="addon">The visible JournalAccept addon.</param>
             <param name="state">The current JournalAccept hover state.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.RestoreJournalAcceptOriginals">
+            <summary>
+                Restores the original JournalAccept title and body when this handler
+                owns the visible native mutation.
+            </summary>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ClearJournalAcceptRuntimeState">
             <summary>
                 Clears JournalAccept hover registrations and local runtime state.
@@ -18473,6 +18479,12 @@
             </summary>
             <param name="addon">The visible JournalResult addon.</param>
             <param name="state">The current JournalResult hover state.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.RestoreJournalResultOriginals">
+            <summary>
+                Restores the original JournalResult title when this handler owns the
+                visible native mutation.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.ClearJournalResultRuntimeState">
             <summary>

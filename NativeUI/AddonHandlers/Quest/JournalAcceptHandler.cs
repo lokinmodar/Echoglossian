@@ -124,6 +124,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     if (!this.Config.TranslateJournalAccept ||
         this.DisableTranslationAccordingToState())
     {
+      this.RestoreJournalAcceptOriginals();
       this.ClearJournalAcceptRuntimeState();
       return;
     }
@@ -321,6 +322,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     if (!this.Config.TranslateJournalAccept ||
         this.DisableTranslationAccordingToState())
     {
+      this.RestoreJournalAcceptOriginals();
       this.ClearJournalAcceptRuntimeState();
       return;
     }
@@ -328,6 +330,12 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     if (this.currentJournalAcceptHoverState == null)
     {
       return;
+    }
+
+    if (!this.JournalAcceptWritesNativeTranslation &&
+        this.ownsJournalAcceptNativeMutation)
+    {
+      this.RestoreJournalAcceptOriginals();
     }
 
     var shouldRefresh =
@@ -873,6 +881,53 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Restores the original JournalAccept title and body when this handler
+  ///     owns the visible native mutation.
+  /// </summary>
+  private unsafe void RestoreJournalAcceptOriginals()
+  {
+    if (!this.ownsJournalAcceptNativeMutation)
+    {
+      return;
+    }
+
+    var state = this.currentJournalAcceptHoverState;
+    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+        ->GetAddonByName(JournalAcceptAddonName);
+    if (addon == null || state == null)
+    {
+      this.ownsJournalAcceptNativeMutation = false;
+      return;
+    }
+
+    if (addon->AtkValues != null && addon->AtkValuesCount > 12)
+    {
+      addon->AtkValues[5].SetManagedString(state.OriginalQuestName);
+      addon->AtkValues[12].SetManagedString(state.OriginalQuestMessage);
+    }
+
+    if (this.TryFindReadableTextNodeByText(
+            addon,
+            state.OriginalQuestName,
+            state.TranslatedQuestName,
+            out var nameNode))
+    {
+      nameNode->SetText(state.OriginalQuestName);
+    }
+
+    if (this.TryFindReadableTextNodeByText(
+            addon,
+            state.OriginalQuestMessage,
+            state.TranslatedQuestMessage,
+            out var messageNode))
+    {
+      messageNode->SetText(state.OriginalQuestMessage);
+    }
+
+    this.ownsJournalAcceptNativeMutation = false;
+  }
+
+  /// <summary>
   ///     Clears JournalAccept hover registrations and local runtime state.
   /// </summary>
   private void ClearJournalAcceptRuntimeState()
@@ -891,10 +946,11 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
   /// <param name="args">The addon lifecycle arguments.</param>
-  private void OnJournalAcceptCleanupEvent(AddonEvent type, AddonArgs args)
+  private unsafe void OnJournalAcceptCleanupEvent(AddonEvent type, AddonArgs args)
   {
     if (string.Equals(args.AddonName, JournalAcceptAddonName, StringComparison.Ordinal))
     {
+      this.RestoreJournalAcceptOriginals();
       this.ClearJournalAcceptRuntimeState();
     }
   }

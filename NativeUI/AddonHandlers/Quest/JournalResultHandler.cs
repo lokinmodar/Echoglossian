@@ -120,6 +120,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     if (!this.Config.TranslateJournalResult ||
         this.DisableTranslationAccordingToState())
     {
+      this.RestoreJournalResultOriginals();
       this.ClearJournalResultRuntimeState();
       return;
     }
@@ -259,6 +260,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     if (!this.Config.TranslateJournalResult ||
         this.DisableTranslationAccordingToState())
     {
+      this.RestoreJournalResultOriginals();
       this.ClearJournalResultRuntimeState();
       return;
     }
@@ -266,6 +268,12 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     if (this.currentJournalResultHoverState == null)
     {
       return;
+    }
+
+    if (!this.JournalResultWritesNativeTranslation &&
+        this.ownsJournalResultNativeMutation)
+    {
+      this.RestoreJournalResultOriginals();
     }
 
     var shouldRefresh =
@@ -686,6 +694,43 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Restores the original JournalResult title when this handler owns the
+  ///     visible native mutation.
+  /// </summary>
+  private unsafe void RestoreJournalResultOriginals()
+  {
+    if (!this.ownsJournalResultNativeMutation)
+    {
+      return;
+    }
+
+    var state = this.currentJournalResultHoverState;
+    var addon = AtkStage.Instance()->RaptureAtkUnitManager
+        ->GetAddonByName(JournalResultAddonName);
+    if (addon == null || state == null)
+    {
+      this.ownsJournalResultNativeMutation = false;
+      return;
+    }
+
+    if (addon->AtkValues != null && addon->AtkValuesCount > 1)
+    {
+      addon->AtkValues[1].SetManagedString(state.OriginalQuestName);
+    }
+
+    if (this.TryFindReadableTextNodeByText(
+            addon,
+            state.OriginalQuestName,
+            state.TranslatedQuestName,
+            out var nameNode))
+    {
+      nameNode->SetText(state.OriginalQuestName);
+    }
+
+    this.ownsJournalResultNativeMutation = false;
+  }
+
+  /// <summary>
   ///     Clears JournalResult hover registrations and local runtime state.
   /// </summary>
   private void ClearJournalResultRuntimeState()
@@ -704,10 +749,11 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="type">The addon lifecycle event.</param>
   /// <param name="args">The addon lifecycle arguments.</param>
-  private void OnJournalResultCleanupEvent(AddonEvent type, AddonArgs args)
+  private unsafe void OnJournalResultCleanupEvent(AddonEvent type, AddonArgs args)
   {
     if (string.Equals(args.AddonName, JournalResultAddonName, StringComparison.Ordinal))
     {
+      this.RestoreJournalResultOriginals();
       this.ClearJournalResultRuntimeState();
     }
   }
