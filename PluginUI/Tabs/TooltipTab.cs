@@ -39,7 +39,6 @@ public static class TooltipTab
             ImGui.TextWrapped(Resources.ActionAndItemTooltipsOverlayOnlyDescription);
         }
 
-        ImGui.Spacing();
         ImGui.TextUnformatted(Resources.HoverTooltipAppearanceSectionLabel);
         ImGui.Separator();
         ImGui.TextWrapped(Resources.HoverTooltipAppearanceDescription);
@@ -91,7 +90,6 @@ public static class TooltipTab
 
         ImGui.Spacing();
         ImGui.Separator();
-        ImGui.Spacing();
         ImGui.TextUnformatted(Resources.TranslateTooltipAddonLabel);
         ImGui.Separator();
 
