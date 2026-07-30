@@ -326,10 +326,17 @@ internal sealed class ToDoHandler :
             ReferenceEquals(
                 snapshot.AppliedPresentation,
                 this.currentPresentation);
-        return this.runtimeRequestState.ShouldShortCircuitStablePreDraw(
+        var shouldShortCircuit =
+            this.runtimeRequestState.ShouldShortCircuitStablePreDraw(
             snapshot.Operation,
             presentationStable,
             nodesStable);
+        if (shouldShortCircuit && snapshot.Policy.UsesHoverTooltips)
+        {
+            this.hoverTooltipManager.TouchByPrefix(HoverTooltipPrefix);
+        }
+
+        return shouldShortCircuit;
     }
 
     /// <summary>

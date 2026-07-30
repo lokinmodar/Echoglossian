@@ -871,6 +871,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.config.OverlayOnlyLanguage);
         var usesHoverTooltips =
             TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
+        var requiresCustomHoverTooltipFallback =
+            this.RequiresCustomHoverTooltipFallback(displayMode);
+        var requiresHoverTooltipLifetimeRefresh =
+            usesHoverTooltips || requiresCustomHoverTooltipFallback;
         var shouldContinueAppliedStateRefresh =
             this.ShouldContinueAppliedStateRefreshOnPreDraw();
         var refreshRequested = Interlocked.Exchange(
@@ -940,12 +944,12 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 hasRuntimeState: this.runtimeState != null,
                 usesHoverTooltips: usesHoverTooltips,
                 hasLastResolvedState: this.lastResolvedState != null,
-                hasVisibleAddon: !usesHoverTooltips ||
+                hasVisibleAddon: !requiresHoverTooltipLifetimeRefresh ||
                     this.TryGetVisibleAddon(out _)))
         {
             if (this.runtimeState != null)
             {
-                if (usesHoverTooltips)
+                if (requiresHoverTooltipLifetimeRefresh)
                 {
                     this.hoverTooltipManager.TouchByPrefix(
                         this.hoverTooltipKeyPrefix);

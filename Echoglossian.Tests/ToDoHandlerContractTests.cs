@@ -163,6 +163,25 @@ public sealed class ToDoHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures stable PreDraw reuse still refreshes hover-tooltip
+    ///     lifetime for tooltip presentation.
+    /// </summary>
+    [Fact]
+    public void ToDoHandler_StablePreDrawRefreshesHoverTooltipLifetime()
+    {
+        var shortcut = typeof(ToDoHandler).GetMethod(
+            "TryShortCircuitStablePreDraw",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var touch = typeof(HoverTooltipManager).GetMethod(
+            nameof(HoverTooltipManager.TouchByPrefix),
+            BindingFlags.Instance | BindingFlags.Public);
+
+        Assert.NotNull(shortcut);
+        Assert.NotNull(touch);
+        Assert.True(MethodReferences(shortcut, touch));
+    }
+
+    /// <summary>
     ///     Ensures countdown rows with three-digit minute values remain native.
     /// </summary>
     [Theory]

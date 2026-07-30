@@ -72,6 +72,26 @@ public sealed class ContextMenuHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures the DB-first PreDraw shortcut still treats custom
+    ///     ContextMenu hover fallback as tooltip lifetime work.
+    /// </summary>
+    [Fact]
+    public void DbFirstPreDrawShortcut_ConsidersCustomHoverFallbackLifetime()
+    {
+        var preDraw = typeof(DbFirstGameWindowAddonHandler).GetMethod(
+            "OnPreDrawEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var requiresCustomFallback = typeof(DbFirstGameWindowAddonHandler)
+            .GetMethod(
+                "RequiresCustomHoverTooltipFallback",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(preDraw);
+        Assert.NotNull(requiresCustomFallback);
+        Assert.True(MethodReferences(preDraw, requiresCustomFallback));
+    }
+
+    /// <summary>
     ///     Ensures translation completion invokes an addon-local dedicated
     ///     persistence seam before the generic GameWindow path.
     /// </summary>
@@ -260,6 +280,27 @@ public sealed class ContextMenuHandlerContractTests
         translatedPayload = Assert.IsType<DbFirstGameWindowPayload>(
             arguments[2]);
         return result;
+    }
+
+    /// <summary>
+    ///     Determines whether one compiled method references another member.
+    /// </summary>
+    /// <param name="method">The method body to inspect.</param>
+    /// <param name="referencedMember">The expected referenced member.</param>
+    /// <returns><c>true</c> when the metadata token is referenced.</returns>
+    private static bool MethodReferences(
+        MethodInfo method,
+        MemberInfo referencedMember)
+    {
+        var methodBody = method.GetMethodBody()?.GetILAsByteArray();
+        if (methodBody == null)
+        {
+            return false;
+        }
+
+        var referencedToken = BitConverter.GetBytes(
+            referencedMember.MetadataToken);
+        return methodBody.AsSpan().IndexOf(referencedToken) >= 0;
     }
 
     /// <summary>
