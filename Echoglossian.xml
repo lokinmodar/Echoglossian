@@ -3042,6 +3042,17 @@
                 <see langword="null" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindContextMenuText(Echoglossian.EFCoreSqlite.Models.ContextMenuText)">
+            <summary>
+                Finds a dedicated ContextMenu payload scoped by addon, source hash,
+                game version, target language, and translation engine.
+            </summary>
+            <param name="contextMenuText">The ContextMenu payload to find.</param>
+            <returns>
+                The matching <see cref="T:Echoglossian.EFCoreSqlite.Models.ContextMenuText" />, or
+                <see langword="null" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken)">
             <summary>
             Inserts a TalkMessage record into the database.
@@ -3145,6 +3156,14 @@
             <param name="selectionDialogText">
                 The generic selection-dialog row to save.
             </param>
+            <returns>A status message describing the persistence result.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertContextMenuTextData(Echoglossian.EFCoreSqlite.Models.ContextMenuText)">
+            <summary>
+                Inserts or updates a dedicated ContextMenu payload without sharing
+                selection-dialog or game-window persistence.
+            </summary>
+            <param name="contextMenuText">The ContextMenu payload to persist.</param>
             <returns>A status message describing the persistence result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
@@ -8528,6 +8547,11 @@
                 Gets or sets the generic selection-dialog translation rows.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.ContextMenuTexts">
+            <summary>
+                Gets or sets the dedicated ContextMenu translation rows.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.NamePlateMessages">
             <summary>
                 Gets or sets the translated world-object nameplate rows.
@@ -8981,6 +9005,18 @@
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddSelectionDialogTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddContextMenuTexts">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddContextMenuTexts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddContextMenuTexts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddContextMenuTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
             <summary>
                 Represents one canonical DB-first action tooltip payload.
@@ -9226,6 +9262,72 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.CompanyActionText.ToString">
             <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.ContextMenuText">
+            <summary>
+                Stores translated ContextMenu payloads independently from generic
+                game-window and selection-dialog rows.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.AddonName">
+            <summary>
+                Gets or sets the addon name.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.OriginalTextsAsText">
+            <summary>
+                Gets or sets the serialized original payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.OriginalLang">
+            <summary>
+                Gets or sets the original source language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.TranslatedTextsAsText">
+            <summary>
+                Gets or sets the serialized translated payload.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.TranslationLang">
+            <summary>
+                Gets or sets the target translation language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.TranslationEngine">
+            <summary>
+                Gets or sets the translation engine id.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.GameVersion">
+            <summary>
+                Gets or sets the stored game version.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.SourceContentHash">
+            <summary>
+                Gets or sets the source payload hash.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.CreatedDate">
+            <summary>
+                Gets or sets the created timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.UpdatedDate">
+            <summary>
+                Gets or sets the updated timestamp.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ContextMenuText.RowVersion">
+            <summary>
+                Gets or sets the optimistic concurrency token.
+            </summary>
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.CraftActionText">
             <summary>

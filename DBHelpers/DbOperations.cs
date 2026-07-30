@@ -982,6 +982,58 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds a dedicated ContextMenu payload scoped by addon, source hash,
+  ///     game version, target language, and translation engine.
+  /// </summary>
+  /// <param name="contextMenuText">The ContextMenu payload to find.</param>
+  /// <returns>
+  ///     The matching <see cref="ContextMenuText" />, or
+  ///     <see langword="null" />.
+  /// </returns>
+  public ContextMenuText? FindContextMenuText(ContextMenuText contextMenuText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (string.IsNullOrWhiteSpace(contextMenuText.AddonName) ||
+          string.IsNullOrWhiteSpace(contextMenuText.OriginalTextsAsText) ||
+          string.IsNullOrWhiteSpace(contextMenuText.GameVersion) ||
+          string.IsNullOrWhiteSpace(contextMenuText.SourceContentHash))
+      {
+        return null;
+      }
+
+      return context.ContextMenuTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == contextMenuText.AddonName &&
+              t.OriginalTextsAsText == contextMenuText.OriginalTextsAsText &&
+              t.GameVersion == contextMenuText.GameVersion &&
+              t.SourceContentHash == contextMenuText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  contextMenuText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  contextMenuText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == contextMenuText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindContextMenuText exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Inserts a TalkMessage record into the database.
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
@@ -1543,6 +1595,62 @@ public partial class Echoglossian
       context.SelectionDialogTexts.Attach(selectionDialogText);
       await context.SaveChangesAsync().ConfigureAwait(false);
       return "Data inserted to SelectionDialogTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or updates a dedicated ContextMenu payload without sharing
+  ///     selection-dialog or game-window persistence.
+  /// </summary>
+  /// <param name="contextMenuText">The ContextMenu payload to persist.</param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertContextMenuTextData(
+      ContextMenuText contextMenuText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(contextMenuText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      contextMenuText.GameVersion ??= GetGameVersion();
+      var existingContextMenuText = context.ContextMenuTexts
+          .Where(t =>
+              t.AddonName == contextMenuText.AddonName &&
+              t.OriginalTextsAsText == contextMenuText.OriginalTextsAsText &&
+              t.GameVersion == contextMenuText.GameVersion &&
+              t.SourceContentHash == contextMenuText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  contextMenuText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  contextMenuText.OriginalLang) &&
+              t.TranslationEngine == contextMenuText.TranslationEngine)
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+      if (existingContextMenuText != null)
+      {
+        existingContextMenuText.TranslatedTextsAsText =
+            contextMenuText.TranslatedTextsAsText;
+        existingContextMenuText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data updated in ContextMenuTexts table.";
+      }
+
+      context.ContextMenuTexts.Attach(contextMenuText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to ContextMenuTexts table.";
     }
     catch (Exception e)
     {
