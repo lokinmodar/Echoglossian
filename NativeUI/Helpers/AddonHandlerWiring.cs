@@ -58,6 +58,12 @@ public partial class Echoglossian
                   this.configuration,
                   this.hoverTooltipManager,
                   TranslationService)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "SystemMenu",
+              Handler: new SystemMenuHandler(
+                  this.configuration,
+                  this.hoverTooltipManager,
+                  TranslationService)));
     }
 
     if (this.configuration.TranslateActionMenuWindow)
@@ -301,6 +307,29 @@ public partial class Echoglossian
                   this.FindAndReturnCutSceneSelectStringMessage,
                   selectString => Task.Run(
                       () => InsertCutSceneSelectStringData(selectString)),
+                  this.FindSelectionDialogText,
+                  selectionDialogText => this.InsertSelectionDialogTextData(
+                      selectionDialogText),
+                  (translatedQuestion, translatedOptions, originalQuestion) =>
+                      this.UpdateOverlayContent(
+                          this.selectStringOverlay,
+                          translatedQuestion,
+                          translatedOptions,
+                          originalQuestion),
+                  () => this.ClearOverlay(
+                      this.selectStringOverlay,
+                      clearText: true),
+                  addon => this.UpdateOverlayBounds(
+                      this.selectStringOverlay,
+                      addon),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "SelectIconString",
+              Handler: new SelectIconStringHandler(
+                  this.configuration,
+                  TranslationService,
                   this.FindSelectionDialogText,
                   selectionDialogText => this.InsertSelectionDialogTextData(
                       selectionDialogText),

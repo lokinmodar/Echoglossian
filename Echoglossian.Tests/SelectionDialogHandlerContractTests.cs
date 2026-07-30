@@ -24,6 +24,7 @@ public sealed class SelectionDialogHandlerContractTests
     [InlineData("SelectYesno", "SelectYesNoHandler")]
     [InlineData("SelectOk", "SelectOkHandler")]
     [InlineData("SelectString", "SelectStringHandler")]
+    [InlineData("SelectIconString", "SelectIconStringHandler")]
     public void AddonHandlerWiring_RegistersSelectionDialogHandlers(
         string addonName,
         string handlerTypeName)
@@ -48,6 +49,7 @@ public sealed class SelectionDialogHandlerContractTests
     [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectYesNoHandler.cs")]
     [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectOkHandler.cs")]
     [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectStringHandler.cs")]
+    [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectIconStringHandler.cs")]
     public void HandlerSourceFiles_ExistForSelectionDialogs(string relativePath)
     {
         var root = FindRepositoryRoot();

@@ -212,17 +212,22 @@ internal sealed class SelectionDialogPayload
     /// <summary>
     ///     Splits the payload into an overlay title and body.
     /// </summary>
+    /// <param name="treatFirstTextAsTitle">
+    ///     <see langword="true" /> to promote the first captured text into the
+    ///     overlay title slot; otherwise all text remains in the body.
+    /// </param>
     /// <returns>The overlay title/body pair.</returns>
-    public (string Title, string Body) ToOverlayParts()
+    public (string Title, string Body) ToOverlayParts(
+        bool treatFirstTextAsTitle = true)
     {
         if (this.Texts.Count == 0)
         {
             return (string.Empty, string.Empty);
         }
 
-        if (this.Texts.Count == 1)
+        if (this.Texts.Count == 1 || !treatFirstTextAsTitle)
         {
-            return (string.Empty, this.Texts[0]);
+            return (string.Empty, string.Join('\n', this.Texts));
         }
 
         return (this.Texts[0], string.Join('\n', this.Texts.Skip(1)));

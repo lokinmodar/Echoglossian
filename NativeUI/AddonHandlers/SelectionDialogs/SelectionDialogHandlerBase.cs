@@ -180,6 +180,19 @@ public abstract class SelectionDialogHandlerBase :
         IReadOnlyList<string> translatedTexts);
 
     /// <summary>
+    ///     Determines whether the overlay should promote the first captured
+    ///     text into the title slot.
+    /// </summary>
+    /// <returns>
+    ///     <see langword="true" /> when the first text should be the title;
+    ///     otherwise, <see langword="false" />.
+    /// </returns>
+    protected virtual bool ShouldPromoteFirstOverlayTextToTitle()
+    {
+        return true;
+    }
+
+    /// <summary>
     ///     Builds one selection-dialog lookup row for the dedicated generic
     ///     selection-dialog table.
     /// </summary>
@@ -926,8 +939,11 @@ public abstract class SelectionDialogHandlerBase :
             return;
         }
 
-        var originalParts = payload.ToOverlayParts();
-        var translatedParts = ToOverlayParts(translatedTexts);
+        var promoteFirstTextAsTitle = this.ShouldPromoteFirstOverlayTextToTitle();
+        var originalParts = payload.ToOverlayParts(promoteFirstTextAsTitle);
+        var translatedParts = ToOverlayParts(
+            translatedTexts,
+            promoteFirstTextAsTitle);
         if (this.ShouldSwapTexts())
         {
             this.updateOverlay(
@@ -1434,16 +1450,17 @@ public abstract class SelectionDialogHandlerBase :
     }
 
     private static (string Title, string Body) ToOverlayParts(
-        IReadOnlyList<string> texts)
+        IReadOnlyList<string> texts,
+        bool treatFirstTextAsTitle = true)
     {
         if (texts.Count == 0)
         {
             return (string.Empty, string.Empty);
         }
 
-        if (texts.Count == 1)
+        if (texts.Count == 1 || !treatFirstTextAsTitle)
         {
-            return (string.Empty, texts[0]);
+            return (string.Empty, string.Join('\n', texts));
         }
 
         return (texts[0], string.Join('\n', texts.Skip(1)));

@@ -134,6 +134,9 @@ public partial class Echoglossian
                 syncBeforeDraw: () =>
                     this.TrySyncOverlayToAddon(
                         "SelectString",
+                        this.selectStringOverlay) ||
+                    this.TrySyncOverlayToAddon(
+                        "SelectIconString",
                         this.selectStringOverlay)));
 
         this.registeredOverlays.Add(

@@ -195,6 +195,9 @@ public sealed class HostedPreviewPluginSessionTests
         registeredHandlers.Should().Contain(entry =>
             entry.AddonName == "SelectString" &&
             entry.Handler is SelectStringHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectIconString" &&
+            entry.Handler is SelectIconStringHandler);
     }
 
     private static IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)>

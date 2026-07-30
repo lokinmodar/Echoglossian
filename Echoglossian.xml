@@ -16870,6 +16870,48 @@
             <param name="atkValueCount">The number of values in the buffer.</param>
             <param name="translatedPayload">The translated payload to apply.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler">
+            <summary>
+                Handles DB-first translation for the SystemMenu addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler" />
+                class.
+            </summary>
+            <param name="config">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
+            <param name="translationService">The service used for translating text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.ShouldReuseCompatiblePayloads">
+            <summary>
+                The SystemMenu addon reuses the same text-node surface for multiple
+                menu states, so broad compatible-payload reuse is not stable enough
+                to keep enabled.
+            </summary>
+            <returns>Always <see langword="false" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange">
+            <summary>
+                The SystemMenu addon repaints the same visible text-node slots
+                across menu states, so stale translated values must be restored
+                before capturing the next original-facing payload.
+            </summary>
+            <returns>Always <see langword="true" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate">
             <summary>
                 Captures the stable data needed to translate one nameplate outside the
@@ -20578,6 +20620,26 @@
             </param>
             <returns>The derived availability snapshot.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler">
+            <summary>
+                Handles the icon-bearing selection dialog runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler" /> class.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.TryFindStoredTranslation(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.List{System.String}@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.PersistTranslationAsync(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.ShouldPromoteFirstOverlayTextToTitle">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy">
             <summary>
                 Resolves the preferred capture path for generic selection-dialog
@@ -20701,6 +20763,16 @@
             <param name="originalTexts">The ordered source payload.</param>
             <param name="translatedTexts">The ordered translated payload.</param>
             <returns>A task that completes with the persistence result message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.ShouldPromoteFirstOverlayTextToTitle">
+            <summary>
+                Determines whether the overlay should promote the first captured
+                text into the title slot.
+            </summary>
+            <returns>
+                <see langword="true" /> when the first text should be the title;
+                otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.BuildSelectionDialogLookup(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
@@ -20884,10 +20956,14 @@
             <param name="normalize">The text normalization delegate.</param>
             <returns>The stable payload key.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.ToOverlayParts">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.ToOverlayParts(System.Boolean)">
             <summary>
                 Splits the payload into an overlay title and body.
             </summary>
+            <param name="treatFirstTextAsTitle">
+                <see langword="true" /> to promote the first captured text into the
+                overlay title slot; otherwise all text remains in the body.
+            </param>
             <returns>The overlay title/body pair.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler">
