@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.Helpers;
+
 namespace Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
 
 /// <summary>
@@ -22,21 +24,17 @@ public sealed class SelectIconStringHandler : SelectionDialogHandlerBase
     public SelectIconStringHandler(
         Config config,
         TranslationService translationService,
+        HoverTooltipManager hoverTooltipManager,
         Func<SelectionDialogText, SelectionDialogText?> findSelectionDialogText,
         Func<SelectionDialogText, Task<string>> insertSelectionDialogTextAsync,
-        Action<string, string, string> updateOverlay,
-        Action clearOverlay,
-        SyncSelectionDialogOverlayBoundsDelegate syncOverlayBounds,
         Func<string, string> normalizeReplacementText)
         : base(
             "SelectIconString",
             config,
             translationService,
+            hoverTooltipManager,
             () => config.TranslateSelectIconString,
             () => config.SelectIconStringTranslationDisplayMode,
-            updateOverlay,
-            clearOverlay,
-            syncOverlayBounds,
             normalizeReplacementText)
     {
         this.findSelectionDialogText = findSelectionDialogText;
@@ -74,11 +72,5 @@ public sealed class SelectIconStringHandler : SelectionDialogHandlerBase
         return row == null
             ? Task.FromResult("No data to save.")
             : this.insertSelectionDialogTextAsync(row);
-    }
-
-    /// <inheritdoc />
-    protected override bool ShouldPromoteFirstOverlayTextToTitle()
-    {
-        return false;
     }
 }

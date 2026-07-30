@@ -210,13 +210,14 @@ internal sealed class SelectionDialogPayload
     }
 
     /// <summary>
-    ///     Splits the payload into an overlay title and body.
+    ///     Splits the payload into an overlay-style title and body pair for
+    ///     tests and any legacy callers that still need body-only shaping.
     /// </summary>
     /// <param name="treatFirstTextAsTitle">
     ///     <see langword="true" /> to promote the first captured text into the
-    ///     overlay title slot; otherwise all text remains in the body.
+    ///     title slot; otherwise all text remains in the body.
     /// </param>
-    /// <returns>The overlay title/body pair.</returns>
+    /// <returns>The title/body pair.</returns>
     public (string Title, string Body) ToOverlayParts(
         bool treatFirstTextAsTitle = true)
     {

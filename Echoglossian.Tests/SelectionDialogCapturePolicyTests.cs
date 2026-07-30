@@ -47,6 +47,31 @@ public sealed class SelectionDialogCapturePolicyTests
     }
 
     /// <summary>
+    ///     Ensures the selection-dialog runtime can promote matching visible
+    ///     text-node payloads so native apply and tooltip anchors use the live
+    ///     nodes instead of detached structured sources.
+    /// </summary>
+    [Fact]
+    public void ShouldPreferTextNodePayload_PrefersMatchingVisibleTexts()
+    {
+        Assert.True(InvokeShouldPreferTextNodePayload(
+            ["Have sanction bestowed.", "Ask about sanction.", "Nothing."],
+            ["Have sanction bestowed.", "Ask about sanction.", "Nothing."]));
+    }
+
+    /// <summary>
+    ///     Ensures text-node promotion stays disabled when the visible node
+    ///     shape diverges from the structured payload.
+    /// </summary>
+    [Fact]
+    public void ShouldPreferTextNodePayload_RejectsMismatchedVisibleTexts()
+    {
+        Assert.False(InvokeShouldPreferTextNodePayload(
+            ["What would you like to do?", "Have sanction bestowed."],
+            ["Have sanction bestowed.", "Ask about sanction.", "Nothing."]));
+    }
+
+    /// <summary>
     ///     Invokes the shared capture policy through reflection so the tests
     ///     fail cleanly before the infrastructure exists.
     /// </summary>
@@ -73,5 +98,30 @@ public sealed class SelectionDialogCapturePolicyTests
             [hasAtkValueText, hasStringArrayText, hasReadableTextNodes]);
         Assert.NotNull(result);
         return result!.ToString() ?? string.Empty;
+    }
+
+    /// <summary>
+    ///     Invokes the visible-node promotion policy through reflection.
+    /// </summary>
+    /// <param name="primaryTexts">The primary structured payload texts.</param>
+    /// <param name="textNodeTexts">The visible text-node payload texts.</param>
+    /// <returns>Whether the visible text nodes should be preferred.</returns>
+    private static bool InvokeShouldPreferTextNodePayload(
+        IReadOnlyList<string> primaryTexts,
+        IReadOnlyList<string> textNodeTexts)
+    {
+        var policyType = typeof(PluginEntry).Assembly.GetType(
+            "Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy");
+        var method = policyType?.GetMethod(
+            "ShouldPreferTextNodePayload",
+            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+        Assert.NotNull(policyType);
+        Assert.NotNull(method);
+
+        var result = method!.Invoke(
+            null,
+            [primaryTexts, textNodeTexts]);
+        return Assert.IsType<bool>(result);
     }
 }

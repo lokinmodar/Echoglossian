@@ -262,21 +262,10 @@ public partial class Echoglossian
               Handler: new SelectYesNoHandler(
                   this.configuration,
                   TranslationService,
+                  this.hoverTooltipManager,
                   this.FindSelectionDialogText,
                   selectionDialogText => this.InsertSelectionDialogTextData(
                       selectionDialogText),
-                  (translatedQuestion, translatedOptions, originalQuestion) =>
-                      this.UpdateOverlayContent(
-                          this.selectYesNoOverlay,
-                          translatedQuestion,
-                          translatedOptions,
-                          originalQuestion),
-                  () => this.ClearOverlay(
-                      this.selectYesNoOverlay,
-                      clearText: true),
-                  addon => this.UpdateOverlayBounds(
-                      this.selectYesNoOverlay,
-                      addon),
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
@@ -289,21 +278,10 @@ public partial class Echoglossian
               Handler: new SelectOkHandler(
                   this.configuration,
                   TranslationService,
+                  this.hoverTooltipManager,
                   this.FindSelectionDialogText,
                   selectionDialogText => this.InsertSelectionDialogTextData(
                       selectionDialogText),
-                  (translatedQuestion, translatedOptions, originalQuestion) =>
-                      this.UpdateOverlayContent(
-                          this.selectOkOverlay,
-                          translatedQuestion,
-                          translatedOptions,
-                          originalQuestion),
-                  () => this.ClearOverlay(
-                      this.selectOkOverlay,
-                      clearText: true),
-                  addon => this.UpdateOverlayBounds(
-                      this.selectOkOverlay,
-                      addon),
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
@@ -316,24 +294,13 @@ public partial class Echoglossian
               Handler: new SelectStringHandler(
                   this.configuration,
                   TranslationService,
+                  this.hoverTooltipManager,
                   this.FindAndReturnCutSceneSelectStringMessage,
                   selectString => Task.Run(
                       () => InsertCutSceneSelectStringData(selectString)),
                   this.FindSelectionDialogText,
                   selectionDialogText => this.InsertSelectionDialogTextData(
                       selectionDialogText),
-                  (translatedQuestion, translatedOptions, originalQuestion) =>
-                      this.UpdateOverlayContent(
-                          this.selectStringOverlay,
-                          translatedQuestion,
-                          translatedOptions,
-                          originalQuestion),
-                  () => this.ClearOverlay(
-                      this.selectStringOverlay,
-                      clearText: true),
-                  addon => this.UpdateOverlayBounds(
-                      this.selectStringOverlay,
-                      addon),
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
@@ -346,21 +313,10 @@ public partial class Echoglossian
               Handler: new SelectIconStringHandler(
                   this.configuration,
                   TranslationService,
+                  this.hoverTooltipManager,
                   this.FindSelectionDialogText,
                   selectionDialogText => this.InsertSelectionDialogTextData(
                       selectionDialogText),
-                  (translatedQuestion, translatedOptions, originalQuestion) =>
-                      this.UpdateOverlayContent(
-                          this.selectStringOverlay,
-                          translatedQuestion,
-                          translatedOptions,
-                          originalQuestion),
-                  () => this.ClearOverlay(
-                      this.selectStringOverlay,
-                      clearText: true),
-                  addon => this.UpdateOverlayBounds(
-                      this.selectStringOverlay,
-                      addon),
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));

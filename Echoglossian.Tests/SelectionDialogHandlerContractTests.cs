@@ -88,6 +88,39 @@ public sealed class SelectionDialogHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures the shared selection-dialog runtime switches to the shared
+    ///     hover-tooltip pipeline instead of the dedicated overlay callbacks.
+    /// </summary>
+    [Fact]
+    public void SelectionDialogHandlerBase_UsesHoverTooltipRuntimeInsteadOfOverlayCallbacks()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "SelectionDialogs",
+            "SelectionDialogHandlerBase.cs"));
+
+        Assert.Contains(
+            "HoverTooltipManager",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "RemoveByPrefix",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "Action<string, string, string> updateOverlay",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "private void PublishOverlay()",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the overlay sync path uses the real native addon name for
     ///     the yes/no dialog.
     /// </summary>

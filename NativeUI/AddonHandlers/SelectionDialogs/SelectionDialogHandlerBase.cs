@@ -3,16 +3,10 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-namespace Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
-
+using Echoglossian.NativeUI.Helpers;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
-/// <summary>
-///     Synchronizes overlay bounds for a visible selection-dialog addon.
-/// </summary>
-/// <param name="addon">The visible addon instance.</param>
-public unsafe delegate void SyncSelectionDialogOverlayBoundsDelegate(
-    AtkUnitBase* addon);
+namespace Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
 
 /// <summary>
 ///     Shared runtime for generic selection-dialog add-ons that can capture
@@ -24,17 +18,16 @@ public abstract class SelectionDialogHandlerBase :
     IPluginUnloadAwareAddonHandler
 {
     private readonly string addonName;
-    private readonly Action clearOverlay;
     private readonly Config config;
     private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>>
         eventHandlers = new();
+    private readonly HoverTooltipManager hoverTooltipManager;
+    private readonly string hoverTooltipKeyPrefix;
     private readonly Func<bool> isTranslationEnabled;
     private readonly Func<JournalTranslationDisplayMode> resolveDisplayMode;
     private readonly Func<string, string> normalizeReplacementText;
     private readonly object stateGate = new();
-    private readonly SyncSelectionDialogOverlayBoundsDelegate syncOverlayBounds;
     private readonly TranslationService translationService;
-    private readonly Action<string, string, string> updateOverlay;
 
     private DialogState state = new();
 
@@ -67,13 +60,13 @@ public abstract class SelectionDialogHandlerBase :
     /// <param name="addonName">The native addon name.</param>
     /// <param name="config">The plugin configuration.</param>
     /// <param name="translationService">The translation service.</param>
+    /// <param name="hoverTooltipManager">
+    ///     The shared hover-tooltip runtime.
+    /// </param>
     /// <param name="isTranslationEnabled">
     ///     Resolves whether the handler is enabled.
     /// </param>
     /// <param name="resolveDisplayMode">Resolves the active display mode.</param>
-    /// <param name="updateOverlay">Publishes overlay content.</param>
-    /// <param name="clearOverlay">Clears the overlay state.</param>
-    /// <param name="syncOverlayBounds">Synchronizes overlay bounds.</param>
     /// <param name="normalizeReplacementText">
     ///     Normalizes translated text for native replacement.
     /// </param>
@@ -81,21 +74,18 @@ public abstract class SelectionDialogHandlerBase :
         string addonName,
         Config config,
         TranslationService translationService,
+        HoverTooltipManager hoverTooltipManager,
         Func<bool> isTranslationEnabled,
         Func<JournalTranslationDisplayMode> resolveDisplayMode,
-        Action<string, string, string> updateOverlay,
-        Action clearOverlay,
-        SyncSelectionDialogOverlayBoundsDelegate syncOverlayBounds,
         Func<string, string> normalizeReplacementText)
     {
         this.addonName = addonName;
         this.config = config;
         this.translationService = translationService;
+        this.hoverTooltipManager = hoverTooltipManager;
+        this.hoverTooltipKeyPrefix = $"SelectionDialog:{addonName}:";
         this.isTranslationEnabled = isTranslationEnabled;
         this.resolveDisplayMode = resolveDisplayMode;
-        this.updateOverlay = updateOverlay;
-        this.clearOverlay = clearOverlay;
-        this.syncOverlayBounds = syncOverlayBounds;
         this.normalizeReplacementText = normalizeReplacementText;
 
         this.RegisterHandler(AddonEvent.PreSetup, this.OnCaptureDialog);
@@ -149,7 +139,7 @@ public abstract class SelectionDialogHandlerBase :
             this.state = new DialogState();
         }
 
-        this.clearOverlay();
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
     }
 
     /// <summary>
@@ -178,19 +168,6 @@ public abstract class SelectionDialogHandlerBase :
         SourceClientLanguage sourceLanguage,
         IReadOnlyList<string> originalTexts,
         IReadOnlyList<string> translatedTexts);
-
-    /// <summary>
-    ///     Determines whether the overlay should promote the first captured
-    ///     text into the title slot.
-    /// </summary>
-    /// <returns>
-    ///     <see langword="true" /> when the first text should be the title;
-    ///     otherwise, <see langword="false" />.
-    /// </returns>
-    protected virtual bool ShouldPromoteFirstOverlayTextToTitle()
-    {
-        return true;
-    }
 
     /// <summary>
     ///     Builds one selection-dialog lookup row for the dedicated generic
@@ -381,7 +358,6 @@ public abstract class SelectionDialogHandlerBase :
             return;
         }
 
-        this.syncOverlayBounds(addon);
         var effectivePayload = this.ResolveEffectivePayload(
             livePayload,
             sourceLanguage);
@@ -392,7 +368,6 @@ public abstract class SelectionDialogHandlerBase :
                 out _,
                 out _))
         {
-            this.PublishOverlay();
             return;
         }
 
@@ -407,11 +382,10 @@ public abstract class SelectionDialogHandlerBase :
                 sourceLanguage,
                 storedTranslatedTexts,
                 storedReplacementTexts);
-            this.PublishOverlay();
             return;
         }
 
-        this.clearOverlay();
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
         if (this.TryQueueTranslation(
                 effectivePayload,
                 sourceLanguage,
@@ -439,7 +413,6 @@ public abstract class SelectionDialogHandlerBase :
             return;
         }
 
-        this.syncOverlayBounds(addon);
         var effectivePayload = this.ResolveEffectivePayload(
             livePayload,
             sourceLanguage);
@@ -449,7 +422,7 @@ public abstract class SelectionDialogHandlerBase :
                 out var translatedTexts,
                 out var replacementTexts))
         {
-            this.clearOverlay();
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
             return;
         }
 
@@ -458,7 +431,15 @@ public abstract class SelectionDialogHandlerBase :
             this.TryRestoreNativeMutation(addon);
         }
 
-        this.PublishOverlay();
+        if (this.ShouldUseHoverTooltips())
+        {
+            this.RegisterHoverTooltips(effectivePayload, translatedTexts);
+        }
+        else
+        {
+            this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+        }
+
         if (!this.ShouldApplyNativeText())
         {
             return;
@@ -483,7 +464,7 @@ public abstract class SelectionDialogHandlerBase :
             this.state = new DialogState();
         }
 
-        this.clearOverlay();
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
     }
 
     private unsafe SelectionDialogPayload? CaptureLivePayload(AtkUnitBase* addon)
@@ -491,6 +472,25 @@ public abstract class SelectionDialogHandlerBase :
         var atkValuePayload = this.CaptureAtkValuePayload(addon);
         var stringArrayPayload = this.CaptureStringArrayPayload(addon);
         var textNodePayload = this.CaptureTextNodePayload(addon);
+        if (textNodePayload != null)
+        {
+            if (atkValuePayload != null &&
+                SelectionDialogCapturePolicy.ShouldPreferTextNodePayload(
+                    atkValuePayload.Texts,
+                    textNodePayload.Texts))
+            {
+                return textNodePayload;
+            }
+
+            if (stringArrayPayload != null &&
+                SelectionDialogCapturePolicy.ShouldPreferTextNodePayload(
+                    stringArrayPayload.Texts,
+                    textNodePayload.Texts))
+            {
+                return textNodePayload;
+            }
+        }
+
         var sourceKind = SelectionDialogCapturePolicy.ResolveBestSource(
             atkValuePayload != null,
             stringArrayPayload != null,
@@ -804,7 +804,6 @@ public abstract class SelectionDialogHandlerBase :
             translatedTexts,
             replacementTexts,
             requestId);
-        this.PublishOverlay();
     }
 
     private async Task<List<string>> TranslatePayloadAsync(
@@ -919,44 +918,6 @@ public abstract class SelectionDialogHandlerBase :
             this.state.TranslationInFlight = false;
             this.state.LastFailedSourceKey = string.Empty;
         }
-    }
-
-    private void PublishOverlay()
-    {
-        SelectionDialogPayload? payload;
-        List<string> translatedTexts;
-        lock (this.stateGate)
-        {
-            payload = this.state.CurrentPayload;
-            translatedTexts = [.. this.state.CurrentTranslatedTexts];
-        }
-
-        if (!this.ShouldUseOverlay() ||
-            payload == null ||
-            translatedTexts.Count == 0)
-        {
-            this.clearOverlay();
-            return;
-        }
-
-        var promoteFirstTextAsTitle = this.ShouldPromoteFirstOverlayTextToTitle();
-        var originalParts = payload.ToOverlayParts(promoteFirstTextAsTitle);
-        var translatedParts = ToOverlayParts(
-            translatedTexts,
-            promoteFirstTextAsTitle);
-        if (this.ShouldSwapTexts())
-        {
-            this.updateOverlay(
-                originalParts.Title,
-                originalParts.Body,
-                translatedParts.Title);
-            return;
-        }
-
-        this.updateOverlay(
-            translatedParts.Title,
-            translatedParts.Body,
-            originalParts.Title);
     }
 
     private unsafe void ApplyNativeTranslation(
@@ -1336,10 +1297,10 @@ public abstract class SelectionDialogHandlerBase :
         }
     }
 
-    private bool ShouldUseOverlay()
+    private bool ShouldUseHoverTooltips()
     {
         return this.isTranslationEnabled() &&
-               TranslationDisplayModeHelper.UsesOverlayPresentation(
+               TranslationDisplayModeHelper.UsesHoverTooltips(
                    this.DisplayMode,
                    this.config.OverlayOnlyLanguage);
     }
@@ -1352,9 +1313,9 @@ public abstract class SelectionDialogHandlerBase :
                    this.config.OverlayOnlyLanguage);
     }
 
-    private bool ShouldSwapTexts()
+    private bool ShouldShowOriginalTooltips()
     {
-        return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+        return TranslationDisplayModeHelper.ShowsOriginalTooltips(
             this.DisplayMode,
             this.config.OverlayOnlyLanguage);
     }
@@ -1449,23 +1410,6 @@ public abstract class SelectionDialogHandlerBase :
         return true;
     }
 
-    private static (string Title, string Body) ToOverlayParts(
-        IReadOnlyList<string> texts,
-        bool treatFirstTextAsTitle = true)
-    {
-        if (texts.Count == 0)
-        {
-            return (string.Empty, string.Empty);
-        }
-
-        if (texts.Count == 1 || !treatFirstTextAsTitle)
-        {
-            return (string.Empty, string.Join('\n', texts));
-        }
-
-        return (texts[0], string.Join('\n', texts.Skip(1)));
-    }
-
     private static bool IsStringValue(in AtkValue value)
     {
         return value.Type is
@@ -1477,5 +1421,64 @@ public abstract class SelectionDialogHandlerBase :
     private static bool ShouldCaptureText(string? text)
     {
         return !string.IsNullOrWhiteSpace(text);
+    }
+
+    private unsafe void RegisterHoverTooltips(
+        SelectionDialogPayload payload,
+        IReadOnlyList<string> translatedTexts)
+    {
+        this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+        if (payload.SourceKind != SelectionDialogCaptureSourceKind.TextNodes ||
+            payload.TextNodeAddresses.Count == 0 ||
+            payload.Texts.Count != translatedTexts.Count ||
+            payload.TextNodeAddresses.Count != payload.Texts.Count)
+        {
+            return;
+        }
+
+        var showOriginalTooltips = this.ShouldShowOriginalTooltips();
+        for (var index = 0; index < payload.TextNodeAddresses.Count; index++)
+        {
+            var textNodeAddress = payload.TextNodeAddresses[index];
+            var textNode = (AtkTextNode*)textNodeAddress;
+            if (textNode == null || !textNode->IsVisible())
+            {
+                continue;
+            }
+
+            var originalText = payload.Texts[index];
+            var translatedText = translatedTexts[index];
+            var body = showOriginalTooltips ? originalText : translatedText;
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                continue;
+            }
+
+            var topLeft = new Vector2(textNode->ScreenX, textNode->ScreenY);
+            var bottomRight = new Vector2(
+                textNode->ScreenX + Math.Max(1f, textNode->GetWidth()),
+                textNode->ScreenY + Math.Max(1f, textNode->GetHeight()));
+            var widthPadding = Math.Clamp(textNode->GetWidth() * 0.15f, 18f, 40f);
+            var heightPadding = Math.Clamp(textNode->GetHeight() * 0.45f, 10f, 22f);
+            topLeft.X -= widthPadding;
+            topLeft.Y -= heightPadding;
+            bottomRight.X += widthPadding;
+            bottomRight.Y += heightPadding;
+
+            this.hoverTooltipManager.Register(
+                $"{this.hoverTooltipKeyPrefix}{index}",
+                topLeft,
+                bottomRight,
+                string.Empty,
+                body,
+                true,
+                useGeneralFont: showOriginalTooltips,
+                displaysOriginalSwapText: showOriginalTooltips,
+                richOriginalTextCaptureRequest: showOriginalTooltips
+                    ? new RichOriginalTextCaptureRequest(
+                        textNodeAddress,
+                        originalText)
+                    : null);
+        }
     }
 }

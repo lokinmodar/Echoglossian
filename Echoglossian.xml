@@ -21732,7 +21732,7 @@
                 Handles the icon-bearing selection dialog runtime.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Echoglossian.NativeUI.Helpers.HoverTooltipManager,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler" /> class.
@@ -21742,9 +21742,6 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.PersistTranslationAsync(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
-            <inheritdoc />
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.ShouldPromoteFirstOverlayTextToTitle">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy">
@@ -21766,6 +21763,19 @@
                 Whether readable text nodes exist.
             </param>
             <returns>The preferred capture source kind.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy.ShouldPreferTextNodePayload(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Determines whether the visible text-node payload should be promoted
+                ahead of a detached structured payload so native mutation and hover
+                tooltips target the live nodes currently on screen.
+            </summary>
+            <param name="primaryTexts">The structured payload texts.</param>
+            <param name="textNodeTexts">The visible text-node texts.</param>
+            <returns>
+                <see langword="true" /> when the visible text nodes should be
+                preferred; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind">
             <summary>
@@ -21793,12 +21803,6 @@
                 Text was scraped from readable text nodes.
             </summary>
         </member>
-        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate">
-            <summary>
-                Synchronizes overlay bounds for a visible selection-dialog addon.
-            </summary>
-            <param name="addon">The visible addon instance.</param>
-        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase">
             <summary>
                 Shared runtime for generic selection-dialog add-ons that can capture
@@ -21811,7 +21815,7 @@
                 In-memory state for the currently visible selection dialog.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{System.Boolean},System.Func{Echoglossian.JournalTranslationDisplayMode},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.#ctor(System.String,Echoglossian.Config,Echoglossian.Translators.TranslationService,Echoglossian.NativeUI.Helpers.HoverTooltipManager,System.Func{System.Boolean},System.Func{Echoglossian.JournalTranslationDisplayMode},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the
                 <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase" /> class.
@@ -21819,13 +21823,13 @@
             <param name="addonName">The native addon name.</param>
             <param name="config">The plugin configuration.</param>
             <param name="translationService">The translation service.</param>
+            <param name="hoverTooltipManager">
+                The shared hover-tooltip runtime.
+            </param>
             <param name="isTranslationEnabled">
                 Resolves whether the handler is enabled.
             </param>
             <param name="resolveDisplayMode">Resolves the active display mode.</param>
-            <param name="updateOverlay">Publishes overlay content.</param>
-            <param name="clearOverlay">Clears the overlay state.</param>
-            <param name="syncOverlayBounds">Synchronizes overlay bounds.</param>
             <param name="normalizeReplacementText">
                 Normalizes translated text for native replacement.
             </param>
@@ -21870,16 +21874,6 @@
             <param name="originalTexts">The ordered source payload.</param>
             <param name="translatedTexts">The ordered translated payload.</param>
             <returns>A task that completes with the persistence result message.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.ShouldPromoteFirstOverlayTextToTitle">
-            <summary>
-                Determines whether the overlay should promote the first captured
-                text into the title slot.
-            </summary>
-            <returns>
-                <see langword="true" /> when the first text should be the title;
-                otherwise, <see langword="false" />.
-            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.BuildSelectionDialogLookup(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
@@ -22065,20 +22059,21 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload.ToOverlayParts(System.Boolean)">
             <summary>
-                Splits the payload into an overlay title and body.
+                Splits the payload into an overlay-style title and body pair for
+                tests and any legacy callers that still need body-only shaping.
             </summary>
             <param name="treatFirstTextAsTitle">
                 <see langword="true" /> to promote the first captured text into the
-                overlay title slot; otherwise all text remains in the body.
+                title slot; otherwise all text remains in the body.
             </param>
-            <returns>The overlay title/body pair.</returns>
+            <returns>The title/body pair.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler">
             <summary>
                 Handles the generic confirmation dialog runtime.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Echoglossian.NativeUI.Helpers.HoverTooltipManager,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler" />
                 class.
@@ -22095,7 +22090,7 @@
                 Handles the generic select-string dialog runtime.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,Echoglossian.EFCoreSqlite.Models.SelectString},System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,System.Threading.Tasks.Task{System.String}},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Echoglossian.NativeUI.Helpers.HoverTooltipManager,System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,Echoglossian.EFCoreSqlite.Models.SelectString},System.Func{Echoglossian.EFCoreSqlite.Models.SelectString,System.Threading.Tasks.Task{System.String}},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectStringHandler" />
                 class.
@@ -22112,7 +22107,7 @@
                 Handles the generic yes/no dialog runtime.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Action{System.String,System.String,System.String},System.Action,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SyncSelectionDialogOverlayBoundsDelegate,System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Echoglossian.NativeUI.Helpers.HoverTooltipManager,System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,Echoglossian.EFCoreSqlite.Models.SelectionDialogText},System.Func{Echoglossian.EFCoreSqlite.Models.SelectionDialogText,System.Threading.Tasks.Task{System.String}},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectYesNoHandler" />
                 class.
