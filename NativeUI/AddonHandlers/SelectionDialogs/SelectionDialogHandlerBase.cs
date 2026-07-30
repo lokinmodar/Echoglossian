@@ -1472,7 +1472,8 @@ public abstract class SelectionDialogHandlerBase :
         }
 
         List<nint> visibleAddresses = [];
-        List<string> visibleTexts = [];
+        List<SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate>
+            visibleTexts = [];
         foreach (var textNodeAddress in readableTextNodeAddresses)
         {
             var textNode = (AtkTextNode*)textNodeAddress;
@@ -1482,8 +1483,15 @@ public abstract class SelectionDialogHandlerBase :
                 continue;
             }
 
+            var visibleIndex = visibleAddresses.Count;
             visibleAddresses.Add(textNodeAddress);
-            visibleTexts.Add(SelectionDialogNodeResolvers.ReadTextNode(textNode));
+            visibleTexts.Add(
+                new SelectionDialogVisibleTextProjection
+                    .SelectionDialogVisibleTextCandidate(
+                        visibleIndex,
+                        SelectionDialogNodeResolvers.ReadTextNode(textNode),
+                        (int)textNode->ScreenY,
+                        (int)textNode->ScreenX));
         }
 
         if (visibleAddresses.Count == 0)

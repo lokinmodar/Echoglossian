@@ -12,6 +12,22 @@ namespace Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
 internal static class SelectionDialogVisibleTextProjection
 {
     /// <summary>
+    ///     Represents one visible selection-dialog text candidate together with
+    ///     its current screen position.
+    /// </summary>
+    /// <param name="VisibleIndex">
+    ///     The original visible-text index captured from node traversal.
+    /// </param>
+    /// <param name="Text">The visible text content.</param>
+    /// <param name="ScreenY">The current on-screen Y position.</param>
+    /// <param name="ScreenX">The current on-screen X position.</param>
+    public readonly record struct SelectionDialogVisibleTextCandidate(
+        int VisibleIndex,
+        string Text,
+        int ScreenY,
+        int ScreenX);
+
+    /// <summary>
     ///     Matches the currently visible ordered text-node values against the
     ///     authoritative ordered payload, allowing the visible surface to be a
     ///     stable subsequence when the addon exposes hidden structured strings.
@@ -23,16 +39,47 @@ internal static class SelectionDialogVisibleTextProjection
         IReadOnlyList<string> sourceTexts,
         IReadOnlyList<string> visibleTexts)
     {
+        ArgumentNullException.ThrowIfNull(visibleTexts);
+
+        return MatchVisibleTexts(
+            sourceTexts,
+            visibleTexts.Select(
+                static (text, index) =>
+                    new SelectionDialogVisibleTextCandidate(
+                        index,
+                        text,
+                        0,
+                        index)).ToList());
+    }
+
+    /// <summary>
+    ///     Matches visible text candidates against the authoritative payload
+    ///     after ordering the candidates by their current screen position.
+    /// </summary>
+    /// <param name="sourceTexts">The authoritative ordered payload texts.</param>
+    /// <param name="visibleTexts">
+    ///     The captured visible text candidates in traversal order.
+    /// </param>
+    /// <returns>The visible-to-source index matches in visual encounter order.</returns>
+    public static IReadOnlyList<SelectionDialogVisibleTextMatch> MatchVisibleTexts(
+        IReadOnlyList<string> sourceTexts,
+        IReadOnlyList<SelectionDialogVisibleTextCandidate> visibleTexts)
+    {
         ArgumentNullException.ThrowIfNull(sourceTexts);
         ArgumentNullException.ThrowIfNull(visibleTexts);
 
         var matches = new List<SelectionDialogVisibleTextMatch>();
         var sourceSearchStart = 0;
+        var orderedVisibleTexts = visibleTexts
+            .OrderBy(static candidate => candidate.ScreenY)
+            .ThenBy(static candidate => candidate.ScreenX)
+            .ThenBy(static candidate => candidate.VisibleIndex)
+            .ToList();
 
-        for (var visibleIndex = 0; visibleIndex < visibleTexts.Count; visibleIndex++)
+        foreach (var visibleText in orderedVisibleTexts)
         {
-            var visibleText = NormalizeText(visibleTexts[visibleIndex]);
-            if (visibleText.Length == 0)
+            var normalizedVisibleText = NormalizeText(visibleText.Text);
+            if (normalizedVisibleText.Length == 0)
             {
                 continue;
             }
@@ -41,13 +88,13 @@ internal static class SelectionDialogVisibleTextProjection
                  sourceIndex < sourceTexts.Count;
                  sourceIndex++)
             {
-                if (!TextsMatch(sourceTexts[sourceIndex], visibleText))
+                if (!TextsMatch(sourceTexts[sourceIndex], normalizedVisibleText))
                 {
                     continue;
                 }
 
                 matches.Add(new SelectionDialogVisibleTextMatch(
-                    visibleIndex,
+                    visibleText.VisibleIndex,
                     sourceIndex));
                 sourceSearchStart = sourceIndex + 1;
                 break;

@@ -22286,6 +22286,44 @@
                 source payload used for translation and persistence.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate">
+            <summary>
+                Represents one visible selection-dialog text candidate together with
+                its current screen position.
+            </summary>
+            <param name="VisibleIndex">
+                The original visible-text index captured from node traversal.
+            </param>
+            <param name="Text">The visible text content.</param>
+            <param name="ScreenY">The current on-screen Y position.</param>
+            <param name="ScreenX">The current on-screen X position.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate.#ctor(System.Int32,System.String,System.Int32,System.Int32)">
+            <summary>
+                Represents one visible selection-dialog text candidate together with
+                its current screen position.
+            </summary>
+            <param name="VisibleIndex">
+                The original visible-text index captured from node traversal.
+            </param>
+            <param name="Text">The visible text content.</param>
+            <param name="ScreenY">The current on-screen Y position.</param>
+            <param name="ScreenX">The current on-screen X position.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate.VisibleIndex">
+            <summary>
+                The original visible-text index captured from node traversal.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate.Text">
+            <summary>The visible text content.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate.ScreenY">
+            <summary>The current on-screen Y position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate.ScreenX">
+            <summary>The current on-screen X position.</summary>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.MatchVisibleTexts(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
                 Matches the currently visible ordered text-node values against the
@@ -22295,6 +22333,17 @@
             <param name="sourceTexts">The authoritative ordered payload texts.</param>
             <param name="visibleTexts">The currently visible ordered text-node texts.</param>
             <returns>The visible-to-source index matches in encounter order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.MatchVisibleTexts(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.SelectionDialogVisibleTextCandidate})">
+            <summary>
+                Matches visible text candidates against the authoritative payload
+                after ordering the candidates by their current screen position.
+            </summary>
+            <param name="sourceTexts">The authoritative ordered payload texts.</param>
+            <param name="visibleTexts">
+                The captured visible text candidates in traversal order.
+            </param>
+            <returns>The visible-to-source index matches in visual encounter order.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextMatch">
             <summary>

@@ -115,6 +115,18 @@ public sealed class SelectionDialogHandlerContractTests
             "SelectionDialogVisibleTextProjection",
             source,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "SelectionDialogVisibleTextCandidate",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "textNode->ScreenY",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "textNode->ScreenX",
+            source,
+            StringComparison.Ordinal);
         Assert.DoesNotContain(
             "payload.SourceKind != SelectionDialogCaptureSourceKind.TextNodes ||\r\n            payload.TextNodeAddresses.Count == 0 ||",
             source,
