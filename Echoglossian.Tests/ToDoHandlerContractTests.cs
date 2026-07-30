@@ -3,71 +3,109 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.IO;
-
+using Echoglossian.NativeUI.AddonHandlers.Quest;
+using Echoglossian.NativeUI.Helpers;
 using Xunit;
 
 namespace Echoglossian.Tests;
 
 /// <summary>
-///     Guards the dedicated ToDo runtime wiring contract.
+///     Covers dedicated ToDo runtime request behavior.
 /// </summary>
 public sealed class ToDoHandlerContractTests
 {
     /// <summary>
-    ///     Ensures addon wiring registers the dedicated ToDo handler.
+    ///     Ensures changing only the dedicated ToDo toggle invalidates addon
+    ///     handler registration.
     /// </summary>
     [Fact]
-    public void AddonHandlerWiring_RegistersDedicatedToDoHandler()
+    public void AddonHandlerRegistrationSignature_ChangesWhenToDoToggleChanges()
     {
-        var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root.FullName,
-            "NativeUI",
-            "Helpers",
-            "AddonHandlerWiring.cs"));
+        var disabled = new Config { TranslateToDo = false };
+        var enabled = new Config { TranslateToDo = true };
 
-        Assert.Contains("(AddonName: \"ToDo\"", source, StringComparison.Ordinal);
-        Assert.Contains("new ToDoHandler(", source, StringComparison.Ordinal);
+        Assert.NotEqual(
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(disabled),
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(enabled));
     }
 
     /// <summary>
-    ///     Ensures countdown ticks are excluded from ToDo translation identity
-    ///     and can reuse the current presentation.
+    ///     Ensures in-flight and failed payloads are short-circuited before
+    ///     persistence lookup and newer visible work rejects stale completion.
     /// </summary>
     [Fact]
-    public void ToDoHandler_ExcludesTimerNodeAndReusesSnapshotOnCountdownTicks()
+    public void ToDoRuntimeRequestState_SuppressesRepeatedLookupAndRejectsStaleCompletion()
     {
-        var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root.FullName,
-            "NativeUI",
-            "AddonHandlers",
-            "Quest",
-            "ToDoHandler.cs"));
+        var state = new ToDoRuntimeRequestState();
+        var first = new ToDoTranslationOperation(
+            "FIRST",
+            new ToDoTranslationScope("ja", "en", 1, "7.0"));
+        var second = new ToDoTranslationOperation(
+            "SECOND",
+            new ToDoTranslationScope("ja", "en", 1, "7.0"));
 
-        Assert.Contains("IsTimerNode", source, StringComparison.Ordinal);
-        Assert.Contains("ComputeSourceContentHash", source, StringComparison.Ordinal);
-        Assert.Contains("TryReuseCurrentToDoPresentation", source, StringComparison.Ordinal);
+        var firstGeneration = state.ObserveVisibleOperation(first);
+        Assert.True(state.TryStart(first, firstGeneration));
+        Assert.True(state.ShouldSkipPersistenceLookup(first));
+
+        var secondGeneration = state.ObserveVisibleOperation(second);
+        Assert.True(state.TryStart(second, secondGeneration));
+        Assert.False(state.TryComplete(first, firstGeneration));
+        Assert.True(state.TryComplete(second, secondGeneration));
+        Assert.False(state.ShouldSkipPersistenceLookup(second));
+
+        var failedGeneration = state.ObserveVisibleOperation(first);
+        Assert.True(state.TryStart(first, failedGeneration));
+        state.MarkFailed(first, failedGeneration);
+        Assert.True(state.ShouldSkipPersistenceLookup(first));
     }
 
     /// <summary>
-    ///     Finds the repository root from the test output directory.
+    ///     Ensures a countdown-only change observes the same in-flight
+    ///     operation and therefore cannot issue another persistence lookup.
     /// </summary>
-    /// <returns>The repository root directory.</returns>
-    private static DirectoryInfo FindRepositoryRoot()
+    [Fact]
+    public void ToDoRuntimeRequestState_TimerOnlyChangesReuseInFlightOperation()
     {
-        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
-        while (current is not null)
-        {
-            if (File.Exists(Path.Combine(current.FullName, "Echoglossian.sln")))
-            {
-                return current;
-            }
+        var beforeTick = new ToDoPayload(
+            [
+                new ToDoCapturedText("10:0", 10, "Duty name", false),
+                new ToDoCapturedText("11:0", 11, "10:00", true),
+            ]);
+        var afterTick = new ToDoPayload(
+            [
+                new ToDoCapturedText("10:0", 10, "Duty name", false),
+                new ToDoCapturedText("11:0", 11, "09:59", true),
+            ]);
+        var scope = new ToDoTranslationScope("ja", "en", 1, "7.0");
+        var beforeOperation = new ToDoTranslationOperation(
+            beforeTick.ComputeSourceContentHash(),
+            scope);
+        var afterOperation = new ToDoTranslationOperation(
+            afterTick.ComputeSourceContentHash(),
+            scope);
+        var state = new ToDoRuntimeRequestState();
 
-            current = current.Parent;
-        }
+        var generation = state.ObserveVisibleOperation(beforeOperation);
+        Assert.True(state.TryStart(beforeOperation, generation));
 
-        throw new DirectoryNotFoundException("Unable to locate repository root.");
+        Assert.Equal(generation, state.ObserveVisibleOperation(afterOperation));
+        Assert.True(state.ShouldSkipPersistenceLookup(afterOperation));
+    }
+
+    /// <summary>
+    ///     Ensures overlay-only languages keep the dedicated ToDo surface in
+    ///     tooltip presentation and never rewrite native text.
+    /// </summary>
+    [Fact]
+    public void ToDoPresentationPolicy_OverlayOnlyLanguageUsesTooltipsWithoutNativeWrites()
+    {
+        var policy = ToDoPresentationPolicy.Create(
+            JournalTranslationDisplayMode.NativeUiTranslation,
+            overlayOnlyLanguage: true);
+
+        Assert.True(policy.UsesHoverTooltips);
+        Assert.False(policy.WritesNativeTranslation);
+        Assert.False(policy.HoverShowsOriginal);
     }
 }

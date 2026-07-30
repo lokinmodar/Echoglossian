@@ -37,4 +37,27 @@ public sealed class ToDoPayloadTests
 
         Assert.Equal(baselineHash, changedTimerHash);
     }
+
+    /// <summary>
+    ///     Ensures repeated native node ids remain distinct when component
+    ///     traversal assigns different structural keys.
+    /// </summary>
+    [Fact]
+    public void ComputeSourceContentHash_DistinguishesRepeatedNodeIdsByStructuralKey()
+    {
+        var firstPayload = new ToDoPayload(
+            [
+                new ToDoCapturedText("17:0", 17, "First objective", false),
+                new ToDoCapturedText("17:1", 17, "Second objective", false),
+            ]);
+        var reorderedPayload = new ToDoPayload(
+            [
+                new ToDoCapturedText("17:0", 17, "Second objective", false),
+                new ToDoCapturedText("17:1", 17, "First objective", false),
+            ]);
+
+        Assert.NotEqual(
+            firstPayload.ComputeSourceContentHash(),
+            reorderedPayload.ComputeSourceContentHash());
+    }
 }

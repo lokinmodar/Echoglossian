@@ -11,10 +11,28 @@ namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 /// <summary>
 ///     Represents one captured ToDo text node.
 /// </summary>
+/// <param name="NodeKey">The stable structural text-node identity.</param>
 /// <param name="NodeId">The native node id.</param>
 /// <param name="Text">The visible node text.</param>
 /// <param name="IsTimerNode">Whether the node displays volatile timer text.</param>
-internal sealed record ToDoCapturedText(int NodeId, string Text, bool IsTimerNode);
+internal sealed record ToDoCapturedText(
+    string NodeKey,
+    int NodeId,
+    string Text,
+    bool IsTimerNode)
+{
+    /// <summary>
+    ///     Initializes a captured text row for callers that only have a unique
+    ///     native node id.
+    /// </summary>
+    /// <param name="nodeId">The native node id.</param>
+    /// <param name="text">The visible node text.</param>
+    /// <param name="isTimerNode">Whether the node displays volatile timer text.</param>
+    public ToDoCapturedText(int nodeId, string text, bool isTimerNode)
+        : this($"{nodeId}:0", nodeId, text, isTimerNode)
+    {
+    }
+}
 
 /// <summary>
 ///     Represents the visible text captured from the dedicated ToDo surface.
@@ -53,7 +71,7 @@ internal sealed class ToDoPayload
         var builder = new StringBuilder();
         foreach (var text in this.GetTranslatableTexts())
         {
-            builder.Append(text.NodeId)
+            builder.Append(text.NodeKey)
                 .Append('|')
                 .Append(text.Text)
                 .Append('\u001F');

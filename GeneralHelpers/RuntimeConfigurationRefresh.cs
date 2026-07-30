@@ -218,27 +218,40 @@ public partial class Echoglossian
   /// <returns>A stable serialized signature.</returns>
   private string ComputeAddonHandlerRegistrationSignature()
   {
+    return ComputeAddonHandlerRegistrationSignature(this.configuration);
+  }
+
+  /// <summary>
+  ///     Computes a signature for config values that determine which addon
+  ///     handlers should be registered.
+  /// </summary>
+  /// <param name="configuration">The configuration to evaluate.</param>
+  /// <returns>A stable serialized signature.</returns>
+  internal static string ComputeAddonHandlerRegistrationSignature(
+      Config configuration)
+  {
     return JsonConvert.SerializeObject(
         new
         {
-          this.configuration.TranslateOperationGuideWindow,
-          this.configuration.TranslateHudWindow,
-          this.configuration.TranslateGameMainMenu,
-          this.configuration.TranslateActionMenuWindow,
-          this.configuration.TranslateCharacterWindow,
-          this.configuration.TranslateTalk,
-          this.configuration.TranslateBattleTalk,
-          this.configuration.TranslateTalkSubtitle,
-          this.configuration.TranslateMiniTalk,
-          this.configuration.TranslateCutSceneSelectString,
-          this.configuration.TranslateToDoList,
-          this.configuration.TranslateScenarioTree,
-          this.configuration.TranslateToast,
-          this.configuration.TranslateWideTextToast,
-          this.configuration.TranslateErrorToast,
-          this.configuration.TranslateAreaToast,
-          this.configuration.TranslateClassChangeToast,
-          this.configuration.TranslateTextGimmickHint,
+          configuration.TranslateOperationGuideWindow,
+          configuration.TranslateHudWindow,
+          configuration.TranslateGameMainMenu,
+          configuration.TranslateActionMenuWindow,
+          configuration.TranslateCharacterWindow,
+          configuration.TranslateTalk,
+          configuration.TranslateBattleTalk,
+          configuration.TranslateTalkSubtitle,
+          configuration.TranslateMiniTalk,
+          configuration.TranslateCutSceneSelectString,
+          configuration.TranslateToDoList,
+          configuration.TranslateToDo,
+          configuration.TranslateScenarioTree,
+          configuration.TranslateToast,
+          configuration.TranslateWideTextToast,
+          configuration.TranslateErrorToast,
+          configuration.TranslateAreaToast,
+          configuration.TranslateClassChangeToast,
+          configuration.TranslateTextGimmickHint,
         });
   }
 

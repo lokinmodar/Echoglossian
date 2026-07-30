@@ -27,13 +27,11 @@ internal sealed class ToDoHandler :
     private readonly Func<ToDoText, ToDoText?> findToDoText;
     private readonly HoverTooltipManager hoverTooltipManager;
     private readonly Func<ToDoText, Task<string>> insertToDoTextAsync;
-    private readonly Dictionary<nint, ToDoNativeMutation> nativeMutations = [];
+    private readonly Dictionary<string, ToDoNativeMutation> nativeMutations = [];
+    private readonly ToDoRuntimeRequestState runtimeRequestState = new();
     private readonly TranslationService translationService;
 
     private ToDoPresentationSnapshot? currentPresentation;
-    private string? lastFailedContentHash;
-    private string? lastVisibleContentHash;
-    private string? translationInFlightContentHash;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ToDoHandler" /> class.
@@ -85,7 +83,7 @@ internal sealed class ToDoHandler :
     /// <inheritdoc />
     public unsafe void OnPluginUnload()
     {
-        if (TryGetVisibleToDo(out var addon))
+        if (TryGetToDo(out var addon))
         {
             this.RestoreOwnedNativeMutations(addon);
         }
@@ -93,17 +91,10 @@ internal sealed class ToDoHandler :
         this.ClearRuntimeState();
     }
 
-    private bool UsesHoverTooltips =>
-        QuestAddonModeHelpers.UsesHoverTooltips(
-            this.configuration.ToDoTranslationDisplayMode);
-
-    private bool WritesNativeTranslation =>
-        QuestAddonModeHelpers.WritesNativeTranslation(
-            this.configuration.ToDoTranslationDisplayMode);
-
-    private bool HoverShowsOriginal =>
-        QuestAddonModeHelpers.ShowsOriginalTooltips(
-            this.configuration.ToDoTranslationDisplayMode);
+    private ToDoPresentationPolicy PresentationPolicy =>
+        ToDoPresentationPolicy.Create(
+            this.configuration.ToDoTranslationDisplayMode,
+            this.configuration.OverlayOnlyLanguage);
 
     /// <summary>
     ///     Registers one local lifecycle handler.
@@ -144,11 +135,16 @@ internal sealed class ToDoHandler :
     /// </summary>
     /// <param name="evt">The triggering lifecycle event.</param>
     /// <param name="args">The associated lifecycle arguments.</param>
-    private void OnToDoCleanupEvent(AddonEvent evt, AddonArgs args)
+    private unsafe void OnToDoCleanupEvent(AddonEvent evt, AddonArgs args)
     {
         if (!string.Equals(args.AddonName, ToDoAddonName, StringComparison.Ordinal))
         {
             return;
+        }
+
+        if (TryGetToDo(out var addon))
+        {
+            this.RestoreOwnedNativeMutations(addon);
         }
 
         this.ClearRuntimeState();
@@ -177,71 +173,64 @@ internal sealed class ToDoHandler :
         if (currentPayload.GetTranslatableTexts().Count == 0)
         {
             this.RestoreOwnedNativeMutations(addon);
-            this.hoverTooltipManager.RemoveByPrefix(HoverTooltipPrefix);
+            this.ClearRuntimeState();
             return;
         }
 
-        var currentContentHash = currentPayload.ComputeSourceContentHash();
-        if (string.Equals(
-                currentContentHash,
-                this.lastVisibleContentHash,
-                StringComparison.Ordinal) &&
-            this.TryReuseCurrentToDoPresentation(addon, currentPayload))
+        var scope = this.CaptureTranslationScope(sourceLanguage);
+        var operation = new ToDoTranslationOperation(
+            currentPayload.ComputeSourceContentHash(),
+            scope);
+        var generation = this.runtimeRequestState.ObserveVisibleOperation(
+            operation);
+        if (this.TryReuseCurrentToDoPresentation(addon, operation))
         {
             return;
         }
 
-        this.lastVisibleContentHash = currentContentHash;
         this.RestoreOwnedNativeMutations(addon);
         this.hoverTooltipManager.RemoveByPrefix(HoverTooltipPrefix);
 
+        if (this.runtimeRequestState.ShouldSkipPersistenceLookup(operation))
+        {
+            return;
+        }
+
         if (this.TryFindPersistedPresentation(
                 currentPayload,
-                sourceLanguage,
+                operation,
                 out var presentation))
         {
             this.currentPresentation = presentation;
-            this.lastFailedContentHash = null;
             this.ApplyCurrentToDoPresentation(addon, presentation);
             return;
         }
 
-        if (string.Equals(
-                currentContentHash,
-                this.lastFailedContentHash,
-                StringComparison.Ordinal) ||
-            string.Equals(
-                currentContentHash,
-                this.translationInFlightContentHash,
-                StringComparison.Ordinal))
+        if (!this.runtimeRequestState.TryStart(operation, generation))
         {
             return;
         }
 
-        this.translationInFlightContentHash = currentContentHash;
         _ = this.ResolveAndPersistPresentationAsync(
             currentPayload,
             sourceLanguage,
-            currentContentHash);
+            operation,
+            generation);
     }
 
     /// <summary>
     ///     Reuses the current translated snapshot when only timer text changed.
     /// </summary>
     /// <param name="addon">The visible ToDo addon.</param>
-    /// <param name="currentPayload">The current visible payload.</param>
+    /// <param name="operation">The immutable operation for the visible payload.</param>
     /// <returns><c>true</c> when the existing presentation was reused.</returns>
     private unsafe bool TryReuseCurrentToDoPresentation(
         AtkUnitBase* addon,
-        ToDoPayload currentPayload)
+        ToDoTranslationOperation operation)
     {
         var presentation = this.currentPresentation;
         if (presentation == null ||
-            !string.Equals(
-                presentation.SourceContentHash,
-                currentPayload.ComputeSourceContentHash(),
-                StringComparison.Ordinal) ||
-            presentation.DisplayMode != this.configuration.ToDoTranslationDisplayMode)
+            !Equals(presentation.Operation, operation))
         {
             return false;
         }
@@ -265,21 +254,21 @@ internal sealed class ToDoHandler :
             return new ToDoPayload(visibleTexts);
         }
 
-        var sourceTextsByNodeId = presentation.OriginalPayload
+        var sourceTextsByNodeKey = presentation.OriginalPayload
             .GetTranslatableTexts()
-            .ToDictionary(text => text.NodeId, text => text.Text);
-        var translatedTextsByNodeId = presentation.TranslatedTexts
+            .ToDictionary(text => text.NodeKey, text => text.Text);
+        var translatedTextsByNodeKey = presentation.TranslatedTexts
             .Select((text, index) => new
             {
-                NodeId = presentation.OriginalPayload.GetTranslatableTexts()[index].NodeId,
+                NodeKey = presentation.OriginalPayload.GetTranslatableTexts()[index].NodeKey,
                 Text = text,
             })
-            .ToDictionary(text => text.NodeId, text => text.Text);
+            .ToDictionary(text => text.NodeKey, text => text.Text);
         var sourceFacingTexts = visibleTexts.Select(text =>
         {
             if (text.IsTimerNode ||
-                !sourceTextsByNodeId.TryGetValue(text.NodeId, out var sourceText) ||
-                !translatedTextsByNodeId.TryGetValue(text.NodeId, out var translatedText) ||
+                !sourceTextsByNodeKey.TryGetValue(text.NodeKey, out var sourceText) ||
+                !translatedTextsByNodeKey.TryGetValue(text.NodeKey, out var translatedText) ||
                 (!string.Equals(text.Text, sourceText, StringComparison.Ordinal) &&
                  !string.Equals(text.Text, translatedText, StringComparison.Ordinal)))
             {
@@ -295,16 +284,16 @@ internal sealed class ToDoHandler :
     ///     Tries to resolve a complete dedicated ToDo translation from SQLite.
     /// </summary>
     /// <param name="payload">The source-facing ToDo payload.</param>
-    /// <param name="sourceLanguage">The source language captured for the payload.</param>
+    /// <param name="operation">The immutable operation for the payload.</param>
     /// <param name="presentation">Receives the resolved presentation.</param>
     /// <returns><c>true</c> when a complete persisted translation exists.</returns>
     private bool TryFindPersistedPresentation(
         ToDoPayload payload,
-        SourceClientLanguage sourceLanguage,
+        ToDoTranslationOperation operation,
         out ToDoPresentationSnapshot presentation)
     {
         presentation = null!;
-        var lookup = this.CreateToDoText(payload, sourceLanguage, null);
+        var lookup = this.CreateToDoText(payload, operation.Scope, null);
         var stored = this.findToDoText(lookup);
         if (stored == null ||
             !TryDeserializeTranslatedTexts(payload, stored.TranslatedTextsAsText,
@@ -314,10 +303,9 @@ internal sealed class ToDoHandler :
         }
 
         presentation = new ToDoPresentationSnapshot(
-            payload.ComputeSourceContentHash(),
+            operation,
             payload,
-            translatedTexts,
-            this.configuration.ToDoTranslationDisplayMode);
+            translatedTexts);
         return true;
     }
 
@@ -327,12 +315,14 @@ internal sealed class ToDoHandler :
     /// </summary>
     /// <param name="payload">The source-facing ToDo payload.</param>
     /// <param name="sourceLanguage">The captured source language.</param>
-    /// <param name="sourceContentHash">The stable non-timer source hash.</param>
+    /// <param name="operation">The immutable operation being translated.</param>
+    /// <param name="generation">The visible generation that scheduled the work.</param>
     /// <returns>A task representing the background translation work.</returns>
     private async Task ResolveAndPersistPresentationAsync(
         ToDoPayload payload,
         SourceClientLanguage sourceLanguage,
-        string sourceContentHash)
+        ToDoTranslationOperation operation,
+        long generation)
     {
         try
         {
@@ -342,39 +332,35 @@ internal sealed class ToDoHandler :
                 var translatedText = await this.translationService.TranslateAsync(
                     text.Text,
                     sourceLanguage,
-                    LangDict[LanguageInt].Code,
+                    operation.Scope.TargetLanguageCode,
                     originContext: "ToDoHandler/Text").ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(translatedText))
                 {
-                    this.lastFailedContentHash = sourceContentHash;
+                    this.runtimeRequestState.MarkFailed(operation, generation);
                     return;
                 }
 
                 translatedTexts.Add(translatedText);
             }
 
-            var row = this.CreateToDoText(payload, sourceLanguage, translatedTexts);
-            _ = await this.insertToDoTextAsync(row).ConfigureAwait(false);
-            this.currentPresentation = new ToDoPresentationSnapshot(
-                sourceContentHash,
+            var row = this.CreateToDoText(
                 payload,
-                translatedTexts,
-                this.configuration.ToDoTranslationDisplayMode);
-            this.lastFailedContentHash = null;
+                operation.Scope,
+                translatedTexts);
+            _ = await this.insertToDoTextAsync(row).ConfigureAwait(false);
+            if (!this.runtimeRequestState.TryComplete(operation, generation))
+            {
+                return;
+            }
+
+            this.currentPresentation = new ToDoPresentationSnapshot(
+                operation,
+                payload,
+                translatedTexts);
         }
         catch
         {
-            this.lastFailedContentHash = sourceContentHash;
-        }
-        finally
-        {
-            if (string.Equals(
-                    this.translationInFlightContentHash,
-                    sourceContentHash,
-                    StringComparison.Ordinal))
-            {
-                this.translationInFlightContentHash = null;
-            }
+            this.runtimeRequestState.MarkFailed(operation, generation);
         }
     }
 
@@ -389,64 +375,59 @@ internal sealed class ToDoHandler :
         ToDoPresentationSnapshot presentation)
     {
         this.hoverTooltipManager.RemoveByPrefix(HoverTooltipPrefix);
-        var translatedTextsByNodeId = presentation.TranslatedTexts
+        var translatedTextsByNodeKey = presentation.TranslatedTexts
             .Select((text, index) => new
             {
-                NodeId = presentation.OriginalPayload.GetTranslatableTexts()[index].NodeId,
+                NodeKey = presentation.OriginalPayload.GetTranslatableTexts()[index].NodeKey,
                 Text = text,
             })
-            .ToDictionary(text => text.NodeId, text => text.Text);
-        var sourceTextsByNodeId = presentation.OriginalPayload
+            .ToDictionary(text => text.NodeKey, text => text.Text);
+        var sourceTextsByNodeKey = presentation.OriginalPayload
             .GetTranslatableTexts()
-            .ToDictionary(text => text.NodeId, text => text.Text);
-        var timerNodeIds = presentation.OriginalPayload.VisibleTexts
-            .Where(text => text.IsTimerNode)
-            .Select(text => text.NodeId)
-            .ToHashSet();
+            .ToDictionary(text => text.NodeKey, text => text.Text);
+        var policy = this.PresentationPolicy;
 
-        foreach (var textNodeAddress in ToDoTextNodeResolvers
-                     .ResolveVisibleTextNodeAddresses(addon))
+        foreach (var node in ToDoTextNodeResolvers.ResolveVisibleTextNodes(addon))
         {
-            var textNode = (AtkTextNode*)textNodeAddress;
+            var textNode = (AtkTextNode*)node.Address;
             if (textNode == null)
             {
                 continue;
             }
 
-            var nodeId = (int)textNode->AtkResNode.NodeId;
-            var visibleText = ToDoTextNodeResolvers.ReadTextNode(textNode);
-            if (timerNodeIds.Contains(nodeId) ||
-                !sourceTextsByNodeId.TryGetValue(nodeId, out var sourceText) ||
-                !translatedTextsByNodeId.TryGetValue(nodeId, out var translatedText))
+            if (node.IsTimerNode ||
+                !sourceTextsByNodeKey.TryGetValue(node.NodeKey, out var sourceText) ||
+                !translatedTextsByNodeKey.TryGetValue(node.NodeKey, out var translatedText))
             {
                 continue;
             }
 
-            if (this.WritesNativeTranslation)
+            if (policy.WritesNativeTranslation)
             {
                 var nativeText = translatedText;
                 if (!string.IsNullOrWhiteSpace(nativeText) &&
-                    !string.Equals(visibleText, nativeText, StringComparison.Ordinal))
+                    !string.Equals(node.Text, nativeText, StringComparison.Ordinal))
                 {
                     textNode->SetText(nativeText);
                 }
 
-                this.nativeMutations[textNodeAddress] = new ToDoNativeMutation(
+                this.nativeMutations[node.NodeKey] = new ToDoNativeMutation(
                     sourceText,
                     nativeText);
             }
 
-            if (this.UsesHoverTooltips)
+            if (policy.UsesHoverTooltips)
             {
                 this.RegisterHoverTooltip(
-                    nodeId,
+                    node.NodeKey,
                     textNode,
                     sourceText,
-                    translatedText);
+                    translatedText,
+                    policy.HoverShowsOriginal);
             }
         }
 
-        if (!this.WritesNativeTranslation)
+        if (!policy.WritesNativeTranslation)
         {
             this.RestoreOwnedNativeMutations(addon);
         }
@@ -458,17 +439,16 @@ internal sealed class ToDoHandler :
     /// <param name="addon">The visible ToDo addon.</param>
     private unsafe void RestoreOwnedNativeMutations(AtkUnitBase* addon)
     {
-        foreach (var textNodeAddress in ToDoTextNodeResolvers
-                     .ResolveVisibleTextNodeAddresses(addon))
+        foreach (var node in ToDoTextNodeResolvers.ResolveVisibleTextNodes(addon))
         {
             if (!this.nativeMutations.TryGetValue(
-                    textNodeAddress,
+                    node.NodeKey,
                     out var mutation))
             {
                 continue;
             }
 
-            var textNode = (AtkTextNode*)textNodeAddress;
+            var textNode = (AtkTextNode*)node.Address;
             if (textNode != null &&
                 string.Equals(
                     ToDoTextNodeResolvers.ReadTextNode(textNode),
@@ -485,17 +465,19 @@ internal sealed class ToDoHandler :
     /// <summary>
     ///     Registers a hover tooltip for one dedicated ToDo text node.
     /// </summary>
-    /// <param name="nodeId">The stable native node id.</param>
+    /// <param name="nodeKey">The stable structural node key.</param>
     /// <param name="textNode">The visible native text node.</param>
     /// <param name="originalText">The original ToDo text.</param>
     /// <param name="translatedText">The translated ToDo text.</param>
+    /// <param name="hoverShowsOriginal">Whether hover text should show the source.</param>
     private unsafe void RegisterHoverTooltip(
-        int nodeId,
+        string nodeKey,
         AtkTextNode* textNode,
         string originalText,
-        string translatedText)
+        string translatedText,
+        bool hoverShowsOriginal)
     {
-        var body = this.HoverShowsOriginal ? originalText : translatedText;
+        var body = hoverShowsOriginal ? originalText : translatedText;
         if (string.IsNullOrWhiteSpace(body))
         {
             return;
@@ -506,25 +488,25 @@ internal sealed class ToDoHandler :
         var right = textNode->ScreenX + Math.Max(1f, textNode->GetWidth()) + 12f;
         var bottom = textNode->ScreenY + Math.Max(1f, textNode->GetHeight()) + 8f;
         this.hoverTooltipManager.Register(
-            $"{HoverTooltipPrefix}{nodeId}",
+            $"{HoverTooltipPrefix}{nodeKey}",
             new Vector2(left, top),
             new Vector2(right, bottom),
             string.Empty,
             body,
-            useGeneralFont: this.HoverShowsOriginal,
-            displaysOriginalSwapText: this.HoverShowsOriginal);
+            useGeneralFont: hoverShowsOriginal,
+            displaysOriginalSwapText: hoverShowsOriginal);
     }
 
     /// <summary>
     ///     Creates the dedicated persistence row for one source payload.
     /// </summary>
     /// <param name="payload">The source-facing ToDo payload.</param>
-    /// <param name="sourceLanguage">The captured source language.</param>
+    /// <param name="scope">The immutable translation and persistence scope.</param>
     /// <param name="translatedTexts">The optional complete translated payload.</param>
     /// <returns>The dedicated persistence row.</returns>
     private ToDoText CreateToDoText(
         ToDoPayload payload,
-        SourceClientLanguage sourceLanguage,
+        ToDoTranslationScope scope,
         IReadOnlyList<string>? translatedTexts)
     {
         var originalTextsAsText = JsonConvert.SerializeObject(
@@ -533,18 +515,34 @@ internal sealed class ToDoHandler :
         {
             AddonName = ToDoAddonName,
             OriginalTextsAsText = originalTextsAsText,
-            OriginalLang = sourceLanguage.PersistenceCode,
+            OriginalLang = scope.SourceLanguageCode,
             TranslatedTextsAsText = translatedTexts == null
                 ? string.Empty
                 : JsonConvert.SerializeObject(translatedTexts),
-            TranslationLang = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
-                this.configuration.Lang),
-            TranslationEngine = this.configuration.ChosenTransEngine,
-            GameVersion = GetGameVersion() ?? string.Empty,
+            TranslationLang = scope.TargetLanguageCode,
+            TranslationEngine = scope.TranslationEngine,
+            GameVersion = scope.GameVersion,
             SourceContentHash = payload.ComputeSourceContentHash(),
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
         };
+    }
+
+    /// <summary>
+    ///     Captures the mutable configuration values that determine translation
+    ///     and persistence behavior before asynchronous work begins.
+    /// </summary>
+    /// <param name="sourceLanguage">The source language captured from the client.</param>
+    /// <returns>The immutable scope for one ToDo translation operation.</returns>
+    private ToDoTranslationScope CaptureTranslationScope(
+        SourceClientLanguage sourceLanguage)
+    {
+        return new ToDoTranslationScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.configuration.Lang),
+            this.configuration.ChosenTransEngine,
+            GetGameVersion() ?? string.Empty);
     }
 
     /// <summary>
@@ -582,15 +580,26 @@ internal sealed class ToDoHandler :
     }
 
     /// <summary>
+    ///     Tries to resolve the dedicated ToDo addon, including an addon that
+    ///     has become hidden but still owns native mutations.
+    /// </summary>
+    /// <param name="addon">Receives the live ToDo addon.</param>
+    /// <returns><c>true</c> when ToDo exists.</returns>
+    private static unsafe bool TryGetToDo(out AtkUnitBase* addon)
+    {
+        addon = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+            ToDoAddonName);
+        return addon != null;
+    }
+
+    /// <summary>
     ///     Tries to resolve the visible dedicated ToDo addon.
     /// </summary>
     /// <param name="addon">Receives the visible ToDo addon.</param>
     /// <returns><c>true</c> when ToDo is visible.</returns>
     private static unsafe bool TryGetVisibleToDo(out AtkUnitBase* addon)
     {
-        addon = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
-            ToDoAddonName);
-        return addon != null && addon->IsVisible;
+        return TryGetToDo(out addon) && addon->IsVisible;
     }
 
     /// <summary>
@@ -599,9 +608,7 @@ internal sealed class ToDoHandler :
     private void ClearRuntimeState()
     {
         this.currentPresentation = null;
-        this.lastFailedContentHash = null;
-        this.lastVisibleContentHash = null;
-        this.translationInFlightContentHash = null;
+        this.runtimeRequestState.Clear();
         this.nativeMutations.Clear();
         this.hoverTooltipManager.RemoveByPrefix(HoverTooltipPrefix);
     }
@@ -609,15 +616,13 @@ internal sealed class ToDoHandler :
     /// <summary>
     ///     Represents a fully resolved dedicated ToDo presentation snapshot.
     /// </summary>
-    /// <param name="SourceContentHash">The non-timer source payload hash.</param>
+    /// <param name="Operation">The immutable operation that resolved this snapshot.</param>
     /// <param name="OriginalPayload">The source-facing ToDo payload.</param>
     /// <param name="TranslatedTexts">The ordered translated text rows.</param>
-    /// <param name="DisplayMode">The display mode that produced the snapshot.</param>
     private sealed record ToDoPresentationSnapshot(
-        string SourceContentHash,
+        ToDoTranslationOperation Operation,
         ToDoPayload OriginalPayload,
-        IReadOnlyList<string> TranslatedTexts,
-        JournalTranslationDisplayMode DisplayMode);
+        IReadOnlyList<string> TranslatedTexts);
 
     /// <summary>
     ///     Captures one native mutation owned by the dedicated ToDo handler.
