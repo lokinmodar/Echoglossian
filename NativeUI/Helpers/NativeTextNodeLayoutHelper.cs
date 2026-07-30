@@ -192,6 +192,18 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     Whether the helper may grow container widths when the wrapped text width
   ///     exceeds the original layout.
   /// </param>
+  /// <param name="restoreHorizontalCentering">
+  ///     Whether horizontally centered text should be re-centered after width
+  ///     growth changes the immediate wrapper width.
+  /// </param>
+  /// <param name="minimumSecondaryHorizontalPadding">
+  ///     The minimum horizontal padding to preserve inside the secondary
+  ///     container when it grows.
+  /// </param>
+  /// <param name="minimumSecondaryVerticalPadding">
+  ///     The minimum vertical padding to preserve inside the secondary
+  ///     container when it grows.
+  /// </param>
   public static void ResizeFromSnapshot(
       NativeTextNodeLayoutSnapshot snapshot,
       NativeTextNodeResizeResult resizeResult,
@@ -199,7 +211,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
       AtkResNode* secondaryContainerNode = null,
       AtkResNode* anchoredXNode = null,
       bool allowWidthGrowth = false,
-      bool restoreHorizontalCentering = true)
+      bool restoreHorizontalCentering = true,
+      int minimumSecondaryHorizontalPadding = 0,
+      int minimumSecondaryVerticalPadding = 0)
   {
     var childWidth = resizeResult.Width;
     var childHeight = resizeResult.Height;
@@ -239,17 +253,21 @@ internal static unsafe class NativeTextNodeLayoutHelper
     {
       if (allowWidthGrowth && snapshot.SecondaryContainerWidth > 0)
       {
-        var secondaryWidth = Math.Max(
+        var secondaryWidth = ResolveExpandedContainerExtent(
             snapshot.SecondaryContainerWidth,
-            resizeResult.Width + snapshot.SecondaryHorizontalPadding);
+            snapshot.TextWidth,
+            resizeResult.Width,
+            minimumSecondaryHorizontalPadding);
         secondaryContainerNode->SetWidth((ushort)Math.Min(ushort.MaxValue, secondaryWidth));
       }
 
       if (snapshot.SecondaryContainerHeight > 0)
       {
-        var secondaryHeight = Math.Max(
-            1,
-            resizeResult.Height + snapshot.SecondaryVerticalPadding);
+        var secondaryHeight = ResolveExpandedContainerExtent(
+            snapshot.SecondaryContainerHeight,
+            snapshot.TextHeight,
+            resizeResult.Height,
+            minimumSecondaryVerticalPadding);
         secondaryContainerNode->SetHeight((ushort)Math.Min(ushort.MaxValue, secondaryHeight));
       }
     }
@@ -456,13 +474,30 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     Whether wrapper widths may grow when the current wrap width is
   ///     insufficient.
   /// </param>
+  /// <param name="restoreHorizontalCentering">
+  ///     Whether horizontally centered text should be re-centered after reflow.
+  /// </param>
+  /// <param name="additionalWrapWidth">
+  ///     Additional width to add to the preserved wrap width before applying
+  ///     the translated text.
+  /// </param>
+  /// <param name="minimumSecondaryHorizontalPadding">
+  ///     The minimum horizontal padding to preserve inside the secondary
+  ///     background when it grows.
+  /// </param>
+  /// <param name="minimumSecondaryVerticalPadding">
+  ///     The minimum vertical padding to preserve inside the secondary
+  ///     background when it grows.
+  /// </param>
   public static NativeTextNodeLayoutSnapshot? ApplyTextReplacementWithInferredReflow(
       AtkUnitBase* addon,
       AtkTextNode* textNode,
       string replacementText,
       bool allowWidthGrowth = false,
       bool restoreHorizontalCentering = true,
-      ushort additionalWrapWidth = 0)
+      ushort additionalWrapWidth = 0,
+      int minimumSecondaryHorizontalPadding = 0,
+      int minimumSecondaryVerticalPadding = 0)
   {
     if (textNode == null)
     {
@@ -503,8 +538,87 @@ internal static unsafe class NativeTextNodeLayoutHelper
         containerNode,
         backgroundResNode,
         allowWidthGrowth: allowWidthGrowth,
-        restoreHorizontalCentering: restoreHorizontalCentering);
+        restoreHorizontalCentering: restoreHorizontalCentering,
+        minimumSecondaryHorizontalPadding: minimumSecondaryHorizontalPadding,
+        minimumSecondaryVerticalPadding: minimumSecondaryVerticalPadding);
     return snapshot;
+  }
+
+  /// <summary>
+  ///     Resolves the effective measured text extent by combining the live node
+  ///     size with the text draw size when wrapped text still reports a stale
+  ///     one-line node height.
+  /// </summary>
+  /// <param name="liveWidth">The current live node width.</param>
+  /// <param name="liveHeight">The current live node height.</param>
+  /// <param name="drawWidth">The measured text draw width.</param>
+  /// <param name="drawHeight">The measured text draw height.</param>
+  /// <param name="textFlags">The live text flags.</param>
+  /// <returns>The effective measured width and height.</returns>
+  public static NativeTextNodeResizeResult ResolveMeasuredTextExtent(
+      ushort liveWidth,
+      ushort liveHeight,
+      ushort drawWidth,
+      ushort drawHeight,
+      TextFlags textFlags)
+  {
+    var width = liveWidth;
+    var height = liveHeight;
+    var prefersDrawSize =
+        (textFlags & (TextFlags.WordWrap |
+                      TextFlags.MultiLine |
+                      TextFlags.AutoAdjustNodeSize)) != 0;
+
+    if (prefersDrawSize)
+    {
+      width = Math.Max(width, drawWidth);
+      height = Math.Max(height, drawHeight);
+    }
+
+    if (width == 0)
+    {
+      width = drawWidth;
+    }
+
+    if (height == 0)
+    {
+      height = drawHeight;
+    }
+
+    return new NativeTextNodeResizeResult(width, height);
+  }
+
+  /// <summary>
+  ///     Resolves the expanded extent for a background or wrapper node while
+  ///     preserving its historical padding and enforcing an optional minimum
+  ///     cushion for dense tooltip-style surfaces.
+  /// </summary>
+  /// <param name="currentContainerExtent">The current container extent.</param>
+  /// <param name="currentTextExtent">The current text extent.</param>
+  /// <param name="measuredTextExtent">The measured text extent after reflow.</param>
+  /// <param name="minimumPadding">The minimum padding to preserve.</param>
+  /// <returns>The expanded container extent.</returns>
+  public static ushort ResolveExpandedContainerExtent(
+      ushort currentContainerExtent,
+      ushort currentTextExtent,
+      ushort measuredTextExtent,
+      int minimumPadding)
+  {
+    if (currentContainerExtent == 0)
+    {
+      return 0;
+    }
+
+    var preservedPadding = Math.Max(
+        0,
+        currentContainerExtent - currentTextExtent);
+    var effectivePadding = Math.Max(
+        preservedPadding,
+        Math.Max(0, minimumPadding));
+    var resolvedExtent = Math.Max(
+        currentContainerExtent,
+        measuredTextExtent + effectivePadding);
+    return (ushort)Math.Min(ushort.MaxValue, Math.Max(1, resolvedExtent));
   }
 
   /// <summary>
@@ -571,19 +685,29 @@ internal static unsafe class NativeTextNodeLayoutHelper
       return;
     }
 
-    width = textNode->GetWidth();
-    height = textNode->GetHeight();
-
-    if (width > 0 && height > 0)
-    {
-      return;
-    }
-
+    var liveWidth = textNode->GetWidth();
+    var liveHeight = textNode->GetHeight();
     ushort measuredWidth = 0;
     ushort measuredHeight = 0;
-    textNode->GetTextDrawSize(&measuredWidth, &measuredHeight);
-    width = measuredWidth;
-    height = measuredHeight;
+    var shouldMeasureDrawSize =
+        liveWidth == 0 ||
+        liveHeight == 0 ||
+        (textNode->TextFlags & (TextFlags.WordWrap |
+                                TextFlags.MultiLine |
+                                TextFlags.AutoAdjustNodeSize)) != 0;
+    if (shouldMeasureDrawSize)
+    {
+      textNode->GetTextDrawSize(&measuredWidth, &measuredHeight);
+    }
+
+    var resolvedExtent = ResolveMeasuredTextExtent(
+        liveWidth,
+        liveHeight,
+        measuredWidth,
+        measuredHeight,
+        textNode->TextFlags);
+    width = resolvedExtent.Width;
+    height = resolvedExtent.Height;
   }
 
   /// <summary>

@@ -27997,7 +27997,7 @@
             </param>
             <returns>The measured size after the text replacement.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean,System.Int32,System.Int32)">
             <summary>
                 Resizes the supplied container nodes using the text delta captured in a
                 pre-replacement layout snapshot.
@@ -28017,6 +28017,18 @@
             <param name="allowWidthGrowth">
                 Whether the helper may grow container widths when the wrapped text width
                 exceeds the original layout.
+            </param>
+            <param name="restoreHorizontalCentering">
+                Whether horizontally centered text should be re-centered after width
+                growth changes the immediate wrapper width.
+            </param>
+            <param name="minimumSecondaryHorizontalPadding">
+                The minimum horizontal padding to preserve inside the secondary
+                container when it grows.
+            </param>
+            <param name="minimumSecondaryVerticalPadding">
+                The minimum vertical padding to preserve inside the secondary
+                container when it grows.
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean,System.Boolean)">
@@ -28047,7 +28059,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16,System.Int32,System.Int32)">
             <summary>
                 Applies translated text to a node and grows its wrapper chain plus the
                 nearest nine-grid background using inferred padding from the current
@@ -28060,6 +28072,46 @@
                 Whether wrapper widths may grow when the current wrap width is
                 insufficient.
             </param>
+            <param name="restoreHorizontalCentering">
+                Whether horizontally centered text should be re-centered after reflow.
+            </param>
+            <param name="additionalWrapWidth">
+                Additional width to add to the preserved wrap width before applying
+                the translated text.
+            </param>
+            <param name="minimumSecondaryHorizontalPadding">
+                The minimum horizontal padding to preserve inside the secondary
+                background when it grows.
+            </param>
+            <param name="minimumSecondaryVerticalPadding">
+                The minimum vertical padding to preserve inside the secondary
+                background when it grows.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags)">
+            <summary>
+                Resolves the effective measured text extent by combining the live node
+                size with the text draw size when wrapped text still reports a stale
+                one-line node height.
+            </summary>
+            <param name="liveWidth">The current live node width.</param>
+            <param name="liveHeight">The current live node height.</param>
+            <param name="drawWidth">The measured text draw width.</param>
+            <param name="drawHeight">The measured text draw height.</param>
+            <param name="textFlags">The live text flags.</param>
+            <returns>The effective measured width and height.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveExpandedContainerExtent(System.UInt16,System.UInt16,System.UInt16,System.Int32)">
+            <summary>
+                Resolves the expanded extent for a background or wrapper node while
+                preserving its historical padding and enforcing an optional minimum
+                cushion for dense tooltip-style surfaces.
+            </summary>
+            <param name="currentContainerExtent">The current container extent.</param>
+            <param name="currentTextExtent">The current text extent.</param>
+            <param name="measuredTextExtent">The measured text extent after reflow.</param>
+            <param name="minimumPadding">The minimum padding to preserve.</param>
+            <returns>The expanded container extent.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMinimumSecondaryWidthForAnchoredNode(System.Int16,System.UInt16,System.Int16,System.UInt16,System.Int32)">
             <summary>

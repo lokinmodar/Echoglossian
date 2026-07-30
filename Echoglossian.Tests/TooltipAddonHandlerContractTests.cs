@@ -97,6 +97,14 @@ public sealed class TooltipAddonHandlerContractTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
+            "minimumSecondaryHorizontalPadding:",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "minimumSecondaryVerticalPadding:",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "FlattenTextNodesForTranslation(",
             source,
             StringComparison.Ordinal);
