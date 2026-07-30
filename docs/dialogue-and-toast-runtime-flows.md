@@ -3,6 +3,9 @@
 This document records the current runtime shape for Echoglossian's
 dialogue-family and toast-family surfaces on `v4-series`.
 
+Selection dialogs and the dedicated `Tooltip` addon are documented separately
+in [selection-dialog-and-tooltip-runtime-flow.md](/C:/Dante/_dalamud/Echoglossian/docs/selection-dialog-and-tooltip-runtime-flow.md).
+
 It focuses on:
 
 - where the source text is captured

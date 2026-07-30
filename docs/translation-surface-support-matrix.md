@@ -37,7 +37,7 @@ flowchart TD
 
 | Mode Family | Modes | Used By |
 | --- | --- | --- |
-| Quest / native-window family | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal-family surfaces and DB-first game windows |
+| Native-tooltip family | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal-family surfaces, DB-first game windows, selection dialogs, and dedicated runtimes with structured hover tooltips |
 | Overlay family | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, subtitles, MiniTalk, CutSceneSelectString, and toast-family surfaces |
 
 ## Dialog and Overlay Surfaces
@@ -49,9 +49,10 @@ flowchart TD
 | TalkSubtitle | `TranslateTalkSubtitle` | Overlay family | Titleless overlay presentation when overlay mode is active | Enabled |
 | MiniTalk | `TranslateMiniTalk` | Overlay family | Small native surface; verbose text still requires careful native reflow | Enabled |
 | CutSceneSelectString | `TranslateCutSceneSelectString` | Overlay family | Question becomes the title and options become the body in overlay mode | Enabled |
-| Yes/No dialog | `TranslateYesNoScreen` | Overlay family | Supports native, overlay-only, and swap presentation through the shared selection-dialog runtime | Enabled |
-| SelectOk dialog | `TranslateSelectOk` | Overlay family | Supports native, overlay-only, and swap presentation through the shared selection-dialog runtime | Enabled |
-| SelectString dialog | `TranslateSelectString` | Overlay family | Supports native, overlay-only, and swap presentation through the shared selection-dialog runtime | Enabled |
+| Yes/No dialog | `TranslateYesNoScreen` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation | Enabled |
+| SelectOk dialog | `TranslateSelectOk` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation | Enabled |
+| SelectString dialog | `TranslateSelectString` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation | Enabled |
+| SelectIconString dialog | `TranslateSelectIconString` | Native-tooltip family | Keeps its own toggle and display mode and uses body-only structured tooltip presentation | Enabled |
 
 ## Quest and Journal Surfaces
 
@@ -88,7 +89,8 @@ flowchart TD
 | HUD windows | `TranslateHudWindow` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Operation Guide | `TranslateOperationGuideWindow` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest / native-window family | DB-first game-window runtime | Enabled |
-| Context Menu | `TranslateContextMenu` | Native UI / Plugin Tooltip / Swap | Dedicated DB-first row-chain runtime with row-local hover targets | Enabled |
+| Context Menu | `TranslateContextMenu` | Native-tooltip family | Dedicated DB-first row-chain runtime with row-local hover targets | Enabled |
+| Tooltip addon | `TranslateTooltipAddon` | Native-tooltip family | Dedicated DB-first runtime for the `Tooltip` addon, separate from `ActionDetail` and `ItemDetail` | Enabled |
 | Action / item detail tooltips | `TranslateTooltips` | Quest / native-window family | DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes | Enabled |
 
 ## Hidden or Temporarily Restricted Surfaces

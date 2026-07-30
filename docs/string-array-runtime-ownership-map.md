@@ -1,7 +1,7 @@
 ## Purpose
 
 This document records the current ownership model for `StringArrayData`-backed
-surfaces in Echoglossian.
+surfaces and adjacent live-text runtimes in Echoglossian.
 
 It answers three practical questions:
 
@@ -11,51 +11,33 @@ It answers three practical questions:
 
 This is intentionally a runtime map, not a schema design doc.
 
-## Executive Summary
+## Executive summary
 
-Not all `StringArrayData` surfaces are currently treated by one single runtime.
+Not all `StringArrayData` surfaces share one runtime.
 
-The repo is in a transitional state with three distinct situations:
+The current production split is:
 
-1. active DB-first runtime using canonical `StringArrayDatas`
-2. active DB-first runtime using `GameWindow` for non-`StringArrayType` payloads
-3. active DB-first runtime using `QuestPlate`
+1. canonical `StringArrayDatas` runtimes for structured string-array payloads
+2. `GameWindow`-family runtimes for live main-menu windows
+3. `QuestPlate` or popup-backed runtimes for quest surfaces
+4. dedicated tables for surfaces that do not reconcile cleanly with the generic
+   owners
 
 So the short answer is:
 
 - some `StringArrayData` surfaces do react automatically today
-- they react through addon lifecycle refreshes, not through a global hook on
-  every native array mutation
-- the active `StringArrayType` surfaces now persist through canonical
-  `stringarraydatas`
-- `_MainCommand` remains on `gamewindows`, but now captures and applies
-  translated payload through visible text nodes instead of `AtkValues`
+- they react through addon lifecycle events, not through a global hook on every
+  native array mutation
+- canonical `stringarraydatas` owns migrated structured string-array payloads
+- `_MainCommand`, `AddonContextMenuTitle`, and `SystemMenu` do not belong to
+  that canonical string-array path
 
-## Current Validation Snapshot
+## Runtime families
 
-The most recent manual validation cycle produced an important split:
+## 1. Active canonical `StringArrayDatas` runtimes
 
-- `_MainCommand` and `AddonContextMenuTitle` now repopulate `gamewindows` with
-  clean English originals and PT-BR translations after a DB reset
-- the `Character*` family still contaminates `stringarraydatas` by persisting
-  already-visible PT-BR strings as `OriginalStrings`
-
-That means the ownership model is directionally right, but the original payload
-recovery step for the `Character*` string-array surfaces is still incomplete.
-
-In the same validation window:
-
-- `ScenarioTree` had no useful runtime signal
-- `AreaMap` had no useful runtime signal
-- `ActionTooltip` and `ItemTooltip` were already prefetching into their own
-  tables, but still need broader in-game validation of apply behavior
-
-## Runtime Families
-
-## 1. Active DB-First Canonical `StringArrayDatas` Runtime
-
-These surfaces are currently owned by
-`NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`.
+These surfaces persist translated structured payloads through the canonical
+`stringarraydatas` table.
 
 ### Active surfaces
 
@@ -67,36 +49,30 @@ These surfaces are currently owned by
 - `Hud`
 - `Hud2`
 - `OperationGuide`
-- `AddonContextMenuTitle`
+- `AreaMap`
+- `_NaviMap`
 
-### Registration point
+### Runtime owners
 
-These are registered in
-`NativeUI/Helpers/AddonHandlerWiring.cs`
-when the corresponding config toggles are enabled.
+- `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`
+  for `Character*`, `Hud*`, and `OperationGuide`
+- `NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs`
+  for `AreaMap` and `_NaviMap`
 
 ### Persistence backend
 
-These surfaces now use the canonical `stringarraydatas` table as the translated
-payload owner.
+- canonical `stringarraydatas`
 
-Important code path:
+Important code paths:
 
-- `DbFirstGameWindowAddonHandler.RefreshOrQueue()`
-- `DbFirstGameWindowAddonHandler.QueueTranslationIfNeeded()`
 - `DbFirstStructuredStringArrayHelper.TranslateAndPersistAsync(...)`
 - `StringArrayDataPersistenceHelper.CreateCanonicalRow(...)`
 - `StringArrayDataPersistenceHelper.FindStringArrayData(...)`
-
-The live apply and restore lifecycle still reuses the stable
-`DbFirstGameWindowAddonHandler` machinery, but persistence and lookup for these
-surfaces no longer go through `gamewindows`.
+- `StringArrayDataCacheManager`
 
 ### Reactivity model
 
-These surfaces do react automatically, but only through addon lifecycle.
-
-The runtime listens to:
+These surfaces react automatically, but only through addon lifecycle:
 
 - `PreSetup`
 - `PreRefresh`
@@ -105,122 +81,85 @@ The runtime listens to:
 - `PreHide`
 - `PreFinalize`
 
-That means:
-
-- if the visible payload changes, the addon-local runtime will usually notice on
-  the next lifecycle pass
-- it will look up the payload in the DB
-- if the payload is missing, it queues background translation and save
-- once the row exists, it applies the translated payload to the live surface
-
 This is automatic enough for the migrated windows, but it is not a global
 watcher on every native setter call.
 
 ### Current caveat for `Character*`
 
-For the `Character*` surfaces specifically, "reacts automatically" currently
-also means "can react to contaminated live payloads." Until original recovery is
-made stricter, these windows may still:
+For the `Character*` surfaces specifically, original recovery can still be
+contaminated by already-visible translated payloads. Until that is made
+stricter, these windows may still persist non-canonical originals.
 
-- send mixed PT/EN `kNN|...` payloads to translation
-- create `stringarraydatas` rows whose `OriginalStrings` are not truly
-  canonical
-- flicker when the game repaints and the addon-local runtime tries to chase the
-  new state
+## 2. Active `GameWindow`-family runtimes
 
-### Character Lookup Snapshot Performance Rule
-
-`Character` and its dynamic subwindows may expose a large number of readable
-text nodes in one lifecycle pass. Their canonical original/translated lookup is
-therefore built once per handler-local snapshot, rather than once per node.
-
-The snapshot is valid only when all of the following remain unchanged:
-
-- the complete `TranslationReuseScope` (source client language, target
-  language, effective engine, and engine-reuse policy)
-- the requested game version
-- the revision of both `StringArrayDataCacheManager` and
-  `GameWindowCacheManager`
-
-Every cache preload, update, or clear advances its revision. The next
-Character-family resolution then rebuilds the snapshot exactly once, so a newly
-persisted translation remains visible without permanent per-frame JSON parsing
-or candidate sorting.
-
-## 2. Active DB-First `GameWindow` Runtime
-
-These surfaces are still owned by
-`NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`,
-but they do not use the canonical `StringArrayDatas` runtime path.
+These surfaces use the shared DB-first GameWindow base but do not belong to the
+canonical `StringArrayDatas` ownership path.
 
 ### Active surfaces
 
 - `_MainCommand`
 - `AddonContextMenuTitle`
+- `SystemMenu`
+
+### Runtime owner
+
+- `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`
 
 ### Persistence backend
 
-These surfaces currently use the `gamewindows` table.
+- `gamewindows`
 
 ### Why it is separate
 
-`_MainCommand` and `AddonContextMenuTitle` do not flow through the same
-`StringArrayType` ownership model used by the migrated `Character*` / `Hud*` /
-`OperationGuide` surfaces.
+These surfaces are live menu windows whose capture, apply, and restore behavior
+is tied to visible text nodes and menu state, not to the typed structured
+string-array schemas.
 
-They now use a hybrid `GameWindow` path where:
+`MainCommandText` remains a sheet-backed canonical lookup source. It is not the
+authoritative live runtime owner for these windows.
 
-- capture is based on visible `AtkTextNode`s
-- persistence is still `gamewindows`
-- native apply/restoration is also done through those text nodes
-
-This keeps them out of the fragile `AtkValues` path that was causing:
-
-- `_MainCommand` to fail to apply visible translations
-- `AddonContextMenuTitle` to place translated values in the wrong nodes for
-  reused submenu contexts
-
-For `AddonContextMenuTitle`, compatible payload reuse is intentionally disabled:
-
-- exact payload matches are allowed
-- "compatible superset" reuse is not
-
-because the addon reuses the same visible slots for different submenu contexts.
-
-## 3. Active DB-First Quest Runtime
+## 3. Active quest-backed runtimes
 
 These surfaces do not belong to the generic `StringArrayData` migration wave.
-They are listed here only because they are active text runtimes with their own
+They are listed here because they are active text runtimes with their own
 DB-first ownership.
 
 ### Active surfaces
 
 - `Journal`
 - `JournalDetail`
+- `JournalAccept`
+- `JournalResult`
+- `RecommendList`
 - `_ToDoList`
 - `ScenarioTree`
 
-### Persistence backend
+### Persistence backends
 
-These use `questplates`, backed by canonical quest data and prefetch driven by
-`QuestManager`.
+- `questplates` for canonical quest-backed rows
+- dedicated `QuestPopupText` fallback rows for popup surfaces that do not have
+  a reliable quest id at capture time
 
-### Reactivity model
+### Notes
 
-These surfaces react automatically to:
+- `JournalAccept` and `JournalResult` prefer canonical quest lookup when a
+  proven quest id is available, and fall back to dedicated popup rows
+  otherwise.
+- `_ToDoList` remains separate from the dedicated `ToDo` addon runtime.
 
-- accepted quest list changes
-- current quest sequence changes
-- DB availability for the required quest payload
+## 4. Active dedicated-table runtimes
 
-They do not depend on the `stringarraydatas` table.
-
-## 4. Active Dedicated Text Runtimes
-
-These surfaces use specialized handlers and specialized tables or entity shapes.
+These surfaces use specialized handlers and specialized tables or entity
+shapes.
 
 Examples:
 
+- `ContextMenu` -> `ContextMenuText`
+- `Tooltip` -> `TooltipText`
+- `ToDo` -> `ToDoText`
+- `SelectYesno`, `SelectOk`, `SelectString`, `SelectIconString`
+  -> `SelectionDialogText` and, for `SelectString`, preferred reuse of
+  `SelectString`
 - `Talk`
 - `_BattleTalk`
 - `TalkSubtitle`
@@ -228,81 +167,11 @@ Examples:
 - `CutSceneSelectString`
 - toast-family handlers
 
-These are not part of the current `StringArrayData` DB-first migration map.
+These are not part of the canonical `StringArrayData` migration map.
 
-## 5. Canonical `stringarraydatas` Infrastructure
+## 5. Current answer to "Does it react automatically?"
 
-The repo now contains the canonical infrastructure for the next wave of
-`StringArrayData` work, and that infrastructure is now the production owner for
-the active `StringArrayType` surfaces listed above.
-
-### Current pieces
-
-- `DBHelpers/StringArrayDataPersistenceHelper.cs`
-- `NativeUI/Helpers/StringArrayStructuredPayload.cs`
-- `NativeUI/Helpers/StringArrayStructuredPayloadResolver.cs`
-- `NativeUI/Helpers/IStringArrayStructuredSchema.cs`
-- `NativeUI/Helpers/StringArrayStructuredPayloadBuilder.cs`
-
-### What it can do today
-
-- persist canonical structured `StringArrayDatas` rows
-- resolve structured payloads back from DB rows
-- fall back from legacy flat slot maps when needed
-- define typed schemas for future surfaces
-- own the translated payload for active `Character*`, `Hud`, `Hud2`,
-  `OperationGuide`, and `AddonContextMenuTitle` windows
-
-### What it does not do yet
-
-- it does not currently run a generic runtime that watches all
-  `StringArrayData` mutations and automatically saves/applies every change
-- it does not currently own `_MainCommand`
-- it does not yet expose the full plugin configuration UI needed to control all
-  migrated `StringArrayData` surfaces cleanly
-- it does not yet guarantee canonical-original capture for all `Character*`
-  runtime mutations
-
-### Presentation Rule for `StringArrayData` Surfaces
-
-For migrated `StringArrayData` surfaces, non-native presentation should prefer
-plugin hover tooltips per translated text:
-
-- native-only mode: translated text may be applied directly into the addon
-- ImGui mode: keep the native addon untouched and use plugin hover tooltips for
-  each translated text block
-- swap mode: keep the translated text in the addon and use plugin hover
-  tooltips to show the original text for each translated block
-
-This rule should guide future migrations so we do not reintroduce direct
-array-write contention just to support overlay-like presentation.
-
-## 6. Dormant or Intentionally Quiet Surfaces
-
-### `RecommendList`
-
-`RecommendList` still exists in the repo as
-`NativeUI/AddonHandlers/Quest/RecommendListHandler.cs`,
-but it is intentionally not registered in
-`NativeUI/Helpers/AddonHandlerWiring.cs`
-right now.
-
-So:
-
-- it is not active
-- it is not reacting automatically
-- it is not currently part of the production path
-
-### Other quiet quest handlers
-
-The repo still contains some quest-family handlers that are not currently
-registered as part of the stabilization pass.
-
-They should not be treated as production-active ownership.
-
-## Current Answer to “Does it react automatically?”
-
-## For migrated `StringArrayType` surfaces
+### For migrated structured string-array surfaces
 
 Yes, but via addon lifecycle.
 
@@ -314,9 +183,7 @@ If the visible captured payload changes:
 4. if missing, queues translation and save
 5. on a later lifecycle pass, reads the translated row and applies it
 
-So this is automatic, but scoped to the addon’s lifecycle.
-
-## For all possible native `StringArrayData` mutations globally
+### For all possible native `StringArrayData` mutations globally
 
 No.
 
@@ -326,35 +193,21 @@ react to all mutations in one place.
 That global-hook idea was researched, but it is not the current production
 approach.
 
-## Why this distinction matters
+## 6. Presentation rule for migrated string-array surfaces
 
-Right now, saying “`StringArrayData` is handled” can mean two different things:
+For migrated `StringArrayData` surfaces, non-native presentation should prefer
+plugin hover tooltips per translated text:
 
-- “this addon has an automatic DB-first runtime and will react on the next
-  lifecycle pass”
-- or “the repo has typed schema/canonical infrastructure ready for additional
-  surfaces that are not yet active”
+- native-only mode: translated text may be applied directly into the addon
+- tooltip mode: keep the native addon untouched and use plugin hover tooltips
+  for each translated text block
+- swap mode: keep the translated text in the addon and use plugin hover
+  tooltips to show the original text for each translated block
 
-Those are not the same.
+This rule should continue to guide future migrations so we do not reintroduce
+direct array-write contention just to support overlay-like presentation.
 
-The current repo has both, but it still does not use a single global mutation
-hook as the owner of every `StringArrayData` surface.
-
-## Recommended Next Step
-
-If the goal is to keep expanding `stringarraydatas` as the owner of future
-`StringArrayData` surfaces, the next meaningful step is:
-
-1. choose the next real consumer surface
-2. define its typed schema
-3. persist it through canonical `StringArrayDatas`
-4. add an addon-local DB-first runtime that reads from that table
-
-The current repo state suggests the next suitable targets are surfaces that
-still rely on legacy/global `StringArrayData` behavior rather than the already
-migrated windows.
-
-## #139 Source Contract
+## 7. #139 source contract
 
 Canonical structured rows carry the captured source persistence identity.
 Structured helpers receive `SourceClientLanguage`; translation selects the
