@@ -87,6 +87,7 @@ flowchart TD
 | HUD windows | `TranslateHudWindow` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Operation Guide | `TranslateOperationGuideWindow` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest / native-window family | DB-first game-window runtime | Enabled |
+| Context Menu | `TranslateContextMenu` | Native UI / Plugin Tooltip / Swap | Dedicated DB-first row-chain runtime with row-local hover targets | Enabled |
 | Action / item detail tooltips | `TranslateTooltips` | Quest / native-window family | DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes | Enabled |
 
 ## Hidden or Temporarily Restricted Surfaces

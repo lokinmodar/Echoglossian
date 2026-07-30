@@ -18,6 +18,10 @@ namespace Echoglossian.NativeUI.AddonHandlers.MainMenu;
 /// </summary>
 internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
 {
+    private const int ContextMenuRowsNodeListIndex = 2;
+    private const int FirstContextMenuRowNodeIndex = 1;
+    private const int ContextMenuRowCollisionNodeIndex = 3;
+
     private readonly Func<ContextMenuText, ContextMenuText?> findContextMenuText;
     private readonly Func<ContextMenuText, Task<string>> insertContextMenuTextAsync;
 
@@ -84,6 +88,153 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
         }
 
         return true;
+    }
+
+    /// <inheritdoc />
+    protected override List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
+    {
+        return ResolveContextMenuRowTextNodes(addon).ToList();
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryPersistDedicatedPayload(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        var row = this.CreateContextMenuText(
+            scope,
+            originalPayload,
+            translatedPayload);
+        _ = this.insertContextMenuTextAsync(row);
+        return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryRegisterCustomHoverTooltips(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        JournalTranslationDisplayMode displayMode)
+    {
+        var originalTexts = GetOrderedTextNodes(originalPayload.TextNodes)
+            .Select(pair => pair.Value)
+            .ToList();
+        var translatedTexts = GetOrderedTextNodes(translatedPayload.TextNodes)
+            .Select(pair => pair.Value)
+            .ToList();
+        var registeredAny = false;
+
+        foreach (var (index, collisionNodeAddress) in ResolveContextMenuRows(
+                     addon).Select((row, index) => (index, row.CollisionNode)))
+        {
+            if (index >= originalTexts.Count || index >= translatedTexts.Count)
+            {
+                break;
+            }
+
+            var collisionNode = (AtkResNode*)collisionNodeAddress;
+            if (collisionNode == null)
+            {
+                continue;
+            }
+
+            this.RegisterTranslatedHoverTooltip(
+                $"row-{index}",
+                new Vector2(collisionNode->ScreenX, collisionNode->ScreenY),
+                new Vector2(
+                    collisionNode->ScreenX + Math.Max(1f, collisionNode->Width),
+                    collisionNode->ScreenY + Math.Max(1f, collisionNode->Height)),
+                originalTexts[index],
+                translatedTexts[index],
+                displayMode);
+            registeredAny = true;
+        }
+
+        return registeredAny;
+    }
+
+    /// <summary>
+    ///     Resolves the visible ContextMenu row label text nodes in row-chain
+    ///     order.
+    /// </summary>
+    /// <param name="addon">The live ContextMenu addon.</param>
+    /// <returns>The visible row label text-node addresses.</returns>
+    private static unsafe IEnumerable<nint> ResolveContextMenuRowTextNodes(
+        AtkUnitBase* addon)
+    {
+        return ResolveContextMenuRows(addon).Select(row => row.TextNode);
+    }
+
+    /// <summary>
+    ///     Resolves the visible row labels and collision nodes from the
+    ///     ContextMenu row chain.
+    /// </summary>
+    /// <param name="addon">The live ContextMenu addon.</param>
+    /// <returns>The visible row label and collision-node pairs.</returns>
+    private static unsafe IEnumerable<(nint TextNode, nint CollisionNode)>
+        ResolveContextMenuRows(AtkUnitBase* addon)
+    {
+        List<(nint TextNode, nint CollisionNode)> rows = [];
+        if (addon == null ||
+            addon->UldManager.NodeList == null ||
+            addon->UldManager.NodeListCount <= ContextMenuRowsNodeListIndex)
+        {
+            return rows;
+        }
+
+        var rowsComponentNode = (AtkComponentNode*)addon->UldManager.NodeList[
+            ContextMenuRowsNodeListIndex];
+        if (rowsComponentNode == null ||
+            rowsComponentNode->Component == null ||
+            rowsComponentNode->Component->UldManager.NodeList == null ||
+            rowsComponentNode->Component->UldManager.NodeListCount <=
+            FirstContextMenuRowNodeIndex)
+        {
+            return rows;
+        }
+
+        for (var rowNode = rowsComponentNode->Component->UldManager.NodeList[
+                 FirstContextMenuRowNodeIndex];
+             rowNode != null;
+             rowNode = rowNode->NextSiblingNode)
+        {
+            if (!rowNode->IsVisible() || (ushort)rowNode->Type < 1000)
+            {
+                continue;
+            }
+
+            var rowComponentNode = (AtkComponentNode*)rowNode;
+            var rowComponent = rowComponentNode->Component;
+            if (rowComponent == null ||
+                rowComponent->UldManager.NodeList == null ||
+                rowComponent->UldManager.NodeListCount <=
+                ContextMenuRowCollisionNodeIndex)
+            {
+                continue;
+            }
+
+            var componentNodes = rowComponent->UldManager.NodeList;
+            // ComponentNodes[3] is the visible row collision node; its Next
+            // sibling is the row label text node. ComponentRoot shares its bounds.
+            var collisionNode = componentNodes[ContextMenuRowCollisionNodeIndex];
+            if (collisionNode == null)
+            {
+                continue;
+            }
+
+            var textNode = collisionNode->NextSiblingNode;
+            if (textNode == null ||
+                !textNode->IsVisible() ||
+                textNode->Type != NodeType.Text)
+            {
+                continue;
+            }
+
+            rows.Add(((nint)textNode, (nint)collisionNode));
+        }
+
+        return rows;
     }
 
     /// <summary>

@@ -16950,6 +16950,31 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryRegisterCustomHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ResolveContextMenuRowTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the visible ContextMenu row label text nodes in row-chain
+                order.
+            </summary>
+            <param name="addon">The live ContextMenu addon.</param>
+            <returns>The visible row label text-node addresses.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ResolveContextMenuRows(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the visible row labels and collision nodes from the
+                ContextMenu row chain.
+            </summary>
+            <param name="addon">The live ContextMenu addon.</param>
+            <returns>The visible row label and collision-node pairs.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.CreateContextMenuText(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload})">
             <summary>
                 Builds one dedicated ContextMenu persistence row from the ordered

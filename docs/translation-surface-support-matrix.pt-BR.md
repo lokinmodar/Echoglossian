@@ -85,6 +85,7 @@ flowchart TD
 | HUD windows | `TranslateHudWindow` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
 | Operation Guide | `TranslateOperationGuideWindow` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
+| Context Menu | `TranslateContextMenu` | UI nativa / Tooltip do plugin / Troca | Runtime DB-first dedicado de cadeia de linhas com alvos de hover por linha | Ativado |
 | Action / item detail tooltips | `TranslateTooltips` | Família quest / native-window | Runtime DB-first de tooltip estruturada; o padrão é modo Plugin Tooltip, enquanto gravação nativa é opt-in e limitada a nodes seguros com texto puro | Ativado |
 
 ## Superfícies ocultas ou temporariamente restritas
