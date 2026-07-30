@@ -4169,6 +4169,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectIconString.
+        /// </summary>
+        public static string TranslateSelectIconStringLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateSelectIconStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate Cutscene Subtitles.
         /// </summary>
         public static string TranslateTalkSubtitleToggleLabel

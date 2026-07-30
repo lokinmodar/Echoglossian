@@ -1886,6 +1886,9 @@
         <member name="F:Echoglossian.Config.SelectStringTranslationDisplayMode">
             <summary>Display mode for SelectString.</summary>
         </member>
+        <member name="F:Echoglossian.Config.SelectIconStringTranslationDisplayMode">
+            <summary>Display mode for SelectIconString.</summary>
+        </member>
         <member name="F:Echoglossian.Config.WideTextToastTranslationDisplayMode">
             <summary>Display mode for ScreenInfo/WideText toasts.</summary>
         </member>
@@ -2469,6 +2472,9 @@
         </member>
         <member name="F:Echoglossian.Config.TranslateSelectString">
             <summary>Translate regular SelectString dialogs.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslateSelectIconString">
+            <summary>Translate icon-bearing SelectString dialogs.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateTalk">
             <summary>Translate Talk window messages.</summary>
@@ -30884,7 +30890,7 @@
             <param name="config">The current plugin configuration.</param>
             <returns><c>true</c> when a setting changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.SelectionDialogsTab.DrawSelectionDialogSection(System.String,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.SelectionDialogsTab.DrawSelectionDialogSection(Echoglossian.Config,System.String,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@)">
             <summary>
                 Draws one selection-dialog enable toggle and display-mode combo.
             </summary>
@@ -30893,14 +30899,6 @@
             <param name="enabled">Whether the surface is enabled.</param>
             <param name="displayMode">The selected translation display mode.</param>
             <returns><c>true</c> when any setting changed.</returns>
-        </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.SelectionDialogsTab.DrawDisplayModeCombo(System.String,Echoglossian.JournalTranslationDisplayMode@)">
-            <summary>
-                Draws the shared selection-dialog display-mode combo.
-            </summary>
-            <param name="comboId">The stable ImGui ID for the combo.</param>
-            <param name="displayMode">The selected display mode.</param>
-            <returns><c>true</c> when the mode changed.</returns>
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TooltipTab">
             <summary>
@@ -33058,6 +33056,11 @@
         <member name="P:Echoglossian.Properties.Resources.TranslateSelectStringLabel">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectString.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateSelectIconStringLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectIconString.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateTalkSubtitleToggleLabel">

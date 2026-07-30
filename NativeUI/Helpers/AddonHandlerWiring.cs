@@ -337,6 +337,10 @@ public partial class Echoglossian
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateSelectIconString)
+    {
       this.registeredAddonHandlers.Add(
           (AddonName: "SelectIconString",
               Handler: new SelectIconStringHandler(

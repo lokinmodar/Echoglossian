@@ -253,6 +253,11 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode SelectStringTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Display mode for SelectIconString.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectIconStringTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Display mode for ScreenInfo/WideText toasts.</summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode WideTextToastTranslationDisplayMode =
@@ -1123,6 +1128,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate regular SelectString dialogs.</summary>
   [DefaultValue(false)] public bool TranslateSelectString = false;
+
+  /// <summary>Translate icon-bearing SelectString dialogs.</summary>
+  [DefaultValue(false)] public bool TranslateSelectIconString = false;
 
   /// <summary>Translate Talk window messages.</summary>
   [DefaultValue(false)] public bool TranslateTalk = false;

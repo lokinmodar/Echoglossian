@@ -691,6 +691,9 @@
   <data name="TranslateSelectStringLabel" xml:space="preserve">
     <value>Translate SelectString</value>
   </data>
+  <data name="TranslateSelectIconStringLabel" xml:space="preserve">
+    <value>Translate SelectIconString</value>
+  </data>
   <data name="TranslateSelectOkLabel" xml:space="preserve">
     <value>Translate SelectOk</value>
   </data>

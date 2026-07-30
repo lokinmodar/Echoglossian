@@ -10,13 +10,6 @@ namespace Echoglossian.PluginUI.Tabs;
 /// </summary>
 public static class SelectionDialogsTab
 {
-    private static readonly string[] OverlayDisplayModes =
-    {
-        Resources.QuestDisplayModeNativeUiTranslation,
-        Resources.OverlayDisplayModeOverlayTranslationOnly,
-        Resources.OverlayDisplayModeNativeUiTranslationWithOriginalOverlay,
-    };
-
     /// <summary>
     ///     Draws the selection-dialog settings tab.
     /// </summary>
@@ -27,20 +20,29 @@ public static class SelectionDialogsTab
         var changed = false;
 
         changed |= DrawSelectionDialogSection(
+            config,
             "SelectYesNoDisplayMode",
             Resources.TranslateYesNoScreenLabel,
             ref config.TranslateYesNoScreen,
             ref config.SelectYesNoTranslationDisplayMode);
         changed |= DrawSelectionDialogSection(
+            config,
             "SelectStringDisplayMode",
             Resources.TranslateSelectStringLabel,
             ref config.TranslateSelectString,
             ref config.SelectStringTranslationDisplayMode);
         changed |= DrawSelectionDialogSection(
+            config,
             "SelectOkDisplayMode",
             Resources.TranslateSelectOkLabel,
             ref config.TranslateSelectOk,
             ref config.SelectOkTranslationDisplayMode);
+        changed |= DrawSelectionDialogSection(
+            config,
+            "SelectIconStringDisplayMode",
+            Resources.TranslateSelectIconStringLabel,
+            ref config.TranslateSelectIconString,
+            ref config.SelectIconStringTranslationDisplayMode);
 
         if (changed)
         {
@@ -60,6 +62,7 @@ public static class SelectionDialogsTab
     /// <param name="displayMode">The selected translation display mode.</param>
     /// <returns><c>true</c> when any setting changed.</returns>
     private static bool DrawSelectionDialogSection(
+        Config config,
         string comboId,
         string sectionLabel,
         ref bool enabled,
@@ -73,32 +76,11 @@ public static class SelectionDialogsTab
             return changed;
         }
 
-        changed |= DrawDisplayModeCombo(comboId, ref displayMode);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            comboId,
+            ref displayMode,
+            config.OverlayOnlyLanguage);
         ImGui.Separator();
         return changed;
-    }
-
-    /// <summary>
-    ///     Draws the shared selection-dialog display-mode combo.
-    /// </summary>
-    /// <param name="comboId">The stable ImGui ID for the combo.</param>
-    /// <param name="displayMode">The selected display mode.</param>
-    /// <returns><c>true</c> when the mode changed.</returns>
-    private static bool DrawDisplayModeCombo(
-        string comboId,
-        ref JournalTranslationDisplayMode displayMode)
-    {
-        var selectedIndex = (int)displayMode;
-        if (!ImGui.Combo(
-                $"##{comboId}",
-                ref selectedIndex,
-                OverlayDisplayModes,
-                OverlayDisplayModes.Length))
-        {
-            return false;
-        }
-
-        displayMode = (JournalTranslationDisplayMode)selectedIndex;
-        return true;
     }
 }

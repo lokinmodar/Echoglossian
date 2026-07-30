@@ -39,6 +39,51 @@ public sealed class SelectionDialogsConfigContractTests
             "SelectStringTranslationDisplayMode",
             source,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "TranslateSelectIconString",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "SelectIconStringTranslationDisplayMode",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the selection-dialog tab renders dedicated sections for all
+    ///     four supported selection-dialog addons and no longer uses
+    ///     overlay-only copy for the family.
+    /// </summary>
+    [Fact]
+    public void SelectionDialogsTab_DrawsDedicatedSectionsWithoutOverlayOnlyCopy()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "PluginUI",
+            "Tabs",
+            "SelectionDialogsTab.cs"));
+
+        Assert.Contains(
+            "Resources.TranslateYesNoScreenLabel",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Resources.TranslateSelectOkLabel",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Resources.TranslateSelectStringLabel",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Resources.TranslateSelectIconStringLabel",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "OverlayDisplayModeOverlayTranslationOnly",
+            source,
+            StringComparison.Ordinal);
     }
 
     /// <summary>

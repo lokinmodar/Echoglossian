@@ -59,6 +59,35 @@ public sealed class SelectionDialogHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures the icon-bearing selection dialog has dedicated config and
+    ///     no longer reuses the plain SelectString toggle and display mode.
+    /// </summary>
+    [Fact]
+    public void SelectIconStringHandler_UsesDedicatedToggleAndDisplayMode()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "SelectionDialogs",
+            "SelectIconStringHandler.cs"));
+
+        Assert.Contains(
+            "config.TranslateSelectIconString",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "config.SelectIconStringTranslationDisplayMode",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "config.TranslateSelectString",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the overlay sync path uses the real native addon name for
     ///     the yes/no dialog.
     /// </summary>
