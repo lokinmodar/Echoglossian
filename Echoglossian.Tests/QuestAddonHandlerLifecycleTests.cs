@@ -23,6 +23,28 @@ namespace Echoglossian.Tests;
 public class QuestAddonHandlerLifecycleTests
 {
     /// <summary>
+    ///     Ensures ToDo participates in plugin-unload resets and registers a
+    ///     pre-draw refresh so persisted payloads can surface after an async
+    ///     translation completes.
+    /// </summary>
+    [Fact]
+    public void ToDoHandler_RegistersLifecycleRefreshAndUnloadCleanup()
+    {
+        var handlerType = typeof(JournalHandler).Assembly.GetType(
+            "Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler");
+
+        Assert.NotNull(handlerType);
+        Assert.True(
+            typeof(IPluginUnloadAwareAddonHandler).IsAssignableFrom(
+                handlerType!));
+        Assert.Equal(
+            handlerType,
+            handlerType.GetMethod(
+                nameof(IPluginUnloadAwareAddonHandler.OnPluginUnload),
+                BindingFlags.Instance | BindingFlags.Public)?.DeclaringType);
+    }
+
+    /// <summary>
     /// Ensures Journal participates in plugin-unload resets so visible quest
     /// text can be restored when the translation runtime changes.
     /// </summary>

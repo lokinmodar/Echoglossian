@@ -421,6 +421,18 @@ public partial class Echoglossian
               Handler: new ToDoListHandler(questAddonDependencies)));
     }
 
+    if (this.configuration.TranslateToDo)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "ToDo",
+              Handler: new ToDoHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindToDoText,
+                  row => this.InsertToDoTextData(row),
+                  this.hoverTooltipManager)));
+    }
+
     if (this.configuration.TranslateScenarioTree)
     {
       this.registeredAddonHandlers.Add(
