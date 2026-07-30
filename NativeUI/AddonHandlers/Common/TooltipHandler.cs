@@ -18,6 +18,7 @@ namespace Echoglossian.NativeUI.AddonHandlers.Common;
 /// </summary>
 internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
 {
+    private const ushort AdditionalTooltipWrapWidth = 8;
     private readonly Dictionary<string, NativeTextNodeLayoutSnapshot>
         appliedLayoutSnapshots = new(StringComparer.Ordinal);
     private readonly List<string> pendingCapturedTexts = [];
@@ -187,6 +188,76 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    private protected override Task<bool> TranslateAndPersistGameWindowPayloadAsync(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload)
+    {
+        if (!scope.TranslationEngine.HasValue)
+        {
+            return Task.FromResult(false);
+        }
+
+        var flattenedTextNodes = TooltipSemanticLineHelper
+            .FlattenTextNodesForTranslation(originalPayload.TextNodes);
+        var translatorResolution = this.HandlerTranslationService
+            .CaptureTranslatorResolution(
+                scope.TranslationEngine.Value,
+                TranslationSurfaceGroup.Default);
+        return GenericAddonHandlerHelper
+            .TranslatePayloadAsync(
+                originalPayload.AtkValues,
+                originalPayload.StringArrayValues,
+                flattenedTextNodes,
+                originalPayload.AtkValues,
+                originalPayload.StringArrayValues,
+                flattenedTextNodes,
+                sourceLanguage,
+                scope.TargetLanguageCode,
+                this.HandlerTranslationService,
+                translatorResolution)
+            .ContinueWith(
+                task =>
+                {
+                    if (task.Status != TaskStatus.RanToCompletion ||
+                        !task.Result.HasValue ||
+                        !TooltipSemanticLineHelper.TryRebuildTranslatedTextNodes(
+                            originalPayload.TextNodes,
+                            task.Result.Value.TextNodes,
+                            out var rebuiltTextNodes))
+                    {
+                        return false;
+                    }
+
+                    var translatedPayload = new DbFirstGameWindowPayload(
+                        task.Result.Value.AtkValues,
+                        task.Result.Value.StringArrayValues,
+                        rebuiltTextNodes);
+                    translatedPayload = this.NormalizeResolvedTranslatedPayload(
+                        sourceLanguage,
+                        originalPayload,
+                        translatedPayload);
+                    if (!this.ShouldAcceptResolvedTranslatedPayload(
+                            originalPayload,
+                            translatedPayload))
+                    {
+                        return false;
+                    }
+
+                    return this.PersistResolvedGameWindowPayload(
+                        scope,
+                        sourceOperation,
+                        originalPayload,
+                        translatedPayload,
+                        this.GetPersistedGameWindowClassJobId(
+                            originalPayload,
+                            translatedPayload));
+                },
+                TaskScheduler.Default);
+    }
+
+    /// <inheritdoc />
     private protected override bool ShouldQueueNewGameWindowTranslation(
         TranslationReuseScope scope,
         DbFirstSourceOperation sourceOperation,
@@ -210,6 +281,16 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         }
 
         return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool ShouldAcceptResolvedTranslatedPayload(
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return TooltipSemanticLineHelper.HasCompatibleSemanticLineStructure(
+            originalPayload.TextNodes,
+            translatedPayload.TextNodes);
     }
 
     /// <inheritdoc />
@@ -286,7 +367,9 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                 NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
                     addon,
                     textNode,
-                    targetText);
+                    targetText,
+                    allowWidthGrowth: true,
+                    additionalWrapWidth: AdditionalTooltipWrapWidth);
             if (layoutSnapshot != null)
             {
                 this.appliedLayoutSnapshots[textNodeKey] = layoutSnapshot;

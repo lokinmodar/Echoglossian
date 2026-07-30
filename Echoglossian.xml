@@ -16858,7 +16858,13 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Boolean)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldAcceptResolvedTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange">
@@ -29055,6 +29061,83 @@
                 Compares two Tooltip text values using semantic recovery
                 normalization.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper">
+            <summary>
+                Preserves Tooltip semantic line structure across provider translation
+                and persisted payload reuse.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper.FlattenTextNodesForTranslation(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Flattens Tooltip text nodes into per-line translation entries so
+                semantic source line breaks survive provider translation.
+            </summary>
+            <param name="textNodes">The semantic Tooltip text nodes.</param>
+            <returns>The per-line translation payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper.TryRebuildTranslatedTextNodes(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.SortedDictionary{System.String,System.String}@)">
+            <summary>
+                Rebuilds semantic Tooltip text nodes from one per-line translated
+                payload.
+            </summary>
+            <param name="originalTextNodes">
+                The original Tooltip text-node shape and semantic line counts.
+            </param>
+            <param name="translatedLineTextNodes">The per-line translated payload.</param>
+            <param name="rebuiltTextNodes">Receives the rebuilt text nodes.</param>
+            <returns>
+                <see langword="true" /> when every translated semantic line was
+                present; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper.HasCompatibleSemanticLineStructure(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Determines whether one resolved Tooltip payload still preserves the
+                semantic source line structure needed for native apply.
+            </summary>
+            <param name="originalTextNodes">The original Tooltip payload.</param>
+            <param name="translatedTextNodes">The resolved translated payload.</param>
+            <returns>
+                <see langword="true" /> when line structure is compatible; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper.HasCompatibleSemanticLineStructure(System.String,System.String)">
+            <summary>
+                Determines whether one translated Tooltip text preserves the same
+                semantic line count as its original source.
+            </summary>
+            <param name="originalText">The semantic original text.</param>
+            <param name="translatedText">The translated text candidate.</param>
+            <returns>
+                <see langword="true" /> when the translated text keeps the semantic
+                line count required by the source text; otherwise
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper.SplitSemanticLines(System.String)">
+            <summary>
+                Splits one semantic Tooltip text into its persisted logical lines.
+            </summary>
+            <param name="text">The semantic Tooltip text.</param>
+            <returns>The logical lines.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper.BuildLineKey(System.String,System.Int32)">
+            <summary>
+                Builds one stable per-line translation key for a Tooltip text node.
+            </summary>
+            <param name="textNodeKey">The semantic text-node key.</param>
+            <param name="lineIndex">The zero-based semantic line index.</param>
+            <returns>The per-line key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipSemanticLineHelper.NormalizeTranslatedLine(System.String)">
+            <summary>
+                Normalizes one translated semantic line before it is rebuilt into a
+                Tooltip text node.
+            </summary>
+            <param name="translatedLine">The translated semantic line.</param>
+            <returns>The normalized line.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.TooltipTextNormalizationHelper">
             <summary>

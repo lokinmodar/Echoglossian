@@ -97,6 +97,18 @@ public sealed class TooltipAddonHandlerContractTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
+            "FlattenTextNodesForTranslation(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TryRebuildTranslatedTextNodes(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "HasCompatibleSemanticLineStructure(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(",
             source,
             StringComparison.Ordinal);
