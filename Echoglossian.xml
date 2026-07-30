@@ -16665,7 +16665,7 @@
             Centralizes the pre-draw short-circuit decision for DB-first addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstPreDrawRefreshPolicy.ShouldShortCircuit(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstPreDrawRefreshPolicy.ShouldShortCircuit(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Determines whether the current pre-draw pass can skip a full DB-first
             refresh and keep the existing applied state.
@@ -16689,6 +16689,10 @@
             </param>
             <param name="hasLastResolvedState">
             Whether one prior resolved payload pair exists for tooltip refresh.
+            </param>
+            <param name="requiresHoverTooltipLifetimeRefresh">
+            Whether the current display mode still depends on one visible addon to
+            keep tooltip lifetime refreshed, including custom hover fallback.
             </param>
             <param name="hasVisibleAddon">
             Whether the addon that owns the current hover targets is still visible.

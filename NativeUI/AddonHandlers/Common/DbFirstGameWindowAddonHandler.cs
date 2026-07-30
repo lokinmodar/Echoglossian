@@ -944,6 +944,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 hasRuntimeState: this.runtimeState != null,
                 usesHoverTooltips: usesHoverTooltips,
                 hasLastResolvedState: this.lastResolvedState != null,
+                requiresHoverTooltipLifetimeRefresh:
+                requiresHoverTooltipLifetimeRefresh,
                 hasVisibleAddon: !requiresHoverTooltipLifetimeRefresh ||
                     this.TryGetVisibleAddon(out _)))
         {
