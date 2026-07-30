@@ -30,6 +30,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private bool hasPendingToDoListTranslations;
 
   private JournalTranslationDisplayMode? lastAppliedDisplayMode;
+  private string? lastVisibleToDoRequestedUpdateSignature;
 
   private DateTime nextToDoListRetryUtc = DateTime.MinValue;
 
@@ -96,6 +97,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
       this.currentToDoListDataReady = false;
       this.lastAppliedDisplayMode = null;
+      this.lastVisibleToDoRequestedUpdateSignature = null;
       return;
     }
 
@@ -106,6 +108,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     }
 
     var visibleQuests = this.CollectVisibleToDoQuests(todoList);
+    var visibleSignature =
+        this.BuildVisibleToDoRequestedUpdateSignature(visibleQuests);
     var runtimeEntries = new Dictionary<string, ToDoRuntimeEntry>(
         StringComparer.Ordinal);
     HashSet<string> blockingQuestLabels = new(StringComparer.Ordinal);
@@ -139,6 +143,10 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     this.currentToDoListDataReady = availability.HasRenderableEntries;
     this.hasPendingToDoListTranslations =
         availability.HasPendingTranslations;
+    this.lastVisibleToDoRequestedUpdateSignature =
+        runtimeEntries.Count > 0
+            ? visibleSignature
+            : null;
 
     if (!availability.HasRenderableEntries)
     {
@@ -406,7 +414,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               visibleQuest.QuestRow,
               progressKey: string.Empty,
               originalQuestText,
-              originalQuestText));
+              originalQuestText,
+              translatedPayloadReady: false));
 
       foreach (var objectiveRow in visibleQuest.Objectives)
       {
@@ -416,7 +425,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
                 objectiveRow,
                 progressKey: string.Empty,
                 originalObjectiveText,
-                originalObjectiveText));
+                originalObjectiveText,
+                translatedPayloadReady: false));
       }
 
       return false;
@@ -447,7 +457,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               visibleQuest.QuestRow,
               todoProgressSnapshot.CacheKey,
               originalQuestText,
-              originalQuestText));
+              originalQuestText,
+              translatedPayloadReady: false));
 
       foreach (var objectiveRow in visibleQuest.Objectives)
       {
@@ -457,7 +468,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
                 objectiveRow,
                 todoProgressSnapshot.CacheKey,
                 originalObjectiveText,
-                originalObjectiveText));
+                originalObjectiveText,
+                translatedPayloadReady: false));
       }
 
       return false;
@@ -468,7 +480,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
             visibleQuest.QuestRow,
             todoProgressSnapshot.CacheKey,
             originalQuestText,
-            foundQuestPlate.TranslatedQuestName));
+            foundQuestPlate.TranslatedQuestName,
+            translatedPayloadReady: true));
 
     for (var objectiveIndex = 0;
          objectiveIndex < visibleQuest.Objectives.Count;
@@ -483,7 +496,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
                 objectiveRow,
                 todoProgressSnapshot.CacheKey,
                 originalObjectiveText,
-                originalObjectiveText));
+                originalObjectiveText,
+                translatedPayloadReady: false));
         continue;
       }
 
@@ -511,7 +525,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
                 objectiveRow,
                 todoProgressSnapshot.CacheKey,
                 originalObjectiveText,
-                originalObjectiveText));
+                originalObjectiveText,
+                translatedPayloadReady: false));
         return false;
       }
 
@@ -520,7 +535,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               objectiveRow,
               todoProgressSnapshot.CacheKey,
               originalObjectiveText,
-              translatedObjectiveText));
+              translatedObjectiveText,
+              translatedPayloadReady: true));
     }
 
     PluginRuntimeLog.Debug(
@@ -618,7 +634,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       ToDoItem questRow,
       string progressKey,
       string originalText,
-      string translatedText)
+      string translatedText,
+      bool translatedPayloadReady)
   {
     return new ToDoRuntimeEntry(
         this.BuildToDoRuntimeEntryKey(
@@ -631,7 +648,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         questRow.IndexJ,
         questRow.NodeId,
         originalText,
-        translatedText);
+        translatedText,
+        translatedPayloadReady);
   }
 
   /// <summary>
@@ -646,7 +664,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       ToDoItem objectiveRow,
       string progressKey,
       string originalText,
-      string translatedText)
+      string translatedText,
+      bool translatedPayloadReady)
   {
     return new ToDoRuntimeEntry(
         this.BuildToDoRuntimeEntryKey(
@@ -659,7 +678,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         objectiveRow.IndexJ,
         objectiveRow.NodeId,
         originalText,
-        translatedText);
+        translatedText,
+        translatedPayloadReady);
   }
 
   /// <summary>
@@ -720,6 +740,77 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Builds one stable requested-update signature from the currently
+  ///     visible translatable ToDoList rows so timer-only repaints can reuse
+  ///     the existing translated snapshot.
+  /// </summary>
+  /// <param name="visibleQuests">The currently visible quest rows.</param>
+  /// <returns>The stable requested-update signature.</returns>
+  private string BuildVisibleToDoRequestedUpdateSignature(
+      IReadOnlyList<ToDoVisibleQuest> visibleQuests)
+  {
+    List<string> parts = [];
+    foreach (var visibleQuest in visibleQuests)
+    {
+      parts.Add(this.BuildVisibleToDoRequestedUpdateSignaturePart(
+          visibleQuest.QuestRow));
+      foreach (var objectiveRow in visibleQuest.Objectives)
+      {
+        parts.Add(this.BuildVisibleToDoRequestedUpdateSignaturePart(
+            objectiveRow));
+      }
+    }
+
+    return string.Join("\n", parts);
+  }
+
+  /// <summary>
+  ///     Builds one stable requested-update signature part for a visible
+  ///     ToDoList row.
+  /// </summary>
+  /// <param name="todoItem">The visible row.</param>
+  /// <returns>The stable requested-update signature part.</returns>
+  private string BuildVisibleToDoRequestedUpdateSignaturePart(ToDoItem todoItem)
+  {
+    return string.Create(
+        CultureInfo.InvariantCulture,
+        $"{todoItem.IndexI}|{todoItem.IndexJ}|{todoItem.NodeId}|{this.ResolveOriginalToDoText(todoItem)}");
+  }
+
+  /// <summary>
+  ///     Attempts to reuse the current translated ToDoList snapshot when a
+  ///     requested-update repaint changed only non-translatable nodes.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  /// <returns>
+  ///     <c>true</c> when the current presentation was safely reused.
+  /// </returns>
+  private unsafe bool TryReuseCurrentToDoPresentation(AtkUnitBase* todoList)
+  {
+    if (todoList == null ||
+        this.lastAppliedDisplayMode != this.Config.ToDoListTranslationDisplayMode ||
+        string.IsNullOrWhiteSpace(this.lastVisibleToDoRequestedUpdateSignature) ||
+        this.toDoRuntimeEntries.Count == 0)
+    {
+      return false;
+    }
+
+    var visibleQuests = this.CollectVisibleToDoQuests(todoList);
+    var currentSignature =
+        this.BuildVisibleToDoRequestedUpdateSignature(visibleQuests);
+    if (!string.Equals(
+            currentSignature,
+            this.lastVisibleToDoRequestedUpdateSignature,
+            StringComparison.Ordinal))
+    {
+      return false;
+    }
+
+    this.ApplyToDoListPresentation(todoList);
+    return true;
+  }
+
+  /// <summary>
   ///     Applies the current ToDoList presentation mode using only the local
   ///     runtime entries resolved from the DB.
   /// </summary>
@@ -742,6 +833,16 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               runtimeEntry.IndexJ,
               out var textNode))
       {
+        continue;
+      }
+
+      if (!runtimeEntry.TranslatedPayloadReady)
+      {
+        if (this.toDoNativeMutationKeys.Remove(runtimeEntry.Key))
+        {
+          textNode->SetText(runtimeEntry.OriginalText ?? string.Empty);
+        }
+
         continue;
       }
 
@@ -847,9 +948,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       return;
     }
 
-    var translatedPayloadReady =
-        !string.IsNullOrWhiteSpace(runtimeEntry.TranslatedText);
-    if (!translatedPayloadReady)
+    if (!runtimeEntry.TranslatedPayloadReady)
     {
       this.RemoveHoverTooltipsByPrefix(runtimeEntry.Key);
       return;
@@ -868,7 +967,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
           bottomRight,
           runtimeEntry.OriginalText,
           runtimeEntry.TranslatedText,
-          translatedPayloadReady,
+          runtimeEntry.TranslatedPayloadReady,
           this.ToDoListHoverShowsOriginal,
           forceEnabled: true);
       return;
@@ -888,7 +987,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         textNode,
         runtimeEntry.OriginalText,
         runtimeEntry.TranslatedText,
-        translatedPayloadReady,
+        runtimeEntry.TranslatedPayloadReady,
         this.ToDoListHoverShowsOriginal,
         forceEnabled: true,
         denseHitbox: true);
@@ -1038,6 +1137,12 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// <param name="args">The lifecycle arguments.</param>
   private unsafe void OnToDoListEvent(AddonEvent type, AddonArgs args)
   {
+    if (TryGetVisibleToDoList(out var todoList) &&
+        this.TryReuseCurrentToDoPresentation(todoList))
+    {
+      return;
+    }
+
     this.RefreshToDoList();
   }
 
@@ -1062,6 +1167,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
       this.currentToDoListDataReady = false;
       this.lastAppliedDisplayMode = null;
+      this.lastVisibleToDoRequestedUpdateSignature = null;
       return;
     }
 
@@ -1104,6 +1210,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     this.currentToDoListDataReady = false;
     this.hasPendingToDoListTranslations = false;
     this.lastAppliedDisplayMode = null;
+    this.lastVisibleToDoRequestedUpdateSignature = null;
     this.nextToDoListRetryUtc = DateTime.MinValue;
     this.ClearToDoListWaitingState();
   }
@@ -1122,6 +1229,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     this.currentToDoListDataReady = false;
     this.hasPendingToDoListTranslations = false;
     this.lastAppliedDisplayMode = null;
+    this.lastVisibleToDoRequestedUpdateSignature = null;
     this.nextToDoListRetryUtc = DateTime.MinValue;
     this.ClearToDoListWaitingState();
   }
@@ -1146,6 +1254,10 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// <param name="NodeId">The backing node id.</param>
   /// <param name="OriginalText">The original source text.</param>
   /// <param name="TranslatedText">The translated text from the DB.</param>
+  /// <param name="TranslatedPayloadReady">
+  ///     Whether the runtime row already has translated payload that can be
+  ///     applied natively or shown through plugin hover tooltips.
+  /// </param>
   private sealed record ToDoRuntimeEntry(
       string Key,
       string ProgressKey,
@@ -1153,5 +1265,6 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       int IndexJ,
       uint NodeId,
       string OriginalText,
-      string TranslatedText);
+      string TranslatedText,
+      bool TranslatedPayloadReady);
 }

@@ -524,6 +524,62 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures ToDoList requested-update events can reuse the current
+    ///     translated snapshot when only non-translatable rows such as timer
+    ///     nodes repaint.
+    /// </summary>
+    [Fact]
+    public void ToDoListHandler_RequestedUpdatesReuseCurrentPresentationForNonTranslatableRefreshes()
+    {
+        var requestedUpdateHandler = typeof(ToDoListHandler).GetMethod(
+            "OnToDoListEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var reuseMethod = typeof(ToDoListHandler).GetMethod(
+            "TryReuseCurrentToDoPresentation",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(requestedUpdateHandler);
+        Assert.NotNull(reuseMethod);
+        Assert.True(
+            MethodReferences(requestedUpdateHandler!, reuseMethod!),
+            "ToDoList requested updates must reuse the current translated snapshot when only timer-driven repaint nodes changed.");
+    }
+
+    /// <summary>
+    ///     Ensures ToDoList applies native text and hover tooltips only when a
+    ///     runtime row actually has translated payload ready.
+    /// </summary>
+    [Fact]
+    public void ToDoListHandler_UsesTranslatedPayloadReadyFlagForPresentation()
+    {
+        var applyPresentation = typeof(ToDoListHandler).GetMethod(
+            "ApplyToDoListPresentation",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var registerTooltip = typeof(ToDoListHandler).GetMethod(
+            "RegisterToDoTooltip",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var runtimeEntryType = typeof(ToDoListHandler).GetNestedType(
+            "ToDoRuntimeEntry",
+            BindingFlags.NonPublic);
+        var translatedPayloadReadyGetter = runtimeEntryType?
+            .GetProperty(
+                "TranslatedPayloadReady",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?
+            .GetMethod;
+
+        Assert.NotNull(applyPresentation);
+        Assert.NotNull(registerTooltip);
+        Assert.NotNull(runtimeEntryType);
+        Assert.NotNull(translatedPayloadReadyGetter);
+        Assert.True(
+            MethodReferences(applyPresentation!, translatedPayloadReadyGetter!),
+            "ToDoList native and swap presentation must skip rows whose translated payload is still pending.");
+        Assert.True(
+            MethodReferences(registerTooltip!, translatedPayloadReadyGetter!),
+            "ToDoList hover tooltips must not treat pending placeholder rows as translated payload.");
+    }
+
+    /// <summary>
     ///     Ensures JournalDetail sends unresolved active quest text to the
     ///     shared accepted-quest prefetch instead of waiting for an unrelated
     ///     refresh to populate the persisted canonical row.

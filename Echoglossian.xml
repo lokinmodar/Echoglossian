@@ -20364,7 +20364,7 @@
             <param name="translatedObjectiveText">The resolved translated objective text.</param>
             <returns><c>true</c> when a translated objective row was resolved.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateQuestRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateQuestRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String,System.Boolean)">
             <summary>
                 Creates the runtime payload for one visible quest-name row.
             </summary>
@@ -20374,7 +20374,7 @@
             <param name="translatedText">The translated quest text.</param>
             <returns>The runtime entry.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateObjectiveRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.CreateObjectiveRuntimeEntry(Echoglossian.ToDoItem,System.String,System.String,System.String,System.Boolean)">
             <summary>
                 Creates the runtime payload for one visible objective row.
             </summary>
@@ -20409,6 +20409,33 @@
             </summary>
             <param name="objectiveText">The visible objective text.</param>
             <returns><c>true</c> when the row should map to canonical TODO data.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.BuildVisibleToDoRequestedUpdateSignature(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest})">
+            <summary>
+                Builds one stable requested-update signature from the currently
+                visible translatable ToDoList rows so timer-only repaints can reuse
+                the existing translated snapshot.
+            </summary>
+            <param name="visibleQuests">The currently visible quest rows.</param>
+            <returns>The stable requested-update signature.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.BuildVisibleToDoRequestedUpdateSignaturePart(Echoglossian.ToDoItem)">
+            <summary>
+                Builds one stable requested-update signature part for a visible
+                ToDoList row.
+            </summary>
+            <param name="todoItem">The visible row.</param>
+            <returns>The stable requested-update signature part.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryReuseCurrentToDoPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Attempts to reuse the current translated ToDoList snapshot when a
+                requested-update repaint changed only non-translatable nodes.
+            </summary>
+            <param name="todoList">The live ToDoList addon.</param>
+            <returns>
+                <c>true</c> when the current presentation was safely reused.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ApplyToDoListPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
@@ -20538,8 +20565,12 @@
             <param name="NodeId">The backing node id.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TranslatedPayloadReady">
+                Whether the runtime row already has translated payload that can be
+                applied natively or shown through plugin hover tooltips.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.Int32,System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.#ctor(System.String,System.String,System.Int32,System.Int32,System.UInt32,System.String,System.String,System.Boolean)">
             <summary>
                 Represents one resolved ToDoList runtime row.
             </summary>
@@ -20550,6 +20581,10 @@
             <param name="NodeId">The backing node id.</param>
             <param name="OriginalText">The original source text.</param>
             <param name="TranslatedText">The translated text from the DB.</param>
+            <param name="TranslatedPayloadReady">
+                Whether the runtime row already has translated payload that can be
+                applied natively or shown through plugin hover tooltips.
+            </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.Key">
             <summary>The stable runtime key.</summary>
@@ -20571,6 +20606,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.TranslatedText">
             <summary>The translated text from the DB.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoRuntimeEntry.TranslatedPayloadReady">
+            <summary>
+                Whether the runtime row already has translated payload that can be
+                applied natively or shown through plugin hover tooltips.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListRuntimeAvailability">
             <summary>
