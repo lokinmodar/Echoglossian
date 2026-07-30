@@ -2509,8 +2509,14 @@
         <member name="F:Echoglossian.Config.TranslateToDoList">
             <summary>Translate To-Do List entries.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateToDo">
+            <summary>Translate ToDo entries.</summary>
+        </member>
         <member name="F:Echoglossian.Config.ToDoListTranslationDisplayMode">
             <summary>Display mode for ToDoList quest entries.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ToDoTranslationDisplayMode">
+            <summary>Display mode for ToDo quest entries.</summary>
         </member>
         <member name="F:Echoglossian.Config.ScenarioTreeTranslationDisplayMode">
             <summary>Display mode for ScenarioTree quest entries.</summary>
@@ -3053,6 +3059,16 @@
                 <see langword="null" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindToDoText(Echoglossian.EFCoreSqlite.Models.ToDoText)">
+            <summary>
+                Finds a dedicated ToDo payload scoped by addon, source hash, game
+                version, target language, and translation engine.
+            </summary>
+            <param name="toDoText">The ToDo payload to find.</param>
+            <returns>
+                The matching <see cref="T:Echoglossian.EFCoreSqlite.Models.ToDoText" />, or <see langword="null" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken)">
             <summary>
             Inserts a TalkMessage record into the database.
@@ -3164,6 +3180,14 @@
                 selection-dialog or game-window persistence.
             </summary>
             <param name="contextMenuText">The ContextMenu payload to persist.</param>
+            <returns>A status message describing the persistence result.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertToDoTextData(Echoglossian.EFCoreSqlite.Models.ToDoText)">
+            <summary>
+                Inserts or updates a dedicated ToDo payload without sharing
+                game-window, quest, or selection-dialog persistence.
+            </summary>
+            <param name="toDoText">The ToDo payload to persist.</param>
             <returns>A status message describing the persistence result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
@@ -3666,6 +3690,14 @@
                 Computes a signature for config values that determine which addon
                 handlers should be registered.
             </summary>
+            <returns>A stable serialized signature.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeAddonHandlerRegistrationSignature(Echoglossian.Config)">
+            <summary>
+                Computes a signature for config values that determine which addon
+                handlers should be registered.
+            </summary>
+            <param name="configuration">The configuration to evaluate.</param>
             <returns>A stable serialized signature.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.RebuildQueuedTranslationBroker">
@@ -6386,6 +6418,23 @@
                 original text.
             </summary>
         </member>
+        <member name="P:Echoglossian.Echoglossian.ToDoUsesHoverTooltips">
+            <summary>
+                Gets whether the dedicated ToDo family should use hover tooltips.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ToDoWritesNativeTranslation">
+            <summary>
+                Gets whether the dedicated ToDo family should write translated text
+                into the native addon.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ToDoHoverShowsOriginal">
+            <summary>
+                Gets whether dedicated ToDo hover tooltips should show the original
+                text.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Echoglossian.ScenarioTreeUsesHoverTooltips">
             <summary>
                 Gets whether the ScenarioTree family should use hover tooltips.
@@ -8552,6 +8601,11 @@
                 Gets or sets the dedicated ContextMenu translation rows.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.ToDoTexts">
+            <summary>
+                Gets or sets the dedicated ToDo translation rows.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.NamePlateMessages">
             <summary>
                 Gets or sets the translated world-object nameplate rows.
@@ -9015,6 +9069,18 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddContextMenuTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddToDoTexts">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddToDoTexts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddToDoTexts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddToDoTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -11366,6 +11432,50 @@
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Models.ToastMessage.SetGameVersion(System.String)">
             <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.ToDoText">
+            <summary>
+                Stores translated ToDo payloads independently from generic game-window,
+                quest, and selection-dialog rows.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.AddonName">
+            <summary>Gets or sets the addon name.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.OriginalTextsAsText">
+            <summary>Gets or sets the serialized original payload.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.OriginalLang">
+            <summary>Gets or sets the original source language.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.TranslatedTextsAsText">
+            <summary>Gets or sets the serialized translated payload.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.TranslationLang">
+            <summary>Gets or sets the target translation language.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.TranslationEngine">
+            <summary>Gets or sets the translation engine id.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.GameVersion">
+            <summary>Gets or sets the stored game version.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.SourceContentHash">
+            <summary>Gets or sets the source payload hash.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.CreatedDate">
+            <summary>Gets or sets the created timestamp.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.UpdatedDate">
+            <summary>Gets or sets the updated timestamp.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.RowVersion">
+            <summary>Gets or sets the optimistic concurrency token.</summary>
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.Trait">
             <summary>
@@ -20533,6 +20643,210 @@
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ScenarioTreeHandler.ScenarioTreeRuntimeEntry.TextNodeKey">
             <summary>The backing visible text-node key, if any.</summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler">
+            <summary>
+                Translates the dedicated ToDo addon without sharing _ToDoList runtime
+                state, persistence, or native mutations.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ToDoText,Echoglossian.EFCoreSqlite.Models.ToDoText},System.Func{Echoglossian.EFCoreSqlite.Models.ToDoText,System.Threading.Tasks.Task{System.String}},Echoglossian.NativeUI.Helpers.HoverTooltipManager)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler" /> class.
+            </summary>
+            <param name="configuration">The plugin configuration.</param>
+            <param name="translationService">The shared translation service.</param>
+            <param name="findToDoText">Resolves persisted dedicated ToDo payloads.</param>
+            <param name="insertToDoTextAsync">Persists translated ToDo payloads.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.GetEventHandlers">
+            <summary>
+                Returns the event handlers required for the dedicated ToDo runtime.
+            </summary>
+            <returns>The lifecycle event handlers.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.OnPluginUnload">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.RegisterHandler(Dalamud.Game.Addon.Lifecycle.AddonEvent,Echoglossian.NativeUI.Handlers.LocalAddonHandlerDelegate)">
+            <summary>
+                Registers one local lifecycle handler.
+            </summary>
+            <param name="evt">The lifecycle event.</param>
+            <param name="handler">The local event handler.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.OnToDoEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Processes one ToDo lifecycle update.
+            </summary>
+            <param name="evt">The triggering lifecycle event.</param>
+            <param name="args">The associated lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.OnToDoCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <summary>
+                Clears ToDo state when the native addon closes.
+            </summary>
+            <param name="evt">The triggering lifecycle event.</param>
+            <param name="args">The associated lifecycle arguments.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ProcessVisibleToDo(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves, applies, or queues the current dedicated ToDo payload.
+            </summary>
+            <param name="addon">The visible ToDo addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryReuseCurrentToDoPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation)">
+            <summary>
+                Reuses the current translated snapshot when only timer text changed.
+            </summary>
+            <param name="addon">The visible ToDo addon.</param>
+            <param name="operation">The immutable operation for the visible payload.</param>
+            <returns><c>true</c> when the existing presentation was reused.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ResolveCurrentPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the source payload while recognizing native text this
+                handler wrote during an earlier display pass.
+            </summary>
+            <param name="addon">The visible ToDo addon.</param>
+            <returns>The source-facing ToDo payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryFindPersistedPresentation(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot@)">
+            <summary>
+                Tries to resolve a complete dedicated ToDo translation from SQLite.
+            </summary>
+            <param name="payload">The source-facing ToDo payload.</param>
+            <param name="operation">The immutable operation for the payload.</param>
+            <param name="presentation">Receives the resolved presentation.</param>
+            <returns><c>true</c> when a complete persisted translation exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ResolveAndPersistPresentationAsync(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,System.Int64)">
+            <summary>
+                Translates and persists one uncached ToDo payload without blocking a
+                lifecycle callback.
+            </summary>
+            <param name="payload">The source-facing ToDo payload.</param>
+            <param name="sourceLanguage">The captured source language.</param>
+            <param name="operation">The immutable operation being translated.</param>
+            <param name="generation">The visible generation that scheduled the work.</param>
+            <returns>A task representing the background translation work.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ApplyCurrentToDoPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot)">
+            <summary>
+                Applies native replacement and hover tooltips for one resolved ToDo
+                snapshot while leaving timer nodes untouched.
+            </summary>
+            <param name="addon">The visible ToDo addon.</param>
+            <param name="presentation">The resolved source and translated payloads.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.RestoreOwnedNativeMutations(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Restores only native text previously written by this handler.
+            </summary>
+            <param name="addon">The visible ToDo addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean)">
+            <summary>
+                Registers a hover tooltip for one dedicated ToDo text node.
+            </summary>
+            <param name="nodeKey">The stable structural node key.</param>
+            <param name="textNode">The visible native text node.</param>
+            <param name="originalText">The original ToDo text.</param>
+            <param name="translatedText">The translated ToDo text.</param>
+            <param name="hoverShowsOriginal">Whether hover text should show the source.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.CreateToDoText(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Creates the dedicated persistence row for one source payload.
+            </summary>
+            <param name="payload">The source-facing ToDo payload.</param>
+            <param name="scope">The immutable translation and persistence scope.</param>
+            <param name="translatedTexts">The optional complete translated payload.</param>
+            <returns>The dedicated persistence row.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.CaptureTranslationScope(Echoglossian.SourceClientLanguage)">
+            <summary>
+                Captures the mutable configuration values that determine translation
+                and persistence behavior before asynchronous work begins.
+            </summary>
+            <param name="sourceLanguage">The source language captured from the client.</param>
+            <returns>The immutable scope for one ToDo translation operation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryDeserializeTranslatedTexts(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload,System.String,System.Collections.Generic.List{System.String}@)">
+            <summary>
+                Parses a persisted ordered translation payload for the current ToDo
+                source rows.
+            </summary>
+            <param name="payload">The current source payload.</param>
+            <param name="serializedTexts">The serialized translated text array.</param>
+            <param name="translatedTexts">Receives the complete translated payload.</param>
+            <returns><c>true</c> when the stored payload is complete and usable.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryGetToDo(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Tries to resolve the dedicated ToDo addon, including an addon that
+                has become hidden but still owns native mutations.
+            </summary>
+            <param name="addon">Receives the live ToDo addon.</param>
+            <returns><c>true</c> when ToDo exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryGetVisibleToDo(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*@)">
+            <summary>
+                Tries to resolve the visible dedicated ToDo addon.
+            </summary>
+            <param name="addon">Receives the visible ToDo addon.</param>
+            <returns><c>true</c> when ToDo is visible.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ClearRuntimeState">
+            <summary>
+                Clears handler-owned runtime state without touching _ToDoList.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot">
+            <summary>
+                Represents a fully resolved dedicated ToDo presentation snapshot.
+            </summary>
+            <param name="Operation">The immutable operation that resolved this snapshot.</param>
+            <param name="OriginalPayload">The source-facing ToDo payload.</param>
+            <param name="TranslatedTexts">The ordered translated text rows.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot.#ctor(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Represents a fully resolved dedicated ToDo presentation snapshot.
+            </summary>
+            <param name="Operation">The immutable operation that resolved this snapshot.</param>
+            <param name="OriginalPayload">The source-facing ToDo payload.</param>
+            <param name="TranslatedTexts">The ordered translated text rows.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot.Operation">
+            <summary>The immutable operation that resolved this snapshot.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot.OriginalPayload">
+            <summary>The source-facing ToDo payload.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot.TranslatedTexts">
+            <summary>The ordered translated text rows.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoNativeMutation">
+            <summary>
+                Captures one native mutation owned by the dedicated ToDo handler.
+            </summary>
+            <param name="OriginalText">The game-owned original text.</param>
+            <param name="AppliedText">The handler-applied native text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoNativeMutation.#ctor(System.String,System.String)">
+            <summary>
+                Captures one native mutation owned by the dedicated ToDo handler.
+            </summary>
+            <param name="OriginalText">The game-owned original text.</param>
+            <param name="AppliedText">The handler-applied native text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoNativeMutation.OriginalText">
+            <summary>The game-owned original text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoNativeMutation.AppliedText">
+            <summary>The handler-applied native text.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler">
             <summary>
                 Handles the ToDoList quest addon runtime using only QuestManager,
@@ -20925,6 +21239,305 @@
             The number of visible quests still waiting on translated data.
             </param>
             <returns>The derived availability snapshot.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText">
+            <summary>
+                Represents one captured ToDo text node.
+            </summary>
+            <param name="NodeKey">The stable structural text-node identity.</param>
+            <param name="NodeId">The native node id.</param>
+            <param name="Text">The visible node text.</param>
+            <param name="IsTimerNode">Whether the node displays volatile timer text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText.#ctor(System.String,System.Int32,System.String,System.Boolean)">
+            <summary>
+                Represents one captured ToDo text node.
+            </summary>
+            <param name="NodeKey">The stable structural text-node identity.</param>
+            <param name="NodeId">The native node id.</param>
+            <param name="Text">The visible node text.</param>
+            <param name="IsTimerNode">Whether the node displays volatile timer text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText.NodeKey">
+            <summary>The stable structural text-node identity.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText.NodeId">
+            <summary>The native node id.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText.Text">
+            <summary>The visible node text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText.IsTimerNode">
+            <summary>Whether the node displays volatile timer text.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText.#ctor(System.Int32,System.String,System.Boolean)">
+            <summary>
+                Initializes a captured text row for callers that only have a unique
+                native node id.
+            </summary>
+            <param name="nodeId">The native node id.</param>
+            <param name="text">The visible node text.</param>
+            <param name="isTimerNode">Whether the node displays volatile timer text.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload">
+            <summary>
+                Represents the visible text captured from the dedicated ToDo surface.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload.#ctor(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoCapturedText})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload" /> class.
+            </summary>
+            <param name="visibleTexts">The captured visible texts in display order.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload.VisibleTexts">
+            <summary>
+                Gets the captured visible texts in display order.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload.GetTranslatableTexts">
+            <summary>
+                Gets the visible texts that are stable and translatable.
+            </summary>
+            <returns>The non-timer text nodes in display order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload.ComputeSourceContentHash">
+            <summary>
+                Computes a stable source hash that excludes volatile timer nodes.
+            </summary>
+            <returns>The uppercase SHA-256 hash.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope">
+            <summary>
+                Captures the immutable translation and persistence scope for one ToDo
+                payload.
+            </summary>
+            <param name="SourceLanguageCode">The captured source-language persistence code.</param>
+            <param name="TargetLanguageCode">The captured configured target-language code.</param>
+            <param name="TranslationEngine">The captured translation engine.</param>
+            <param name="GameVersion">The captured game version.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope.#ctor(System.String,System.String,System.Int32,System.String)">
+            <summary>
+                Captures the immutable translation and persistence scope for one ToDo
+                payload.
+            </summary>
+            <param name="SourceLanguageCode">The captured source-language persistence code.</param>
+            <param name="TargetLanguageCode">The captured configured target-language code.</param>
+            <param name="TranslationEngine">The captured translation engine.</param>
+            <param name="GameVersion">The captured game version.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope.SourceLanguageCode">
+            <summary>The captured source-language persistence code.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope.TargetLanguageCode">
+            <summary>The captured configured target-language code.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope.TranslationEngine">
+            <summary>The captured translation engine.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope.GameVersion">
+            <summary>The captured game version.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation">
+            <summary>
+                Identifies one ToDo translation request and its immutable scope.
+            </summary>
+            <param name="SourceContentHash">The stable non-timer source hash.</param>
+            <param name="Scope">The immutable translation and persistence scope.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation.#ctor(System.String,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationScope)">
+            <summary>
+                Identifies one ToDo translation request and its immutable scope.
+            </summary>
+            <param name="SourceContentHash">The stable non-timer source hash.</param>
+            <param name="Scope">The immutable translation and persistence scope.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation.SourceContentHash">
+            <summary>The stable non-timer source hash.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation.Scope">
+            <summary>The immutable translation and persistence scope.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState">
+            <summary>
+                Tracks visible ToDo translation work so timer-driven repaints neither
+                repeat persistence lookups nor let stale completions replace newer work.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState.ObserveVisibleOperation(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation)">
+            <summary>
+                Records the currently visible operation and returns its generation.
+            </summary>
+            <param name="operation">The operation represented by the visible addon.</param>
+            <returns>The current visible generation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState.ShouldSkipPersistenceLookup(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation)">
+            <summary>
+                Gets whether a persistence lookup must be skipped for known pending
+                or failed work.
+            </summary>
+            <param name="operation">The candidate operation.</param>
+            <returns><c>true</c> when persistence lookup must be skipped.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState.TryStart(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,System.Int64)">
+            <summary>
+                Marks one visible operation as in flight.
+            </summary>
+            <param name="operation">The operation being translated.</param>
+            <param name="generation">The visible generation that scheduled it.</param>
+            <returns><c>true</c> when the operation may start.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState.TryComplete(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,System.Int64)">
+            <summary>
+                Accepts a completed operation only when it still represents the
+                current visible request.
+            </summary>
+            <param name="operation">The completed operation.</param>
+            <param name="generation">The visible generation that scheduled it.</param>
+            <returns><c>true</c> when the completion may update presentation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState.MarkFailed(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,System.Int64)">
+            <summary>
+                Records a failed operation only when it is still current.
+            </summary>
+            <param name="operation">The failed operation.</param>
+            <param name="generation">The visible generation that scheduled it.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState.Clear">
+            <summary>
+                Invalidates all pending work and clears request state.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy">
+            <summary>
+                Resolves the presentation behavior for the dedicated ToDo addon.
+            </summary>
+            <param name="UsesHoverTooltips">Whether hover tooltips are required.</param>
+            <param name="WritesNativeTranslation">Whether native text may be rewritten.</param>
+            <param name="HoverShowsOriginal">Whether hover text should show the source.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy.#ctor(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+                Resolves the presentation behavior for the dedicated ToDo addon.
+            </summary>
+            <param name="UsesHoverTooltips">Whether hover tooltips are required.</param>
+            <param name="WritesNativeTranslation">Whether native text may be rewritten.</param>
+            <param name="HoverShowsOriginal">Whether hover text should show the source.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy.UsesHoverTooltips">
+            <summary>Whether hover tooltips are required.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy.WritesNativeTranslation">
+            <summary>Whether native text may be rewritten.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy.HoverShowsOriginal">
+            <summary>Whether hover text should show the source.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy.Create(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Resolves a display policy after applying overlay-only language
+                restrictions.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">Whether native mutation is forbidden.</param>
+            <returns>The effective dedicated ToDo presentation policy.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers">
+            <summary>
+                Resolves the readable text rows displayed by the dedicated ToDo addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers.ResolveVisibleTexts(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves visible ToDo text in display order, keeping countdown text
+                in the payload while excluding it from translation identity.
+            </summary>
+            <param name="addon">The live ToDo addon.</param>
+            <returns>The visible text rows in display order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers.ResolveVisibleTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves visible ToDo text nodes with an identity that remains unique
+                when repeated component node ids occur in the tree.
+            </summary>
+            <param name="addon">The live ToDo addon.</param>
+            <returns>The readable visible text nodes in display order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers.ResolveVisibleTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Resolves the visible ToDo text node addresses in display order.
+            </summary>
+            <param name="addon">The live ToDo addon.</param>
+            <returns>The readable visible text-node addresses.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers.ReadTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the most useful text representation from one native text node.
+            </summary>
+            <param name="textNode">The native text node.</param>
+            <returns>The readable text, or an empty string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers.IsTimerText(System.String)">
+            <summary>
+                Determines whether a readable ToDo row is the volatile countdown.
+            </summary>
+            <param name="text">The visible text.</param>
+            <returns><c>true</c> when the text is a countdown value.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers.TimerTextPattern">
+            <remarks>
+            Pattern:<br/>
+            <code>^\\s*(?:(?:\\d{1,2}:)?\\d{1,2}:\\d{2})\\s*$</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ Match if at the beginning of the string.<br/>
+            ○ Match a whitespace character greedily any number of times.<br/>
+            ○ Optional (greedy).<br/>
+                ○ Match a Unicode digit atomically at least 1 and at most 2 times.<br/>
+                ○ Match ':'.<br/>
+            ○ Match a Unicode digit atomically at least 1 and at most 2 times.<br/>
+            ○ Match ':'.<br/>
+            ○ Match a Unicode digit exactly 2 times.<br/>
+            ○ Match a whitespace character greedily any number of times.<br/>
+            ○ Match if at the end of the string or if before an ending newline.<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode">
+            <summary>
+                Represents one visible ToDo node with a structural identity.
+            </summary>
+            <param name="NodeKey">The node id plus traversal ordinal.</param>
+            <param name="NodeId">The native node id.</param>
+            <param name="Text">The readable node text.</param>
+            <param name="IsTimerNode">Whether the node displays volatile timer text.</param>
+            <param name="Address">The live native text-node address.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode.#ctor(System.String,System.Int32,System.String,System.Boolean,System.IntPtr)">
+            <summary>
+                Represents one visible ToDo node with a structural identity.
+            </summary>
+            <param name="NodeKey">The node id plus traversal ordinal.</param>
+            <param name="NodeId">The native node id.</param>
+            <param name="Text">The readable node text.</param>
+            <param name="IsTimerNode">Whether the node displays volatile timer text.</param>
+            <param name="Address">The live native text-node address.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode.NodeKey">
+            <summary>The node id plus traversal ordinal.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode.NodeId">
+            <summary>The native node id.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode.Text">
+            <summary>The readable node text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode.IsTimerNode">
+            <summary>Whether the node displays volatile timer text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode.Address">
+            <summary>The live native text-node address.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler">
             <summary>
@@ -32300,6 +32913,11 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate ToDoList.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateToDoToggle">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Translate ToDo.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateYesNoScreenLabel">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate Yes/No Screen.
@@ -37735,6 +38353,50 @@
             only keyed registrations with the matching key are decorated.
             </para>
             </remarks>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.TimerTextPattern_0">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the TimerTextPattern method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.TimerTextPattern_0.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TimerTextPattern_0.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.TimerTextPattern_0.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TimerTextPattern_0.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.TimerTextPattern_0.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TimerTextPattern_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TimerTextPattern_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TimerTextPattern_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.Utilities">
+            <summary>Helper methods used by generated <see cref="T:System.Text.RegularExpressions.Regex"/>-derived implementations.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout">
+            <summary>Default timeout value set in <see cref="T:System.AppContext"/>, or <see cref="F:System.Text.RegularExpressions.Regex.InfiniteMatchTimeout"/> if none was set.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_hasTimeout">
+            <summary>Whether <see cref="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout"/> is non-infinite.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.Utilities.StackPush(System.Int32[]@,System.Int32@,System.Int32)">
+            <summary>Pushes 1 value onto the backtracking stack.</summary>
         </member>
     </members>
 </doc>

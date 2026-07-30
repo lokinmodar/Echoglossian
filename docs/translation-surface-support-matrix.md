@@ -59,7 +59,7 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | Journal | `TranslateJournal` | Quest / native-window family | Quest list surface | Enabled |
 | JournalDetail | `TranslateJournalDetail` | Quest / native-window family | Dense body layout; native mode requires explicit block reflow | Enabled |
-| ToDoList | `TranslateToDoList` | Quest / native-window family | Quest tracker / objective list | Enabled |
+| ToDo | `TranslateToDo` | Quest / native-window family | Instanced/FATE objective tracker | Enabled |
 | ScenarioTree | `TranslateScenarioTree` | Quest / native-window family | Main scenario tracker | Enabled |
 | JournalAccept | `TranslateJournalAccept` | Quest / native-window family | Quest accept window; uses live popup capture with dedicated popup persistence when no safe quest id is available | Enabled |
 | JournalResult | `TranslateJournalResult` | Quest / native-window family | Quest result / completion window; prefers canonical quest lookup and falls back to popup persistence while missing rows are translated live | Enabled |

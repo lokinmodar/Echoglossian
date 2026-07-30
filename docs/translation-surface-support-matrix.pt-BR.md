@@ -57,7 +57,7 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | Journal | `TranslateJournal` | Família quest / native-window | Superfície de lista de quests | Ativado |
 | JournalDetail | `TranslateJournalDetail` | Família quest / native-window | Layout de corpo denso; o modo nativo exige block reflow explícito | Ativado |
-| ToDoList | `TranslateToDoList` | Família quest / native-window | Rastreador de quest / lista de objetivos | Ativado |
+| ToDo | `TranslateToDo` | Família quest / native-window | Rastreador de objetivos de instância/FATE | Ativado |
 | ScenarioTree | `TranslateScenarioTree` | Família quest / native-window | Rastreador do cenário principal | Ativado |
 | JournalAccept | `TranslateJournalAccept` | Família quest / native-window | Janela de aceite de quest; usa captura do popup em runtime com persistência dedicada quando não há quest id seguro | Ativado |
 | JournalResult | `TranslateJournalResult` | Família quest / native-window | Janela de resultado / conclusão de quest; prioriza lookup canônico de quest e cai para persistência de popup enquanto linhas ausentes são traduzidas em runtime | Ativado |
