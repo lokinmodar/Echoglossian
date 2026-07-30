@@ -11,8 +11,8 @@ namespace Echoglossian.PluginUI.Tabs;
 public static class SelectionDialogsTab
 {
     /// <summary>
-    ///     Draws the selection-dialog settings tab.
-    /// </summary>
+     ///     Draws the selection-dialog settings tab.
+     /// </summary>
     /// <param name="config">The current plugin configuration.</param>
     /// <returns><c>true</c> when a setting changed.</returns>
     public static bool Draw(Config config)
@@ -33,16 +33,16 @@ public static class SelectionDialogsTab
             ref config.SelectStringTranslationDisplayMode);
         changed |= DrawSelectionDialogSection(
             config,
-            "SelectOkDisplayMode",
-            Resources.TranslateSelectOkLabel,
-            ref config.TranslateSelectOk,
-            ref config.SelectOkTranslationDisplayMode);
-        changed |= DrawSelectionDialogSection(
-            config,
             "SelectIconStringDisplayMode",
             Resources.TranslateSelectIconStringLabel,
             ref config.TranslateSelectIconString,
             ref config.SelectIconStringTranslationDisplayMode);
+        changed |= DrawSelectionDialogSection(
+            config,
+            "SelectOkDisplayMode",
+            Resources.TranslateSelectOkLabel,
+            ref config.TranslateSelectOk,
+            ref config.SelectOkTranslationDisplayMode);
 
         if (changed)
         {
@@ -56,6 +56,7 @@ public static class SelectionDialogsTab
     /// <summary>
     ///     Draws one selection-dialog enable toggle and display-mode combo.
     /// </summary>
+    /// <param name="config">The current plugin configuration.</param>
     /// <param name="comboId">The stable ImGui ID for the display-mode combo.</param>
     /// <param name="sectionLabel">The translated checkbox label.</param>
     /// <param name="enabled">Whether the surface is enabled.</param>

@@ -44,32 +44,40 @@ internal static class SelectionDialogCapturePolicy
     }
 
     /// <summary>
-    ///     Determines whether the visible text-node payload should be promoted
-    ///     ahead of a detached structured payload so native mutation and hover
-    ///     tooltips target the live nodes currently on screen.
+    ///     Determines whether a visible text-node payload should replace the
+    ///     otherwise preferred structured payload because both expose the same
+    ///     ordered texts.
     /// </summary>
-    /// <param name="primaryTexts">The structured payload texts.</param>
-    /// <param name="textNodeTexts">The visible text-node texts.</param>
+    /// <param name="structuredPayload">
+    ///     The ATK-value or string-array payload chosen by structure.
+    /// </param>
+    /// <param name="textNodePayload">The visible text-node payload.</param>
     /// <returns>
-    ///     <see langword="true" /> when the visible text nodes should be
-    ///     preferred; otherwise, <see langword="false" />.
+    ///     <see langword="true" /> when the visible text-node payload should
+    ///     become authoritative; otherwise, <see langword="false" />.
     /// </returns>
     public static bool ShouldPreferTextNodePayload(
-        IReadOnlyList<string> primaryTexts,
-        IReadOnlyList<string> textNodeTexts)
+        SelectionDialogPayload structuredPayload,
+        SelectionDialogPayload textNodePayload)
     {
-        if (primaryTexts.Count == 0 ||
-            primaryTexts.Count != textNodeTexts.Count)
+        ArgumentNullException.ThrowIfNull(structuredPayload);
+        ArgumentNullException.ThrowIfNull(textNodePayload);
+
+        if (structuredPayload.SourceKind ==
+                SelectionDialogCaptureSourceKind.TextNodes ||
+            textNodePayload.SourceKind !=
+                SelectionDialogCaptureSourceKind.TextNodes ||
+            textNodePayload.TextNodeAddresses.Count == 0 ||
+            structuredPayload.Texts.Count != textNodePayload.Texts.Count)
         {
             return false;
         }
 
-        for (var index = 0; index < primaryTexts.Count; index++)
+        for (var index = 0; index < structuredPayload.Texts.Count; index++)
         {
-            if (!string.Equals(
-                    NormalizeVisibleText(primaryTexts[index]),
-                    NormalizeVisibleText(textNodeTexts[index]),
-                    StringComparison.Ordinal))
+            if (!TextsMatch(
+                    structuredPayload.Texts[index],
+                    textNodePayload.Texts[index]))
             {
                 return false;
             }
@@ -78,17 +86,20 @@ internal static class SelectionDialogCapturePolicy
         return true;
     }
 
-    private static string NormalizeVisibleText(string? text)
+    private static bool TextsMatch(string? left, string? right)
     {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return string.Empty;
-        }
+        return string.Equals(
+            NormalizeText(left),
+            NormalizeText(right),
+            StringComparison.Ordinal);
+    }
 
-        return string.Join(
-            " ",
-            text.Split(
-                ['\r', '\n', '\t', ' '],
-                StringSplitOptions.RemoveEmptyEntries));
+    private static string NormalizeText(string? text)
+    {
+        return string.IsNullOrWhiteSpace(text)
+            ? string.Empty
+            : text.Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Replace('\r', '\n')
+                .Trim();
     }
 }

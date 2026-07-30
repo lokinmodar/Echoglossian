@@ -93,54 +93,6 @@ public partial class Echoglossian
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
-                this.selectYesNoOverlay,
-                () => TranslationWindowConfig.FromConfigForSelectYesNo(
-                    this.configuration),
-                isEnabled: () =>
-                    this.configuration.TranslateYesNoScreen &&
-                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                        this.configuration.SelectYesNoTranslationDisplayMode,
-                        this.configuration.OverlayOnlyLanguage),
-                syncBeforeDraw: () =>
-                    this.TrySyncOverlayToAddon(
-                        "SelectYesno",
-                        this.selectYesNoOverlay)));
-
-        this.registeredOverlays.Add(
-            new OverlayRegistration(
-                this.selectOkOverlay,
-                () => TranslationWindowConfig.FromConfigForSelectOk(
-                    this.configuration),
-                isEnabled: () =>
-                    this.configuration.TranslateSelectOk &&
-                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                        this.configuration.SelectOkTranslationDisplayMode,
-                        this.configuration.OverlayOnlyLanguage),
-                syncBeforeDraw: () =>
-                    this.TrySyncOverlayToAddon(
-                        "SelectOk",
-                        this.selectOkOverlay)));
-
-        this.registeredOverlays.Add(
-            new OverlayRegistration(
-                this.selectStringOverlay,
-                () => TranslationWindowConfig.FromConfigForSelectString(
-                    this.configuration),
-                isEnabled: () =>
-                    this.configuration.TranslateSelectString &&
-                    NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                        this.configuration.SelectStringTranslationDisplayMode,
-                        this.configuration.OverlayOnlyLanguage),
-                syncBeforeDraw: () =>
-                    this.TrySyncOverlayToAddon(
-                        "SelectString",
-                        this.selectStringOverlay) ||
-                    this.TrySyncOverlayToAddon(
-                        "SelectIconString",
-                        this.selectStringOverlay)));
-
-        this.registeredOverlays.Add(
-            new OverlayRegistration(
                 this.textGimmickHintOverlay,
                 () => TranslationWindowConfig.FromConfigForTextGimmickHint(
                     this.configuration),

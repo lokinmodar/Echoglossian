@@ -3,9 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.NativeUI.Helpers;
-
 namespace Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
+
+using global::Echoglossian.NativeUI.Helpers;
 
 /// <summary>
 ///     Handles the icon-bearing selection dialog runtime.
@@ -72,5 +72,11 @@ public sealed class SelectIconStringHandler : SelectionDialogHandlerBase
         return row == null
             ? Task.FromResult("No data to save.")
             : this.insertSelectionDialogTextAsync(row);
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldPromoteFirstOverlayTextToTitle()
+    {
+        return false;
     }
 }

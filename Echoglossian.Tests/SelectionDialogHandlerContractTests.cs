@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.IO;
+using System.Reflection;
 
 using Xunit;
 
@@ -41,32 +42,34 @@ public sealed class SelectionDialogHandlerContractTests
     }
 
     /// <summary>
-    ///     Ensures the handler source files exist so runtime wiring can target
-    ///     concrete implementations rather than placeholder names.
+    ///     Ensures changing only the SelectIconString toggle invalidates addon
+    ///     handler registration.
     /// </summary>
-    /// <param name="relativePath">The handler file relative path.</param>
-    [Theory]
-    [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectYesNoHandler.cs")]
-    [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectOkHandler.cs")]
-    [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectStringHandler.cs")]
-    [InlineData("NativeUI\\AddonHandlers\\SelectionDialogs\\SelectIconStringHandler.cs")]
-    public void HandlerSourceFiles_ExistForSelectionDialogs(string relativePath)
+    [Fact]
+    public void AddonHandlerRegistrationSignature_ChangesWhenSelectIconStringToggleChanges()
     {
-        var root = FindRepositoryRoot();
-        Assert.True(
-            File.Exists(Path.Combine(root.FullName, relativePath)),
-            $"Expected selection-dialog handler source file '{relativePath}' to exist.");
+        var disabled = new Config { TranslateSelectIconString = false };
+        var enabled = new Config { TranslateSelectIconString = true };
+
+        Assert.NotEqual(
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(disabled),
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(enabled));
     }
 
     /// <summary>
-    ///     Ensures the icon-bearing selection dialog has dedicated config and
-    ///     no longer reuses the plain SelectString toggle and display mode.
+    ///     Ensures addon wiring registers SelectIconString under its dedicated
+    ///     toggle rather than sharing SelectString settings.
     /// </summary>
     [Fact]
-    public void SelectIconStringHandler_UsesDedicatedToggleAndDisplayMode()
+    public void AddonHandlerWiring_UsesDedicatedSelectIconStringToggleAndMode()
     {
         var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
+        var wiringSource = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "AddonHandlerWiring.cs"));
+        var handlerSource = File.ReadAllText(Path.Combine(
             root.FullName,
             "NativeUI",
             "AddonHandlers",
@@ -74,25 +77,21 @@ public sealed class SelectionDialogHandlerContractTests
             "SelectIconStringHandler.cs"));
 
         Assert.Contains(
-            "config.TranslateSelectIconString",
-            source,
+            "this.configuration.TranslateSelectIconString",
+            wiringSource,
             StringComparison.Ordinal);
         Assert.Contains(
             "config.SelectIconStringTranslationDisplayMode",
-            source,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "config.TranslateSelectString",
-            source,
+            handlerSource,
             StringComparison.Ordinal);
     }
 
     /// <summary>
-    ///     Ensures the shared selection-dialog runtime switches to the shared
-    ///     hover-tooltip pipeline instead of the dedicated overlay callbacks.
+    ///     Ensures the selection-dialog runtime now uses hover tooltips rather
+    ///     than callback-owned overlay state.
     /// </summary>
     [Fact]
-    public void SelectionDialogHandlerBase_UsesHoverTooltipRuntimeInsteadOfOverlayCallbacks()
+    public void SelectionDialogHandlerBase_UsesHoverTooltipManagerInsteadOfOverlayCallbacks()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -102,30 +101,24 @@ public sealed class SelectionDialogHandlerContractTests
             "SelectionDialogs",
             "SelectionDialogHandlerBase.cs"));
 
-        Assert.Contains(
-            "HoverTooltipManager",
-            source,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "RemoveByPrefix",
+        Assert.Contains("HoverTooltipManager", source, StringComparison.Ordinal);
+        Assert.Contains("RemoveByPrefix", source, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "SyncSelectionDialogOverlayBoundsDelegate",
             source,
             StringComparison.Ordinal);
         Assert.DoesNotContain(
             "Action<string, string, string> updateOverlay",
             source,
             StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "private void PublishOverlay()",
-            source,
-            StringComparison.Ordinal);
     }
 
     /// <summary>
-    ///     Ensures the overlay sync path uses the real native addon name for
-    ///     the yes/no dialog.
+    ///     Ensures generic selection dialogs are no longer registered as
+    ///     overlay surfaces now that they use structured hover tooltips.
     /// </summary>
     [Fact]
-    public void OverlayConfigs_UsesNativeSelectYesnoAddonName()
+    public void OverlayConfigs_DoesNotRegisterGenericSelectionDialogOverlays()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -134,7 +127,41 @@ public sealed class SelectionDialogHandlerContractTests
             "TranslationOverlay",
             "OverlayConfigs.cs"));
 
-        Assert.Contains("\"SelectYesno\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"SelectYesno\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"SelectOk\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"SelectString\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"SelectIconString\"", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the frame-time overlay readiness gate no longer treats the
+    ///     generic selection dialogs as ImGui overlay surfaces.
+    /// </summary>
+    [Fact]
+    public void PluginRuntimeUi_DoesNotGateSelectionDialogsAsOverlayPresentation()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "PluginUI",
+            "PluginRuntimeUi.cs"));
+
+        Assert.DoesNotContain(
+            "this.configuration.SelectYesNoTranslationDisplayMode",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "this.configuration.SelectOkTranslationDisplayMode",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "this.configuration.SelectStringTranslationDisplayMode",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "this.configuration.SelectIconStringTranslationDisplayMode",
+            source,
+            StringComparison.Ordinal);
     }
 
     /// <summary>

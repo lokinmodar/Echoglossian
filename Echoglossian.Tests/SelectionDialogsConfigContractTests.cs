@@ -40,22 +40,35 @@ public sealed class SelectionDialogsConfigContractTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "TranslateSelectIconString",
-            source,
-            StringComparison.Ordinal);
-        Assert.Contains(
             "SelectIconStringTranslationDisplayMode",
             source,
             StringComparison.Ordinal);
     }
 
     /// <summary>
-    ///     Ensures the selection-dialog tab renders dedicated sections for all
-    ///     four supported selection-dialog addons and no longer uses
-    ///     overlay-only copy for the family.
+    ///     Ensures the config declares an independent toggle for the
+    ///     icon-bearing dialog rather than sharing the SelectString toggle.
     /// </summary>
     [Fact]
-    public void SelectionDialogsTab_DrawsDedicatedSectionsWithoutOverlayOnlyCopy()
+    public void Config_DefinesDedicatedSelectIconStringToggle()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "Config.cs"));
+
+        Assert.Contains(
+            "TranslateSelectIconString",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the configuration UI uses the shared native or tooltip
+    ///     display-mode helper and exposes SelectIconString independently.
+    /// </summary>
+    [Fact]
+    public void SelectionDialogsTab_UsesSharedTooltipDisplayModesForAllDialogs()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -65,15 +78,15 @@ public sealed class SelectionDialogsConfigContractTests
             "SelectionDialogsTab.cs"));
 
         Assert.Contains(
-            "Resources.TranslateYesNoScreenLabel",
+            "TranslationDisplayModeUiHelper.DrawDisplayModeCombo",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Resources.TranslateSelectOkLabel",
+            "config.TranslateSelectIconString",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Resources.TranslateSelectStringLabel",
+            "config.SelectIconStringTranslationDisplayMode",
             source,
             StringComparison.Ordinal);
         Assert.Contains(

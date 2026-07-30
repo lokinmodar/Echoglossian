@@ -3,9 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.NativeUI.Helpers;
-
 namespace Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
+
+using global::Echoglossian.NativeUI.Helpers;
 
 /// <summary>
 ///     Handles the generic confirmation dialog runtime.

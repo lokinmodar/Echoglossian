@@ -49,15 +49,6 @@ public partial class Echoglossian
                 this.configuration.CutSceneSelectStringTranslationDisplayMode,
                 this.configuration.OverlayOnlyLanguage) ||
             NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                this.configuration.SelectYesNoTranslationDisplayMode,
-                this.configuration.OverlayOnlyLanguage) ||
-            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                this.configuration.SelectOkTranslationDisplayMode,
-                this.configuration.OverlayOnlyLanguage) ||
-            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
-                this.configuration.SelectStringTranslationDisplayMode,
-                this.configuration.OverlayOnlyLanguage) ||
-            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
                 this.configuration.WideTextToastTranslationDisplayMode,
                 this.configuration.OverlayOnlyLanguage) ||
             NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
