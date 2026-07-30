@@ -1167,9 +1167,17 @@ public class Config : IPluginConfiguration
   /// <summary>Translate To-Do List entries.</summary>
   [DefaultValue(false)] public bool TranslateToDoList = false;
 
+  /// <summary>Translate ToDo entries.</summary>
+  [DefaultValue(false)] public bool TranslateToDo = false;
+
   /// <summary>Display mode for ToDoList quest entries.</summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode ToDoListTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for ToDo quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode ToDoTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Display mode for ScenarioTree quest entries.</summary>

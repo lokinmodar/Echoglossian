@@ -4244,6 +4244,17 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("TranslateToDoListToggle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate ToDo.
+        /// </summary>
+        public static string TranslateToDoToggle
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateToDoToggle", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate Yes/No Screen.

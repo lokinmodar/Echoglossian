@@ -928,6 +928,9 @@
   <data name="TranslateToDoListToggle" xml:space="preserve">
     <value>Translate ToDoList</value>
   </data>
+  <data name="TranslateToDoToggle" xml:space="preserve">
+    <value>Translate ToDo</value>
+  </data>
   <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
     <value>Translate Text Gimmick Hint</value>
   </data>

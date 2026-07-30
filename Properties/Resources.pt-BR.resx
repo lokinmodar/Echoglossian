@@ -804,6 +804,9 @@
   <data name="TranslateToDoListToggle" xml:space="preserve">
     <value>Traduzir ToDoList</value>
   </data>
+  <data name="TranslateToDoToggle" xml:space="preserve">
+    <value>Traduzir ToDo</value>
+  </data>
   <data name="TalkTabTitle" xml:space="preserve">
     <value>Falar</value>
   </data>
