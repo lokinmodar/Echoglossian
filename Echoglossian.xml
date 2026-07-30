@@ -16820,6 +16820,12 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.OnPluginUnload">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldCaptureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.NormalizeCapturedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
@@ -16828,6 +16834,26 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ResolvePreferredCaptureText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <summary>
+                Prefers the original source text when the visible Tooltip text only
+                differs by wrap markers or inline formatting payloads, but keeps the
+                live visible text once the game is already showing translated
+                content.
+            </summary>
+            <param name="textNode">The live Tooltip text node.</param>
+            <param name="normalizedVisibleText">The normalized visible text.</param>
+            <returns>The preferred semantic capture text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ReadNormalizedSourceText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the original Tooltip source text without live wrap markers so
+                capture can persist a semantic source string when the live text is
+                still game-owned.
+            </summary>
+            <param name="textNode">The live Tooltip text node.</param>
+            <returns>The normalized source text, or an empty string.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.AfterRestorePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
@@ -28855,6 +28881,27 @@
             <param name="sourceText">The canonical source text.</param>
             <param name="candidateText">The translated candidate text.</param>
             <returns><see langword="true" /> when both values are source-equivalent.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TooltipTextNormalizationHelper">
+            <summary>
+                Normalizes Tooltip addon text so capture and native-state comparisons
+                operate on semantic text instead of wrapped SeString payload noise.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipTextNormalizationHelper.NormalizeForCapture(System.String)">
+            <summary>
+                Removes raw wrap payload bytes and residual formatting controls while
+                preserving semantic line breaks owned by the source text itself.
+            </summary>
+            <param name="text">The raw Tooltip text.</param>
+            <returns>The normalized capture text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipTextNormalizationHelper.TrimTrailingSpaces(System.Text.StringBuilder)">
+            <summary>
+                Removes trailing spaces that were only introduced by wrapped payload
+                bytes before one semantic line break.
+            </summary>
+            <param name="builder">The builder under normalization.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.TraitCanonicalPayload">
             <summary>

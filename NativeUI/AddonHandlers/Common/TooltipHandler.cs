@@ -9,6 +9,7 @@ using Echoglossian.NativeUI.Helpers;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
+using Lumina.Text.ReadOnly;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Common;
 
@@ -19,6 +20,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
 {
     private readonly Dictionary<string, NativeTextNodeLayoutSnapshot>
         appliedLayoutSnapshots = new(StringComparer.Ordinal);
+    private readonly List<string> pendingCapturedTexts = [];
     private readonly Func<TooltipText, TooltipText?> findTooltipText;
     private readonly Func<TooltipText, Task<string>> insertTooltipTextAsync;
 
@@ -65,6 +67,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     {
         base.OnCleanupEvent(evt, args);
         this.appliedLayoutSnapshots.Clear();
+        this.pendingCapturedTexts.Clear();
     }
 
     /// <inheritdoc />
@@ -72,6 +75,52 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     {
         base.OnPluginUnload();
         this.appliedLayoutSnapshots.Clear();
+        this.pendingCapturedTexts.Clear();
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldCaptureTextNode(
+        AtkTextNode* textNode,
+        string visibleText)
+    {
+        var normalizedVisibleText =
+            TooltipTextNormalizationHelper.NormalizeForCapture(visibleText);
+        var preferredCaptureText =
+            ResolvePreferredCaptureText(textNode, normalizedVisibleText);
+        this.pendingCapturedTexts.Add(preferredCaptureText);
+        return !string.IsNullOrWhiteSpace(preferredCaptureText);
+    }
+
+    /// <inheritdoc />
+    protected override SortedDictionary<string, string> NormalizeCapturedTextNodes(
+        SortedDictionary<string, string> capturedTextNodes)
+    {
+        var normalizedTextNodes = new SortedDictionary<string, string>(
+            StringComparer.Ordinal);
+
+        try
+        {
+            var captureIndex = 0;
+            foreach (var (key, value) in capturedTextNodes)
+            {
+                var normalizedText = captureIndex < this.pendingCapturedTexts.Count
+                    ? this.pendingCapturedTexts[captureIndex]
+                    : TooltipTextNormalizationHelper.NormalizeForCapture(value);
+                captureIndex++;
+                if (string.IsNullOrWhiteSpace(normalizedText))
+                {
+                    continue;
+                }
+
+                normalizedTextNodes[key] = normalizedText;
+            }
+
+            return normalizedTextNodes;
+        }
+        finally
+        {
+            this.pendingCapturedTexts.Clear();
+        }
     }
 
     /// <inheritdoc />
@@ -150,7 +199,12 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
             }
 
             var currentText = this.ReadTextNode(textNode);
-            if (string.Equals(currentText, targetText, StringComparison.Ordinal))
+            if (string.Equals(
+                    NativeTextComparisonNormalizationHelper.NormalizeForComparison(
+                        currentText),
+                    NativeTextComparisonNormalizationHelper.NormalizeForComparison(
+                        targetText),
+                    StringComparison.Ordinal))
             {
                 continue;
             }
@@ -167,6 +221,83 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     Prefers the original source text when the visible Tooltip text only
+    ///     differs by wrap markers or inline formatting payloads, but keeps the
+    ///     live visible text once the game is already showing translated
+    ///     content.
+    /// </summary>
+    /// <param name="textNode">The live Tooltip text node.</param>
+    /// <param name="normalizedVisibleText">The normalized visible text.</param>
+    /// <returns>The preferred semantic capture text.</returns>
+    private static string ResolvePreferredCaptureText(
+        AtkTextNode* textNode,
+        string normalizedVisibleText)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedVisibleText))
+        {
+            return string.Empty;
+        }
+
+        var normalizedSourceText = ReadNormalizedSourceText(textNode);
+        if (string.IsNullOrWhiteSpace(normalizedSourceText))
+        {
+            return normalizedVisibleText;
+        }
+
+        var comparisonVisibleText =
+            NativeTextComparisonNormalizationHelper.NormalizeForComparison(
+                normalizedVisibleText);
+        var comparisonSourceText =
+            NativeTextComparisonNormalizationHelper.NormalizeForComparison(
+                normalizedSourceText);
+        if (string.IsNullOrWhiteSpace(comparisonVisibleText) ||
+            string.IsNullOrWhiteSpace(comparisonSourceText))
+        {
+            return normalizedVisibleText;
+        }
+
+        return string.Equals(
+                   comparisonVisibleText,
+                   comparisonSourceText,
+                   StringComparison.Ordinal) ||
+               comparisonVisibleText.Contains(
+                   comparisonSourceText,
+                   StringComparison.Ordinal) ||
+               comparisonSourceText.Contains(
+                   comparisonVisibleText,
+                   StringComparison.Ordinal)
+            ? normalizedSourceText
+            : normalizedVisibleText;
+    }
+
+    /// <summary>
+    ///     Reads the original Tooltip source text without live wrap markers so
+    ///     capture can persist a semantic source string when the live text is
+    ///     still game-owned.
+    /// </summary>
+    /// <param name="textNode">The live Tooltip text node.</param>
+    /// <returns>The normalized source text, or an empty string.</returns>
+    private static string ReadNormalizedSourceText(AtkTextNode* textNode)
+    {
+        if (textNode == null)
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            var sourceText = textNode->OriginalTextPointer
+                .AsReadOnlySeStringSpan()
+                .ExtractText();
+            return TooltipTextNormalizationHelper.NormalizeForCapture(sourceText);
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     /// <inheritdoc />

@@ -46,6 +46,36 @@ public sealed class TooltipAddonNativePresentationContractTests
     }
 
     /// <summary>
+    ///     Ensures the dedicated Tooltip handler normalizes wrapped SeString
+    ///     payloads before persistence and compares live native text by meaning
+    ///     instead of raw wrap-marker bytes.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_NormalizesCaptureAndComparison()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "NormalizeCapturedTextNodes",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TooltipTextNormalizationHelper.NormalizeForCapture",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "NativeTextComparisonNormalizationHelper.NormalizeForComparison",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the dedicated Tooltip addon toggle is rendered after the
     ///     shared hover-tooltip appearance controls so addon-specific toggles
     ///     do not mix with formatting sliders from other flows.
