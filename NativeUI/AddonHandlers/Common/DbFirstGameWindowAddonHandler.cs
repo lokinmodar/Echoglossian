@@ -390,6 +390,26 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Tries to persist one resolved payload pair through an addon-local
+    ///     dedicated store instead of the shared <see cref="GameWindow" />
+    ///     table.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="translatedPayload">The resolved translated payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the derived handler handled
+    ///     persistence; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool TryPersistDedicatedPayload(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Normalizes one resolved translated payload before it is applied to
     ///     the live addon surface.
     /// </summary>
@@ -1274,7 +1294,11 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     goto QueueNewTranslation;
                 }
 
-                if (this.ShouldPersistNewGameWindowPayload(
+                if (!this.TryPersistDedicatedPayload(
+                        operationScope,
+                        originalPayload,
+                        supplementalTranslatedPayload) &&
+                    this.ShouldPersistNewGameWindowPayload(
                         operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload))

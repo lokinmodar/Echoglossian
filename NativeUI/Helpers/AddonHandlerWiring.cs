@@ -66,6 +66,18 @@ public partial class Echoglossian
                   TranslationService)));
     }
 
+    if (this.configuration.TranslateContextMenu)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "ContextMenu",
+              Handler: new ContextMenuHandler(
+                  this.configuration,
+                  this.hoverTooltipManager,
+                  TranslationService,
+                  this.FindContextMenuText,
+                  row => this.InsertContextMenuTextData(row))));
+    }
+
     if (this.configuration.TranslateActionMenuWindow)
     {
       this.registeredAddonHandlers.Add(

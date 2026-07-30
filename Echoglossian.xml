@@ -15150,6 +15150,20 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Tries to persist one resolved payload pair through an addon-local
+                dedicated store instead of the shared <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />
+                table.
+            </summary>
+            <param name="scope">The immutable operation scope used for persistence.</param>
+            <param name="originalPayload">The original-facing payload.</param>
+            <param name="translatedPayload">The resolved translated payload.</param>
+            <returns>
+                <see langword="true" /> when the derived handler handled
+                persistence; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeResolvedTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Normalizes one resolved translated payload before it is applied to
@@ -16899,6 +16913,60 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.AddonContextMenuTitleHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler">
+            <summary>
+                Handles DB-first translation for the ContextMenu addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.ContextMenuText,Echoglossian.EFCoreSqlite.Models.ContextMenuText},System.Func{Echoglossian.EFCoreSqlite.Models.ContextMenuText,System.Threading.Tasks.Task{System.String}})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler" />
+                class.
+            </summary>
+            <param name="configuration">The configuration settings for the plugin.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
+            <param name="translationService">The service used for translating text.</param>
+            <param name="findContextMenuText">
+                Resolves a persisted dedicated ContextMenu payload.
+            </param>
+            <param name="insertContextMenuTextAsync">
+                Persists a dedicated ContextMenu payload asynchronously.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.CreateContextMenuText(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload})">
+            <summary>
+                Builds one dedicated ContextMenu persistence row from the ordered
+                visible text-node payload.
+            </summary>
+            <param name="scope">The immutable source, target, and engine scope.</param>
+            <param name="originalPayload">The ordered original-facing payload.</param>
+            <param name="translatedPayload">The optional ordered translated payload.</param>
+            <returns>The dedicated ContextMenu row.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryProjectStoredTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <summary>
+                Projects one ordered dedicated ContextMenu payload onto the current
+                text-node keys.
+            </summary>
+            <param name="originalPayload">The visible original-facing payload.</param>
+            <param name="translatedTextsAsText">The stored ordered translations.</param>
+            <param name="translatedPayload">Receives the projected payload.</param>
+            <returns>
+                <see langword="true" /> when the stored ordered payload matches the
+                visible text-node shape; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ComputeSourceContentHash(System.String)">
+            <summary>
+                Computes the stable hash used to key one ordered ContextMenu
+                original payload.
+            </summary>
+            <param name="originalTextsAsText">The normalized ordered source JSON.</param>
+            <returns>The uppercase SHA-256 hash.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.MainMenu.MainCommandHandler">
             <summary>
