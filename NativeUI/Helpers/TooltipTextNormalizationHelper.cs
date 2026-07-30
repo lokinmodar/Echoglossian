@@ -84,6 +84,34 @@ internal static class TooltipTextNormalizationHelper
     }
 
     /// <summary>
+    ///     Normalizes Tooltip text for semantic recovery by removing
+    ///     whitespace-only layout churn after capture normalization.
+    /// </summary>
+    /// <param name="text">The raw Tooltip text.</param>
+    /// <returns>The semantic recovery key.</returns>
+    public static string NormalizeForRecovery(string? text)
+    {
+        var normalizedText = NormalizeForCapture(text);
+        if (normalizedText.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(normalizedText.Length);
+        foreach (var character in normalizedText)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                continue;
+            }
+
+            builder.Append(character);
+        }
+
+        return builder.ToString();
+    }
+
+    /// <summary>
     ///     Removes trailing spaces that were only introduced by wrapped payload
     ///     bytes before one semantic line break.
     /// </summary>

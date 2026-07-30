@@ -1134,6 +1134,54 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds dedicated Tooltip addon payload candidates scoped by addon,
+  ///     source language, target language, translation engine, and game
+  ///     version so the runtime can recover the canonical original payload
+  ///     even after the live tooltip text has been wrapped or mutated.
+  /// </summary>
+  /// <param name="tooltipText">The Tooltip payload probe to match.</param>
+  /// <returns>The ordered candidate rows for recovery.</returns>
+  public IReadOnlyList<TooltipText> FindTooltipTextCandidates(
+      TooltipText tooltipText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (string.IsNullOrWhiteSpace(tooltipText.AddonName) ||
+          string.IsNullOrWhiteSpace(tooltipText.GameVersion))
+      {
+        return [];
+      }
+
+      return context.TooltipTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == tooltipText.AddonName &&
+              t.GameVersion == tooltipText.GameVersion)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  tooltipText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  tooltipText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == tooltipText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .ToList();
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindTooltipTextCandidates exception {e}");
+      return [];
+    }
+  }
+
+  /// <summary>
   /// Inserts a TalkMessage record into the database.
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>

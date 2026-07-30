@@ -129,6 +129,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Gets the currently applied runtime state for the visible addon.
+    /// </summary>
+    private protected DbFirstGameWindowRuntimeState? CurrentRuntimeState
+    {
+        get
+        {
+            return this.runtimeState;
+        }
+    }
+
+    /// <summary>
     ///     Initializes a new instance of the
     ///     <see cref="DbFirstGameWindowAddonHandler" /> class.
     /// </summary>
@@ -586,6 +597,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     protected virtual bool ShouldRestoreStaleTranslatedTextNodesOnPayloadChange()
     {
         return false;
+    }
+
+    /// <summary>
+    ///     Performs addon-local follow-up work after stale translated
+    ///     text-node values have been restored before the next live capture.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    private protected virtual void AfterRestoreStaleTranslatedTextNodes(
+        AtkUnitBase* addon)
+    {
     }
 
     /// <summary>
@@ -1117,6 +1138,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             !livePayload.MatchesOriginal(this.runtimeState.OriginalPayload) &&
             this.TryRestoreStaleTranslatedTextNodes(addon, livePayload))
         {
+            this.AfterRestoreStaleTranslatedTextNodes(addon);
             livePayload = this.CaptureLivePayload(addon);
             if (livePayload.IsEmpty)
             {

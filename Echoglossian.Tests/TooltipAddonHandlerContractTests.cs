@@ -69,6 +69,40 @@ public sealed class TooltipAddonHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures the dedicated Tooltip handler canonicalizes captured text
+    ///     against the active runtime state and uses the shared native reflow
+    ///     helper so layout can be restored cleanly between shows.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_UsesRuntimeCanonicalizationAndNativeReflowRestore()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "TooltipPayloadRecoveryHelper.CanonicalizeLiveTextNodes(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ShouldRestoreStaleTranslatedTextNodesOnPayloadChange()",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

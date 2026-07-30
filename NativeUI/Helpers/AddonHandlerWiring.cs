@@ -333,6 +333,7 @@ public partial class Echoglossian
                   this.hoverTooltipManager,
                   TranslationService,
                   this.FindTooltipText,
+                  this.FindTooltipTextCandidates,
                   row => this.InsertTooltipTextData(row))));
     }
 

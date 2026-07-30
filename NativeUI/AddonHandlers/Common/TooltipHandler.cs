@@ -22,6 +22,8 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         appliedLayoutSnapshots = new(StringComparer.Ordinal);
     private readonly List<string> pendingCapturedTexts = [];
     private readonly Func<TooltipText, TooltipText?> findTooltipText;
+    private readonly Func<TooltipText, IReadOnlyList<TooltipText>>
+        findTooltipTextCandidates;
     private readonly Func<TooltipText, Task<string>> insertTooltipTextAsync;
 
     /// <summary>
@@ -32,6 +34,10 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
     /// <param name="translationService">The translation service.</param>
     /// <param name="findTooltipText">Resolves a persisted Tooltip payload.</param>
+    /// <param name="findTooltipTextCandidates">
+    ///     Resolves candidate Tooltip payloads for canonical original
+    ///     recovery.
+    /// </param>
     /// <param name="insertTooltipTextAsync">
     ///     Persists a Tooltip payload asynchronously.
     /// </param>
@@ -40,6 +46,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         HoverTooltipManager hoverTooltipManager,
         TranslationService translationService,
         Func<TooltipText, TooltipText?> findTooltipText,
+        Func<TooltipText, IReadOnlyList<TooltipText>> findTooltipTextCandidates,
         Func<TooltipText, Task<string>> insertTooltipTextAsync)
         : base(
             addonName: "Tooltip",
@@ -53,6 +60,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                 configuration.TooltipAddonTranslationDisplayMode)
     {
         this.findTooltipText = findTooltipText;
+        this.findTooltipTextCandidates = findTooltipTextCandidates;
         this.insertTooltipTextAsync = insertTooltipTextAsync;
     }
 
@@ -115,12 +123,36 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                 normalizedTextNodes[key] = normalizedText;
             }
 
+            if (this.CurrentRuntimeState != null)
+            {
+                return TooltipPayloadRecoveryHelper.CanonicalizeLiveTextNodes(
+                    normalizedTextNodes,
+                    this.CurrentRuntimeState.OriginalPayload.TextNodes,
+                    this.CurrentRuntimeState.TranslatedPayload.TextNodes);
+            }
+
             return normalizedTextNodes;
         }
         finally
         {
             this.pendingCapturedTexts.Clear();
         }
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryResolveSupplementalOriginalPayload(
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload livePayload,
+        out DbFirstGameWindowPayload originalPayload)
+    {
+        originalPayload = DbFirstGameWindowPayload.Empty;
+        var candidates = this.BuildRecoveryCandidates(
+            sourceLanguage,
+            livePayload);
+        return TooltipPayloadRecoveryHelper.TryRecoverOriginalPayload(
+            livePayload,
+            candidates,
+            out originalPayload);
     }
 
     /// <inheritdoc />
@@ -142,7 +174,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
             translatedPayload: null);
         var storedPayload = this.findTooltipText(lookup);
         if (storedPayload == null ||
-            !TryProjectStoredTranslatedPayload(
+            !TryProjectStoredPayload(
                 originalPayload,
                 storedPayload.TranslatedTextsAsText,
                 out translatedPayload))
@@ -152,6 +184,45 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         }
 
         return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool ShouldQueueNewGameWindowTranslation(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload originalPayload,
+        bool retryCoolingDown)
+    {
+        if (retryCoolingDown)
+        {
+            return false;
+        }
+
+        var candidates = this.BuildRecoveryCandidates(
+            sourceLanguage,
+            originalPayload);
+        if (TooltipPayloadRecoveryHelper.HasTranslatedSlotEvidence(
+                originalPayload,
+                candidates))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldRestoreStaleTranslatedTextNodesOnPayloadChange()
+    {
+        return true;
+    }
+
+    /// <inheritdoc />
+    private protected override void AfterRestoreStaleTranslatedTextNodes(
+        AtkUnitBase* addon)
+    {
+        this.RestoreAppliedLayoutSnapshots(addon);
     }
 
     /// <inheritdoc />
@@ -174,6 +245,8 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload sourcePayload,
         DbFirstGameWindowPayload targetPayload)
     {
+        this.RestoreAppliedLayoutSnapshots(addon);
+
         var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
@@ -306,45 +379,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         DbFirstGameWindowPayload originalPayload)
     {
-        if (this.appliedLayoutSnapshots.Count == 0)
-        {
-            return;
-        }
-
-        var restoredKeys = new List<string>();
-        var ordinalsByNodeId = new Dictionary<uint, int>();
-        foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
-        {
-            var textNode = (AtkTextNode*)nodeAddress;
-            if (textNode == null)
-            {
-                continue;
-            }
-
-            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
-                ordinalsByNodeId,
-                textNode->AtkResNode.NodeId);
-            if (!this.appliedLayoutSnapshots.TryGetValue(
-                    textNodeKey,
-                    out var layoutSnapshot) ||
-                !originalPayload.TextNodes.TryGetValue(
-                    textNodeKey,
-                    out var originalText))
-            {
-                continue;
-            }
-
-            NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
-                layoutSnapshot,
-                originalText,
-                restoreText: false);
-            restoredKeys.Add(textNodeKey);
-        }
-
-        foreach (var restoredKey in restoredKeys)
-        {
-            this.appliedLayoutSnapshots.Remove(restoredKey);
-        }
+        this.RestoreAppliedLayoutSnapshots(addon);
     }
 
     /// <summary>
@@ -393,45 +428,154 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     ///     <see langword="true" /> when the stored ordered payload matches the
     ///     visible text-node shape; otherwise <see langword="false" />.
     /// </returns>
-    private static bool TryProjectStoredTranslatedPayload(
-        DbFirstGameWindowPayload originalPayload,
-        string? translatedTextsAsText,
-        out DbFirstGameWindowPayload translatedPayload)
+    private IReadOnlyList<DbFirstPayloadRecoveryCandidate> BuildRecoveryCandidates(
+        SourceClientLanguage sourceLanguage,
+        DbFirstGameWindowPayload livePayload)
     {
-        translatedPayload = DbFirstGameWindowPayload.Empty;
+        var scope = new TranslationReuseScope(
+            sourceLanguage.PersistenceCode,
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+                this.HandlerConfig.Lang),
+            this.GetOperationTranslationEngineId(),
+            this.HandlerConfig.TranslateAlreadyTranslatedTexts);
+        var probe = this.CreateTooltipText(
+            scope,
+            livePayload,
+            translatedPayload: null);
+        var rows = this.findTooltipTextCandidates(probe);
+        if (rows.Count == 0)
+        {
+            return [];
+        }
+
+        var candidates = new List<DbFirstPayloadRecoveryCandidate>();
+        foreach (var row in rows)
+        {
+            if (!TryProjectStoredPayload(
+                    livePayload,
+                    row.OriginalTextsAsText,
+                    out var originalCandidatePayload) ||
+                !TryProjectStoredPayload(
+                    livePayload,
+                    row.TranslatedTextsAsText,
+                    out var translatedCandidatePayload))
+            {
+                continue;
+            }
+
+            if (!TooltipPayloadRecoveryHelper.HasSemanticallyDistinctPayloads(
+                    originalCandidatePayload,
+                    translatedCandidatePayload))
+            {
+                continue;
+            }
+
+            candidates.Add(
+                new DbFirstPayloadRecoveryCandidate(
+                    originalCandidatePayload,
+                    translatedCandidatePayload));
+        }
+
+        return candidates;
+    }
+
+    /// <summary>
+    ///     Projects one ordered dedicated Tooltip payload onto the current
+    ///     text-node keys.
+    /// </summary>
+    /// <param name="referencePayload">The visible payload shape to project to.</param>
+    /// <param name="storedTextsAsText">The stored ordered payload values.</param>
+    /// <param name="projectedPayload">Receives the projected payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the stored ordered payload matches the
+    ///     visible text-node shape; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool TryProjectStoredPayload(
+        DbFirstGameWindowPayload referencePayload,
+        string? storedTextsAsText,
+        out DbFirstGameWindowPayload projectedPayload)
+    {
+        projectedPayload = DbFirstGameWindowPayload.Empty;
 
         try
         {
-            var translatedTexts = JsonConvert.DeserializeObject<List<string>>(
-                translatedTextsAsText ?? string.Empty);
-            if (translatedTexts == null ||
-                translatedTexts.Count != originalPayload.TextNodes.Count ||
-                translatedTexts.Any(string.IsNullOrWhiteSpace))
+            var storedTexts = JsonConvert.DeserializeObject<List<string>>(
+                storedTextsAsText ?? string.Empty);
+            if (storedTexts == null ||
+                storedTexts.Count != referencePayload.TextNodes.Count ||
+                storedTexts.Any(string.IsNullOrWhiteSpace))
             {
                 return false;
             }
 
-            var translatedTextNodes = new SortedDictionary<string, string>(
+            var projectedTextNodes = new SortedDictionary<string, string>(
                 StringComparer.Ordinal);
             using var originalKeys = GetOrderedTextNodes(
-                    originalPayload.TextNodes)
+                    referencePayload.TextNodes)
                 .Select(pair => pair.Key)
                 .GetEnumerator();
-            using var translatedValues = translatedTexts.GetEnumerator();
-            while (originalKeys.MoveNext() && translatedValues.MoveNext())
+            using var storedValues = storedTexts.GetEnumerator();
+            while (originalKeys.MoveNext() && storedValues.MoveNext())
             {
-                translatedTextNodes[originalKeys.Current] = translatedValues.Current;
+                projectedTextNodes[originalKeys.Current] =
+                    TooltipTextNormalizationHelper.NormalizeForCapture(
+                        storedValues.Current);
             }
 
-            translatedPayload = new DbFirstGameWindowPayload(
+            projectedPayload = new DbFirstGameWindowPayload(
                 [],
                 [],
-                translatedTextNodes);
+                projectedTextNodes);
             return true;
         }
         catch (JsonException)
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    ///     Restores cached native layout snapshots so one reused Tooltip addon
+    ///     does not accumulate stale dimensions across distinct payloads.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    private void RestoreAppliedLayoutSnapshots(AtkUnitBase* addon)
+    {
+        if (this.appliedLayoutSnapshots.Count == 0)
+        {
+            return;
+        }
+
+        var restoredKeys = new List<string>();
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+        foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null)
+            {
+                continue;
+            }
+
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                textNode->AtkResNode.NodeId);
+            if (!this.appliedLayoutSnapshots.TryGetValue(
+                    textNodeKey,
+                    out var layoutSnapshot))
+            {
+                continue;
+            }
+
+            NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+                layoutSnapshot,
+                string.Empty,
+                restoreText: false);
+            restoredKeys.Add(textNodeKey);
+        }
+
+        foreach (var restoredKey in restoredKeys)
+        {
+            this.appliedLayoutSnapshots.Remove(restoredKey);
         }
     }
 

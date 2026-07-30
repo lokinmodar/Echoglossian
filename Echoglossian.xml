@@ -3097,6 +3097,16 @@
                 The matching <see cref="T:Echoglossian.EFCoreSqlite.Models.TooltipText" />, or <see langword="null" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindTooltipTextCandidates(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Finds dedicated Tooltip addon payload candidates scoped by addon,
+                source language, target language, translation engine, and game
+                version so the runtime can recover the canonical original payload
+                even after the live tooltip text has been wrapped or mutated.
+            </summary>
+            <param name="tooltipText">The Tooltip payload probe to match.</param>
+            <returns>The ordered candidate rows for recovery.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken)">
             <summary>
             Inserts a TalkMessage record into the database.
@@ -15196,6 +15206,11 @@
             </summary>
             <returns>The effective default-surface translation engine identifier.</returns>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.CurrentRuntimeState">
+            <summary>
+                Gets the currently applied runtime state for the visible addon.
+            </summary>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.#ctor(System.String,Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.Config,System.Boolean},System.Boolean,System.Boolean,System.Nullable{FFXIVClientStructs.FFXIV.Component.GUI.StringArrayType},System.Func{Echoglossian.Config,Echoglossian.JournalTranslationDisplayMode})">
             <summary>
                 Initializes a new instance of the
@@ -15498,6 +15513,13 @@
                 safe and desirable for this addon; otherwise
                 <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.AfterRestoreStaleTranslatedTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Performs addon-local follow-up work after stale translated
+                text-node values have been restored before the next live capture.
+            </summary>
+            <param name="addon">The live addon.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldRefreshAppliedStateOnPreDraw">
             <summary>
@@ -16798,7 +16820,7 @@
                 Handles DB-first translation for the Tooltip addon.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,Echoglossian.EFCoreSqlite.Models.TooltipText},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Threading.Tasks.Task{System.String}})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,Echoglossian.EFCoreSqlite.Models.TooltipText},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Collections.Generic.IReadOnlyList{Echoglossian.EFCoreSqlite.Models.TooltipText}},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Threading.Tasks.Task{System.String}})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler" />
                 class.
@@ -16807,6 +16829,10 @@
             <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The translation service.</param>
             <param name="findTooltipText">Resolves a persisted Tooltip payload.</param>
+            <param name="findTooltipTextCandidates">
+                Resolves candidate Tooltip payloads for canonical original
+                recovery.
+            </param>
             <param name="insertTooltipTextAsync">
                 Persists a Tooltip payload asynchronously.
             </param>
@@ -16826,7 +16852,19 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.NormalizeCapturedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldQueueNewGameWindowTranslation(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Boolean)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.AfterRestoreStaleTranslatedTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
@@ -16868,7 +16906,7 @@
             <param name="translatedPayload">The optional ordered translated payload.</param>
             <returns>The dedicated Tooltip row.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryProjectStoredTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.BuildRecoveryCandidates(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Projects one ordered dedicated Tooltip payload onto the current
                 text-node keys.
@@ -16880,6 +16918,26 @@
                 <see langword="true" /> when the stored ordered payload matches the
                 visible text-node shape; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryProjectStoredPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <summary>
+                Projects one ordered dedicated Tooltip payload onto the current
+                text-node keys.
+            </summary>
+            <param name="referencePayload">The visible payload shape to project to.</param>
+            <param name="storedTextsAsText">The stored ordered payload values.</param>
+            <param name="projectedPayload">Receives the projected payload.</param>
+            <returns>
+                <see langword="true" /> when the stored ordered payload matches the
+                visible text-node shape; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.RestoreAppliedLayoutSnapshots(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Restores cached native layout snapshots so one reused Tooltip addon
+                does not accumulate stale dimensions across distinct payloads.
+            </summary>
+            <param name="addon">The live addon.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.GetOrderedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
             <summary>
@@ -28882,6 +28940,122 @@
             <param name="candidateText">The translated candidate text.</param>
             <returns><see langword="true" /> when both values are source-equivalent.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper">
+            <summary>
+                Recovers canonical Tooltip originals from persisted candidates even
+                when the live node text has been mutated by native wrapping or prior
+                translated application.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.CanonicalizeLiveTextNodes(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Rewrites one live Tooltip text-node map back to the canonical
+                original or translated payload text whenever the visible node only
+                differs by layout-only whitespace churn.
+            </summary>
+            <param name="liveValues">The freshly captured live text-node values.</param>
+            <param name="originalValues">The canonical original text-node values.</param>
+            <param name="translatedValues">
+                The canonical translated text-node values.
+            </param>
+            <returns>The canonicalized text-node map.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.HasSemanticallyDistinctPayloads(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Determines whether one original and translated Tooltip payload pair
+                carries any semantic difference beyond whitespace-only layout
+                mutations.
+            </summary>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The candidate translated payload.</param>
+            <returns>
+                <see langword="true" /> when at least one slot differs
+                semantically; otherwise <see langword="false" /> when the pair is
+                only a poisoned whitespace mutation chain.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.TryRecoverOriginalPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.DbFirstPayloadRecoveryCandidate},Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <summary>
+                Tries to recover the original payload from one set of Tooltip
+                candidates using semantic text matching that ignores layout-only
+                whitespace churn.
+            </summary>
+            <param name="livePayload">The currently visible live payload.</param>
+            <param name="candidates">The candidate original and translated pairs.</param>
+            <param name="originalPayload">
+                The recovered original payload when one unique candidate matches.
+            </param>
+            <returns>
+                <see langword="true" /> when one unique candidate explains the live
+                Tooltip state; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.HasTranslatedSlotEvidence(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.DbFirstPayloadRecoveryCandidate})">
+            <summary>
+                Determines whether the live Tooltip payload still contains evidence
+                that one or more visible slots are already derived from translated
+                candidate text.
+            </summary>
+            <param name="livePayload">The currently visible live payload.</param>
+            <param name="candidates">The candidate original and translated pairs.</param>
+            <returns>
+                <see langword="true" /> when at least one live slot matches the
+                translated candidate semantically while differing from its original
+                candidate text.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.TryScoreCandidate(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.Helpers.DbFirstPayloadRecoveryCandidate,System.Int32@)">
+            <summary>
+                Scores one candidate against the live Tooltip payload.
+            </summary>
+            <param name="livePayload">The live payload.</param>
+            <param name="candidate">The persisted candidate.</param>
+            <param name="score">The resulting score.</param>
+            <returns>
+                <see langword="true" /> when the live payload is fully explainable
+                by the candidate original or translated values.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.TryScoreMap(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Int32@)">
+            <summary>
+                Scores one numeric payload map against a candidate pair.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.TryScoreMap(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Int32@)">
+            <summary>
+                Scores one text-node payload map against a candidate pair.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.MapHasTranslatedSlotEvidence(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String})">
+            <summary>
+                Determines whether a numeric payload map contains translated-slot
+                evidence after semantic normalization.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.MapHasTranslatedSlotEvidence(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Determines whether a text-node payload map contains translated-slot
+                evidence after semantic normalization.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.MapHasSemanticDifference(System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String},System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.String})">
+            <summary>
+                Determines whether two numeric payload maps differ semantically
+                after recovery normalization.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.MapHasSemanticDifference(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+                Determines whether two text-node payload maps differ semantically
+                after recovery normalization.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper.MatchesRecoveryText(System.String,System.String)">
+            <summary>
+                Compares two Tooltip text values using semantic recovery
+                normalization.
+            </summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.TooltipTextNormalizationHelper">
             <summary>
                 Normalizes Tooltip addon text so capture and native-state comparisons
@@ -28895,6 +29069,14 @@
             </summary>
             <param name="text">The raw Tooltip text.</param>
             <returns>The normalized capture text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipTextNormalizationHelper.NormalizeForRecovery(System.String)">
+            <summary>
+                Normalizes Tooltip text for semantic recovery by removing
+                whitespace-only layout churn after capture normalization.
+            </summary>
+            <param name="text">The raw Tooltip text.</param>
+            <returns>The semantic recovery key.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.TooltipTextNormalizationHelper.TrimTrailingSpaces(System.Text.StringBuilder)">
             <summary>
