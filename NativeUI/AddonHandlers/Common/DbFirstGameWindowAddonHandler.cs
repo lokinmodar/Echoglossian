@@ -1294,11 +1294,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                     goto QueueNewTranslation;
                 }
 
-                if (!this.TryPersistDedicatedPayload(
-                        operationScope,
-                        originalPayload,
-                        supplementalTranslatedPayload) &&
-                    this.ShouldPersistNewGameWindowPayload(
+                if (this.ShouldPersistNewGameWindowPayload(
                         operationSourceLanguage,
                         originalPayload,
                         supplementalTranslatedPayload))
@@ -1962,9 +1958,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
-    ///     Persists one resolved original/translated payload pair as a
-    ///     canonical <see cref="GameWindow" /> row using an explicit
-    ///     class/job discriminator captured by the caller.
+    ///     Persists one resolved original/translated payload pair through an
+    ///     addon-local dedicated store or the canonical
+    ///     <see cref="GameWindow" /> row path using an explicit class/job
+    ///     discriminator captured by the caller.
     /// </summary>
     /// <param name="scope">The immutable operation scope used for persistence.</param>
     /// <param name="originalPayload">The original payload.</param>
@@ -1973,6 +1970,37 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     The class/job identifier to persist with the row.
     /// </param>
     internal void PersistResolvedGameWindowPayload(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        uint? classJobId)
+    {
+        if (this.TryPersistDedicatedPayload(
+                scope,
+                originalPayload,
+                translatedPayload))
+        {
+            return;
+        }
+
+        this.PersistResolvedGenericGameWindowPayload(
+            scope,
+            originalPayload,
+            translatedPayload,
+            classJobId);
+    }
+
+    /// <summary>
+    ///     Persists one resolved original/translated payload pair as a
+    ///     canonical <see cref="GameWindow" /> row.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="classJobId">
+    ///     The class/job identifier to persist with the row.
+    /// </param>
+    private void PersistResolvedGenericGameWindowPayload(
         TranslationReuseScope scope,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,

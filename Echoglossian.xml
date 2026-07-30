@@ -15646,9 +15646,22 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
             <summary>
+                Persists one resolved original/translated payload pair through an
+                addon-local dedicated store or the canonical
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row path using an explicit class/job
+                discriminator captured by the caller.
+            </summary>
+            <param name="scope">The immutable operation scope used for persistence.</param>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The translated payload.</param>
+            <param name="classJobId">
+                The class/job identifier to persist with the row.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGenericGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
+            <summary>
                 Persists one resolved original/translated payload pair as a
-                canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row using an explicit
-                class/job discriminator captured by the caller.
+                canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row.
             </summary>
             <param name="scope">The immutable operation scope used for persistence.</param>
             <param name="originalPayload">The original payload.</param>
@@ -16959,6 +16972,21 @@
                 <see langword="true" /> when the stored ordered payload matches the
                 visible text-node shape; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.GetOrderedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
+            <summary>
+                Orders visible text-node payload entries by their numeric node id
+                and duplicate visible-node ordinal.
+            </summary>
+            <param name="textNodes">The text-node payload to order.</param>
+            <returns>The entries in their stable numeric node-key order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.GetTextNodeKeyOrder(System.String)">
+            <summary>
+                Parses the numeric components of one DB-first text-node key.
+            </summary>
+            <param name="textNodeKey">The stable node-id and ordinal key.</param>
+            <returns>The numeric key parts, or maximum values for an invalid key.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ComputeSourceContentHash(System.String)">
             <summary>

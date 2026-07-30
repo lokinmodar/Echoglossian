@@ -100,7 +100,8 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload? translatedPayload)
     {
         var originalTextsAsText = JsonConvert.SerializeObject(
-            originalPayload.TextNodes.Values);
+            GetOrderedTextNodes(originalPayload.TextNodes)
+                .Select(pair => pair.Value));
         return new ContextMenuText
         {
             AddonName = this.AddonName,
@@ -108,7 +109,8 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
             OriginalLang = scope.SourceLanguageCode,
             TranslatedTextsAsText = translatedPayload.HasValue
                 ? JsonConvert.SerializeObject(
-                    translatedPayload.Value.TextNodes.Values)
+                    GetOrderedTextNodes(translatedPayload.Value.TextNodes)
+                        .Select(pair => pair.Value))
                 : string.Empty,
             TranslationLang = scope.TargetLanguageCode,
             TranslationEngine = scope.TranslationEngine,
@@ -142,14 +144,18 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
             var translatedTexts = JsonConvert.DeserializeObject<List<string>>(
                 translatedTextsAsText ?? string.Empty);
             if (translatedTexts == null ||
-                translatedTexts.Count != originalPayload.TextNodes.Count)
+                translatedTexts.Count != originalPayload.TextNodes.Count ||
+                translatedTexts.Any(string.IsNullOrWhiteSpace))
             {
                 return false;
             }
 
             var translatedTextNodes = new SortedDictionary<string, string>(
                 StringComparer.Ordinal);
-            using var originalKeys = originalPayload.TextNodes.Keys.GetEnumerator();
+            using var originalKeys = GetOrderedTextNodes(
+                    originalPayload.TextNodes)
+                .Select(pair => pair.Key)
+                .GetEnumerator();
             using var translatedValues = translatedTexts.GetEnumerator();
             while (originalKeys.MoveNext() && translatedValues.MoveNext())
             {
@@ -166,6 +172,40 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
         {
             return false;
         }
+    }
+
+    /// <summary>
+    ///     Orders visible text-node payload entries by their numeric node id
+    ///     and duplicate visible-node ordinal.
+    /// </summary>
+    /// <param name="textNodes">The text-node payload to order.</param>
+    /// <returns>The entries in their stable numeric node-key order.</returns>
+    private static IEnumerable<KeyValuePair<string, string>> GetOrderedTextNodes(
+        SortedDictionary<string, string> textNodes)
+    {
+        return textNodes
+            .OrderBy(pair => GetTextNodeKeyOrder(pair.Key).NodeId)
+            .ThenBy(pair => GetTextNodeKeyOrder(pair.Key).Ordinal)
+            .ThenBy(pair => pair.Key, StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    ///     Parses the numeric components of one DB-first text-node key.
+    /// </summary>
+    /// <param name="textNodeKey">The stable node-id and ordinal key.</param>
+    /// <returns>The numeric key parts, or maximum values for an invalid key.</returns>
+    private static (uint NodeId, int Ordinal) GetTextNodeKeyOrder(
+        string textNodeKey)
+    {
+        var separatorIndex = textNodeKey.LastIndexOf(':');
+        if (separatorIndex > 0 &&
+            uint.TryParse(textNodeKey.AsSpan(0, separatorIndex), out var nodeId) &&
+            int.TryParse(textNodeKey.AsSpan(separatorIndex + 1), out var ordinal))
+        {
+            return (nodeId, ordinal);
+        }
+
+        return (uint.MaxValue, int.MaxValue);
     }
 
     /// <summary>
