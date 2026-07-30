@@ -28117,6 +28117,23 @@
             </param>
             <returns>The wrap width that should be assigned to the node.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveReplacementContainerWidth(System.UInt16,System.UInt16,System.Boolean)">
+            <summary>
+                Resolves the effective container width for a replacement after the
+                live node has been measured.
+            </summary>
+            <param name="resolvedWrapWidth">
+                The wrap width assigned before applying the replacement.
+            </param>
+            <param name="measuredWidth">
+                The post-apply measured width reported by the live text node.
+            </param>
+            <param name="preferMeasuredOverflow">
+                Whether callers should preserve measured overflow when it exceeds the
+                assigned wrap width.
+            </param>
+            <returns>The width that should drive container resizing.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags)">
             <summary>
                 Resolves the effective measured text extent by combining the live node

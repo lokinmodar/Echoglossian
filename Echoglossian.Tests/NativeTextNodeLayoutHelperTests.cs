@@ -96,6 +96,51 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
+    ///     Ensures tooltip-style native reflow keeps the larger measured width
+    ///     when the live text draw size still exceeds the preserved wrap width.
+    /// </summary>
+    [Fact]
+    public void ResolveReplacementContainerWidth_PrefersMeasuredOverflow_WhenEnabled()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveReplacementContainerWidth(
+            resolvedWrapWidth: 209,
+            measuredWidth: 294,
+            preferMeasuredOverflow: true);
+
+        Assert.Equal((ushort)294, resolved);
+    }
+
+    /// <summary>
+    ///     Ensures callers that do not opt into measured overflow continue to
+    ///     preserve the historical wrap width.
+    /// </summary>
+    [Fact]
+    public void ResolveReplacementContainerWidth_PreservesWrapWidth_WhenMeasuredOverflowIsDisabled()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveReplacementContainerWidth(
+            resolvedWrapWidth: 209,
+            measuredWidth: 294,
+            preferMeasuredOverflow: false);
+
+        Assert.Equal((ushort)209, resolved);
+    }
+
+    /// <summary>
+    ///     Ensures native reflow still falls back to the preserved wrap width
+    ///     when no post-apply measurement is available.
+    /// </summary>
+    [Fact]
+    public void ResolveReplacementContainerWidth_FallsBackToWrapWidth_WhenMeasuredWidthIsMissing()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveReplacementContainerWidth(
+            resolvedWrapWidth: 209,
+            measuredWidth: 0,
+            preferMeasuredOverflow: true);
+
+        Assert.Equal((ushort)209, resolved);
+    }
+
+    /// <summary>
     ///     Ensures the secondary background width is left untouched when the
     ///     anchored node already fits inside the current bounds.
     /// </summary>

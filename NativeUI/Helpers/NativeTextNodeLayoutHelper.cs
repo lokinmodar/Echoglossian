@@ -191,7 +191,10 @@ internal static unsafe class NativeTextNodeLayoutHelper
     TryMeasureTextNode(textNode, out var width, out var height);
     if (resolvedWrapWidth > 0)
     {
-      width = resolvedWrapWidth;
+      width = ResolveReplacementContainerWidth(
+          resolvedWrapWidth,
+          width,
+          measureReplacementWidthBeforeApply);
     }
 
     return new NativeTextNodeResizeResult(width, height);
@@ -683,6 +686,43 @@ internal static unsafe class NativeTextNodeLayoutHelper
     }
 
     return candidateDrawWidth;
+  }
+
+  /// <summary>
+  ///     Resolves the effective container width for a replacement after the
+  ///     live node has been measured.
+  /// </summary>
+  /// <param name="resolvedWrapWidth">
+  ///     The wrap width assigned before applying the replacement.
+  /// </param>
+  /// <param name="measuredWidth">
+  ///     The post-apply measured width reported by the live text node.
+  /// </param>
+  /// <param name="preferMeasuredOverflow">
+  ///     Whether callers should preserve measured overflow when it exceeds the
+  ///     assigned wrap width.
+  /// </param>
+  /// <returns>The width that should drive container resizing.</returns>
+  public static ushort ResolveReplacementContainerWidth(
+      ushort resolvedWrapWidth,
+      ushort measuredWidth,
+      bool preferMeasuredOverflow)
+  {
+    if (resolvedWrapWidth == 0)
+    {
+      return measuredWidth;
+    }
+
+    if (!preferMeasuredOverflow || measuredWidth == 0)
+    {
+      return resolvedWrapWidth;
+    }
+
+    return (ushort)Math.Min(
+        ushort.MaxValue,
+        Math.Max(
+            resolvedWrapWidth,
+            measuredWidth));
   }
 
   /// <summary>
