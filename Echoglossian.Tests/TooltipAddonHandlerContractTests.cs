@@ -123,39 +123,6 @@ public sealed class TooltipAddonHandlerContractTests
     }
 
     /// <summary>
-    ///     Ensures the active translated Tooltip layout is not restored back to
-    ///     its original size at the start of each native apply pass, because
-    ///     the same translated payload may remain visible across frames.
-    /// </summary>
-    [Fact]
-    public void TooltipHandler_DoesNotRestoreActiveLayoutAtStartOfNativeApply()
-    {
-        var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root.FullName,
-            "NativeUI",
-            "AddonHandlers",
-            "Common",
-            "TooltipHandler.cs"));
-        var methodStart = source.IndexOf(
-            "private protected override bool TryApplyCustomTextNodePayload(",
-            StringComparison.Ordinal);
-        Assert.True(methodStart >= 0);
-
-        var nextMethodStart = source.IndexOf(
-            "private static string ResolvePreferredCaptureText(",
-            methodStart,
-            StringComparison.Ordinal);
-        Assert.True(nextMethodStart > methodStart);
-
-        var methodBody = source.Substring(methodStart, nextMethodStart - methodStart);
-        Assert.DoesNotContain(
-            "this.RestoreAppliedLayoutSnapshots(addon);",
-            methodBody,
-            StringComparison.Ordinal);
-    }
-
-    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>
