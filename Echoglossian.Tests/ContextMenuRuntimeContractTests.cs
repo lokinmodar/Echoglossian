@@ -4,7 +4,9 @@
 // </copyright>
 
 using System.IO;
+using System.Reflection;
 
+using Echoglossian.NativeUI.AddonHandlers.MainMenu;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -41,6 +43,36 @@ public sealed class ContextMenuRuntimeContractTests
         Assert.Contains("TryRegisterCustomHoverTooltips", source);
         Assert.Contains("RegisterTranslatedHoverTooltip", source);
         Assert.Contains("ComponentRoot", source);
+        Assert.Contains("DbFirstTextNodeKeyAllocator.ConsumeVisibleNode", source);
+        Assert.Contains("originalPayload.TextNodes.TryGetValue", source);
+        Assert.Contains("translatedPayload.TextNodes.TryGetValue", source);
+        Assert.Contains(
+            "!IsNativeContextMenuReplacementSafe(liveText, sourceText)",
+            source);
+        Assert.DoesNotContain("Select((row, index)", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures ContextMenu canonicalizes decorated labels for persistence
+    ///     and leaves labels with unrecomposable decorations out of native
+    ///     replacement.
+    /// </summary>
+    [Fact]
+    public void ContextMenu_NormalizesDecoratedLabelsAndGuardsNativeReplacement()
+    {
+        Assert.Equal(
+            "Dismiss",
+            InvokeStaticStringMethod(
+                "NormalizeContextMenuLabel",
+                "\uE03C\u0002Dismiss\u0003"));
+        Assert.True(InvokeStaticBooleanMethod(
+            "IsNativeContextMenuReplacementSafe",
+            "Dismiss",
+            "Dismiss"));
+        Assert.False(InvokeStaticBooleanMethod(
+            "IsNativeContextMenuReplacementSafe",
+            "\uE03CDismiss",
+            "Dismiss"));
     }
 
     /// <summary>
@@ -56,6 +88,40 @@ public sealed class ContextMenuRuntimeContractTests
             "AddonHandlers",
             "MainMenu",
             "ContextMenuHandler.cs"));
+    }
+
+    /// <summary>
+    ///     Invokes one private static ContextMenu string helper.
+    /// </summary>
+    /// <param name="methodName">The helper method name.</param>
+    /// <param name="value">The input label.</param>
+    /// <returns>The helper result.</returns>
+    private static string InvokeStaticStringMethod(string methodName, string value)
+    {
+        var method = typeof(ContextMenuHandler).GetMethod(
+            methodName,
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        return Assert.IsType<string>(method.Invoke(null, [value]));
+    }
+
+    /// <summary>
+    ///     Invokes one private static ContextMenu native-replacement guard.
+    /// </summary>
+    /// <param name="methodName">The helper method name.</param>
+    /// <param name="liveLabel">The raw label currently in the UI.</param>
+    /// <param name="canonicalLabel">The canonical persisted label.</param>
+    /// <returns>The guard result.</returns>
+    private static bool InvokeStaticBooleanMethod(
+        string methodName,
+        string liveLabel,
+        string canonicalLabel)
+    {
+        var method = typeof(ContextMenuHandler).GetMethod(
+            methodName,
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        return Assert.IsType<bool>(method.Invoke(null, [liveLabel, canonicalLabel]));
     }
 
     /// <summary>

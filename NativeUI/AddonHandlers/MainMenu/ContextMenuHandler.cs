@@ -3,12 +3,15 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.UIOverlays.TranslationOverlay;
 using Newtonsoft.Json;
 
 namespace Echoglossian.NativeUI.AddonHandlers.MainMenu;
@@ -21,6 +24,10 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
     private const int ContextMenuRowsNodeListIndex = 2;
     private const int FirstContextMenuRowNodeIndex = 1;
     private const int ContextMenuRowCollisionNodeIndex = 3;
+
+    private static readonly Regex NumericLikeLabelPattern = new(
+        @"^\s*([€£$¥]?\s*\d+([.,]\d+)?\s*[%€£$¥]?\s*|(\d+/\d+))\s*$",
+        RegexOptions.Compiled);
 
     private readonly Func<ContextMenuText, ContextMenuText?> findContextMenuText;
     private readonly Func<ContextMenuText, Task<string>> insertContextMenuTextAsync;
@@ -97,16 +104,87 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    protected override SortedDictionary<string, string> NormalizeCapturedTextNodes(
+        SortedDictionary<string, string> capturedTextNodes)
+    {
+        var normalizedTextNodes = new SortedDictionary<string, string>(
+            StringComparer.Ordinal);
+
+        foreach (var (textNodeKey, capturedText) in capturedTextNodes)
+        {
+            var normalizedText = NormalizeContextMenuLabel(capturedText);
+            if (!ShouldPersistContextMenuLabel(normalizedText))
+            {
+                continue;
+            }
+
+            normalizedTextNodes[textNodeKey] = normalizedText;
+        }
+
+        return normalizedTextNodes;
+    }
+
+    /// <inheritdoc />
     private protected override bool TryPersistDedicatedPayload(
         TranslationReuseScope scope,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
     {
+        var normalizedTranslatedPayload = NormalizeContextMenuTranslatedPayload(
+            translatedPayload);
         var row = this.CreateContextMenuText(
             scope,
             originalPayload,
-            translatedPayload);
+            normalizedTranslatedPayload);
         _ = this.insertContextMenuTextAsync(row);
+        return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryApplyCustomTextNodePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload sourcePayload,
+        DbFirstGameWindowPayload targetPayload)
+    {
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+
+        foreach (var row in ResolveContextMenuRows(addon))
+        {
+            var textNode = (AtkTextNode*)row.TextNode;
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
+            {
+                continue;
+            }
+
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                textNode->AtkResNode.NodeId);
+            if (!sourcePayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var sourceText) ||
+                !targetPayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var targetText))
+            {
+                continue;
+            }
+
+            var liveText = this.ReadTextNode(textNode);
+            if (!IsNativeContextMenuReplacementSafe(liveText, sourceText) ||
+                !IsNativeContextMenuReplacementSafe(targetText, targetText))
+            {
+                continue;
+            }
+
+            if (string.Equals(liveText, targetText, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            textNode->SetText(targetText);
+        }
+
         return true;
     }
 
@@ -117,36 +195,42 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         JournalTranslationDisplayMode displayMode)
     {
-        var originalTexts = GetOrderedTextNodes(originalPayload.TextNodes)
-            .Select(pair => pair.Value)
-            .ToList();
-        var translatedTexts = GetOrderedTextNodes(translatedPayload.TextNodes)
-            .Select(pair => pair.Value)
-            .ToList();
         var registeredAny = false;
+        var ordinalsByNodeId = new Dictionary<uint, int>();
 
-        foreach (var (index, collisionNodeAddress) in ResolveContextMenuRows(
-                     addon).Select((row, index) => (index, row.CollisionNode)))
+        foreach (var row in ResolveContextMenuRows(addon))
         {
-            if (index >= originalTexts.Count || index >= translatedTexts.Count)
+            var textNode = (AtkTextNode*)row.TextNode;
+            var collisionNode = (AtkResNode*)row.CollisionNode;
+            if (textNode == null ||
+                collisionNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode) ||
+                !this.IsEffectivelyVisible(collisionNode))
             {
-                break;
+                continue;
             }
 
-            var collisionNode = (AtkResNode*)collisionNodeAddress;
-            if (collisionNode == null)
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                textNode->AtkResNode.NodeId);
+            if (!originalPayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var originalText) ||
+                !translatedPayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var translatedText))
             {
                 continue;
             }
 
             this.RegisterTranslatedHoverTooltip(
-                $"row-{index}",
+                $"row-{textNodeKey}",
                 new Vector2(collisionNode->ScreenX, collisionNode->ScreenY),
                 new Vector2(
                     collisionNode->ScreenX + Math.Max(1f, collisionNode->Width),
                     collisionNode->ScreenY + Math.Max(1f, collisionNode->Height)),
-                originalTexts[index],
-                translatedTexts[index],
+                originalText,
+                translatedText,
                 displayMode);
             registeredAny = true;
         }
@@ -310,7 +394,14 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
             using var translatedValues = translatedTexts.GetEnumerator();
             while (originalKeys.MoveNext() && translatedValues.MoveNext())
             {
-                translatedTextNodes[originalKeys.Current] = translatedValues.Current;
+                var normalizedTranslatedText = NormalizeContextMenuLabel(
+                    translatedValues.Current);
+                if (string.IsNullOrWhiteSpace(normalizedTranslatedText))
+                {
+                    return false;
+                }
+
+                translatedTextNodes[originalKeys.Current] = normalizedTranslatedText;
             }
 
             translatedPayload = new DbFirstGameWindowPayload(
@@ -338,6 +429,87 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
             .OrderBy(pair => GetTextNodeKeyOrder(pair.Key).NodeId)
             .ThenBy(pair => GetTextNodeKeyOrder(pair.Key).Ordinal)
             .ThenBy(pair => pair.Key, StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    ///     Normalizes translated ContextMenu labels before they enter the
+    ///     dedicated persistence store.
+    /// </summary>
+    /// <param name="translatedPayload">The translated text-node payload.</param>
+    /// <returns>The payload with canonical translated labels.</returns>
+    private static DbFirstGameWindowPayload NormalizeContextMenuTranslatedPayload(
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        var normalizedTextNodes = new SortedDictionary<string, string>(
+            StringComparer.Ordinal);
+        foreach (var (textNodeKey, translatedText) in translatedPayload.TextNodes)
+        {
+            normalizedTextNodes[textNodeKey] = NormalizeContextMenuLabel(
+                translatedText);
+        }
+
+        return new DbFirstGameWindowPayload(
+            translatedPayload.AtkValues,
+            translatedPayload.StringArrayValues,
+            normalizedTextNodes);
+    }
+
+    /// <summary>
+    ///     Removes non-text ContextMenu label decorations before using a label
+    ///     as a persistence or translation value.
+    /// </summary>
+    /// <param name="text">The raw ContextMenu label.</param>
+    /// <returns>The canonical printable label text.</returns>
+    private static string NormalizeContextMenuLabel(string? text)
+    {
+        var displayText = TranslationOverlayTextNormalizationHelper
+            .NormalizeForDisplay(text);
+        var builder = new StringBuilder(displayText.Length);
+        foreach (var character in displayText)
+        {
+            if (char.GetUnicodeCategory(character) == UnicodeCategory.PrivateUse)
+            {
+                continue;
+            }
+
+            builder.Append(character);
+        }
+
+        return builder.ToString();
+    }
+
+    /// <summary>
+    ///     Determines whether a canonical ContextMenu label is meaningful
+    ///     enough to persist and translate.
+    /// </summary>
+    /// <param name="text">The canonical ContextMenu label.</param>
+    /// <returns><see langword="true" /> when the label should be retained.</returns>
+    private static bool ShouldPersistContextMenuLabel(string text)
+    {
+        return !string.IsNullOrWhiteSpace(text) &&
+               !text.All(char.IsPunctuation) &&
+               !NumericLikeLabelPattern.IsMatch(text);
+    }
+
+    /// <summary>
+    ///     Determines whether a native label can be replaced without losing
+    ///     decorations that the handler cannot safely rebuild.
+    /// </summary>
+    /// <param name="liveLabel">The raw label currently held by the text node.</param>
+    /// <param name="canonicalLabel">The canonical payload label.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the raw and canonical labels are the
+    ///     same printable text; otherwise <see langword="false" />.
+    /// </returns>
+    private static bool IsNativeContextMenuReplacementSafe(
+        string liveLabel,
+        string canonicalLabel)
+    {
+        return string.Equals(liveLabel, canonicalLabel, StringComparison.Ordinal) &&
+               string.Equals(
+                   NormalizeContextMenuLabel(liveLabel),
+                   canonicalLabel,
+                   StringComparison.Ordinal);
     }
 
     /// <summary>

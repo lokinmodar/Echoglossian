@@ -134,6 +134,54 @@ public sealed class ContextMenuHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures stored ContextMenu translations are canonicalized before
+    ///     the runtime can consider them for native replacement.
+    /// </summary>
+    [Fact]
+    public void ContextMenuHandler_NormalizesStoredDecoratedTranslations()
+    {
+        var originalPayload = CreateTextNodePayload(
+            ("3:0", "Dismiss"));
+
+        var projected = TryProjectStoredTranslatedPayload(
+            originalPayload,
+            "[\"\\uE03CDispensar\\u0002\"]",
+            out var translatedPayload);
+
+        Assert.True(projected);
+        Assert.Equal("Dispensar", translatedPayload.TextNodes["3:0"]);
+    }
+
+    /// <summary>
+    ///     Ensures captured ContextMenu labels are canonicalized before they
+    ///     become the dedicated persistence lookup payload.
+    /// </summary>
+    [Fact]
+    public void ContextMenuHandler_NormalizesCapturedDecoratedLabels()
+    {
+        var handler = new ContextMenuHandler(
+            new Config(),
+            null!,
+            null!,
+            static _ => null,
+            static _ => Task.FromResult(string.Empty));
+        var method = typeof(ContextMenuHandler).GetMethod(
+            "NormalizeCapturedTextNodes",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        var capturedTextNodes = new SortedDictionary<string, string>(
+            StringComparer.Ordinal)
+        {
+            ["3:0"] = "\uE03C\u0002Dismiss\u0003",
+        };
+
+        var normalizedTextNodes = Assert.IsType<SortedDictionary<string, string>>(
+            method.Invoke(handler, [capturedTextNodes]));
+
+        Assert.Equal("Dismiss", normalizedTextNodes["3:0"]);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

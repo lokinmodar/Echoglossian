@@ -16953,7 +16953,13 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.NormalizeCapturedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryRegisterCustomHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
@@ -17005,6 +17011,42 @@
             </summary>
             <param name="textNodes">The text-node payload to order.</param>
             <returns>The entries in their stable numeric node-key order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.NormalizeContextMenuTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Normalizes translated ContextMenu labels before they enter the
+                dedicated persistence store.
+            </summary>
+            <param name="translatedPayload">The translated text-node payload.</param>
+            <returns>The payload with canonical translated labels.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.NormalizeContextMenuLabel(System.String)">
+            <summary>
+                Removes non-text ContextMenu label decorations before using a label
+                as a persistence or translation value.
+            </summary>
+            <param name="text">The raw ContextMenu label.</param>
+            <returns>The canonical printable label text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ShouldPersistContextMenuLabel(System.String)">
+            <summary>
+                Determines whether a canonical ContextMenu label is meaningful
+                enough to persist and translate.
+            </summary>
+            <param name="text">The canonical ContextMenu label.</param>
+            <returns><see langword="true" /> when the label should be retained.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.IsNativeContextMenuReplacementSafe(System.String,System.String)">
+            <summary>
+                Determines whether a native label can be replaced without losing
+                decorations that the handler cannot safely rebuild.
+            </summary>
+            <param name="liveLabel">The raw label currently held by the text node.</param>
+            <param name="canonicalLabel">The canonical payload label.</param>
+            <returns>
+                <see langword="true" /> when the raw and canonical labels are the
+                same printable text; otherwise <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.GetTextNodeKeyOrder(System.String)">
             <summary>
