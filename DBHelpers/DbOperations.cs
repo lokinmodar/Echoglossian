@@ -1083,6 +1083,57 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds a dedicated Tooltip addon payload scoped by addon, source hash,
+  ///     game version, target language, and translation engine.
+  /// </summary>
+  /// <param name="tooltipText">The Tooltip payload to find.</param>
+  /// <returns>
+  ///     The matching <see cref="TooltipText" />, or <see langword="null" />.
+  /// </returns>
+  public TooltipText? FindTooltipText(TooltipText tooltipText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (string.IsNullOrWhiteSpace(tooltipText.AddonName) ||
+          string.IsNullOrWhiteSpace(tooltipText.OriginalTextsAsText) ||
+          string.IsNullOrWhiteSpace(tooltipText.GameVersion) ||
+          string.IsNullOrWhiteSpace(tooltipText.SourceContentHash))
+      {
+        return null;
+      }
+
+      return context.TooltipTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == tooltipText.AddonName &&
+              t.OriginalTextsAsText == tooltipText.OriginalTextsAsText &&
+              t.GameVersion == tooltipText.GameVersion &&
+              t.SourceContentHash == tooltipText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  tooltipText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  tooltipText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == tooltipText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindTooltipText exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Inserts a TalkMessage record into the database.
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
@@ -1750,6 +1801,61 @@ public partial class Echoglossian
       context.ToDoTexts.Attach(toDoText);
       await context.SaveChangesAsync().ConfigureAwait(false);
       return "Data inserted to ToDoTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or updates a dedicated Tooltip addon payload without sharing
+  ///     game-window or selection-dialog persistence.
+  /// </summary>
+  /// <param name="tooltipText">The Tooltip payload to persist.</param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertTooltipTextData(TooltipText tooltipText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(tooltipText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      tooltipText.GameVersion ??= GetGameVersion();
+      var existingTooltipText = context.TooltipTexts
+          .Where(t =>
+              t.AddonName == tooltipText.AddonName &&
+              t.OriginalTextsAsText == tooltipText.OriginalTextsAsText &&
+              t.GameVersion == tooltipText.GameVersion &&
+              t.SourceContentHash == tooltipText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  tooltipText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  tooltipText.OriginalLang) &&
+              t.TranslationEngine == tooltipText.TranslationEngine)
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+      if (existingTooltipText != null)
+      {
+        existingTooltipText.TranslatedTextsAsText =
+            tooltipText.TranslatedTextsAsText;
+        existingTooltipText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data updated in TooltipTexts table.";
+      }
+
+      context.TooltipTexts.Attach(tooltipText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to TooltipTexts table.";
     }
     catch (Exception e)
     {

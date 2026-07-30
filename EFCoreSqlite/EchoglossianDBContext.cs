@@ -56,6 +56,11 @@ public class EchoglossianDbContext : DbContext
   /// </summary>
   public DbSet<ToDoText> ToDoTexts { get; set; }
 
+  /// <summary>
+  ///     Gets or sets the dedicated Tooltip addon translation rows.
+  /// </summary>
+  public DbSet<TooltipText> TooltipTexts { get; set; }
+
   public DbSet<GameWindow> GameWindow { get; set; }
 
   public DbSet<TalkSubtitleMessage> TalkSubtitleMessage { get; set; }
@@ -256,6 +261,17 @@ public class EchoglossianDbContext : DbContext
           t.SourceContentHash
         })
         .HasDatabaseName("IX_todotexts_lookup");
+    modelBuilder.Entity<TooltipText>().ToTable("tooltiptexts");
+    modelBuilder.Entity<TooltipText>()
+        .HasIndex(t => new
+        {
+          t.AddonName,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_tooltiptexts_lookup");
     modelBuilder.Entity<GameWindow>().ToTable("gamewindows");
     modelBuilder.Entity<GameWindow>()
         .HasIndex(g => new

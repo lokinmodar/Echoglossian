@@ -697,6 +697,9 @@
   <data name="TranslateSelectOkLabel" xml:space="preserve">
     <value>Translate SelectOk</value>
   </data>
+  <data name="TranslateTooltipAddonLabel" xml:space="preserve">
+    <value>Translate Tooltip Addon</value>
+  </data>
   <data name="GeminiAPIKey" xml:space="preserve">
     <value>Google AI Studio API Key</value>
   </data>

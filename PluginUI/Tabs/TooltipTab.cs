@@ -40,6 +40,18 @@ public static class TooltipTab
         }
 
         ImGui.Spacing();
+        ImGui.TextUnformatted(Resources.TranslateTooltipAddonLabel);
+        ImGui.Separator();
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateTooltipAddonLabel,
+            ref config.TranslateTooltipAddon);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            Resources.TranslateTooltipAddonLabel,
+            ref config.TooltipAddonTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
+
+        ImGui.Spacing();
         ImGui.TextUnformatted(Resources.HoverTooltipAppearanceSectionLabel);
         ImGui.Separator();
         ImGui.TextWrapped(Resources.HoverTooltipAppearanceDescription);

@@ -1129,7 +1129,7 @@ public class Config : IPluginConfiguration
   /// <summary>Translate regular SelectString dialogs.</summary>
   [DefaultValue(false)] public bool TranslateSelectString = false;
 
-  /// <summary>Translate icon-bearing SelectString dialogs.</summary>
+  /// <summary>Translate SelectIconString dialogs.</summary>
   [DefaultValue(false)] public bool TranslateSelectIconString = false;
 
   /// <summary>Translate Talk window messages.</summary>
@@ -1208,6 +1208,9 @@ public class Config : IPluginConfiguration
   /// <summary>Translate UI tooltips.</summary>
   [DefaultValue(true)] public bool TranslateTooltips = true;
 
+  /// <summary>Translate the Tooltip addon.</summary>
+  [DefaultValue(false)] public bool TranslateTooltipAddon = false;
+
   /// <summary>
   ///     Persisted display mode for action and item tooltips managed by the
   ///     DB-first tooltip runtime. Native modes are normalized to Plugin
@@ -1216,6 +1219,11 @@ public class Config : IPluginConfiguration
   [DefaultValue(JournalTranslationDisplayMode.TooltipTranslation)]
   public JournalTranslationDisplayMode TooltipTranslationDisplayMode =
       JournalTranslationDisplayMode.TooltipTranslation;
+
+  /// <summary>Display mode for the Tooltip addon.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode TooltipAddonTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Text color used by Echoglossian hover tooltips.</summary>
   [DefaultValue(typeof(Vector3), "1, 1, 1")]

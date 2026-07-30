@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using global::Echoglossian.NativeUI.AddonHandlers.Common;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
@@ -320,6 +322,18 @@ public partial class Echoglossian
                   text => this.RemoveDiacritics(
                       text,
                       this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateTooltipAddon)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "Tooltip",
+              Handler: new TooltipHandler(
+                  this.configuration,
+                  this.hoverTooltipManager,
+                  TranslationService,
+                  this.FindTooltipText,
+                  row => this.InsertTooltipTextData(row))));
     }
 
     var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();

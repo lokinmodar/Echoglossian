@@ -2474,7 +2474,7 @@
             <summary>Translate regular SelectString dialogs.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateSelectIconString">
-            <summary>Translate icon-bearing SelectString dialogs.</summary>
+            <summary>Translate SelectIconString dialogs.</summary>
         </member>
         <member name="F:Echoglossian.Config.TranslateTalk">
             <summary>Translate Talk window messages.</summary>
@@ -2542,12 +2542,18 @@
         <member name="F:Echoglossian.Config.TranslateTooltips">
             <summary>Translate UI tooltips.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateTooltipAddon">
+            <summary>Translate the Tooltip addon.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TooltipTranslationDisplayMode">
             <summary>
                 Persisted display mode for action and item tooltips managed by the
                 DB-first tooltip runtime. Native modes are normalized to Plugin
                 Tooltips until verified native mappings are available.
             </summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonTranslationDisplayMode">
+            <summary>Display mode for the Tooltip addon.</summary>
         </member>
         <member name="F:Echoglossian.Config.HoverTooltipTextColor">
             <summary>Text color used by Echoglossian hover tooltips.</summary>
@@ -3081,6 +3087,16 @@
                 The matching <see cref="T:Echoglossian.EFCoreSqlite.Models.ToDoText" />, or <see langword="null" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindTooltipText(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Finds a dedicated Tooltip addon payload scoped by addon, source hash,
+                game version, target language, and translation engine.
+            </summary>
+            <param name="tooltipText">The Tooltip payload to find.</param>
+            <returns>
+                The matching <see cref="T:Echoglossian.EFCoreSqlite.Models.TooltipText" />, or <see langword="null" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.InsertTalkData(Echoglossian.EFCoreSqlite.Models.TalkMessage,System.Threading.CancellationToken)">
             <summary>
             Inserts a TalkMessage record into the database.
@@ -3200,6 +3216,14 @@
                 game-window, quest, or selection-dialog persistence.
             </summary>
             <param name="toDoText">The ToDo payload to persist.</param>
+            <returns>A status message describing the persistence result.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.InsertTooltipTextData(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Inserts or updates a dedicated Tooltip addon payload without sharing
+                game-window or selection-dialog persistence.
+            </summary>
+            <param name="tooltipText">The Tooltip payload to persist.</param>
             <returns>A status message describing the persistence result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
@@ -8618,6 +8642,11 @@
                 Gets or sets the dedicated ToDo translation rows.
             </summary>
         </member>
+        <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.TooltipTexts">
+            <summary>
+                Gets or sets the dedicated Tooltip addon translation rows.
+            </summary>
+        </member>
         <member name="P:Echoglossian.EFCoreSqlite.EchoglossianDbContext.NamePlateMessages">
             <summary>
                 Gets or sets the translated world-object nameplate rows.
@@ -9093,6 +9122,18 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddToDoTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Migrations.AddTooltipTexts">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddTooltipTexts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddTooltipTexts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.Migrations.AddTooltipTexts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip">
@@ -11487,6 +11528,50 @@
             <summary>Gets or sets the updated timestamp.</summary>
         </member>
         <member name="P:Echoglossian.EFCoreSqlite.Models.ToDoText.RowVersion">
+            <summary>Gets or sets the optimistic concurrency token.</summary>
+        </member>
+        <member name="T:Echoglossian.EFCoreSqlite.Models.TooltipText">
+            <summary>
+                Stores translated Tooltip addon payloads independently from generic
+                game-window and selection-dialog rows.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.Id">
+            <summary>
+                Gets or sets the primary key.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.AddonName">
+            <summary>Gets or sets the addon name.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.OriginalTextsAsText">
+            <summary>Gets or sets the serialized original payload.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.OriginalLang">
+            <summary>Gets or sets the original source language.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.TranslatedTextsAsText">
+            <summary>Gets or sets the serialized translated payload.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.TranslationLang">
+            <summary>Gets or sets the target translation language.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.TranslationEngine">
+            <summary>Gets or sets the translation engine id.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.GameVersion">
+            <summary>Gets or sets the stored game version.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.SourceContentHash">
+            <summary>Gets or sets the source payload hash.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.CreatedDate">
+            <summary>Gets or sets the created timestamp.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.UpdatedDate">
+            <summary>Gets or sets the updated timestamp.</summary>
+        </member>
+        <member name="P:Echoglossian.EFCoreSqlite.Models.TooltipText.RowVersion">
             <summary>Gets or sets the optimistic concurrency token.</summary>
         </member>
         <member name="T:Echoglossian.EFCoreSqlite.Models.Trait">
@@ -16708,6 +16793,79 @@
             pre-draw pass; otherwise, <see langword="false"/>.
             </returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler">
+            <summary>
+                Handles DB-first translation for the Tooltip addon.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,Echoglossian.EFCoreSqlite.Models.TooltipText},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Threading.Tasks.Task{System.String}})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler" />
+                class.
+            </summary>
+            <param name="configuration">The plugin configuration.</param>
+            <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
+            <param name="translationService">The translation service.</param>
+            <param name="findTooltipText">Resolves a persisted Tooltip payload.</param>
+            <param name="insertTooltipTextAsync">
+                Persists a Tooltip payload asynchronously.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.CreateTooltipText(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload})">
+            <summary>
+                Builds one dedicated Tooltip persistence row from the ordered
+                visible text-node payload.
+            </summary>
+            <param name="scope">The immutable source, target, and engine scope.</param>
+            <param name="originalPayload">The ordered original-facing payload.</param>
+            <param name="translatedPayload">The optional ordered translated payload.</param>
+            <returns>The dedicated Tooltip row.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryProjectStoredTranslatedPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
+            <summary>
+                Projects one ordered dedicated Tooltip payload onto the current
+                text-node keys.
+            </summary>
+            <param name="originalPayload">The visible original-facing payload.</param>
+            <param name="translatedTextsAsText">The stored ordered translations.</param>
+            <param name="translatedPayload">Receives the projected payload.</param>
+            <returns>
+                <see langword="true" /> when the stored ordered payload matches the
+                visible text-node shape; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.GetOrderedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
+            <summary>
+                Orders visible text-node payload entries by their numeric node id
+                and duplicate visible-node ordinal.
+            </summary>
+            <param name="textNodes">The text-node payload to order.</param>
+            <returns>The entries in their stable numeric node-key order.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.GetTextNodeKeyOrder(System.String)">
+            <summary>
+                Parses one text-node payload key into numeric order parts.
+            </summary>
+            <param name="key">The text-node key.</param>
+            <returns>The parsed node id and duplicate ordinal.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ComputeSourceContentHash(System.String)">
+            <summary>
+                Computes the stable hash used to key one ordered Tooltip original
+                payload.
+            </summary>
+            <param name="originalTextsAsText">The normalized ordered source JSON.</param>
+            <returns>The uppercase SHA-256 hash.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.CutSceneSelectString.SyncCutSceneSelectStringOverlayBoundsDelegate">
             <summary>
                 Synchronizes the overlay bounds for the visible CutSceneSelectString addon.
@@ -21744,6 +21902,9 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.PersistTranslationAsync(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectIconStringHandler.ShouldPromoteFirstOverlayTextToTitle">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy">
             <summary>
                 Resolves the preferred capture path for generic selection-dialog
@@ -21764,17 +21925,19 @@
             </param>
             <returns>The preferred capture source kind.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy.ShouldPreferTextNodePayload(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCapturePolicy.ShouldPreferTextNodePayload(Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload,Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogPayload)">
             <summary>
-                Determines whether the visible text-node payload should be promoted
-                ahead of a detached structured payload so native mutation and hover
-                tooltips target the live nodes currently on screen.
+                Determines whether a visible text-node payload should replace the
+                otherwise preferred structured payload because both expose the same
+                ordered texts.
             </summary>
-            <param name="primaryTexts">The structured payload texts.</param>
-            <param name="textNodeTexts">The visible text-node texts.</param>
+            <param name="structuredPayload">
+                The ATK-value or string-array payload chosen by structure.
+            </param>
+            <param name="textNodePayload">The visible text-node payload.</param>
             <returns>
-                <see langword="true" /> when the visible text nodes should be
-                preferred; otherwise, <see langword="false" />.
+                <see langword="true" /> when the visible text-node payload should
+                become authoritative; otherwise, <see langword="false" />.
             </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogCaptureSourceKind">
@@ -21823,13 +21986,13 @@
             <param name="addonName">The native addon name.</param>
             <param name="config">The plugin configuration.</param>
             <param name="translationService">The translation service.</param>
-            <param name="hoverTooltipManager">
-                The shared hover-tooltip runtime.
-            </param>
             <param name="isTranslationEnabled">
                 Resolves whether the handler is enabled.
             </param>
             <param name="resolveDisplayMode">Resolves the active display mode.</param>
+            <param name="hoverTooltipManager">
+                The shared hover-tooltip manager.
+            </param>
             <param name="normalizeReplacementText">
                 Normalizes translated text for native replacement.
             </param>
@@ -21874,6 +22037,16 @@
             <param name="originalTexts">The ordered source payload.</param>
             <param name="translatedTexts">The ordered translated payload.</param>
             <returns>A task that completes with the persistence result message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.ShouldPromoteFirstOverlayTextToTitle">
+            <summary>
+                Determines whether the hover tooltip should promote the first
+                captured text into the title slot.
+            </summary>
+            <returns>
+                <see langword="true" /> when the first text should be the title;
+                otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.BuildSelectionDialogLookup(Echoglossian.SourceClientLanguage,System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
@@ -30889,6 +31062,7 @@
             <summary>
                 Draws one selection-dialog enable toggle and display-mode combo.
             </summary>
+            <param name="config">The current plugin configuration.</param>
             <param name="comboId">The stable ImGui ID for the display-mode combo.</param>
             <param name="sectionLabel">The translated checkbox label.</param>
             <param name="enabled">Whether the surface is enabled.</param>
@@ -33048,14 +33222,19 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectOk.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateSelectIconStringLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectIconString.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateSelectStringLabel">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectString.
             </summary>
         </member>
-        <member name="P:Echoglossian.Properties.Resources.TranslateSelectIconStringLabel">
+        <member name="P:Echoglossian.Properties.Resources.TranslateTooltipAddonLabel">
             <summary>
-                Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectIconString.
+                Pesquisa uma cadeia de caracteres localizada semelhante a Translate Tooltip Addon.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateTalkSubtitleToggleLabel">

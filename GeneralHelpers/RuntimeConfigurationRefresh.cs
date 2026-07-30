@@ -251,6 +251,7 @@ public partial class Echoglossian
           configuration.TranslateToDoList,
           configuration.TranslateToDo,
           configuration.TranslateScenarioTree,
+          configuration.TranslateTooltipAddon,
           configuration.TranslateToast,
           configuration.TranslateWideTextToast,
           configuration.TranslateErrorToast,

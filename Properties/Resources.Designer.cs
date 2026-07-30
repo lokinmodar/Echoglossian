@@ -4158,6 +4158,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectIconString.
+        /// </summary>
+        public static string TranslateSelectIconStringLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateSelectIconStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectString.
         /// </summary>
         public static string TranslateSelectStringLabel
@@ -4169,13 +4180,13 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
-        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectIconString.
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate Tooltip Addon.
         /// </summary>
-        public static string TranslateSelectIconStringLabel
+        public static string TranslateTooltipAddonLabel
         {
             get
             {
-                return ResourceManager.GetString("TranslateSelectIconStringLabel", resourceCulture);
+                return ResourceManager.GetString("TranslateTooltipAddonLabel", resourceCulture);
             }
         }
         
