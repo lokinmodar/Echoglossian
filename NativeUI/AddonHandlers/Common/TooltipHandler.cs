@@ -17,6 +17,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Common;
 /// </summary>
 internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
 {
+    private readonly Dictionary<string, NativeTextNodeLayoutSnapshot>
+        appliedLayoutSnapshots = new(StringComparer.Ordinal);
     private readonly Func<TooltipText, TooltipText?> findTooltipText;
     private readonly Func<TooltipText, Task<string>> insertTooltipTextAsync;
 
@@ -56,6 +58,20 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     protected override List<nint> ResolveTextNodeAddresses(AtkUnitBase* addon)
     {
         return AddonTextNodeResolvers.ResolveReadableTextNodes(addon);
+    }
+
+    /// <inheritdoc />
+    protected override void OnCleanupEvent(AddonEvent evt, AddonArgs args)
+    {
+        base.OnCleanupEvent(evt, args);
+        this.appliedLayoutSnapshots.Clear();
+    }
+
+    /// <inheritdoc />
+    public override void OnPluginUnload()
+    {
+        base.OnPluginUnload();
+        this.appliedLayoutSnapshots.Clear();
     }
 
     /// <inheritdoc />
@@ -101,6 +117,103 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
             translatedPayload);
         _ = this.insertTooltipTextAsync(row);
         return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryApplyCustomTextNodePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload sourcePayload,
+        DbFirstGameWindowPayload targetPayload)
+    {
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+
+        foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
+            {
+                continue;
+            }
+
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                textNode->AtkResNode.NodeId);
+            if (!sourcePayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var sourceText) ||
+                !targetPayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var targetText))
+            {
+                continue;
+            }
+
+            var currentText = this.ReadTextNode(textNode);
+            if (string.Equals(currentText, targetText, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var layoutSnapshot =
+                NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
+                    addon,
+                    textNode,
+                    targetText);
+            if (layoutSnapshot != null)
+            {
+                this.appliedLayoutSnapshots[textNodeKey] = layoutSnapshot;
+            }
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    private protected override void AfterRestorePayload(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload translatedPayload,
+        DbFirstGameWindowPayload originalPayload)
+    {
+        if (this.appliedLayoutSnapshots.Count == 0)
+        {
+            return;
+        }
+
+        var restoredKeys = new List<string>();
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+        foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null)
+            {
+                continue;
+            }
+
+            var textNodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                textNode->AtkResNode.NodeId);
+            if (!this.appliedLayoutSnapshots.TryGetValue(
+                    textNodeKey,
+                    out var layoutSnapshot) ||
+                !originalPayload.TextNodes.TryGetValue(
+                    textNodeKey,
+                    out var originalText))
+            {
+                continue;
+            }
+
+            NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+                layoutSnapshot,
+                originalText,
+                restoreText: false);
+            restoredKeys.Add(textNodeKey);
+        }
+
+        foreach (var restoredKey in restoredKeys)
+        {
+            this.appliedLayoutSnapshots.Remove(restoredKey);
+        }
     }
 
     /// <summary>

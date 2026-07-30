@@ -16814,10 +16814,22 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.OnCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.OnPluginUnload">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryResolveSupplementalTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.AfterRestorePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.CreateTooltipText(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload})">
@@ -21973,6 +21985,33 @@
                 nodes and then apply translation through the active display mode.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.VisibleTextNodeTarget">
+            <summary>
+                One visible text-node target projected back onto the ordered source
+                payload.
+            </summary>
+            <param name="TextNodeAddress">The visible text-node address.</param>
+            <param name="OriginalText">The original source-facing text.</param>
+            <param name="ReplacementText">The translated replacement text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.VisibleTextNodeTarget.#ctor(System.IntPtr,System.String,System.String)">
+            <summary>
+                One visible text-node target projected back onto the ordered source
+                payload.
+            </summary>
+            <param name="TextNodeAddress">The visible text-node address.</param>
+            <param name="OriginalText">The original source-facing text.</param>
+            <param name="ReplacementText">The translated replacement text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.VisibleTextNodeTarget.TextNodeAddress">
+            <summary>The visible text-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.VisibleTextNodeTarget.OriginalText">
+            <summary>The original source-facing text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.VisibleTextNodeTarget.ReplacementText">
+            <summary>The translated replacement text.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogHandlerBase.DialogState">
             <summary>
                 In-memory state for the currently visible selection dialog.
@@ -22240,6 +22279,44 @@
                 title slot; otherwise all text remains in the body.
             </param>
             <returns>The title/body pair.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection">
+            <summary>
+                Projects currently visible selection-dialog text nodes onto the ordered
+                source payload used for translation and persistence.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextProjection.MatchVisibleTexts(System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+                Matches the currently visible ordered text-node values against the
+                authoritative ordered payload, allowing the visible surface to be a
+                stable subsequence when the addon exposes hidden structured strings.
+            </summary>
+            <param name="sourceTexts">The authoritative ordered payload texts.</param>
+            <param name="visibleTexts">The currently visible ordered text-node texts.</param>
+            <returns>The visible-to-source index matches in encounter order.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextMatch">
+            <summary>
+                Represents one ordered visible text-node match projected back onto the
+                authoritative selection-dialog source payload.
+            </summary>
+            <param name="VisibleIndex">The ordered visible text-node index.</param>
+            <param name="SourceIndex">The ordered source payload index.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextMatch.#ctor(System.Int32,System.Int32)">
+            <summary>
+                Represents one ordered visible text-node match projected back onto the
+                authoritative selection-dialog source payload.
+            </summary>
+            <param name="VisibleIndex">The ordered visible text-node index.</param>
+            <param name="SourceIndex">The ordered source payload index.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextMatch.VisibleIndex">
+            <summary>The ordered visible text-node index.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectionDialogVisibleTextMatch.SourceIndex">
+            <summary>The ordered source payload index.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.SelectionDialogs.SelectOkHandler">
             <summary>

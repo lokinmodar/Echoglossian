@@ -33,6 +33,18 @@ public abstract class SelectionDialogHandlerBase :
     private DialogState state = new();
 
     /// <summary>
+    ///     One visible text-node target projected back onto the ordered source
+    ///     payload.
+    /// </summary>
+    /// <param name="TextNodeAddress">The visible text-node address.</param>
+    /// <param name="OriginalText">The original source-facing text.</param>
+    /// <param name="ReplacementText">The translated replacement text.</param>
+    private readonly record struct VisibleTextNodeTarget(
+        nint TextNodeAddress,
+        string OriginalText,
+        string ReplacementText);
+
+    /// <summary>
     ///     In-memory state for the currently visible selection dialog.
     /// </summary>
     private sealed class DialogState
@@ -928,9 +940,12 @@ public abstract class SelectionDialogHandlerBase :
     {
         this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
 
+        var visibleTargets = this.ResolveVisibleTextNodeTargets(
+            addon,
+            payload.Texts,
+            translatedTexts);
         if (!this.ShouldUseHoverTooltips() ||
-            payload.SourceKind != SelectionDialogCaptureSourceKind.TextNodes ||
-            payload.TextNodeAddresses.Count == 0 ||
+            visibleTargets.Count == 0 ||
             translatedTexts.Count != payload.Texts.Count)
         {
             return;
@@ -953,9 +968,9 @@ public abstract class SelectionDialogHandlerBase :
             return;
         }
 
-        for (var index = 0; index < payload.TextNodeAddresses.Count; index++)
+        for (var index = 0; index < visibleTargets.Count; index++)
         {
-            var textNode = (AtkTextNode*)payload.TextNodeAddresses[index];
+            var textNode = (AtkTextNode*)visibleTargets[index].TextNodeAddress;
             if (textNode == null ||
                 !this.IsEffectivelyVisible((AtkResNode*)textNode))
             {
@@ -992,6 +1007,14 @@ public abstract class SelectionDialogHandlerBase :
             case SelectionDialogCaptureSourceKind.TextNodes:
                 this.ApplyTextNodeTranslation(payload, replacementTexts);
                 break;
+        }
+
+        if (payload.SourceKind != SelectionDialogCaptureSourceKind.TextNodes)
+        {
+            this.ApplyVisibleTextNodeTranslation(
+                addon,
+                payload.Texts,
+                replacementTexts);
         }
 
         lock (this.stateGate)
@@ -1107,6 +1130,32 @@ public abstract class SelectionDialogHandlerBase :
         }
     }
 
+    private unsafe void ApplyVisibleTextNodeTranslation(
+        AtkUnitBase* addon,
+        IReadOnlyList<string> originalTexts,
+        IReadOnlyList<string> replacementTexts)
+    {
+        foreach (var target in this.ResolveVisibleTextNodeTargets(
+                     addon,
+                     originalTexts,
+                     replacementTexts))
+        {
+            var textNode = (AtkTextNode*)target.TextNodeAddress;
+            if (textNode == null)
+            {
+                continue;
+            }
+
+            var currentText = SelectionDialogNodeResolvers.ReadTextNode(textNode);
+            if (this.TextMatches(currentText, target.ReplacementText))
+            {
+                continue;
+            }
+
+            textNode->SetText(target.ReplacementText);
+        }
+    }
+
     private unsafe bool TryRestoreNativeMutation(AtkUnitBase* addon)
     {
         SelectionDialogPayload? payload;
@@ -1150,7 +1199,11 @@ public abstract class SelectionDialogHandlerBase :
                     originalTexts,
                     replacementTexts),
             _ => false,
-        };
+        } | (payload.SourceKind != SelectionDialogCaptureSourceKind.TextNodes &&
+             this.RestoreVisibleTextNodeTranslation(
+                 addon,
+                 originalTexts,
+                 replacementTexts));
     }
 
     private unsafe bool RestoreAtkValueTranslation(
@@ -1269,6 +1322,36 @@ public abstract class SelectionDialogHandlerBase :
         return restoredAny;
     }
 
+    private unsafe bool RestoreVisibleTextNodeTranslation(
+        AtkUnitBase* addon,
+        IReadOnlyList<string> originalTexts,
+        IReadOnlyList<string> replacementTexts)
+    {
+        var restoredAny = false;
+        foreach (var target in this.ResolveVisibleTextNodeTargets(
+                     addon,
+                     originalTexts,
+                     replacementTexts))
+        {
+            var textNodeAddress = target.TextNodeAddress;
+            var textNode = (AtkTextNode*)textNodeAddress;
+            if (textNode == null)
+            {
+                continue;
+            }
+
+            var currentText = SelectionDialogNodeResolvers.ReadTextNode(textNode);
+            restoredAny |= TryRestoreOwnedText(
+                currentText,
+                target.ReplacementText,
+                target.OriginalText,
+                restoredText => ((AtkTextNode*)textNodeAddress)->SetText(
+                    restoredText));
+        }
+
+        return restoredAny;
+    }
+
     private unsafe bool ShouldHandleAddon(AddonArgs args, out AtkUnitBase* addon)
     {
         addon = null;
@@ -1366,6 +1449,74 @@ public abstract class SelectionDialogHandlerBase :
         }
 
         return true;
+    }
+
+    private unsafe List<VisibleTextNodeTarget> ResolveVisibleTextNodeTargets(
+        AtkUnitBase* addon,
+        IReadOnlyList<string> originalTexts,
+        IReadOnlyList<string> replacementTexts)
+    {
+        List<VisibleTextNodeTarget> targets = [];
+        if (addon == null ||
+            originalTexts.Count == 0 ||
+            replacementTexts.Count != originalTexts.Count)
+        {
+            return targets;
+        }
+
+        var readableTextNodeAddresses = SelectionDialogNodeResolvers
+            .ResolveReadableTextNodes(addon);
+        if (readableTextNodeAddresses.Count == 0)
+        {
+            return targets;
+        }
+
+        List<nint> visibleAddresses = [];
+        List<string> visibleTexts = [];
+        foreach (var textNodeAddress in readableTextNodeAddresses)
+        {
+            var textNode = (AtkTextNode*)textNodeAddress;
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
+            {
+                continue;
+            }
+
+            visibleAddresses.Add(textNodeAddress);
+            visibleTexts.Add(SelectionDialogNodeResolvers.ReadTextNode(textNode));
+        }
+
+        if (visibleAddresses.Count == 0)
+        {
+            return targets;
+        }
+
+        var sourceMatches = SelectionDialogVisibleTextProjection.MatchVisibleTexts(
+            originalTexts,
+            visibleTexts);
+        var replacementMatches =
+            SelectionDialogVisibleTextProjection.MatchVisibleTexts(
+                replacementTexts,
+                visibleTexts);
+        var preferredMatches = replacementMatches.Count > sourceMatches.Count
+            ? replacementMatches
+            : sourceMatches;
+
+        foreach (var match in preferredMatches)
+        {
+            if ((uint)match.VisibleIndex >= visibleAddresses.Count ||
+                (uint)match.SourceIndex >= originalTexts.Count)
+            {
+                continue;
+            }
+
+            targets.Add(new VisibleTextNodeTarget(
+                visibleAddresses[match.VisibleIndex],
+                originalTexts[match.SourceIndex],
+                replacementTexts[match.SourceIndex]));
+        }
+
+        return targets;
     }
 
     private bool ShouldUseHoverTooltips()

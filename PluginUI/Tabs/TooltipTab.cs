@@ -40,18 +40,6 @@ public static class TooltipTab
         }
 
         ImGui.Spacing();
-        ImGui.TextUnformatted(Resources.TranslateTooltipAddonLabel);
-        ImGui.Separator();
-
-        changed |= ImGui.Checkbox(
-            Resources.TranslateTooltipAddonLabel,
-            ref config.TranslateTooltipAddon);
-        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
-            Resources.TranslateTooltipAddonLabel,
-            ref config.TooltipAddonTranslationDisplayMode,
-            config.OverlayOnlyLanguage);
-
-        ImGui.Spacing();
         ImGui.TextUnformatted(Resources.HoverTooltipAppearanceSectionLabel);
         ImGui.Separator();
         ImGui.TextWrapped(Resources.HoverTooltipAppearanceDescription);
@@ -100,6 +88,20 @@ public static class TooltipTab
             0f,
             1f,
             "%.2f");
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+        ImGui.TextUnformatted(Resources.TranslateTooltipAddonLabel);
+        ImGui.Separator();
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateTooltipAddonLabel,
+            ref config.TranslateTooltipAddon);
+        changed |= TranslationDisplayModeUiHelper.DrawDisplayModeCombo(
+            Resources.TranslateTooltipAddonLabel,
+            ref config.TooltipAddonTranslationDisplayMode,
+            config.OverlayOnlyLanguage);
 
         if (changed)
         {

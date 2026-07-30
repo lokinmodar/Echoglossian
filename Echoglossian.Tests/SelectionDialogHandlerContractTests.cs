@@ -111,6 +111,14 @@ public sealed class SelectionDialogHandlerContractTests
             "Action<string, string, string> updateOverlay",
             source,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "SelectionDialogVisibleTextProjection",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "payload.SourceKind != SelectionDialogCaptureSourceKind.TextNodes ||\r\n            payload.TextNodeAddresses.Count == 0 ||",
+            source,
+            StringComparison.Ordinal);
     }
 
     /// <summary>
