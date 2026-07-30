@@ -31880,6 +31880,11 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate Addon Context Menu Title.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslateContextMenuWindow">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Translate Context Menu.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.TranslateAreaMapToggle">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Translate AreaMap.

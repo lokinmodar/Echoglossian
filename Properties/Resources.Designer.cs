@@ -3903,6 +3903,17 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("TranslateAddonContextMenuTitleWindow", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate Context Menu.
+        /// </summary>
+        public static string TranslateContextMenuWindow
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateContextMenuWindow", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate AreaMap.

@@ -33,6 +33,11 @@ public static class GameWindowsTab
             ref config.ActionMenuWindowTranslationDisplayMode);
         changed |= DrawWindowSection(
             config,
+            Resources.TranslateContextMenuWindow,
+            ref config.TranslateContextMenu,
+            ref config.ContextMenuTranslationDisplayMode);
+        changed |= DrawWindowSection(
+            config,
             Resources.TranslateHudWindows,
             ref config.TranslateHudWindow,
             ref config.HudWindowTranslationDisplayMode);

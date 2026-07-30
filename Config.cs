@@ -826,6 +826,12 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode ActionMenuWindowTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  [DefaultValue(false)] public bool TranslateContextMenu = false;
+
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode ContextMenuTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>
   /// Gets a value indicating whether the game main menu scope is enabled.
   /// </summary>

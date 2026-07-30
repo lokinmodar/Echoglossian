@@ -765,6 +765,9 @@
   <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
     <value>Traduzir Addon Context Menu Title</value>
   </data>
+  <data name="TranslateContextMenuWindow" xml:space="preserve">
+    <value>Traduzir menu de contexto</value>
+  </data>
   <data name="TranslateAreaMapToggle" xml:space="preserve">
     <value>Traduzir AreaMap</value>
   </data>

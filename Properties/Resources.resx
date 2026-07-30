@@ -1105,6 +1105,9 @@
   <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
     <value>Translate Addon Context Menu Title</value>
   </data>
+  <data name="TranslateContextMenuWindow" xml:space="preserve">
+    <value>Translate Context Menu</value>
+  </data>
   <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
     <value>Talk translation</value>
   </data>
