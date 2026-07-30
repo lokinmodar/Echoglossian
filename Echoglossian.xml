@@ -2327,6 +2327,12 @@
         <member name="F:Echoglossian.Config.ActionMenuWindowTranslationDisplayMode">
             <summary>Display mode for the ActionMenu window.</summary>
         </member>
+        <member name="F:Echoglossian.Config.TranslateContextMenu">
+            <summary>Translates the dedicated ContextMenu addon.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ContextMenuTranslationDisplayMode">
+            <summary>Gets or sets the display mode for the ContextMenu addon.</summary>
+        </member>
         <member name="P:Echoglossian.Config.TranslateGameMainMenu">
             <summary>
             Gets a value indicating whether the game main menu scope is enabled.
@@ -15542,6 +15548,17 @@
                 and the default text-node path should be skipped.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RequiresCustomHoverTooltipFallback(Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Determines whether addon-specific hover targets are required even
+                when the configured mode normally uses native text only.
+            </summary>
+            <param name="displayMode">The active display mode.</param>
+            <returns>
+                <see langword="true" /> when custom fallback hover targets should be
+                registered; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.OnLifecycleEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Handles setup/refresh/update events.
@@ -17075,6 +17092,9 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryRegisterCustomHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.RequiresCustomHoverTooltipFallback(Echoglossian.JournalTranslationDisplayMode)">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ResolveContextMenuRowTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
                 Resolves the visible ContextMenu row label text nodes in row-chain
@@ -17157,6 +17177,16 @@
                 <see langword="true" /> when the raw and canonical labels are the
                 same printable text; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ResolveContextMenuTooltipDisplayMode(System.String,System.String,Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Resolves the tooltip mode for a ContextMenu row, forcing translated
+                fallback text when decorations make native replacement unsafe.
+            </summary>
+            <param name="liveLabel">The raw label currently held by the text node.</param>
+            <param name="canonicalLabel">The canonical original payload label.</param>
+            <param name="displayMode">The active display mode.</param>
+            <returns>The tooltip mode, or <see langword="null" /> for no tooltip.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.GetTextNodeKeyOrder(System.String)">
             <summary>
@@ -20689,13 +20719,36 @@
             <param name="evt">The triggering lifecycle event.</param>
             <param name="args">The associated lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ProcessVisibleToDo(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ProcessVisibleToDo(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Dalamud.Game.Addon.Lifecycle.AddonEvent)">
             <summary>
                 Resolves, applies, or queues the current dedicated ToDo payload.
             </summary>
             <param name="addon">The visible ToDo addon.</param>
+            <param name="evt">The lifecycle event that requested processing.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryReuseCurrentToDoPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryShortCircuitStablePreDraw(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Validates cached node addresses and presentation state so an
+                unchanged PreDraw can avoid repeated traversal and apply work.
+            </summary>
+            <param name="addon">The visible ToDo addon.</param>
+            <returns>
+                <see langword="true" /> when the cached state remains reusable;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.CaptureStablePreDrawSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode})">
+            <summary>
+                Captures resolved node addresses and their expected presentation
+                state for subsequent stable PreDraw validation.
+            </summary>
+            <param name="addon">The visible ToDo addon.</param>
+            <param name="operation">The current immutable operation.</param>
+            <param name="payload">The source-facing payload.</param>
+            <param name="presentation">The applied presentation, if one is ready.</param>
+            <param name="resolvedNodes">The already-resolved visible node snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryReuseCurrentToDoPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode})">
             <summary>
                 Reuses the current translated snapshot when only timer text changed.
             </summary>
@@ -20703,12 +20756,12 @@
             <param name="operation">The immutable operation for the visible payload.</param>
             <returns><c>true</c> when the existing presentation was reused.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ResolveCurrentPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ResolveCurrentPayload(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode})">
             <summary>
                 Resolves the source payload while recognizing native text this
                 handler wrote during an earlier display pass.
             </summary>
-            <param name="addon">The visible ToDo addon.</param>
+            <param name="resolvedNodes">The already-resolved visible text nodes.</param>
             <returns>The source-facing ToDo payload.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.TryFindPersistedPresentation(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPayload,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot@)">
@@ -20731,7 +20784,7 @@
             <param name="generation">The visible generation that scheduled the work.</param>
             <returns>A task representing the background translation work.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ApplyCurrentToDoPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ApplyCurrentToDoPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode})">
             <summary>
                 Applies native replacement and hover tooltips for one resolved ToDo
                 snapshot while leaving timer nodes untouched.
@@ -20739,11 +20792,15 @@
             <param name="addon">The visible ToDo addon.</param>
             <param name="presentation">The resolved source and translated payloads.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.RestoreOwnedNativeMutations(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.RestoreOwnedNativeMutations(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoResolvedTextNode})">
             <summary>
                 Restores only native text previously written by this handler.
             </summary>
             <param name="addon">The visible ToDo addon.</param>
+            <param name="resolvedNodes">
+                Optional already-resolved node snapshot for the current lifecycle
+                pass.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.RegisterHoverTooltip(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean)">
             <summary>
@@ -20846,6 +20903,105 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoNativeMutation.AppliedText">
             <summary>The handler-applied native text.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStablePreDrawSnapshot">
+            <summary>
+                Retains the applied or pending node state needed to validate a stable
+                PreDraw without repeating addon-tree traversal.
+            </summary>
+            <param name="AddonAddress">The live addon address.</param>
+            <param name="Operation">The visible operation represented by the nodes.</param>
+            <param name="Policy">The presentation policy used for the snapshot.</param>
+            <param name="AppliedPresentation">
+                The presentation applied when the snapshot was captured, if any.
+            </param>
+            <param name="Nodes">The resolved nodes and their expected native state.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStablePreDrawSnapshot.#ctor(System.IntPtr,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy,Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoPresentationSnapshot,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot})">
+            <summary>
+                Retains the applied or pending node state needed to validate a stable
+                PreDraw without repeating addon-tree traversal.
+            </summary>
+            <param name="AddonAddress">The live addon address.</param>
+            <param name="Operation">The visible operation represented by the nodes.</param>
+            <param name="Policy">The presentation policy used for the snapshot.</param>
+            <param name="AppliedPresentation">
+                The presentation applied when the snapshot was captured, if any.
+            </param>
+            <param name="Nodes">The resolved nodes and their expected native state.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStablePreDrawSnapshot.AddonAddress">
+            <summary>The live addon address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStablePreDrawSnapshot.Operation">
+            <summary>The visible operation represented by the nodes.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStablePreDrawSnapshot.Policy">
+            <summary>The presentation policy used for the snapshot.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStablePreDrawSnapshot.AppliedPresentation">
+            <summary>
+                The presentation applied when the snapshot was captured, if any.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStablePreDrawSnapshot.Nodes">
+            <summary>The resolved nodes and their expected native state.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot">
+            <summary>
+                Retains one node address, expected text, and optional tooltip bounds.
+            </summary>
+            <param name="Address">The native text-node address.</param>
+            <param name="IsTimerNode">Whether volatile timer changes are ignored.</param>
+            <param name="ExpectedText">The expected stable native text.</param>
+            <param name="TracksTooltipBounds">
+                Whether tooltip bounds must remain unchanged.
+            </param>
+            <param name="Left">The tooltip hit area left edge.</param>
+            <param name="Top">The tooltip hit area top edge.</param>
+            <param name="Right">The tooltip hit area right edge.</param>
+            <param name="Bottom">The tooltip hit area bottom edge.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.#ctor(System.IntPtr,System.Boolean,System.String,System.Boolean,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+                Retains one node address, expected text, and optional tooltip bounds.
+            </summary>
+            <param name="Address">The native text-node address.</param>
+            <param name="IsTimerNode">Whether volatile timer changes are ignored.</param>
+            <param name="ExpectedText">The expected stable native text.</param>
+            <param name="TracksTooltipBounds">
+                Whether tooltip bounds must remain unchanged.
+            </param>
+            <param name="Left">The tooltip hit area left edge.</param>
+            <param name="Top">The tooltip hit area top edge.</param>
+            <param name="Right">The tooltip hit area right edge.</param>
+            <param name="Bottom">The tooltip hit area bottom edge.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.Address">
+            <summary>The native text-node address.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.IsTimerNode">
+            <summary>Whether volatile timer changes are ignored.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.ExpectedText">
+            <summary>The expected stable native text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.TracksTooltipBounds">
+            <summary>
+                Whether tooltip bounds must remain unchanged.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.Left">
+            <summary>The tooltip hit area left edge.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.Top">
+            <summary>The tooltip hit area top edge.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.Right">
+            <summary>The tooltip hit area right edge.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoHandler.ToDoStableNodeSnapshot.Bottom">
+            <summary>The tooltip hit area bottom edge.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler">
             <summary>
@@ -21409,6 +21565,23 @@
                 Invalidates all pending work and clears request state.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoRuntimeRequestState.ShouldShortCircuitStablePreDraw(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTranslationOperation,System.Boolean,System.Boolean)">
+            <summary>
+                Determines whether a stable PreDraw can reuse already-observed work
+                without repeating persistence lookup or presentation application.
+            </summary>
+            <param name="operation">The operation represented by the node snapshot.</param>
+            <param name="presentationStable">
+                Whether the snapshot still represents the applied presentation.
+            </param>
+            <param name="nodeSnapshotStable">
+                Whether the cached visible nodes still match their expected state.
+            </param>
+            <returns>
+                <see langword="true" /> when dense PreDraw work can be skipped;
+                otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoPresentationPolicy">
             <summary>
                 Resolves the presentation behavior for the dedicated ToDo addon.
@@ -21488,17 +21661,22 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoTextNodeResolvers.TimerTextPattern">
             <remarks>
             Pattern:<br/>
-            <code>^\\s*(?:(?:\\d{1,2}:)?\\d{1,2}:\\d{2})\\s*$</code><br/>
+            <code>^\\s*(?:\\d{1,3}:\\d{2}|\\d{1,2}:\\d{1,2}:\\d{2})\\s*$</code><br/>
             Explanation:<br/>
             <code>
             ○ Match if at the beginning of the string.<br/>
-            ○ Match a whitespace character greedily any number of times.<br/>
-            ○ Optional (greedy).<br/>
-                ○ Match a Unicode digit atomically at least 1 and at most 2 times.<br/>
-                ○ Match ':'.<br/>
-            ○ Match a Unicode digit atomically at least 1 and at most 2 times.<br/>
-            ○ Match ':'.<br/>
-            ○ Match a Unicode digit exactly 2 times.<br/>
+            ○ Match a whitespace character atomically any number of times.<br/>
+            ○ Match with 2 alternative expressions.<br/>
+                ○ Match a sequence of expressions.<br/>
+                    ○ Match a Unicode digit atomically at least 1 and at most 3 times.<br/>
+                    ○ Match ':'.<br/>
+                    ○ Match a Unicode digit exactly 2 times.<br/>
+                ○ Match a sequence of expressions.<br/>
+                    ○ Match a Unicode digit atomically at least 1 and at most 2 times.<br/>
+                    ○ Match ':'.<br/>
+                    ○ Match a Unicode digit atomically at least 1 and at most 2 times.<br/>
+                    ○ Match ':'.<br/>
+                    ○ Match a Unicode digit exactly 2 times.<br/>
             ○ Match a whitespace character greedily any number of times.<br/>
             ○ Match if at the end of the string or if before an ending newline.<br/>
             </code>
@@ -38394,9 +38572,6 @@
         </member>
         <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_hasTimeout">
             <summary>Whether <see cref="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout"/> is non-infinite.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.Utilities.StackPush(System.Int32[]@,System.Int32@,System.Int32)">
-            <summary>Pushes 1 value onto the backtracking stack.</summary>
         </member>
     </members>
 </doc>

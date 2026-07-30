@@ -32,6 +32,7 @@ internal sealed class ToDoHandler :
     private readonly TranslationService translationService;
 
     private ToDoPresentationSnapshot? currentPresentation;
+    private ToDoStablePreDrawSnapshot? stablePreDrawSnapshot;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ToDoHandler" /> class.
@@ -127,7 +128,7 @@ internal sealed class ToDoHandler :
             return;
         }
 
-        this.ProcessVisibleToDo(addon);
+        this.ProcessVisibleToDo(addon, evt);
     }
 
     /// <summary>
@@ -154,12 +155,19 @@ internal sealed class ToDoHandler :
     ///     Resolves, applies, or queues the current dedicated ToDo payload.
     /// </summary>
     /// <param name="addon">The visible ToDo addon.</param>
-    private unsafe void ProcessVisibleToDo(AtkUnitBase* addon)
+    /// <param name="evt">The lifecycle event that requested processing.</param>
+    private unsafe void ProcessVisibleToDo(AtkUnitBase* addon, AddonEvent evt)
     {
         if (!this.configuration.TranslateToDo)
         {
             this.RestoreOwnedNativeMutations(addon);
             this.ClearRuntimeState();
+            return;
+        }
+
+        if (evt == AddonEvent.PreDraw &&
+            this.TryShortCircuitStablePreDraw(addon))
+        {
             return;
         }
 
@@ -169,10 +177,11 @@ internal sealed class ToDoHandler :
             return;
         }
 
-        var currentPayload = this.ResolveCurrentPayload(addon);
+        var resolvedNodes = ToDoTextNodeResolvers.ResolveVisibleTextNodes(addon);
+        var currentPayload = this.ResolveCurrentPayload(resolvedNodes);
         if (currentPayload.GetTranslatableTexts().Count == 0)
         {
-            this.RestoreOwnedNativeMutations(addon);
+            this.RestoreOwnedNativeMutations(addon, resolvedNodes);
             this.ClearRuntimeState();
             return;
         }
@@ -183,16 +192,25 @@ internal sealed class ToDoHandler :
             scope);
         var generation = this.runtimeRequestState.ObserveVisibleOperation(
             operation);
-        if (this.TryReuseCurrentToDoPresentation(addon, operation))
+        if (this.TryReuseCurrentToDoPresentation(
+                addon,
+                operation,
+                resolvedNodes))
         {
             return;
         }
 
-        this.RestoreOwnedNativeMutations(addon);
+        this.RestoreOwnedNativeMutations(addon, resolvedNodes);
         this.hoverTooltipManager.RemoveByPrefix(HoverTooltipPrefix);
 
         if (this.runtimeRequestState.ShouldSkipPersistenceLookup(operation))
         {
+            this.CaptureStablePreDrawSnapshot(
+                addon,
+                operation,
+                currentPayload,
+                null,
+                resolvedNodes);
             return;
         }
 
@@ -202,20 +220,197 @@ internal sealed class ToDoHandler :
                 out var presentation))
         {
             this.currentPresentation = presentation;
-            this.ApplyCurrentToDoPresentation(addon, presentation);
+            this.ApplyCurrentToDoPresentation(
+                addon,
+                presentation,
+                resolvedNodes);
             return;
         }
 
         if (!this.runtimeRequestState.TryStart(operation, generation))
         {
+            this.CaptureStablePreDrawSnapshot(
+                addon,
+                operation,
+                currentPayload,
+                null,
+                resolvedNodes);
             return;
         }
 
+        this.CaptureStablePreDrawSnapshot(
+            addon,
+            operation,
+            currentPayload,
+            null,
+            resolvedNodes);
         _ = this.ResolveAndPersistPresentationAsync(
             currentPayload,
             sourceLanguage,
             operation,
             generation);
+    }
+
+    /// <summary>
+    ///     Validates cached node addresses and presentation state so an
+    ///     unchanged PreDraw can avoid repeated traversal and apply work.
+    /// </summary>
+    /// <param name="addon">The visible ToDo addon.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the cached state remains reusable;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    private unsafe bool TryShortCircuitStablePreDraw(AtkUnitBase* addon)
+    {
+        var snapshot = this.stablePreDrawSnapshot;
+        if (snapshot == null ||
+            snapshot.AddonAddress != (nint)addon ||
+            snapshot.Policy != this.PresentationPolicy ||
+            snapshot.Nodes.Count == 0)
+        {
+            return false;
+        }
+
+        var nodesStable = true;
+        foreach (var node in snapshot.Nodes)
+        {
+            var textNode = (AtkTextNode*)node.Address;
+            if (textNode == null || !textNode->AtkResNode.IsVisible())
+            {
+                nodesStable = false;
+                break;
+            }
+
+            var liveText = ToDoTextNodeResolvers.ReadTextNode(textNode);
+            if (node.IsTimerNode)
+            {
+                if (!ToDoTextNodeResolvers.IsTimerText(liveText))
+                {
+                    nodesStable = false;
+                    break;
+                }
+
+                continue;
+            }
+
+            if (!string.Equals(
+                    liveText,
+                    node.ExpectedText,
+                    StringComparison.Ordinal))
+            {
+                nodesStable = false;
+                break;
+            }
+
+            if (node.TracksTooltipBounds)
+            {
+                var left = textNode->ScreenX - 12f;
+                var top = textNode->ScreenY - 8f;
+                var right = textNode->ScreenX +
+                            Math.Max(1f, textNode->GetWidth()) + 12f;
+                var bottom = textNode->ScreenY +
+                             Math.Max(1f, textNode->GetHeight()) + 8f;
+                if (left != node.Left ||
+                    top != node.Top ||
+                    right != node.Right ||
+                    bottom != node.Bottom)
+                {
+                    nodesStable = false;
+                    break;
+                }
+            }
+        }
+
+        var presentationStable =
+            snapshot.AppliedPresentation != null &&
+            ReferenceEquals(
+                snapshot.AppliedPresentation,
+                this.currentPresentation);
+        return this.runtimeRequestState.ShouldShortCircuitStablePreDraw(
+            snapshot.Operation,
+            presentationStable,
+            nodesStable);
+    }
+
+    /// <summary>
+    ///     Captures resolved node addresses and their expected presentation
+    ///     state for subsequent stable PreDraw validation.
+    /// </summary>
+    /// <param name="addon">The visible ToDo addon.</param>
+    /// <param name="operation">The current immutable operation.</param>
+    /// <param name="payload">The source-facing payload.</param>
+    /// <param name="presentation">The applied presentation, if one is ready.</param>
+    /// <param name="resolvedNodes">The already-resolved visible node snapshot.</param>
+    private unsafe void CaptureStablePreDrawSnapshot(
+        AtkUnitBase* addon,
+        ToDoTranslationOperation operation,
+        ToDoPayload payload,
+        ToDoPresentationSnapshot? presentation,
+        IReadOnlyList<ToDoResolvedTextNode> resolvedNodes)
+    {
+        var sourceTextsByNodeKey = payload.VisibleTexts
+            .ToDictionary(text => text.NodeKey, text => text.Text);
+        Dictionary<string, string> translatedTextsByNodeKey = [];
+        if (presentation != null)
+        {
+            var translatableTexts = payload.GetTranslatableTexts();
+            translatedTextsByNodeKey = presentation.TranslatedTexts
+                .Select((text, index) => new
+                {
+                    NodeKey = translatableTexts[index].NodeKey,
+                    Text = text,
+                })
+                .ToDictionary(text => text.NodeKey, text => text.Text);
+        }
+
+        var policy = this.PresentationPolicy;
+        List<ToDoStableNodeSnapshot> stableNodes = [];
+        foreach (var node in resolvedNodes)
+        {
+            var textNode = (AtkTextNode*)node.Address;
+            var hasSourceText = sourceTextsByNodeKey.TryGetValue(
+                node.NodeKey,
+                out var sourceText);
+            var hasTranslatedText = translatedTextsByNodeKey.TryGetValue(
+                node.NodeKey,
+                out var translatedText);
+            var expectedText = hasSourceText ? sourceText! : node.Text;
+            if (policy.WritesNativeTranslation && hasTranslatedText)
+            {
+                expectedText = translatedText!;
+            }
+
+            var tracksTooltipBounds =
+                policy.UsesHoverTooltips &&
+                !node.IsTimerNode &&
+                hasSourceText &&
+                hasTranslatedText &&
+                textNode != null;
+            var left = tracksTooltipBounds ? textNode->ScreenX - 12f : 0f;
+            var top = tracksTooltipBounds ? textNode->ScreenY - 8f : 0f;
+            var right = tracksTooltipBounds
+                ? textNode->ScreenX + Math.Max(1f, textNode->GetWidth()) + 12f
+                : 0f;
+            var bottom = tracksTooltipBounds
+                ? textNode->ScreenY + Math.Max(1f, textNode->GetHeight()) + 8f
+                : 0f;
+            stableNodes.Add(new ToDoStableNodeSnapshot(
+                node.Address,
+                node.IsTimerNode,
+                expectedText,
+                tracksTooltipBounds,
+                left,
+                top,
+                right,
+                bottom));
+        }
+
+        this.stablePreDrawSnapshot = new ToDoStablePreDrawSnapshot(
+            (nint)addon,
+            operation,
+            policy,
+            presentation,
+            stableNodes);
     }
 
     /// <summary>
@@ -226,7 +421,8 @@ internal sealed class ToDoHandler :
     /// <returns><c>true</c> when the existing presentation was reused.</returns>
     private unsafe bool TryReuseCurrentToDoPresentation(
         AtkUnitBase* addon,
-        ToDoTranslationOperation operation)
+        ToDoTranslationOperation operation,
+        IReadOnlyList<ToDoResolvedTextNode> resolvedNodes)
     {
         var presentation = this.currentPresentation;
         if (presentation == null ||
@@ -235,7 +431,7 @@ internal sealed class ToDoHandler :
             return false;
         }
 
-        this.ApplyCurrentToDoPresentation(addon, presentation);
+        this.ApplyCurrentToDoPresentation(addon, presentation, resolvedNodes);
         return true;
     }
 
@@ -243,11 +439,18 @@ internal sealed class ToDoHandler :
     ///     Resolves the source payload while recognizing native text this
     ///     handler wrote during an earlier display pass.
     /// </summary>
-    /// <param name="addon">The visible ToDo addon.</param>
+    /// <param name="resolvedNodes">The already-resolved visible text nodes.</param>
     /// <returns>The source-facing ToDo payload.</returns>
-    private unsafe ToDoPayload ResolveCurrentPayload(AtkUnitBase* addon)
+    private ToDoPayload ResolveCurrentPayload(
+        IReadOnlyList<ToDoResolvedTextNode> resolvedNodes)
     {
-        var visibleTexts = ToDoTextNodeResolvers.ResolveVisibleTexts(addon);
+        var visibleTexts = resolvedNodes
+            .Select(node => new ToDoCapturedText(
+                node.NodeKey,
+                node.NodeId,
+                node.Text,
+                node.IsTimerNode))
+            .ToArray();
         var presentation = this.currentPresentation;
         if (presentation == null)
         {
@@ -372,22 +575,24 @@ internal sealed class ToDoHandler :
     /// <param name="presentation">The resolved source and translated payloads.</param>
     private unsafe void ApplyCurrentToDoPresentation(
         AtkUnitBase* addon,
-        ToDoPresentationSnapshot presentation)
+        ToDoPresentationSnapshot presentation,
+        IReadOnlyList<ToDoResolvedTextNode> resolvedNodes)
     {
         this.hoverTooltipManager.RemoveByPrefix(HoverTooltipPrefix);
+        var translatableTexts =
+            presentation.OriginalPayload.GetTranslatableTexts();
         var translatedTextsByNodeKey = presentation.TranslatedTexts
             .Select((text, index) => new
             {
-                NodeKey = presentation.OriginalPayload.GetTranslatableTexts()[index].NodeKey,
+                NodeKey = translatableTexts[index].NodeKey,
                 Text = text,
             })
             .ToDictionary(text => text.NodeKey, text => text.Text);
-        var sourceTextsByNodeKey = presentation.OriginalPayload
-            .GetTranslatableTexts()
+        var sourceTextsByNodeKey = translatableTexts
             .ToDictionary(text => text.NodeKey, text => text.Text);
         var policy = this.PresentationPolicy;
 
-        foreach (var node in ToDoTextNodeResolvers.ResolveVisibleTextNodes(addon))
+        foreach (var node in resolvedNodes)
         {
             var textNode = (AtkTextNode*)node.Address;
             if (textNode == null)
@@ -406,7 +611,10 @@ internal sealed class ToDoHandler :
             {
                 var nativeText = translatedText;
                 if (!string.IsNullOrWhiteSpace(nativeText) &&
-                    !string.Equals(node.Text, nativeText, StringComparison.Ordinal))
+                    !string.Equals(
+                        ToDoTextNodeResolvers.ReadTextNode(textNode),
+                        nativeText,
+                        StringComparison.Ordinal))
                 {
                     textNode->SetText(nativeText);
                 }
@@ -429,17 +637,31 @@ internal sealed class ToDoHandler :
 
         if (!policy.WritesNativeTranslation)
         {
-            this.RestoreOwnedNativeMutations(addon);
+            this.RestoreOwnedNativeMutations(addon, resolvedNodes);
         }
+
+        this.CaptureStablePreDrawSnapshot(
+            addon,
+            presentation.Operation,
+            presentation.OriginalPayload,
+            presentation,
+            resolvedNodes);
     }
 
     /// <summary>
     ///     Restores only native text previously written by this handler.
     /// </summary>
     /// <param name="addon">The visible ToDo addon.</param>
-    private unsafe void RestoreOwnedNativeMutations(AtkUnitBase* addon)
+    /// <param name="resolvedNodes">
+    ///     Optional already-resolved node snapshot for the current lifecycle
+    ///     pass.
+    /// </param>
+    private unsafe void RestoreOwnedNativeMutations(
+        AtkUnitBase* addon,
+        IReadOnlyList<ToDoResolvedTextNode>? resolvedNodes = null)
     {
-        foreach (var node in ToDoTextNodeResolvers.ResolveVisibleTextNodes(addon))
+        resolvedNodes ??= ToDoTextNodeResolvers.ResolveVisibleTextNodes(addon);
+        foreach (var node in resolvedNodes)
         {
             if (!this.nativeMutations.TryGetValue(
                     node.NodeKey,
@@ -608,6 +830,7 @@ internal sealed class ToDoHandler :
     private void ClearRuntimeState()
     {
         this.currentPresentation = null;
+        this.stablePreDrawSnapshot = null;
         this.runtimeRequestState.Clear();
         this.nativeMutations.Clear();
         this.hoverTooltipManager.RemoveByPrefix(HoverTooltipPrefix);
@@ -632,4 +855,45 @@ internal sealed class ToDoHandler :
     private sealed record ToDoNativeMutation(
         string OriginalText,
         string AppliedText);
+
+    /// <summary>
+    ///     Retains the applied or pending node state needed to validate a stable
+    ///     PreDraw without repeating addon-tree traversal.
+    /// </summary>
+    /// <param name="AddonAddress">The live addon address.</param>
+    /// <param name="Operation">The visible operation represented by the nodes.</param>
+    /// <param name="Policy">The presentation policy used for the snapshot.</param>
+    /// <param name="AppliedPresentation">
+    ///     The presentation applied when the snapshot was captured, if any.
+    /// </param>
+    /// <param name="Nodes">The resolved nodes and their expected native state.</param>
+    private sealed record ToDoStablePreDrawSnapshot(
+        nint AddonAddress,
+        ToDoTranslationOperation Operation,
+        ToDoPresentationPolicy Policy,
+        ToDoPresentationSnapshot? AppliedPresentation,
+        IReadOnlyList<ToDoStableNodeSnapshot> Nodes);
+
+    /// <summary>
+    ///     Retains one node address, expected text, and optional tooltip bounds.
+    /// </summary>
+    /// <param name="Address">The native text-node address.</param>
+    /// <param name="IsTimerNode">Whether volatile timer changes are ignored.</param>
+    /// <param name="ExpectedText">The expected stable native text.</param>
+    /// <param name="TracksTooltipBounds">
+    ///     Whether tooltip bounds must remain unchanged.
+    /// </param>
+    /// <param name="Left">The tooltip hit area left edge.</param>
+    /// <param name="Top">The tooltip hit area top edge.</param>
+    /// <param name="Right">The tooltip hit area right edge.</param>
+    /// <param name="Bottom">The tooltip hit area bottom edge.</param>
+    private sealed record ToDoStableNodeSnapshot(
+        nint Address,
+        bool IsTimerNode,
+        string ExpectedText,
+        bool TracksTooltipBounds,
+        float Left,
+        float Top,
+        float Right,
+        float Bottom);
 }

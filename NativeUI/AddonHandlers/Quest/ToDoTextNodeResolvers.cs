@@ -116,12 +116,12 @@ internal static unsafe partial class ToDoTextNodeResolvers
     /// </summary>
     /// <param name="text">The visible text.</param>
     /// <returns><c>true</c> when the text is a countdown value.</returns>
-    private static bool IsTimerText(string text)
+    internal static bool IsTimerText(string text)
     {
         return TimerTextPattern().IsMatch(text);
     }
 
-    [GeneratedRegex(@"^\s*(?:(?:\d{1,2}:)?\d{1,2}:\d{2})\s*$")]
+    [GeneratedRegex(@"^\s*(?:\d{1,3}:\d{2}|\d{1,2}:\d{1,2}:\d{2})\s*$")]
     private static partial Regex TimerTextPattern();
 }
 

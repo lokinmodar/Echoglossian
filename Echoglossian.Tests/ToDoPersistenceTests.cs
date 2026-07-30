@@ -23,6 +23,71 @@ namespace Echoglossian.Tests;
 public sealed class ToDoPersistenceTests
 {
     /// <summary>
+    ///     Ensures the dedicated writer inserts one identity row and updates
+    ///     that row rather than creating a duplicate.
+    /// </summary>
+    [Fact]
+    public async Task InsertToDoTextData_InsertsThenUpdatesDedicatedRow()
+    {
+        var configDir = CreateTempConfigDirectory();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        var plugin = CreateFormattingPlugin(new Config
+        {
+            Lang = 28,
+            ChosenTransEngine = 0,
+            TranslateAlreadyTranslatedTexts = true,
+        });
+        var originalTexts = JsonConvert.SerializeObject(
+            new[] { "Halatali", "Clear the Hall of the Cesti: 0/1" });
+
+        try
+        {
+            await using (var context = new EchoglossianDbContext(configDir))
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            var row = new ToDoText
+            {
+                AddonName = "ToDo",
+                OriginalTextsAsText = originalTexts,
+                OriginalLang = "en",
+                TranslatedTextsAsText = JsonConvert.SerializeObject(
+                    new[] { "Halatali", "Limpe o Hall of the Cesti: 0/1" }),
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "test-version",
+                SourceContentHash = "todo-write-hash",
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
+            };
+
+            Assert.Equal(
+                "Data inserted to ToDoTexts table.",
+                await plugin.InsertToDoTextData(row));
+
+            row.Id = 0;
+            row.TranslatedTextsAsText = JsonConvert.SerializeObject(
+                new[] { "Halatali", "Conclua o Hall of the Cesti: 0/1" });
+            Assert.Equal(
+                "Data updated in ToDoTexts table.",
+                await plugin.InsertToDoTextData(row));
+
+            await using var verification = new EchoglossianDbContext(configDir);
+            var persisted = Assert.Single(await verification.ToDoTexts
+                .AsNoTracking()
+                .ToListAsync());
+            Assert.Equal(row.TranslatedTextsAsText, persisted.TranslatedTextsAsText);
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures a ToDo payload reuses its dedicated persisted row.
     /// </summary>
     [Fact]

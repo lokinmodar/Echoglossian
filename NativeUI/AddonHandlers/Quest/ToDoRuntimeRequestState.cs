@@ -158,6 +158,35 @@ internal sealed class ToDoRuntimeRequestState
         }
     }
 
+    /// <summary>
+    ///     Determines whether a stable PreDraw can reuse already-observed work
+    ///     without repeating persistence lookup or presentation application.
+    /// </summary>
+    /// <param name="operation">The operation represented by the node snapshot.</param>
+    /// <param name="presentationStable">
+    ///     Whether the snapshot still represents the applied presentation.
+    /// </param>
+    /// <param name="nodeSnapshotStable">
+    ///     Whether the cached visible nodes still match their expected state.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> when dense PreDraw work can be skipped;
+    ///     otherwise <see langword="false" />.
+    /// </returns>
+    public bool ShouldShortCircuitStablePreDraw(
+        ToDoTranslationOperation operation,
+        bool presentationStable,
+        bool nodeSnapshotStable)
+    {
+        lock (this.syncRoot)
+        {
+            return nodeSnapshotStable &&
+                   Equals(this.visibleOperation, operation) &&
+                   (presentationStable ||
+                    this.ShouldSkipPersistenceLookupCore(operation));
+        }
+    }
+
     private bool ShouldSkipPersistenceLookupCore(ToDoTranslationOperation operation)
     {
         return Equals(this.inFlightOperation, operation) ||

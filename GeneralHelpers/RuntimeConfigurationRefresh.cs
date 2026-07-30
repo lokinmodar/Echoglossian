@@ -237,6 +237,7 @@ public partial class Echoglossian
           configuration.TranslateHudWindow,
           configuration.TranslateGameMainMenu,
           configuration.TranslateActionMenuWindow,
+          configuration.TranslateContextMenu,
           configuration.TranslateCharacterWindow,
           configuration.TranslateTalk,
           configuration.TranslateBattleTalk,

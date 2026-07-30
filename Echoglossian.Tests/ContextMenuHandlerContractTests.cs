@@ -18,6 +18,21 @@ namespace Echoglossian.Tests;
 public sealed class ContextMenuHandlerContractTests
 {
     /// <summary>
+    ///     Ensures changing only the dedicated ContextMenu toggle invalidates
+    ///     addon handler registration.
+    /// </summary>
+    [Fact]
+    public void AddonHandlerRegistrationSignature_ChangesWhenContextMenuToggleChanges()
+    {
+        var disabled = new Config { TranslateContextMenu = false };
+        var enabled = new Config { TranslateContextMenu = true };
+
+        Assert.NotEqual(
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(disabled),
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(enabled));
+    }
+
+    /// <summary>
     ///     Ensures addon wiring registers the dedicated ContextMenu handler.
     /// </summary>
     [Fact]

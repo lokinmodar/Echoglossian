@@ -76,6 +76,29 @@ public sealed class ContextMenuRuntimeContractTests
     }
 
     /// <summary>
+    ///     Ensures a decorated row that cannot be replaced natively falls back
+    ///     to translated hover text in both native-writing modes.
+    /// </summary>
+    [Theory]
+    [InlineData(JournalTranslationDisplayMode.NativeUiTranslation)]
+    [InlineData(
+        JournalTranslationDisplayMode.NativeUiTranslationWithOriginalTooltips)]
+    public void ContextMenu_DecoratedNativeRowsUseTranslatedTooltipFallback(
+        JournalTranslationDisplayMode displayMode)
+    {
+        Assert.Equal(
+            JournalTranslationDisplayMode.TooltipTranslation,
+            InvokeTooltipDisplayMode(
+                "\uE03CDismiss",
+                "Dismiss",
+                displayMode));
+        Assert.Null(InvokeTooltipDisplayMode(
+            "Dismiss",
+            "Dismiss",
+            JournalTranslationDisplayMode.NativeUiTranslation));
+    }
+
+    /// <summary>
     ///     Reads the ContextMenu handler source.
     /// </summary>
     /// <returns>The handler source text.</returns>
@@ -122,6 +145,27 @@ public sealed class ContextMenuRuntimeContractTests
             BindingFlags.Static | BindingFlags.NonPublic);
         Assert.NotNull(method);
         return Assert.IsType<bool>(method.Invoke(null, [liveLabel, canonicalLabel]));
+    }
+
+    /// <summary>
+    ///     Invokes the ContextMenu tooltip fallback policy.
+    /// </summary>
+    /// <param name="liveLabel">The raw visible label.</param>
+    /// <param name="canonicalLabel">The canonical source label.</param>
+    /// <param name="displayMode">The configured display mode.</param>
+    /// <returns>The tooltip display mode, or <see langword="null" />.</returns>
+    private static JournalTranslationDisplayMode? InvokeTooltipDisplayMode(
+        string liveLabel,
+        string canonicalLabel,
+        JournalTranslationDisplayMode displayMode)
+    {
+        var method = typeof(ContextMenuHandler).GetMethod(
+            "ResolveContextMenuTooltipDisplayMode",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        return (JournalTranslationDisplayMode?)method.Invoke(
+            null,
+            [liveLabel, canonicalLabel, displayMode]);
     }
 
     /// <summary>

@@ -223,6 +223,15 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
                 continue;
             }
 
+            var tooltipDisplayMode = ResolveContextMenuTooltipDisplayMode(
+                this.ReadTextNode(textNode),
+                originalText,
+                displayMode);
+            if (tooltipDisplayMode == null)
+            {
+                continue;
+            }
+
             this.RegisterTranslatedHoverTooltip(
                 $"row-{textNodeKey}",
                 new Vector2(collisionNode->ScreenX, collisionNode->ScreenY),
@@ -231,11 +240,19 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
                     collisionNode->ScreenY + Math.Max(1f, collisionNode->Height)),
                 originalText,
                 translatedText,
-                displayMode);
+                tooltipDisplayMode.Value);
             registeredAny = true;
         }
 
-        return registeredAny;
+        return registeredAny ||
+               TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
+    }
+
+    /// <inheritdoc />
+    private protected override bool RequiresCustomHoverTooltipFallback(
+        JournalTranslationDisplayMode displayMode)
+    {
+        return TranslationDisplayModeHelper.WritesNativeTranslation(displayMode);
     }
 
     /// <summary>
@@ -510,6 +527,36 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
                    NormalizeContextMenuLabel(liveLabel),
                    canonicalLabel,
                    StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Resolves the tooltip mode for a ContextMenu row, forcing translated
+    ///     fallback text when decorations make native replacement unsafe.
+    /// </summary>
+    /// <param name="liveLabel">The raw label currently held by the text node.</param>
+    /// <param name="canonicalLabel">The canonical original payload label.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    /// <returns>The tooltip mode, or <see langword="null" /> for no tooltip.</returns>
+    private static JournalTranslationDisplayMode?
+        ResolveContextMenuTooltipDisplayMode(
+            string liveLabel,
+            string canonicalLabel,
+            JournalTranslationDisplayMode displayMode)
+    {
+        var nativeReplacementSkipped =
+            !IsNativeContextMenuReplacementSafe(liveLabel, canonicalLabel) &&
+            string.Equals(
+                NormalizeContextMenuLabel(liveLabel),
+                canonicalLabel,
+                StringComparison.Ordinal);
+        if (nativeReplacementSkipped)
+        {
+            return JournalTranslationDisplayMode.TooltipTranslation;
+        }
+
+        return TranslationDisplayModeHelper.UsesHoverTooltips(displayMode)
+            ? displayMode
+            : null;
     }
 
     /// <summary>

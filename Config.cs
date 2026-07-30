@@ -826,8 +826,10 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode ActionMenuWindowTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Translates the dedicated ContextMenu addon.</summary>
   [DefaultValue(false)] public bool TranslateContextMenu = false;
 
+  /// <summary>Gets or sets the display mode for the ContextMenu addon.</summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode ContextMenuTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;

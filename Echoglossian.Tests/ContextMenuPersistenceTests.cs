@@ -23,6 +23,71 @@ namespace Echoglossian.Tests;
 public class ContextMenuPersistenceTests
 {
     /// <summary>
+    ///     Ensures the dedicated writer inserts one identity row and updates
+    ///     that row rather than creating a duplicate.
+    /// </summary>
+    [Fact]
+    public async Task InsertContextMenuTextData_InsertsThenUpdatesDedicatedRow()
+    {
+        var configDir = CreateTempConfigDirectory();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        var plugin = CreateFormattingPlugin(new Config
+        {
+            Lang = 28,
+            ChosenTransEngine = 0,
+            TranslateAlreadyTranslatedTexts = true,
+        });
+        var originalTexts = JsonConvert.SerializeObject(
+            new[] { "Dismiss", "Emote" });
+
+        try
+        {
+            await using (var context = new EchoglossianDbContext(configDir))
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            var row = new ContextMenuText
+            {
+                AddonName = "ContextMenu",
+                OriginalTextsAsText = originalTexts,
+                OriginalLang = "en",
+                TranslatedTextsAsText = JsonConvert.SerializeObject(
+                    new[] { "Dispensar", "Emote" }),
+                TranslationLang = "pt-BR",
+                TranslationEngine = 0,
+                GameVersion = "test-version",
+                SourceContentHash = "contextmenu-write-hash",
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
+            };
+
+            Assert.Equal(
+                "Data inserted to ContextMenuTexts table.",
+                await plugin.InsertContextMenuTextData(row));
+
+            row.Id = 0;
+            row.TranslatedTextsAsText = JsonConvert.SerializeObject(
+                new[] { "Fechar", "Emote" });
+            Assert.Equal(
+                "Data updated in ContextMenuTexts table.",
+                await plugin.InsertContextMenuTextData(row));
+
+            await using var verification = new EchoglossianDbContext(configDir);
+            var persisted = Assert.Single(await verification.ContextMenuTexts
+                .AsNoTracking()
+                .ToListAsync());
+            Assert.Equal(row.TranslatedTextsAsText, persisted.TranslatedTextsAsText);
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures a ContextMenu payload reuses a row scoped to its source
     ///     content hash.
     /// </summary>

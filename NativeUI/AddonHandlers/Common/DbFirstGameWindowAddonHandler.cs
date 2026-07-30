@@ -788,6 +788,21 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether addon-specific hover targets are required even
+    ///     when the configured mode normally uses native text only.
+    /// </summary>
+    /// <param name="displayMode">The active display mode.</param>
+    /// <returns>
+    ///     <see langword="true" /> when custom fallback hover targets should be
+    ///     registered; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool RequiresCustomHoverTooltipFallback(
+        JournalTranslationDisplayMode displayMode)
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Handles setup/refresh/update events.
     /// </summary>
     /// <param name="evt">The lifecycle event.</param>
@@ -2758,7 +2773,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        if (TranslationDisplayModeHelper.UsesHoverTooltips(displayMode))
+        if (TranslationDisplayModeHelper.UsesHoverTooltips(displayMode) ||
+            this.RequiresCustomHoverTooltipFallback(displayMode))
         {
             this.RegisterHoverTooltips(
                 addon,

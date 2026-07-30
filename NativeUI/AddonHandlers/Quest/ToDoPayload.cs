@@ -39,6 +39,8 @@ internal sealed record ToDoCapturedText(
 /// </summary>
 internal sealed class ToDoPayload
 {
+    private readonly IReadOnlyList<ToDoCapturedText> translatableTexts;
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="ToDoPayload" /> class.
     /// </summary>
@@ -46,6 +48,9 @@ internal sealed class ToDoPayload
     public ToDoPayload(IReadOnlyList<ToDoCapturedText> visibleTexts)
     {
         this.VisibleTexts = [.. visibleTexts];
+        this.translatableTexts = this.VisibleTexts
+            .Where(text => !text.IsTimerNode)
+            .ToArray();
     }
 
     /// <summary>
@@ -59,7 +64,7 @@ internal sealed class ToDoPayload
     /// <returns>The non-timer text nodes in display order.</returns>
     public IReadOnlyList<ToDoCapturedText> GetTranslatableTexts()
     {
-        return this.VisibleTexts.Where(text => !text.IsTimerNode).ToArray();
+        return this.translatableTexts;
     }
 
     /// <summary>
