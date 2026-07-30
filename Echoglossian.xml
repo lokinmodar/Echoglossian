@@ -28113,6 +28113,22 @@
             <param name="minimumPadding">The minimum padding to preserve.</param>
             <returns>The expanded container extent.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(System.UInt16,System.UInt16,System.UInt16,System.UInt16,System.Int32)">
+            <summary>
+                Resolves one shared extent for detached tooltip-style containers that
+                must stay visually aligned even when the text node does not live under
+                the same native wrapper chain.
+            </summary>
+            <param name="primaryContainerExtent">The primary container extent.</param>
+            <param name="secondaryContainerExtent">The secondary container extent.</param>
+            <param name="currentTextExtent">The current text extent.</param>
+            <param name="measuredTextExtent">The measured text extent after reflow.</param>
+            <param name="minimumSecondaryPadding">
+                The explicit padding that should remain inside the synchronized
+                tooltip-style background.
+            </param>
+            <returns>The synchronized extent shared by both containers.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMinimumSecondaryWidthForAnchoredNode(System.Int16,System.UInt16,System.Int16,System.UInt16,System.Int32)">
             <summary>
                 Resolves the minimum secondary-container width required to keep an
@@ -28206,6 +28222,15 @@
                 The top-most wrapper to include in the captured chain.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.CaptureDetachedPrimaryContainer(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Captures the primary container separately when it is not part of the
+                text node's parent chain, which is the case for simple tooltip
+                addons where the root background and text node are siblings.
+            </summary>
+            <param name="snapshot">The snapshot receiving detached container data.</param>
+            <param name="primaryContainerNode">The resolved primary container node.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryRestoreHorizontalCentering(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot)">
             <summary>
                 Re-centers the text node within its immediate wrapper when the original
@@ -28294,6 +28319,34 @@
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerAddress">
             <summary>
                 Gets or sets the native address of the secondary container node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.DetachedPrimaryContainerAddress">
+            <summary>
+                Gets or sets the native address of one detached primary container
+                node that must be restored separately from the text wrapper chain.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.DetachedPrimaryContainerWidth">
+            <summary>
+                Gets or sets the detached primary container width.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.DetachedPrimaryContainerHeight">
+            <summary>
+                Gets or sets the detached primary container height.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.DetachedPrimaryContainerOriginalX">
+            <summary>
+                Gets or sets the original X position of the detached primary
+                container.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.DetachedPrimaryContainerOriginalY">
+            <summary>
+                Gets or sets the original Y position of the detached primary
+                container.
             </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot.SecondaryContainerWidth">

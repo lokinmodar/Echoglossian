@@ -133,4 +133,41 @@ public class NativeTextNodeLayoutHelperTests
 
         Assert.Equal((ushort)82, resolvedExtent);
     }
+
+    /// <summary>
+    ///     Ensures tooltip-style native reflow can coordinate the primary
+    ///     container with the secondary background when the background needs
+    ///     extra horizontal padding beyond the primary container's historical
+    ///     width.
+    /// </summary>
+    [Fact]
+    public void ResolveSynchronizedContainerExtent_UsesLargestResolvedWidthAcrossTooltipContainers()
+    {
+        var resolvedExtent = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+            primaryContainerExtent: 171,
+            secondaryContainerExtent: 171,
+            currentTextExtent: 143,
+            measuredTextExtent: 179,
+            minimumSecondaryPadding: 24);
+
+        Assert.Equal((ushort)203, resolvedExtent);
+    }
+
+    /// <summary>
+    ///     Ensures tooltip-style native reflow can coordinate the primary
+    ///     container with the secondary background when translated multiline
+    ///     text needs extra vertical padding in the nine-grid.
+    /// </summary>
+    [Fact]
+    public void ResolveSynchronizedContainerExtent_UsesLargestResolvedHeightAcrossTooltipContainers()
+    {
+        var resolvedExtent = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+            primaryContainerExtent: 42,
+            secondaryContainerExtent: 42,
+            currentTextExtent: 37,
+            measuredTextExtent: 55,
+            minimumSecondaryPadding: 8);
+
+        Assert.Equal((ushort)63, resolvedExtent);
+    }
 }

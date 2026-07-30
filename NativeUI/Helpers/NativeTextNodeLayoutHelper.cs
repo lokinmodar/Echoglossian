@@ -76,6 +76,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
         snapshot,
         textNode,
         primaryContainerNode);
+    CaptureDetachedPrimaryContainer(
+        snapshot,
+        primaryContainerNode);
     return snapshot;
   }
 
@@ -249,25 +252,75 @@ internal static unsafe class NativeTextNodeLayoutHelper
       }
     }
 
-    if (secondaryContainerNode != null)
+    var hasDetachedPrimaryContainer =
+        snapshot.DetachedPrimaryContainerAddress != 0 &&
+        primaryContainerNode != null;
+    if (hasDetachedPrimaryContainer)
     {
-      if (allowWidthGrowth && snapshot.SecondaryContainerWidth > 0)
+      if (allowWidthGrowth && snapshot.DetachedPrimaryContainerWidth > 0)
       {
-        var secondaryWidth = ResolveExpandedContainerExtent(
+        var synchronizedWidth = ResolveSynchronizedContainerExtent(
+            snapshot.DetachedPrimaryContainerWidth,
             snapshot.SecondaryContainerWidth,
             snapshot.TextWidth,
             resizeResult.Width,
             minimumSecondaryHorizontalPadding);
+        if (synchronizedWidth > 0)
+        {
+          primaryContainerNode->SetWidth(synchronizedWidth);
+          childWidth = synchronizedWidth;
+        }
+      }
+
+      if (snapshot.DetachedPrimaryContainerHeight > 0)
+      {
+        var synchronizedHeight = ResolveSynchronizedContainerExtent(
+            snapshot.DetachedPrimaryContainerHeight,
+            snapshot.SecondaryContainerHeight,
+            snapshot.TextHeight,
+            resizeResult.Height,
+            minimumSecondaryVerticalPadding);
+        if (synchronizedHeight > 0)
+        {
+          primaryContainerNode->SetHeight(synchronizedHeight);
+          childHeight = synchronizedHeight;
+        }
+      }
+    }
+
+    if (secondaryContainerNode != null)
+    {
+      if (allowWidthGrowth && snapshot.SecondaryContainerWidth > 0)
+      {
+        var secondaryWidth = hasDetachedPrimaryContainer
+            ? ResolveSynchronizedContainerExtent(
+                snapshot.DetachedPrimaryContainerWidth,
+                snapshot.SecondaryContainerWidth,
+                snapshot.TextWidth,
+                resizeResult.Width,
+                minimumSecondaryHorizontalPadding)
+            : ResolveExpandedContainerExtent(
+                snapshot.SecondaryContainerWidth,
+                snapshot.TextWidth,
+                resizeResult.Width,
+                minimumSecondaryHorizontalPadding);
         secondaryContainerNode->SetWidth((ushort)Math.Min(ushort.MaxValue, secondaryWidth));
       }
 
       if (snapshot.SecondaryContainerHeight > 0)
       {
-        var secondaryHeight = ResolveExpandedContainerExtent(
-            snapshot.SecondaryContainerHeight,
-            snapshot.TextHeight,
-            resizeResult.Height,
-            minimumSecondaryVerticalPadding);
+        var secondaryHeight = hasDetachedPrimaryContainer
+            ? ResolveSynchronizedContainerExtent(
+                snapshot.DetachedPrimaryContainerHeight,
+                snapshot.SecondaryContainerHeight,
+                snapshot.TextHeight,
+                resizeResult.Height,
+                minimumSecondaryVerticalPadding)
+            : ResolveExpandedContainerExtent(
+                snapshot.SecondaryContainerHeight,
+                snapshot.TextHeight,
+                resizeResult.Height,
+                minimumSecondaryVerticalPadding);
         secondaryContainerNode->SetHeight((ushort)Math.Min(ushort.MaxValue, secondaryHeight));
       }
     }
@@ -375,6 +428,29 @@ internal static unsafe class NativeTextNodeLayoutHelper
       {
         ancestorNode->SetXShort(ancestorSnapshot.OriginalX);
         ancestorNode->SetYShort(ancestorSnapshot.OriginalY);
+      }
+    }
+
+    if (snapshot.DetachedPrimaryContainerAddress != 0)
+    {
+      var detachedPrimaryContainerNode = (AtkResNode*)snapshot.DetachedPrimaryContainerAddress;
+      if (detachedPrimaryContainerNode != null)
+      {
+        if (snapshot.DetachedPrimaryContainerWidth > 0)
+        {
+          detachedPrimaryContainerNode->SetWidth(snapshot.DetachedPrimaryContainerWidth);
+        }
+
+        if (snapshot.DetachedPrimaryContainerHeight > 0)
+        {
+          detachedPrimaryContainerNode->SetHeight(snapshot.DetachedPrimaryContainerHeight);
+        }
+
+        if (restorePositions)
+        {
+          detachedPrimaryContainerNode->SetXShort(snapshot.DetachedPrimaryContainerOriginalX);
+          detachedPrimaryContainerNode->SetYShort(snapshot.DetachedPrimaryContainerOriginalY);
+        }
       }
     }
 
@@ -618,6 +694,44 @@ internal static unsafe class NativeTextNodeLayoutHelper
     var resolvedExtent = Math.Max(
         currentContainerExtent,
         measuredTextExtent + effectivePadding);
+    return (ushort)Math.Min(ushort.MaxValue, Math.Max(1, resolvedExtent));
+  }
+
+  /// <summary>
+  ///     Resolves one shared extent for detached tooltip-style containers that
+  ///     must stay visually aligned even when the text node does not live under
+  ///     the same native wrapper chain.
+  /// </summary>
+  /// <param name="primaryContainerExtent">The primary container extent.</param>
+  /// <param name="secondaryContainerExtent">The secondary container extent.</param>
+  /// <param name="currentTextExtent">The current text extent.</param>
+  /// <param name="measuredTextExtent">The measured text extent after reflow.</param>
+  /// <param name="minimumSecondaryPadding">
+  ///     The explicit padding that should remain inside the synchronized
+  ///     tooltip-style background.
+  /// </param>
+  /// <returns>The synchronized extent shared by both containers.</returns>
+  public static ushort ResolveSynchronizedContainerExtent(
+      ushort primaryContainerExtent,
+      ushort secondaryContainerExtent,
+      ushort currentTextExtent,
+      ushort measuredTextExtent,
+      int minimumSecondaryPadding)
+  {
+    var baseExtent = Math.Max(
+        primaryContainerExtent,
+        secondaryContainerExtent);
+    var effectiveTextExtent = Math.Max(
+        currentTextExtent,
+        measuredTextExtent);
+    var resolvedExtent = Math.Max(
+        baseExtent,
+        effectiveTextExtent + Math.Max(0, minimumSecondaryPadding));
+    if (resolvedExtent <= 0)
+    {
+      return 0;
+    }
+
     return (ushort)Math.Min(ushort.MaxValue, Math.Max(1, resolvedExtent));
   }
 
@@ -915,6 +1029,37 @@ internal static unsafe class NativeTextNodeLayoutHelper
   }
 
   /// <summary>
+  ///     Captures the primary container separately when it is not part of the
+  ///     text node's parent chain, which is the case for simple tooltip
+  ///     addons where the root background and text node are siblings.
+  /// </summary>
+  /// <param name="snapshot">The snapshot receiving detached container data.</param>
+  /// <param name="primaryContainerNode">The resolved primary container node.</param>
+  private static void CaptureDetachedPrimaryContainer(
+      NativeTextNodeLayoutSnapshot snapshot,
+      AtkResNode* primaryContainerNode)
+  {
+    if (snapshot == null || primaryContainerNode == null)
+    {
+      return;
+    }
+
+    foreach (var ancestorSnapshot in snapshot.AncestorChain)
+    {
+      if (ancestorSnapshot.NodeAddress == (nint)primaryContainerNode)
+      {
+        return;
+      }
+    }
+
+    snapshot.DetachedPrimaryContainerAddress = (nint)primaryContainerNode;
+    snapshot.DetachedPrimaryContainerWidth = primaryContainerNode->GetWidth();
+    snapshot.DetachedPrimaryContainerHeight = primaryContainerNode->GetHeight();
+    snapshot.DetachedPrimaryContainerOriginalX = primaryContainerNode->GetXShort();
+    snapshot.DetachedPrimaryContainerOriginalY = primaryContainerNode->GetYShort();
+  }
+
+  /// <summary>
   ///     Re-centers the text node within its immediate wrapper when the original
   ///     layout was centered and width growth changed the wrapper size.
   /// </summary>
@@ -1055,6 +1200,34 @@ internal sealed class NativeTextNodeLayoutSnapshot
   ///     Gets or sets the native address of the secondary container node.
   /// </summary>
   public nint SecondaryContainerAddress { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the native address of one detached primary container
+  ///     node that must be restored separately from the text wrapper chain.
+  /// </summary>
+  public nint DetachedPrimaryContainerAddress { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the detached primary container width.
+  /// </summary>
+  public ushort DetachedPrimaryContainerWidth { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the detached primary container height.
+  /// </summary>
+  public ushort DetachedPrimaryContainerHeight { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original X position of the detached primary
+  ///     container.
+  /// </summary>
+  public short DetachedPrimaryContainerOriginalX { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original Y position of the detached primary
+  ///     container.
+  /// </summary>
+  public short DetachedPrimaryContainerOriginalY { get; set; }
 
   /// <summary>
   ///     Gets or sets the secondary container width.
