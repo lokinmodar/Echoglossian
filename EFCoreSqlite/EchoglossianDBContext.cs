@@ -51,6 +51,11 @@ public class EchoglossianDbContext : DbContext
   /// </summary>
   public DbSet<ContextMenuText> ContextMenuTexts { get; set; }
 
+  /// <summary>
+  ///     Gets or sets the dedicated ToDo translation rows.
+  /// </summary>
+  public DbSet<ToDoText> ToDoTexts { get; set; }
+
   public DbSet<GameWindow> GameWindow { get; set; }
 
   public DbSet<TalkSubtitleMessage> TalkSubtitleMessage { get; set; }
@@ -240,6 +245,17 @@ public class EchoglossianDbContext : DbContext
           t.SourceContentHash
         })
         .HasDatabaseName("IX_contextmenutexts_lookup");
+    modelBuilder.Entity<ToDoText>().ToTable("todotexts");
+    modelBuilder.Entity<ToDoText>()
+        .HasIndex(t => new
+        {
+          t.AddonName,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_todotexts_lookup");
     modelBuilder.Entity<GameWindow>().ToTable("gamewindows");
     modelBuilder.Entity<GameWindow>()
         .HasIndex(g => new

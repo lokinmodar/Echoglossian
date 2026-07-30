@@ -1034,6 +1034,55 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds a dedicated ToDo payload scoped by addon, source hash, game
+  ///     version, target language, and translation engine.
+  /// </summary>
+  /// <param name="toDoText">The ToDo payload to find.</param>
+  /// <returns>
+  ///     The matching <see cref="ToDoText" />, or <see langword="null" />.
+  /// </returns>
+  public ToDoText? FindToDoText(ToDoText toDoText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (string.IsNullOrWhiteSpace(toDoText.AddonName) ||
+          string.IsNullOrWhiteSpace(toDoText.OriginalTextsAsText) ||
+          string.IsNullOrWhiteSpace(toDoText.GameVersion) ||
+          string.IsNullOrWhiteSpace(toDoText.SourceContentHash))
+      {
+        return null;
+      }
+
+      return context.ToDoTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == toDoText.AddonName &&
+              t.OriginalTextsAsText == toDoText.OriginalTextsAsText &&
+              t.GameVersion == toDoText.GameVersion &&
+              t.SourceContentHash == toDoText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  toDoText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(t.OriginalLang, toDoText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == toDoText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindToDoText exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Inserts a TalkMessage record into the database.
   /// </summary>
   /// <param name="talkMessage">Formatted TalkMessage to be inserted into the database</param>
@@ -1651,6 +1700,56 @@ public partial class Echoglossian
       context.ContextMenuTexts.Attach(contextMenuText);
       await context.SaveChangesAsync().ConfigureAwait(false);
       return "Data inserted to ContextMenuTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or updates a dedicated ToDo payload without sharing
+  ///     game-window, quest, or selection-dialog persistence.
+  /// </summary>
+  /// <param name="toDoText">The ToDo payload to persist.</param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertToDoTextData(ToDoText toDoText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(toDoText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      toDoText.GameVersion ??= GetGameVersion();
+      var existingToDoText = context.ToDoTexts
+          .Where(t =>
+              t.AddonName == toDoText.AddonName &&
+              t.OriginalTextsAsText == toDoText.OriginalTextsAsText &&
+              t.GameVersion == toDoText.GameVersion &&
+              t.SourceContentHash == toDoText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(t.TranslationLang, toDoText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(t.OriginalLang, toDoText.OriginalLang) &&
+              t.TranslationEngine == toDoText.TranslationEngine)
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+      if (existingToDoText != null)
+      {
+        existingToDoText.TranslatedTextsAsText = toDoText.TranslatedTextsAsText;
+        existingToDoText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data updated in ToDoTexts table.";
+      }
+
+      context.ToDoTexts.Attach(toDoText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to ToDoTexts table.";
     }
     catch (Exception e)
     {
