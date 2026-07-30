@@ -372,6 +372,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                     targetText,
                     allowWidthGrowth: true,
                     additionalWrapWidth: AdditionalTooltipWrapWidth,
+                    measureReplacementWidthBeforeApply: true,
                     minimumSecondaryHorizontalPadding:
                     MinimumTooltipBackgroundHorizontalPadding,
                     minimumSecondaryVerticalPadding:

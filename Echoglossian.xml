@@ -27985,7 +27985,7 @@
             </param>
             <returns>The preferred wrap width to preserve.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16,System.Boolean,System.Boolean)">
             <summary>
                 Applies translated text to a node using the existing wrap width and the
                 minimum multiline flags required for the game to recompute size.
@@ -27994,6 +27994,15 @@
             <param name="replacementText">The translated text to write back.</param>
             <param name="preferredWrapWidth">
                 The width that should be preserved for wrapping.
+            </param>
+            <param name="allowWidthGrowth">
+                Whether the text node itself may widen to the measured candidate text
+                width instead of staying clamped to the preserved historical width.
+            </param>
+            <param name="measureReplacementWidthBeforeApply">
+                Whether the candidate replacement text should be measured before it is
+                applied so width growth can use that draw width instead of relying
+                only on the historical wrap width.
             </param>
             <returns>The measured size after the text replacement.</returns>
         </member>
@@ -28059,7 +28068,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16,System.Int32,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16,System.Int32,System.Int32,System.Boolean)">
             <summary>
                 Applies translated text to a node and grows its wrapper chain plus the
                 nearest nine-grid background using inferred padding from the current
@@ -28087,6 +28096,26 @@
                 The minimum vertical padding to preserve inside the secondary
                 background when it grows.
             </param>
+            <param name="measureReplacementWidthBeforeApply">
+                Whether the candidate replacement text should be measured before
+                native apply so width growth can use its draw width.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveReplacementWrapWidth(System.UInt16,System.UInt16,System.Boolean)">
+            <summary>
+                Resolves the wrap width that should be applied to one replacement
+                text, preserving the historical width by default and only widening to
+                the candidate draw width when the caller explicitly allows it.
+            </summary>
+            <param name="preferredWrapWidth">The historical wrap width to preserve.</param>
+            <param name="candidateDrawWidth">
+                The measured draw width of the replacement text before it is applied
+                to the node.
+            </param>
+            <param name="allowWidthGrowth">
+                Whether horizontal growth is allowed for this replacement.
+            </param>
+            <returns>The wrap width that should be assigned to the node.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags)">
             <summary>
@@ -28100,6 +28129,16 @@
             <param name="drawHeight">The measured text draw height.</param>
             <param name="textFlags">The live text flags.</param>
             <returns>The effective measured width and height.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.MeasureReplacementCandidateWidth(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <summary>
+                Measures the candidate replacement text width using the node's live
+                font and style fields without permanently mutating the visible text or
+                preserving the node's current wrap clamp.
+            </summary>
+            <param name="textNode">The live text node whose style should be reused.</param>
+            <param name="replacementText">The candidate replacement text.</param>
+            <returns>The measured candidate width.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveExpandedContainerExtent(System.UInt16,System.UInt16,System.UInt16,System.Int32)">
             <summary>

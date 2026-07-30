@@ -51,6 +51,51 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
+    ///     Ensures native reflow can widen the text node to the candidate text
+    ///     draw width when the caller explicitly allows width growth.
+    /// </summary>
+    [Fact]
+    public void ResolveReplacementWrapWidth_PrefersCandidateDrawWidth_WhenGrowthIsAllowed()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveReplacementWrapWidth(
+            preferredWrapWidth: 171,
+            candidateDrawWidth: 344,
+            allowWidthGrowth: true);
+
+        Assert.Equal((ushort)344, resolved);
+    }
+
+    /// <summary>
+    ///     Ensures native reflow preserves the historical wrap width when the
+    ///     caller does not allow horizontal growth.
+    /// </summary>
+    [Fact]
+    public void ResolveReplacementWrapWidth_PreservesHistoricalWidth_WhenGrowthIsDisabled()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveReplacementWrapWidth(
+            preferredWrapWidth: 171,
+            candidateDrawWidth: 344,
+            allowWidthGrowth: false);
+
+        Assert.Equal((ushort)171, resolved);
+    }
+
+    /// <summary>
+    ///     Ensures native reflow can still fall back to the candidate text draw
+    ///     width when no historical wrap width is available.
+    /// </summary>
+    [Fact]
+    public void ResolveReplacementWrapWidth_FallsBackToCandidateWidth_WhenHistoricalWidthIsMissing()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveReplacementWrapWidth(
+            preferredWrapWidth: 0,
+            candidateDrawWidth: 239,
+            allowWidthGrowth: true);
+
+        Assert.Equal((ushort)239, resolved);
+    }
+
+    /// <summary>
     ///     Ensures the secondary background width is left untouched when the
     ///     anchored node already fits inside the current bounds.
     /// </summary>

@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Text;
+
 namespace Echoglossian.NativeUI.Helpers;
 
 /// <summary>
@@ -137,39 +139,59 @@ internal static unsafe class NativeTextNodeLayoutHelper
   /// <param name="preferredWrapWidth">
   ///     The width that should be preserved for wrapping.
   /// </param>
+  /// <param name="allowWidthGrowth">
+  ///     Whether the text node itself may widen to the measured candidate text
+  ///     width instead of staying clamped to the preserved historical width.
+  /// </param>
+  /// <param name="measureReplacementWidthBeforeApply">
+  ///     Whether the candidate replacement text should be measured before it is
+  ///     applied so width growth can use that draw width instead of relying
+  ///     only on the historical wrap width.
+  /// </param>
   /// <returns>The measured size after the text replacement.</returns>
   public static NativeTextNodeResizeResult ApplyWrappedTextAndMeasure(
       AtkTextNode* textNode,
       string replacementText,
-      ushort preferredWrapWidth)
+      ushort preferredWrapWidth,
+      bool allowWidthGrowth = false,
+      bool measureReplacementWidthBeforeApply = false)
   {
     if (textNode == null)
     {
       return default;
     }
 
+    var resolvedWrapWidth = ResolveReplacementWrapWidth(
+        preferredWrapWidth,
+        measureReplacementWidthBeforeApply
+            ? MeasureReplacementCandidateWidth(
+                textNode,
+                replacementText)
+            : (ushort)0,
+        allowWidthGrowth);
+
     textNode->TextFlags |= TextFlags.WordWrap
                            | TextFlags.MultiLine
                            | TextFlags.AutoAdjustNodeSize;
 
-    if (preferredWrapWidth > 0)
+    if (resolvedWrapWidth > 0)
     {
-      textNode->SetWidth(preferredWrapWidth);
+      textNode->SetWidth(resolvedWrapWidth);
     }
 
     textNode->SetText(replacementText);
     textNode->ResizeNodeForCurrentText();
 
-    if (preferredWrapWidth > 0 &&
-        textNode->GetWidth() != preferredWrapWidth)
+    if (resolvedWrapWidth > 0 &&
+        textNode->GetWidth() != resolvedWrapWidth)
     {
-      textNode->SetWidth(preferredWrapWidth);
+      textNode->SetWidth(resolvedWrapWidth);
     }
 
     TryMeasureTextNode(textNode, out var width, out var height);
-    if (preferredWrapWidth > 0)
+    if (resolvedWrapWidth > 0)
     {
-      width = preferredWrapWidth;
+      width = resolvedWrapWidth;
     }
 
     return new NativeTextNodeResizeResult(width, height);
@@ -565,6 +587,10 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The minimum vertical padding to preserve inside the secondary
   ///     background when it grows.
   /// </param>
+  /// <param name="measureReplacementWidthBeforeApply">
+  ///     Whether the candidate replacement text should be measured before
+  ///     native apply so width growth can use its draw width.
+  /// </param>
   public static NativeTextNodeLayoutSnapshot? ApplyTextReplacementWithInferredReflow(
       AtkUnitBase* addon,
       AtkTextNode* textNode,
@@ -573,7 +599,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       bool restoreHorizontalCentering = true,
       ushort additionalWrapWidth = 0,
       int minimumSecondaryHorizontalPadding = 0,
-      int minimumSecondaryVerticalPadding = 0)
+      int minimumSecondaryVerticalPadding = 0,
+      bool measureReplacementWidthBeforeApply = false)
   {
     if (textNode == null)
     {
@@ -607,7 +634,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
     var resizeResult = ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
-        preferredWrapWidth);
+        preferredWrapWidth,
+        allowWidthGrowth,
+        measureReplacementWidthBeforeApply);
     ResizeFromSnapshot(
         snapshot,
         resizeResult,
@@ -618,6 +647,42 @@ internal static unsafe class NativeTextNodeLayoutHelper
         minimumSecondaryHorizontalPadding: minimumSecondaryHorizontalPadding,
         minimumSecondaryVerticalPadding: minimumSecondaryVerticalPadding);
     return snapshot;
+  }
+
+  /// <summary>
+  ///     Resolves the wrap width that should be applied to one replacement
+  ///     text, preserving the historical width by default and only widening to
+  ///     the candidate draw width when the caller explicitly allows it.
+  /// </summary>
+  /// <param name="preferredWrapWidth">The historical wrap width to preserve.</param>
+  /// <param name="candidateDrawWidth">
+  ///     The measured draw width of the replacement text before it is applied
+  ///     to the node.
+  /// </param>
+  /// <param name="allowWidthGrowth">
+  ///     Whether horizontal growth is allowed for this replacement.
+  /// </param>
+  /// <returns>The wrap width that should be assigned to the node.</returns>
+  public static ushort ResolveReplacementWrapWidth(
+      ushort preferredWrapWidth,
+      ushort candidateDrawWidth,
+      bool allowWidthGrowth)
+  {
+    if (allowWidthGrowth)
+    {
+      return (ushort)Math.Min(
+          ushort.MaxValue,
+          Math.Max(
+              preferredWrapWidth,
+              candidateDrawWidth));
+    }
+
+    if (preferredWrapWidth > 0)
+    {
+      return preferredWrapWidth;
+    }
+
+    return candidateDrawWidth;
   }
 
   /// <summary>
@@ -662,6 +727,55 @@ internal static unsafe class NativeTextNodeLayoutHelper
     }
 
     return new NativeTextNodeResizeResult(width, height);
+  }
+
+  /// <summary>
+  ///     Measures the candidate replacement text width using the node's live
+  ///     font and style fields without permanently mutating the visible text or
+  ///     preserving the node's current wrap clamp.
+  /// </summary>
+  /// <param name="textNode">The live text node whose style should be reused.</param>
+  /// <param name="replacementText">The candidate replacement text.</param>
+  /// <returns>The measured candidate width.</returns>
+  private static ushort MeasureReplacementCandidateWidth(
+      AtkTextNode* textNode,
+      string replacementText)
+  {
+    if (textNode == null ||
+        string.IsNullOrEmpty(replacementText))
+    {
+      return 0;
+    }
+
+    var originalTextFlags = textNode->TextFlags;
+    try
+    {
+      textNode->TextFlags &= ~(TextFlags.WordWrap | TextFlags.MultiLine);
+      ushort measuredWidth = 0;
+      ushort measuredHeight = 0;
+      var utf8Length = Encoding.UTF8.GetByteCount(replacementText);
+      Span<byte> utf8Bytes =
+          utf8Length <= 511 ? stackalloc byte[512] : new byte[utf8Length + 1];
+      Encoding.UTF8.GetBytes(replacementText, utf8Bytes);
+      utf8Bytes[utf8Length] = 0;
+
+      fixed (byte* utf8Pointer = utf8Bytes)
+      {
+        textNode->GetTextDrawSize(
+            &measuredWidth,
+            &measuredHeight,
+            utf8Pointer,
+            0,
+            -1,
+            true);
+      }
+
+      return measuredWidth;
+    }
+    finally
+    {
+      textNode->TextFlags = originalTextFlags;
+    }
   }
 
   /// <summary>
