@@ -3,7 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
@@ -493,9 +495,52 @@ internal abstract class QuestAddonHandlerBase
   /// <returns>The normalized text.</returns>
   private static string NormalizeReadableText(string text)
   {
-    return string.IsNullOrWhiteSpace(text)
-        ? string.Empty
-        : Regex.Replace(text.Trim(), @"\s+", " ");
+    if (string.IsNullOrWhiteSpace(text))
+    {
+      return string.Empty;
+    }
+
+    var builder = new StringBuilder(text.Length);
+    var previousWasSeparator = false;
+    foreach (var character in text.Trim())
+    {
+      if (char.IsWhiteSpace(character) || IsReadableTextNoise(character))
+      {
+        if (!previousWasSeparator)
+        {
+          builder.Append(' ');
+          previousWasSeparator = true;
+        }
+
+        continue;
+      }
+
+      builder.Append(character);
+      previousWasSeparator = false;
+    }
+
+    return builder.ToString().Trim();
+  }
+
+  /// <summary>
+  ///     Determines whether one character should be ignored while matching
+  ///     readable popup text because it only represents SeString payload noise.
+  /// </summary>
+  /// <param name="character">The character to inspect.</param>
+  /// <returns><c>true</c> when the character should be treated as a separator.</returns>
+  private static bool IsReadableTextNoise(char character)
+  {
+    if (character == '\uFFFD')
+    {
+      return true;
+    }
+
+    var category = char.GetUnicodeCategory(character);
+    return category == UnicodeCategory.Control ||
+           category == UnicodeCategory.Format ||
+           category == UnicodeCategory.PrivateUse ||
+           category == UnicodeCategory.Surrogate ||
+           category == UnicodeCategory.OtherNotAssigned;
   }
 
   /// <summary>

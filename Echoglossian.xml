@@ -19844,6 +19844,14 @@
             <param name="text">The text to normalize.</param>
             <returns>The normalized text.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.IsReadableTextNoise(System.Char)">
+            <summary>
+                Determines whether one character should be ignored while matching
+                readable popup text because it only represents SeString payload noise.
+            </summary>
+            <param name="character">The character to inspect.</param>
+            <returns><c>true</c> when the character should be treated as a separator.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.NormalizeQuestText(System.String)">
             <summary>
                 Normalizes quest text before writing it to the native UI.
