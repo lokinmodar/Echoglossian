@@ -116,6 +116,28 @@ public sealed class TooltipAddonNativePresentationContractTests
     }
 
     /// <summary>
+    ///     Ensures the dedicated Tooltip addon keeps only a narrow horizontal
+    ///     padding floor so short native balloons preserve their historical
+    ///     compact sizing instead of inflating to a blanket wide background.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_UsesNarrowHorizontalPaddingFloor()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "private const int MinimumTooltipBackgroundHorizontalPadding = 8;",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the dedicated Tooltip addon toggle is rendered after the
     ///     shared hover-tooltip appearance controls so addon-specific toggles
     ///     do not mix with formatting sliders from other flows.

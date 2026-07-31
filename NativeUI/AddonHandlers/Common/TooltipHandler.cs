@@ -19,7 +19,7 @@ namespace Echoglossian.NativeUI.AddonHandlers.Common;
 internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
 {
     private const ushort AdditionalTooltipWrapWidth = 8;
-    private const int MinimumTooltipBackgroundHorizontalPadding = 24;
+    private const int MinimumTooltipBackgroundHorizontalPadding = 8;
     private const int MinimumTooltipBackgroundVerticalPadding = 8;
     private readonly Dictionary<string, NativeTextNodeLayoutSnapshot>
         appliedLayoutSnapshots = new(StringComparer.Ordinal);
