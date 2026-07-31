@@ -328,8 +328,6 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload sourcePayload,
         DbFirstGameWindowPayload targetPayload)
     {
-        this.RestoreAppliedLayoutSnapshots(addon);
-
         var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))

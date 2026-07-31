@@ -76,6 +76,46 @@ public sealed class TooltipAddonNativePresentationContractTests
     }
 
     /// <summary>
+    ///     Ensures steady-state native Tooltip reapply does not restore the
+    ///     cached layout snapshot before it determines whether the translated
+    ///     text is already visible, otherwise the background collapses while the
+    ///     translated text remains on screen.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_SteadyStateApply_DoesNotRestoreLayoutBeforeComparison()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        var methodStart = source.IndexOf(
+            "private protected override bool TryApplyCustomTextNodePayload(",
+            StringComparison.Ordinal);
+        Assert.True(methodStart >= 0);
+
+        var methodEnd = source.IndexOf(
+            "return true;",
+            methodStart,
+            StringComparison.Ordinal);
+        Assert.True(methodEnd > methodStart);
+
+        var methodBody = source.Substring(methodStart, methodEnd - methodStart);
+
+        Assert.DoesNotContain(
+            "this.RestoreAppliedLayoutSnapshots(addon);",
+            methodBody,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "NativeTextComparisonNormalizationHelper.NormalizeForComparison",
+            methodBody,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the dedicated Tooltip addon toggle is rendered after the
     ///     shared hover-tooltip appearance controls so addon-specific toggles
     ///     do not mix with formatting sliders from other flows.

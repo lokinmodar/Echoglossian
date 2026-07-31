@@ -182,10 +182,17 @@ internal static unsafe class NativeTextNodeLayoutHelper
     textNode->SetText(replacementText);
     textNode->ResizeNodeForCurrentText();
 
-    if (resolvedWrapWidth > 0 &&
-        textNode->GetWidth() != resolvedWrapWidth)
+    if (resolvedWrapWidth > 0)
     {
-      textNode->SetWidth(resolvedWrapWidth);
+      var resolvedPostApplyWidth = ResolvePostApplyTextNodeWidth(
+          resolvedWrapWidth,
+          textNode->GetWidth(),
+          measureReplacementWidthBeforeApply);
+      if (resolvedPostApplyWidth > 0 &&
+          textNode->GetWidth() != resolvedPostApplyWidth)
+      {
+        textNode->SetWidth(resolvedPostApplyWidth);
+      }
     }
 
     TryMeasureTextNode(textNode, out var width, out var height);
@@ -723,6 +730,32 @@ internal static unsafe class NativeTextNodeLayoutHelper
         Math.Max(
             resolvedWrapWidth,
             measuredWidth));
+  }
+
+  /// <summary>
+  ///     Resolves the width that should remain on the live text node after the
+  ///     game has reflowed the replacement text.
+  /// </summary>
+  /// <param name="resolvedWrapWidth">
+  ///     The wrap width assigned before applying the replacement.
+  /// </param>
+  /// <param name="postApplyNodeWidth">
+  ///     The width reported by the live node immediately after native reflow.
+  /// </param>
+  /// <param name="preferMeasuredOverflow">
+  ///     Whether callers should preserve native width growth when it exceeds
+  ///     the assigned wrap width.
+  /// </param>
+  /// <returns>The width that should remain on the text node.</returns>
+  public static ushort ResolvePostApplyTextNodeWidth(
+      ushort resolvedWrapWidth,
+      ushort postApplyNodeWidth,
+      bool preferMeasuredOverflow)
+  {
+    return ResolveReplacementContainerWidth(
+        resolvedWrapWidth,
+        postApplyNodeWidth,
+        preferMeasuredOverflow);
   }
 
   /// <summary>

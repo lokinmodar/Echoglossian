@@ -141,6 +141,53 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
+    ///     Ensures post-apply native auto-sizing can keep a wider live text
+    ///     node when the caller explicitly opted into preserving measured
+    ///     overflow.
+    /// </summary>
+    [Fact]
+    public void ResolvePostApplyTextNodeWidth_PreservesWiderNativeWidth_WhenMeasuredOverflowIsEnabled()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolvePostApplyTextNodeWidth(
+            resolvedWrapWidth: 223,
+            postApplyNodeWidth: 256,
+            preferMeasuredOverflow: true);
+
+        Assert.Equal((ushort)256, resolved);
+    }
+
+    /// <summary>
+    ///     Ensures callers that do not opt into measured overflow still clamp
+    ///     the live text node back to the preserved wrap width after native
+    ///     reflow runs.
+    /// </summary>
+    [Fact]
+    public void ResolvePostApplyTextNodeWidth_ReclampsToWrapWidth_WhenMeasuredOverflowIsDisabled()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolvePostApplyTextNodeWidth(
+            resolvedWrapWidth: 223,
+            postApplyNodeWidth: 256,
+            preferMeasuredOverflow: false);
+
+        Assert.Equal((ushort)223, resolved);
+    }
+
+    /// <summary>
+    ///     Ensures post-apply sizing still falls back to the preserved wrap
+    ///     width when the native node did not report any width after reflow.
+    /// </summary>
+    [Fact]
+    public void ResolvePostApplyTextNodeWidth_FallsBackToWrapWidth_WhenNativeWidthIsMissing()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolvePostApplyTextNodeWidth(
+            resolvedWrapWidth: 223,
+            postApplyNodeWidth: 0,
+            preferMeasuredOverflow: true);
+
+        Assert.Equal((ushort)223, resolved);
+    }
+
+    /// <summary>
     ///     Ensures the secondary background width is left untouched when the
     ///     anchored node already fits inside the current bounds.
     /// </summary>
