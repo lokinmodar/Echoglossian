@@ -18111,6 +18111,32 @@
                 readable.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptOriginalHoverBody(System.String,System.String)">
+            <summary>
+                Promotes the original JournalAccept hover body to the richer visible
+                message text when setup capture only exposed the short quest-sync
+                marker.
+            </summary>
+            <param name="setupMessage">The setup-captured JournalAccept body.</param>
+            <param name="visibleText">The current visible body node text.</param>
+            <returns>The preferred original body text for hover presentation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.NormalizeJournalAcceptSetupMessageForComparison(System.String)">
+            <summary>
+                Removes setup-only emphasis wrappers from JournalAccept body text so
+                readable-node comparison can match the richer visible message.
+            </summary>
+            <param name="setupMessage">The setup-captured JournalAccept body.</param>
+            <returns>The comparable setup message.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TrimLeadingJournalAcceptPayloadMarkers(System.String)">
+            <summary>
+                Removes leading raw JournalAccept formatting marker tokens that leak
+                into readable node text as consecutive <c>H</c>/<c>I</c> words.
+            </summary>
+            <param name="text">The normalized readable text.</param>
+            <returns>The readable text without leading payload markers.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ApplyJournalAcceptNativeState(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState)">
             <summary>
                 Applies or restores JournalAccept native text when the current display

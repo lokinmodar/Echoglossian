@@ -757,6 +757,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     }
 
     var registeredName = false;
+    var originalHoverQuestMessage = state.OriginalQuestMessage;
     if (this.TryFindReadableTextNodeByText(
             addon,
             state.OriginalQuestName,
@@ -782,10 +783,13 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             state.TranslatedQuestMessage,
             out var messageNode))
     {
+      originalHoverQuestMessage = ResolveJournalAcceptOriginalHoverBody(
+          state.OriginalQuestMessage,
+          ReadReadableTextNode(messageNode));
       this.RegisterTranslatedHoverTooltip(
           $"JournalAccept-QuestBody-{(nint)messageNode:X}",
           messageNode,
-          state.OriginalQuestMessage,
+          originalHoverQuestMessage,
           state.TranslatedQuestMessage,
           translatedPayloadReady: canRenderTooltip,
           swapEnabled: this.JournalAcceptHoverShowsOriginal,
@@ -799,7 +803,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       this.RegisterTranslatedHoverTooltip(
           $"JournalAccept-{(nint)addon:X}",
           addon,
-          $"{state.OriginalQuestName}\n{state.OriginalQuestMessage}",
+          $"{state.OriginalQuestName}\n{originalHoverQuestMessage}",
           $"{state.TranslatedQuestName}\n{state.TranslatedQuestMessage}",
           translatedPayloadReady: canRenderTooltip,
           swapEnabled: this.JournalAcceptHoverShowsOriginal,
@@ -811,7 +815,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       this.RegisterTranslatedHoverTooltip(
           $"JournalAccept-QuestBody-{(nint)addon:X}",
           addon,
-          state.OriginalQuestMessage,
+          originalHoverQuestMessage,
           state.TranslatedQuestMessage,
           translatedPayloadReady: canRenderTooltip,
           swapEnabled: this.JournalAcceptHoverShowsOriginal,
@@ -822,6 +826,127 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     this.lastAppliedDisplayMode =
         this.Config.JournalAcceptTranslationDisplayMode;
     this.needsJournalAcceptHoverRefresh = false;
+  }
+
+  /// <summary>
+  ///     Promotes the original JournalAccept hover body to the richer visible
+  ///     message text when setup capture only exposed the short quest-sync
+  ///     marker.
+  /// </summary>
+  /// <param name="setupMessage">The setup-captured JournalAccept body.</param>
+  /// <param name="visibleText">The current visible body node text.</param>
+  /// <returns>The preferred original body text for hover presentation.</returns>
+  private static string ResolveJournalAcceptOriginalHoverBody(
+      string setupMessage,
+      string visibleText)
+  {
+    if (string.IsNullOrWhiteSpace(setupMessage))
+    {
+      return string.Empty;
+    }
+
+    if (string.IsNullOrWhiteSpace(visibleText))
+    {
+      return setupMessage;
+    }
+
+    var normalizedSetupMessage = NormalizeReadableText(
+        NormalizeJournalAcceptSetupMessageForComparison(setupMessage));
+    var normalizedVisibleSetupText = NormalizeReadableText(
+        NormalizeJournalAcceptSetupMessageForComparison(visibleText));
+    if (string.IsNullOrWhiteSpace(normalizedSetupMessage) ||
+        string.IsNullOrWhiteSpace(normalizedVisibleSetupText))
+    {
+      return setupMessage;
+    }
+
+    if (string.Equals(
+            normalizedSetupMessage,
+            normalizedVisibleSetupText,
+            StringComparison.Ordinal))
+    {
+      return setupMessage;
+    }
+
+    var normalizedVisibleText = TrimLeadingJournalAcceptPayloadMarkers(
+        NormalizeReadableText(visibleText));
+    if (!normalizedVisibleText.StartsWith(
+            normalizedSetupMessage,
+            StringComparison.Ordinal))
+    {
+      return setupMessage;
+    }
+
+    if (normalizedVisibleText.Length <= normalizedSetupMessage.Length)
+    {
+      return setupMessage;
+    }
+
+    var bodySuffix = TrimLeadingJournalAcceptPayloadMarkers(
+        normalizedVisibleText[normalizedSetupMessage.Length..].TrimStart());
+    if (string.IsNullOrWhiteSpace(bodySuffix))
+    {
+      return setupMessage;
+    }
+
+    return $"{normalizedSetupMessage} {bodySuffix}";
+  }
+
+  /// <summary>
+  ///     Removes setup-only emphasis wrappers from JournalAccept body text so
+  ///     readable-node comparison can match the richer visible message.
+  /// </summary>
+  /// <param name="setupMessage">The setup-captured JournalAccept body.</param>
+  /// <returns>The comparable setup message.</returns>
+  private static string NormalizeJournalAcceptSetupMessageForComparison(
+      string setupMessage)
+  {
+    if (string.IsNullOrWhiteSpace(setupMessage))
+    {
+      return string.Empty;
+    }
+
+    var trimmedMessage = setupMessage.Trim();
+    if (trimmedMessage.Length > 4 &&
+        trimmedMessage.StartsWith("**", StringComparison.Ordinal) &&
+        trimmedMessage.EndsWith("**", StringComparison.Ordinal))
+    {
+      return trimmedMessage[2..^2].Trim();
+    }
+
+    return trimmedMessage;
+  }
+
+  /// <summary>
+  ///     Removes leading raw JournalAccept formatting marker tokens that leak
+  ///     into readable node text as consecutive <c>H</c>/<c>I</c> words.
+  /// </summary>
+  /// <param name="text">The normalized readable text.</param>
+  /// <returns>The readable text without leading payload markers.</returns>
+  private static string TrimLeadingJournalAcceptPayloadMarkers(string text)
+  {
+    if (string.IsNullOrWhiteSpace(text))
+    {
+      return string.Empty;
+    }
+
+    var tokens = text.Split(
+        ' ',
+        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    var markerCount = 0;
+    while (markerCount < tokens.Length &&
+           (string.Equals(tokens[markerCount], "H", StringComparison.Ordinal) ||
+            string.Equals(tokens[markerCount], "I", StringComparison.Ordinal)))
+    {
+      markerCount++;
+    }
+
+    if (markerCount < 2)
+    {
+      return string.Join(" ", tokens);
+    }
+
+    return string.Join(" ", tokens[markerCount..]);
   }
 
   /// <summary>

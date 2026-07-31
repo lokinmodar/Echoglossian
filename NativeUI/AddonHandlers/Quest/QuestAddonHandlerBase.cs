@@ -408,7 +408,7 @@ internal abstract class QuestAddonHandlerBase
   /// </summary>
   /// <param name="textNode">The text node to read.</param>
   /// <returns>The readable text, or an empty string.</returns>
-  private static unsafe string ReadReadableTextNode(AtkTextNode* textNode)
+  protected static unsafe string ReadReadableTextNode(AtkTextNode* textNode)
   {
     if (textNode == null)
     {
@@ -493,7 +493,7 @@ internal abstract class QuestAddonHandlerBase
   /// </summary>
   /// <param name="text">The text to normalize.</param>
   /// <returns>The normalized text.</returns>
-  private static string NormalizeReadableText(string text)
+  protected static string NormalizeReadableText(string text)
   {
     if (string.IsNullOrWhiteSpace(text))
     {
