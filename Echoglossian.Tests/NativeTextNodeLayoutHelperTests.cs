@@ -51,6 +51,46 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
+    ///     Ensures pre-apply native width measurement honors explicit tooltip
+    ///     line breaks instead of treating the whole payload as one unwrapped
+    ///     line.
+    /// </summary>
+    [Fact]
+    public void SplitMeasurementLines_SplitsExplicitCarriageReturnBreaks()
+    {
+        var lines = NativeTextNodeLayoutHelper.SplitMeasurementLines(
+            "Linha um\rLinha dois\rLinha tres");
+
+        Assert.Equal(
+            [
+                "Linha um",
+                "Linha dois",
+                "Linha tres",
+            ],
+            lines);
+    }
+
+    /// <summary>
+    ///     Ensures the helper normalizes mixed Windows and Unix line endings so
+    ///     native pre-apply width checks can measure the widest explicit line
+    ///     instead of a concatenated paragraph.
+    /// </summary>
+    [Fact]
+    public void SplitMeasurementLines_NormalizesMixedLineEndings()
+    {
+        var lines = NativeTextNodeLayoutHelper.SplitMeasurementLines(
+            "Linha um\r\nLinha dois\nLinha tres");
+
+        Assert.Equal(
+            [
+                "Linha um",
+                "Linha dois",
+                "Linha tres",
+            ],
+            lines);
+    }
+
+    /// <summary>
     ///     Ensures native reflow can widen the text node to the candidate text
     ///     draw width when the caller explicitly allows width growth.
     /// </summary>

@@ -803,6 +803,26 @@ internal static unsafe class NativeTextNodeLayoutHelper
   }
 
   /// <summary>
+  ///     Splits candidate measurement text into the explicit lines that should
+  ///     be measured independently when native pre-apply width checks need the
+  ///     widest authored line instead of one concatenated paragraph.
+  /// </summary>
+  /// <param name="replacementText">The candidate replacement text.</param>
+  /// <returns>The normalized explicit lines to measure.</returns>
+  public static IReadOnlyList<string> SplitMeasurementLines(string replacementText)
+  {
+    if (string.IsNullOrEmpty(replacementText))
+    {
+      return [string.Empty];
+    }
+
+    return replacementText
+        .Replace("\r\n", "\n", StringComparison.Ordinal)
+        .Replace('\r', '\n')
+        .Split('\n');
+  }
+
+  /// <summary>
   ///     Measures the candidate replacement text width using the node's live
   ///     font and style fields without permanently mutating the visible text or
   ///     preserving the node's current wrap clamp.
@@ -824,31 +844,59 @@ internal static unsafe class NativeTextNodeLayoutHelper
     try
     {
       textNode->TextFlags &= ~(TextFlags.WordWrap | TextFlags.MultiLine);
-      ushort measuredWidth = 0;
-      ushort measuredHeight = 0;
-      var utf8Length = Encoding.UTF8.GetByteCount(replacementText);
-      Span<byte> utf8Bytes =
-          utf8Length <= 511 ? stackalloc byte[512] : new byte[utf8Length + 1];
-      Encoding.UTF8.GetBytes(replacementText, utf8Bytes);
-      utf8Bytes[utf8Length] = 0;
-
-      fixed (byte* utf8Pointer = utf8Bytes)
+      ushort widestMeasuredWidth = 0;
+      foreach (var measurementLine in SplitMeasurementLines(replacementText))
       {
-        textNode->GetTextDrawSize(
-            &measuredWidth,
-            &measuredHeight,
-            utf8Pointer,
-            0,
-            -1,
-            true);
+        widestMeasuredWidth = Math.Max(
+            widestMeasuredWidth,
+            MeasureReplacementCandidateLineWidth(
+                textNode,
+                measurementLine));
       }
 
-      return measuredWidth;
+      return widestMeasuredWidth;
     }
     finally
     {
       textNode->TextFlags = originalTextFlags;
     }
+  }
+
+  /// <summary>
+  ///     Measures one explicit candidate replacement line using the node's live
+  ///     font and style fields without preserving the node's current wrap
+  ///     clamp.
+  /// </summary>
+  /// <param name="textNode">The live text node whose style should be reused.</param>
+  /// <param name="measurementLine">The explicit line to measure.</param>
+  /// <returns>The measured candidate line width.</returns>
+  private static ushort MeasureReplacementCandidateLineWidth(
+      AtkTextNode* textNode,
+      string measurementLine)
+  {
+    ushort measuredWidth = 0;
+    ushort measuredHeight = 0;
+    var utf8Length = Encoding.UTF8.GetByteCount(measurementLine);
+    Span<byte> utf8Bytes =
+        utf8Length <= 511 ? stackalloc byte[512] : new byte[utf8Length + 1];
+    if (utf8Length > 0)
+    {
+      Encoding.UTF8.GetBytes(measurementLine, utf8Bytes);
+    }
+
+    utf8Bytes[utf8Length] = 0;
+    fixed (byte* utf8Pointer = utf8Bytes)
+    {
+      textNode->GetTextDrawSize(
+          &measuredWidth,
+          &measuredHeight,
+          utf8Pointer,
+          0,
+          -1,
+          true);
+    }
+
+    return measuredWidth;
   }
 
   /// <summary>
