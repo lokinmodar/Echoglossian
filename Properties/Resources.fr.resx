@@ -71,7 +71,7 @@
     <value>Activer la traduction de texte de jeu en temps réel</value>
   </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
-    <value>Couleur de police de Plugin Overlay :</value>
+    <value>Couleur de police de superposition :</value>
   </data>
   <data name="HelpMessage" xml:space="preserve">
     <value>Ouvre la fenêtre de configuration Echoglossian</value>
@@ -81,7 +81,7 @@
     <value>(?)</value>
   </data>
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Ajustez les options liées à la Plugin Overlay de traduction :</value>
+    <value>Ajustez les options liées à la superposition de traduction :</value>
   </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>La langue n’a pas pu être identifiée avec un degré de certitude acceptable</value>
@@ -90,7 +90,7 @@
     <value>La langue sélectionnée n’est pas prise en charge par le backend de traduction actuellement disponible</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>La langue sélectionnée n’est prise en charge qu’à l’aide des Plugin Overlay de plugins en raison des limitations du jeu natif Font</value>
+    <value>La langue sélectionnée n’est prise en charge qu’à l’aide des superpositions de plugins en raison des limitations du jeu natif Font</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>Dans quelle langue traduire les boîtes de dialogue du jeu.</value>
@@ -111,25 +111,25 @@
     <value>La liste non exhaustive des problèmes et des TODO est disponible dans le lien ci-dessous:</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Veuillez ajuster la position si votre Plugin Overlay n’est pas centrée par rapport à la zone de texte de l’interface utilisateur du jeu.</value>
+    <value>Veuillez ajuster la position si votre superposition n’est pas centrée par rapport à la zone de texte de l’interface utilisateur du jeu.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
     <value>OverlayColorSelect</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Cliquez pour choisir la couleur de police de Plugin Overlay</value>
+    <value>Cliquez pour choisir la couleur de police de superposition</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Ajuster l’échelle de police de Plugin Overlay</value>
+    <value>Ajuster l’échelle de police de superposition</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
-    <value>Taille de police de Plugin Overlay</value>
+    <value>Taille de police de superposition</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Sélectionnez la taille de police pour la Plugin Overlay de texte</value>
+    <value>Sélectionnez la taille de police pour la superposition de texte</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Multiplicateur de hauteur de Plugin Overlay de translation</value>
+    <value>Multiplicateur de hauteur de superposition de translation</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Battle talk (lignes de dialogue Enenies) traduction</value>
@@ -139,13 +139,13 @@
     <value>Réglage de la position</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Afficher la Plugin Overlay de texte traduit au-dessus de la zone de texte de l’interface utilisateur du jeu au lieu de remplacer son texte par la traduction</value>
+    <value>Afficher la superposition de texte traduit au-dessus de la zone de texte de l’interface utilisateur du jeu au lieu de remplacer son texte par la traduction</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Ajuster la largeur de Plugin Overlay de traduction</value>
+    <value>Ajuster la largeur de superposition de traduction</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicateur de largeur de Plugin Overlay de traduction</value>
+    <value>Multiplicateur de largeur de superposition de traduction</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Chemin absolu vers le dossier Echoglossian (dans le dossier XIVLauncher -&gt; pluginConfigs)</value>
@@ -187,13 +187,13 @@
     <value>Paramètres de Google Traduction :</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Afficher le texte de dialogue d’origine dans Plugin Overlay et traduit dans la boîte de dialogue de l’interface utilisateur du jeu</value>
+    <value>Afficher le texte de dialogue d’origine dans superposition et traduit dans la boîte de dialogue de l’interface utilisateur du jeu</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Ajuster la largeur de Plugin Overlay de translation toast</value>
+    <value>Ajuster la largeur de superposition de translation toast</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplicateur de largeur de Plugin Overlay toast</value>
+    <value>Multiplicateur de largeur de superposition toast</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
     <value>Liste des TODO sur Github</value>
@@ -238,7 +238,7 @@
     <value>Traductions activées !</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Utiliser la Plugin Overlay pour afficher les traductions toasts</value>
+    <value>Utiliser la superposition pour afficher les traductions toasts</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>En attente de traduction...</value>
@@ -406,7 +406,7 @@
     <value>Discussion sur la bataille</value>
   </data>
   <data name="ToastTabTitle" xml:space="preserve">
-    <value>Griller</value>
+    <value>Toast</value>
   </data>
   <data name="SubtitleTabTitle" xml:space="preserve">
     <value>DiscussionSous-titres</value>
@@ -638,341 +638,5 @@
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Enregistrements {0} chargés</value>
-  </data>
-  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
-    <value>Détails de l'action et de l'objet</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
-    <value>Mode d'affichage détaillé</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle les surfaces ActionDetail et ItemDetail. Native UI écrit le texte de détail traduit dans l’addon du jeu, Plugin Overlay translation only laisse l’addon natif intact et utilise des Plugin Overlays, et Native UI translation + original Plugin Overlay écrit la traduction nativement tout en affichant l’original dans notre Plugin Overlay.</value>
-  </data>
-  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Activer la traduction des détails d’action/objet et les Plugin Tooltips partagés</value>
-  </data>
-  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
-    <value>Impossible de récupérer les modèles. Ollama s'exécute-t-il localement ?</value>
-  </data>
-  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
-    <value>La question est utilisée comme titre de fenêtre et les options sont affichées une par ligne.</value>
-  </data>
-  <data name="GameWindowsTabTitle" xml:space="preserve">
-    <value>Fenêtres de jeu</value>
-  </data>
-  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Ces couleurs s’appliquent aux Plugin Tooltips utilisées par les surfaces UI de quête et DB-first.</value>
-  </data>
-  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Apparition de l'info-bulle de survol</value>
-  </data>
-  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
-    <value>Couleur d’arrière-plan de l’info-bulle</value>
-  </data>
-  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
-    <value>Opacité de l'arrière-plan de l'info-bulle</value>
-  </data>
-  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
-    <value>Couleur du texte de l'info-bulle</value>
-  </data>
-  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept et JournalResult. Les Plugin Tooltips du Journal suivent directement ce mode ; le basculement global de Plugin Tooltip n’affecte que les autres UI traduites.</value>
-  </data>
-  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
-    <value>Mode d'affichage des quêtes du journal</value>
-  </data>
-  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
-    <value>Le mode de remplacement natif est actif pour ce type de toast. Les contrôles de style de Plugin Overlay ne sont pas utilisés dans ce mode.</value>
-  </data>
-  <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle la façon dont le texte traduit est présenté. Native UI écrit directement dans le module complémentaire du jeu, la Plugin Overlay uniquement laisse le module complémentaire natif intact et la Plugin Overlay native avec l'original écrit la traduction de manière native tout en affichant l'original dans la Plugin Overlay.</value>
-  </data>
-  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Traduction Native UI + Plugin Overlay originale</value>
-  </data>
-  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
-    <value>Traduction superposée uniquement</value>
-  </data>
-  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
-    <value>Afficher la barre de titre en Plugin Overlay avec le nom de l'orateur lorsqu'elle est disponible</value>
-  </data>
-  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>Le langage de Plugin Overlay uniquement est actif, donc tous les types de toast seront rendus via des Plugin Overlay.</value>
-  </data>
-  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>La langue sélectionnée ne prend pas en charge la police native du jeu, cette surface est donc limitée aux Plugin Overlays et aux Plugin Tooltips.</value>
-  </data>
-  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
-    <value>CutSceneSelectString</value>
-  </data>
-  <data name="OverlayTabMiniTalkText" xml:space="preserve">
-    <value>MiniTalk</value>
-  </data>
-  <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Ce mode contrôle la façon dont cette fenêtre de quête est présentée. Native UI écrit la traduction dans l’addon, Plugin Tooltip translation only laisse l’addon intact, et Native UI translation + original Plugin Tooltips écrit la traduction nativement tout en affichant l’original dans les Plugin Tooltips.</value>
-  </data>
-  <data name="QuestDisplayModeLabel" xml:space="preserve">
-    <value>Mode d'affichage des quêtes</value>
-  </data>
-  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
-    <value>Native UI traduction</value>
-  </data>
-  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Traduction Native UI + info-bulles originales</value>
-  </data>
-  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
-    <value>Traduction d'info-bulle uniquement</value>
-  </data>
-  <data name="QuestWindowsTabTitle" xml:space="preserve">
-    <value>Fenêtres de quête</value>
-  </data>
-  <data name="SelectionDialogsTabTitle" xml:space="preserve">
-    <value>Boîtes de dialogue de sélection</value>
-  </data>
-  <data name="SettingsForClaudeText" xml:space="preserve">
-    <value>Paramètres pour Claude</value>
-  </data>
-  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
-    <value>Affiche des notifications d'information lorsque la pré-traduction de quête en arrière-plan démarre ou lorsque les fenêtres de quête attendent toujours les données de quête stockées. Désactivé par défaut pour éviter les popups bruyants pendant le jeu normal.</value>
-  </data>
-  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
-    <value>Afficher les notifications en arrière-plan de la quête</value>
-  </data>
-  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
-    <value>Configurez le moteur de traduction sélectionné avant d’activer la traduction.</value>
-  </data>
-  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
-    <value>La traduction est actuellement désactivée, car le moteur de traduction sélectionné doit encore être configuré. Ouvrez la fenêtre de configuration et terminez la configuration du moteur.</value>
-  </data>
-  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
-    <value>La traduction est actuellement désactivée, car la langue sélectionnée nécessite des ressources de police supplémentaires. Ouvrez la fenêtre de configuration pour télécharger ou valider les fichiers requis.</value>
-  </data>
-  <data name="ToastModeDescription" xml:space="preserve">
-    <value>Chaque type de toast peut choisir indépendamment entre le remplacement natif et le rendu par Plugin Overlay.</value>
-  </data>
-  <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Lorsqu'un type de toast utilise le mode Plugin Overlay, vous pouvez également échanger les textes afin que la Plugin Overlay conserve la ligne d'origine tandis que le toast natif affiche la traduction.</value>
-  </data>
-  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
-    <value>Toast de zone</value>
-  </data>
-  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
-    <value>Opacité de l'arrière-plan</value>
-  </data>
-  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
-    <value>Contrôle l'opacité de l'arrière-plan de Plugin Overlay de toast. Utilisez 0 pour un arrière-plan entièrement transparent.</value>
-  </data>
-  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
-    <value>Toast de changement de classe/d'emploi</value>
-  </data>
-  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
-    <value>Activer ce type de toast</value>
-  </data>
-  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
-    <value>Toast d'erreur</value>
-  </data>
-  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
-    <value>Toast de quête</value>
-  </data>
-  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
-    <value>Informations sur l'écran (_WideText)</value>
-  </data>
-  <data name="ToastOverlayTabAreaText" xml:space="preserve">
-    <value>Zone</value>
-  </data>
-  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
-    <value>Classe / Travail</value>
-  </data>
-  <data name="ToastOverlayTabErrorText" xml:space="preserve">
-    <value>Erreur</value>
-  </data>
-  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
-    <value>Général</value>
-  </data>
-  <data name="ToastOverlayTabQuestText" xml:space="preserve">
-    <value>Quête</value>
-  </data>
-  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
-    <value>Informations sur l'écran</value>
-  </data>
-  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
-    <value>Text Gimmick Hint</value>
-  </data>
-  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
-    <value>Text Gimmick Hint</value>
-  </data>
-  <data name="TranslateActionMenuWindow" xml:space="preserve">
-    <value>Traduire la fenêtre ActionMenu</value>
-  </data>
-  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
-    <value>Traduire Addon Context Menu Title</value>
-  </data>
-  <data name="TranslateAreaMapToggle" xml:space="preserve">
-    <value>Traduire AreaMap</value>
-  </data>
-  <data name="TranslateHudWindows" xml:space="preserve">
-    <value>Traduire les fenêtres HUD</value>
-  </data>
-  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
-    <value>Traduire JournalAccept</value>
-  </data>
-  <data name="TranslateJournalDetailToggle" xml:space="preserve">
-    <value>Traduire JournalDetail</value>
-  </data>
-  <data name="TranslateJournalResultToggle" xml:space="preserve">
-    <value>Traduire JournalResult</value>
-  </data>
-  <data name="TranslateMainCommandWindow" xml:space="preserve">
-      <value>Traduire le menu principal du jeu</value>
-  </data>
-  <data name="TranslateMiniTalkLabel" xml:space="preserve">
-    <value>Traduire MiniTalk</value>
-  </data>
-  <data name="TranslateOperationGuideWindow" xml:space="preserve">
-    <value>Traduire Operation Guide</value>
-  </data>
-  <data name="TranslateRecommendListToggle" xml:space="preserve">
-    <value>Traduire RecommendList</value>
-  </data>
-  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
-    <value>Traduire ScenarioTree</value>
-  </data>
-  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
-    <value>Traduire Text Gimmick Hint</value>
-  </data>
-  <data name="TranslateToDoListToggle" xml:space="preserve">
-    <value>Traduire ToDoList</value>
-  </data>
-  <data name="NoModelsAvailable" xml:space="preserve">
-    <value>Aucun modèle disponible.</value>
-  </data>
-  <data name="DefaultTag" xml:space="preserve">
-    <value>[défaut]</value>
-  </data>
-  <data name="ModelIdLabel" xml:space="preserve">
-    <value>ID du modèle : {0}</value>
-  </data>
-  <data name="ModelTierGpt4o" xml:space="preserve">
-    <value>GPT-4o</value>
-  </data>
-  <data name="ModelTierGpt4" xml:space="preserve">
-    <value>GPT-4</value>
-  </data>
-  <data name="ModelTierGpt35" xml:space="preserve">
-    <value>GPT-3.5</value>
-  </data>
-  <data name="ModelTierGemini15" xml:space="preserve">
-    <value>Gemini 1.5</value>
-  </data>
-  <data name="ModelTierGeminiPro" xml:space="preserve">
-    <value>Gemini Pro</value>
-  </data>
-  <data name="ModelTierChat" xml:space="preserve">
-    <value>Chat</value>
-  </data>
-  <data name="ModelTierReasoner" xml:space="preserve">
-    <value>Raisonneur</value>
-  </data>
-  <data name="ModelTierOpus" xml:space="preserve">
-    <value>Opus</value>
-  </data>
-  <data name="ModelTierSonnet" xml:space="preserve">
-    <value>Sonnet</value>
-  </data>
-  <data name="ModelTierHaiku" xml:space="preserve">
-    <value>Haïku</value>
-  </data>
-  <data name="ModelTierO1" xml:space="preserve">
-    <value>O1</value>
-  </data>
-  <data name="ModelTierOther" xml:space="preserve">
-    <value>Autre</value>
-  </data>
-  <data name="RequiredFieldMessageFormat" xml:space="preserve">
-    <value>{0} est requis.</value>
-  </data>
-  <data name="OpenAnthropicApiKeys" xml:space="preserve">
-    <value>Ouvrir Anthropic API Keys</value>
-  </data>
-  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
-    <value>Exemple</value>
-  </data>
-  <data name="CustomLabel" xml:space="preserve">
-    <value>Coutume</value>
-  </data>
-  <data name="OptionalApiKeyLabel" xml:space="preserve">
-    <value>API Key (facultatif)</value>
-  </data>
-  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
-    <value>L'interface utilisateur du moteur Ollama n'a pas pu être restituée.</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
-    <value>⚡ Rapide et abordable (4k jetons)</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
-    <value>⚡ Contexte du jeton 16k</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
-    <value>🧠 Plus performant mais plus lent et coûteux</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
-    <value>🟢 Variante GPT-4 plus rapide et moins chère</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
-    <value>👁 Modèle multimodal et temps réel</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
-    <value>⚡ GPT-4o Mini - rapide et compact</value>
-  </data>
-  <data name="GeminiModelTooltipPro" xml:space="preserve">
-    <value>🔷 Modèle hérité Gemini Pro (par défaut)</value>
-  </data>
-  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
-    <value>🟢 Grande fenêtre contextuelle et haute précision</value>
-  </data>
-  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
-    <value>⚡ Modèle Gemini le plus rapide et le moins cher</value>
-  </data>
-  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
-    <value>💬 Optimisé pour le chat général et la vitesse</value>
-  </data>
-  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
-    <value>🧠 Tâches de raisonnement et de résolution de problèmes</value>
-  </data>
-  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
-    <value>Qualité, latence et coût équilibrés pour la traduction générale.</value>
-  </data>
-  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
-    <value>Alias ​​Claude fort à usage général avec de larges capacités.</value>
-  </data>
-  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
-    <value>Niveau Claude le plus rapide pour une latence et un coût inférieurs.</value>
-  </data>
-  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
-    <value>Modèle Claude de niveau le plus élevé lorsque vous souhaitez une qualité maximale.</value>
-  </data>
-  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
-    <value>[La traduction OpenAI-compatible n'est pas disponible. Vérifiez l'endpoint, la clé API et les paramètres du modèle.]</value>
-  </data>
-  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
-    <value>La configuration du fournisseur OpenAI-compatible est incomplète. La traduction ne sera pas disponible tant que l'endpoint, la clé API et le modèle ne seront pas renseignés.</value>
-  </data>
-  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
-    <value>Fournisseur</value>
-  </data>
-  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
-    <value>Official OpenAI</value>
-  </data>
-  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
-    <value>Custom OpenAI-Compatible</value>
-  </data>
-  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
-    <value>Configurez un endpoint, une clé API et un modèle OpenAI-compatible. La récupération en direct des modèles est facultative ; si le fournisseur n'expose pas correctement /models, utilisez un identifiant de modèle manuel.</value>
-  </data>
-  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
-    <value>Impossible de récupérer les modèles du fournisseur OpenAI-compatible configuré. Conservez un identifiant de modèle manuel ou vérifiez l'endpoint et les identifiants.</value>
-  </data>
-  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
-    <value>Utilisez l'identifiant exact du modèle exposé par votre fournisseur OpenAI-compatible lorsque la liste de modèles en direct n'est pas disponible ou est désactivée.</value>
   </data>
 </root>

@@ -68,7 +68,7 @@
     <comment>Shown in plugin install window</comment>
   </data>
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Juster de indstillinger, der er relateret til Plugin Overlay:</value>
+    <value>Juster de indstillinger, der er relateret til oversættelsesoverlejringen:</value>
   </data>
   <data name="LangIdentError" xml:space="preserve">
     <value>Sproget kunne ikke identificeres med en acceptabel grad af sikkerhed</value>
@@ -77,7 +77,7 @@
     <value>Det valgte sprog understøttes ikke af den aktuelt tilgængelige oversættelses-backend</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>Det valgte sprog understøttes kun ved hjælp af Plugin Overlay på grund af begrænsningerne i det oprindelige spil Font</value>
+    <value>Det valgte sprog understøttes kun ved hjælp af plugin-overlejringer på grund af begrænsningerne i det oprindelige spil Font</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
     <value>Hvilket sprog du skal oversætte de in-game dialogbokse til.</value>
@@ -89,25 +89,25 @@
     <value>Den ikke-udtømmende liste over spørgsmål og TODO'er er tilgængelig i linket nedenfor:</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Juster placeringen, hvis Plugin Overlay ikke er centreret i forhold til spillets tekstboks til brugergrænsefladen.</value>
+    <value>Juster placeringen, hvis overlejringen ikke er centreret i forhold til spillets tekstboks til brugergrænsefladen.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
     <value>OverlayColorSelect</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Klik her for at vælge skriftfarven Plugin Overlay</value>
+    <value>Klik her for at vælge skriftfarven overlejring</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Justere skriftskalaen Plugin Overlay</value>
+    <value>Justere skriftskalaen Overlejring</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
-    <value>Plugin Overlay af skriftstørrelse</value>
+    <value>Overlejring af skriftstørrelse</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Vælge skriftstørrelsen for tekstPlugin Overlay</value>
+    <value>Vælge skriftstørrelsen for tekstoverlejringen</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Multiplikator for Plugin Overlay af Plugin Overlay</value>
+    <value>Multiplikator for overlejring af oversættelsesoverlejring</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
     <value>Battle talk (Enenies dialog linjer) oversættelse</value>
@@ -117,13 +117,13 @@
     <value>Positionsjustering</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Vis oversat tekstPlugin Overlay over tekstboksen i brugergrænsefladen i spillet i stedet for at erstatte teksten med oversættelsen</value>
+    <value>Vis oversat tekstoverlejring over tekstboksen i brugergrænsefladen i spillet i stedet for at erstatte teksten med oversættelsen</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Juster bredden af Plugin Overlay af oversættelse</value>
+    <value>Juster bredden af overlejring af oversættelse</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplikator for Plugin Overlay af Plugin Overlay</value>
+    <value>Multiplikator for overlejring af oversættelsesoverlejring</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
     <value>Absolut sti til Echoglossian mappe (inde XIVLauncher -&gt; pluginConfigs mappe)</value>
@@ -159,13 +159,13 @@
     <value>Indstillinger for Google Translate:</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Vis original dialogtekst i Plugin Overlay og Oversat i dialogboksen Spilgrænseflade</value>
+    <value>Vis original dialogtekst i Overlejring og Oversat i dialogboksen Spilgrænseflade</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Juster bredden af Plugin Overlay af toastoversættelse</value>
+    <value>Juster bredden af overlejring af toastoversættelse</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Multiplikator for Plugin Overlay</value>
+    <value>Multiplikator for toastoverlejringsbredde</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
     <value>TODOs Liste på Github</value>
@@ -210,7 +210,7 @@
     <value>Oversættelser aktiveret!</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Brug Plugin Overlay til at vise Toasts-oversættelser</value>
+    <value>Brug overlejring til at vise Toasts-oversættelser</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
     <value>Afventer oversættelse...</value>
@@ -610,341 +610,5 @@
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Indlæste {0}-poster</value>
-  </data>
-  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
-    <value>Handlings- og elementdetaljer</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
-    <value>Detaljevisningstilstand</value>
-  </data>
-  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer ActionDetail- og ItemDetail-overfladerne. Native UI skriver den oversatte detaljetekst ind i spiltilføjelsen, Plugin Overlay translation only holder den oprindelige tilføjelse intakt og bruger Plugin Overlays, og Native UI translation + original Plugin Overlay skriver oversættelsen nativt, mens originalen vises i vores Plugin Overlay.</value>
-  </data>
-  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
-    <value>Aktiver oversættelse af handlings-/elementdetaljer og delte Plugin Tooltips</value>
-  </data>
-  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
-    <value>Kunne ikke hente modeller. Kører Ollama lokalt?</value>
-  </data>
-  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
-    <value>Spørgsmålet bruges som vinduestitel, og mulighederne gengives én pr. linje.</value>
-  </data>
-  <data name="GameWindowsTabTitle" xml:space="preserve">
-    <value>Spil vinduer</value>
-  </data>
-  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
-    <value>Disse farver gælder for Plugin Tooltips, der bruges af quest- og DB-first-UI-overflader.</value>
-  </data>
-  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
-    <value>Hover Plugin Tooltip udseende</value>
-  </data>
-  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
-    <value>Plugin Tooltip baggrundsfarve</value>
-  </data>
-  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
-    <value>Plugin Tooltip baggrundsopacitet</value>
-  </data>
-  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
-    <value>Plugin Tooltip tekstfarve</value>
-  </data>
-  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept og JournalResult. Journal Plugin Tooltips følger denne tilstand direkte; det globale Plugin Tooltip-skift påvirker kun anden oversat UI.</value>
-  </data>
-  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
-    <value>Visningstilstand for Journal quest</value>
-  </data>
-  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
-    <value>Indbygget erstatningstilstand er aktiv for denne toasttype. Plugin Overlay-stilkontroller bruges ikke i denne tilstand.</value>
-  </data>
-  <data name="OverlayDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer, hvordan den oversatte tekst præsenteres. Native UI skriver direkte ind i spiltilføjelsen, kun Plugin Overlay lader den native tilføjelse være urørt, og Native UI translation + original Plugin Overlay skriver oversættelse native, mens originalen vises i Plugin Overlay.</value>
-  </data>
-  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
-    <value>Native UI oversættelse + original Plugin Overlay</value>
-  </data>
-  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
-    <value>Kun Plugin Overlay</value>
-  </data>
-  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
-    <value>Vis Plugin Overlay med højttalernavn, når det er tilgængeligt</value>
-  </data>
-  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
-    <value>Kun Plugin Overlay er aktivt, så alle toasttyper gengives gennem Plugin Overlay.</value>
-  </data>
-  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
-    <value>Det valgte sprog understøtter ikke den oprindelige spilskrifttype, så denne overflade er begrænset til Plugin Overlays og Plugin Tooltips.</value>
-  </data>
-  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
-    <value>CutSceneSelectString</value>
-  </data>
-  <data name="OverlayTabMiniTalkText" xml:space="preserve">
-    <value>MiniTalk</value>
-  </data>
-  <data name="QuestDisplayModeDescription" xml:space="preserve">
-    <value>Denne tilstand styrer, hvordan dette questvindue præsenteres. Native UI skriver oversættelsen til tilføjelsen, Plugin Tooltip translation only holder tilføjelsen intakt, og Native UI translation + original Plugin Tooltips skriver oversættelsen nativt, mens originalen vises i Plugin Tooltips.</value>
-  </data>
-  <data name="QuestDisplayModeLabel" xml:space="preserve">
-    <value>Quest-visningstilstand</value>
-  </data>
-  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
-    <value>Native UI oversættelse</value>
-  </data>
-  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
-    <value>Native UI oversættelse + originale Plugin Tooltip</value>
-  </data>
-  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
-    <value>Kun oversættelse af Plugin Tooltip</value>
-  </data>
-  <data name="QuestWindowsTabTitle" xml:space="preserve">
-    <value>Quest vinduer</value>
-  </data>
-  <data name="SelectionDialogsTabTitle" xml:space="preserve">
-    <value>Valg dialoger</value>
-  </data>
-  <data name="SettingsForClaudeText" xml:space="preserve">
-    <value>Indstillinger for Claude</value>
-  </data>
-  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
-    <value>Viser informative meddelelser, når forudgående oversættelse af quest i baggrunden starter, eller når questvinduer stadig venter på gemte questdata. Deaktiveret som standard for at undgå støjende popups under normal gameplay.</value>
-  </data>
-  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
-    <value>Vis quest-baggrundsmeddelelser</value>
-  </data>
-  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
-    <value>Konfigurer den valgte oversættelsesmotor, før oversættelse kan aktiveres.</value>
-  </data>
-  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
-    <value>Oversættelse er i øjeblikket deaktiveret, fordi den valgte oversættelsesmotor stadig skal konfigureres. Åbn konfigurationsvinduet, og fuldfør motoropsætningen.</value>
-  </data>
-  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
-    <value>Oversættelse er i øjeblikket deaktiveret, fordi det valgte sprog kræver ekstra skrifttypeaktiver. Åbn konfigurationsvinduet for at downloade eller validere de nødvendige filer.</value>
-  </data>
-  <data name="ToastModeDescription" xml:space="preserve">
-    <value>Hver toasttype kan vælge uafhængigt mellem native erstatning og Plugin Overlay-gengivelse.</value>
-  </data>
-  <data name="ToastModeSwapDescription" xml:space="preserve">
-    <value>Når en toasttype bruger Plugin Overlay, kan du også bytte tekster, så Plugin Overlay beholder den oprindelige linje, mens den oprindelige toast viser oversættelsen.</value>
-  </data>
-  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
-    <value>Område Toast</value>
-  </data>
-  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
-    <value>Baggrundens uigennemsigtighed</value>
-  </data>
-  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
-    <value>Styrer, hvor uigennemsigtig Plugin Overlay-baggrunden skal være. Brug 0 for en fuldstændig gennemsigtig baggrund.</value>
-  </data>
-  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
-    <value>Klasse / Job Skift Toast</value>
-  </data>
-  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
-    <value>Aktiver denne toasttype</value>
-  </data>
-  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
-    <value>Fejl Toast</value>
-  </data>
-  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
-    <value>Quest Toast</value>
-  </data>
-  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
-    <value>Skærmoplysninger (_WideText)</value>
-  </data>
-  <data name="ToastOverlayTabAreaText" xml:space="preserve">
-    <value>Areal</value>
-  </data>
-  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
-    <value>Klasse / job</value>
-  </data>
-  <data name="ToastOverlayTabErrorText" xml:space="preserve">
-    <value>Fejl</value>
-  </data>
-  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
-    <value>Generel</value>
-  </data>
-  <data name="ToastOverlayTabQuestText" xml:space="preserve">
-    <value>Søgen</value>
-  </data>
-  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
-    <value>Skærm info</value>
-  </data>
-  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
-    <value>Text Gimmick Hint</value>
-  </data>
-  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
-    <value>Text Gimmick Hint</value>
-  </data>
-  <data name="TranslateActionMenuWindow" xml:space="preserve">
-    <value>Oversæt ActionMenu vindue</value>
-  </data>
-  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
-    <value>Oversæt Addon Context Menu Title</value>
-  </data>
-  <data name="TranslateAreaMapToggle" xml:space="preserve">
-    <value>Oversæt AreaMap</value>
-  </data>
-  <data name="TranslateHudWindows" xml:space="preserve">
-    <value>Oversæt HUD Windows</value>
-  </data>
-  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
-    <value>Oversæt JournalAccept</value>
-  </data>
-  <data name="TranslateJournalDetailToggle" xml:space="preserve">
-    <value>Oversæt JournalDetail</value>
-  </data>
-  <data name="TranslateJournalResultToggle" xml:space="preserve">
-    <value>Oversæt JournalResult</value>
-  </data>
-  <data name="TranslateMainCommandWindow" xml:space="preserve">
-      <value>Oversæt spillets hovedmenu</value>
-  </data>
-  <data name="TranslateMiniTalkLabel" xml:space="preserve">
-    <value>Oversæt MiniTalk</value>
-  </data>
-  <data name="TranslateOperationGuideWindow" xml:space="preserve">
-    <value>Oversæt Operation Guide</value>
-  </data>
-  <data name="TranslateRecommendListToggle" xml:space="preserve">
-    <value>Oversæt RecommendList</value>
-  </data>
-  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
-    <value>Oversæt ScenarioTree</value>
-  </data>
-  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
-    <value>Oversæt Text Gimmick Hint</value>
-  </data>
-  <data name="TranslateToDoListToggle" xml:space="preserve">
-    <value>Oversæt ToDoList</value>
-  </data>
-  <data name="NoModelsAvailable" xml:space="preserve">
-    <value>Ingen tilgængelige modeller.</value>
-  </data>
-  <data name="DefaultTag" xml:space="preserve">
-    <value>[misligholdelse]</value>
-  </data>
-  <data name="ModelIdLabel" xml:space="preserve">
-    <value>Model-id: {0}</value>
-  </data>
-  <data name="ModelTierGpt4o" xml:space="preserve">
-    <value>GPT-4o</value>
-  </data>
-  <data name="ModelTierGpt4" xml:space="preserve">
-    <value>GPT-4</value>
-  </data>
-  <data name="ModelTierGpt35" xml:space="preserve">
-    <value>GPT-3.5</value>
-  </data>
-  <data name="ModelTierGemini15" xml:space="preserve">
-    <value>Gemini 1.5</value>
-  </data>
-  <data name="ModelTierGeminiPro" xml:space="preserve">
-    <value>Gemini Pro</value>
-  </data>
-  <data name="ModelTierChat" xml:space="preserve">
-    <value>Snak</value>
-  </data>
-  <data name="ModelTierReasoner" xml:space="preserve">
-    <value>Fornuft</value>
-  </data>
-  <data name="ModelTierOpus" xml:space="preserve">
-    <value>Opus</value>
-  </data>
-  <data name="ModelTierSonnet" xml:space="preserve">
-    <value>Sonnet</value>
-  </data>
-  <data name="ModelTierHaiku" xml:space="preserve">
-    <value>Haiku</value>
-  </data>
-  <data name="ModelTierO1" xml:space="preserve">
-    <value>O1</value>
-  </data>
-  <data name="ModelTierOther" xml:space="preserve">
-    <value>Andre</value>
-  </data>
-  <data name="RequiredFieldMessageFormat" xml:space="preserve">
-    <value>{0} er påkrævet.</value>
-  </data>
-  <data name="OpenAnthropicApiKeys" xml:space="preserve">
-    <value>Åbn Anthropic API Keys</value>
-  </data>
-  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
-    <value>Forekomst</value>
-  </data>
-  <data name="CustomLabel" xml:space="preserve">
-    <value>Skik</value>
-  </data>
-  <data name="OptionalApiKeyLabel" xml:space="preserve">
-    <value>API Key (valgfrit)</value>
-  </data>
-  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
-    <value>Ollama motorens brugergrænseflade kunne ikke gengives.</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
-    <value>⚡ Hurtig og overkommelig (4k tokens)</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
-    <value>⚡ 16k token kontekst</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
-    <value>🧠 Mere dygtig, men langsommere og dyr</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
-    <value>🟢 Hurtigere og billigere GPT-4 variant</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
-    <value>👁 Multimodal og realtidsmodel</value>
-  </data>
-  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
-    <value>⚡ GPT-4o Mini - hurtig og kompakt</value>
-  </data>
-  <data name="GeminiModelTooltipPro" xml:space="preserve">
-    <value>🔷 Ældre Gemini Pro model (standard)</value>
-  </data>
-  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
-    <value>🟢 Stort kontekstvindue og høj nøjagtighed</value>
-  </data>
-  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
-    <value>⚡ Hurtigste og billigste Gemini model</value>
-  </data>
-  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
-    <value>💬 Optimeret til generel chat og hastighed</value>
-  </data>
-  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
-    <value>🧠 Ræsoneerings- og problemløsningsopgaver</value>
-  </data>
-  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
-    <value>Afbalanceret kvalitet, latens og omkostninger for generel oversættelse.</value>
-  </data>
-  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
-    <value>Stærkt generel Claude alias med bred kapacitet.</value>
-  </data>
-  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
-    <value>Hurtigste Claude niveau for lavere latenstid og lavere omkostninger.</value>
-  </data>
-  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
-    <value>Højeste niveau Claude model, når du ønsker maksimal kvalitet.</value>
-  </data>
-  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
-    <value>[OpenAI-kompatibel oversættelse er utilgængelig. Kontrollér endpoint, API-nøgle og modelindstillinger.]</value>
-  </data>
-  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
-    <value>OpenAI-kompatibel provider-konfiguration er ufuldstændig. Oversættelse vil ikke være tilgængelig, før endpoint, API-nøgle og model er udfyldt.</value>
-  </data>
-  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
-    <value>Provider</value>
-  </data>
-  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
-    <value>Official OpenAI</value>
-  </data>
-  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
-    <value>Custom OpenAI-Compatible</value>
-  </data>
-  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
-    <value>Konfigurer et OpenAI-kompatibelt endpoint, en API-nøgle og en model. Live modelhentning er valgfri; hvis provideren ikke eksponerer /models korrekt, skal du bruge et manuelt model-id.</value>
-  </data>
-  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
-    <value>Kunne ikke hente modeller fra den konfigurerede OpenAI-kompatible provider. Behold et manuelt model-id, eller kontrollér endpoint og legitimationsoplysninger.</value>
-  </data>
-  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
-    <value>Brug det præcise model-id, som din OpenAI-kompatible provider eksponerer, når live modelliste ikke er tilgængelig eller er deaktiveret.</value>
   </data>
 </root>
