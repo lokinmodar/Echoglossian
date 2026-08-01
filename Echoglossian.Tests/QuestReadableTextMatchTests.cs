@@ -289,6 +289,34 @@ public sealed class QuestReadableTextMatchTests
     }
 
     /// <summary>
+    ///     Ensures captured setup wrappers do not prevent retaining a rich
+    ///     payload whose extracted readable text omits those wrappers.
+    /// </summary>
+    [Fact]
+    public void ProjectReadablePayloadBytes_RetainsRichPayloadWhenCapturedTextHasOuterWrappers()
+    {
+        const string capturedText = "**A**";
+        const string translatedText = "B";
+        var originalPayload = new SeStringBuilder()
+            .AddUiForeground(500)
+            .AddText("A")
+            .AddUiForegroundOff()
+            .Build()
+            .Encode();
+
+        var projectedPayload = this.InvokeProjectReadablePayloadBytes(
+            originalPayload,
+            capturedText,
+            translatedText);
+
+        Assert.NotNull(projectedPayload);
+        Assert.Equal(translatedText, new ReadOnlySeString(projectedPayload).ExtractText());
+        Assert.NotEqual(
+            ReadOnlySeString.FromText(translatedText).Data.ToArray(),
+            projectedPayload);
+    }
+
+    /// <summary>
     ///     Ensures the shared readable SeString helper can still extract plain
     ///     readable text from one payload that carries formatting macros.
     /// </summary>

@@ -301,8 +301,8 @@ internal static class ReadableSeStringPayloadHelper
         string visibleText,
         string expectedText)
     {
-        var normalizedVisibleText = NormalizeReadableText(visibleText);
-        var normalizedExpectedText = NormalizeReadableText(expectedText);
+        var normalizedVisibleText = NormalizePayloadComparisonText(visibleText);
+        var normalizedExpectedText = NormalizePayloadComparisonText(expectedText);
         if (string.IsNullOrWhiteSpace(normalizedVisibleText) ||
             string.IsNullOrWhiteSpace(normalizedExpectedText))
         {
@@ -328,6 +328,31 @@ internal static class ReadableSeStringPayloadHelper
                normalizedExpectedText.Contains(
                    normalizedVisibleText,
                    StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Normalizes readable payload text and removes balanced outer setup
+    ///     wrappers without altering payload content or general text matching.
+    /// </summary>
+    /// <param name="text">The payload text to normalize for comparison.</param>
+    /// <returns>The normalized payload comparison text.</returns>
+    private static string NormalizePayloadComparisonText(string text)
+    {
+        var normalizedText = NormalizeReadableText(text);
+        while (normalizedText.Length > 4 &&
+               normalizedText.StartsWith("**", StringComparison.Ordinal) &&
+               normalizedText.EndsWith("**", StringComparison.Ordinal))
+        {
+            var unwrappedText = normalizedText[2..^2].Trim();
+            if (unwrappedText.Length == 0)
+            {
+                break;
+            }
+
+            normalizedText = unwrappedText;
+        }
+
+        return normalizedText;
     }
 
     /// <summary>

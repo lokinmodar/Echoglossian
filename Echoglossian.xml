@@ -29415,6 +29415,14 @@
             <param name="expectedText">The expected original or translated payload.</param>
             <returns><c>true</c> when the texts describe the same payload.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.NormalizePayloadComparisonText(System.String)">
+            <summary>
+                Normalizes readable payload text and removes balanced outer setup
+                wrappers without altering payload content or general text matching.
+            </summary>
+            <param name="text">The payload text to normalize for comparison.</param>
+            <returns>The normalized payload comparison text.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.NormalizeReadableText(System.String)">
             <summary>
                 Normalizes readable native text for popup text-node matching.
