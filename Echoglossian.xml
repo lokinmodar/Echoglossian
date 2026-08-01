@@ -29115,6 +29115,46 @@
                 Clears the current observation state.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.PopupBodyHoverGeometryHelper">
+            <summary>
+            Selects the best pure geometry candidate for popup-body hover handling.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverGeometryHelper.SelectCandidateIndex(System.Single,System.Single,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate})">
+            <summary>
+            Selects the best valid popup-body candidate by deterministic geometry ranking.
+            </summary>
+            <param name="textWidth">The width of the body text rectangle.</param>
+            <param name="textHeight">The height of the body text rectangle.</param>
+            <param name="candidates">The candidate snapshots to evaluate.</param>
+            <returns>The zero-based selected candidate index, or <c>-1</c> when none is valid.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverGeometryHelper.IsValidCandidate(System.Single,System.Single,Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate)">
+            <summary>
+            Determines whether a candidate satisfies the popup-body geometry requirements.
+            </summary>
+            <param name="textWidth">The width of the body text rectangle.</param>
+            <param name="textHeight">The height of the body text rectangle.</param>
+            <param name="candidate">The candidate snapshot to validate.</param>
+            <returns><see langword="true"/> when the candidate is valid.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverGeometryHelper.GetCandidateRank(Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate)">
+            <summary>
+            Gets the deterministic precedence rank for a valid candidate.
+            </summary>
+            <param name="candidate">The candidate snapshot to rank.</param>
+            <returns>The candidate precedence rank.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate">
+            <summary>
+            Describes a native-node-derived popup-body hover candidate without retaining native pointers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate.#ctor(System.Single,System.Single,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+            Describes a native-node-derived popup-body hover candidate without retaining native pointers.
+            </summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker">
             <summary>
                 Keeps a shared in-memory translation cache and drains translation
