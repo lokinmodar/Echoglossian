@@ -507,6 +507,8 @@ public partial class Echoglossian
   /// </summary>
   public static void SaveConfig(Config config)
   {
+    config.DefaultPluginCulture = PluginCultureLocaleHelper.NormalizePersistedCultureName(
+        config.DefaultPluginCulture);
     config.NormalizeGameMainMenuTranslationSettings();
     config.NormalizeNativeReplacementDiacriticsSettings();
     config.NormalizeStructuredTooltipPresentationSettings();

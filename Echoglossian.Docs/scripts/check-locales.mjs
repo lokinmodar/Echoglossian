@@ -10,7 +10,9 @@ const repositoryRoot = path.resolve(__dirname, '..', '..');
 const resourcesDirectory = path.join(repositoryRoot, 'Properties');
 
 export function collectResourceCultures(resourceFileNames) {
-  return [...new Set(resourceFileNames.map((fileName) => toCultureSegment(fileName)))].sort();
+  return [...new Set(resourceFileNames.map((fileName) => (
+    normalizeResourceLocaleKey(toCultureSegment(fileName))
+  )))].sort();
 }
 
 export function buildConfiguredLocales() {
@@ -74,6 +76,14 @@ function toCultureSegment(fileName) {
   return fileName
     .slice('Resources.'.length, -'.resx'.length)
     .toLowerCase();
+}
+
+function normalizeResourceLocaleKey(cultureSegment) {
+  if (cultureSegment === 'root' || Object.hasOwn(locales, cultureSegment)) {
+    return cultureSegment;
+  }
+
+  return cultureSegment.split('-')[0];
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {

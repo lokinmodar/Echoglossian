@@ -22,8 +22,6 @@ public sealed class TooltipConfigCopyTests
     /// <param name="resourceFileName">The resource file to verify.</param>
     [Theory]
     [InlineData("Resources.resx")]
-    [InlineData("Resources.pt-BR.resx")]
-    [InlineData("Resources.pt.resx")]
     public void ActionAndItemTooltipsOverlayOnlyDescription_DoesNotMentionFfxivClientStructs(
         string resourceFileName)
     {

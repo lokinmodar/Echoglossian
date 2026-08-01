@@ -176,6 +176,14 @@ public partial class Echoglossian : IDalamudPlugin
   {
     var persistedConfig = PluginInterface.GetPluginConfig() as Config;
     this.configuration = persistedConfig ?? new Config();
+    var normalizedPluginCulture = PluginCultureLocaleHelper.NormalizePersistedCultureName(
+        this.configuration.DefaultPluginCulture);
+    var pluginCultureChanged = !string.Equals(
+        this.configuration.DefaultPluginCulture,
+        normalizedPluginCulture,
+        StringComparison.Ordinal);
+    this.configuration.DefaultPluginCulture = normalizedPluginCulture;
+    this.cultureInfo = new CultureInfo(normalizedPluginCulture);
     if (persistedConfig == null)
     {
       PluginInterface.SavePluginConfig(this.configuration);
@@ -241,8 +249,6 @@ public partial class Echoglossian : IDalamudPlugin
       PluginRuntimeLog.Error($"Error creating or using database: {e}");
     }
 
-    this.cultureInfo =
-        new CultureInfo(this.configuration.DefaultPluginCulture);
     AssetsManager.AssetsPath =
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
     AssetsManager.AssetFiles =
@@ -284,7 +290,7 @@ public partial class Echoglossian : IDalamudPlugin
         this.configuration.NormalizeNativeReplacementDiacriticsSettings();
     normalizedTooltipSettings |= this.configuration
         .NormalizeStructuredTooltipPresentationSettings();
-    if (normalizedTooltipSettings)
+    if (normalizedTooltipSettings || pluginCultureChanged)
     {
       SaveConfig(this.configuration);
     }

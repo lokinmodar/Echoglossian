@@ -636,9 +636,6 @@
   <data name="CSVExportCopiesToClipboard" xml:space="preserve">
     <value>CSV Exportar cópias para a área de transferência</value>
   </data>
-  <data name="ActionAndItemTooltipsOverlayOnlyDescription" xml:space="preserve">
-    <value>ActionDetail e ItemDetail usam atualmente apenas Plugin Tooltips. A tradução na UI nativa para essas superfícies ainda não está disponível.</value>
-  </data>
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Registros {0} carregados</value>
   </data>

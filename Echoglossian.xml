@@ -12042,6 +12042,20 @@
                 Clears the tracked stable-ready interval.
             </summary>
         </member>
+        <member name="T:Echoglossian.PluginCultureLocaleHelper">
+            <summary>
+                Normalizes persisted plugin resource culture names to the locale-
+                specific resource files used by the plugin UI.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginCultureLocaleHelper.NormalizePersistedCultureName(System.String)">
+            <summary>
+                Promotes legacy neutral culture codes to the canonical locale-
+                specific culture names used by localized plugin resources.
+            </summary>
+            <param name="cultureName">The persisted culture name.</param>
+            <returns>The canonical culture name to use for plugin resources.</returns>
+        </member>
         <member name="T:Echoglossian.PluginRuntimeFileLog">
             <summary>
                 Mirrors plugin runtime logs into an Echoglossian-exclusive file so
