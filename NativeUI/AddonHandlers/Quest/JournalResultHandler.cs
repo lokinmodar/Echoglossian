@@ -374,9 +374,16 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         string.Empty,
         questId);
 
-    return !string.IsNullOrWhiteSpace(questId)
-        ? this.FindQuestPlate(questPlate)
-        : this.FindQuestPlateByName(questPlate);
+    if (!string.IsNullOrWhiteSpace(questId))
+    {
+      var foundQuestPlate = this.FindQuestPlate(questPlate);
+      if (foundQuestPlate != null)
+      {
+        return foundQuestPlate;
+      }
+    }
+
+    return this.FindQuestPlateByName(questPlate);
   }
 
   /// <summary>
@@ -399,6 +406,17 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       out string translatedNameText)
   {
     translatedNameText = string.Empty;
+    if (foundQuestPlate != null &&
+        IsTranslatedPayloadReady(foundQuestPlate.TranslatedQuestName))
+    {
+      translatedNameText = foundQuestPlate.TranslatedQuestName ?? string.Empty;
+#if DEBUG
+      PluginRuntimeLog.Debug(
+          $"Name from database: {questNameText} -> {translatedNameText}");
+#endif
+      return true;
+    }
+
     if (this.currentJournalResultHoverState is
         {
           TranslatedPayloadReady: true,
@@ -418,17 +436,6 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         IsTranslatedPayloadReady(cachedSnapshot.AppliedText))
     {
       translatedNameText = cachedSnapshot.AppliedText;
-      return true;
-    }
-
-    if (foundQuestPlate != null &&
-        IsTranslatedPayloadReady(foundQuestPlate.TranslatedQuestName))
-    {
-      translatedNameText = foundQuestPlate.TranslatedQuestName ?? string.Empty;
-#if DEBUG
-      PluginRuntimeLog.Debug(
-          $"Name from database: {questNameText} -> {translatedNameText}");
-#endif
       return true;
     }
 
@@ -524,28 +531,25 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     var translatedPayloadReady = false;
     QuestPlate? foundQuestPlate = null;
     QuestPopupText? foundQuestPopupText = null;
-    if (this.TryGetQueuedTranslation(
+    foundQuestPlate = this.FindJournalResultQuestPlate(
+        state.SourceLanguage,
+        state.OriginalQuestName,
+        state.QuestId);
+    if (foundQuestPlate != null &&
+        IsTranslatedPayloadReady(foundQuestPlate.TranslatedQuestName))
+    {
+      translatedNameText = foundQuestPlate.TranslatedQuestName ?? string.Empty;
+      translatedPayloadReady = true;
+    }
+
+    if (!translatedPayloadReady &&
+        this.TryGetQueuedTranslation(
             state.CacheKey,
             out var cachedTranslatedName) &&
         IsTranslatedPayloadReady(cachedTranslatedName))
     {
       translatedNameText = cachedTranslatedName;
       translatedPayloadReady = true;
-    }
-
-    if (!translatedPayloadReady)
-    {
-      foundQuestPlate = this.FindJournalResultQuestPlate(
-          state.SourceLanguage,
-          state.OriginalQuestName,
-          state.QuestId);
-      if (foundQuestPlate != null &&
-          IsTranslatedPayloadReady(foundQuestPlate.TranslatedQuestName))
-      {
-        translatedNameText =
-            foundQuestPlate.TranslatedQuestName ?? string.Empty;
-        translatedPayloadReady = true;
-      }
     }
 
     if (!translatedPayloadReady &&

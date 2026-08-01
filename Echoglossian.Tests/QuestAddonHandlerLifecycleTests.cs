@@ -3,10 +3,16 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Collections;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Plugin.Services;
 
+using Echoglossian.Cache;
+using Echoglossian.EFCoreSqlite.Models.Journal;
+using Echoglossian.LanguagesHandling;
 using Echoglossian.NativeUI.AddonHandlers.Quest;
 using Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
 using Echoglossian.NativeUI.Handlers;
@@ -500,6 +506,120 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True(
             MethodReferences(refresh!, popupLookup!),
             "JournalResult must check the dedicated popup table when canonical lookup does not yield a translated title.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult falls back to the title lookup when its
+    ///     canonical quest-id lookup does not find a row.
+    /// </summary>
+    [Fact]
+    public void FindJournalResultQuestPlate_IdMiss_FallsBackToTitleLookup()
+    {
+        var lookup = typeof(JournalResultHandler).GetMethod(
+            "FindJournalResultQuestPlate",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var calls = new List<string>();
+        var knownRow = new QuestPlate(
+            "Quest title",
+            string.Empty,
+            "en",
+            "Canonical translation",
+            string.Empty,
+            "42",
+            "pt-BR",
+            0,
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+        var originalDataManager = PluginEntry.DManager;
+        var originalLanguages = PluginEntry.LangDict;
+        PluginEntry.DManager = CreateDataManager();
+        PluginEntry.LangDict = new Dictionary<int, LanguageInfo>
+        {
+            [28] = new LanguageInfo(
+                "pt-BR",
+                "Brazilian Portuguese",
+                string.Empty,
+                string.Empty,
+                []),
+        };
+        try
+        {
+            var handler = new JournalResultHandler(CreateDependencies(
+                findQuestPlate: row =>
+                {
+                    calls.Add($"id:{row.QuestId}");
+                    return null;
+                },
+                findQuestPlateByName: row =>
+                {
+                    calls.Add($"title:{row.QuestName}");
+                    return knownRow;
+                }));
+
+            Assert.NotNull(lookup);
+            var resolved = lookup!.Invoke(
+                handler,
+                [new SourceClientLanguage("en", "en"), "Quest title", "42"]);
+
+            Assert.Same(knownRow, resolved);
+            Assert.Equal(["id:42", "title:Quest title"], calls);
+        }
+        finally
+        {
+            PluginEntry.DManager = originalDataManager;
+            PluginEntry.LangDict = originalLanguages;
+        }
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult prefers a completed canonical title over a
+    ///     stale title already applied to a UI node.
+    /// </summary>
+    [Fact]
+    public void TryResolveJournalResultTranslation_CanonicalTitle_WinsOverAppliedCache()
+    {
+        var resolve = typeof(JournalResultHandler).GetMethod(
+            "TryResolveJournalResultTranslation",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var canonicalRow = new QuestPlate(
+            "Quest title",
+            string.Empty,
+            "en",
+            "Canonical translation",
+            string.Empty,
+            "42",
+            "pt-BR",
+            0,
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+        var arguments = new object?[]
+        {
+            "journal-result-cache-key",
+            "Quest title",
+            canonicalRow,
+            null,
+            null,
+        };
+
+        QuestUiTranslationCache.Clear();
+        try
+        {
+            QuestUiTranslationCache.Remember(
+                "Quest title",
+                "Previously applied translation");
+
+            Assert.NotNull(resolve);
+            var found = (bool)resolve!.Invoke(
+                new JournalResultHandler(CreateDependencies()),
+                arguments)!;
+
+            Assert.True(found);
+            Assert.Equal("Canonical translation", arguments[4]);
+        }
+        finally
+        {
+            QuestUiTranslationCache.Clear();
+        }
     }
 
     /// <summary>
@@ -1141,14 +1261,16 @@ public class QuestAddonHandlerLifecycleTests
     /// handlers for lifecycle tests.
     /// </summary>
     /// <returns>The quest-handler dependencies.</returns>
-    private static QuestAddonHandlerDependencies CreateDependencies()
+    private static QuestAddonHandlerDependencies CreateDependencies(
+        Func<QuestPlate, QuestPlate?>? findQuestPlate = null,
+        Func<QuestPlate, QuestPlate?>? findQuestPlateByName = null)
     {
         return new QuestAddonHandlerDependencies
         {
             Config = new Config(),
             TranslationService = null!,
-            FindQuestPlate = _ => null,
-            FindQuestPlateByName = _ => null,
+            FindQuestPlate = findQuestPlate ?? (_ => null),
+            FindQuestPlateByName = findQuestPlateByName ?? (_ => null),
             FindQuestPopupText = _ => null,
             InsertQuestPlate = _ => string.Empty,
             InsertQuestPopupTextAsync = _ => Task.FromResult(string.Empty),
@@ -1182,6 +1304,68 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    /// Creates the minimal data-manager proxy required when the handler builds
+    /// a quest plate with the current game version.
+    /// </summary>
+    /// <returns>The configured data-manager proxy.</returns>
+    private static IDataManager CreateDataManager()
+    {
+        var gameDataProperty = typeof(IDataManager).GetProperty("GameData") ??
+                               throw new MissingMemberException(
+                                   typeof(IDataManager).FullName,
+                                   "GameData");
+        var gameData = RuntimeHelpers.GetUninitializedObject(
+            gameDataProperty.PropertyType);
+        var repositoriesProperty = gameDataProperty.PropertyType.GetProperty(
+            "Repositories") ??
+            throw new MissingMemberException(
+                gameDataProperty.PropertyType.FullName,
+                "Repositories");
+        var repositories = (IDictionary)(Activator.CreateInstance(
+            repositoriesProperty.PropertyType) ??
+            throw new InvalidOperationException(
+                "Could not create a Lumina repository dictionary."));
+        var repositoryType = repositoriesProperty.PropertyType
+            .GetGenericArguments()[1];
+        var repository = RuntimeHelpers.GetUninitializedObject(repositoryType);
+        SetMember(repository, "Version", "test-version");
+        repositories.Add("ffxiv", repository);
+        SetMember(gameData, "Repositories", repositories);
+
+        var dataManager = DispatchProxy.Create<IDataManager, DataManagerProxy>();
+        ((DataManagerProxy)(object)dataManager).GameData = gameData;
+        return dataManager;
+    }
+
+    /// <summary>
+    /// Sets a property or compiler-generated backing field on an uninitialized
+    /// test object.
+    /// </summary>
+    /// <param name="instance">The object to update.</param>
+    /// <param name="memberName">The member name.</param>
+    /// <param name="value">The value to assign.</param>
+    private static void SetMember(
+        object instance,
+        string memberName,
+        object value)
+    {
+        var property = instance.GetType().GetProperty(
+            memberName,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (property?.SetMethod != null)
+        {
+            property.SetValue(instance, value);
+            return;
+        }
+
+        var backingField = instance.GetType().GetField(
+            $"<{memberName}>k__BackingField",
+            BindingFlags.Instance | BindingFlags.NonPublic) ??
+            throw new MissingMemberException(instance.GetType().FullName, memberName);
+        backingField.SetValue(instance, value);
+    }
+
+    /// <summary>
     /// Determines whether one compiled method body references another member.
     /// </summary>
     /// <param name="method">The method body to inspect.</param>
@@ -1200,5 +1384,32 @@ public class QuestAddonHandlerLifecycleTests
         var referencedToken = BitConverter.GetBytes(
             referencedMember.MetadataToken);
         return methodBody.AsSpan().IndexOf(referencedToken) >= 0;
+    }
+
+    /// <summary>
+    /// Supplies the game-data member needed by the game-version helper.
+    /// </summary>
+    private class DataManagerProxy : DispatchProxy
+    {
+        /// <summary>Gets or sets the fake Lumina game-data instance.</summary>
+        public object? GameData { get; set; }
+
+        /// <summary>
+        /// Dispatches the game-data getter used by quest plate construction.
+        /// </summary>
+        /// <param name="targetMethod">The invoked interface method.</param>
+        /// <param name="args">The invoked method arguments.</param>
+        /// <returns>The configured game-data instance.</returns>
+        protected override object? Invoke(
+            MethodInfo? targetMethod,
+            object?[]? args)
+        {
+            if (targetMethod?.Name == "get_GameData")
+            {
+                return this.GameData;
+            }
+
+            throw new NotSupportedException(targetMethod?.Name);
+        }
     }
 }
