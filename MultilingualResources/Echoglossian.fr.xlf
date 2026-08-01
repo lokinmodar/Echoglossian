@@ -86,8 +86,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Activer la traduction de texte de jeu en temps réel</target>
         </trans-unit>
         <trans-unit id="FontColorSelectLabel" translate="yes" xml:space="preserve">
-          <source>Overlay font color:</source>
+          <source>Plugin Overlay font color:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Couleur de police de superposition :</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="HelpMessage" translate="yes" xml:space="preserve">
           <source>Opens Echoglossian config window</source>
@@ -99,8 +100,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">(?)</target>
         </trans-unit>
         <trans-unit id="ImguiAdjustmentsLabel" translate="yes" xml:space="preserve">
-          <source>Adjust the options related to the translation overlay:</source>
+          <source>Adjust the options related to the Plugin Overlay:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ajustez les options liées à la superposition de traduction :</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="LangIdentError" translate="yes" xml:space="preserve">
           <source>The language could not be identified with an acceptable degree of certainty</source>
@@ -111,8 +113,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">La langue sélectionnée n’est pas prise en charge par le backend de traduction actuellement disponible</target>
         </trans-unit>
         <trans-unit id="LanguageOnlySupportedUsingOverlay" translate="yes" xml:space="preserve">
-          <source>The selected language is only supported using the plugin overlays due to limitations of the native game Font</source>
+          <source>The selected language is only supported using Plugin Overlays due to limitations of the native game font</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">La langue sélectionnée n’est prise en charge qu’à l’aide des superpositions de plugins en raison des limitations du jeu natif Font</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="LanguageSelectionTooltip" translate="yes" xml:space="preserve">
           <source>Which language to translate the in-game dialogue boxes to.</source>
@@ -140,32 +143,38 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">La liste non exhaustive des problèmes et des TODO est disponible dans le lien ci-dessous:</target>
         </trans-unit>
         <trans-unit id="OverlayAdjustmentOrientations" translate="yes" xml:space="preserve">
-          <source>Please adjust position if your overlay is not centered relative to the game's UI text box.</source>
+          <source>Please adjust the position if your Plugin Overlay is not centered relative to the game's UI text box.</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Veuillez ajuster la position si votre superposition n’est pas centrée par rapport à la zone de texte de l’interface utilisateur du jeu.</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayColorSelectName" translate="yes" xml:space="preserve">
           <source>OverlayColorSelect</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">OverlayColorSelect</target>
         </trans-unit>
         <trans-unit id="OverlayFontColorOrientations" translate="yes" xml:space="preserve">
-          <source>Click to choose the overlay font color</source>
+          <source>Click to choose the Plugin Overlay font color</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Cliquez pour choisir la couleur de police de superposition</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayFontScaleLabel" translate="yes" xml:space="preserve">
-          <source>Adjust the Overlay font scale</source>
+          <source>Adjust the Plugin Overlay font scale</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ajuster l’échelle de police de superposition</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayFontSizeLabel" translate="yes" xml:space="preserve">
-          <source>Overlay Font Size</source>
+          <source>Plugin Overlay font size</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Taille de police de superposition</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayFontSizeOrientations" translate="yes" xml:space="preserve">
-          <source>Select the font size for the text overlay</source>
+          <source>Select the font size for the Plugin Overlay text</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Sélectionnez la taille de police pour la superposition de texte</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayHeightScrollLabel" translate="yes" xml:space="preserve">
-          <source>Translation Overlay Height multiplier</source>
+          <source>Plugin Overlay height multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Multiplicateur de hauteur de superposition de translation</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayName" translate="yes" xml:space="preserve">
           <source>Battle talk (Enenies dialogue lines) translation</source>
@@ -177,16 +186,19 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Réglage de la position</target>
         </trans-unit>
         <trans-unit id="OverlayToggleLabel" translate="yes" xml:space="preserve">
-          <source>Display translated text overlay above game UI text box instead of replacing its text with the translation</source>
+          <source>Display translated text in a Plugin Overlay above the game UI text box instead of replacing its text with the translation</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Afficher la superposition de texte traduit au-dessus de la zone de texte de l’interface utilisateur du jeu au lieu de remplacer son texte par la traduction</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
-          <source>Adjust translation overlay width</source>
+          <source>Adjust Plugin Overlay width</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ajuster la largeur de superposition de traduction</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Translation Overlay Width multiplier</source>
+          <source>Plugin Overlay width multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Multiplicateur de largeur de superposition de traduction</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="PathInputInstructions" translate="yes" xml:space="preserve">
           <source>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</source>
@@ -242,16 +254,19 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Paramètres de Google Traduction :</target>
         </trans-unit>
         <trans-unit id="SwapTranslationTextToggle" translate="yes" xml:space="preserve">
-          <source>Show Original dialogue text in Overlay and Translated in the Game UI dialogue box</source>
+          <source>Show original dialogue text in a Plugin Overlay and translated text in the game UI dialogue box</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Afficher le texte de dialogue d’origine dans superposition et traduit dans la boîte de dialogue de l’interface utilisateur du jeu</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ToastOverlayWidthMultiplierOrientations" translate="yes" xml:space="preserve">
-          <source>Adjust toast translation overlay width</source>
+          <source>Adjust toast Plugin Overlay width</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Ajuster la largeur de superposition de translation toast</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="ToastOverlayWidthScrollLabel" translate="yes" xml:space="preserve">
-          <source>Toast Overlay Width multiplier</source>
+          <source>Toast Plugin Overlay width multiplier</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Multiplicateur de largeur de superposition toast</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="TodoUrl" translate="yes" xml:space="preserve">
           <source>TODOs List on Github</source>
@@ -311,7 +326,7 @@
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="UseImGuiForToastsToggle" translate="yes" xml:space="preserve">
-          <source>Use overlay to show Toasts translations (WIP)</source>
+          <source>Use a Plugin Overlay to show toast translations (WIP)</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Utiliser la superposition pour afficher les traductions toasts</target>
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
@@ -606,8 +621,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Aucun réglage requis pour ce moteur</target>
         </trans-unit>
         <trans-unit id="SettingsForGeminiText" translate="yes" xml:space="preserve">
-          <source>Settings for Gemini:</source>
+          <source>Settings for Google AI Studio / Gemini:</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Paramètres pour Gemini :</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="SettingsForLibreTranslateText" translate="yes" xml:space="preserve">
           <source>Settings for LibreTranslate:</source>
@@ -662,8 +678,9 @@
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Traduire SelectOk</target>
         </trans-unit>
         <trans-unit id="GeminiAPIKey" translate="yes" xml:space="preserve">
-          <source>Gemini API Key</source>
+          <source>Google AI Studio API Key</source>
           <target state="needs-review-translation" state-qualifier="mt-suggestion">Clé API Gemini</target>
+          <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="SettingsForYandexPublic" translate="yes" xml:space="preserve">
           <source>Settings for Yandex public Translator</source>
@@ -854,8 +871,8 @@
           <note from="MultilingualUpdate" annotates="source" priority="2">Please verify the translation’s accuracy as the source string was updated after it was translated.</note>
         </trans-unit>
         <trans-unit id="OverlayForceShowTitleToggleLabel" translate="yes" xml:space="preserve">
-          <source>Show overlay title bar with speaker name when available</source>
-          <target state="new">Show overlay title bar with speaker name when available</target>
+          <source>Show a Plugin Overlay title bar with speaker name when available</source>
+          <target state="new">Show a Plugin Overlay title bar with speaker name when available</target>
         </trans-unit>
         <trans-unit id="AddonProbeHelpMessage" translate="yes" xml:space="preserve">
           <source>Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe <it id="1" pos="open">&lt;addon name&gt;</it> [index] or /egloaddonprobe stop</source>
@@ -870,44 +887,44 @@
           <target state="new">Native UI translation</target>
         </trans-unit>
         <trans-unit id="JournalQuestDisplayModeTooltipTranslationOnly" translate="yes" xml:space="preserve">
-          <source>Tooltip translation only</source>
-          <target state="new">Tooltip translation only</target>
+          <source>Plugin Tooltip translation only</source>
+          <target state="new">Plugin Tooltip translation only</target>
         </trans-unit>
         <trans-unit id="JournalQuestDisplayModeNativeUiTranslationWithOriginalTooltips" translate="yes" xml:space="preserve">
-          <source>Native UI translation + original tooltips</source>
-          <target state="new">Native UI translation + original tooltips</target>
+          <source>Native UI translation + original Plugin Tooltips</source>
+          <target state="new">Native UI translation + original Plugin Tooltips</target>
         </trans-unit>
         <trans-unit id="JournalQuestDisplayModeLabel" translate="yes" xml:space="preserve">
           <source>Journal quest display mode</source>
           <target state="new">Journal quest display mode</target>
         </trans-unit>
         <trans-unit id="JournalQuestDisplayModeDescription" translate="yes" xml:space="preserve">
-          <source>This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal hover tooltips follow this mode directly; the global tooltip toggle only affects other translated UI.</source>
-          <target state="new">This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal hover tooltips follow this mode directly; the global tooltip toggle only affects other translated UI.</target>
+          <source>This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal Plugin Tooltips follow this mode directly; the global Plugin Tooltip toggle only affects other translated UI.</source>
+          <target state="new">This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal Plugin Tooltips follow this mode directly; the global Plugin Tooltip toggle only affects other translated UI.</target>
         </trans-unit>
         <trans-unit id="JournalGlobalHoverTooltipsLabel" translate="yes" xml:space="preserve">
-          <source>Enable global hover tooltips for other translated UI</source>
-          <target state="new">Enable global hover tooltips for other translated UI</target>
+          <source>Enable global Plugin Tooltips for other translated UI</source>
+          <target state="new">Enable global Plugin Tooltips for other translated UI</target>
         </trans-unit>
         <trans-unit id="QuestDisplayModeNativeUiTranslation" translate="yes" xml:space="preserve">
           <source>Native UI translation</source>
           <target state="new">Native UI translation</target>
         </trans-unit>
         <trans-unit id="QuestDisplayModeTooltipTranslationOnly" translate="yes" xml:space="preserve">
-          <source>Tooltip translation only</source>
-          <target state="new">Tooltip translation only</target>
+          <source>Plugin Tooltip translation only</source>
+          <target state="new">Plugin Tooltip translation only</target>
         </trans-unit>
         <trans-unit id="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" translate="yes" xml:space="preserve">
-          <source>Native UI translation + original tooltips</source>
-          <target state="new">Native UI translation + original tooltips</target>
+          <source>Native UI translation + original Plugin Tooltips</source>
+          <target state="new">Native UI translation + original Plugin Tooltips</target>
         </trans-unit>
         <trans-unit id="QuestDisplayModeLabel" translate="yes" xml:space="preserve">
           <source>Quest display mode</source>
           <target state="new">Quest display mode</target>
         </trans-unit>
         <trans-unit id="QuestDisplayModeDescription" translate="yes" xml:space="preserve">
-          <source>This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips.</source>
-          <target state="new">This mode controls how this quest window is presented. Native UI writes the translation into the addon, tooltip-only keeps the addon intact, and native-with-original-tooltips writes translation natively while showing the original in tooltips.</target>
+          <source>This mode controls how this quest window is presented. Native UI writes the translation into the addon, Plugin Tooltip translation only keeps the addon intact, and Native UI translation + original Plugin Tooltips writes the translation natively while showing the original in Plugin Tooltips.</source>
+          <target state="new">This mode controls how this quest window is presented. Native UI writes the translation into the addon, Plugin Tooltip translation only keeps the addon intact, and Native UI translation + original Plugin Tooltips writes the translation natively while showing the original in Plugin Tooltips.</target>
         </trans-unit>
         <trans-unit id="TranslateJournalAcceptToggle" translate="yes" xml:space="preserve">
           <source>Translate JournalAccept</source>
@@ -974,24 +991,24 @@
           <target state="new">Quest</target>
         </trans-unit>
         <trans-unit id="ToastModeDescription" translate="yes" xml:space="preserve">
-          <source>Each toast type can choose independently between native replacement and overlay rendering.</source>
-          <target state="new">Each toast type can choose independently between native replacement and overlay rendering.</target>
+          <source>Each toast type can choose independently between native replacement and Plugin Overlay rendering.</source>
+          <target state="new">Each toast type can choose independently between native replacement and Plugin Overlay rendering.</target>
         </trans-unit>
         <trans-unit id="ToastModeSwapDescription" translate="yes" xml:space="preserve">
-          <source>When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation.</source>
-          <target state="new">When a toast type uses overlay mode, you can also swap the texts so the overlay keeps the original line while the native toast shows the translation.</target>
+          <source>When a toast type uses Plugin Overlay mode, you can also swap the texts so the Plugin Overlay keeps the original line while the native toast shows the translation.</source>
+          <target state="new">When a toast type uses Plugin Overlay mode, you can also swap the texts so the Plugin Overlay keeps the original line while the native toast shows the translation.</target>
         </trans-unit>
         <trans-unit id="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" translate="yes" xml:space="preserve">
-          <source>Overlay-only language is active, so all toast types will render through overlays.</source>
-          <target state="new">Overlay-only language is active, so all toast types will render through overlays.</target>
+          <source>Plugin Overlay-only language support is active, so all toast types will render through Plugin Overlays.</source>
+          <target state="new">Plugin Overlay-only language support is active, so all toast types will render through Plugin Overlays.</target>
         </trans-unit>
         <trans-unit id="OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay" translate="yes" xml:space="preserve">
-          <source>Overlay-only language is active, so this toast type will render through an overlay.</source>
-          <target state="new">Overlay-only language is active, so this toast type will render through an overlay.</target>
+          <source>Plugin Overlay-only language support is active, so this toast type will render through a Plugin Overlay.</source>
+          <target state="new">Plugin Overlay-only language support is active, so this toast type will render through a Plugin Overlay.</target>
         </trans-unit>
         <trans-unit id="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" translate="yes" xml:space="preserve">
-          <source>Native replacement mode is active for this toast type. Overlay style controls are not used in this mode.</source>
-          <target state="new">Native replacement mode is active for this toast type. Overlay style controls are not used in this mode.</target>
+          <source>Native replacement mode is active for this toast type. Plugin Overlay style controls are not used in this mode.</source>
+          <target state="new">Native replacement mode is active for this toast type. Plugin Overlay style controls are not used in this mode.</target>
         </trans-unit>
         <trans-unit id="ToastOverlayScreenInfoWideTextSectionTitle" translate="yes" xml:space="preserve">
           <source>Screen Info (_WideText)</source>
@@ -1022,8 +1039,8 @@
           <target state="new">Enable this toast type</target>
         </trans-unit>
         <trans-unit id="ToastOverlayUseOverlayForThisToastTypeLabel" translate="yes" xml:space="preserve">
-          <source>Use overlay for this toast type</source>
-          <target state="new">Use overlay for this toast type</target>
+          <source>Use a Plugin Overlay for this toast type</source>
+          <target state="new">Use a Plugin Overlay for this toast type</target>
         </trans-unit>
         <trans-unit id="TranslateMiniTalkLabel" translate="yes" xml:space="preserve">
           <source>Translate MiniTalk</source>
@@ -1038,8 +1055,8 @@
           <target state="new">Background opacity</target>
         </trans-unit>
         <trans-unit id="ToastOverlayBackgroundOpacityTooltip" translate="yes" xml:space="preserve">
-          <source>Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</source>
-          <target state="new">Controls how opaque the toast overlay background should be. Use 0 for a fully transparent background.</target>
+          <source>Controls how opaque the toast Plugin Overlay background should be. Use 0 for a fully transparent background.</source>
+          <target state="new">Controls how opaque the toast Plugin Overlay background should be. Use 0 for a fully transparent background.</target>
         </trans-unit>
         <trans-unit id="ConfigVersionUpgradeRecommendedMessage" translate="yes" xml:space="preserve">
           <source>Your saved Echoglossian configuration is from an older version. We migrated it, but reviewing and reconfiguring the plugin is recommended.</source>
@@ -1070,8 +1087,8 @@
           <target state="new">Quest windows</target>
         </trans-unit>
         <trans-unit id="TooltipTabTitle" translate="yes" xml:space="preserve">
-          <source>Tooltips</source>
-          <target state="new">Tooltips</target>
+          <source>Details &amp; hover</source>
+          <target state="new">Details &amp; hover</target>
         </trans-unit>
         <trans-unit id="SelectionDialogsTabTitle" translate="yes" xml:space="preserve">
           <source>Selection dialogs</source>
@@ -1098,56 +1115,56 @@
           <target state="new">ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</target>
         </trans-unit>
         <trans-unit id="OverlayDisplayModeDescription" translate="yes" xml:space="preserve">
-          <source>This mode controls how the translated text is presented. Native UI writes directly into the game addon, overlay-only leaves the native addon untouched, and native-with-original-overlay writes translation natively while showing the original in the overlay.</source>
-          <target state="new">This mode controls how the translated text is presented. Native UI writes directly into the game addon, overlay-only leaves the native addon untouched, and native-with-original-overlay writes translation natively while showing the original in the overlay.</target>
+          <source>This mode controls how the translated text is presented. Native UI writes directly into the game addon, Plugin Overlay translation only leaves the native addon untouched, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in the Plugin Overlay.</source>
+          <target state="new">This mode controls how the translated text is presented. Native UI writes directly into the game addon, Plugin Overlay translation only leaves the native addon untouched, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in the Plugin Overlay.</target>
         </trans-unit>
         <trans-unit id="OverlayDisplayModeOverlayTranslationOnly" translate="yes" xml:space="preserve">
-          <source>Overlay translation only</source>
-          <target state="new">Overlay translation only</target>
+          <source>Plugin Overlay translation only</source>
+          <target state="new">Plugin Overlay translation only</target>
         </trans-unit>
         <trans-unit id="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" translate="yes" xml:space="preserve">
-          <source>Native UI translation + original overlay</source>
-          <target state="new">Native UI translation + original overlay</target>
+          <source>Native UI translation + original Plugin Overlay</source>
+          <target state="new">Native UI translation + original Plugin Overlay</target>
         </trans-unit>
         <trans-unit id="OverlayOnlyLanguageModeDescription" translate="yes" xml:space="preserve">
-          <source>The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.</source>
-          <target state="new">The selected language does not support the native game font, so this surface is limited to Echoglossian overlays and custom tooltips.</target>
+          <source>The selected language does not support the native game font, so this surface is limited to Plugin Overlays and Plugin Tooltips.</source>
+          <target state="new">The selected language does not support the native game font, so this surface is limited to Plugin Overlays and Plugin Tooltips.</target>
         </trans-unit>
         <trans-unit id="ActionAndItemTooltipsSectionLabel" translate="yes" xml:space="preserve">
-          <source>Action and item tooltips</source>
-          <target state="new">Action and item tooltips</target>
+          <source>Action and item details</source>
+          <target state="new">Action and item details</target>
         </trans-unit>
         <trans-unit id="ActionAndItemTooltipsDisplayModeLabel" translate="yes" xml:space="preserve">
-          <source>Tooltip display mode</source>
-          <target state="new">Tooltip display mode</target>
+          <source>Detail display mode</source>
+          <target state="new">Detail display mode</target>
         </trans-unit>
         <trans-unit id="ActionAndItemTooltipsDisplayModeDescription" translate="yes" xml:space="preserve">
-          <source>This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.</source>
-          <target state="new">This mode controls action and item tooltips. Native UI writes the translated tooltip into the game tooltip, tooltip-only keeps the native tooltip intact and uses Echoglossian overlays, and native-with-original-tooltips writes translation natively while showing the original in our overlay.</target>
+          <source>This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, Plugin Overlay translation only keeps the native addon intact and uses Plugin Overlays, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in our Plugin Overlay.</source>
+          <target state="new">This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, Plugin Overlay translation only keeps the native addon intact and uses Plugin Overlays, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in our Plugin Overlay.</target>
         </trans-unit>
         <trans-unit id="HoverTooltipAppearanceSectionLabel" translate="yes" xml:space="preserve">
-          <source>Hover tooltip appearance</source>
-          <target state="new">Hover tooltip appearance</target>
+          <source>Hover Plugin Tooltip appearance</source>
+          <target state="new">Hover Plugin Tooltip appearance</target>
         </trans-unit>
         <trans-unit id="HoverTooltipTextColorLabel" translate="yes" xml:space="preserve">
-          <source>Tooltip text color</source>
-          <target state="new">Tooltip text color</target>
+          <source>Plugin Tooltip text color</source>
+          <target state="new">Plugin Tooltip text color</target>
         </trans-unit>
         <trans-unit id="HoverTooltipBackgroundColorLabel" translate="yes" xml:space="preserve">
-          <source>Tooltip background color</source>
-          <target state="new">Tooltip background color</target>
+          <source>Plugin Tooltip background color</source>
+          <target state="new">Plugin Tooltip background color</target>
         </trans-unit>
         <trans-unit id="HoverTooltipBackgroundOpacityLabel" translate="yes" xml:space="preserve">
-          <source>Tooltip background opacity</source>
-          <target state="new">Tooltip background opacity</target>
+          <source>Plugin Tooltip background opacity</source>
+          <target state="new">Plugin Tooltip background opacity</target>
         </trans-unit>
         <trans-unit id="HoverTooltipAppearanceDescription" translate="yes" xml:space="preserve">
-          <source>These colors apply to Echoglossian hover tooltips used by quest and DB-first UI surfaces.</source>
-          <target state="new">These colors apply to Echoglossian hover tooltips used by quest and DB-first UI surfaces.</target>
+          <source>These settings apply to hover Plugin Tooltips used by quest and DB-first UI surfaces.</source>
+          <target state="new">These settings apply to hover Plugin Tooltips used by quest and DB-first UI surfaces.</target>
         </trans-unit>
         <trans-unit id="TranslateMainCommandWindow" translate="yes" xml:space="preserve">
-          <source>Translate Main Command</source>
-          <target state="new">Translate Main Command</target>
+          <source>Translate Game Main Menu</source>
+          <target state="new">Translate Game Main Menu</target>
         </trans-unit>
         <trans-unit id="TranslateActionMenuWindow" translate="yes" xml:space="preserve">
           <source>Translate ActionMenu Window</source>
@@ -1224,6 +1241,878 @@
         <trans-unit id="CouldNotFetchOllamaModels" translate="yes" xml:space="preserve">
           <source>Could not fetch models. Is Ollama running locally?</source>
           <target state="new">Could not fetch models. Is Ollama running locally?</target>
+        </trans-unit>
+        <trans-unit id="TranslationBlockedByEngineConfigurationNotificationText" translate="yes" xml:space="preserve">
+          <source>Translation is currently disabled because the selected translation engine still needs to be configured. Open the configuration window and finish the engine setup.</source>
+          <target state="new">Translation is currently disabled because the selected translation engine still needs to be configured. Open the configuration window and finish the engine setup.</target>
+        </trans-unit>
+        <trans-unit id="TranslationBlockedByMissingAssetsNotificationText" translate="yes" xml:space="preserve">
+          <source>Translation is currently disabled because the selected language requires extra font assets. Open the configuration window to download or validate the required files.</source>
+          <target state="new">Translation is currently disabled because the selected language requires extra font assets. Open the configuration window to download or validate the required files.</target>
+        </trans-unit>
+        <trans-unit id="ManageLanguageAssetsButtonText" translate="yes" xml:space="preserve">
+          <source>Manage required language assets</source>
+          <target state="new">Manage required language assets</target>
+        </trans-unit>
+        <trans-unit id="TranslationRequiresDownloadedAssetsText" translate="yes" xml:space="preserve">
+          <source>This language requires extra downloadable font assets before translation can be enabled.</source>
+          <target state="new">This language requires extra downloadable font assets before translation can be enabled.</target>
+        </trans-unit>
+        <trans-unit id="TranslationBlockedByEngineConfigurationText" translate="yes" xml:space="preserve">
+          <source>Configure the selected translation engine before enabling translation.</source>
+          <target state="new">Configure the selected translation engine before enabling translation.</target>
+        </trans-unit>
+        <trans-unit id="TranslationBlockedByMissingAssetsStatusText" translate="yes" xml:space="preserve">
+          <source>Waiting for required font assets</source>
+          <target state="new">Waiting for required font assets</target>
+        </trans-unit>
+        <trans-unit id="LanguageAssetsPopupBodyFormat" translate="yes" xml:space="preserve">
+          <source>{0} requires one or more external font assets before Echoglossian can translate safely.</source>
+          <target state="new">{0} requires one or more external font assets before Echoglossian can translate safely.</target>
+        </trans-unit>
+        <trans-unit id="LanguageAssetsPopupAutoDownloadHint" translate="yes" xml:space="preserve">
+          <source>An automatic background download was triggered when possible. If it fails, use the controls below to place the files manually and recheck them.</source>
+          <target state="new">An automatic background download was triggered when possible. If it fails, use the controls below to place the files manually and recheck them.</target>
+        </trans-unit>
+        <trans-unit id="LanguageAssetsPopupFolderLabel" translate="yes" xml:space="preserve">
+          <source>Assets folder:</source>
+          <target state="new">Assets folder:</target>
+        </trans-unit>
+        <trans-unit id="LanguageAssetsPopupFilesLabel" translate="yes" xml:space="preserve">
+          <source>Required files:</source>
+          <target state="new">Required files:</target>
+        </trans-unit>
+        <trans-unit id="OpenAssetsFolderButtonText" translate="yes" xml:space="preserve">
+          <source>Open assets folder</source>
+          <target state="new">Open assets folder</target>
+        </trans-unit>
+        <trans-unit id="OpenManualDownloadLinksButtonText" translate="yes" xml:space="preserve">
+          <source>Open manual download links</source>
+          <target state="new">Open manual download links</target>
+        </trans-unit>
+        <trans-unit id="RecheckAssetsButtonText" translate="yes" xml:space="preserve">
+          <source>Recheck assets</source>
+          <target state="new">Recheck assets</target>
+        </trans-unit>
+        <trans-unit id="LanguageAssetsTroubleshootingSummaryFormat" translate="yes" xml:space="preserve">
+          <source>The selected language "{0}" depends on downloaded font assets. Manual files should be placed in: {1}</source>
+          <target state="new">The selected language "{0}" depends on downloaded font assets. Manual files should be placed in: {1}</target>
+        </trans-unit>
+        <trans-unit id="DialogueLlmOverrideSectionLabel" translate="yes" xml:space="preserve">
+          <source>Dialogue LLM override</source>
+          <target state="new">Dialogue LLM override</target>
+        </trans-unit>
+        <trans-unit id="DialogueLlmOverrideDescription" translate="yes" xml:space="preserve">
+          <source>Route Talk, BattleTalk, TalkSubtitle, and MiniTalk through a dedicated LLM without changing the primary engine used elsewhere.</source>
+          <target state="new">Route Talk, BattleTalk, TalkSubtitle, and MiniTalk through a dedicated LLM without changing the primary engine used elsewhere.</target>
+        </trans-unit>
+        <trans-unit id="UseDialogueLlmOverrideLabel" translate="yes" xml:space="preserve">
+          <source>Use a dedicated LLM for dialogue-family surfaces</source>
+          <target state="new">Use a dedicated LLM for dialogue-family surfaces</target>
+        </trans-unit>
+        <trans-unit id="DialogueLlmEngineLabel" translate="yes" xml:space="preserve">
+          <source>Dialogue LLM engine</source>
+          <target state="new">Dialogue LLM engine</target>
+        </trans-unit>
+        <trans-unit id="DialogueLlmOverrideNeedsConfigurationText" translate="yes" xml:space="preserve">
+          <source>The selected dialogue LLM override is not fully configured yet. Dialogue-family surfaces will keep using the primary engine until the override is ready.</source>
+          <target state="new">The selected dialogue LLM override is not fully configured yet. Dialogue-family surfaces will keep using the primary engine until the override is ready.</target>
+        </trans-unit>
+        <trans-unit id="DialogueLlmOverrideMatchesPrimaryText" translate="yes" xml:space="preserve">
+          <source>Dialogue-family surfaces currently reuse the same engine configuration selected above.</source>
+          <target state="new">Dialogue-family surfaces currently reuse the same engine configuration selected above.</target>
+        </trans-unit>
+        <trans-unit id="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" translate="yes" xml:space="preserve">
+          <source>[OpenAI-compatible translation unavailable. Please check the endpoint, API key, and model settings.]</source>
+          <target state="new">[OpenAI-compatible translation unavailable. Please check the endpoint, API key, and model settings.]</target>
+        </trans-unit>
+        <trans-unit id="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" translate="yes" xml:space="preserve">
+          <source>OpenAI-compatible provider configuration is incomplete. Translation will not be available until endpoint, API key, and model are filled.</source>
+          <target state="new">OpenAI-compatible provider configuration is incomplete. Translation will not be available until endpoint, API key, and model are filled.</target>
+        </trans-unit>
+        <trans-unit id="PreviewImageryUnavailableText" translate="yes" xml:space="preserve">
+          <source>Preview imagery is unavailable in the standalone previewer.</source>
+          <target state="new">Preview imagery is unavailable in the standalone previewer.</target>
+        </trans-unit>
+        <trans-unit id="TranslateSelectIconStringLabel" translate="yes" xml:space="preserve">
+          <source>Translate SelectIconString</source>
+          <target state="new">Translate SelectIconString</target>
+        </trans-unit>
+        <trans-unit id="TranslateTooltipAddonLabel" translate="yes" xml:space="preserve">
+          <source>Translate Tooltip Addon</source>
+          <target state="new">Translate Tooltip Addon</target>
+        </trans-unit>
+        <trans-unit id="NamePlateTabTitle" translate="yes" xml:space="preserve">
+          <source>Nameplates</source>
+          <target state="new">Nameplates</target>
+        </trans-unit>
+        <trans-unit id="OpensTheTranslatorDebuggerAndMetricsWindow" translate="yes" xml:space="preserve">
+          <source>Opens the Translator Debugger and Metrics window.</source>
+          <target state="new">Opens the Translator Debugger and Metrics window.</target>
+        </trans-unit>
+        <trans-unit id="ShowQuestProgressNotificationsToggle" translate="yes" xml:space="preserve">
+          <source>Show quest background notifications</source>
+          <target state="new">Show quest background notifications</target>
+        </trans-unit>
+        <trans-unit id="ShowQuestProgressNotificationsDescription" translate="yes" xml:space="preserve">
+          <source>Shows informational notifications when background quest pre-translation starts or when quest windows are still waiting for stored quest data. Disabled by default to avoid noisy popups during normal gameplay.</source>
+          <target state="new">Shows informational notifications when background quest pre-translation starts or when quest windows are still waiting for stored quest data. Disabled by default to avoid noisy popups during normal gameplay.</target>
+        </trans-unit>
+        <trans-unit id="TranslateToDoToggle" translate="yes" xml:space="preserve">
+          <source>Translate ToDo</source>
+          <target state="new">Translate ToDo</target>
+        </trans-unit>
+        <trans-unit id="TranslateNamePlatesLabel" translate="yes" xml:space="preserve">
+          <source>Translate eligible world-object nameplates</source>
+          <target state="new">Translate eligible world-object nameplates</target>
+        </trans-unit>
+        <trans-unit id="NamePlateOverlayHelpText" translate="yes" xml:space="preserve">
+          <source>Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped.</source>
+          <target state="new">Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped.</target>
+        </trans-unit>
+        <trans-unit id="NamePlateNativeReplacementHelpText" translate="yes" xml:space="preserve">
+          <source>Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode.</source>
+          <target state="new">Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode.</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlaySupportedNormalPlacementDescription" translate="yes" xml:space="preserve">
+          <source>Supported normal toasts currently share one callback-owned runtime. Configure their top and bottom placement buckets here.</source>
+          <target state="new">Supported normal toasts currently share one callback-owned runtime. Configure their top and bottom placement buckets here.</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlaySupportedNormalSharedSettingsMessage" translate="yes" xml:space="preserve">
+          <source>This toast type currently uses the shared top and bottom supported-normal placement settings from the Screen Info page.</source>
+          <target state="new">This toast type currently uses the shared top and bottom supported-normal placement settings from the Screen Info page.</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayTopPlacementTitle" translate="yes" xml:space="preserve">
+          <source>Top placement</source>
+          <target state="new">Top placement</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayBottomPlacementTitle" translate="yes" xml:space="preserve">
+          <source>Bottom placement</source>
+          <target state="new">Bottom placement</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayLeftPlacementTitle" translate="yes" xml:space="preserve">
+          <source>Left placement</source>
+          <target state="new">Left placement</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayCentrePlacementTitle" translate="yes" xml:space="preserve">
+          <source>Centre placement</source>
+          <target state="new">Centre placement</target>
+        </trans-unit>
+        <trans-unit id="ToastOverlayRightPlacementTitle" translate="yes" xml:space="preserve">
+          <source>Right placement</source>
+          <target state="new">Right placement</target>
+        </trans-unit>
+        <trans-unit id="ActionAndItemTooltipsOverlayOnlyDescription" translate="yes" xml:space="preserve">
+          <source>ActionDetail and ItemDetail currently use Plugin Tooltips only. Native UI translation for these surfaces is currently unavailable.</source>
+          <target state="new">ActionDetail and ItemDetail currently use Plugin Tooltips only. Native UI translation for these surfaces is currently unavailable.</target>
+        </trans-unit>
+        <trans-unit id="HoverTooltipFontScaleLabel" translate="yes" xml:space="preserve">
+          <source>Plugin Tooltip font scale</source>
+          <target state="new">Plugin Tooltip font scale</target>
+        </trans-unit>
+        <trans-unit id="HoverTooltipMaxWidthLabel" translate="yes" xml:space="preserve">
+          <source>Plugin Tooltip max width</source>
+          <target state="new">Plugin Tooltip max width</target>
+        </trans-unit>
+        <trans-unit id="TexturePresentationLineHeightScaleLabel" translate="yes" xml:space="preserve">
+          <source>Texture text line height</source>
+          <target state="new">Texture text line height</target>
+        </trans-unit>
+        <trans-unit id="TexturePresentationLineHeightScaleDescription" translate="yes" xml:space="preserve">
+          <source>Applies to texture-backed complex-script text across hover tooltips and overlays.</source>
+          <target state="new">Applies to texture-backed complex-script text across hover tooltips and overlays.</target>
+        </trans-unit>
+        <trans-unit id="TranslateContextMenuWindow" translate="yes" xml:space="preserve">
+          <source>Translate Context Menu</source>
+          <target state="new">Translate Context Menu</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleNamePlateTranslation" translate="yes" xml:space="preserve">
+          <source>Nameplate translation</source>
+          <target state="new">Nameplate translation</target>
+        </trans-unit>
+        <trans-unit id="ActionAndItemTooltipsToggleLabel" translate="yes" xml:space="preserve">
+          <source>Enable action/item detail translation</source>
+          <target state="new">Enable action/item detail translation</target>
+        </trans-unit>
+        <trans-unit id="NoModelsAvailable" translate="yes" xml:space="preserve">
+          <source>No models available.</source>
+          <target state="new">No models available.</target>
+        </trans-unit>
+        <trans-unit id="DefaultTag" translate="yes" xml:space="preserve">
+          <source> [default]</source>
+          <target state="new"> [default]</target>
+        </trans-unit>
+        <trans-unit id="ModelIdLabel" translate="yes" xml:space="preserve">
+          <source>Model ID: {0}</source>
+          <target state="new">Model ID: {0}</target>
+        </trans-unit>
+        <trans-unit id="ModelTierGpt4o" translate="yes" xml:space="preserve">
+          <source>GPT-4o</source>
+          <target state="new">GPT-4o</target>
+        </trans-unit>
+        <trans-unit id="ModelTierGpt4" translate="yes" xml:space="preserve">
+          <source>GPT-4</source>
+          <target state="new">GPT-4</target>
+        </trans-unit>
+        <trans-unit id="ModelTierGpt35" translate="yes" xml:space="preserve">
+          <source>GPT-3.5</source>
+          <target state="new">GPT-3.5</target>
+        </trans-unit>
+        <trans-unit id="ModelTierGemini15" translate="yes" xml:space="preserve">
+          <source>Gemini 2.5 Flash</source>
+          <target state="new">Gemini 2.5 Flash</target>
+        </trans-unit>
+        <trans-unit id="ModelTierGeminiPro" translate="yes" xml:space="preserve">
+          <source>Gemini 2.5 Pro</source>
+          <target state="new">Gemini 2.5 Pro</target>
+        </trans-unit>
+        <trans-unit id="ModelTierChat" translate="yes" xml:space="preserve">
+          <source>Chat</source>
+          <target state="new">Chat</target>
+        </trans-unit>
+        <trans-unit id="ModelTierReasoner" translate="yes" xml:space="preserve">
+          <source>Reasoner</source>
+          <target state="new">Reasoner</target>
+        </trans-unit>
+        <trans-unit id="ModelTierOpus" translate="yes" xml:space="preserve">
+          <source>Opus</source>
+          <target state="new">Opus</target>
+        </trans-unit>
+        <trans-unit id="ModelTierSonnet" translate="yes" xml:space="preserve">
+          <source>Sonnet</source>
+          <target state="new">Sonnet</target>
+        </trans-unit>
+        <trans-unit id="ModelTierHaiku" translate="yes" xml:space="preserve">
+          <source>Haiku</source>
+          <target state="new">Haiku</target>
+        </trans-unit>
+        <trans-unit id="ModelTierO1" translate="yes" xml:space="preserve">
+          <source>O1</source>
+          <target state="new">O1</target>
+        </trans-unit>
+        <trans-unit id="ModelTierOther" translate="yes" xml:space="preserve">
+          <source>Other</source>
+          <target state="new">Other</target>
+        </trans-unit>
+        <trans-unit id="RequiredFieldMessageFormat" translate="yes" xml:space="preserve">
+          <source>{0} is required.</source>
+          <target state="new">{0} is required.</target>
+        </trans-unit>
+        <trans-unit id="OpenAnthropicApiKeys" translate="yes" xml:space="preserve">
+          <source>Open Anthropic API Keys</source>
+          <target state="new">Open Anthropic API Keys</target>
+        </trans-unit>
+        <trans-unit id="LibreTranslateInstanceLabel" translate="yes" xml:space="preserve">
+          <source>Instance</source>
+          <target state="new">Instance</target>
+        </trans-unit>
+        <trans-unit id="CustomLabel" translate="yes" xml:space="preserve">
+          <source>Custom</source>
+          <target state="new">Custom</target>
+        </trans-unit>
+        <trans-unit id="OptionalApiKeyLabel" translate="yes" xml:space="preserve">
+          <source>API Key (optional)</source>
+          <target state="new">API Key (optional)</target>
+        </trans-unit>
+        <trans-unit id="OllamaEngineUiFailedToRender" translate="yes" xml:space="preserve">
+          <source>Ollama engine UI failed to render.</source>
+          <target state="new">Ollama engine UI failed to render.</target>
+        </trans-unit>
+        <trans-unit id="ChatGptModelTooltipGpt35Turbo" translate="yes" xml:space="preserve">
+          <source>⚡ Fast and affordable (4k tokens)</source>
+          <target state="new">⚡ Fast and affordable (4k tokens)</target>
+        </trans-unit>
+        <trans-unit id="ChatGptModelTooltipGpt35Turbo16k" translate="yes" xml:space="preserve">
+          <source>⚡ 16k token context</source>
+          <target state="new">⚡ 16k token context</target>
+        </trans-unit>
+        <trans-unit id="ChatGptModelTooltipGpt4" translate="yes" xml:space="preserve">
+          <source>🧠 More capable but slower and costly</source>
+          <target state="new">🧠 More capable but slower and costly</target>
+        </trans-unit>
+        <trans-unit id="ChatGptModelTooltipGpt4Turbo" translate="yes" xml:space="preserve">
+          <source>🟢 Faster and cheaper GPT-4 variant</source>
+          <target state="new">🟢 Faster and cheaper GPT-4 variant</target>
+        </trans-unit>
+        <trans-unit id="ChatGptModelTooltipGpt4o" translate="yes" xml:space="preserve">
+          <source>👁 Multimodal and real-time model</source>
+          <target state="new">👁 Multimodal and real-time model</target>
+        </trans-unit>
+        <trans-unit id="ChatGptModelTooltipGpt4oMini" translate="yes" xml:space="preserve">
+          <source>⚡ GPT-4o Mini - fast and compact</source>
+          <target state="new">⚡ GPT-4o Mini - fast and compact</target>
+        </trans-unit>
+        <trans-unit id="OpenAiProviderVariantLabel" translate="yes" xml:space="preserve">
+          <source>Provider</source>
+          <target state="new">Provider</target>
+        </trans-unit>
+        <trans-unit id="OpenAiProviderVariantOfficialOpenAi" translate="yes" xml:space="preserve">
+          <source>Official OpenAI</source>
+          <target state="new">Official OpenAI</target>
+        </trans-unit>
+        <trans-unit id="OpenAiProviderVariantCustomOpenAiCompatible" translate="yes" xml:space="preserve">
+          <source>Custom OpenAI-Compatible</source>
+          <target state="new">Custom OpenAI-Compatible</target>
+        </trans-unit>
+        <trans-unit id="OpenAiCompatibleProviderDescription" translate="yes" xml:space="preserve">
+          <source>Configure an OpenAI-compatible endpoint, API key, and model. Live model fetch is optional; if the provider does not expose /models cleanly, keep a manual model id.</source>
+          <target state="new">Configure an OpenAI-compatible endpoint, API key, and model. Live model fetch is optional; if the provider does not expose /models cleanly, keep a manual model id.</target>
+        </trans-unit>
+        <trans-unit id="OpenAiCompatibleLiveModelFetchFailed" translate="yes" xml:space="preserve">
+          <source>Could not fetch models from the configured OpenAI-compatible provider. Keep a manual model id or verify the endpoint and credentials.</source>
+          <target state="new">Could not fetch models from the configured OpenAI-compatible provider. Keep a manual model id or verify the endpoint and credentials.</target>
+        </trans-unit>
+        <trans-unit id="OpenAiCompatibleManualModelHint" translate="yes" xml:space="preserve">
+          <source>Use the exact model id exposed by your OpenAI-compatible provider when live model listing is unavailable or disabled.</source>
+          <target state="new">Use the exact model id exposed by your OpenAI-compatible provider when live model listing is unavailable or disabled.</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossarySectionLabel" translate="yes" xml:space="preserve">
+          <source>Dialogue glossary</source>
+          <target state="new">Dialogue glossary</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossaryDescription" translate="yes" xml:space="preserve">
+          <source>Inject a structured glossary into dialogue-family LLM requests using an operator-managed JSON file.</source>
+          <target state="new">Inject a structured glossary into dialogue-family LLM requests using an operator-managed JSON file.</target>
+        </trans-unit>
+        <trans-unit id="EnableDialogueGlossaryInjectionLabel" translate="yes" xml:space="preserve">
+          <source>Enable dialogue glossary injection</source>
+          <target state="new">Enable dialogue glossary injection</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossaryFilePathLabel" translate="yes" xml:space="preserve">
+          <source>Dialogue glossary file path</source>
+          <target state="new">Dialogue glossary file path</target>
+        </trans-unit>
+        <trans-unit id="ReloadDialogueGlossaryButtonLabel" translate="yes" xml:space="preserve">
+          <source>Reload dialogue glossary</source>
+          <target state="new">Reload dialogue glossary</target>
+        </trans-unit>
+        <trans-unit id="ClearDialogueGlossaryButtonLabel" translate="yes" xml:space="preserve">
+          <source>Clear loaded glossary</source>
+          <target state="new">Clear loaded glossary</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossaryStatusLoaded" translate="yes" xml:space="preserve">
+          <source>Loaded</source>
+          <target state="new">Loaded</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossaryStatusFailed" translate="yes" xml:space="preserve">
+          <source>Failed</source>
+          <target state="new">Failed</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossaryStatusIdle" translate="yes" xml:space="preserve">
+          <source>Idle</source>
+          <target state="new">Idle</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossarySnapshotSummary" translate="yes" xml:space="preserve">
+          <source>Status: {0}  |  Entries: {1}  |  Skipped rows: {2}</source>
+          <target state="new">Status: {0}  |  Entries: {1}  |  Skipped rows: {2}</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossarySnapshotPath" translate="yes" xml:space="preserve">
+          <source>Last path: {0}</source>
+          <target state="new">Last path: {0}</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossarySnapshotUtc" translate="yes" xml:space="preserve">
+          <source>Last load UTC: {0}</source>
+          <target state="new">Last load UTC: {0}</target>
+        </trans-unit>
+        <trans-unit id="DialogueGlossarySnapshotFailure" translate="yes" xml:space="preserve">
+          <source>Last glossary load failure: {0}</source>
+          <target state="new">Last glossary load failure: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerWindowTitle" translate="yes" xml:space="preserve">
+          <source>Translator Debugger and Metrics</source>
+          <target state="new">Translator Debugger and Metrics</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerWindowDescription" translate="yes" xml:space="preserve">
+          <source>Aggregated runtime metrics and latest visible story-surface provenance for this session.</source>
+          <target state="new">Aggregated runtime metrics and latest visible story-surface provenance for this session.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerRetranslateVisibleDialogueAndPersist" translate="yes" xml:space="preserve">
+          <source>Retranslate Visible Story Text And Persist</source>
+          <target state="new">Retranslate Visible Story Text And Persist</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerClearMetrics" translate="yes" xml:space="preserve">
+          <source>Clear Metrics</source>
+          <target state="new">Clear Metrics</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerClearDialogueSessions" translate="yes" xml:space="preserve">
+          <source>Clear Dialogue Sessions</source>
+          <target state="new">Clear Dialogue Sessions</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerRetranslatingVisibleDialogue" translate="yes" xml:space="preserve">
+          <source>Retranslating the currently visible story-facing text...</source>
+          <target state="new">Retranslating the currently visible story-facing text...</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerNoMetricsRecorded" translate="yes" xml:space="preserve">
+          <source>No translator metrics have been recorded in this session yet.</source>
+          <target state="new">No translator metrics have been recorded in this session yet.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerEngineSummary" translate="yes" xml:space="preserve">
+          <source>Engines: {0}  |  Live requests: {1}  |  Context-aware: {2}  |  Failures: {3}  |  Short circuits: {4}</source>
+          <target state="new">Engines: {0}  |  Live requests: {1}  |  Context-aware: {2}  |  Failures: {3}  |  Short circuits: {4}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerStructuredSummary" translate="yes" xml:space="preserve">
+          <source>Structured attempts: {0}  |  Structured successes: {1}  |  Glossary-assisted: {2}</source>
+          <target state="new">Structured attempts: {0}  |  Structured successes: {1}  |  Glossary-assisted: {2}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueSessionsCount" translate="yes" xml:space="preserve">
+          <source>Dialogue sessions: {0}</source>
+          <target state="new">Dialogue sessions: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableEngine" translate="yes" xml:space="preserve">
+          <source>Engine</source>
+          <target state="new">Engine</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableProvider" translate="yes" xml:space="preserve">
+          <source>Provider</source>
+          <target state="new">Provider</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableModel" translate="yes" xml:space="preserve">
+          <source>Model</source>
+          <target state="new">Model</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableLiveRequests" translate="yes" xml:space="preserve">
+          <source>Live Requests</source>
+          <target state="new">Live Requests</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableContextAware" translate="yes" xml:space="preserve">
+          <source>Context-Aware</source>
+          <target state="new">Context-Aware</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableStructured" translate="yes" xml:space="preserve">
+          <source>Structured</source>
+          <target state="new">Structured</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableStructuredOk" translate="yes" xml:space="preserve">
+          <source>Structured OK</source>
+          <target state="new">Structured OK</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableGlossary" translate="yes" xml:space="preserve">
+          <source>Glossary</source>
+          <target state="new">Glossary</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableSuccesses" translate="yes" xml:space="preserve">
+          <source>Successes</source>
+          <target state="new">Successes</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableFailures" translate="yes" xml:space="preserve">
+          <source>Failures</source>
+          <target state="new">Failures</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableShortCircuits" translate="yes" xml:space="preserve">
+          <source>Short Circuits</source>
+          <target state="new">Short Circuits</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableAverageMs" translate="yes" xml:space="preserve">
+          <source>Avg ms</source>
+          <target state="new">Avg ms</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableMaxMs" translate="yes" xml:space="preserve">
+          <source>Max ms</source>
+          <target state="new">Max ms</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableLastMs" translate="yes" xml:space="preserve">
+          <source>Last ms</source>
+          <target state="new">Last ms</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableLastRequestUtc" translate="yes" xml:space="preserve">
+          <source>Last Request UTC</source>
+          <target state="new">Last Request UTC</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerMetricsTableLastFailure" translate="yes" xml:space="preserve">
+          <source>Last Failure</source>
+          <target state="new">Last Failure</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueSessionDescription" translate="yes" xml:space="preserve">
+          <source>Runtime-only dialogue sessions currently retained for context-aware translation.</source>
+          <target state="new">Runtime-only dialogue sessions currently retained for context-aware translation.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueSessionTableNamespace" translate="yes" xml:space="preserve">
+          <source>Namespace</source>
+          <target state="new">Namespace</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueSessionTableSessionKey" translate="yes" xml:space="preserve">
+          <source>Session Key</source>
+          <target state="new">Session Key</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueSessionTableLastSpeaker" translate="yes" xml:space="preserve">
+          <source>Last Speaker</source>
+          <target state="new">Last Speaker</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueSessionTableRetainedTurns" translate="yes" xml:space="preserve">
+          <source>Retained Turns</source>
+          <target state="new">Retained Turns</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueSessionTableLastObservedUtc" translate="yes" xml:space="preserve">
+          <source>Last Observed UTC</source>
+          <target state="new">Last Observed UTC</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueGlossarySummary" translate="yes" xml:space="preserve">
+          <source>Dialogue glossary enabled: {0}  |  Entries: {1}  |  Skipped rows: {2}</source>
+          <target state="new">Dialogue glossary enabled: {0}  |  Entries: {1}  |  Skipped rows: {2}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueGlossaryPath" translate="yes" xml:space="preserve">
+          <source>Configured file path: {0}</source>
+          <target state="new">Configured file path: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueGlossaryLoadStatus" translate="yes" xml:space="preserve">
+          <source>Last glossary load: {0}  |  Last load UTC: {1}</source>
+          <target state="new">Last glossary load: {0}  |  Last load UTC: {1}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerReloadDialogueGlossary" translate="yes" xml:space="preserve">
+          <source>Reload Dialogue Glossary</source>
+          <target state="new">Reload Dialogue Glossary</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerClearDialogueGlossary" translate="yes" xml:space="preserve">
+          <source>Clear Loaded Glossary</source>
+          <target state="new">Clear Loaded Glossary</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueGlossaryFailure" translate="yes" xml:space="preserve">
+          <source>Last glossary load failure: {0}</source>
+          <target state="new">Last glossary load failure: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueOverridePrimaryAndEffective" translate="yes" xml:space="preserve">
+          <source>Primary engine: {0}  |  Effective dialogue engine: {1}</source>
+          <target state="new">Primary engine: {0}  |  Effective dialogue engine: {1}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueOverrideDisabled" translate="yes" xml:space="preserve">
+          <source>Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine.</source>
+          <target state="new">Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueOverrideMatchesPrimary" translate="yes" xml:space="preserve">
+          <source>Dialogue LLM override is enabled, but it currently matches the primary engine selection.</source>
+          <target state="new">Dialogue LLM override is enabled, but it currently matches the primary engine selection.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueOverrideActive" translate="yes" xml:space="preserve">
+          <source>Dialogue LLM override is active and routes dialogue-family surfaces through {0}.</source>
+          <target state="new">Dialogue LLM override is active and routes dialogue-family surfaces through {0}.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueOverrideInactiveFallback" translate="yes" xml:space="preserve">
+          <source>Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine.</source>
+          <target state="new">Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDialogueOverrideNotConfigured" translate="yes" xml:space="preserve">
+          <source>Dialogue LLM override is enabled, but {0} is not fully configured yet. Dialogue-family surfaces keep using the primary engine.</source>
+          <target state="new">Dialogue LLM override is enabled, but {0} is not fully configured yet. Dialogue-family surfaces keep using the primary engine.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerOpenAiProviderSummary" translate="yes" xml:space="preserve">
+          <source>OpenAI-family provider: {0}  |  Variant: {1}  |  Configured: {2}</source>
+          <target state="new">OpenAI-family provider: {0}  |  Variant: {1}  |  Configured: {2}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerOpenAiEndpoint" translate="yes" xml:space="preserve">
+          <source>Endpoint: {0}</source>
+          <target state="new">Endpoint: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerOpenAiModelSummary" translate="yes" xml:space="preserve">
+          <source>Model: {0}  |  Live models: {1}</source>
+          <target state="new">Model: {0}  |  Live models: {1}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerOpenAiRefreshSummary" translate="yes" xml:space="preserve">
+          <source>Last model refresh: {0}  |  Provider: {1}  |  Current model count: {2}</source>
+          <target state="new">Last model refresh: {0}  |  Provider: {1}  |  Current model count: {2}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerOpenAiRefreshUtc" translate="yes" xml:space="preserve">
+          <source>Last refresh UTC: {0}</source>
+          <target state="new">Last refresh UTC: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerOpenAiRefreshEndpoint" translate="yes" xml:space="preserve">
+          <source>Refresh endpoint: {0}</source>
+          <target state="new">Refresh endpoint: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerOpenAiRefreshFailure" translate="yes" xml:space="preserve">
+          <source>Last model refresh failure: {0}</source>
+          <target state="new">Last model refresh failure: {0}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerYes" translate="yes" xml:space="preserve">
+          <source>Yes</source>
+          <target state="new">Yes</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerNo" translate="yes" xml:space="preserve">
+          <source>No</source>
+          <target state="new">No</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerEnabled" translate="yes" xml:space="preserve">
+          <source>Enabled</source>
+          <target state="new">Enabled</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerDisabled" translate="yes" xml:space="preserve">
+          <source>Disabled</source>
+          <target state="new">Disabled</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerSucceeded" translate="yes" xml:space="preserve">
+          <source>Succeeded</source>
+          <target state="new">Succeeded</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerFailed" translate="yes" xml:space="preserve">
+          <source>Failed</source>
+          <target state="new">Failed</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerNeverAttempted" translate="yes" xml:space="preserve">
+          <source>Never attempted</source>
+          <target state="new">Never attempted</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerUnknown" translate="yes" xml:space="preserve">
+          <source>Unknown</source>
+          <target state="new">Unknown</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceSectionTitle" translate="yes" xml:space="preserve">
+          <source>Latest Visible Story Surface</source>
+          <target state="new">Latest Visible Story Surface</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceDescription" translate="yes" xml:space="preserve">
+          <source>Most recent visible story-facing source and translated payload retained for debugger inspection.</source>
+          <target state="new">Most recent visible story-facing source and translated payload retained for debugger inspection.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNoSnapshot" translate="yes" xml:space="preserve">
+          <source>No visible story-surface snapshot is currently retained.</source>
+          <target state="new">No visible story-surface snapshot is currently retained.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceViewInDbManager" translate="yes" xml:space="preserve">
+          <source>View In DB Manager</source>
+          <target state="new">View In DB Manager</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNoColumns" translate="yes" xml:space="preserve">
+          <source>No visible story-surface fields are available to display.</source>
+          <target state="new">No visible story-surface fields are available to display.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldColumn" translate="yes" xml:space="preserve">
+          <source>Field</source>
+          <target state="new">Field</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceValueColumn" translate="yes" xml:space="preserve">
+          <source>Value</source>
+          <target state="new">Value</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldSurface" translate="yes" xml:space="preserve">
+          <source>Surface</source>
+          <target state="new">Surface</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldProvenance" translate="yes" xml:space="preserve">
+          <source>Provenance</source>
+          <target state="new">Provenance</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldDbTable" translate="yes" xml:space="preserve">
+          <source>DB table</source>
+          <target state="new">DB table</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldEffectiveEngine" translate="yes" xml:space="preserve">
+          <source>Effective engine</source>
+          <target state="new">Effective engine</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldRuntimeOnlyDialogueContext" translate="yes" xml:space="preserve">
+          <source>Runtime-only dialogue context</source>
+          <target state="new">Runtime-only dialogue context</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldObservedUtc" translate="yes" xml:space="preserve">
+          <source>Last updated (UTC)</source>
+          <target state="new">Last updated (UTC)</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldOriginalSpeaker" translate="yes" xml:space="preserve">
+          <source>Original speaker</source>
+          <target state="new">Original speaker</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldOriginalText" translate="yes" xml:space="preserve">
+          <source>Original text</source>
+          <target state="new">Original text</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldOriginalOptions" translate="yes" xml:space="preserve">
+          <source>Original options</source>
+          <target state="new">Original options</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedSpeaker" translate="yes" xml:space="preserve">
+          <source>Translated speaker</source>
+          <target state="new">Translated speaker</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedText" translate="yes" xml:space="preserve">
+          <source>Translated text</source>
+          <target state="new">Translated text</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedOptions" translate="yes" xml:space="preserve">
+          <source>Translated options</source>
+          <target state="new">Translated options</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceFieldLastRetranslation" translate="yes" xml:space="preserve">
+          <source>Last retranslation</source>
+          <target state="new">Last retranslation</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNameTalk" translate="yes" xml:space="preserve">
+          <source>Talk</source>
+          <target state="new">Talk</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNameBattleTalk" translate="yes" xml:space="preserve">
+          <source>BattleTalk</source>
+          <target state="new">BattleTalk</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNameTalkSubtitle" translate="yes" xml:space="preserve">
+          <source>TalkSubtitle</source>
+          <target state="new">TalkSubtitle</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString" translate="yes" xml:space="preserve">
+          <source>CutSceneSelectString</source>
+          <target state="new">CutSceneSelectString</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNameTextGimmickHint" translate="yes" xml:space="preserve">
+          <source>TextGimmickHint</source>
+          <target state="new">TextGimmickHint</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceProvenanceDbReuse" translate="yes" xml:space="preserve">
+          <source>DB reuse</source>
+          <target state="new">DB reuse</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation" translate="yes" xml:space="preserve">
+          <source>Fresh live translation</source>
+          <target state="new">Fresh live translation</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslationRuntimeOnlyContext" translate="yes" xml:space="preserve">
+          <source>Fresh live translation (runtime-only dialogue context)</source>
+          <target state="new">Fresh live translation (runtime-only dialogue context)</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNoVisibleText" translate="yes" xml:space="preserve">
+          <source>No visible {0} text is available to retranslate.</source>
+          <target state="new">No visible {0} text is available to retranslate.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNoUsableTranslation" translate="yes" xml:space="preserve">
+          <source>The visible {0} text did not produce a usable translated result.</source>
+          <target state="new">The visible {0} text did not produce a usable translated result.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfacePersistenceFailed" translate="yes" xml:space="preserve">
+          <source>The visible {0} text was refreshed, but persistence failed: {1}</source>
+          <target state="new">The visible {0} text was refreshed, but persistence failed: {1}</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfacePersistedButVisibleChanged" translate="yes" xml:space="preserve">
+          <source>The refreshed {0} text was persisted, but the visible content changed before it could be applied.</source>
+          <target state="new">The refreshed {0} text was persisted, but the visible content changed before it could be applied.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceRetranslatedAndPersisted" translate="yes" xml:space="preserve">
+          <source>The visible {0} text was retranslated and persisted.</source>
+          <target state="new">The visible {0} text was retranslated and persisted.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceRetranslationFailed" translate="yes" xml:space="preserve">
+          <source>Retranslating the visible {0} text failed before a usable result could be applied.</source>
+          <target state="new">Retranslating the visible {0} text failed before a usable result could be applied.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceNoVisibleSurfaceAvailable" translate="yes" xml:space="preserve">
+          <source>No visible story-facing text is currently available to retranslate.</source>
+          <target state="new">No visible story-facing text is currently available to retranslate.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceUnexpectedFailure" translate="yes" xml:space="preserve">
+          <source>Visible story-surface retranslation failed unexpectedly before a result could be reported.</source>
+          <target state="new">Visible story-surface retranslation failed unexpectedly before a result could be reported.</target>
+        </trans-unit>
+        <trans-unit id="TranslatorDebuggerVisibleStorySurfaceCanceled" translate="yes" xml:space="preserve">
+          <source>Visible story-surface retranslation was canceled before completion.</source>
+          <target state="new">Visible story-surface retranslation was canceled before completion.</target>
+        </trans-unit>
+        <trans-unit id="GeminiModelTooltipPro" translate="yes" xml:space="preserve">
+          <source>⚪ Lowest-cost Gemini 2.5 Flash-Lite text model.</source>
+          <target state="new">⚪ Lowest-cost Gemini 2.5 Flash-Lite text model.</target>
+        </trans-unit>
+        <trans-unit id="GeminiModelTooltip15Pro" translate="yes" xml:space="preserve">
+          <source>🟢 Highest-quality Gemini 2.5 Pro text model.</source>
+          <target state="new">🟢 Highest-quality Gemini 2.5 Pro text model.</target>
+        </trans-unit>
+        <trans-unit id="GeminiModelTooltip15Flash" translate="yes" xml:space="preserve">
+          <source>⚡ Default Gemini 2.5 Flash text model with balanced speed and quality.</source>
+          <target state="new">⚡ Default Gemini 2.5 Flash text model with balanced speed and quality.</target>
+        </trans-unit>
+        <trans-unit id="DeepSeekModelTooltipChat" translate="yes" xml:space="preserve">
+          <source>💬 Optimized for general chat and speed</source>
+          <target state="new">💬 Optimized for general chat and speed</target>
+        </trans-unit>
+        <trans-unit id="DeepSeekModelTooltipReasoner" translate="yes" xml:space="preserve">
+          <source>🧠 Reasoning and problem-solving tasks</source>
+          <target state="new">🧠 Reasoning and problem-solving tasks</target>
+        </trans-unit>
+        <trans-unit id="ClaudeModelTooltipSonnet4" translate="yes" xml:space="preserve">
+          <source>Balanced quality, latency, and cost for general translation.</source>
+          <target state="new">Balanced quality, latency, and cost for general translation.</target>
+        </trans-unit>
+        <trans-unit id="ClaudeModelTooltipSonnet37" translate="yes" xml:space="preserve">
+          <source>Strong general-purpose Claude alias with broad capability.</source>
+          <target state="new">Strong general-purpose Claude alias with broad capability.</target>
+        </trans-unit>
+        <trans-unit id="ClaudeModelTooltipHaiku35" translate="yes" xml:space="preserve">
+          <source>Fastest Claude tier for lower latency and lower cost.</source>
+          <target state="new">Fastest Claude tier for lower latency and lower cost.</target>
+        </trans-unit>
+        <trans-unit id="ClaudeModelTooltipOpus41" translate="yes" xml:space="preserve">
+          <source>Highest-tier Claude model when you want maximum quality.</source>
+          <target state="new">Highest-tier Claude model when you want maximum quality.</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiCaptureForSupportedToastsLabel" translate="yes" xml:space="preserve">
+          <source>Use ToastGui-assisted capture for supported normal/error toasts (experimental)</source>
+          <target state="new">Use ToastGui-assisted capture for supported normal/error toasts (experimental)</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiCaptureForSupportedToastsDescription" translate="yes" xml:space="preserve">
+          <source>Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path.</source>
+          <target state="new">Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path.</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiNormalToastRouteStatusLabel" translate="yes" xml:space="preserve">
+          <source>Supported normal toast route</source>
+          <target state="new">Supported normal toast route</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiErrorToastRouteStatusLabel" translate="yes" xml:space="preserve">
+          <source>Supported error toast route</source>
+          <target state="new">Supported error toast route</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiQuestToastRouteStatusLabel" translate="yes" xml:space="preserve">
+          <source>Quest toast route</source>
+          <target state="new">Quest toast route</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiTextGimmickHintRouteStatusLabel" translate="yes" xml:space="preserve">
+          <source>Text Gimmick Hint route</source>
+          <target state="new">Text Gimmick Hint route</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiRouteStateLegacyAddonHandlers" translate="yes" xml:space="preserve">
+          <source>Legacy addon handlers</source>
+          <target state="new">Legacy addon handlers</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiRouteStateCapturePrefetch" translate="yes" xml:space="preserve">
+          <source>ToastGui capture/prefetch</source>
+          <target state="new">ToastGui capture/prefetch</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiRouteStateFullRuntime" translate="yes" xml:space="preserve">
+          <source>ToastGui full runtime</source>
+          <target state="new">ToastGui full runtime</target>
+        </trans-unit>
+        <trans-unit id="ToastGuiRouteStateAddonHandlerOnly" translate="yes" xml:space="preserve">
+          <source>Addon handler only</source>
+          <target state="new">Addon handler only</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeNoActiveWatch" translate="yes" xml:space="preserve">
+          <source>No active addon probe watch to stop.</source>
+          <target state="new">No active addon probe watch to stop.</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeStopped" translate="yes" xml:space="preserve">
+          <source>Addon probe watch stopped.</source>
+          <target state="new">Addon probe watch stopped.</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeUsage" translate="yes" xml:space="preserve">
+          <source>Usage: /egloaddonprobe <it id="1" pos="open">&lt;addon name&gt;</it> [index] [duration] or /egloaddonprobe stop</source>
+          <target state="new">Usage: /egloaddonprobe <it id="1" pos="open">&lt;addon name&gt;</it> [index] [duration] or /egloaddonprobe stop</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeInvalidDurationFormat" translate="yes" xml:space="preserve">
+          <source>Invalid addon probe duration. Use values like 90s or 15m, up to {0} minutes.</source>
+          <target state="new">Invalid addon probe duration. Use values like 90s or 15m, up to {0} minutes.</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeStartedFormat" translate="yes" xml:space="preserve">
+          <source>Addon probe watch started for '{0}'[{1}] for {2}. Check the Dalamud log for event and tree dumps.</source>
+          <target state="new">Addon probe watch started for '{0}'[{1}] for {2}. Check the Dalamud log for event and tree dumps.</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeDurationMinuteFormat" translate="yes" xml:space="preserve">
+          <source>{0} minute</source>
+          <target state="new">{0} minute</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeDurationMinutesFormat" translate="yes" xml:space="preserve">
+          <source>{0} minutes</source>
+          <target state="new">{0} minutes</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeDurationSecondFormat" translate="yes" xml:space="preserve">
+          <source>{0} second</source>
+          <target state="new">{0} second</target>
+        </trans-unit>
+        <trans-unit id="AddonProbeDurationSecondsFormat" translate="yes" xml:space="preserve">
+          <source>{0} seconds</source>
+          <target state="new">{0} seconds</target>
         </trans-unit>
       </group>
     </body>
