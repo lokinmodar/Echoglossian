@@ -560,40 +560,6 @@ internal abstract class QuestAddonHandlerBase
         candidateAddresses,
         visitedCandidates);
 
-    var siblingParent = preferredHoverNode != null
-        ? preferredHoverNode->ParentNode
-        : null;
-    if (siblingParent != null)
-    {
-      HashSet<nint> visitedSiblings = [];
-      var inspectedSiblingCount = 0;
-      for (var sibling = siblingParent->ChildNode;
-           sibling != null &&
-           PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
-               (nint)sibling,
-               nint.Zero,
-               inspectedSiblingCount,
-               PopupSectionBodySearchMaxSiblingCount,
-               visitedSiblings);
-           sibling = sibling->NextSiblingNode, inspectedSiblingCount++)
-      {
-        if (sibling->Type == NodeType.Collision)
-        {
-          AddPopupBodyHoverCandidate(
-              sibling,
-              textLeft,
-              textTop,
-              textRight,
-              textBottom,
-              isSectionBounded: sibling->ParentNode == siblingParent,
-              distanceFromText: 1,
-              candidates,
-              candidateAddresses,
-              visitedCandidates);
-        }
-      }
-    }
-
     if (preferredHoverNode != null &&
         preferredHoverNode != (AtkResNode*)textNode)
     {
