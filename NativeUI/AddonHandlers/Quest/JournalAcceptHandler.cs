@@ -24,10 +24,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   private static readonly TimeSpan JournalAcceptRetryInterval =
       TimeSpan.FromSeconds(2);
 
-  private const float JournalAcceptParentHoverWidthThreshold = 12f;
-
-  private const float JournalAcceptParentHoverHeightThreshold = 18f;
-
   private JournalAcceptHoverState? currentJournalAcceptHoverState;
 
   private bool hasPendingJournalAcceptTranslations;
@@ -563,6 +559,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
+            out _,
             out var promotedOriginalQuestMessage) ||
         string.IsNullOrWhiteSpace(promotedOriginalQuestMessage) ||
         string.Equals(
@@ -988,18 +985,11 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
+            out var preferredHoverNode,
             out originalHoverQuestMessage))
     {
       var messageHoverKey = $"JournalAccept-QuestBody-{(nint)messageNode:X}";
-      var preferredHoverNode =
-          TryFindPopupSectionBodyTextNodeByHeadingTextId(
-              addon,
-              JournalAcceptSummaryTextId,
-              out _,
-              out var structuralHoverNode)
-              ? structuralHoverNode
-              : null;
-      if (TryBuildJournalAcceptMessageHoverBounds(
+      if (TryBuildPopupBodyHoverBounds(
               messageNode,
               preferredHoverNode,
               out var messageTopLeft,
@@ -1070,6 +1060,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// <param name="addon">The live JournalAccept addon instance.</param>
   /// <param name="state">The current JournalAccept hover state.</param>
   /// <param name="messageNode">The resolved body node, if any.</param>
+  /// <param name="preferredHoverNode">
+  ///     The optional structural body node used only for tooltip geometry.
+  /// </param>
   /// <param name="originalHoverQuestMessage">
   ///     The preferred original body text for hover presentation.
   /// </param>
@@ -1078,9 +1071,11 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       AtkUnitBase* addon,
       JournalAcceptHoverState state,
       out AtkTextNode* messageNode,
+      out AtkResNode* preferredHoverNode,
       out string originalHoverQuestMessage)
   {
     messageNode = null;
+    preferredHoverNode = null;
     originalHoverQuestMessage = state.OriginalQuestMessage;
     AtkTextNode* directMatchNode = null;
     string directMatchHoverMessage = state.OriginalQuestMessage;
@@ -1100,6 +1095,10 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       if (!string.IsNullOrWhiteSpace(expandedVisibleBody))
       {
         messageNode = candidate;
+        this.TryResolveJournalAcceptPreferredHoverNode(
+            addon,
+            messageNode,
+            out preferredHoverNode);
         originalHoverQuestMessage = expandedVisibleBody;
         return true;
       }
@@ -1123,6 +1122,10 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     if (directMatchNode != null)
     {
       messageNode = directMatchNode;
+      this.TryResolveJournalAcceptPreferredHoverNode(
+          addon,
+          messageNode,
+          out preferredHoverNode);
       originalHoverQuestMessage = directMatchHoverMessage;
       return true;
     }
@@ -1130,7 +1133,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     if (TryFindPopupSectionBodyTextNodeByHeadingTextId(
             addon,
             JournalAcceptSummaryTextId,
-            out var structuralMessageNode))
+            out var structuralMessageNode,
+            out preferredHoverNode))
     {
       messageNode = structuralMessageNode;
       originalHoverQuestMessage = state.OriginalQuestMessage;
@@ -1138,6 +1142,35 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     }
 
     return false;
+  }
+
+  /// <summary>
+  ///     Resolves the structural body node only when the heading-based popup
+  ///     resolver identifies the same live text node selected for payload work.
+  /// </summary>
+  /// <param name="addon">The live JournalAccept addon instance.</param>
+  /// <param name="messageNode">The live body text node.</param>
+  /// <param name="preferredHoverNode">
+  ///     The matching structural body node used only for tooltip geometry.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when a matching structural body node was
+  ///     resolved; otherwise, <see langword="false" />.
+  /// </returns>
+  private unsafe bool TryResolveJournalAcceptPreferredHoverNode(
+      AtkUnitBase* addon,
+      AtkTextNode* messageNode,
+      out AtkResNode* preferredHoverNode)
+  {
+    preferredHoverNode = null;
+    return messageNode != null &&
+           TryFindPopupSectionBodyTextNodeByHeadingTextId(
+               addon,
+               JournalAcceptSummaryTextId,
+               out var structuralMessageNode,
+               out var structuralHoverNode) &&
+           structuralMessageNode == messageNode &&
+           (preferredHoverNode = structuralHoverNode) != null;
   }
 
   /// <summary>
@@ -1299,234 +1332,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
-  ///     Builds broader hover bounds for the JournalAccept body when the live
-  ///     text node only covers one line inside a larger visible body
-  ///     container.
-  /// </summary>
-  /// <param name="messageNode">The resolved JournalAccept body text node.</param>
-  /// <param name="topLeft">The promoted hover top-left coordinate.</param>
-  /// <param name="bottomRight">The promoted hover bottom-right coordinate.</param>
-  /// <returns>
-  ///     <c>true</c> when a larger parent container should drive the hover
-  ///     target; otherwise, <c>false</c>.
-  /// </returns>
-  private static unsafe bool TryBuildJournalAcceptMessageHoverBounds(
-      AtkTextNode* messageNode,
-      AtkResNode* preferredHoverNode,
-      out Vector2 topLeft,
-      out Vector2 bottomRight)
-  {
-    topLeft = Vector2.Zero;
-    bottomRight = Vector2.Zero;
-    if (messageNode == null || !messageNode->IsVisible())
-    {
-      return false;
-    }
-
-    var textWidth = Math.Max(1f, messageNode->GetWidth());
-    var textHeight = Math.Max(1f, messageNode->GetHeight());
-    if (preferredHoverNode != null &&
-        preferredHoverNode->IsVisible())
-    {
-      var preferredHoverWidth = Math.Max(1f, preferredHoverNode->Width);
-      var preferredHoverHeight = Math.Max(1f, preferredHoverNode->Height);
-      if (ShouldUseJournalAcceptParentHoverBounds(
-              textWidth,
-              textHeight,
-              preferredHoverWidth,
-              preferredHoverHeight))
-      {
-        BuildJournalAcceptMessageHoverBounds(
-            messageNode,
-            preferredHoverNode->ScreenX,
-            preferredHoverNode->ScreenY,
-            preferredHoverWidth,
-            preferredHoverHeight,
-            out topLeft,
-            out bottomRight);
-        return true;
-      }
-    }
-
-    List<nint> ancestorNodeAddresses = [];
-    List<Vector2> ancestorSizes = [];
-    for (var currentNode = messageNode->AtkResNode.ParentNode;
-         currentNode != null;
-         currentNode = currentNode->ParentNode)
-    {
-      if (!currentNode->IsVisible())
-      {
-        continue;
-      }
-
-      ancestorNodeAddresses.Add((nint)currentNode);
-      ancestorSizes.Add(
-          new Vector2(
-              Math.Max(1f, currentNode->Width),
-              Math.Max(1f, currentNode->Height)));
-    }
-
-    var ancestorLevel = ResolveJournalAcceptHoverAncestorLevel(
-        textWidth,
-        textHeight,
-        ancestorSizes);
-    if (ancestorLevel < 0 ||
-        ancestorLevel >= ancestorNodeAddresses.Count)
-    {
-      return false;
-    }
-
-    var hoverNode = (AtkResNode*)ancestorNodeAddresses[ancestorLevel];
-    var hoverWidth = Math.Max(1f, hoverNode->Width);
-    var hoverHeight = Math.Max(1f, hoverNode->Height);
-    BuildJournalAcceptMessageHoverBounds(
-        messageNode,
-        hoverNode->ScreenX,
-        hoverNode->ScreenY,
-        hoverWidth,
-        hoverHeight,
-        out topLeft,
-        out bottomRight);
-    return true;
-  }
-
-  /// <summary>
-  ///     Builds one JournalAccept body hover rectangle by unioning the live
-  ///     text-node bounds with one broader structural hover region.
-  /// </summary>
-  /// <param name="messageNode">The live JournalAccept body text node.</param>
-  /// <param name="hoverLeft">The broader hover-region left coordinate.</param>
-  /// <param name="hoverTop">The broader hover-region top coordinate.</param>
-  /// <param name="hoverWidth">The broader hover-region width.</param>
-  /// <param name="hoverHeight">The broader hover-region height.</param>
-  /// <param name="topLeft">The resulting hover top-left coordinate.</param>
-  /// <param name="bottomRight">The resulting hover bottom-right coordinate.</param>
-  private static unsafe void BuildJournalAcceptMessageHoverBounds(
-      AtkTextNode* messageNode,
-      float hoverLeft,
-      float hoverTop,
-      float hoverWidth,
-      float hoverHeight,
-      out Vector2 topLeft,
-      out Vector2 bottomRight)
-  {
-    var textWidth = Math.Max(1f, messageNode->GetWidth());
-    var textHeight = Math.Max(1f, messageNode->GetHeight());
-    var textLeft = messageNode->ScreenX;
-    var textTop = messageNode->ScreenY;
-    var textRight = textLeft + textWidth;
-    var textBottom = textTop + textHeight;
-    var hoverRight = hoverLeft + hoverWidth;
-    var hoverBottom = hoverTop + hoverHeight;
-
-    topLeft = new Vector2(
-        Math.Min(textLeft, hoverLeft) - 8f,
-        Math.Min(textTop, hoverTop) - 4f);
-    bottomRight = new Vector2(
-        Math.Max(textRight, hoverRight) + 8f,
-        Math.Max(textBottom, hoverBottom) + 4f);
-  }
-
-  /// <summary>
-  ///     Resolves the first visible JournalAccept ancestor level whose bounds
-  ///     are materially larger than the live text node and therefore better
-  ///     represent the whole description block as a hover target.
-  /// </summary>
-  /// <param name="textWidth">The visible text-node width.</param>
-  /// <param name="textHeight">The visible text-node height.</param>
-  /// <param name="ancestorSizes">
-  ///     The visible ancestor sizes in parent-chain order, starting at the
-  ///     immediate parent.
-  /// </param>
-  /// <returns>
-  ///     The zero-based ancestor level that should drive the hover bounds, or
-  ///     <c>-1</c> when no visible ancestor qualifies.
-  /// </returns>
-  private static int ResolveJournalAcceptHoverAncestorLevel(
-      float textWidth,
-      float textHeight,
-      IReadOnlyList<Vector2> ancestorSizes)
-  {
-    if (textWidth <= 0f ||
-        textHeight <= 0f ||
-        ancestorSizes == null ||
-        ancestorSizes.Count == 0)
-    {
-      return -1;
-    }
-
-    for (var index = 0; index < ancestorSizes.Count; index++)
-    {
-      var ancestorSize = ancestorSizes[index];
-      if (ShouldUseJournalAcceptParentHoverBounds(
-              textWidth,
-              textHeight,
-              ancestorSize.X,
-              ancestorSize.Y))
-      {
-        return index;
-      }
-    }
-
-    return -1;
-  }
-
-  /// <summary>
-  ///     Reconstructs the JournalAccept parent container screen origin from
-  ///     the visible body text node position and its local offset inside the
-  ///     larger body container.
-  /// </summary>
-  /// <param name="textLeft">The visible body text-node screen X position.</param>
-  /// <param name="textTop">The visible body text-node screen Y position.</param>
-  /// <param name="textLocalX">The text-node local X offset in the parent.</param>
-  /// <param name="textLocalY">The text-node local Y offset in the parent.</param>
-  /// <returns>The reconstructed parent container screen origin.</returns>
-  private static Vector2 ResolveJournalAcceptParentScreenOrigin(
-      float textLeft,
-      float textTop,
-      short textLocalX,
-      short textLocalY)
-  {
-    return new Vector2(textLeft - textLocalX, textTop - textLocalY);
-  }
-
-  /// <summary>
-  ///     Determines whether the JournalAccept body should use its larger
-  ///     parent container as the hover hitbox instead of the narrow live text
-  ///     node bounds.
-  /// </summary>
-  /// <param name="textWidth">The visible text-node width.</param>
-  /// <param name="textHeight">The visible text-node height.</param>
-  /// <param name="parentWidth">The parent container width.</param>
-  /// <param name="parentHeight">The parent container height.</param>
-  /// <returns>
-  ///     <c>true</c> when the parent container is materially larger than the
-  ///     text node; otherwise, <c>false</c>.
-  /// </returns>
-  private static bool ShouldUseJournalAcceptParentHoverBounds(
-      float textWidth,
-      float textHeight,
-      float parentWidth,
-      float parentHeight)
-  {
-    if (textWidth <= 0f ||
-        textHeight <= 0f ||
-        parentWidth <= 0f ||
-        parentHeight <= 0f)
-    {
-      return false;
-    }
-
-    if (parentWidth < textWidth || parentHeight < textHeight)
-    {
-      return false;
-    }
-
-    return (parentWidth - textWidth) >= JournalAcceptParentHoverWidthThreshold ||
-           (parentHeight - textHeight) >= JournalAcceptParentHoverHeightThreshold;
-  }
-
-  /// <summary>
   ///     Removes setup-only emphasis wrappers from JournalAccept body text so
   ///     readable-node comparison can match the richer visible message.
   /// </summary>
@@ -1626,6 +1431,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
+            out _,
             out _))
     {
       SetJournalAcceptMessageNode(
@@ -1686,6 +1492,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
+            out _,
             out _))
     {
       SetJournalAcceptMessageNode(

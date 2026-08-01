@@ -18165,7 +18165,7 @@
                 readable.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryFindJournalAcceptMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryFindJournalAcceptMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,System.String@)">
             <summary>
                 Finds the visible JournalAccept body node, including the expanded
                 runtime body that keeps the quest-sync marker ahead of the readable
@@ -18174,10 +18174,28 @@
             <param name="addon">The live JournalAccept addon instance.</param>
             <param name="state">The current JournalAccept hover state.</param>
             <param name="messageNode">The resolved body node, if any.</param>
+            <param name="preferredHoverNode">
+                The optional structural body node used only for tooltip geometry.
+            </param>
             <param name="originalHoverQuestMessage">
                 The preferred original body text for hover presentation.
             </param>
             <returns><c>true</c> when the body node was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryResolveJournalAcceptPreferredHoverNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
+            <summary>
+                Resolves the structural body node only when the heading-based popup
+                resolver identifies the same live text node selected for payload work.
+            </summary>
+            <param name="addon">The live JournalAccept addon instance.</param>
+            <param name="messageNode">The live body text node.</param>
+            <param name="preferredHoverNode">
+                The matching structural body node used only for tooltip geometry.
+            </param>
+            <returns>
+                <see langword="true" /> when a matching structural body node was
+                resolved; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptTextNodePayloadMatches(System.String,System.String)">
             <summary>
@@ -18221,77 +18239,6 @@
             <returns>
                 The preferred visible body payload for runtime use, or the setup body
                 when no richer visible node exists.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryBuildJournalAcceptMessageHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
-            <summary>
-                Builds broader hover bounds for the JournalAccept body when the live
-                text node only covers one line inside a larger visible body
-                container.
-            </summary>
-            <param name="messageNode">The resolved JournalAccept body text node.</param>
-            <param name="topLeft">The promoted hover top-left coordinate.</param>
-            <param name="bottomRight">The promoted hover bottom-right coordinate.</param>
-            <returns>
-                <c>true</c> when a larger parent container should drive the hover
-                target; otherwise, <c>false</c>.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.BuildJournalAcceptMessageHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Single,System.Single,System.Single,System.Single,System.Numerics.Vector2@,System.Numerics.Vector2@)">
-            <summary>
-                Builds one JournalAccept body hover rectangle by unioning the live
-                text-node bounds with one broader structural hover region.
-            </summary>
-            <param name="messageNode">The live JournalAccept body text node.</param>
-            <param name="hoverLeft">The broader hover-region left coordinate.</param>
-            <param name="hoverTop">The broader hover-region top coordinate.</param>
-            <param name="hoverWidth">The broader hover-region width.</param>
-            <param name="hoverHeight">The broader hover-region height.</param>
-            <param name="topLeft">The resulting hover top-left coordinate.</param>
-            <param name="bottomRight">The resulting hover bottom-right coordinate.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptHoverAncestorLevel(System.Single,System.Single,System.Collections.Generic.IReadOnlyList{System.Numerics.Vector2})">
-            <summary>
-                Resolves the first visible JournalAccept ancestor level whose bounds
-                are materially larger than the live text node and therefore better
-                represent the whole description block as a hover target.
-            </summary>
-            <param name="textWidth">The visible text-node width.</param>
-            <param name="textHeight">The visible text-node height.</param>
-            <param name="ancestorSizes">
-                The visible ancestor sizes in parent-chain order, starting at the
-                immediate parent.
-            </param>
-            <returns>
-                The zero-based ancestor level that should drive the hover bounds, or
-                <c>-1</c> when no visible ancestor qualifies.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptParentScreenOrigin(System.Single,System.Single,System.Int16,System.Int16)">
-            <summary>
-                Reconstructs the JournalAccept parent container screen origin from
-                the visible body text node position and its local offset inside the
-                larger body container.
-            </summary>
-            <param name="textLeft">The visible body text-node screen X position.</param>
-            <param name="textTop">The visible body text-node screen Y position.</param>
-            <param name="textLocalX">The text-node local X offset in the parent.</param>
-            <param name="textLocalY">The text-node local Y offset in the parent.</param>
-            <returns>The reconstructed parent container screen origin.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ShouldUseJournalAcceptParentHoverBounds(System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-                Determines whether the JournalAccept body should use its larger
-                parent container as the hover hitbox instead of the narrow live text
-                node bounds.
-            </summary>
-            <param name="textWidth">The visible text-node width.</param>
-            <param name="textHeight">The visible text-node height.</param>
-            <param name="parentWidth">The parent container width.</param>
-            <param name="parentHeight">The parent container height.</param>
-            <returns>
-                <c>true</c> when the parent container is materially larger than the
-                text node; otherwise, <c>false</c>.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.NormalizeJournalAcceptSetupMessageForComparison(System.String)">
@@ -19461,7 +19408,7 @@
                 visible native mutation.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryFindJournalResultMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryFindJournalResultMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
             <summary>
                 Finds the visible JournalResult body node, falling back to the shared
                 popup-section structural resolver when readable-node scans miss the
@@ -19470,7 +19417,25 @@
             <param name="addon">The live JournalResult addon instance.</param>
             <param name="state">The current JournalResult hover state.</param>
             <param name="messageNode">The resolved body node, if any.</param>
+            <param name="preferredHoverNode">
+                The optional structural body node used only for tooltip geometry.
+            </param>
             <returns><c>true</c> when the body node was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryResolveJournalResultPreferredHoverNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
+            <summary>
+                Resolves the structural body node only when the heading-based popup
+                resolver identifies the same live text node selected for payload work.
+            </summary>
+            <param name="addon">The live JournalResult addon instance.</param>
+            <param name="messageNode">The live body text node.</param>
+            <param name="preferredHoverNode">
+                The matching structural body node used only for tooltip geometry.
+            </param>
+            <returns>
+                <see langword="true" /> when a matching structural body node was
+                resolved; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.SetJournalResultValue(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.Byte[],System.String)">
             <summary>
@@ -20212,6 +20177,37 @@
                 The structural section node that owns the body node, if any.
             </param>
             <returns><c>true</c> when the popup body node was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryBuildPopupBodyHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
+            <summary>
+                Builds explicit hover bounds for a popup body by selecting the best
+                structural region associated with its live text node.
+            </summary>
+            <param name="textNode">The live popup body text node.</param>
+            <param name="preferredHoverNode">
+                The optional structural body node returned by the section resolver.
+            </param>
+            <param name="topLeft">The resolved hover top-left coordinate.</param>
+            <param name="bottomRight">The resolved hover bottom-right coordinate.</param>
+            <returns>
+                <see langword="true" /> when a structural region was selected;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.AddPopupBodyHoverCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Single,System.Single,System.Single,System.Single,System.Int32,System.Collections.Generic.List{Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate},System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
+            <summary>
+                Adds one visible native popup-body geometry candidate when it
+                intersects the live body text rectangle.
+            </summary>
+            <param name="candidateNode">The candidate native node.</param>
+            <param name="textLeft">The live body text left coordinate.</param>
+            <param name="textTop">The live body text top coordinate.</param>
+            <param name="textRight">The live body text right coordinate.</param>
+            <param name="textBottom">The live body text bottom coordinate.</param>
+            <param name="distanceFromText">The structural distance from the text node.</param>
+            <param name="candidates">The pure candidate snapshots to populate.</param>
+            <param name="candidateAddresses">The native pointers mapped to snapshots.</param>
+            <param name="visitedCandidates">The native-pointer deduplication set.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ReadReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
@@ -29119,6 +29115,24 @@
             <summary>
             Selects the best pure geometry candidate for popup-body hover handling.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(System.IntPtr,System.IntPtr,System.Int32,System.Int32,System.Collections.Generic.ISet{System.IntPtr})">
+            <summary>
+            Determines whether a native popup-body traversal node can be inspected within its bounded
+            live section.
+            </summary>
+            <param name="nodeAddress">The address of the node to inspect.</param>
+            <param name="sectionBoundaryAddress">
+            The address of the resolved popup section boundary, or <see cref="F:System.IntPtr.Zero" /> when no
+            boundary applies.
+            </param>
+            <param name="inspectedNodeCount">The number of nodes already inspected.</param>
+            <param name="maximumNodeCount">The maximum number of nodes that may be inspected.</param>
+            <param name="visitedNodes">The addresses already visited by the traversal.</param>
+            <returns>
+            <see langword="true" /> when the node may be inspected; otherwise,
+            <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverGeometryHelper.SelectCandidateIndex(System.Single,System.Single,System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate})">
             <summary>

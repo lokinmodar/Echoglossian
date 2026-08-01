@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Numerics;
 using System.Reflection;
 
 using Dalamud.Game.Text.SeStringHandling;
@@ -133,77 +132,6 @@ public sealed class QuestReadableTextMatchTests
             this.InvokeResolvePreferredJournalAcceptVisibleBody(
                 setupMessage,
                 [directVisibleText, expandedVisibleText]));
-    }
-
-    /// <summary>
-    ///     Ensures JournalAccept promotes the hover hitbox to the larger body
-    ///     container when the visible text node is materially smaller than the
-    ///     runtime body block exposed by the addon.
-    /// </summary>
-    [Fact]
-    public void ShouldUseJournalAcceptParentHoverBounds_ReturnsTrueForExpandedBodyContainer()
-    {
-        Assert.True(
-            this.InvokeShouldUseJournalAcceptParentHoverBounds(
-                372f,
-                22f,
-                391f,
-                97f));
-    }
-
-    /// <summary>
-    ///     Ensures JournalAccept keeps the text-node hitbox when the parent
-    ///     container is only marginally larger than the visible text node.
-    /// </summary>
-    [Fact]
-    public void ShouldUseJournalAcceptParentHoverBounds_ReturnsFalseForNearTextSizedContainer()
-    {
-        Assert.False(
-            this.InvokeShouldUseJournalAcceptParentHoverBounds(
-                372f,
-                22f,
-                378f,
-                28f));
-    }
-
-    /// <summary>
-    ///     Ensures JournalAccept reconstructs the larger body-container origin
-    ///     from the visible text node screen position and local node offset
-    ///     instead of trusting the parent screen origin directly.
-    /// </summary>
-    [Fact]
-    public void ResolveJournalAcceptParentScreenOrigin_RebuildsParentOriginFromChildOffset()
-    {
-        var origin = this.InvokeResolveJournalAcceptParentScreenOrigin(
-            640f,
-            320f,
-            19,
-            34);
-
-        Assert.Equal(new Vector2(621f, 286f), origin);
-    }
-
-    /// <summary>
-    ///     Ensures JournalAccept can skip a near-text-sized immediate parent
-    ///     and promote the hover hitbox to the first ancestor that actually
-    ///     covers the wider description block shown by the live addon.
-    /// </summary>
-    [Fact]
-    public void ResolveJournalAcceptHoverAncestorLevel_SelectsFirstQualifyingAncestor()
-    {
-        var ancestorSizes = new[]
-        {
-            new Vector2(378f, 28f),
-            new Vector2(464f, 189f),
-            new Vector2(697f, 496f),
-        };
-
-        Assert.Equal(
-            1,
-            this.InvokeResolveJournalAcceptHoverAncestorLevel(
-                372f,
-                22f,
-                ancestorSizes));
     }
 
     /// <summary>
@@ -544,96 +472,6 @@ public sealed class QuestReadableTextMatchTests
                          "ResolvePreferredJournalAcceptVisibleBody");
 
         return (string)method.Invoke(null, [setupMessage, visibleTexts])!;
-    }
-
-    /// <summary>
-    ///     Invokes the JournalAccept hover-bounds promotion helper through
-    ///     reflection so RED can pin the larger body hitbox without widening
-    ///     production visibility.
-    /// </summary>
-    /// <param name="textWidth">The visible text-node width.</param>
-    /// <param name="textHeight">The visible text-node height.</param>
-    /// <param name="parentWidth">The candidate parent-node width.</param>
-    /// <param name="parentHeight">The candidate parent-node height.</param>
-    /// <returns>
-    ///     <see langword="true" /> when the parent bounds should drive the
-    ///     JournalAccept body hover target.
-    /// </returns>
-    private bool InvokeShouldUseJournalAcceptParentHoverBounds(
-        float textWidth,
-        float textHeight,
-        float parentWidth,
-        float parentHeight)
-    {
-        var method = typeof(JournalAcceptHandler).GetMethod(
-                         "ShouldUseJournalAcceptParentHoverBounds",
-                         BindingFlags.Static | BindingFlags.NonPublic) ??
-                     throw new MissingMethodException(
-                         typeof(JournalAcceptHandler).FullName,
-                         "ShouldUseJournalAcceptParentHoverBounds");
-
-        return (bool)method.Invoke(
-            null,
-            [textWidth, textHeight, parentWidth, parentHeight])!;
-    }
-
-    /// <summary>
-    ///     Invokes the JournalAccept parent-origin reconstruction helper
-    ///     through reflection so RED can pin the explicit hover-bounds math
-    ///     without widening production visibility.
-    /// </summary>
-    /// <param name="textLeft">The visible text-node screen X position.</param>
-    /// <param name="textTop">The visible text-node screen Y position.</param>
-    /// <param name="textLocalX">The local X offset inside the parent.</param>
-    /// <param name="textLocalY">The local Y offset inside the parent.</param>
-    /// <returns>The reconstructed parent screen origin.</returns>
-    private Vector2 InvokeResolveJournalAcceptParentScreenOrigin(
-        float textLeft,
-        float textTop,
-        short textLocalX,
-        short textLocalY)
-    {
-        var method = typeof(JournalAcceptHandler).GetMethod(
-                         "ResolveJournalAcceptParentScreenOrigin",
-                         BindingFlags.Static | BindingFlags.NonPublic) ??
-                     throw new MissingMethodException(
-                         typeof(JournalAcceptHandler).FullName,
-                         "ResolveJournalAcceptParentScreenOrigin");
-
-        return (Vector2)method.Invoke(
-            null,
-            [textLeft, textTop, textLocalX, textLocalY])!;
-    }
-
-    /// <summary>
-    ///     Invokes the JournalAccept hover-ancestor selector through
-    ///     reflection so RED can pin the parent-chain promotion behavior
-    ///     without widening production visibility.
-    /// </summary>
-    /// <param name="textWidth">The visible text-node width.</param>
-    /// <param name="textHeight">The visible text-node height.</param>
-    /// <param name="ancestorSizes">
-    ///     The visible ancestor sizes in parent-chain order.
-    /// </param>
-    /// <returns>
-    ///     The zero-based ancestor level that should drive the hover bounds,
-    ///     or <c>-1</c> when no ancestor qualifies.
-    /// </returns>
-    private int InvokeResolveJournalAcceptHoverAncestorLevel(
-        float textWidth,
-        float textHeight,
-        IReadOnlyList<Vector2> ancestorSizes)
-    {
-        var method = typeof(JournalAcceptHandler).GetMethod(
-                         "ResolveJournalAcceptHoverAncestorLevel",
-                         BindingFlags.Static | BindingFlags.NonPublic) ??
-                     throw new MissingMethodException(
-                         typeof(JournalAcceptHandler).FullName,
-                         "ResolveJournalAcceptHoverAncestorLevel");
-
-        return (int)method.Invoke(
-            null,
-            [textWidth, textHeight, ancestorSizes])!;
     }
 
     /// <summary>

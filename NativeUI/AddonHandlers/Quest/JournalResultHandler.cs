@@ -724,17 +724,40 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode))
+            out var messageNode,
+            out var preferredHoverNode))
     {
-      this.RegisterTranslatedHoverTooltip(
-          $"JournalResult-QuestBody-{(nint)messageNode:X}",
-          messageNode,
-          state.OriginalQuestMessage,
-          state.TranslatedQuestMessage,
-          translatedPayloadReady: canRenderTooltip,
-          swapEnabled: this.JournalResultHoverShowsOriginal,
-          forceEnabled: true,
-          denseHitbox: true);
+      var messageHoverKey = $"JournalResult-QuestBody-{(nint)messageNode:X}";
+      if (TryBuildPopupBodyHoverBounds(
+              messageNode,
+              preferredHoverNode,
+              out var messageTopLeft,
+              out var messageBottomRight))
+      {
+        this.RegisterTranslatedHoverTooltip(
+            messageHoverKey,
+            messageTopLeft,
+            messageBottomRight,
+            messageNode,
+            state.OriginalQuestMessage,
+            state.TranslatedQuestMessage,
+            canRenderTooltip,
+            this.JournalResultHoverShowsOriginal,
+            true);
+      }
+      else
+      {
+        this.RegisterTranslatedHoverTooltip(
+            messageHoverKey,
+            messageNode,
+            state.OriginalQuestMessage,
+            state.TranslatedQuestMessage,
+            translatedPayloadReady: canRenderTooltip,
+            swapEnabled: this.JournalResultHoverShowsOriginal,
+            forceEnabled: true,
+            denseHitbox: true);
+      }
+
       registeredMessage = true;
     }
 
@@ -819,7 +842,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode))
+            out var messageNode,
+            out _))
     {
       updatedOriginalQuestMessagePayload =
           ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(
@@ -903,7 +927,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode))
+            out var messageNode,
+            out _))
     {
       SetJournalResultTextNode(
           messageNode,
@@ -963,7 +988,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode))
+            out var messageNode,
+            out _))
     {
       SetJournalResultTextNode(
           messageNode,
@@ -982,13 +1008,18 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// <param name="addon">The live JournalResult addon instance.</param>
   /// <param name="state">The current JournalResult hover state.</param>
   /// <param name="messageNode">The resolved body node, if any.</param>
+  /// <param name="preferredHoverNode">
+  ///     The optional structural body node used only for tooltip geometry.
+  /// </param>
   /// <returns><c>true</c> when the body node was found.</returns>
   private unsafe bool TryFindJournalResultMessageNode(
       AtkUnitBase* addon,
       JournalResultHoverState state,
-      out AtkTextNode* messageNode)
+      out AtkTextNode* messageNode,
+      out AtkResNode* preferredHoverNode)
   {
     messageNode = null;
+    preferredHoverNode = null;
     if (addon == null || string.IsNullOrWhiteSpace(state.OriginalQuestMessage))
     {
       return false;
@@ -1000,13 +1031,47 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
             state.TranslatedQuestMessage,
             out messageNode))
     {
+      this.TryResolveJournalResultPreferredHoverNode(
+          addon,
+          messageNode,
+          out preferredHoverNode);
       return true;
     }
 
     return TryFindPopupSectionBodyTextNodeByHeadingTextId(
         addon,
         JournalResultDescriptionTextId,
-        out messageNode);
+        out messageNode,
+        out preferredHoverNode);
+  }
+
+  /// <summary>
+  ///     Resolves the structural body node only when the heading-based popup
+  ///     resolver identifies the same live text node selected for payload work.
+  /// </summary>
+  /// <param name="addon">The live JournalResult addon instance.</param>
+  /// <param name="messageNode">The live body text node.</param>
+  /// <param name="preferredHoverNode">
+  ///     The matching structural body node used only for tooltip geometry.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when a matching structural body node was
+  ///     resolved; otherwise, <see langword="false" />.
+  /// </returns>
+  private unsafe bool TryResolveJournalResultPreferredHoverNode(
+      AtkUnitBase* addon,
+      AtkTextNode* messageNode,
+      out AtkResNode* preferredHoverNode)
+  {
+    preferredHoverNode = null;
+    return messageNode != null &&
+           TryFindPopupSectionBodyTextNodeByHeadingTextId(
+               addon,
+               JournalResultDescriptionTextId,
+               out var structuralMessageNode,
+               out var structuralHoverNode) &&
+           structuralMessageNode == messageNode &&
+           (preferredHoverNode = structuralHoverNode) != null;
   }
 
   /// <summary>

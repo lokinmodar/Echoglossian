@@ -14,6 +14,35 @@ internal static class PopupBodyHoverGeometryHelper
     private const float MaterialHeightThreshold = 18f;
 
     /// <summary>
+    /// Determines whether a native popup-body traversal node can be inspected within its bounded
+    /// live section.
+    /// </summary>
+    /// <param name="nodeAddress">The address of the node to inspect.</param>
+    /// <param name="sectionBoundaryAddress">
+    /// The address of the resolved popup section boundary, or <see cref="nint.Zero" /> when no
+    /// boundary applies.
+    /// </param>
+    /// <param name="inspectedNodeCount">The number of nodes already inspected.</param>
+    /// <param name="maximumNodeCount">The maximum number of nodes that may be inspected.</param>
+    /// <param name="visitedNodes">The addresses already visited by the traversal.</param>
+    /// <returns>
+    /// <see langword="true" /> when the node may be inspected; otherwise,
+    /// <see langword="false" />.
+    /// </returns>
+    public static bool TryVisitSectionBoundedTraversalNode(
+        nint nodeAddress,
+        nint sectionBoundaryAddress,
+        int inspectedNodeCount,
+        int maximumNodeCount,
+        ISet<nint> visitedNodes)
+    {
+        return nodeAddress != nint.Zero
+            && nodeAddress != sectionBoundaryAddress
+            && inspectedNodeCount < maximumNodeCount
+            && visitedNodes.Add(nodeAddress);
+    }
+
+    /// <summary>
     /// Selects the best valid popup-body candidate by deterministic geometry ranking.
     /// </summary>
     /// <param name="textWidth">The width of the body text rectangle.</param>

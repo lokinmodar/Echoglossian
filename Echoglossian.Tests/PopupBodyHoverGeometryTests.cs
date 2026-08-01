@@ -15,6 +15,59 @@ namespace Echoglossian.Tests;
 public sealed class PopupBodyHoverGeometryTests
 {
     /// <summary>
+    /// Ensures the native candidate collector does not inspect the resolved popup section boundary
+    /// or any of its ancestors.
+    /// </summary>
+    [Fact]
+    public void TryVisitSectionBoundedTraversalNode_StopsAtResolvedPopupSectionBoundary()
+    {
+        HashSet<nint> visitedNodes = [];
+
+        var shouldVisit = PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
+            nodeAddress: (nint)200,
+            sectionBoundaryAddress: (nint)200,
+            inspectedNodeCount: 0,
+            maximumNodeCount: 6,
+            visitedNodes);
+
+        Assert.False(shouldVisit);
+        Assert.Empty(visitedNodes);
+    }
+
+    /// <summary>
+    /// Ensures the native candidate collector stops repeated or over-limit traversal nodes before
+    /// they can expand a popup-body tooltip outside its live section.
+    /// </summary>
+    [Fact]
+    public void TryVisitSectionBoundedTraversalNode_RejectsCyclesAndTraversalLimit()
+    {
+        HashSet<nint> visitedNodes = [];
+
+        Assert.True(
+            PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
+                nodeAddress: (nint)100,
+                sectionBoundaryAddress: (nint)200,
+                inspectedNodeCount: 0,
+                maximumNodeCount: 2,
+                visitedNodes));
+        Assert.False(
+            PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
+                nodeAddress: (nint)100,
+                sectionBoundaryAddress: (nint)200,
+                inspectedNodeCount: 1,
+                maximumNodeCount: 2,
+                visitedNodes));
+        Assert.False(
+            PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
+                nodeAddress: (nint)300,
+                sectionBoundaryAddress: (nint)200,
+                inspectedNodeCount: 2,
+                maximumNodeCount: 2,
+                visitedNodes));
+        Assert.Equal([(nint)100], visitedNodes);
+    }
+
+    /// <summary>
     /// Ensures a valid body collision wins over a text-sized component and addon ancestor.
     /// </summary>
     [Fact]

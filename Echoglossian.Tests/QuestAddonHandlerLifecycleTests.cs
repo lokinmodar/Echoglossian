@@ -397,13 +397,34 @@ public class QuestAddonHandlerLifecycleTests
                                   method.Name,
                                   "TryFindPopupSectionBodyTextNodeByHeadingTextId",
                                   StringComparison.Ordinal) &&
-                              method.GetParameters().Length == 3);
+                              method.GetParameters().Length == 4);
 
         Assert.NotNull(resolver);
         Assert.NotNull(fallback);
         Assert.True(
             MethodReferences(resolver!, fallback!),
             "JournalAccept must fall back to the shared popup-section body resolver when the visible body node is structurally present but not readable.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalAccept derives its body tooltip hitbox through the
+    ///     shared popup-body geometry resolver.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_UsesSharedPopupBodyHoverBounds()
+    {
+        var register = typeof(JournalAcceptHandler).GetMethod(
+            "RegisterJournalAcceptHoverTooltip",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var bounds = typeof(QuestAddonHandlerBase).GetMethod(
+            "TryBuildPopupBodyHoverBounds",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(register);
+        Assert.NotNull(bounds);
+        Assert.True(
+            MethodReferences(register!, bounds!),
+            "JournalAccept must register its body tooltip through shared popup-body hover bounds.");
     }
 
     /// <summary>
@@ -519,13 +540,59 @@ public class QuestAddonHandlerLifecycleTests
                                   method.Name,
                                   "TryFindPopupSectionBodyTextNodeByHeadingTextId",
                                   StringComparison.Ordinal) &&
-                              method.GetParameters().Length == 3);
+                              method.GetParameters().Length == 4);
 
         Assert.NotNull(resolver);
         Assert.NotNull(fallback);
         Assert.True(
             MethodReferences(resolver!, fallback!),
             "JournalResult must fall back to the shared popup-section body resolver when the visible body node is structurally present but not readable.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult derives its body tooltip hitbox through the
+    ///     shared popup-body geometry resolver.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_UsesSharedPopupBodyHoverBounds()
+    {
+        var register = typeof(JournalResultHandler).GetMethod(
+            "RegisterJournalResultHoverTooltip",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var bounds = typeof(QuestAddonHandlerBase).GetMethod(
+            "TryBuildPopupBodyHoverBounds",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(register);
+        Assert.NotNull(bounds);
+        Assert.True(
+            MethodReferences(register!, bounds!),
+            "JournalResult must register its body tooltip through shared popup-body hover bounds.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult keeps rich body capture while registering the
+    ///     structural body hitbox through the explicit-bounds overload.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_UsesExplicitBoundsForStructuralBodyHover()
+    {
+        var register = typeof(JournalResultHandler).GetMethod(
+            "RegisterJournalResultHoverTooltip",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var explicitBoundsRegistration = typeof(QuestAddonHandlerBase)
+            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+            .Single(method => string.Equals(
+                                  method.Name,
+                                  "RegisterTranslatedHoverTooltip",
+                                  StringComparison.Ordinal) &&
+                              method.GetParameters().Length == 9);
+
+        Assert.NotNull(register);
+        Assert.NotNull(explicitBoundsRegistration);
+        Assert.True(
+            MethodReferences(register!, explicitBoundsRegistration!),
+            "JournalResult must use explicit bounds when a structural body candidate is available.");
     }
 
     /// <summary>

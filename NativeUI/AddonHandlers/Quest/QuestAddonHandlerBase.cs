@@ -17,6 +17,13 @@ internal abstract class QuestAddonHandlerBase
 {
   private const int PopupSectionBodySearchMaxSiblingCount = 6;
 
+  private const int PopupBodyHoverAncestorSearchMaxNodeCount =
+      PopupSectionBodySearchMaxSiblingCount;
+
+  private const float PopupBodyHoverHorizontalPadding = 8f;
+
+  private const float PopupBodyHoverVerticalPadding = 4f;
+
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>>
       eventHandlers = new();
 
@@ -474,6 +481,210 @@ internal abstract class QuestAddonHandlerBase
     }
 
     return false;
+  }
+
+  /// <summary>
+  ///     Builds explicit hover bounds for a popup body by selecting the best
+  ///     structural region associated with its live text node.
+  /// </summary>
+  /// <param name="textNode">The live popup body text node.</param>
+  /// <param name="preferredHoverNode">
+  ///     The optional structural body node returned by the section resolver.
+  /// </param>
+  /// <param name="topLeft">The resolved hover top-left coordinate.</param>
+  /// <param name="bottomRight">The resolved hover bottom-right coordinate.</param>
+  /// <returns>
+  ///     <see langword="true" /> when a structural region was selected;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  protected static unsafe bool TryBuildPopupBodyHoverBounds(
+      AtkTextNode* textNode,
+      AtkResNode* preferredHoverNode,
+      out Vector2 topLeft,
+      out Vector2 bottomRight)
+  {
+    topLeft = Vector2.Zero;
+    bottomRight = Vector2.Zero;
+    if (textNode == null || !textNode->IsVisible())
+    {
+      return false;
+    }
+
+    var textLeft = textNode->ScreenX;
+    var textTop = textNode->ScreenY;
+    var textWidth = Math.Max(1f, textNode->GetWidth());
+    var textHeight = Math.Max(1f, textNode->GetHeight());
+    var textRight = textLeft + textWidth;
+    var textBottom = textTop + textHeight;
+    List<PopupBodyHoverCandidate> candidates = [];
+    List<nint> candidateAddresses = [];
+    HashSet<nint> visitedCandidates = [];
+
+    AddPopupBodyHoverCandidate(
+        preferredHoverNode,
+        textLeft,
+        textTop,
+        textRight,
+        textBottom,
+        distanceFromText: 0,
+        candidates,
+        candidateAddresses,
+        visitedCandidates);
+
+    var siblingParent = preferredHoverNode != null
+        ? preferredHoverNode->ParentNode
+        : null;
+    if (siblingParent != null)
+    {
+      HashSet<nint> visitedSiblings = [];
+      var inspectedSiblingCount = 0;
+      for (var sibling = siblingParent->ChildNode;
+           sibling != null &&
+           PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
+               (nint)sibling,
+               nint.Zero,
+               inspectedSiblingCount,
+               PopupSectionBodySearchMaxSiblingCount,
+               visitedSiblings);
+           sibling = sibling->NextSiblingNode, inspectedSiblingCount++)
+      {
+        if (sibling->Type == NodeType.Collision)
+        {
+          AddPopupBodyHoverCandidate(
+              sibling,
+              textLeft,
+              textTop,
+              textRight,
+              textBottom,
+              distanceFromText: 1,
+              candidates,
+              candidateAddresses,
+              visitedCandidates);
+        }
+      }
+    }
+
+    if (preferredHoverNode != null &&
+        preferredHoverNode != (AtkResNode*)textNode)
+    {
+      List<(nint Address, int Distance)> sectionAncestors = [];
+      HashSet<nint> visitedAncestors = [];
+      var ancestorDistance = 1;
+      var inspectedAncestorCount = 0;
+      var ancestor = textNode->AtkResNode.ParentNode;
+      for (; ancestor != null &&
+             PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
+                 (nint)ancestor,
+                 (nint)preferredHoverNode,
+                 inspectedAncestorCount,
+                 PopupBodyHoverAncestorSearchMaxNodeCount,
+                 visitedAncestors);
+           ancestor = ancestor->ParentNode, ancestorDistance++, inspectedAncestorCount++)
+      {
+        if ((ushort)ancestor->Type >= 1000)
+        {
+          sectionAncestors.Add(((nint)ancestor, ancestorDistance));
+        }
+      }
+
+      if (ancestor == preferredHoverNode)
+      {
+        foreach (var sectionAncestor in sectionAncestors)
+        {
+          AddPopupBodyHoverCandidate(
+              (AtkResNode*)sectionAncestor.Address,
+              textLeft,
+              textTop,
+              textRight,
+              textBottom,
+              sectionAncestor.Distance,
+              candidates,
+              candidateAddresses,
+              visitedCandidates);
+        }
+      }
+    }
+
+    var selectedIndex = PopupBodyHoverGeometryHelper.SelectCandidateIndex(
+        textWidth,
+        textHeight,
+        candidates);
+    if (selectedIndex < 0 || selectedIndex >= candidateAddresses.Count)
+    {
+      return false;
+    }
+
+    var selectedNode = (AtkResNode*)candidateAddresses[selectedIndex];
+    if (selectedNode == null || !selectedNode->IsVisible())
+    {
+      return false;
+    }
+
+    var selectedLeft = selectedNode->ScreenX;
+    var selectedTop = selectedNode->ScreenY;
+    var selectedRight = selectedLeft + Math.Max(1f, selectedNode->Width);
+    var selectedBottom = selectedTop + Math.Max(1f, selectedNode->Height);
+    topLeft = new Vector2(
+        Math.Min(textLeft, selectedLeft) - PopupBodyHoverHorizontalPadding,
+        Math.Min(textTop, selectedTop) - PopupBodyHoverVerticalPadding);
+    bottomRight = new Vector2(
+        Math.Max(textRight, selectedRight) + PopupBodyHoverHorizontalPadding,
+        Math.Max(textBottom, selectedBottom) + PopupBodyHoverVerticalPadding);
+    return bottomRight.X > topLeft.X && bottomRight.Y > topLeft.Y;
+  }
+
+  /// <summary>
+  ///     Adds one visible native popup-body geometry candidate when it
+  ///     intersects the live body text rectangle.
+  /// </summary>
+  /// <param name="candidateNode">The candidate native node.</param>
+  /// <param name="textLeft">The live body text left coordinate.</param>
+  /// <param name="textTop">The live body text top coordinate.</param>
+  /// <param name="textRight">The live body text right coordinate.</param>
+  /// <param name="textBottom">The live body text bottom coordinate.</param>
+  /// <param name="distanceFromText">The structural distance from the text node.</param>
+  /// <param name="candidates">The pure candidate snapshots to populate.</param>
+  /// <param name="candidateAddresses">The native pointers mapped to snapshots.</param>
+  /// <param name="visitedCandidates">The native-pointer deduplication set.</param>
+  private static unsafe void AddPopupBodyHoverCandidate(
+      AtkResNode* candidateNode,
+      float textLeft,
+      float textTop,
+      float textRight,
+      float textBottom,
+      int distanceFromText,
+      List<PopupBodyHoverCandidate> candidates,
+      List<nint> candidateAddresses,
+      HashSet<nint> visitedCandidates)
+  {
+    if (candidateNode == null ||
+        !candidateNode->IsVisible() ||
+        !visitedCandidates.Add((nint)candidateNode))
+    {
+      return;
+    }
+
+    var width = Math.Max(1f, candidateNode->Width);
+    var height = Math.Max(1f, candidateNode->Height);
+    var left = candidateNode->ScreenX;
+    var top = candidateNode->ScreenY;
+    var right = left + width;
+    var bottom = top + height;
+    var containsText =
+        (left <= textLeft && top <= textTop && right >= textRight &&
+         bottom >= textBottom) ||
+        (left < textRight && right > textLeft && top < textBottom &&
+         bottom > textTop);
+    candidates.Add(
+        new PopupBodyHoverCandidate(
+            width,
+            height,
+            IsVisible: true,
+            ContainsText: containsText,
+            IsCollision: candidateNode->Type == NodeType.Collision,
+            IsComponent: (ushort)candidateNode->Type >= 1000,
+            DistanceFromText: distanceFromText));
+    candidateAddresses.Add((nint)candidateNode);
   }
 
   /// <summary>
