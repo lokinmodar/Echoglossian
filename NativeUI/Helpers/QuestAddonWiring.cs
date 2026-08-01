@@ -78,6 +78,18 @@ public partial class Echoglossian
                   translatedPayloadReady,
                   swapEnabled,
                   forceEnabled),
+      RegisterTranslatedHoverTooltipTextNodeBounds =
+          (key, topLeft, bottomRight, textNode, originalText, translatedText, translatedPayloadReady, swapEnabled, forceEnabled) =>
+              this.RegisterTranslatedHoverTooltip(
+                  key,
+                  topLeft,
+                  bottomRight,
+                  textNode,
+                  originalText,
+                  translatedText,
+                  translatedPayloadReady,
+                  swapEnabled,
+                  forceEnabled),
     };
   }
 }

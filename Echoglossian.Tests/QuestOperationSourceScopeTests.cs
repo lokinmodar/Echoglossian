@@ -288,16 +288,17 @@ public class QuestOperationSourceScopeTests
             RegisterTranslatedHoverTooltipAddon = null!,
             RegisterTranslatedHoverTooltipTextNode = null!,
             RegisterTranslatedHoverTooltipResNode = null!,
-            RegisterTranslatedHoverTooltipBounds = static (
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _) => { },
-        };
+              RegisterTranslatedHoverTooltipBounds = static (
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _) => { },
+              RegisterTranslatedHoverTooltipTextNodeBounds = null!,
+          };
     }
 
     /// <summary>

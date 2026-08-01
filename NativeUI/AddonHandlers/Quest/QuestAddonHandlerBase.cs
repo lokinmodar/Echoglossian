@@ -3,9 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Text;
+
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
@@ -15,6 +15,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 internal abstract class QuestAddonHandlerBase
     : IAddonTranslationHandler, IPluginUnloadAwareAddonHandler
 {
+  private const int PopupSectionBodySearchMaxSiblingCount = 6;
+
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>>
       eventHandlers = new();
 
@@ -403,6 +405,50 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Resolves the first visible popup body text node that belongs to the
+  ///     section immediately preceding one heading text node with the supplied
+  ///     sheet-text identifier.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="headingTextId">
+  ///     The sheet-text identifier carried by the visible section heading.
+  /// </param>
+  /// <param name="textNode">The resolved visible body node, if any.</param>
+  /// <returns><c>true</c> when the popup body node was found.</returns>
+  protected static unsafe bool TryFindPopupSectionBodyTextNodeByHeadingTextId(
+      AtkUnitBase* addon,
+      uint headingTextId,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (addon == null ||
+        !TryFindVisibleTextNodeByTextId(
+            addon,
+            headingTextId,
+            out var headingNode))
+    {
+      return false;
+    }
+
+    var inspectedSiblingCount = 0;
+    for (var candidate = ((AtkResNode*)headingNode)->PrevSiblingNode;
+         candidate != null &&
+         inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
+         candidate = candidate->PrevSiblingNode, inspectedSiblingCount++)
+    {
+      if (TryFindPopupSectionBodyTextNodeFromCandidate(
+              candidate,
+              headingNode,
+              out textNode))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
   ///     Reads the best plain-text representation available from a native text
   ///     node without mutating the node.
   /// </summary>
@@ -410,42 +456,200 @@ internal abstract class QuestAddonHandlerBase
   /// <returns>The readable text, or an empty string.</returns>
   protected static unsafe string ReadReadableTextNode(AtkTextNode* textNode)
   {
-    if (textNode == null)
+    return ReadableSeStringPayloadHelper.ReadReadableTextNode(textNode);
+  }
+
+  /// <summary>
+  ///     Finds one visible readable text node whose sheet-text identifier
+  ///     matches the supplied value.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="textId">The sheet-text identifier to resolve.</param>
+  /// <param name="textNode">The matched visible text node, if any.</param>
+  /// <returns><c>true</c> when a matching heading node was found.</returns>
+  private static unsafe bool TryFindVisibleTextNodeByTextId(
+      AtkUnitBase* addon,
+      uint textId,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (addon == null)
     {
-      return string.Empty;
+      return false;
     }
 
-    var currentText = textNode->NodeText.ToString();
-    if (!string.IsNullOrWhiteSpace(currentText))
+    foreach (var nodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
     {
-      return currentText;
-    }
-
-    try
-    {
-      var originalText = textNode->OriginalTextPointer
-          .AsReadOnlySeStringSpan()
-          .ExtractText();
-      if (!string.IsNullOrWhiteSpace(originalText))
+      var candidate = (AtkTextNode*)nodeAddress;
+      if (candidate == null ||
+          !candidate->IsVisible() ||
+          candidate->TextId != textId)
       {
-        return originalText;
+        continue;
+      }
+
+      textNode = candidate;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Tries to resolve the first visible text-node descendant from one
+  ///     structural popup section candidate that precedes the target heading.
+  /// </summary>
+  /// <param name="candidate">The structural section candidate.</param>
+  /// <param name="headingNode">The heading node that owns the section.</param>
+  /// <param name="textNode">The resolved body text node, if any.</param>
+  /// <returns><c>true</c> when the candidate exposes one visible body node.</returns>
+  private static unsafe bool TryFindPopupSectionBodyTextNodeFromCandidate(
+      AtkResNode* candidate,
+      AtkTextNode* headingNode,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (candidate == null || !candidate->IsVisible())
+    {
+      return false;
+    }
+
+    var excludedNode = (AtkResNode*)headingNode;
+    if (candidate->Type == NodeType.Text && candidate != excludedNode)
+    {
+      textNode = candidate->GetAsAtkTextNode();
+      return textNode != null && textNode->IsVisible();
+    }
+
+    HashSet<nint> visitedNodes = [];
+    if ((ushort)candidate->Type >= 1000)
+    {
+      var componentNode = (AtkComponentNode*)candidate;
+      if (componentNode->Component != null &&
+          TryFindFirstVisibleTextNodeInSubtree(
+              componentNode->Component->UldManager.RootNode,
+              headingNode,
+              visitedNodes,
+              out textNode))
+      {
+        return true;
       }
     }
-    catch
+
+    return TryFindFirstVisibleTextNodeInSubtree(
+        candidate->ChildNode,
+        headingNode,
+        visitedNodes,
+        out textNode);
+  }
+
+  /// <summary>
+  ///     Walks one visible node subtree in draw order and returns the first
+  ///     visible text node that is not the excluded heading.
+  /// </summary>
+  /// <param name="node">The subtree root to inspect.</param>
+  /// <param name="excludedTextNode">The heading node that must be skipped.</param>
+  /// <param name="visitedNodes">The visited native-node addresses.</param>
+  /// <param name="textNode">The resolved visible text node, if any.</param>
+  /// <returns><c>true</c> when a visible text node was found.</returns>
+  private static unsafe bool TryFindFirstVisibleTextNodeInSubtree(
+      AtkResNode* node,
+      AtkTextNode* excludedTextNode,
+      HashSet<nint> visitedNodes,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    for (var current = node; current != null; current = current->NextSiblingNode)
     {
-      // Keep falling through to the legacy buffer read below.
+      if (!visitedNodes.Add((nint)current) || !current->IsVisible())
+      {
+        continue;
+      }
+
+      if (current->Type == NodeType.Text)
+      {
+        var candidateTextNode = current->GetAsAtkTextNode();
+        if (candidateTextNode != null && candidateTextNode != excludedTextNode)
+        {
+          textNode = candidateTextNode;
+          return true;
+        }
+      }
+
+      if ((ushort)current->Type >= 1000)
+      {
+        var componentNode = (AtkComponentNode*)current;
+        if (componentNode->Component != null &&
+            TryFindFirstVisibleTextNodeInSubtree(
+                componentNode->Component->UldManager.RootNode,
+                excludedTextNode,
+                visitedNodes,
+                out textNode))
+        {
+          return true;
+        }
+      }
+
+      if (TryFindFirstVisibleTextNodeInSubtree(
+              current->ChildNode,
+              excludedTextNode,
+              visitedNodes,
+              out textNode))
+      {
+        return true;
+      }
     }
 
-    try
-    {
-      return MemoryHelper.ReadSeStringAsString(
-          out _,
-          (nint)textNode->NodeText.StringPtr.Value);
-    }
-    catch
-    {
-      return string.Empty;
-    }
+    return false;
+  }
+
+  /// <summary>
+  ///     Chooses the safest readable representation for one native text node.
+  /// </summary>
+  /// <param name="currentText">
+  ///     The direct current text returned by the live <see cref="Utf8String" />
+  ///     wrapper.
+  /// </param>
+  /// <param name="originalText">
+  ///     The readable text extracted from the node's structured original
+  ///     payload.
+  /// </param>
+  /// <param name="legacyText">
+  ///     The legacy SeString buffer read fallback.
+  /// </param>
+  /// <returns>The preferred readable text for matching and hover work.</returns>
+  private static string ResolveReadableTextNodeText(
+      string currentText,
+      string originalText,
+      string legacyText)
+  {
+    return ReadableSeStringPayloadHelper.ResolveReadableTextNodeText(
+        currentText,
+        originalText,
+        legacyText);
+  }
+
+  /// <summary>
+  ///     Projects translated readable text onto a captured SeString payload so
+  ///     native mutation can preserve original formatting macros when the raw
+  ///     payload still matches the expected readable source text.
+  /// </summary>
+  /// <param name="originalPayload">The captured original SeString bytes.</param>
+  /// <param name="originalText">The expected readable original text.</param>
+  /// <param name="translatedText">The translated readable text.</param>
+  /// <returns>
+  ///     The projected payload bytes when payload reuse succeeds; otherwise,
+  ///     <see langword="null" />.
+  /// </returns>
+  protected static byte[]? ProjectReadablePayloadBytes(
+      byte[]? originalPayload,
+      string originalText,
+      string translatedText)
+  {
+    return ReadableSeStringPayloadHelper.ProjectReadablePayloadBytes(
+        originalPayload,
+        originalText,
+        translatedText);
   }
 
   /// <summary>
@@ -459,33 +663,9 @@ internal abstract class QuestAddonHandlerBase
       string visibleText,
       string expectedText)
   {
-    var normalizedVisibleText = NormalizeReadableText(visibleText);
-    var normalizedExpectedText = NormalizeReadableText(expectedText);
-    if (string.IsNullOrWhiteSpace(normalizedVisibleText) ||
-        string.IsNullOrWhiteSpace(normalizedExpectedText))
-    {
-      return false;
-    }
-
-    if (string.Equals(
-            normalizedVisibleText,
-            normalizedExpectedText,
-            StringComparison.Ordinal))
-    {
-      return true;
-    }
-
-    if (normalizedVisibleText.Length < 4 || normalizedExpectedText.Length < 4)
-    {
-      return false;
-    }
-
-    return normalizedVisibleText.Contains(
-               normalizedExpectedText,
-               StringComparison.Ordinal) ||
-           normalizedExpectedText.Contains(
-               normalizedVisibleText,
-               StringComparison.Ordinal);
+    return ReadableSeStringPayloadHelper.PayloadMatches(
+        visibleText,
+        expectedText);
   }
 
   /// <summary>
@@ -495,52 +675,7 @@ internal abstract class QuestAddonHandlerBase
   /// <returns>The normalized text.</returns>
   protected static string NormalizeReadableText(string text)
   {
-    if (string.IsNullOrWhiteSpace(text))
-    {
-      return string.Empty;
-    }
-
-    var builder = new StringBuilder(text.Length);
-    var previousWasSeparator = false;
-    foreach (var character in text.Trim())
-    {
-      if (char.IsWhiteSpace(character) || IsReadableTextNoise(character))
-      {
-        if (!previousWasSeparator)
-        {
-          builder.Append(' ');
-          previousWasSeparator = true;
-        }
-
-        continue;
-      }
-
-      builder.Append(character);
-      previousWasSeparator = false;
-    }
-
-    return builder.ToString().Trim();
-  }
-
-  /// <summary>
-  ///     Determines whether one character should be ignored while matching
-  ///     readable popup text because it only represents SeString payload noise.
-  /// </summary>
-  /// <param name="character">The character to inspect.</param>
-  /// <returns><c>true</c> when the character should be treated as a separator.</returns>
-  private static bool IsReadableTextNoise(char character)
-  {
-    if (character == '\uFFFD')
-    {
-      return true;
-    }
-
-    var category = char.GetUnicodeCategory(character);
-    return category == UnicodeCategory.Control ||
-           category == UnicodeCategory.Format ||
-           category == UnicodeCategory.PrivateUse ||
-           category == UnicodeCategory.Surrogate ||
-           category == UnicodeCategory.OtherNotAssigned;
+    return ReadableSeStringPayloadHelper.NormalizeReadableText(text);
   }
 
   /// <summary>
@@ -765,6 +900,44 @@ internal abstract class QuestAddonHandlerBase
         key,
         topLeft,
         bottomRight,
+        originalText,
+        translatedText,
+        translatedPayloadReady,
+        swapEnabled,
+        forceEnabled);
+  }
+
+  /// <summary>
+  ///     Registers a hover tooltip using explicit screen bounds while
+  ///     preserving rich original capture from a live text node.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="topLeft">Top-left screen coordinate.</param>
+  /// <param name="bottomRight">Bottom-right screen coordinate.</param>
+  /// <param name="textNode">The live text node used for rich original capture.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
+  /// <param name="swapEnabled">Optional explicit swap override.</param>
+  /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+  protected unsafe void RegisterTranslatedHoverTooltip(
+      string key,
+      Vector2 topLeft,
+      Vector2 bottomRight,
+      AtkTextNode* textNode,
+      string originalText,
+      string translatedText,
+      bool translatedPayloadReady = true,
+      bool? swapEnabled = null,
+      bool forceEnabled = false)
+  {
+    this.Dependencies.RegisterTranslatedHoverTooltipTextNodeBounds(
+        key,
+        topLeft,
+        bottomRight,
+        textNode,
         originalText,
         translatedText,
         translatedPayloadReady,

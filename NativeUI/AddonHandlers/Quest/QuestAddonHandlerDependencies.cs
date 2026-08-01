@@ -152,6 +152,32 @@ internal delegate void RegisterTranslatedHoverTooltipBoundsDelegate(
     bool forceEnabled = false);
 
 /// <summary>
+///     Delegate used to register a hover tooltip from explicit screen bounds
+///     while preserving rich original capture from a live text node.
+/// </summary>
+/// <param name="key">Stable key used to refresh the tooltip target.</param>
+/// <param name="topLeft">Top-left screen coordinate.</param>
+/// <param name="bottomRight">Bottom-right screen coordinate.</param>
+/// <param name="textNode">The live text node used for rich original capture.</param>
+/// <param name="originalText">The original visible text.</param>
+/// <param name="translatedText">The translated text.</param>
+/// <param name="translatedPayloadReady">
+/// Whether the tooltip payload required by the current mode is ready.
+/// </param>
+/// <param name="swapEnabled">Optional explicit swap override.</param>
+/// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+internal unsafe delegate void RegisterTranslatedHoverTooltipTextNodeBoundsDelegate(
+    string key,
+    Vector2 topLeft,
+    Vector2 bottomRight,
+    AtkTextNode* textNode,
+    string originalText,
+    string translatedText,
+    bool translatedPayloadReady = true,
+    bool? swapEnabled = null,
+    bool forceEnabled = false);
+
+/// <summary>
 ///     Bundles the quest-specific delegates and services needed by standalone
 ///     quest handlers.
 /// </summary>
@@ -221,4 +247,11 @@ internal sealed class QuestAddonHandlerDependencies
   /// <summary>Gets or sets the bounds-based tooltip registration delegate.</summary>
   public required RegisterTranslatedHoverTooltipBoundsDelegate
       RegisterTranslatedHoverTooltipBounds { get; init; }
+
+  /// <summary>
+  ///     Gets or sets the bounds-based tooltip registration delegate that
+  ///     still captures rich original text from one live text node.
+  /// </summary>
+  public required RegisterTranslatedHoverTooltipTextNodeBoundsDelegate
+      RegisterTranslatedHoverTooltipTextNodeBounds { get; init; }
 }

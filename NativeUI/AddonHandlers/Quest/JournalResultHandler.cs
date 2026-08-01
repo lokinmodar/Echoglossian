@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.NativeUI.Helpers;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
@@ -17,6 +18,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   private const string JournalResultAddonName = "JournalResult";
 
   private const string JournalResultHoverPrefix = "JournalResult-";
+
+  private const uint JournalResultDescriptionTextId = 543;
 
   private static readonly TimeSpan JournalResultRetryInterval =
       TimeSpan.FromSeconds(2);
@@ -140,7 +143,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     {
       if (!TryReadJournalResultSetupText(
               setupAtkValues,
-              out var questNameText))
+              out var questNameText,
+              out var questNamePayload))
       {
         return;
       }
@@ -177,6 +181,12 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
           ? $"JournalResult|QuestId:{questId}|{questNameText}"
           : $"JournalResult|{questNameText}";
 
+      var storedMessagePayload = ResolveJournalResultStoredMessage(
+          foundQuestPlate?.OriginalQuestMessage,
+          foundQuestPlate?.TranslatedQuestMessage,
+          foundQuestPopupText?.OriginalBody,
+          foundQuestPopupText?.TranslatedBody);
+
       if (!this.TryResolveJournalResultTranslation(
               cacheKey,
               questNameText,
@@ -189,7 +199,11 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
             sourceLanguage,
             questNameText,
             string.Empty,
-            questId);
+            storedMessagePayload[0],
+            storedMessagePayload[1],
+            questId,
+            questNamePayload,
+            null);
         this.QueueJournalResultTranslation(
             cacheKey,
             sourceLanguage,
@@ -210,11 +224,18 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
           sourceLanguage,
           questNameText,
           translatedNameText,
-          questId);
+          storedMessagePayload[0],
+          storedMessagePayload[1],
+          questId,
+          questNamePayload,
+          null);
 
       if (this.JournalResultWritesNativeTranslation)
       {
-        setupAtkValues[1].SetManagedString(translatedNameText);
+        SetJournalResultValue(
+            &setupAtkValues[1],
+            this.currentJournalResultHoverState?.TranslatedQuestNamePayload,
+            translatedNameText);
         this.ownsJournalResultNativeMutation = true;
       }
       else
@@ -270,6 +291,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       return;
     }
 
+    this.TryCaptureJournalResultVisiblePayloads(addon);
+
     if (!this.JournalResultWritesNativeTranslation &&
         this.ownsJournalResultNativeMutation)
     {
@@ -303,9 +326,11 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// <returns><c>true</c> when the title is a readable string.</returns>
   private static unsafe bool TryReadJournalResultSetupText(
       AtkValue* setupAtkValues,
-      out string questNameText)
+      out string questNameText,
+      out byte[]? questNamePayload)
   {
     questNameText = string.Empty;
+    questNamePayload = null;
     if (setupAtkValues == null ||
         setupAtkValues[1].Type != ValueType.String ||
         !setupAtkValues[1].String.HasValue)
@@ -316,6 +341,17 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     questNameText = MemoryHelper.ReadSeStringAsString(
         out _,
         (nint)setupAtkValues[1].String.Value);
+    try
+    {
+      questNamePayload = MemoryHelper.ReadSeStringNullTerminated(
+              (nint)setupAtkValues[1].String.Value)
+          .Encode();
+    }
+    catch
+    {
+      questNamePayload = null;
+    }
+
     return !string.IsNullOrWhiteSpace(questNameText);
   }
 
@@ -486,6 +522,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 
     var translatedNameText = string.Empty;
     var translatedPayloadReady = false;
+    QuestPlate? foundQuestPlate = null;
+    QuestPopupText? foundQuestPopupText = null;
     if (this.TryGetQueuedTranslation(
             state.CacheKey,
             out var cachedTranslatedName) &&
@@ -497,7 +535,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 
     if (!translatedPayloadReady)
     {
-      var foundQuestPlate = this.FindJournalResultQuestPlate(
+      foundQuestPlate = this.FindJournalResultQuestPlate(
           state.SourceLanguage,
           state.OriginalQuestName,
           state.QuestId);
@@ -513,7 +551,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     if (!translatedPayloadReady &&
         string.IsNullOrWhiteSpace(state.QuestId))
     {
-      var foundQuestPopupText = this.FindQuestPopupText(
+      foundQuestPopupText = this.FindQuestPopupText(
           this.CreateQuestPopupText(
               JournalResultAddonName,
               state.SourceLanguage,
@@ -527,6 +565,12 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         translatedPayloadReady = true;
       }
     }
+
+    var storedMessagePayload = ResolveJournalResultStoredMessage(
+        foundQuestPlate?.OriginalQuestMessage,
+        foundQuestPlate?.TranslatedQuestMessage,
+        foundQuestPopupText?.OriginalBody,
+        foundQuestPopupText?.TranslatedBody);
 
     if (!translatedPayloadReady)
     {
@@ -548,7 +592,11 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         state.SourceLanguage,
         state.OriginalQuestName,
         translatedNameText,
-        state.QuestId);
+        storedMessagePayload[0],
+        storedMessagePayload[1],
+        state.QuestId,
+        state.OriginalQuestNamePayload,
+        state.OriginalQuestMessagePayload);
     return true;
   }
 
@@ -565,14 +613,42 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       SourceClientLanguage sourceLanguage,
       string originalQuestName,
       string translatedQuestName,
-      string? questId)
+      string originalQuestMessage,
+      string translatedQuestMessage,
+      string? questId,
+      byte[]? originalQuestNamePayload,
+      byte[]? originalQuestMessagePayload)
   {
+    var retainedOriginalQuestNamePayload =
+        ReadableSeStringPayloadHelper.RetainMatchingPayload(
+            originalQuestNamePayload,
+            originalQuestName);
+    var retainedOriginalQuestMessagePayload =
+        ReadableSeStringPayloadHelper.RetainMatchingPayload(
+            originalQuestMessagePayload,
+            originalQuestMessage);
+    var translatedQuestNamePayload =
+        ReadableSeStringPayloadHelper.ProjectReadablePayloadBytes(
+            retainedOriginalQuestNamePayload,
+            originalQuestName,
+            translatedQuestName);
+    var translatedQuestMessagePayload =
+        ReadableSeStringPayloadHelper.ProjectReadablePayloadBytes(
+            retainedOriginalQuestMessagePayload,
+            originalQuestMessage,
+            translatedQuestMessage);
     this.currentJournalResultHoverState = new JournalResultHoverState(
         cacheKey,
         sourceLanguage,
         originalQuestName,
         translatedQuestName,
-        questId);
+        originalQuestMessage,
+        translatedQuestMessage,
+        questId,
+        retainedOriginalQuestNamePayload,
+        translatedQuestNamePayload,
+        retainedOriginalQuestMessagePayload,
+        translatedQuestMessagePayload);
     this.hasPendingJournalResultTranslation =
         !this.currentJournalResultHoverState.TranslatedPayloadReady;
     this.nextJournalResultRetryUtc = this.hasPendingJournalResultTranslation
@@ -623,6 +699,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       return;
     }
 
+    var registeredName = false;
     if (this.TryFindReadableTextNodeByText(
             addon,
             state.OriginalQuestName,
@@ -638,14 +715,61 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
           swapEnabled: this.JournalResultHoverShowsOriginal,
           forceEnabled: true,
           denseHitbox: true);
+      registeredName = true;
     }
-    else
+
+    var registeredMessage = false;
+    if (!string.IsNullOrWhiteSpace(state.OriginalQuestMessage) &&
+        IsTranslatedPayloadReady(state.TranslatedQuestMessage) &&
+        this.TryFindJournalResultMessageNode(
+            addon,
+            state,
+            out var messageNode))
     {
+      this.RegisterTranslatedHoverTooltip(
+          $"JournalResult-QuestBody-{(nint)messageNode:X}",
+          messageNode,
+          state.OriginalQuestMessage,
+          state.TranslatedQuestMessage,
+          translatedPayloadReady: canRenderTooltip,
+          swapEnabled: this.JournalResultHoverShowsOriginal,
+          forceEnabled: true,
+          denseHitbox: true);
+      registeredMessage = true;
+    }
+
+    if (!registeredName && !registeredMessage)
+    {
+      var originalAddonPayload = state.OriginalQuestName;
+      var translatedAddonPayload = state.TranslatedQuestName;
+      if (!string.IsNullOrWhiteSpace(state.OriginalQuestMessage) &&
+          IsTranslatedPayloadReady(state.TranslatedQuestMessage))
+      {
+        originalAddonPayload =
+            $"{state.OriginalQuestName}\n{state.OriginalQuestMessage}";
+        translatedAddonPayload =
+            $"{state.TranslatedQuestName}\n{state.TranslatedQuestMessage}";
+      }
+
       this.RegisterTranslatedHoverTooltip(
           $"JournalResult-{(nint)addon:X}",
           addon,
-          state.OriginalQuestName,
-          state.TranslatedQuestName,
+          originalAddonPayload,
+          translatedAddonPayload,
+          translatedPayloadReady: canRenderTooltip,
+          swapEnabled: this.JournalResultHoverShowsOriginal,
+          forceEnabled: true,
+          denseHitbox: true);
+    }
+    else if (!registeredMessage &&
+             !string.IsNullOrWhiteSpace(state.OriginalQuestMessage) &&
+             IsTranslatedPayloadReady(state.TranslatedQuestMessage))
+    {
+      this.RegisterTranslatedHoverTooltip(
+          $"JournalResult-QuestBody-{(nint)addon:X}",
+          addon,
+          state.OriginalQuestMessage,
+          state.TranslatedQuestMessage,
           translatedPayloadReady: canRenderTooltip,
           swapEnabled: this.JournalResultHoverShowsOriginal,
           forceEnabled: true,
@@ -655,6 +779,75 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     this.lastAppliedDisplayMode =
         this.Config.JournalResultTranslationDisplayMode;
     this.needsJournalResultHoverRefresh = false;
+  }
+
+  /// <summary>
+  ///     Captures the current visible JournalResult title and body payloads
+  ///     before handler-owned native mutation rewrites the live nodes.
+  /// </summary>
+  /// <param name="addon">The visible JournalResult addon.</param>
+  /// <returns>
+  ///     <c>true</c> when at least one newly captured payload was retained.
+  /// </returns>
+  private unsafe bool TryCaptureJournalResultVisiblePayloads(AtkUnitBase* addon)
+  {
+    var state = this.currentJournalResultHoverState;
+    if (state == null || addon == null || !addon->IsVisible)
+    {
+      return false;
+    }
+
+    var updatedOriginalQuestNamePayload =
+        state.OriginalQuestNamePayload;
+    if (updatedOriginalQuestNamePayload == null &&
+        this.TryFindReadableTextNodeByText(
+            addon,
+            state.OriginalQuestName,
+            state.TranslatedQuestName,
+            out var nameNode))
+    {
+      updatedOriginalQuestNamePayload =
+          ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(
+              nameNode,
+              state.OriginalQuestName);
+    }
+
+    var updatedOriginalQuestMessagePayload =
+        state.OriginalQuestMessagePayload;
+    if (!string.IsNullOrWhiteSpace(state.OriginalQuestMessage) &&
+        updatedOriginalQuestMessagePayload == null &&
+        this.TryFindJournalResultMessageNode(
+            addon,
+            state,
+            out var messageNode))
+    {
+      updatedOriginalQuestMessagePayload =
+          ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(
+              messageNode,
+              state.OriginalQuestMessage);
+    }
+
+    if (ReferenceEquals(
+            updatedOriginalQuestNamePayload,
+            state.OriginalQuestNamePayload) &&
+        ReferenceEquals(
+            updatedOriginalQuestMessagePayload,
+            state.OriginalQuestMessagePayload))
+    {
+      return false;
+    }
+
+    this.RememberJournalResultHoverState(
+        state.CacheKey,
+        state.SourceLanguage,
+        state.OriginalQuestName,
+        state.TranslatedQuestName,
+        state.OriginalQuestMessage,
+        state.TranslatedQuestMessage,
+        state.QuestId,
+        updatedOriginalQuestNamePayload,
+        updatedOriginalQuestMessagePayload);
+    return true;
   }
 
   /// <summary>
@@ -681,13 +874,46 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     var targetQuestName = this.JournalResultWritesNativeTranslation
         ? state.TranslatedQuestName
         : state.OriginalQuestName;
+    var targetQuestMessage = this.JournalResultWritesNativeTranslation
+        ? state.TranslatedQuestMessage
+        : state.OriginalQuestMessage;
+    var targetQuestNamePayload = this.JournalResultWritesNativeTranslation
+        ? state.TranslatedQuestNamePayload
+        : state.OriginalQuestNamePayload;
+    var targetQuestMessagePayload = this.JournalResultWritesNativeTranslation
+        ? state.TranslatedQuestMessagePayload
+        : state.OriginalQuestMessagePayload;
+    var appliedName = false;
     if (this.TryFindReadableTextNodeByText(
             addon,
             state.OriginalQuestName,
             state.TranslatedQuestName,
             out var nameNode))
     {
-      nameNode->SetText(targetQuestName);
+      SetJournalResultTextNode(
+          nameNode,
+          targetQuestNamePayload,
+          targetQuestName);
+      appliedName = true;
+    }
+
+    var appliedMessage = string.IsNullOrWhiteSpace(state.OriginalQuestMessage);
+    if (!appliedMessage &&
+        IsTranslatedPayloadReady(state.TranslatedQuestMessage) &&
+        this.TryFindJournalResultMessageNode(
+            addon,
+            state,
+            out var messageNode))
+    {
+      SetJournalResultTextNode(
+          messageNode,
+          targetQuestMessagePayload,
+          targetQuestMessage);
+      appliedMessage = true;
+    }
+
+    if (appliedName && appliedMessage)
+    {
       this.ownsJournalResultNativeMutation =
           this.JournalResultWritesNativeTranslation;
     }
@@ -715,19 +941,161 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 
     if (addon->AtkValues != null && addon->AtkValuesCount > 1)
     {
-      addon->AtkValues[1].SetManagedString(state.OriginalQuestName);
+      SetJournalResultValue(
+          &addon->AtkValues[1],
+          state.OriginalQuestNamePayload,
+          state.OriginalQuestName);
+    }
+
+    if (this.TryFindReadableTextNodeByText(
+        addon,
+        state.OriginalQuestName,
+        state.TranslatedQuestName,
+        out var nameNode))
+    {
+      SetJournalResultTextNode(
+          nameNode,
+          state.OriginalQuestNamePayload,
+          state.OriginalQuestName);
+    }
+
+    if (!string.IsNullOrWhiteSpace(state.OriginalQuestMessage) &&
+        this.TryFindJournalResultMessageNode(
+            addon,
+            state,
+            out var messageNode))
+    {
+      SetJournalResultTextNode(
+          messageNode,
+          state.OriginalQuestMessagePayload,
+          state.OriginalQuestMessage);
+    }
+
+    this.ownsJournalResultNativeMutation = false;
+  }
+
+  /// <summary>
+  ///     Finds the visible JournalResult body node, falling back to the shared
+  ///     popup-section structural resolver when readable-node scans miss the
+  ///     empty runtime body node.
+  /// </summary>
+  /// <param name="addon">The live JournalResult addon instance.</param>
+  /// <param name="state">The current JournalResult hover state.</param>
+  /// <param name="messageNode">The resolved body node, if any.</param>
+  /// <returns><c>true</c> when the body node was found.</returns>
+  private unsafe bool TryFindJournalResultMessageNode(
+      AtkUnitBase* addon,
+      JournalResultHoverState state,
+      out AtkTextNode* messageNode)
+  {
+    messageNode = null;
+    if (addon == null || string.IsNullOrWhiteSpace(state.OriginalQuestMessage))
+    {
+      return false;
     }
 
     if (this.TryFindReadableTextNodeByText(
             addon,
-            state.OriginalQuestName,
-            state.TranslatedQuestName,
-            out var nameNode))
+            state.OriginalQuestMessage,
+            state.TranslatedQuestMessage,
+            out messageNode))
     {
-      nameNode->SetText(state.OriginalQuestName);
+      return true;
     }
 
-    this.ownsJournalResultNativeMutation = false;
+    return TryFindPopupSectionBodyTextNodeByHeadingTextId(
+        addon,
+        JournalResultDescriptionTextId,
+        out messageNode);
+  }
+
+  /// <summary>
+  ///     Writes a JournalResult title payload back into an addon value while
+  ///     falling back to plain text when no rich payload is available.
+  /// </summary>
+  /// <param name="atkValue">The addon value to write.</param>
+  /// <param name="payload">The optional rich payload bytes.</param>
+  /// <param name="fallbackText">The plain-text fallback.</param>
+  private static unsafe void SetJournalResultValue(
+      AtkValue* atkValue,
+      byte[]? payload,
+      string fallbackText)
+  {
+    if (atkValue == null)
+    {
+      return;
+    }
+
+    if (payload is { Length: > 0 })
+    {
+      atkValue->SetManagedString(payload);
+      return;
+    }
+
+    atkValue->SetManagedString(fallbackText);
+  }
+
+  /// <summary>
+  ///     Writes one JournalResult text payload back into the live text node
+  ///     while falling back to plain text when no rich payload is available.
+  /// </summary>
+  /// <param name="textNode">The live text node to mutate.</param>
+  /// <param name="payload">The optional rich payload bytes.</param>
+  /// <param name="fallbackText">The plain-text fallback.</param>
+  private static unsafe void SetJournalResultTextNode(
+      AtkTextNode* textNode,
+      byte[]? payload,
+      string fallbackText)
+  {
+    if (textNode == null)
+    {
+      return;
+    }
+
+    if (payload is { Length: > 0 })
+    {
+      textNode->SetText(payload);
+      return;
+    }
+
+    textNode->SetText(fallbackText);
+  }
+
+  /// <summary>
+  ///     Resolves the best stored JournalResult body payload without forcing a
+  ///     body path when only title data is trustworthy.
+  /// </summary>
+  /// <param name="canonicalOriginalBody">The canonical original body text.</param>
+  /// <param name="canonicalTranslatedBody">
+  ///     The canonical translated body text.
+  /// </param>
+  /// <param name="popupOriginalBody">The popup-scoped original body text.</param>
+  /// <param name="popupTranslatedBody">
+  ///     The popup-scoped translated body text.
+  /// </param>
+  /// <returns>
+  ///     A two-item payload with original body at index 0 and translated body
+  ///     at index 1, or empty strings when no complete body is available.
+  /// </returns>
+  private static string[] ResolveJournalResultStoredMessage(
+      string? canonicalOriginalBody,
+      string? canonicalTranslatedBody,
+      string? popupOriginalBody,
+      string? popupTranslatedBody)
+  {
+    if (!string.IsNullOrWhiteSpace(canonicalOriginalBody) &&
+        IsTranslatedPayloadReady(canonicalTranslatedBody))
+    {
+      return [canonicalOriginalBody, canonicalTranslatedBody ?? string.Empty];
+    }
+
+    if (!string.IsNullOrWhiteSpace(popupOriginalBody) &&
+        IsTranslatedPayloadReady(popupTranslatedBody))
+    {
+      return [popupOriginalBody, popupTranslatedBody ?? string.Empty];
+    }
+
+    return [string.Empty, string.Empty];
   }
 
   /// <summary>
@@ -766,13 +1134,35 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// <param name="SourceLanguage">The captured source language.</param>
   /// <param name="OriginalQuestName">The original quest title.</param>
   /// <param name="TranslatedQuestName">The translated quest title.</param>
+  /// <param name="OriginalQuestMessage">The optional original quest body.</param>
+  /// <param name="TranslatedQuestMessage">
+  ///     The optional translated quest body.
+  /// </param>
   /// <param name="QuestId">The optional canonical quest id.</param>
+  /// <param name="OriginalQuestNamePayload">
+  ///     The captured original quest title payload bytes, if available.
+  /// </param>
+  /// <param name="TranslatedQuestNamePayload">
+  ///     The projected translated quest title payload bytes, if available.
+  /// </param>
+  /// <param name="OriginalQuestMessagePayload">
+  ///     The captured original quest body payload bytes, if available.
+  /// </param>
+  /// <param name="TranslatedQuestMessagePayload">
+  ///     The projected translated quest body payload bytes, if available.
+  /// </param>
   private sealed record JournalResultHoverState(
       string CacheKey,
       SourceClientLanguage SourceLanguage,
       string OriginalQuestName,
       string TranslatedQuestName,
-      string? QuestId)
+      string OriginalQuestMessage,
+      string TranslatedQuestMessage,
+      string? QuestId,
+      byte[]? OriginalQuestNamePayload,
+      byte[]? TranslatedQuestNamePayload,
+      byte[]? OriginalQuestMessagePayload,
+      byte[]? TranslatedQuestMessagePayload)
   {
     /// <summary>
     ///     Gets whether the translated JournalResult payload is complete.

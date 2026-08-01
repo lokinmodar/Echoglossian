@@ -381,6 +381,28 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures JournalAccept can still resolve the live body node through
+    ///     the shared popup-section structural fallback when readable-node scans
+    ///     miss the empty runtime body node.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_UsesSharedPopupSectionBodyFallback()
+    {
+        var resolver = typeof(JournalAcceptHandler).GetMethod(
+            "TryFindJournalAcceptMessageNode",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var fallback = typeof(QuestAddonHandlerBase).GetMethod(
+            "TryFindPopupSectionBodyTextNodeByHeadingTextId",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(fallback);
+        Assert.True(
+            MethodReferences(resolver!, fallback!),
+            "JournalAccept must fall back to the shared popup-section body resolver when the visible body node is structurally present but not readable.");
+    }
+
+    /// <summary>
     /// Ensures JournalResult refreshes tooltip targets after setup so queued
     /// translations can surface while the result dialog remains open.
     /// </summary>
@@ -474,6 +496,28 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True(
             MethodReferences(cleanup!, restore!),
             "JournalResult cleanup must restore any handler-owned native mutation before state is cleared.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult centralizes body-node lookup through a shared
+    ///     structural fallback so hover, capture, native write, and restore all
+    ///     target the same live body node.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_UsesSharedPopupSectionBodyFallback()
+    {
+        var resolver = typeof(JournalResultHandler).GetMethod(
+            "TryFindJournalResultMessageNode",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var fallback = typeof(QuestAddonHandlerBase).GetMethod(
+            "TryFindPopupSectionBodyTextNodeByHeadingTextId",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(fallback);
+        Assert.True(
+            MethodReferences(resolver!, fallback!),
+            "JournalResult must fall back to the shared popup-section body resolver when the visible body node is structurally present but not readable.");
     }
 
     /// <summary>
@@ -1049,16 +1093,17 @@ public class QuestAddonHandlerLifecycleTests
             RegisterTranslatedHoverTooltipAddon = null!,
             RegisterTranslatedHoverTooltipTextNode = null!,
             RegisterTranslatedHoverTooltipResNode = null!,
-            RegisterTranslatedHoverTooltipBounds = static (
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _) => { },
-        };
+              RegisterTranslatedHoverTooltipBounds = static (
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _) => { },
+              RegisterTranslatedHoverTooltipTextNodeBounds = null!,
+          };
     }
 
     /// <summary>

@@ -184,7 +184,9 @@ public partial class Echoglossian
       string title,
       string body,
       bool forceEnabled = false,
-      bool useGeneralFont = false)
+      bool useGeneralFont = false,
+      bool displaysOriginalSwapText = false,
+      RichOriginalTextCaptureRequest? richOriginalTextCaptureRequest = null)
   {
     if (!forceEnabled && !this.configuration.TranslateTooltips)
     {
@@ -198,7 +200,9 @@ public partial class Echoglossian
         title,
         body,
         true,
-        useGeneralFont);
+        useGeneralFont,
+        displaysOriginalSwapText,
+        richOriginalTextCaptureRequest);
   }
 
   /// <summary>
@@ -418,6 +422,68 @@ public partial class Echoglossian
         displayText,
         forceEnabled,
         useGeneralFont: shouldSwap);
+  }
+
+  /// <summary>
+  /// Registers a translated hover tooltip using explicit screen bounds while
+  /// preserving rich original swap capture from one live text node.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="topLeft">Top-left screen coordinate.</param>
+  /// <param name="bottomRight">Bottom-right screen coordinate.</param>
+  /// <param name="textNode">The live text node used for rich original capture.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
+  /// <param name="swapEnabled">Optional explicit swap override.</param>
+  /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+  private unsafe void RegisterTranslatedHoverTooltip(
+      string key,
+      Vector2 topLeft,
+      Vector2 bottomRight,
+      AtkTextNode* textNode,
+      string originalText,
+      string translatedText,
+      bool translatedPayloadReady = true,
+      bool? swapEnabled = null,
+      bool forceEnabled = false)
+  {
+    if (!forceEnabled && !this.configuration.TranslateTooltips)
+    {
+      return;
+    }
+
+    if (!translatedPayloadReady)
+    {
+      this.hoverTooltipManager.Remove(key);
+      return;
+    }
+
+    var shouldSwap = swapEnabled ?? this.configuration.SwapTextsUsingImGui;
+    var displayText = shouldSwap
+        ? originalText
+        : translatedText;
+
+    if (string.IsNullOrWhiteSpace(displayText))
+    {
+      this.hoverTooltipManager.Remove(key);
+      return;
+    }
+
+    this.RegisterHoverTooltip(
+        key,
+        topLeft,
+        bottomRight,
+        string.Empty,
+        displayText,
+        forceEnabled,
+        useGeneralFont: shouldSwap,
+        displaysOriginalSwapText: shouldSwap,
+        richOriginalTextCaptureRequest: shouldSwap && textNode != null
+            ? new RichOriginalTextCaptureRequest((nint)textNode, originalText)
+            : null);
   }
 
   /// <summary>

@@ -5882,7 +5882,7 @@
             <param name="title">Tooltip title.</param>
             <param name="body">Tooltip body text.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.Echoglossian.RegisterHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest})">
             <summary>
             Registers a hover tooltip using explicit screen bounds.
             </summary>
@@ -5940,6 +5940,23 @@
             <param name="key">Stable key used to refresh the tooltip target.</param>
             <param name="topLeft">Top-left screen coordinate.</param>
             <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean)">
+            <summary>
+            Registers a translated hover tooltip using explicit screen bounds while
+            preserving rich original swap capture from one live text node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="topLeft">Top-left screen coordinate.</param>
+            <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="textNode">The live text node used for rich original capture.</param>
             <param name="originalText">The original visible text.</param>
             <param name="translatedText">The translated text.</param>
             <param name="translatedPayloadReady">
@@ -18045,7 +18062,7 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryReadJournalAcceptSetupText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryReadJournalAcceptSetupText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String@,System.String@,System.Byte[]@)">
             <summary>
                 Reads the JournalAccept setup title and message values safely.
             </summary>
@@ -18053,6 +18070,17 @@
             <param name="questName">The captured quest title.</param>
             <param name="questMessage">The captured quest message.</param>
             <returns><c>true</c> when both values are readable strings.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.BuildJournalAcceptCacheKey(System.String,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget,System.String)">
+            <summary>
+                Builds the stable JournalAccept cache key for the current persistence
+                target.
+            </summary>
+            <param name="questName">The original quest title.</param>
+            <param name="questMessage">The original quest message.</param>
+            <param name="persistenceTarget">The persistence bucket in use.</param>
+            <param name="questId">The optional canonical quest id.</param>
+            <returns>The stable cache key for the current JournalAccept payload.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryResolveJournalAcceptTranslation(System.String,System.String,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText,System.String@,System.String@)">
             <summary>
@@ -18069,6 +18097,18 @@
             <param name="translatedQuestName">The translated quest title.</param>
             <param name="translatedQuestMessage">The translated quest message.</param>
             <returns><c>true</c> when a complete translated payload exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryPromoteJournalAcceptVisibleBodyPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Promotes the current JournalAccept runtime payload to the richer
+                visible body text when setup capture only exposed the short
+                quest-sync marker.
+            </summary>
+            <param name="addon">The live JournalAccept addon instance.</param>
+            <returns>
+                <c>true</c> when the runtime state was promoted to a richer visible
+                body payload; otherwise, <c>false</c>.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.QueueJournalAcceptTranslation(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget,System.String)">
             <summary>
@@ -18090,7 +18130,7 @@
             </summary>
             <returns><c>true</c> when a complete payload became available.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.RememberJournalAcceptHoverState(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.RememberJournalAcceptHoverState(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget,System.String,System.Byte[])">
             <summary>
                 Stores the current JournalAccept hover payload and retry state.
             </summary>
@@ -18111,6 +18151,29 @@
                 readable.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryFindJournalAcceptMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.String@)">
+            <summary>
+                Finds the visible JournalAccept body node, including the expanded
+                runtime body that keeps the quest-sync marker ahead of the readable
+                message text.
+            </summary>
+            <param name="addon">The live JournalAccept addon instance.</param>
+            <param name="state">The current JournalAccept hover state.</param>
+            <param name="messageNode">The resolved body node, if any.</param>
+            <param name="originalHoverQuestMessage">
+                The preferred original body text for hover presentation.
+            </param>
+            <returns><c>true</c> when the body node was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptTextNodePayloadMatches(System.String,System.String)">
+            <summary>
+                Compares a visible JournalAccept text node payload with one expected
+                payload while allowing wrapping and readable-text normalization.
+            </summary>
+            <param name="visibleText">The current text read from the node.</param>
+            <param name="expectedText">The expected original or translated payload.</param>
+            <returns><c>true</c> when both texts describe the same payload.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptOriginalHoverBody(System.String,System.String)">
             <summary>
                 Promotes the original JournalAccept hover body to the richer visible
@@ -18120,6 +18183,72 @@
             <param name="setupMessage">The setup-captured JournalAccept body.</param>
             <param name="visibleText">The current visible body node text.</param>
             <returns>The preferred original body text for hover presentation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptExpandedVisibleBodyMatch(System.String,System.String)">
+            <summary>
+                Returns the promoted original body text when a visible node clearly
+                belongs to the expanded JournalAccept body payload.
+            </summary>
+            <param name="setupMessage">The setup-captured JournalAccept body.</param>
+            <param name="visibleText">The current visible node text.</param>
+            <returns>
+                The promoted original body text when the node belongs to the expanded
+                JournalAccept body; otherwise an empty string.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolvePreferredJournalAcceptVisibleBody(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+                Resolves the preferred JournalAccept visible body payload from the
+                readable-node scan order, preferring the richer expanded body even
+                when a shorter quest-sync marker appears first.
+            </summary>
+            <param name="setupMessage">The setup-captured JournalAccept body.</param>
+            <param name="visibleTexts">The readable visible-node texts in scan order.</param>
+            <returns>
+                The preferred visible body payload for runtime use, or the setup body
+                when no richer visible node exists.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryBuildJournalAcceptMessageHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
+            <summary>
+                Builds broader hover bounds for the JournalAccept body when the live
+                text node only covers one line inside a larger visible body
+                container.
+            </summary>
+            <param name="messageNode">The resolved JournalAccept body text node.</param>
+            <param name="topLeft">The promoted hover top-left coordinate.</param>
+            <param name="bottomRight">The promoted hover bottom-right coordinate.</param>
+            <returns>
+                <c>true</c> when a larger parent container should drive the hover
+                target; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptParentScreenOrigin(System.Single,System.Single,System.Int16,System.Int16)">
+            <summary>
+                Reconstructs the JournalAccept parent container screen origin from
+                the visible body text node position and its local offset inside the
+                larger body container.
+            </summary>
+            <param name="textLeft">The visible body text-node screen X position.</param>
+            <param name="textTop">The visible body text-node screen Y position.</param>
+            <param name="textLocalX">The text-node local X offset in the parent.</param>
+            <param name="textLocalY">The text-node local Y offset in the parent.</param>
+            <returns>The reconstructed parent container screen origin.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ShouldUseJournalAcceptParentHoverBounds(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+                Determines whether the JournalAccept body should use its larger
+                parent container as the hover hitbox instead of the narrow live text
+                node bounds.
+            </summary>
+            <param name="textWidth">The visible text-node width.</param>
+            <param name="textHeight">The visible text-node height.</param>
+            <param name="parentWidth">The parent container width.</param>
+            <param name="parentHeight">The parent container height.</param>
+            <returns>
+                <c>true</c> when the parent container is materially larger than the
+                text node; otherwise, <c>false</c>.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.NormalizeJournalAcceptSetupMessageForComparison(System.String)">
             <summary>
@@ -18156,6 +18285,33 @@
                 Clears JournalAccept hover registrations and local runtime state.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryCaptureJournalAcceptMessagePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <summary>
+                Captures the original JournalAccept body payload from the live text
+                node when it still matches the expected readable source text.
+            </summary>
+            <param name="messageNode">The live JournalAccept body node.</param>
+            <param name="expectedText">The expected readable original body text.</param>
+            <returns>The captured original payload bytes, if available.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.SetJournalAcceptMessageValue(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.Byte[],System.String)">
+            <summary>
+                Writes a JournalAccept body payload back into an addon setup value
+                while falling back to plain text when no rich payload is available.
+            </summary>
+            <param name="atkValue">The setup value to write.</param>
+            <param name="payload">The optional rich payload bytes.</param>
+            <param name="fallbackText">The plain-text fallback.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.SetJournalAcceptMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Byte[],System.String)">
+            <summary>
+                Writes a JournalAccept body payload back into the live text node while
+                falling back to plain text when no rich payload is available.
+            </summary>
+            <param name="messageNode">The live JournalAccept body node.</param>
+            <param name="payload">The optional rich payload bytes.</param>
+            <param name="fallbackText">The plain-text fallback.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.OnJournalAcceptCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <summary>
                 Clears JournalAccept hover registrations when the addon closes.
@@ -18177,8 +18333,14 @@
             <param name="SourceContentHash">The resolved source content hash.</param>
             <param name="PersistenceTarget">The persistence bucket in use.</param>
             <param name="QuestId">The optional canonical quest id.</param>
+            <param name="OriginalQuestMessagePayload">
+                The captured original body payload bytes, if available.
+            </param>
+            <param name="TranslatedQuestMessagePayload">
+                The projected translated body payload bytes, if available.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState.#ctor(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState.#ctor(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String,Echoglossian.NativeUI.AddonHandlers.Quest.QuestPopupPersistenceTarget,System.String,System.Byte[],System.Byte[])">
             <summary>
                 Local JournalAccept payload retained between setup and visible draw
                 passes.
@@ -18192,6 +18354,12 @@
             <param name="SourceContentHash">The resolved source content hash.</param>
             <param name="PersistenceTarget">The persistence bucket in use.</param>
             <param name="QuestId">The optional canonical quest id.</param>
+            <param name="OriginalQuestMessagePayload">
+                The captured original body payload bytes, if available.
+            </param>
+            <param name="TranslatedQuestMessagePayload">
+                The projected translated body payload bytes, if available.
+            </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState.CacheKey">
             <summary>The stable translation cache key.</summary>
@@ -18219,6 +18387,16 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState.QuestId">
             <summary>The optional canonical quest id.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState.OriginalQuestMessagePayload">
+            <summary>
+                The captured original body payload bytes, if available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState.TranslatedQuestMessagePayload">
+            <summary>
+                The projected translated body payload bytes, if available.
+            </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState.TranslatedPayloadReady">
             <summary>
@@ -19150,7 +19328,7 @@
             <param name="type">The addon lifecycle event.</param>
             <param name="args">The addon lifecycle arguments.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryReadJournalResultSetupText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryReadJournalResultSetupText(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.String@,System.Byte[]@)">
             <summary>
                 Reads the JournalResult setup title safely.
             </summary>
@@ -19199,7 +19377,7 @@
             </summary>
             <returns><c>true</c> when a translated title became available.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.RememberJournalResultHoverState(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.RememberJournalResultHoverState(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String,System.Byte[],System.Byte[])">
             <summary>
                 Stores the current JournalResult hover payload and retry state.
             </summary>
@@ -19215,6 +19393,16 @@
                 possible, falling back to the addon window otherwise.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryCaptureJournalResultVisiblePayloads(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
+            <summary>
+                Captures the current visible JournalResult title and body payloads
+                before handler-owned native mutation rewrites the live nodes.
+            </summary>
+            <param name="addon">The visible JournalResult addon.</param>
+            <returns>
+                <c>true</c> when at least one newly captured payload was retained.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.ApplyJournalResultNativeState(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState)">
             <summary>
                 Applies or restores JournalResult native text when the current display
@@ -19228,6 +19416,53 @@
                 Restores the original JournalResult title when this handler owns the
                 visible native mutation.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryFindJournalResultMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Finds the visible JournalResult body node, falling back to the shared
+                popup-section structural resolver when readable-node scans miss the
+                empty runtime body node.
+            </summary>
+            <param name="addon">The live JournalResult addon instance.</param>
+            <param name="state">The current JournalResult hover state.</param>
+            <param name="messageNode">The resolved body node, if any.</param>
+            <returns><c>true</c> when the body node was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.SetJournalResultValue(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue*,System.Byte[],System.String)">
+            <summary>
+                Writes a JournalResult title payload back into an addon value while
+                falling back to plain text when no rich payload is available.
+            </summary>
+            <param name="atkValue">The addon value to write.</param>
+            <param name="payload">The optional rich payload bytes.</param>
+            <param name="fallbackText">The plain-text fallback.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.SetJournalResultTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Byte[],System.String)">
+            <summary>
+                Writes one JournalResult text payload back into the live text node
+                while falling back to plain text when no rich payload is available.
+            </summary>
+            <param name="textNode">The live text node to mutate.</param>
+            <param name="payload">The optional rich payload bytes.</param>
+            <param name="fallbackText">The plain-text fallback.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.ResolveJournalResultStoredMessage(System.String,System.String,System.String,System.String)">
+            <summary>
+                Resolves the best stored JournalResult body payload without forcing a
+                body path when only title data is trustworthy.
+            </summary>
+            <param name="canonicalOriginalBody">The canonical original body text.</param>
+            <param name="canonicalTranslatedBody">
+                The canonical translated body text.
+            </param>
+            <param name="popupOriginalBody">The popup-scoped original body text.</param>
+            <param name="popupTranslatedBody">
+                The popup-scoped translated body text.
+            </param>
+            <returns>
+                A two-item payload with original body at index 0 and translated body
+                at index 1, or empty strings when no complete body is available.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.ClearJournalResultRuntimeState">
             <summary>
@@ -19250,9 +19485,25 @@
             <param name="SourceLanguage">The captured source language.</param>
             <param name="OriginalQuestName">The original quest title.</param>
             <param name="TranslatedQuestName">The translated quest title.</param>
+            <param name="OriginalQuestMessage">The optional original quest body.</param>
+            <param name="TranslatedQuestMessage">
+                The optional translated quest body.
+            </param>
             <param name="QuestId">The optional canonical quest id.</param>
+            <param name="OriginalQuestNamePayload">
+                The captured original quest title payload bytes, if available.
+            </param>
+            <param name="TranslatedQuestNamePayload">
+                The projected translated quest title payload bytes, if available.
+            </param>
+            <param name="OriginalQuestMessagePayload">
+                The captured original quest body payload bytes, if available.
+            </param>
+            <param name="TranslatedQuestMessagePayload">
+                The projected translated quest body payload bytes, if available.
+            </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.#ctor(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.#ctor(System.String,Echoglossian.SourceClientLanguage,System.String,System.String,System.String,System.String,System.String,System.Byte[],System.Byte[],System.Byte[],System.Byte[])">
             <summary>
                 Local JournalResult payload retained between setup and visible draw
                 passes.
@@ -19261,7 +19512,23 @@
             <param name="SourceLanguage">The captured source language.</param>
             <param name="OriginalQuestName">The original quest title.</param>
             <param name="TranslatedQuestName">The translated quest title.</param>
+            <param name="OriginalQuestMessage">The optional original quest body.</param>
+            <param name="TranslatedQuestMessage">
+                The optional translated quest body.
+            </param>
             <param name="QuestId">The optional canonical quest id.</param>
+            <param name="OriginalQuestNamePayload">
+                The captured original quest title payload bytes, if available.
+            </param>
+            <param name="TranslatedQuestNamePayload">
+                The projected translated quest title payload bytes, if available.
+            </param>
+            <param name="OriginalQuestMessagePayload">
+                The captured original quest body payload bytes, if available.
+            </param>
+            <param name="TranslatedQuestMessagePayload">
+                The projected translated quest body payload bytes, if available.
+            </param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.CacheKey">
             <summary>The stable translation cache key.</summary>
@@ -19275,8 +19542,36 @@
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.TranslatedQuestName">
             <summary>The translated quest title.</summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.OriginalQuestMessage">
+            <summary>The optional original quest body.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.TranslatedQuestMessage">
+            <summary>
+                The optional translated quest body.
+            </summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.QuestId">
             <summary>The optional canonical quest id.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.OriginalQuestNamePayload">
+            <summary>
+                The captured original quest title payload bytes, if available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.TranslatedQuestNamePayload">
+            <summary>
+                The projected translated quest title payload bytes, if available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.OriginalQuestMessagePayload">
+            <summary>
+                The captured original quest body payload bytes, if available.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.TranslatedQuestMessagePayload">
+            <summary>
+                The projected translated quest body payload bytes, if available.
+            </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState.TranslatedPayloadReady">
             <summary>
@@ -19846,6 +20141,19 @@
             <param name="textNode">The matched text node, if any.</param>
             <returns><c>true</c> when a matching text node was found.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeByHeadingTextId(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Resolves the first visible popup body text node that belongs to the
+                section immediately preceding one heading text node with the supplied
+                sheet-text identifier.
+            </summary>
+            <param name="addon">The live addon instance to inspect.</param>
+            <param name="headingTextId">
+                The sheet-text identifier carried by the visible section heading.
+            </param>
+            <param name="textNode">The resolved visible body node, if any.</param>
+            <returns><c>true</c> when the popup body node was found.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ReadReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Reads the best plain-text representation available from a native text
@@ -19853,6 +20161,68 @@
             </summary>
             <param name="textNode">The text node to read.</param>
             <returns>The readable text, or an empty string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindVisibleTextNodeByTextId(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Finds one visible readable text node whose sheet-text identifier
+                matches the supplied value.
+            </summary>
+            <param name="addon">The live addon instance to inspect.</param>
+            <param name="textId">The sheet-text identifier to resolve.</param>
+            <param name="textNode">The matched visible text node, if any.</param>
+            <returns><c>true</c> when a matching heading node was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeFromCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Tries to resolve the first visible text-node descendant from one
+                structural popup section candidate that precedes the target heading.
+            </summary>
+            <param name="candidate">The structural section candidate.</param>
+            <param name="headingNode">The heading node that owns the section.</param>
+            <param name="textNode">The resolved body text node, if any.</param>
+            <returns><c>true</c> when the candidate exposes one visible body node.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindFirstVisibleTextNodeInSubtree(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.HashSet{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+            <summary>
+                Walks one visible node subtree in draw order and returns the first
+                visible text node that is not the excluded heading.
+            </summary>
+            <param name="node">The subtree root to inspect.</param>
+            <param name="excludedTextNode">The heading node that must be skipped.</param>
+            <param name="visitedNodes">The visited native-node addresses.</param>
+            <param name="textNode">The resolved visible text node, if any.</param>
+            <returns><c>true</c> when a visible text node was found.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ResolveReadableTextNodeText(System.String,System.String,System.String)">
+            <summary>
+                Chooses the safest readable representation for one native text node.
+            </summary>
+            <param name="currentText">
+                The direct current text returned by the live <see cref="!:Utf8String" />
+                wrapper.
+            </param>
+            <param name="originalText">
+                The readable text extracted from the node's structured original
+                payload.
+            </param>
+            <param name="legacyText">
+                The legacy SeString buffer read fallback.
+            </param>
+            <returns>The preferred readable text for matching and hover work.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ProjectReadablePayloadBytes(System.Byte[],System.String,System.String)">
+            <summary>
+                Projects translated readable text onto a captured SeString payload so
+                native mutation can preserve original formatting macros when the raw
+                payload still matches the expected readable source text.
+            </summary>
+            <param name="originalPayload">The captured original SeString bytes.</param>
+            <param name="originalText">The expected readable original text.</param>
+            <param name="translatedText">The translated readable text.</param>
+            <returns>
+                The projected payload bytes when payload reuse succeeds; otherwise,
+                <see langword="null" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TextNodePayloadMatches(System.String,System.String)">
             <summary>
@@ -19869,14 +20239,6 @@
             </summary>
             <param name="text">The text to normalize.</param>
             <returns>The normalized text.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.IsReadableTextNoise(System.Char)">
-            <summary>
-                Determines whether one character should be ignored while matching
-                readable popup text because it only represents SeString payload noise.
-            </summary>
-            <param name="character">The character to inspect.</param>
-            <returns><c>true</c> when the character should be treated as a separator.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.NormalizeQuestText(System.String)">
             <summary>
@@ -20004,6 +20366,23 @@
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.RegisterTranslatedHoverTooltip(System.String,System.Numerics.Vector2,System.Numerics.Vector2,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.String,System.Boolean,System.Nullable{System.Boolean},System.Boolean)">
+            <summary>
+                Registers a hover tooltip using explicit screen bounds while
+                preserving rich original capture from a live text node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="topLeft">Top-left screen coordinate.</param>
+            <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="textNode">The live text node used for rich original capture.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.TryGetQueuedTranslationDelegate">
             <summary>
                 Delegate used to read a queued quest translation from the shared
@@ -20107,6 +20486,23 @@
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.RegisterTranslatedHoverTooltipTextNodeBoundsDelegate">
+            <summary>
+                Delegate used to register a hover tooltip from explicit screen bounds
+                while preserving rich original capture from a live text node.
+            </summary>
+            <param name="key">Stable key used to refresh the tooltip target.</param>
+            <param name="topLeft">Top-left screen coordinate.</param>
+            <param name="bottomRight">Bottom-right screen coordinate.</param>
+            <param name="textNode">The live text node used for rich original capture.</param>
+            <param name="originalText">The original visible text.</param>
+            <param name="translatedText">The translated text.</param>
+            <param name="translatedPayloadReady">
+            Whether the tooltip payload required by the current mode is ready.
+            </param>
+            <param name="swapEnabled">Optional explicit swap override.</param>
+            <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies">
             <summary>
                 Bundles the quest-specific delegates and services needed by standalone
@@ -20172,6 +20568,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RegisterTranslatedHoverTooltipBounds">
             <summary>Gets or sets the bounds-based tooltip registration delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.RegisterTranslatedHoverTooltipTextNodeBounds">
+            <summary>
+                Gets or sets the bounds-based tooltip registration delegate that
+                still captures rich original text from one live text node.
+            </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers">
             <summary>
@@ -28852,6 +29254,146 @@
             <summary>
                 Releases broker resources and stops the background pump.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper">
+            <summary>
+                Reads, matches, captures, and reprojects readable native
+                <see cref="T:Lumina.Text.ReadOnly.ReadOnlySeString" /> payloads while preserving macro payload
+                structure wherever possible.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.ReadReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
+            <summary>
+                Reads the best readable text representation available from one live
+                native text node without mutating it.
+            </summary>
+            <param name="textNode">The live text node to inspect.</param>
+            <returns>The preferred readable text, or an empty string.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.ResolveReadableTextNodeText(System.String,System.String,System.String)">
+            <summary>
+                Chooses the safest readable representation for one native text node.
+            </summary>
+            <param name="currentText">
+                The direct current text returned by the live native string wrapper.
+            </param>
+            <param name="originalText">
+                The readable text extracted from the node's structured original
+                payload.
+            </param>
+            <param name="legacyText">
+                The legacy SeString buffer-read fallback.
+            </param>
+            <returns>The preferred readable text for matching and hover work.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.TryExtractReadablePayloadText(System.Byte[],System.String@)">
+            <summary>
+                Attempts to extract readable text from one persisted or captured
+                SeString payload.
+            </summary>
+            <param name="payload">The encoded payload bytes.</param>
+            <param name="readableText">The readable text when extraction succeeds.</param>
+            <returns><c>true</c> when readable text was extracted.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.RetainMatchingPayload(System.Byte[],System.String)">
+            <summary>
+                Returns the captured payload only when its readable text still
+                matches the expected source text.
+            </summary>
+            <param name="payload">The captured payload bytes.</param>
+            <param name="expectedText">The expected readable source text.</param>
+            <returns>The original payload when it still matches; otherwise <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.ResolvePreferredMatchingPayload(System.Byte[],System.Byte[],System.String)">
+            <summary>
+                Resolves the preferred captured payload for one readable source
+                text, falling back from the original structured payload to the
+                current live payload when the original no longer matches the richer
+                visible text.
+            </summary>
+            <param name="originalPayload">The original structured payload bytes.</param>
+            <param name="currentPayload">The current live payload bytes.</param>
+            <param name="expectedText">The expected readable source text.</param>
+            <returns>
+                The first matching payload that still resolves to the expected
+                readable text, or <see langword="null" /> when neither payload
+                matches.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
+            <summary>
+                Captures the current original payload bytes from one live text node
+                only when the readable payload still matches the expected source
+                text.
+            </summary>
+            <param name="textNode">The live text node.</param>
+            <param name="expectedText">The expected readable source text.</param>
+            <returns>The captured payload bytes, if they still match.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.ProjectReadablePayloadBytes(System.Byte[],System.String,System.String)">
+            <summary>
+                Projects translated readable text onto one captured SeString payload
+                so native mutation can preserve original formatting macros when the
+                payload still matches the expected readable source text.
+            </summary>
+            <param name="originalPayload">The captured original SeString bytes.</param>
+            <param name="originalText">The expected readable original text.</param>
+            <param name="translatedText">The translated readable text.</param>
+            <returns>
+                The projected payload bytes when payload reuse succeeds; otherwise,
+                <see langword="null" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.PayloadMatches(System.String,System.String)">
+            <summary>
+                Compares visible native text with one expected payload while
+                allowing line wrapping and SeString whitespace differences.
+            </summary>
+            <param name="visibleText">The text read from the native node.</param>
+            <param name="expectedText">The expected original or translated payload.</param>
+            <returns><c>true</c> when the texts describe the same payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.NormalizeReadableText(System.String)">
+            <summary>
+                Normalizes readable native text for popup text-node matching.
+            </summary>
+            <param name="text">The text to normalize.</param>
+            <returns>The normalized text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.IsReadableTextNoise(System.Char)">
+            <summary>
+                Determines whether one character should be ignored while matching
+                readable popup text because it only represents SeString payload
+                noise.
+            </summary>
+            <param name="character">The character to inspect.</param>
+            <returns><c>true</c> when the character should be treated as a separator.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.ShouldPreferRicherReadableText(System.String,System.String)">
+            <summary>
+                Determines whether the current readable node text should win over
+                the structured original text because it is a strict readable
+                expansion of the original payload.
+            </summary>
+            <param name="currentText">The current live readable node text.</param>
+            <param name="originalText">The structured original readable text.</param>
+            <returns>
+                <c>true</c> when the current text is a richer readable expansion of
+                the original text; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReadableSeStringPayloadHelper.GetPayloadMatchScore(System.Byte[],System.String)">
+            <summary>
+                Scores how confidently one captured payload represents the expected
+                readable source text.
+            </summary>
+            <param name="payload">The captured payload bytes.</param>
+            <param name="expectedText">The expected readable source text.</param>
+            <returns>
+                <c>2</c> for an exact normalized readable-text match, <c>1</c> for
+                a loose readable match, and <c>0</c> when the payload does not
+                match.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload">
             <summary>
