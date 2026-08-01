@@ -15,6 +15,7 @@ using Echoglossian.EFCoreSqlite.Models.Journal;
 using Echoglossian.LanguagesHandling;
 using Echoglossian.NativeUI.AddonHandlers.Quest;
 using Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
+using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Handlers;
 
 using Xunit;
@@ -403,13 +404,20 @@ public class QuestAddonHandlerLifecycleTests
                                   method.Name,
                                   "TryFindPopupSectionBodyTextNodeByHeadingTextId",
                                   StringComparison.Ordinal) &&
-                              method.GetParameters().Length == 4);
+                              method.GetParameters().Length == 3);
+        var presentationResolver = typeof(JournalAcceptHandler).GetMethod(
+            "TryResolveJournalAcceptPreferredHoverNode",
+            BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.NotNull(resolver);
         Assert.NotNull(fallback);
+        Assert.NotNull(presentationResolver);
         Assert.True(
             MethodReferences(resolver!, fallback!),
             "JournalAccept must fall back to the shared popup-section body resolver when the visible body node is structurally present but not readable.");
+        Assert.False(
+            MethodReferences(resolver!, presentationResolver!),
+            "JournalAccept text-node resolution must not perform presentation-geometry traversal.");
     }
 
     /// <summary>
@@ -425,12 +433,43 @@ public class QuestAddonHandlerLifecycleTests
         var bounds = typeof(QuestAddonHandlerBase).GetMethod(
             "TryBuildPopupBodyHoverBounds",
             BindingFlags.Static | BindingFlags.NonPublic);
+        var presentationResolver = typeof(JournalAcceptHandler).GetMethod(
+            "TryResolveJournalAcceptPreferredHoverNode",
+            BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.NotNull(register);
         Assert.NotNull(bounds);
+        Assert.NotNull(presentationResolver);
         Assert.True(
             MethodReferences(register!, bounds!),
             "JournalAccept must register its body tooltip through shared popup-body hover bounds.");
+        Assert.True(
+            MethodReferences(register!, presentationResolver!),
+            "JournalAccept presentation must resolve structural body geometry only while registering hover bounds.");
+    }
+
+    /// <summary>
+    ///     Ensures popup-section text traversal uses the shared duplicate and
+    ///     node-limit guard before following native child or sibling links.
+    /// </summary>
+    [Fact]
+    public void QuestAddonHandlerBase_PopupSectionTextTraversalUsesBoundedNodeGuard()
+    {
+        var traversal = typeof(QuestAddonHandlerBase).GetMethod(
+            "TryFindFirstVisibleTextNodeInSubtree",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        var traversalGuard = typeof(AddonTextNodeResolvers)
+            .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+            .Single(method => string.Equals(
+                                  method.Name,
+                                  "TryVisitNodeAddress",
+                                  StringComparison.Ordinal) &&
+                              method.GetParameters().Length == 3);
+
+        Assert.NotNull(traversal);
+        Assert.True(
+            MethodReferences(traversal!, traversalGuard),
+            "Popup-section text traversal must stop at duplicate addresses and its practical node limit.");
     }
 
     /// <summary>
@@ -660,13 +699,20 @@ public class QuestAddonHandlerLifecycleTests
                                   method.Name,
                                   "TryFindPopupSectionBodyTextNodeByHeadingTextId",
                                   StringComparison.Ordinal) &&
-                              method.GetParameters().Length == 4);
+                              method.GetParameters().Length == 3);
+        var presentationResolver = typeof(JournalResultHandler).GetMethod(
+            "TryResolveJournalResultPreferredHoverNode",
+            BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.NotNull(resolver);
         Assert.NotNull(fallback);
+        Assert.NotNull(presentationResolver);
         Assert.True(
             MethodReferences(resolver!, fallback!),
             "JournalResult must fall back to the shared popup-section body resolver when the visible body node is structurally present but not readable.");
+        Assert.False(
+            MethodReferences(resolver!, presentationResolver!),
+            "JournalResult text-node resolution must not perform presentation-geometry traversal.");
     }
 
     /// <summary>
@@ -682,12 +728,19 @@ public class QuestAddonHandlerLifecycleTests
         var bounds = typeof(QuestAddonHandlerBase).GetMethod(
             "TryBuildPopupBodyHoverBounds",
             BindingFlags.Static | BindingFlags.NonPublic);
+        var presentationResolver = typeof(JournalResultHandler).GetMethod(
+            "TryResolveJournalResultPreferredHoverNode",
+            BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.NotNull(register);
         Assert.NotNull(bounds);
+        Assert.NotNull(presentationResolver);
         Assert.True(
             MethodReferences(register!, bounds!),
             "JournalResult must register its body tooltip through shared popup-body hover bounds.");
+        Assert.True(
+            MethodReferences(register!, presentationResolver!),
+            "JournalResult presentation must resolve structural body geometry only while registering hover bounds.");
     }
 
     /// <summary>

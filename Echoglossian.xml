@@ -18165,7 +18165,7 @@
                 readable.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryFindJournalAcceptMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@,System.String@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryFindJournalAcceptMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.JournalAcceptHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,System.String@)">
             <summary>
                 Finds the visible JournalAccept body node, including the expanded
                 runtime body that keeps the quest-sync marker ahead of the readable
@@ -18174,9 +18174,6 @@
             <param name="addon">The live JournalAccept addon instance.</param>
             <param name="state">The current JournalAccept hover state.</param>
             <param name="messageNode">The resolved body node, if any.</param>
-            <param name="preferredHoverNode">
-                The optional structural body node used only for tooltip geometry.
-            </param>
             <param name="originalHoverQuestMessage">
                 The preferred original body text for hover presentation.
             </param>
@@ -19408,7 +19405,7 @@
                 visible native mutation.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryFindJournalResultMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryFindJournalResultMessageNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.JournalResultHoverState,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
             <summary>
                 Finds the visible JournalResult body node, falling back to the shared
                 popup-section structural resolver when readable-node scans miss the
@@ -19417,9 +19414,6 @@
             <param name="addon">The live JournalResult addon instance.</param>
             <param name="state">The current JournalResult hover state.</param>
             <param name="messageNode">The resolved body node, if any.</param>
-            <param name="preferredHoverNode">
-                The optional structural body node used only for tooltip geometry.
-            </param>
             <returns><c>true</c> when the body node was found.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalResultHandler.TryResolveJournalResultPreferredHoverNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
@@ -20163,20 +20157,23 @@
             <param name="textNode">The resolved visible body node, if any.</param>
             <returns><c>true</c> when the popup body node was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeByHeadingTextId(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyHoverNodeByHeadingTextId(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
             <summary>
-                Resolves the first visible popup body text node and the structural
-                section node that contains it for one heading text identifier.
+                Resolves the structural popup section that contains one previously
+                selected body text node for presentation geometry.
             </summary>
             <param name="addon">The live addon instance to inspect.</param>
             <param name="headingTextId">
                 The sheet-text identifier carried by the visible section heading.
             </param>
-            <param name="textNode">The resolved visible body node, if any.</param>
+            <param name="textNode">The previously selected live body text node.</param>
             <param name="hoverNode">
                 The structural section node that owns the body node, if any.
             </param>
-            <returns><c>true</c> when the popup body node was found.</returns>
+            <returns>
+                <see langword="true" /> when the matching presentation section was
+                found; otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryBuildPopupBodyHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
             <summary>
@@ -20194,7 +20191,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.AddPopupBodyHoverCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Single,System.Single,System.Single,System.Single,System.Int32,System.Collections.Generic.List{Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate},System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.AddPopupBodyHoverCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Single,System.Single,System.Single,System.Single,System.Boolean,System.Int32,System.Collections.Generic.List{Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate},System.Collections.Generic.List{System.IntPtr},System.Collections.Generic.HashSet{System.IntPtr})">
             <summary>
                 Adds one visible native popup-body geometry candidate when it
                 intersects the live body text rectangle.
@@ -20204,6 +20201,10 @@
             <param name="textTop">The live body text top coordinate.</param>
             <param name="textRight">The live body text right coordinate.</param>
             <param name="textBottom">The live body text bottom coordinate.</param>
+            <param name="isSectionBounded">
+                Whether bounded structural traversal associated the candidate with
+                the resolved popup body section.
+            </param>
             <param name="distanceFromText">The structural distance from the text node.</param>
             <param name="candidates">The pure candidate snapshots to populate.</param>
             <param name="candidateAddresses">The native pointers mapped to snapshots.</param>
@@ -20227,7 +20228,7 @@
             <param name="textNode">The matched visible text node, if any.</param>
             <returns><c>true</c> when a matching heading node was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeFromCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeFromCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
             <summary>
                 Tries to resolve the first visible text-node descendant from one
                 structural popup section candidate that precedes the target heading.
@@ -20235,12 +20236,9 @@
             <param name="candidate">The structural section candidate.</param>
             <param name="headingNode">The heading node that owns the section.</param>
             <param name="textNode">The resolved body text node, if any.</param>
-            <param name="hoverNode">
-                The structural section node that owns the body text node.
-            </param>
             <returns><c>true</c> when the candidate exposes one visible body node.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindFirstVisibleTextNodeInSubtree(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.HashSet{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindFirstVisibleTextNodeInSubtree(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.HashSet{System.IntPtr},System.Int32,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
             <summary>
                 Walks one visible node subtree in draw order and returns the first
                 visible text node that is not the excluded heading.
@@ -20248,6 +20246,7 @@
             <param name="node">The subtree root to inspect.</param>
             <param name="excludedTextNode">The heading node that must be skipped.</param>
             <param name="visitedNodes">The visited native-node addresses.</param>
+            <param name="depth">The current structural traversal depth.</param>
             <param name="textNode">The resolved visible text node, if any.</param>
             <returns><c>true</c> when a visible text node was found.</returns>
         </member>
@@ -29161,12 +29160,12 @@
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate">
             <summary>
-            Describes a native-node-derived popup-body hover candidate without retaining native pointers.
+            Describes a section-bounded native popup-body hover candidate without retaining native pointers.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate.#ctor(System.Single,System.Single,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32)">
+        <member name="M:Echoglossian.NativeUI.Helpers.PopupBodyHoverCandidate.#ctor(System.Single,System.Single,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32)">
             <summary>
-            Describes a native-node-derived popup-body hover candidate without retaining native pointers.
+            Describes a section-bounded native popup-body hover candidate without retaining native pointers.
             </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker">

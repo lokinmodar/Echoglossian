@@ -728,9 +728,13 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode,
-            out var preferredHoverNode))
+            out var messageNode))
     {
+      AtkResNode* preferredHoverNode = null;
+      this.TryResolveJournalResultPreferredHoverNode(
+          addon,
+          messageNode,
+          out preferredHoverNode);
       var messageHoverKey = $"JournalResult-QuestBody-{(nint)messageNode:X}";
       if (TryBuildPopupBodyHoverBounds(
               messageNode,
@@ -846,8 +850,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode,
-            out _))
+            out var messageNode))
     {
       updatedOriginalQuestMessagePayload =
           ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(
@@ -931,8 +934,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode,
-            out _))
+            out var messageNode))
     {
       SetJournalResultTextNode(
           messageNode,
@@ -992,8 +994,7 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         this.TryFindJournalResultMessageNode(
             addon,
             state,
-            out var messageNode,
-            out _))
+            out var messageNode))
     {
       SetJournalResultTextNode(
           messageNode,
@@ -1012,18 +1013,13 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// <param name="addon">The live JournalResult addon instance.</param>
   /// <param name="state">The current JournalResult hover state.</param>
   /// <param name="messageNode">The resolved body node, if any.</param>
-  /// <param name="preferredHoverNode">
-  ///     The optional structural body node used only for tooltip geometry.
-  /// </param>
   /// <returns><c>true</c> when the body node was found.</returns>
   private unsafe bool TryFindJournalResultMessageNode(
       AtkUnitBase* addon,
       JournalResultHoverState state,
-      out AtkTextNode* messageNode,
-      out AtkResNode* preferredHoverNode)
+      out AtkTextNode* messageNode)
   {
     messageNode = null;
-    preferredHoverNode = null;
     if (addon == null || string.IsNullOrWhiteSpace(state.OriginalQuestMessage))
     {
       return false;
@@ -1035,18 +1031,13 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
             state.TranslatedQuestMessage,
             out messageNode))
     {
-      this.TryResolveJournalResultPreferredHoverNode(
-          addon,
-          messageNode,
-          out preferredHoverNode);
       return true;
     }
 
     return TryFindPopupSectionBodyTextNodeByHeadingTextId(
         addon,
         JournalResultDescriptionTextId,
-        out messageNode,
-        out preferredHoverNode);
+        out messageNode);
   }
 
   /// <summary>
@@ -1069,13 +1060,11 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   {
     preferredHoverNode = null;
     return messageNode != null &&
-           TryFindPopupSectionBodyTextNodeByHeadingTextId(
+           TryFindPopupSectionBodyHoverNodeByHeadingTextId(
                addon,
                JournalResultDescriptionTextId,
-               out var structuralMessageNode,
-               out var structuralHoverNode) &&
-           structuralMessageNode == messageNode &&
-           (preferredHoverNode = structuralHoverNode) != null;
+               messageNode,
+               out preferredHoverNode);
   }
 
   /// <summary>

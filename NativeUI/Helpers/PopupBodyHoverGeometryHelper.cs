@@ -104,6 +104,8 @@ internal static class PopupBodyHoverGeometryHelper
             && candidate.Height > 0
             && candidate.IsVisible
             && candidate.ContainsText
+            && candidate.IsSectionBounded
+            && (candidate.IsCollision || candidate.IsComponent)
             && candidate.Width >= textWidth
             && candidate.Height >= textHeight
             && (candidate.Width >= textWidth + MaterialWidthThreshold
@@ -132,7 +134,7 @@ internal static class PopupBodyHoverGeometryHelper
 }
 
 /// <summary>
-/// Describes a native-node-derived popup-body hover candidate without retaining native pointers.
+/// Describes a section-bounded native popup-body hover candidate without retaining native pointers.
 /// </summary>
 internal readonly record struct PopupBodyHoverCandidate(
     float Width,
@@ -141,4 +143,5 @@ internal readonly record struct PopupBodyHoverCandidate(
     bool ContainsText,
     bool IsCollision,
     bool IsComponent,
+    bool IsSectionBounded,
     int DistanceFromText);

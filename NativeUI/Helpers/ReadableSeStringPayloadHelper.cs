@@ -468,8 +468,8 @@ internal static class ReadableSeStringPayloadHelper
             return 0;
         }
 
-        var normalizedReadableText = NormalizeReadableText(readableText);
-        var normalizedExpectedText = NormalizeReadableText(expectedText);
+        var normalizedReadableText = NormalizePayloadComparisonText(readableText);
+        var normalizedExpectedText = NormalizePayloadComparisonText(expectedText);
         if (!string.IsNullOrWhiteSpace(normalizedReadableText) &&
             string.Equals(
                 normalizedReadableText,

@@ -559,7 +559,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
-            out _,
             out var promotedOriginalQuestMessage) ||
         string.IsNullOrWhiteSpace(promotedOriginalQuestMessage) ||
         string.Equals(
@@ -985,9 +984,13 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
-            out var preferredHoverNode,
             out originalHoverQuestMessage))
     {
+      AtkResNode* preferredHoverNode = null;
+      this.TryResolveJournalAcceptPreferredHoverNode(
+          addon,
+          messageNode,
+          out preferredHoverNode);
       var messageHoverKey = $"JournalAccept-QuestBody-{(nint)messageNode:X}";
       if (TryBuildPopupBodyHoverBounds(
               messageNode,
@@ -1060,9 +1063,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// <param name="addon">The live JournalAccept addon instance.</param>
   /// <param name="state">The current JournalAccept hover state.</param>
   /// <param name="messageNode">The resolved body node, if any.</param>
-  /// <param name="preferredHoverNode">
-  ///     The optional structural body node used only for tooltip geometry.
-  /// </param>
   /// <param name="originalHoverQuestMessage">
   ///     The preferred original body text for hover presentation.
   /// </param>
@@ -1071,11 +1071,9 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       AtkUnitBase* addon,
       JournalAcceptHoverState state,
       out AtkTextNode* messageNode,
-      out AtkResNode* preferredHoverNode,
       out string originalHoverQuestMessage)
   {
     messageNode = null;
-    preferredHoverNode = null;
     originalHoverQuestMessage = state.OriginalQuestMessage;
     AtkTextNode* directMatchNode = null;
     string directMatchHoverMessage = state.OriginalQuestMessage;
@@ -1095,10 +1093,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       if (!string.IsNullOrWhiteSpace(expandedVisibleBody))
       {
         messageNode = candidate;
-        this.TryResolveJournalAcceptPreferredHoverNode(
-            addon,
-            messageNode,
-            out preferredHoverNode);
         originalHoverQuestMessage = expandedVisibleBody;
         return true;
       }
@@ -1122,10 +1116,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     if (directMatchNode != null)
     {
       messageNode = directMatchNode;
-      this.TryResolveJournalAcceptPreferredHoverNode(
-          addon,
-          messageNode,
-          out preferredHoverNode);
       originalHoverQuestMessage = directMatchHoverMessage;
       return true;
     }
@@ -1133,8 +1123,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     if (TryFindPopupSectionBodyTextNodeByHeadingTextId(
             addon,
             JournalAcceptSummaryTextId,
-            out var structuralMessageNode,
-            out preferredHoverNode))
+            out var structuralMessageNode))
     {
       messageNode = structuralMessageNode;
       originalHoverQuestMessage = state.OriginalQuestMessage;
@@ -1164,13 +1153,11 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   {
     preferredHoverNode = null;
     return messageNode != null &&
-           TryFindPopupSectionBodyTextNodeByHeadingTextId(
+           TryFindPopupSectionBodyHoverNodeByHeadingTextId(
                addon,
                JournalAcceptSummaryTextId,
-               out var structuralMessageNode,
-               out var structuralHoverNode) &&
-           structuralMessageNode == messageNode &&
-           (preferredHoverNode = structuralHoverNode) != null;
+               messageNode,
+               out preferredHoverNode);
   }
 
   /// <summary>
@@ -1431,7 +1418,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
-            out _,
             out _))
     {
       SetJournalAcceptMessageNode(
@@ -1492,7 +1478,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
             addon,
             state,
             out var messageNode,
-            out _,
             out _))
     {
       SetJournalAcceptMessageNode(

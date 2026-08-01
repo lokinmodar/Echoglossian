@@ -381,6 +381,39 @@ public sealed class QuestReadableTextMatchTests
     }
 
     /// <summary>
+    ///     Ensures wrapper-only text differences cannot make a plain current
+    ///     payload outrank a matching rich original payload.
+    /// </summary>
+    [Fact]
+    public void ReadableSeStringPayloadHelper_ResolvePreferredMatchingPayload_PrefersRichOriginalOverLiteralWrapperPayload()
+    {
+        const string expectedText = "**Quest Sync**";
+        var originalPayload = new SeStringBuilder()
+            .AddUiForeground(500)
+            .AddText("Quest Sync")
+            .AddUiForegroundOff()
+            .Build()
+            .Encode();
+        var currentPayload = new SeStringBuilder()
+            .AddText(expectedText)
+            .Build()
+            .Encode();
+
+        var retainedPayload =
+            ReadableSeStringPayloadHelper.ResolvePreferredMatchingPayload(
+                originalPayload,
+                currentPayload,
+                expectedText);
+
+        Assert.NotNull(retainedPayload);
+        Assert.Equal(originalPayload, retainedPayload);
+        Assert.Equal(
+            "Quest Sync",
+            new ReadOnlySeString(retainedPayload).ExtractText());
+        Assert.NotEqual(currentPayload, retainedPayload);
+    }
+
+    /// <summary>
     ///     Invokes the shared quest-popup readable-text matcher through
     ///     reflection so RED can pin behavior without widening production
     ///     visibility.
