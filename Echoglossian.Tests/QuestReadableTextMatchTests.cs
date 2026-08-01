@@ -184,6 +184,29 @@ public sealed class QuestReadableTextMatchTests
     }
 
     /// <summary>
+    ///     Ensures JournalAccept can skip a near-text-sized immediate parent
+    ///     and promote the hover hitbox to the first ancestor that actually
+    ///     covers the wider description block shown by the live addon.
+    /// </summary>
+    [Fact]
+    public void ResolveJournalAcceptHoverAncestorLevel_SelectsFirstQualifyingAncestor()
+    {
+        var ancestorSizes = new[]
+        {
+            new Vector2(378f, 28f),
+            new Vector2(464f, 189f),
+            new Vector2(697f, 496f),
+        };
+
+        Assert.Equal(
+            1,
+            this.InvokeResolveJournalAcceptHoverAncestorLevel(
+                372f,
+                22f,
+                ancestorSizes));
+    }
+
+    /// <summary>
     ///     Ensures JournalResult prefers the canonical stored body when it is
     ///     already available alongside the translated body.
     /// </summary>
@@ -552,6 +575,37 @@ public sealed class QuestReadableTextMatchTests
         return (Vector2)method.Invoke(
             null,
             [textLeft, textTop, textLocalX, textLocalY])!;
+    }
+
+    /// <summary>
+    ///     Invokes the JournalAccept hover-ancestor selector through
+    ///     reflection so RED can pin the parent-chain promotion behavior
+    ///     without widening production visibility.
+    /// </summary>
+    /// <param name="textWidth">The visible text-node width.</param>
+    /// <param name="textHeight">The visible text-node height.</param>
+    /// <param name="ancestorSizes">
+    ///     The visible ancestor sizes in parent-chain order.
+    /// </param>
+    /// <returns>
+    ///     The zero-based ancestor level that should drive the hover bounds,
+    ///     or <c>-1</c> when no ancestor qualifies.
+    /// </returns>
+    private int InvokeResolveJournalAcceptHoverAncestorLevel(
+        float textWidth,
+        float textHeight,
+        IReadOnlyList<Vector2> ancestorSizes)
+    {
+        var method = typeof(JournalAcceptHandler).GetMethod(
+                         "ResolveJournalAcceptHoverAncestorLevel",
+                         BindingFlags.Static | BindingFlags.NonPublic) ??
+                     throw new MissingMethodException(
+                         typeof(JournalAcceptHandler).FullName,
+                         "ResolveJournalAcceptHoverAncestorLevel");
+
+        return (int)method.Invoke(
+            null,
+            [textWidth, textHeight, ancestorSizes])!;
     }
 
     /// <summary>

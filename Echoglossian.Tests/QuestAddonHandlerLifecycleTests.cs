@@ -391,9 +391,13 @@ public class QuestAddonHandlerLifecycleTests
         var resolver = typeof(JournalAcceptHandler).GetMethod(
             "TryFindJournalAcceptMessageNode",
             BindingFlags.Instance | BindingFlags.NonPublic);
-        var fallback = typeof(QuestAddonHandlerBase).GetMethod(
-            "TryFindPopupSectionBodyTextNodeByHeadingTextId",
-            BindingFlags.Static | BindingFlags.NonPublic);
+        var fallback = typeof(QuestAddonHandlerBase)
+            .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+            .Single(method => string.Equals(
+                                  method.Name,
+                                  "TryFindPopupSectionBodyTextNodeByHeadingTextId",
+                                  StringComparison.Ordinal) &&
+                              method.GetParameters().Length == 3);
 
         Assert.NotNull(resolver);
         Assert.NotNull(fallback);
@@ -509,9 +513,13 @@ public class QuestAddonHandlerLifecycleTests
         var resolver = typeof(JournalResultHandler).GetMethod(
             "TryFindJournalResultMessageNode",
             BindingFlags.Instance | BindingFlags.NonPublic);
-        var fallback = typeof(QuestAddonHandlerBase).GetMethod(
-            "TryFindPopupSectionBodyTextNodeByHeadingTextId",
-            BindingFlags.Static | BindingFlags.NonPublic);
+        var fallback = typeof(QuestAddonHandlerBase)
+            .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+            .Single(method => string.Equals(
+                                  method.Name,
+                                  "TryFindPopupSectionBodyTextNodeByHeadingTextId",
+                                  StringComparison.Ordinal) &&
+                              method.GetParameters().Length == 3);
 
         Assert.NotNull(resolver);
         Assert.NotNull(fallback);

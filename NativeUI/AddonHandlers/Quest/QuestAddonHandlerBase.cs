@@ -420,7 +420,34 @@ internal abstract class QuestAddonHandlerBase
       uint headingTextId,
       out AtkTextNode* textNode)
   {
+    return TryFindPopupSectionBodyTextNodeByHeadingTextId(
+        addon,
+        headingTextId,
+        out textNode,
+        out _);
+  }
+
+  /// <summary>
+  ///     Resolves the first visible popup body text node and the structural
+  ///     section node that contains it for one heading text identifier.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="headingTextId">
+  ///     The sheet-text identifier carried by the visible section heading.
+  /// </param>
+  /// <param name="textNode">The resolved visible body node, if any.</param>
+  /// <param name="hoverNode">
+  ///     The structural section node that owns the body node, if any.
+  /// </param>
+  /// <returns><c>true</c> when the popup body node was found.</returns>
+  protected static unsafe bool TryFindPopupSectionBodyTextNodeByHeadingTextId(
+      AtkUnitBase* addon,
+      uint headingTextId,
+      out AtkTextNode* textNode,
+      out AtkResNode* hoverNode)
+  {
     textNode = null;
+    hoverNode = null;
     if (addon == null ||
         !TryFindVisibleTextNodeByTextId(
             addon,
@@ -439,7 +466,8 @@ internal abstract class QuestAddonHandlerBase
       if (TryFindPopupSectionBodyTextNodeFromCandidate(
               candidate,
               headingNode,
-              out textNode))
+              out textNode,
+              out hoverNode))
       {
         return true;
       }
@@ -502,13 +530,18 @@ internal abstract class QuestAddonHandlerBase
   /// <param name="candidate">The structural section candidate.</param>
   /// <param name="headingNode">The heading node that owns the section.</param>
   /// <param name="textNode">The resolved body text node, if any.</param>
+  /// <param name="hoverNode">
+  ///     The structural section node that owns the body text node.
+  /// </param>
   /// <returns><c>true</c> when the candidate exposes one visible body node.</returns>
   private static unsafe bool TryFindPopupSectionBodyTextNodeFromCandidate(
       AtkResNode* candidate,
       AtkTextNode* headingNode,
-      out AtkTextNode* textNode)
+      out AtkTextNode* textNode,
+      out AtkResNode* hoverNode)
   {
     textNode = null;
+    hoverNode = null;
     if (candidate == null || !candidate->IsVisible())
     {
       return false;
@@ -518,7 +551,13 @@ internal abstract class QuestAddonHandlerBase
     if (candidate->Type == NodeType.Text && candidate != excludedNode)
     {
       textNode = candidate->GetAsAtkTextNode();
-      return textNode != null && textNode->IsVisible();
+      if (textNode != null && textNode->IsVisible())
+      {
+        hoverNode = candidate;
+        return true;
+      }
+
+      return false;
     }
 
     HashSet<nint> visitedNodes = [];
@@ -532,15 +571,22 @@ internal abstract class QuestAddonHandlerBase
               visitedNodes,
               out textNode))
       {
+        hoverNode = candidate;
         return true;
       }
     }
 
-    return TryFindFirstVisibleTextNodeInSubtree(
-        candidate->ChildNode,
-        headingNode,
-        visitedNodes,
-        out textNode);
+    if (TryFindFirstVisibleTextNodeInSubtree(
+            candidate->ChildNode,
+            headingNode,
+            visitedNodes,
+            out textNode))
+    {
+      hoverNode = candidate;
+      return true;
+    }
+
+    return false;
   }
 
   /// <summary>

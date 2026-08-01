@@ -18209,7 +18209,7 @@
                 when no richer visible node exists.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryBuildJournalAcceptMessageHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.TryBuildJournalAcceptMessageHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Numerics.Vector2@,System.Numerics.Vector2@)">
             <summary>
                 Builds broader hover bounds for the JournalAccept body when the live
                 text node only covers one line inside a larger visible body
@@ -18221,6 +18221,36 @@
             <returns>
                 <c>true</c> when a larger parent container should drive the hover
                 target; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.BuildJournalAcceptMessageHoverBounds(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Single,System.Single,System.Single,System.Single,System.Numerics.Vector2@,System.Numerics.Vector2@)">
+            <summary>
+                Builds one JournalAccept body hover rectangle by unioning the live
+                text-node bounds with one broader structural hover region.
+            </summary>
+            <param name="messageNode">The live JournalAccept body text node.</param>
+            <param name="hoverLeft">The broader hover-region left coordinate.</param>
+            <param name="hoverTop">The broader hover-region top coordinate.</param>
+            <param name="hoverWidth">The broader hover-region width.</param>
+            <param name="hoverHeight">The broader hover-region height.</param>
+            <param name="topLeft">The resulting hover top-left coordinate.</param>
+            <param name="bottomRight">The resulting hover bottom-right coordinate.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptHoverAncestorLevel(System.Single,System.Single,System.Collections.Generic.IReadOnlyList{System.Numerics.Vector2})">
+            <summary>
+                Resolves the first visible JournalAccept ancestor level whose bounds
+                are materially larger than the live text node and therefore better
+                represent the whole description block as a hover target.
+            </summary>
+            <param name="textWidth">The visible text-node width.</param>
+            <param name="textHeight">The visible text-node height.</param>
+            <param name="ancestorSizes">
+                The visible ancestor sizes in parent-chain order, starting at the
+                immediate parent.
+            </param>
+            <returns>
+                The zero-based ancestor level that should drive the hover bounds, or
+                <c>-1</c> when no visible ancestor qualifies.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.JournalAcceptHandler.ResolveJournalAcceptParentScreenOrigin(System.Single,System.Single,System.Int16,System.Int16)">
@@ -20154,6 +20184,21 @@
             <param name="textNode">The resolved visible body node, if any.</param>
             <returns><c>true</c> when the popup body node was found.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeByHeadingTextId(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.UInt32,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
+            <summary>
+                Resolves the first visible popup body text node and the structural
+                section node that contains it for one heading text identifier.
+            </summary>
+            <param name="addon">The live addon instance to inspect.</param>
+            <param name="headingTextId">
+                The sheet-text identifier carried by the visible section heading.
+            </param>
+            <param name="textNode">The resolved visible body node, if any.</param>
+            <param name="hoverNode">
+                The structural section node that owns the body node, if any.
+            </param>
+            <returns><c>true</c> when the popup body node was found.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ReadReadableTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*)">
             <summary>
                 Reads the best plain-text representation available from a native text
@@ -20172,7 +20217,7 @@
             <param name="textNode">The matched visible text node, if any.</param>
             <returns><c>true</c> when a matching heading node was found.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeFromCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindPopupSectionBodyTextNodeFromCandidate(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*@)">
             <summary>
                 Tries to resolve the first visible text-node descendant from one
                 structural popup section candidate that precedes the target heading.
@@ -20180,6 +20225,9 @@
             <param name="candidate">The structural section candidate.</param>
             <param name="headingNode">The heading node that owns the section.</param>
             <param name="textNode">The resolved body text node, if any.</param>
+            <param name="hoverNode">
+                The structural section node that owns the body text node.
+            </param>
             <returns><c>true</c> when the candidate exposes one visible body node.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TryFindFirstVisibleTextNodeInSubtree(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.Collections.Generic.HashSet{System.IntPtr},FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*@)">
