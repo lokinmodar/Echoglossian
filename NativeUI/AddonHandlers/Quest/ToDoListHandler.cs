@@ -391,6 +391,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
             originalQuestText,
             out var todoProgressSnapshot))
     {
+      var resolvedFallbackQuestTitle =
+          this.TryResolveToDoListFallbackQuestTitle(
+              visibleQuest,
+              sourceLanguage,
+              out var fallbackTranslatedQuestTitle);
       if (QuestLuminaResolver.TryResolveQuestId(
               originalQuestText,
               out var pendingQuestIdText) &&
@@ -413,13 +418,24 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
             this.SummarizeDiagnosticText(originalQuestText));
       }
 
+      if (resolvedFallbackQuestTitle)
+      {
+        PluginRuntimeLog.Debug(
+            ToDoListAddonName,
+            "resolve-fallback title='{QuestTitle}' translatedReady=true objectiveCount={ObjectiveCount}",
+            this.SummarizeDiagnosticText(originalQuestText),
+            visibleQuest.Objectives.Count);
+      }
+
       runtimeEntries.Add(
           this.CreateQuestRuntimeEntry(
               visibleQuest.QuestRow,
               progressKey: string.Empty,
               originalQuestText,
-              originalQuestText,
-              translatedPayloadReady: false));
+              resolvedFallbackQuestTitle
+                  ? fallbackTranslatedQuestTitle
+                  : originalQuestText,
+              translatedPayloadReady: resolvedFallbackQuestTitle));
 
       foreach (var objectiveRow in visibleQuest.Objectives)
       {
@@ -550,6 +566,38 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         todoProgressSnapshot.CacheKey,
         this.SummarizeDiagnosticText(originalQuestText),
         visibleQuest.Objectives.Count);
+    return true;
+  }
+
+  /// <summary>
+  ///     Attempts to reuse one persisted quest-title translation by matching
+  ///     the visible ToDoList quest text against existing QuestPlate rows when
+  ///     live todo progress is not available yet.
+  /// </summary>
+  /// <param name="visibleQuest">The visible quest row and grouped objectives.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="translatedQuestTitle">The reused translated quest title.</param>
+  /// <returns><c>true</c> when a persisted translated quest title exists.</returns>
+  private bool TryResolveToDoListFallbackQuestTitle(
+      ToDoVisibleQuest visibleQuest,
+      SourceClientLanguage sourceLanguage,
+      out string translatedQuestTitle)
+  {
+    translatedQuestTitle = string.Empty;
+
+    var originalQuestText = this.ResolveOriginalToDoText(visibleQuest.QuestRow);
+    var fallbackQuestPlate = this.CreateQuestPlate(
+        sourceLanguage,
+        originalQuestText,
+        string.Empty);
+    var foundFallbackQuestPlate = this.FindQuestPlateByName(fallbackQuestPlate);
+    if (foundFallbackQuestPlate == null ||
+        string.IsNullOrWhiteSpace(foundFallbackQuestPlate.TranslatedQuestName))
+    {
+      return false;
+    }
+
+    translatedQuestTitle = foundFallbackQuestPlate.TranslatedQuestName;
     return true;
   }
 

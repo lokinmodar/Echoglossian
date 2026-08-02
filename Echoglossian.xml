@@ -3923,6 +3923,13 @@
                 current translation service.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RestoreVisibleAddonPresentationStateBeforeRuntimeReset">
+            <summary>
+                Restores visible addon-owned presentation state before shared
+                translation caches and runtimes are cleared for a live translation
+                configuration change.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.RefreshAddonHandlerRegistrations">
             <summary>
                 Re-registers addon handlers according to the current config.
@@ -22308,6 +22315,17 @@
                 <c>true</c> when every required translated payload is already stored
                 in the DB.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryResolveToDoListFallbackQuestTitle(Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ToDoVisibleQuest,Echoglossian.SourceClientLanguage,System.String@)">
+            <summary>
+                Attempts to reuse one persisted quest-title translation by matching
+                the visible ToDoList quest text against existing QuestPlate rows when
+                live todo progress is not available yet.
+            </summary>
+            <param name="visibleQuest">The visible quest row and grouped objectives.</param>
+            <param name="sourceLanguage">The resolved source language.</param>
+            <param name="translatedQuestTitle">The reused translated quest title.</param>
+            <returns><c>true</c> when a persisted translated quest title exists.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryResolveTranslatedObjectiveText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,Echoglossian.QuestTodoProgressSnapshot,System.String,System.Int32,System.Int32,System.String@)">
             <summary>

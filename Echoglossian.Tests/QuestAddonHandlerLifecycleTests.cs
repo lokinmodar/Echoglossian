@@ -1082,6 +1082,34 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures ToDoList can reuse a persisted quest-title translation when
+    ///     live todo progress has not loaded yet.
+    /// </summary>
+    [Fact]
+    public void ToDoListHandler_ReusesPersistedQuestPlateTitleWhenTodoProgressSnapshotIsUnavailable()
+    {
+        var resolver = typeof(ToDoListHandler).GetMethod(
+            "TryResolveVisibleQuestEntries",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var fallbackResolver = typeof(ToDoListHandler).GetMethod(
+            "TryResolveToDoListFallbackQuestTitle",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var findByName = typeof(QuestAddonHandlerBase).GetMethod(
+            "FindQuestPlateByName",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(resolver);
+        Assert.NotNull(fallbackResolver);
+        Assert.NotNull(findByName);
+        Assert.True(
+            MethodReferences(resolver!, fallbackResolver!),
+            "ToDoList must attempt a persisted quest-title fallback before waiting on live todo progress.");
+        Assert.True(
+            MethodReferences(fallbackResolver!, findByName!),
+            "ToDoList persisted quest-title fallback must reuse the shared QuestPlate lookup by name.");
+    }
+
+    /// <summary>
     ///     Ensures ToDoList requested-update events can reuse the current
     ///     translated snapshot when only non-translatable rows such as timer
     ///     nodes repaint.
