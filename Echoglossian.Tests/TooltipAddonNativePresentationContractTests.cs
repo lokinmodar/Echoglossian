@@ -138,6 +138,32 @@ public sealed class TooltipAddonNativePresentationContractTests
     }
 
     /// <summary>
+    ///     Ensures the dedicated Tooltip runtime does not keep polling on
+    ///     every pre-draw once a translated state is already applied. Tooltip
+    ///     reflow is too expensive for continuous frame-by-frame refresh.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_DisablesContinuousPreDrawRefresh()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "protected override bool ShouldRefreshAppliedStateOnPreDraw()",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "return false;",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the dedicated Tooltip addon toggle is rendered after the
     ///     shared hover-tooltip appearance controls so addon-specific toggles
     ///     do not mix with formatting sliders from other flows.

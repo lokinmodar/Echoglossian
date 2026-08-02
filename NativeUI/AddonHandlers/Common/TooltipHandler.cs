@@ -74,6 +74,12 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    protected override bool ShouldRefreshAppliedStateOnPreDraw()
+    {
+        return false;
+    }
+
+    /// <inheritdoc />
     protected override void OnCleanupEvent(AddonEvent evt, AddonArgs args)
     {
         base.OnCleanupEvent(evt, args);

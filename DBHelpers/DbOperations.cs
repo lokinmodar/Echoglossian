@@ -1092,8 +1092,6 @@ public partial class Echoglossian
   /// </returns>
   public TooltipText? FindTooltipText(TooltipText tooltipText)
   {
-    using var context = new EchoglossianDbContext(ConfigDirectory);
-
     try
     {
       if (string.IsNullOrWhiteSpace(tooltipText.AddonName) ||
@@ -1104,7 +1102,24 @@ public partial class Echoglossian
         return null;
       }
 
-      return context.TooltipTexts
+      var scope = new TranslationReuseScope(
+          tooltipText.OriginalLang ?? string.Empty,
+          tooltipText.TranslationLang ?? string.Empty,
+          tooltipText.TranslationEngine,
+          this.configuration.TranslateAlreadyTranslatedTexts);
+      var cached = TooltipTextCacheManager.TryFindMatch(
+          tooltipText.AddonName,
+          scope,
+          tooltipText.GameVersion,
+          tooltipText.OriginalTextsAsText,
+          tooltipText.SourceContentHash);
+      if (cached != null || TooltipTextCacheManager.IsPreloaded)
+      {
+        return cached;
+      }
+
+      using var context = new EchoglossianDbContext(ConfigDirectory);
+      var persisted = context.TooltipTexts
           .AsNoTracking()
           .Where(t =>
               t.AddonName == tooltipText.AddonName &&
@@ -1125,6 +1140,12 @@ public partial class Echoglossian
           .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
           .ThenByDescending(t => t.Id)
           .FirstOrDefault();
+      if (persisted != null)
+      {
+        TooltipTextCacheManager.Update(persisted);
+      }
+
+      return persisted;
     }
     catch (Exception e)
     {
@@ -1144,8 +1165,6 @@ public partial class Echoglossian
   public IReadOnlyList<TooltipText> FindTooltipTextCandidates(
       TooltipText tooltipText)
   {
-    using var context = new EchoglossianDbContext(ConfigDirectory);
-
     try
     {
       if (string.IsNullOrWhiteSpace(tooltipText.AddonName) ||
@@ -1154,7 +1173,22 @@ public partial class Echoglossian
         return [];
       }
 
-      return context.TooltipTexts
+      var scope = new TranslationReuseScope(
+          tooltipText.OriginalLang ?? string.Empty,
+          tooltipText.TranslationLang ?? string.Empty,
+          tooltipText.TranslationEngine,
+          this.configuration.TranslateAlreadyTranslatedTexts);
+      var cached = TooltipTextCacheManager.GetCandidates(
+          tooltipText.AddonName,
+          scope,
+          tooltipText.GameVersion);
+      if (cached.Count > 0 || TooltipTextCacheManager.IsPreloaded)
+      {
+        return cached;
+      }
+
+      using var context = new EchoglossianDbContext(ConfigDirectory);
+      var persisted = context.TooltipTexts
           .AsNoTracking()
           .Where(t =>
               t.AddonName == tooltipText.AddonName &&
@@ -1173,6 +1207,12 @@ public partial class Echoglossian
           .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
           .ThenByDescending(t => t.Id)
           .ToList();
+      foreach (var row in persisted)
+      {
+        TooltipTextCacheManager.Update(row);
+      }
+
+      return persisted;
     }
     catch (Exception e)
     {
@@ -1898,11 +1938,13 @@ public partial class Echoglossian
             tooltipText.TranslatedTextsAsText;
         existingTooltipText.UpdatedDate = DateTime.Now;
         await context.SaveChangesAsync().ConfigureAwait(false);
+        TooltipTextCacheManager.Update(existingTooltipText);
         return "Data updated in TooltipTexts table.";
       }
 
       context.TooltipTexts.Attach(tooltipText);
       await context.SaveChangesAsync().ConfigureAwait(false);
+      TooltipTextCacheManager.Update(tooltipText);
       return "Data inserted to TooltipTexts table.";
     }
     catch (Exception e)

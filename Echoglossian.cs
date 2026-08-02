@@ -404,6 +404,7 @@ public partial class Echoglossian : IDalamudPlugin
     TraitCacheManager.Preload(ConfigDirectory);
     ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
     ItemTooltipCacheManager.Preload(ConfigDirectory);
+    TooltipTextCacheManager.Preload(ConfigDirectory);
     this.RefreshStructuredDialogueGlossaryRuntime();
     this.startupAudit.Mark(PluginStartupStage.RuntimeCachesPreloaded);
 
@@ -572,6 +573,7 @@ public partial class Echoglossian : IDalamudPlugin
       TraitCacheManager.Clear();
       ReferenceTextCacheRegistry.ClearAll();
       ItemTooltipCacheManager.Clear();
+      TooltipTextCacheManager.Clear();
       DbFirstGameWindowAddonHandler.ClearSessionCaches();
       QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();

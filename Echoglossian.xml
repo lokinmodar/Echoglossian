@@ -1355,6 +1355,146 @@
                 Clears the in-memory cache.
             </summary>
         </member>
+        <member name="T:Echoglossian.Cache.TooltipTextCacheManager">
+            <summary>
+                Manages an in-memory cache of dedicated <see cref="T:Echoglossian.EFCoreSqlite.Models.TooltipText" />
+                rows so the Tooltip addon does not need SQLite lookups on its hot path.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.TooltipTextCacheManager.IsPreloaded">
+            <summary>
+                Gets a value indicating whether the cache was preloaded from the
+                current session database.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Cache.TooltipTextCacheManager.Revision">
+            <summary>
+                Gets the monotonically increasing cache revision.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.Preload(System.String)">
+            <summary>
+                Loads all dedicated Tooltip addon rows into memory.
+            </summary>
+            <param name="configDir">The plugin configuration directory.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.Update(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Updates or inserts one cached Tooltip row.
+            </summary>
+            <param name="newRecord">The row to cache.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.TryFindMatch(System.String,Echoglossian.TranslationReuseScope,System.String,System.String,System.String)">
+            <summary>
+                Tries to find one exact dedicated Tooltip row in memory.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <param name="originalTextsAsText">The serialized original payload.</param>
+            <param name="sourceContentHash">The stable source-content hash.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.GetCandidates(System.String,Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Returns cached candidate Tooltip rows for one exact lookup scope so
+                the runtime can recover canonical originals without touching
+                SQLite.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="gameVersion">The requested game version.</param>
+            <returns>The matching cached rows.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.Clear">
+            <summary>
+                Clears the in-memory cache.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.GetScopedRows(System.String,Echoglossian.TranslationReuseScope,System.String)">
+            <summary>
+                Gets rows for one exact stored version and source-target-engine
+                scope.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="scope">The required translation reuse scope.</param>
+            <param name="version">The exact stored game version.</param>
+            <returns>The matching rows, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.TryFindExistingCacheRow(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Tries to find the cached row that should be replaced by the
+                supplied record.
+            </summary>
+            <param name="newRecord">The incoming row.</param>
+            <returns>The cached row to replace, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.GetAddonBucket(System.String)">
+            <summary>
+                Gets the addon bucket for one Tooltip surface.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <returns>The existing or newly created addon bucket.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.GetScopeBucket(System.String,System.String,System.String,System.Nullable{System.Int32},System.String)">
+            <summary>
+                Gets the scope bucket for one strict source-target-engine-version
+                Tooltip lookup scope.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <param name="engine">The translation engine.</param>
+            <param name="version">The game version.</param>
+            <returns>The existing or newly created scope bucket.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.IndexRecord(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Adds one row to every in-memory index.
+            </summary>
+            <param name="record">The row to index.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.RemoveIndexedRecord(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Removes one row from every in-memory index.
+            </summary>
+            <param name="record">The row to remove.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.BuildScopeKey(System.String,System.String,System.String,System.Nullable{System.Int32},System.String)">
+            <summary>
+                Builds the stable scope key used by strict engine-aware lookups.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <param name="engine">The translation engine.</param>
+            <param name="version">The game version.</param>
+            <returns>The stable scope key.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.BuildExactKey(System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.String)">
+            <summary>
+                Builds the stable exact-match key for one Tooltip payload.
+            </summary>
+            <param name="addonName">The addon name.</param>
+            <param name="sourceLanguage">The source language.</param>
+            <param name="targetLanguage">The target language.</param>
+            <param name="engine">The translation engine.</param>
+            <param name="version">The game version.</param>
+            <param name="originalTextsAsText">The serialized original payload.</param>
+            <param name="sourceContentHash">The source-content hash.</param>
+            <returns>The stable exact-match key.</returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TooltipTextCacheManager.HasSavedTranslation(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+            <summary>
+                Determines whether one row contains a usable translated Tooltip
+                payload.
+            </summary>
+            <param name="row">The row to inspect.</param>
+            <returns>
+                <see langword="true" /> when the row contains translated Tooltip
+                text; otherwise <see langword="false" />.
+            </returns>
+        </member>
         <member name="T:Echoglossian.Cache.TraitCacheManager">
             <summary>
                 Manages an in-memory cache of canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.Trait" /> rows.
@@ -16882,6 +17022,9 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ResolveTextNodeAddresses(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldRefreshAppliedStateOnPreDraw">
+            <inheritdoc />
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.OnCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <inheritdoc />
         </member>
@@ -17629,6 +17772,86 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan">
+            <summary>
+            Describes the native NamePlate field writes required for one translated
+            presentation result.
+            </summary>
+            <param name="WritesTranslatedName">
+            Whether the runtime should write the translated text into the native name
+            field.
+            </param>
+            <param name="NameText">
+            The translated name to write when <paramref name="WritesTranslatedName" />
+            is <see langword="true" />.
+            </param>
+            <param name="ShowsTitle">
+            Whether the runtime should use the native title line as the auxiliary
+            presentation surface.
+            </param>
+            <param name="TitleText">
+            The title text to write when <paramref name="ShowsTitle" /> is
+            <see langword="true" />.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan.#ctor(System.Boolean,System.String,System.Boolean,System.String)">
+            <summary>
+            Describes the native NamePlate field writes required for one translated
+            presentation result.
+            </summary>
+            <param name="WritesTranslatedName">
+            Whether the runtime should write the translated text into the native name
+            field.
+            </param>
+            <param name="NameText">
+            The translated name to write when <paramref name="WritesTranslatedName" />
+            is <see langword="true" />.
+            </param>
+            <param name="ShowsTitle">
+            Whether the runtime should use the native title line as the auxiliary
+            presentation surface.
+            </param>
+            <param name="TitleText">
+            The title text to write when <paramref name="ShowsTitle" /> is
+            <see langword="true" />.
+            </param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan.WritesTranslatedName">
+            <summary>
+            Whether the runtime should write the translated text into the native name
+            field.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan.NameText">
+            <summary>
+            The translated name to write when <paramref name="WritesTranslatedName" />
+            is <see langword="true" />.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan.ShowsTitle">
+            <summary>
+            Whether the runtime should use the native title line as the auxiliary
+            presentation surface.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan.TitleText">
+            <summary>
+            The title text to write when <paramref name="ShowsTitle" /> is
+            <see langword="true" />.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan.Create(System.String,System.String,Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+            Creates the native NamePlate field plan for the supplied display mode.
+            </summary>
+            <param name="originalText">The original source name.</param>
+            <param name="translatedText">The cached translated name.</param>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+            Whether the selected language forbids native replacement.
+            </param>
+            <returns>The field mutation plan for the current mode.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate">
             <summary>
                 Captures the stable data needed to translate one nameplate outside the
@@ -17657,15 +17880,12 @@
                 <see cref="T:Dalamud.Plugin.Services.INamePlateGui" /> surface.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IObjectTable,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer,System.Action{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate},System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Action{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime" /> class.
             </summary>
             <param name="config">The active plugin configuration.</param>
             <param name="translationService">The shared translation service.</param>
-            <param name="gameGui">The game UI service used for world-to-screen projection.</param>
-            <param name="objectTable">The object table used to resolve live object positions.</param>
-            <param name="renderer">The shared translation overlay renderer.</param>
             <param name="trackPrefetchCandidate">
                 Delegate used to record stable nameplate source text for background
                 prefetch outside the one-frame handler callback.
@@ -17681,12 +17901,6 @@
             </summary>
             <param name="context">The current nameplate update context.</param>
             <param name="handlers">The updated nameplate handlers.</param>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.DrawOverlays">
-            <summary>
-                Draws active nameplate overlays using the shared renderer and RTL
-                presentation stack.
-            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.Dispose">
             <inheritdoc />
