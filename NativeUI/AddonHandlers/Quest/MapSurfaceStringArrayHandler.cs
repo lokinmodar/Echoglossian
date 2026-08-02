@@ -84,15 +84,18 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
 
   private bool UsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   private bool WritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   private bool HoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   private bool ShouldAllowAggregateHoverTooltip =>
       !string.Equals(this.addonName, "AreaMap", StringComparison.Ordinal);
@@ -100,7 +103,8 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
   private bool ShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.AreaMapTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   private int EffectiveTranslationEngineId =>
       this.TranslationService.GetEffectiveTranslationEngineId(
@@ -418,7 +422,8 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
             translation.TranslatedText,
             translatedPayloadReady: QuestAddonModeHelpers.CanRenderHoverTooltip(
                 this.Config.AreaMapTranslationDisplayMode,
-                translatedPayloadReady: true),
+                translatedPayloadReady: true,
+                this.Config.OverlayOnlyLanguage),
             swapEnabled: this.HoverShowsOriginal,
             forceEnabled: true,
             denseHitbox: true);
@@ -457,7 +462,8 @@ internal sealed class MapSurfaceStringArrayHandler : QuestAddonHandlerBase
         translatedText,
         translatedPayloadReady: QuestAddonModeHelpers.CanRenderHoverTooltip(
             this.Config.AreaMapTranslationDisplayMode,
-            translatedPayloadReady: true),
+            translatedPayloadReady: true,
+            this.Config.OverlayOnlyLanguage),
         swapEnabled: this.HoverShowsOriginal,
         forceEnabled: true,
         denseHitbox: true);

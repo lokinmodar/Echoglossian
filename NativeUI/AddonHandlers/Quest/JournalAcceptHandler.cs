@@ -59,7 +59,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalAcceptWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.JournalAcceptTranslationDisplayMode);
+          this.Config.JournalAcceptTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalAccept family hover tooltips should show the
@@ -67,7 +68,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalAcceptHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.JournalAcceptTranslationDisplayMode);
+          this.Config.JournalAcceptTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalAccept may render a hover tooltip for a payload
@@ -81,7 +83,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       bool translatedPayloadReady) =>
       QuestAddonModeHelpers.CanRenderHoverTooltip(
           this.Config.JournalAcceptTranslationDisplayMode,
-          translatedPayloadReady);
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated JournalAccept text should be normalized before
@@ -90,7 +93,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
   private bool JournalAcceptShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.JournalAcceptTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Determines whether the translated JournalAccept title and body are

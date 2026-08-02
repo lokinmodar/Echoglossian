@@ -57,7 +57,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalResultWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.JournalResultTranslationDisplayMode);
+          this.Config.JournalResultTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the JournalResult family hover tooltips should show the
@@ -65,7 +66,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalResultHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.JournalResultTranslationDisplayMode);
+          this.Config.JournalResultTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalResult may render a hover tooltip for a payload
@@ -79,7 +81,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       bool translatedPayloadReady) =>
       QuestAddonModeHelpers.CanRenderHoverTooltip(
           this.Config.JournalResultTranslationDisplayMode,
-          translatedPayloadReady);
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated JournalResult text should be normalized before
@@ -88,7 +91,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
   private bool JournalResultShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.JournalResultTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Determines whether the translated JournalResult title is ready for

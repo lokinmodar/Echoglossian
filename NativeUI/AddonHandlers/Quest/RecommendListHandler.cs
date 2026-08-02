@@ -57,7 +57,8 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool RecommendListUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.RecommendListTranslationDisplayMode);
+          this.Config.RecommendListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the RecommendList family should write translated text
@@ -65,7 +66,8 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool RecommendListWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.RecommendListTranslationDisplayMode);
+          this.Config.RecommendListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the RecommendList family hover tooltips should show the
@@ -73,7 +75,8 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool RecommendListHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.RecommendListTranslationDisplayMode);
+          this.Config.RecommendListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated RecommendList text should be normalized before
@@ -82,7 +85,8 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
   private bool RecommendListShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.RecommendListTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether RecommendList may render a hover tooltip for a payload
@@ -96,7 +100,8 @@ internal sealed class RecommendListHandler : QuestAddonHandlerBase
       bool translatedPayloadReady) =>
       QuestAddonModeHelpers.CanRenderHoverTooltip(
           this.Config.RecommendListTranslationDisplayMode,
-          translatedPayloadReady);
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Determines whether the translated RecommendList title is ready for

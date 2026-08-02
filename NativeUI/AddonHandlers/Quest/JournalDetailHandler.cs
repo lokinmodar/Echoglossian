@@ -64,7 +64,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalDetailUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.JournalDetailTranslationDisplayMode);
+          this.Config.JournalDetailTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalDetail should write translated text into the
@@ -72,7 +73,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalDetailWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.JournalDetailTranslationDisplayMode);
+          this.Config.JournalDetailTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalDetail hover tooltips should show the original
@@ -80,7 +82,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalDetailHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.JournalDetailTranslationDisplayMode);
+          this.Config.JournalDetailTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalDetail may render a hover tooltip for a payload
@@ -93,7 +96,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   private bool CanRenderJournalDetailHoverTooltip(bool translatedPayloadReady) =>
       QuestAddonModeHelpers.CanRenderHoverTooltip(
           this.Config.JournalDetailTranslationDisplayMode,
-          translatedPayloadReady);
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated JournalDetail text should be normalized before
@@ -102,7 +106,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   private bool JournalDetailShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.JournalDetailTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Resolves the native mutation action allowed for the current

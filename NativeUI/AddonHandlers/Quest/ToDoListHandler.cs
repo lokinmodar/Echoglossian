@@ -53,7 +53,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ToDoListUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.ToDoListTranslationDisplayMode);
+          this.Config.ToDoListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ToDoList family should write translated text into the
@@ -61,7 +62,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ToDoListWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.ToDoListTranslationDisplayMode);
+          this.Config.ToDoListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ToDoList family hover tooltips should show the
@@ -69,7 +71,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ToDoListHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.ToDoListTranslationDisplayMode);
+          this.Config.ToDoListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated ToDoList text should be normalized before
@@ -78,7 +81,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private bool ToDoListShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.ToDoListTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Refreshes the ToDoList runtime from canonical quest data and the DB.

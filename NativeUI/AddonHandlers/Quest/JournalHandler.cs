@@ -72,7 +72,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.JournalTranslationDisplayMode);
+          this.Config.JournalTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether Journal should write translated text into the native
@@ -80,14 +81,16 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.JournalTranslationDisplayMode);
+          this.Config.JournalTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether Journal hover tooltips should show the original text.
   /// </summary>
   private bool JournalHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.JournalTranslationDisplayMode);
+          this.Config.JournalTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether Journal may render a hover tooltip for a payload whose
@@ -100,7 +103,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   private bool CanRenderJournalHoverTooltip(bool translatedPayloadReady) =>
       QuestAddonModeHelpers.CanRenderHoverTooltip(
           this.Config.JournalTranslationDisplayMode,
-          translatedPayloadReady);
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated Journal text should be normalized before being
@@ -109,7 +113,8 @@ internal sealed class JournalHandler : QuestAddonHandlerBase
   private bool JournalShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.JournalTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Translates the active Journal quest list addon.

@@ -21084,31 +21084,40 @@
                 Shared display-mode helpers for quest-family addon handlers.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.UsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.UsesHoverTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether the quest family display mode should render hover
                 tooltips.
             </summary>
             <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language must stay overlay-only.
+            </param>
             <returns><c>true</c> when hover tooltips should be rendered.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.WritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.WritesNativeTranslation(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether the quest family display mode should write translated
                 text into the native addon.
             </summary>
             <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language must stay overlay-only.
+            </param>
             <returns><c>true</c> when native addon text should be replaced.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.ShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.ShowsOriginalTooltips(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
             <summary>
                 Gets whether the quest family hover tooltips should show the original
                 text.
             </summary>
             <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language must stay overlay-only.
+            </param>
             <returns><c>true</c> when hover tooltips should keep the original text.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.CanRenderHoverTooltip(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.CanRenderHoverTooltip(Echoglossian.JournalTranslationDisplayMode,System.Boolean,System.Boolean)">
             <summary>
                 Gets whether a quest-family hover tooltip may be rendered for the
                 current display mode, given the readiness of the translated payload
@@ -21119,11 +21128,14 @@
                 Whether the translated payload required by the current mode is fully
                 ready.
             </param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language must stay overlay-only.
+            </param>
             <returns>
                 <c>true</c> when the tooltip may be rendered for the current mode.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.ShouldRemoveDiacritics(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers.ShouldRemoveDiacritics(Echoglossian.JournalTranslationDisplayMode,System.Boolean,System.Boolean)">
             <summary>
                 Gets whether translated quest text should be normalized before being
                 written into the native UI.
@@ -21131,6 +21143,9 @@
             <param name="displayMode">The configured display mode.</param>
             <param name="removeDiacriticsWhenUsingReplacementQuest">
                 Whether the quest-family diacritics toggle is enabled.
+            </param>
+            <param name="overlayOnlyLanguage">
+                Whether the selected language must stay overlay-only.
             </param>
             <returns><c>true</c> when normalization should be applied.</returns>
         </member>

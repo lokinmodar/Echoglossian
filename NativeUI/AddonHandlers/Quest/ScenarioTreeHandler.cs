@@ -89,7 +89,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ScenarioTreeUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.ScenarioTreeTranslationDisplayMode);
+          this.Config.ScenarioTreeTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ScenarioTree family should write translated text into
@@ -97,7 +98,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ScenarioTreeWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.ScenarioTreeTranslationDisplayMode);
+          this.Config.ScenarioTreeTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ScenarioTree family hover tooltips should show the
@@ -105,7 +107,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ScenarioTreeHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.ScenarioTreeTranslationDisplayMode);
+          this.Config.ScenarioTreeTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated ScenarioTree text should be normalized before
@@ -114,7 +117,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   private bool ScenarioTreeShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.ScenarioTreeTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Determines whether translated ScenarioTree slot text is ready for

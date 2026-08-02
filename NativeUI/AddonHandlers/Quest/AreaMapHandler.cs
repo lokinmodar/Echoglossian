@@ -62,7 +62,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// </summary>
   private bool AreaMapUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the AreaMap family should write translated text into the
@@ -70,7 +71,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// </summary>
   private bool AreaMapWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the AreaMap family hover tooltips should show the
@@ -78,7 +80,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// </summary>
   private bool AreaMapHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated AreaMap text should be normalized before being
@@ -87,7 +90,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   private bool AreaMapShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.AreaMapTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether AreaMap may render a hover tooltip for a payload whose
@@ -100,7 +104,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   private bool CanRenderAreaMapHoverTooltip(bool translatedPayloadReady) =>
       QuestAddonModeHelpers.CanRenderHoverTooltip(
           this.Config.AreaMapTranslationDisplayMode,
-          translatedPayloadReady);
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Determines whether translated AreaMap quest text is ready for native
