@@ -70,6 +70,22 @@ public class TranslationWindowConfigTests
     }
 
     /// <summary>
+    ///     Ensures the Tooltip addon anchored-overlay surface resolves through
+    ///     its dedicated configuration factory.
+    /// </summary>
+    [Fact]
+    public void TranslationWindowConfig_ForSurfaceSupportsTooltipAddon()
+    {
+        var config = new Config();
+
+        var windowConfig = TranslationWindowConfig.ForSurface(
+            config,
+            TranslationOverlaySurfaceId.TooltipAddon);
+
+        Assert.Equal(TranslationOverlaySurfaceId.TooltipAddon, windowConfig.SurfaceId);
+    }
+
+    /// <summary>
     ///     Ensures the callback-owned normal-toast placement factories use the
     ///     placement-specific overrides instead of the legacy shared family
     ///     config.
@@ -205,6 +221,11 @@ public class TranslationWindowConfigTests
         [
             TranslationOverlaySurfaceId.ChatBubble,
             (Func<Config, TranslationWindowConfig>)TranslationWindowConfig.FromConfigForChatBubble,
+        ];
+        yield return
+        [
+            TranslationOverlaySurfaceId.TooltipAddon,
+            (Func<Config, TranslationWindowConfig>)TranslationWindowConfig.FromConfigForTooltipAddon,
         ];
     }
 }

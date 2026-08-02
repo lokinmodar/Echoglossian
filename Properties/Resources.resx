@@ -700,6 +700,45 @@
   <data name="TranslateTooltipAddonLabel" xml:space="preserve">
     <value>Translate Tooltip Addon</value>
   </data>
+  <data name="TooltipAddonOverlayAppearanceSectionLabel" xml:space="preserve">
+    <value>Tooltip addon overlay appearance</value>
+  </data>
+  <data name="TooltipAddonOverlayAppearanceDescription" xml:space="preserve">
+    <value>These settings apply only when the Tooltip addon uses its anchored Plugin Overlay.</value>
+  </data>
+  <data name="TooltipAddonHideNativeTooltipWhenOverlayActiveLabel" xml:space="preserve">
+    <value>Hide native Tooltip while overlay is active</value>
+  </data>
+  <data name="TooltipAddonOverlayFontScaleAdjustmentLabel" xml:space="preserve">
+    <value>Overlay font scale</value>
+  </data>
+  <data name="TooltipAddonOverlayLineHeightScaleLabel" xml:space="preserve">
+    <value>Overlay text line height</value>
+  </data>
+  <data name="TooltipAddonOverlayPaddingLabel" xml:space="preserve">
+    <value>Overlay padding</value>
+  </data>
+  <data name="TooltipAddonOverlayTextColorLabel" xml:space="preserve">
+    <value>Overlay text color</value>
+  </data>
+  <data name="TooltipAddonOverlayBackgroundColorLabel" xml:space="preserve">
+    <value>Overlay background color</value>
+  </data>
+  <data name="TooltipAddonOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Overlay background opacity</value>
+  </data>
+  <data name="TooltipAddonOverlayMaxWidthModeLabel" xml:space="preserve">
+    <value>Overlay maximum width</value>
+  </data>
+  <data name="TooltipAddonOverlayMaxWidthMatchNativeLabel" xml:space="preserve">
+    <value>Match native tooltip</value>
+  </data>
+  <data name="TooltipAddonOverlayMaxWidthManualCapLabel" xml:space="preserve">
+    <value>Manual cap</value>
+  </data>
+  <data name="TooltipAddonOverlayManualMaxWidthLabel" xml:space="preserve">
+    <value>Overlay manual maximum width</value>
+  </data>
   <data name="GeminiAPIKey" xml:space="preserve">
     <value>Google AI Studio API Key</value>
   </data>
@@ -1176,6 +1215,9 @@
   </data>
   <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
     <value>Item tooltip translation</value>
+  </data>
+  <data name="OverlayWindowTitleTooltipAddonTranslation" xml:space="preserve">
+    <value>Tooltip addon translation</value>
   </data>
   <data name="CouldNotFetchOllamaModels" xml:space="preserve">
     <value>Could not fetch models. Is Ollama running locally?</value>

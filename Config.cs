@@ -21,6 +21,18 @@ public enum JournalTranslationDisplayMode
 }
 
 /// <summary>
+///     Selects how the Tooltip addon anchored overlay limits its width.
+/// </summary>
+public enum TooltipAddonOverlayMaxWidthMode
+{
+  /// <summary>Match the visible native Tooltip addon width.</summary>
+  MatchNative = 0,
+
+  /// <summary>Use the configured manual width cap.</summary>
+  ManualCap = 1,
+}
+
+/// <summary>
 ///     Selects which provider profile the OpenAI-family engine should use.
 /// </summary>
 public enum OpenAiProviderVariant
@@ -1239,6 +1251,40 @@ public class Config : IPluginConfiguration
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode TooltipAddonTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Text color used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 TooltipAddonOverlayTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Background color used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(typeof(Vector3), "0.08, 0.08, 0.08")]
+  public Vector3 TooltipAddonOverlayBackgroundColor = new(0.08f, 0.08f, 0.08f);
+
+  /// <summary>Background opacity used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(0.95f)] public float TooltipAddonOverlayBackgroundOpacity = 0.95f;
+
+  /// <summary>Font scale adjustment used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(0.85f)] public float TooltipAddonOverlayFontScaleAdjustment = 0.85f;
+
+  /// <summary>Line-height scale used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(0.9f)] public float TooltipAddonOverlayLineHeightScale = 0.9f;
+
+  /// <summary>
+  ///     Whether the native Tooltip addon is hidden while its anchored overlay
+  ///     is active.
+  /// </summary>
+  [DefaultValue(false)] public bool TooltipAddonHideNativeTooltipWhenOverlayActive = false;
+
+  /// <summary>Padding applied by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(8f)] public float TooltipAddonOverlayPadding = 8f;
+
+  /// <summary>Width mode used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(TooltipAddonOverlayMaxWidthMode.MatchNative)]
+  public TooltipAddonOverlayMaxWidthMode TooltipAddonOverlayMaxWidthMode =
+      TooltipAddonOverlayMaxWidthMode.MatchNative;
+
+  /// <summary>Manual maximum width used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(720f)] public float TooltipAddonOverlayManualMaxWidth = 720f;
 
   /// <summary>Text color used by Echoglossian hover tooltips.</summary>
   [DefaultValue(typeof(Vector3), "1, 1, 1")]

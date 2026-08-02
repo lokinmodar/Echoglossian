@@ -31,6 +31,29 @@ public sealed class TooltipAddonConfigContractTests
     }
 
     /// <summary>
+    ///     Ensures the Tooltip addon anchored overlay has its own persisted
+    ///     appearance and presentation settings.
+    /// </summary>
+    [Fact]
+    public void Config_DefinesDedicatedTooltipAddonOverlaySettings()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "Config.cs"));
+
+        Assert.Contains("TooltipAddonOverlayTextColor", source, StringComparison.Ordinal);
+        Assert.Contains(
+            "TooltipAddonHideNativeTooltipWhenOverlayActive",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TooltipAddonOverlayFontScaleAdjustment",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains("TooltipAddonOverlayMaxWidthMode", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the tooltip settings UI exposes the dedicated Tooltip addon
     ///     controls separately from ActionDetail and ItemDetail.
     /// </summary>

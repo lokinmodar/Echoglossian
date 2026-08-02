@@ -6,8 +6,7 @@
 namespace Echoglossian.PluginUI.Tabs;
 
 /// <summary>
-///     Renders the settings tab for action/item detail presentation plus shared
-///     hover-tooltip appearance.
+///     Renders the settings tab for tooltip presentation and appearance.
 /// </summary>
 public static class TooltipTab
 {
@@ -100,6 +99,85 @@ public static class TooltipTab
             Resources.TranslateTooltipAddonLabel,
             ref config.TooltipAddonTranslationDisplayMode,
             config.OverlayOnlyLanguage);
+
+        ImGui.TextUnformatted(Resources.TooltipAddonOverlayAppearanceSectionLabel);
+        ImGui.Separator();
+        ImGui.TextWrapped(Resources.TooltipAddonOverlayAppearanceDescription);
+
+        changed |= ImGui.Checkbox(
+            Resources.TooltipAddonHideNativeTooltipWhenOverlayActiveLabel,
+            ref config.TooltipAddonHideNativeTooltipWhenOverlayActive);
+
+        changed |= ImGui.SliderFloat(
+            Resources.TooltipAddonOverlayFontScaleAdjustmentLabel,
+            ref config.TooltipAddonOverlayFontScaleAdjustment,
+            0.25f,
+            3f,
+            "%.2f");
+
+        changed |= ImGui.SliderFloat(
+            Resources.TooltipAddonOverlayLineHeightScaleLabel,
+            ref config.TooltipAddonOverlayLineHeightScale,
+            0.8f,
+            1.2f,
+            "%.2f");
+
+        changed |= ImGui.SliderFloat(
+            Resources.TooltipAddonOverlayPaddingLabel,
+            ref config.TooltipAddonOverlayPadding,
+            0f,
+            32f,
+            "%.0f px");
+
+        var tooltipAddonTextColorLabel = Resources.TooltipAddonOverlayTextColorLabel;
+        ImGui.Text(tooltipAddonTextColorLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            $"{tooltipAddonTextColorLabel}##Color",
+            ref config.TooltipAddonOverlayTextColor,
+            ImGuiColorEditFlags.NoInputs);
+
+        var tooltipAddonBackgroundColorLabel =
+            Resources.TooltipAddonOverlayBackgroundColorLabel;
+        ImGui.Text(tooltipAddonBackgroundColorLabel);
+        ImGui.SameLine();
+        changed |= ImGui.ColorEdit3(
+            $"{tooltipAddonBackgroundColorLabel}##Color",
+            ref config.TooltipAddonOverlayBackgroundColor,
+            ImGuiColorEditFlags.NoInputs);
+
+        changed |= ImGui.SliderFloat(
+            Resources.TooltipAddonOverlayBackgroundOpacityLabel,
+            ref config.TooltipAddonOverlayBackgroundOpacity,
+            0f,
+            1f,
+            "%.2f");
+
+        var maxWidthMode = (int)config.TooltipAddonOverlayMaxWidthMode;
+        if (ImGui.Combo(
+                Resources.TooltipAddonOverlayMaxWidthModeLabel,
+                ref maxWidthMode,
+                [
+                    Resources.TooltipAddonOverlayMaxWidthMatchNativeLabel,
+                    Resources.TooltipAddonOverlayMaxWidthManualCapLabel,
+                ],
+                2))
+        {
+            config.TooltipAddonOverlayMaxWidthMode =
+                (TooltipAddonOverlayMaxWidthMode)maxWidthMode;
+            changed = true;
+        }
+
+        if (config.TooltipAddonOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.ManualCap)
+        {
+            changed |= ImGui.SliderFloat(
+                Resources.TooltipAddonOverlayManualMaxWidthLabel,
+                ref config.TooltipAddonOverlayManualMaxWidth,
+                240f,
+                1920f,
+                "%.0f px");
+        }
 
         if (changed)
         {

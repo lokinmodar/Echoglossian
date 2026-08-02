@@ -61,6 +61,9 @@ internal enum TranslationOverlaySurfaceId
     /// <summary>Chat bubble overlay.</summary>
     ChatBubble,
 
+    /// <summary>Tooltip addon anchored overlay.</summary>
+    TooltipAddon,
+
     /// <summary>ActionDetail overlay.</summary>
     ActionDetail,
 
@@ -120,6 +123,7 @@ internal record TranslationWindowConfig(
       TranslationOverlaySurfaceId.QuestToast => FromConfigForQuestToast(config),
       TranslationOverlaySurfaceId.NamePlate => FromConfigForNamePlate(config),
       TranslationOverlaySurfaceId.ChatBubble => FromConfigForChatBubble(config),
+      TranslationOverlaySurfaceId.TooltipAddon => FromConfigForTooltipAddon(config),
       TranslationOverlaySurfaceId.ActionDetail or TranslationOverlaySurfaceId.ItemDetail =>
           throw new NotSupportedException(
               $"The {surfaceId} surface is rendered through the tooltip path."),
@@ -503,6 +507,42 @@ internal record TranslationWindowConfig(
         NoBackground: config.NamePlateBackgroundOpacity <= 0f,
         CenterOnAddon: true,
         AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for the Tooltip addon anchored overlay.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The Tooltip addon anchored-overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForTooltipAddon(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.TooltipAddon,
+        DefaultTitle: Resources.OverlayWindowTitleTooltipAddonTranslation,
+        FontScale: config.TooltipAddonOverlayFontScaleAdjustment,
+        WidthMultiplier: 1.0f,
+        HeightMultiplier: 1.0f,
+        TextColor: new Vector4(
+            config.TooltipAddonOverlayTextColor.X,
+            config.TooltipAddonOverlayTextColor.Y,
+            config.TooltipAddonOverlayTextColor.Z,
+            1.0f),
+        PosCorrection: Vector2.Zero,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.TooltipAddonOverlayBackgroundOpacity,
+        AutoSizeToTextWithMaxWidth: true,
+        ExpandWidthToFitText:
+            config.TooltipAddonOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.MatchNative,
+        MaxWidthViewportFraction:
+            config.TooltipAddonOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.ManualCap
+                ? Math.Clamp(
+                    config.TooltipAddonOverlayManualMaxWidth / 1920f,
+                    0.10f,
+                    0.90f)
+                : 0f);
   }
 
   /// <summary>
