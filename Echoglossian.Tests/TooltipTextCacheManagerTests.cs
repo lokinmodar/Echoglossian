@@ -5,7 +5,11 @@
 
 using System.Reflection;
 
+using Echoglossian.Cache;
+using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -38,6 +42,64 @@ public sealed class TooltipTextCacheManagerTests
         Assert.NotNull(cacheManagerType.GetMethod(
             "Clear",
             BindingFlags.Public | BindingFlags.Static));
+        Assert.NotNull(cacheManagerType.GetMethod(
+            "Preload",
+            BindingFlags.Public | BindingFlags.Static));
+    }
+
+    /// <summary>
+    ///     Ensures preload loads rows with translated payloads from SQLite.
+    /// </summary>
+    [Fact]
+    public void TooltipTextCacheManager_PreloadLoadsTranslatedTooltipRowsFromSqlite()
+    {
+        var configDir = CreateTempConfigDirectory();
+
+        try
+        {
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.TooltipTexts.Add(new TooltipText
+                {
+                    Id = 1,
+                    AddonName = "Tooltip",
+                    OriginalTextsAsText = "[\"Travel\"]",
+                    OriginalLang = "en",
+                    TranslatedTextsAsText = "[\"Viaje\"]",
+                    TranslationLang = "pt-BR",
+                    TranslationEngine = 0,
+                    GameVersion = "7.3",
+                    SourceContentHash = "tooltip-travel-hash",
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = DateTime.UtcNow,
+                });
+                context.SaveChanges();
+            }
+
+            TooltipTextCacheManager.Clear();
+            TooltipTextCacheManager.Preload(configDir);
+
+            var match = TooltipTextCacheManager.TryFindMatch(
+                "Tooltip",
+                new TranslationReuseScope("en", "pt-BR", 0, true),
+                "7.3",
+                "[\"Travel\"]",
+                "tooltip-travel-hash");
+
+            Assert.NotNull(match);
+        }
+        finally
+        {
+            TooltipTextCacheManager.Clear();
+        }
+    }
+
+    private static string CreateTempConfigDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(path);
+        return path;
     }
 
     /// <summary>

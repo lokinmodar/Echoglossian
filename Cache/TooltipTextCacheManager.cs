@@ -50,7 +50,7 @@ public static class TooltipTextCacheManager
                     !string.IsNullOrWhiteSpace(row.OriginalTextsAsText) &&
                     !string.IsNullOrWhiteSpace(row.GameVersion) &&
                     !string.IsNullOrWhiteSpace(row.SourceContentHash) &&
-                    HasSavedTranslation(row))
+                    !string.IsNullOrWhiteSpace(row.TranslatedTextsAsText))
                 .OrderBy(row => row.Id)
                 .ToList();
 
@@ -481,10 +481,7 @@ public static class TooltipTextCacheManager
     ///     payload.
     /// </summary>
     /// <param name="row">The row to inspect.</param>
-    /// <returns>
-    ///     <see langword="true" /> when the row contains translated Tooltip
-    ///     text; otherwise <see langword="false" />.
-    /// </returns>
+    /// <returns><c>true</c> when translated Tooltip text is present.</returns>
     private static bool HasSavedTranslation(TooltipText row)
     {
         return row != null &&
