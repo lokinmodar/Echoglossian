@@ -85,6 +85,34 @@ public sealed class NamePlateNativePresentationContractTests
     }
 
     /// <summary>
+    /// Verifies that runtime config refresh tracks NamePlate presentation
+    /// state separately and explicitly requests a NamePlate redraw when that
+    /// state changes.
+    /// </summary>
+    [Fact]
+    public void RuntimeConfigurationRefresh_requests_nameplate_redraw_when_presentation_signature_changes()
+    {
+        var root = FindRepositoryRoot();
+        var refreshSource = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "RuntimeConfigurationRefresh.cs"));
+        var pluginSource = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "Echoglossian.cs"));
+
+        Assert.Contains(
+            "ComputeNamePlatePresentationSignature()",
+            refreshSource);
+        Assert.Contains(
+            "NamePlateGuiInterface.RequestRedraw();",
+            refreshSource);
+        Assert.Contains(
+            "namePlatePresentationSignature",
+            pluginSource);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

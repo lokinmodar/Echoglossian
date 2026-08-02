@@ -73,6 +73,17 @@ public partial class Echoglossian
       this.addonHandlerRegistrationSignature = null;
     }
 
+    var namePlatePresentationSignature =
+        this.ComputeNamePlatePresentationSignature();
+    if (!string.Equals(
+            namePlatePresentationSignature,
+            this.namePlatePresentationSignature,
+            StringComparison.Ordinal))
+    {
+      NamePlateGuiInterface.RequestRedraw();
+      this.namePlatePresentationSignature = namePlatePresentationSignature;
+    }
+
     var addonHandlerSignature =
         this.ComputeAddonHandlerRegistrationSignature();
     if (!string.Equals(
@@ -186,6 +197,24 @@ public partial class Echoglossian
           DialogueGlossaryFilePath =
               this.configuration.DialogueGlossaryFilePath?.Trim() ??
               string.Empty,
+        });
+  }
+
+  /// <summary>
+  ///     Computes a signature for config values that change how NamePlate
+  ///     translations are presented so the runtime can request a redraw only
+  ///     when its native title-field semantics change.
+  /// </summary>
+  /// <returns>A stable serialized signature.</returns>
+  private string ComputeNamePlatePresentationSignature()
+  {
+    return JsonConvert.SerializeObject(
+        new
+        {
+          this.configuration.Translate,
+          this.configuration.TranslateNamePlates,
+          this.configuration.NamePlateTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage,
         });
   }
 

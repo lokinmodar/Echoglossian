@@ -148,6 +148,7 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly object runtimeTranslationFailureNotificationLock = new();
   private readonly Dictionary<string, DateTime> runtimeTranslationFailureNotificationTimes =
       new(StringComparer.Ordinal);
+  private string? namePlatePresentationSignature;
   private string? structuredDialogueGlossaryRuntimeSignature;
   private string? translationActivationBlockedNotificationSignature;
   private string? translationRuntimeSignature;
@@ -440,6 +441,8 @@ public partial class Echoglossian : IDalamudPlugin
     activeInstance = this;
     this.structuredDialogueGlossaryRuntimeSignature =
         this.ComputeStructuredDialogueGlossaryRuntimeSignature();
+    this.namePlatePresentationSignature =
+        this.ComputeNamePlatePresentationSignature();
     this.translationRuntimeSignature =
         this.ComputeTranslationRuntimeSignature();
     this.addonHandlerRegistrationSignature =

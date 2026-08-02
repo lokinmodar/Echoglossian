@@ -3868,6 +3868,14 @@
             </summary>
             <returns>A stable serialized signature.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ComputeNamePlatePresentationSignature">
+            <summary>
+                Computes a signature for config values that change how NamePlate
+                translations are presented so the runtime can request a redraw only
+                when its native title-field semantics change.
+            </summary>
+            <returns>A stable serialized signature.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.RefreshStructuredDialogueGlossaryRuntime">
             <summary>
                 Refreshes the shared structured dialogue glossary store from the
