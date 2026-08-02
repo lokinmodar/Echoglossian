@@ -152,6 +152,7 @@ public partial class Echoglossian : IDalamudPlugin
   private string? structuredDialogueGlossaryRuntimeSignature;
   private string? translationActivationBlockedNotificationSignature;
   private string? translationRuntimeSignature;
+  private bool translationRefreshRestoreApplied;
   private bool runtimeConfigurationDirty;
   private bool runtimeConfigurationReady;
 

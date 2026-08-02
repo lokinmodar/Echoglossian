@@ -65,6 +65,7 @@ public partial class Echoglossian
 
     if (translationChanged)
     {
+      this.RestoreVisibleAddonPresentationStateBeforeRuntimeReset();
       this.ResetRuntimeTranslationPresentationState();
       this.RebuildTranslationServiceSafely();
       this.RebuildQueuedTranslationBroker();
@@ -320,17 +321,44 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Restores visible addon-owned presentation state before shared
+  ///     translation caches and runtimes are cleared for a live translation
+  ///     configuration change.
+  /// </summary>
+  private void RestoreVisibleAddonPresentationStateBeforeRuntimeReset()
+  {
+    if (this.translationRefreshRestoreApplied ||
+        this.registeredAddonHandlers == null)
+    {
+      return;
+    }
+
+    foreach (var (_, handler) in this.registeredAddonHandlers)
+    {
+      if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
+      {
+        unloadAwareHandler.OnPluginUnload();
+      }
+    }
+
+    this.translationRefreshRestoreApplied = true;
+  }
+
+  /// <summary>
   ///     Re-registers addon handlers according to the current config.
   /// </summary>
   private void RefreshAddonHandlerRegistrations()
   {
     if (this.registeredAddonHandlers != null)
     {
-      foreach (var (_, handler) in this.registeredAddonHandlers)
+      if (!this.translationRefreshRestoreApplied)
       {
-        if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
+        foreach (var (_, handler) in this.registeredAddonHandlers)
         {
-          unloadAwareHandler.OnPluginUnload();
+          if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
+          {
+            unloadAwareHandler.OnPluginUnload();
+          }
         }
       }
 
@@ -341,6 +369,7 @@ public partial class Echoglossian
 
     this.hoverTooltipManager.Clear();
     this.EgloAddonHandler();
+    this.translationRefreshRestoreApplied = false;
   }
 
   /// <summary>
