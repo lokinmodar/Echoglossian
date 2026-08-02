@@ -7,6 +7,8 @@ using Dalamud.Game.Gui.NamePlate;
 
 using Echoglossian.Cache;
 
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
+
 namespace Echoglossian.NativeUI.AddonHandlers.NamePlates;
 
 /// <summary>
@@ -20,11 +22,15 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   private const float NamePlateOverlayAnchorHeight = 24f;
 
   private readonly Config config;
+  private readonly TranslationOverlay distanceAwareOverlay;
+  private readonly object distanceAwareOverlayGate = new();
+  private readonly IGameGui gameGui;
   private readonly Func<string, string> normalizeReplacementText;
   private readonly ReentrantCallbackGuard namePlateUpdateGuard = new();
   private readonly Action<NamePlatePrefetchCandidate> trackPrefetchCandidate;
   private readonly TranslationService translationService;
 
+  private NamePlateDistanceAwareOverlayFrame? distanceAwareOverlayFrame;
   private bool disposed;
 
   /// <summary>
@@ -32,6 +38,10 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
   /// <param name="translationService">The shared translation service.</param>
+  /// <param name="gameGui">The game GUI service used for world projection.</param>
+  /// <param name="distanceAwareOverlay">
+  ///     The shared overlay used for the overlay-only NamePlate backend.
+  /// </param>
   /// <param name="trackPrefetchCandidate">
   ///     Delegate used to record stable nameplate source text for background
   ///     prefetch outside the one-frame handler callback.
@@ -42,11 +52,15 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   public NamePlateTranslationRuntime(
       Config config,
       TranslationService translationService,
+      IGameGui gameGui,
+      TranslationOverlay distanceAwareOverlay,
       Action<NamePlatePrefetchCandidate> trackPrefetchCandidate,
       Func<string, string> normalizeReplacementText)
   {
     this.config = config;
     this.translationService = translationService;
+    this.gameGui = gameGui;
+    this.distanceAwareOverlay = distanceAwareOverlay;
     this.trackPrefetchCandidate = trackPrefetchCandidate;
     this.normalizeReplacementText = normalizeReplacementText;
   }
@@ -134,6 +148,39 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     return (screenPosition - (size * 0.5f), size);
   }
 
+  /// <summary>
+  ///     Synchronizes the latest projected NamePlate frame to the overlay
+  ///     bounds used by the shared UI-thread renderer.
+  /// </summary>
+  /// <param name="overlay">The NamePlate overlay to synchronize.</param>
+  /// <param name="viewportSize">The active viewport size.</param>
+  /// <returns>Whether a visible NamePlate frame was synchronized.</returns>
+  internal bool TrySyncDistanceAwareOverlayFrame(
+      TranslationOverlay overlay,
+      Vector2 viewportSize)
+  {
+    NamePlateDistanceAwareOverlayFrame? frame;
+    lock (this.distanceAwareOverlayGate)
+    {
+      frame = this.distanceAwareOverlayFrame;
+    }
+
+    if (frame == null || !overlay.Display)
+    {
+      return false;
+    }
+
+    var bounds = ResolveCenteredNamePlateOverlayBounds(
+        frame.Value.ScreenPosition,
+        viewportSize);
+    overlay.Position = bounds.Position;
+    overlay.Dimensions = bounds.Size;
+    overlay.UpdateRuntimePresentation(
+        frame.Value.ScaleMultiplier,
+        frame.Value.AlphaMultiplier);
+    return true;
+  }
+
   private void ProcessNamePlate(
       INamePlateUpdateHandler handler,
       TranslationReuseScope scope)
@@ -168,6 +215,19 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
       string originalText,
       string translatedText)
   {
+    if (this.ShouldSuppressTranslatedPresentation())
+    {
+      this.ClearDistanceAwareOverlay();
+      return;
+    }
+
+    if (this.ShouldUseDistanceAwareOverlayBackend())
+    {
+      this.ApplyDistanceAwareOverlay(handler, originalText, translatedText);
+      return;
+    }
+
+    this.ClearDistanceAwareOverlay();
     var presentationPlan = NamePlateNativePresentationPlan.Create(
         originalText,
         translatedText,
@@ -193,6 +253,106 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     handler.SetField(
         NamePlateStringField.Name,
         this.NormalizeForNativeReplacement(presentationPlan.NameText!));
+  }
+
+  private void ApplyDistanceAwareOverlay(
+      INamePlateUpdateHandler handler,
+      string originalText,
+      string translatedText)
+  {
+    var gameObject = handler.GameObject;
+    if (gameObject == null)
+    {
+      this.ClearDistanceAwareOverlay();
+      return;
+    }
+
+    var worldAnchor = ResolveNamePlateWorldAnchor(
+        gameObject.Position,
+        gameObject.HitboxRadius);
+    if (!this.gameGui.WorldToScreen(worldAnchor, out var screenPosition, out var inView) ||
+        !inView)
+    {
+      this.ClearDistanceAwareOverlay();
+      return;
+    }
+
+    var distanceToCamera = this.ResolveDistanceToCamera(worldAnchor);
+    var presentation = DistanceAwareOverlayPresentation.Resolve(
+        distanceToCamera,
+        this.config.DistanceAwareOverlayFullScaleDistance,
+        this.config.DistanceAwareOverlayFadeStartDistance,
+        this.config.DistanceAwareOverlayMaxDistance,
+        this.config.DistanceAwareOverlayMinScale);
+    if (!presentation.IsVisible)
+    {
+      this.ClearDistanceAwareOverlay();
+      return;
+    }
+
+    lock (this.distanceAwareOverlayGate)
+    {
+      this.distanceAwareOverlayFrame = new NamePlateDistanceAwareOverlayFrame(
+          screenPosition,
+          presentation.Scale,
+          presentation.Alpha);
+    }
+
+    this.distanceAwareOverlay.UpdateRuntimePresentation(
+        presentation.Scale,
+        presentation.Alpha);
+    this.distanceAwareOverlay.CurrentName = string.Empty;
+    this.distanceAwareOverlay.OriginalName = originalText;
+    this.distanceAwareOverlay.CurrentText =
+        TranslationOverlayTextNormalizationHelper.NormalizeForDisplay(
+            translatedText);
+    this.distanceAwareOverlay.Display = true;
+  }
+
+  private void ClearDistanceAwareOverlay()
+  {
+    lock (this.distanceAwareOverlayGate)
+    {
+      this.distanceAwareOverlayFrame = null;
+    }
+
+    this.distanceAwareOverlay.Display = false;
+    this.distanceAwareOverlay.CurrentText = string.Empty;
+    this.distanceAwareOverlay.CurrentName = string.Empty;
+    this.distanceAwareOverlay.OriginalName = string.Empty;
+    this.distanceAwareOverlay.ClearRuntimePresentation();
+  }
+
+  private unsafe float ResolveDistanceToCamera(Vector3 worldAnchor)
+  {
+    var cameraManager = CameraManager.Instance();
+    if (cameraManager == null)
+    {
+      return float.MaxValue;
+    }
+
+    var camera = cameraManager->Cameras[0].Value;
+    if (camera == null || camera->CameraBase.SceneCamera.RenderCamera == null)
+    {
+      return float.MaxValue;
+    }
+
+    var cameraOrigin = camera->CameraBase.SceneCamera.RenderCamera->Origin;
+    return Vector3.Distance(
+        worldAnchor,
+        new Vector3(cameraOrigin.X, cameraOrigin.Y, cameraOrigin.Z));
+  }
+
+  private bool ShouldSuppressTranslatedPresentation()
+  {
+    return this.config.OverlayOnlyLanguage &&
+           !this.config.EnableDistanceAwareOverlays;
+  }
+
+  private bool ShouldUseDistanceAwareOverlayBackend()
+  {
+    return this.config.OverlayOnlyLanguage &&
+           this.config.EnableDistanceAwareOverlays;
   }
 
   private string NormalizeForNativeReplacement(string translatedText)

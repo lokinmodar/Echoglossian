@@ -636,6 +636,21 @@ public class Config : IPluginConfiguration
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 OverlayNamePlateTextColor = new(1f, 1f, 1f);
 
+  /// <summary>Whether overlay-only languages use distance-aware overlays.</summary>
+  [DefaultValue(true)] public bool EnableDistanceAwareOverlays = true;
+
+  /// <summary>Camera distance at or below which overlays use full scale.</summary>
+  [DefaultValue(8f)] public float DistanceAwareOverlayFullScaleDistance = 8f;
+
+  /// <summary>Camera distance at which overlays begin fading.</summary>
+  [DefaultValue(16f)] public float DistanceAwareOverlayFadeStartDistance = 16f;
+
+  /// <summary>Camera distance at which overlays become hidden.</summary>
+  [DefaultValue(28f)] public float DistanceAwareOverlayMaxDistance = 28f;
+
+  /// <summary>Minimum distance-aware overlay scale.</summary>
+  [DefaultValue(0.60f)] public float DistanceAwareOverlayMinScale = 0.60f;
+
   /// <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
   [DefaultValue(1f)] public float WideTextToastBackgroundOpacity = 1f;
 

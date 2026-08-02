@@ -15,6 +15,7 @@ public partial class Echoglossian
     private readonly TranslationOverlay classChangeToastOverlay = new();
     private readonly TranslationOverlay chatBubbleOverlay = new();
     private readonly TranslationOverlay errorToastOverlay = new();
+    private readonly TranslationOverlay namePlateOverlay = new();
     private readonly TranslationOverlay cutSceneSelectStringOverlay = new();
     private readonly TranslationOverlay selectYesNoOverlay = new();
     private readonly TranslationOverlay selectOkOverlay = new();
@@ -37,6 +38,20 @@ public partial class Echoglossian
     private unsafe void RegisterOverlays()
     {
         PluginRuntimeLog.Debug("Registering overlays...");
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.namePlateOverlay,
+                () => TranslationWindowConfig.FromConfigForNamePlate(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateNamePlates &&
+                    this.configuration.OverlayOnlyLanguage &&
+                    this.configuration.EnableDistanceAwareOverlays,
+                syncBeforeDraw: () =>
+                    this.namePlateTranslationRuntime.TrySyncDistanceAwareOverlayFrame(
+                        this.namePlateOverlay,
+                        ImGui.GetMainViewport().Size)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
