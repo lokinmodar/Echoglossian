@@ -103,6 +103,11 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             !shouldCenterOverlayText &&
             LanguagePresentationPolicy.ShouldRightAlign(this.configuration.Lang);
         var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2f;
+        var textureMaxWidthOverride = this.ResolveTextureMaxWidthOverride(
+            request,
+            config);
+        var textureLineHeightScaleOverride =
+            this.ResolveTextureLineHeightScaleOverride(request, config);
         var preliminaryLayout = TranslationOverlayLayoutCalculator.Calculate(
             new TranslationOverlayLayoutRequest(
                 request.ViewportPosition,
@@ -128,7 +133,9 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1f),
             Vector4.Zero,
             config.SurfaceId,
-            shouldCenterOverlayText);
+            shouldCenterOverlayText,
+            MaxWidthOverride: textureMaxWidthOverride,
+            LineHeightScaleOverride: textureLineHeightScaleOverride);
         var backendKind = TextPresentationResolver.ResolveBackendKind(textRequest);
         var shouldRenderRichOriginalText = ShouldRenderRichOriginalText(
             backendKind,
@@ -499,6 +506,69 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         }
 
         return Math.Max(64f, maxWidth - horizontalPadding);
+    }
+
+    /// <summary>
+    /// Resolves any surface-specific texture width override required by the
+    /// current overlay request.
+    /// </summary>
+    /// <param name="request">The active render request.</param>
+    /// <param name="config">The surface configuration.</param>
+    /// <returns>The resolved raster width override, if any.</returns>
+    private float? ResolveTextureMaxWidthOverride(
+        TranslationOverlayRenderRequest request,
+        TranslationWindowConfig config)
+    {
+        if (request.TextureMaxWidthOverride.HasValue &&
+            request.TextureMaxWidthOverride.Value > 0f)
+        {
+            return request.TextureMaxWidthOverride.Value;
+        }
+
+        if (config.SurfaceId != TranslationOverlaySurfaceId.TooltipAddon)
+        {
+            return null;
+        }
+
+        var padding = Math.Max(0f, this.configuration.TooltipAddonOverlayPadding) * 2f;
+        var nativeWidth = Math.Max(64f, request.AddonSize.X - padding);
+        if (this.configuration.TooltipAddonOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.ManualCap)
+        {
+            var manualWidth = Math.Max(
+                64f,
+                this.configuration.TooltipAddonOverlayManualMaxWidth - padding);
+            return Math.Min(nativeWidth, manualWidth);
+        }
+
+        return nativeWidth;
+    }
+
+    /// <summary>
+    /// Resolves any surface-specific raster line-height override required by
+    /// the current overlay request.
+    /// </summary>
+    /// <param name="request">The active render request.</param>
+    /// <param name="config">The surface configuration.</param>
+    /// <returns>The resolved line-height override, if any.</returns>
+    private float? ResolveTextureLineHeightScaleOverride(
+        TranslationOverlayRenderRequest request,
+        TranslationWindowConfig config)
+    {
+        if (request.TextureLineHeightScaleOverride.HasValue)
+        {
+            return request.TextureLineHeightScaleOverride.Value;
+        }
+
+        if (config.SurfaceId != TranslationOverlaySurfaceId.TooltipAddon)
+        {
+            return null;
+        }
+
+        return Math.Clamp(
+            this.configuration.TooltipAddonOverlayLineHeightScale,
+            0.8f,
+            1.2f);
     }
 
     /// <summary>

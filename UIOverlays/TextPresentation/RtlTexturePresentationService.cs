@@ -710,10 +710,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
         this.ToColor(request.TextColor),
         this.ToColor(request.BackgroundColor),
         this.ResolveMaxWidth(request),
-        Math.Clamp(
-            this.configuration.TexturePresentationLineHeightScale,
-            0.8f,
-            1.2f),
+        this.ResolveLineHeightScale(request),
         LanguagePresentationPolicy.ShouldRightAlign(request.LanguageId));
   }
 
@@ -889,6 +886,13 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// <returns>The resolved width or <see langword="null"/>.</returns>
   private int? ResolveMaxWidth(TextLayoutRequest request)
   {
+    if (request.MaxWidthOverride.HasValue &&
+        request.MaxWidthOverride.Value > 0f)
+    {
+      return TextRasterLimits.ClampWrapWidth(
+          Math.Max(1, (int)Math.Ceiling(request.MaxWidthOverride.Value)));
+    }
+
     if (request.MaxWidth <= 0f)
     {
       return null;
@@ -896,6 +900,24 @@ internal sealed class RtlTexturePresentationService : IDisposable
 
     return TextRasterLimits.ClampWrapWidth(
         Math.Max(1, (int)Math.Ceiling(request.MaxWidth)));
+  }
+
+  /// <summary>
+  /// Resolves the line-height scale for one raster-backed request.
+  /// </summary>
+  /// <param name="request">The source layout request.</param>
+  /// <returns>The clamped line-height scale.</returns>
+  private float ResolveLineHeightScale(TextLayoutRequest request)
+  {
+    if (request.LineHeightScaleOverride.HasValue)
+    {
+      return Math.Clamp(request.LineHeightScaleOverride.Value, 0.8f, 1.2f);
+    }
+
+    return Math.Clamp(
+        this.configuration.TexturePresentationLineHeightScale,
+        0.8f,
+        1.2f);
   }
 
   /// <summary>

@@ -21,6 +21,9 @@ public partial class Echoglossian
     private readonly TranslationOverlay selectOkOverlay = new();
     private readonly TranslationOverlay selectStringOverlay = new();
     private readonly TranslationOverlay textGimmickHintOverlay = new();
+    private readonly NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime
+        tooltipAddonAnchoredOverlayRuntime = new();
+    private readonly TranslationOverlay tooltipAddonOverlay = new();
     private readonly TranslationOverlay questToastOverlay = new();
 
     // List of registered overlays
@@ -235,6 +238,22 @@ public partial class Echoglossian
                 this.chatBubbleOverlay,
                 () => TranslationWindowConfig.FromConfigForChatBubble(
                     this.configuration)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.tooltipAddonOverlay,
+                () => TranslationWindowConfig.FromConfigForTooltipAddon(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateTooltipAddon &&
+                    NativeUI.Helpers.TooltipAddonAnchoredOverlayPresentationPolicy
+                        .UsesAnchoredOverlay(
+                            this.configuration.TooltipAddonTranslationDisplayMode,
+                            this.configuration.OverlayOnlyLanguage),
+                syncBeforeDraw: () =>
+                    this.tooltipAddonAnchoredOverlayRuntime.TrySync(
+                        this.tooltipAddonOverlay,
+                        currentFrame: null)));
 
         PluginRuntimeLog.Debug(
             $"Overlays registered: {this.registeredOverlays.Count} ");
