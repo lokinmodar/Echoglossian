@@ -22,9 +22,6 @@ public partial class Echoglossian
     return new NamePlateTranslationRuntime(
         this.configuration,
         TranslationService,
-        GameGuiInterface,
-        ObjectTableInterface,
-        this.translationOverlayRenderer,
         this.TrackNamePlatePrefetchCandidate,
         text => this.RemoveDiacritics(
             text,

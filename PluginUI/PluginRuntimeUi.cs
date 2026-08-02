@@ -141,7 +141,6 @@ public partial class Echoglossian
     }
 
     this.DrawMiniTalkBubbleOverlays();
-    this.namePlateTranslationRuntime.DrawOverlays();
     this.DrawStructuredTooltipOverlays();
     var shouldDrawHoverTooltips = this.ShouldDrawHoverTooltips;
 

@@ -723,22 +723,8 @@ public static class OverlayTab
             "NamePlateDisplayMode",
             ref config.NamePlateTranslationDisplayMode);
 
-        if (!ShouldDrawOverlaySettings(
-                config.NamePlateTranslationDisplayMode,
-                config.OverlayOnlyLanguage))
-        {
-            ImGui.Spacing();
-            ImGui.TextWrapped(Resources.NamePlateNativeReplacementHelpText);
-            return changed;
-        }
-
-        changed |= DrawToastOverlaySettings(
-            ref config.NamePlateFontScale,
-            ref config.ImGuiNamePlateWindowWidthMult,
-            ref config.ImGuiNamePlateWindowPosCorrection,
-            ref config.OverlayNamePlateTextColor,
-            ref config.NamePlateBackgroundOpacity,
-            ref config.FontChangeTime);
+        ImGui.Spacing();
+        ImGui.TextWrapped(Resources.NamePlateNativeReplacementHelpText);
 
         return changed;
     }
