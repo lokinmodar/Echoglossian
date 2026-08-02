@@ -2302,6 +2302,21 @@
         <member name="F:Echoglossian.Config.OverlayNamePlateTextColor">
             <summary>Text color used by nameplate overlays.</summary>
         </member>
+        <member name="F:Echoglossian.Config.EnableDistanceAwareOverlays">
+            <summary>Whether overlay-only languages use distance-aware overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DistanceAwareOverlayFullScaleDistance">
+            <summary>Camera distance at or below which overlays use full scale.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DistanceAwareOverlayFadeStartDistance">
+            <summary>Camera distance at which overlays begin fading.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DistanceAwareOverlayMaxDistance">
+            <summary>Camera distance at which overlays become hidden.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.DistanceAwareOverlayMinScale">
+            <summary>Minimum distance-aware overlay scale.</summary>
+        </member>
         <member name="F:Echoglossian.Config.WideTextToastBackgroundOpacity">
             <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
         </member>
@@ -17780,6 +17795,31 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.SystemMenuHandler.TryResolveSupplementalOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <inheritdoc />
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame">
+            <summary>
+                Represents the projected NamePlate overlay presentation for one frame.
+            </summary>
+            <param name="ScreenPosition">The projected screen-space anchor.</param>
+            <param name="ScaleMultiplier">The distance-aware render scale.</param>
+            <param name="AlphaMultiplier">The distance-aware render opacity.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.#ctor(System.Numerics.Vector2,System.Single,System.Single)">
+            <summary>
+                Represents the projected NamePlate overlay presentation for one frame.
+            </summary>
+            <param name="ScreenPosition">The projected screen-space anchor.</param>
+            <param name="ScaleMultiplier">The distance-aware render scale.</param>
+            <param name="AlphaMultiplier">The distance-aware render opacity.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.ScreenPosition">
+            <summary>The projected screen-space anchor.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.ScaleMultiplier">
+            <summary>The distance-aware render scale.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.AlphaMultiplier">
+            <summary>The distance-aware render opacity.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan">
             <summary>
             Describes the native NamePlate field writes required for one translated
@@ -17888,12 +17928,16 @@
                 <see cref="T:Dalamud.Plugin.Services.INamePlateGui" /> surface.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,System.Action{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate},System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Dalamud.Plugin.Services.IGameGui,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Action{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime" /> class.
             </summary>
             <param name="config">The active plugin configuration.</param>
             <param name="translationService">The shared translation service.</param>
+            <param name="gameGui">The game GUI service used for world projection.</param>
+            <param name="distanceAwareOverlay">
+                The shared overlay used for the overlay-only NamePlate backend.
+            </param>
             <param name="trackPrefetchCandidate">
                 Delegate used to record stable nameplate source text for background
                 prefetch outside the one-frame handler callback.
@@ -17929,6 +17973,15 @@
             <param name="screenPosition">The projected nameplate center point.</param>
             <param name="viewportSize">The current viewport size.</param>
             <returns>The overlay top-left position and initial size.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.TrySyncDistanceAwareOverlayFrame(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Numerics.Vector2)">
+            <summary>
+                Synchronizes the latest projected NamePlate frame to the overlay
+                bounds used by the shared UI-thread renderer.
+            </summary>
+            <param name="overlay">The NamePlate overlay to synchronize.</param>
+            <param name="viewportSize">The active viewport size.</param>
+            <returns>Whether a visible NamePlate frame was synchronized.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.OperationGuide.OperationGuideHandler">
             <summary>
@@ -33766,6 +33819,26 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a Dialogue LLM override.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayFadeStartDistanceLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Fade start distance.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayFullScaleDistanceLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Full scale distance.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayMaxDistanceLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Maximum distance.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayMinScaleLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Minimum scale.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.DisclaimerText1">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
@@ -33811,6 +33884,11 @@
                 Pesquisa uma cadeia de caracteres localizada semelhante a Enable dialogue glossary injection.
             </summary>
         </member>
+        <member name="P:Echoglossian.Properties.Resources.EnableDistanceAwareOverlaysLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Enable distance-aware overlays.
+            </summary>
+        </member>
         <member name="P:Echoglossian.Properties.Resources.EnableTranslation">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Activate game text realtime translation.
@@ -33819,26 +33897,6 @@
         <member name="P:Echoglossian.Properties.Resources.Endpoint">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Endpoint.
-        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayFadeStartDistanceLabel">
-            <summary>
-                Pesquisa uma cadeia de caracteres localizada semelhante a Fade start distance.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayFullScaleDistanceLabel">
-            <summary>
-                Pesquisa uma cadeia de caracteres localizada semelhante a Full scale distance.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayMaxDistanceLabel">
-            <summary>
-                Pesquisa uma cadeia de caracteres localizada semelhante a Maximum distance.
-            </summary>
-        </member>
-        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayMinScaleLabel">
-            <summary>
-                Pesquisa uma cadeia de caracteres localizada semelhante a Minimum scale.
-            </summary>
-        </member>
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ErrorSavingData">
@@ -33884,11 +33942,6 @@
         <member name="P:Echoglossian.Properties.Resources.GeminiModelTooltip15Flash">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a ⚡ Fastest and cheapest Gemini model.
-        <member name="P:Echoglossian.Properties.Resources.EnableDistanceAwareOverlaysLabel">
-            <summary>
-                Pesquisa uma cadeia de caracteres localizada semelhante a Enable distance-aware overlays.
-            </summary>
-        </member>
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.GeminiModelTooltip15Pro">
@@ -39496,6 +39549,42 @@
             <param name="request">The presentation request.</param>
             <returns>The resolved backend kind.</returns>
         </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.DistanceAwareOverlayPresentationState">
+            <summary>
+            Represents the resolved visibility, scale, and opacity for a distance-aware overlay.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.DistanceAwareOverlayPresentationState.#ctor(System.Boolean,System.Single,System.Single)">
+            <summary>
+            Represents the resolved visibility, scale, and opacity for a distance-aware overlay.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.DistanceAwareOverlayPresentation">
+            <summary>
+            Resolves distance-aware overlay presentation values from primitive inputs.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.DistanceAwareOverlayPresentation.Resolve(System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Resolves visibility, scale, and opacity for an overlay at a given camera distance.
+            </summary>
+            <param name="distanceToCamera">The overlay's distance to the camera.</param>
+            <param name="fullScaleDistance">The distance through which the overlay remains full size.</param>
+            <param name="fadeStartDistance">The distance at which the overlay begins fading.</param>
+            <param name="maxDistance">The distance at which the overlay becomes hidden.</param>
+            <param name="minScale">The minimum scale reached at the maximum distance.</param>
+            <returns>The resolved distance-aware presentation state.</returns>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.RenderScale">
+            <summary>
+            Gets or sets the runtime scale multiplier used when rendering the overlay.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.RenderAlpha">
+            <summary>
+            Gets or sets the runtime alpha multiplier used when rendering the overlay.
+            </summary>
+        </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.DisplaysOriginalSwapText">
             <summary>
             Gets whether the current content is original text shown through swap
@@ -39521,6 +39610,18 @@
             <summary>
             Clears the retained original swap presentation while the caller owns
             <see cref="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.Semaphore" />.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.UpdateRuntimePresentation(System.Single,System.Single)">
+            <summary>
+            Updates the runtime scale and alpha modifiers for the overlay presentation.
+            </summary>
+            <param name="renderScale">The runtime scale multiplier.</param>
+            <param name="renderAlpha">The runtime alpha multiplier.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.ClearRuntimePresentation">
+            <summary>
+            Clears the runtime scale and alpha modifiers for the overlay presentation.
             </summary>
         </member>
         <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayBoundsCalculator">
@@ -39854,8 +39955,10 @@
             <param name="AddonPosition">The source addon position.</param>
             <param name="AddonSize">The source addon dimensions.</param>
             <param name="IsPreview">Whether the request comes from the standalone previewer.</param>
+            <param name="ScaleMultiplier">The runtime overlay scale multiplier.</param>
+            <param name="AlphaMultiplier">The runtime overlay alpha multiplier.</param>
         </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.#ctor(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean)">
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.#ctor(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean,System.Single,System.Single)">
             <summary>
             Describes one translation overlay render pass.
             </summary>
@@ -39866,6 +39969,8 @@
             <param name="AddonPosition">The source addon position.</param>
             <param name="AddonSize">The source addon dimensions.</param>
             <param name="IsPreview">Whether the request comes from the standalone previewer.</param>
+            <param name="ScaleMultiplier">The runtime overlay scale multiplier.</param>
+            <param name="AlphaMultiplier">The runtime overlay alpha multiplier.</param>
         </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.Overlay">
             <summary>The visible overlay state.</summary>
@@ -39887,6 +39992,12 @@
         </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.IsPreview">
             <summary>Whether the request comes from the standalone previewer.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.ScaleMultiplier">
+            <summary>The runtime overlay scale multiplier.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.AlphaMultiplier">
+            <summary>The runtime overlay alpha multiplier.</summary>
         </member>
         <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult">
             <summary>
