@@ -90,6 +90,17 @@ public partial class Echoglossian
                   translatedPayloadReady,
                   swapEnabled,
                   forceEnabled),
+      LogPopupBodyHoverGeometryDecision =
+          (key, preferredHoverNodeKind, preferredTopLeft, preferredBottomRight, explicitBoundsBuilt, explicitTopLeft, explicitBottomRight, finalAnchorKind) =>
+              this.hoverTooltipManager.LogBodyGeometryDecision(
+                  key,
+                  preferredHoverNodeKind,
+                  preferredTopLeft,
+                  preferredBottomRight,
+                  explicitBoundsBuilt,
+                  explicitTopLeft,
+                  explicitBottomRight,
+                  finalAnchorKind),
     };
   }
 }

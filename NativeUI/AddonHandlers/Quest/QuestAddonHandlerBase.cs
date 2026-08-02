@@ -456,6 +456,21 @@ internal abstract class QuestAddonHandlerBase
       }
     }
 
+    inspectedSiblingCount = 0;
+    for (var candidate = ((AtkResNode*)headingNode)->NextSiblingNode;
+         candidate != null &&
+         inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
+         candidate = candidate->NextSiblingNode, inspectedSiblingCount++)
+    {
+      if (TryFindPopupSectionBodyTextNodeFromCandidate(
+              candidate,
+              headingNode,
+              out textNode))
+      {
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -496,6 +511,23 @@ internal abstract class QuestAddonHandlerBase
          candidate != null &&
          inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
          candidate = candidate->PrevSiblingNode, inspectedSiblingCount++)
+    {
+      if (TryFindPopupSectionBodyTextNodeFromCandidate(
+              candidate,
+              headingNode,
+              out var candidateTextNode) &&
+          candidateTextNode == textNode)
+      {
+        hoverNode = candidate;
+        return true;
+      }
+    }
+
+    inspectedSiblingCount = 0;
+    for (var candidate = ((AtkResNode*)headingNode)->NextSiblingNode;
+         candidate != null &&
+         inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
+         candidate = candidate->NextSiblingNode, inspectedSiblingCount++)
     {
       if (TryFindPopupSectionBodyTextNodeFromCandidate(
               candidate,
@@ -924,6 +956,31 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Determines whether popup hover registration should keep retrying on
+  ///     visible draws until every expected direct tooltip target resolves.
+  /// </summary>
+  /// <param name="registeredName">
+  ///     Whether the direct title target was registered.
+  /// </param>
+  /// <param name="expectsMessage">
+  ///     Whether the popup currently expects one body tooltip target.
+  /// </param>
+  /// <param name="registeredMessage">
+  ///     Whether the direct body target was registered.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when one expected direct target is still
+  ///     missing and the next visible draw should retry registration.
+  /// </returns>
+  internal static bool ShouldKeepPopupHoverRefreshPending(
+      bool registeredName,
+      bool expectsMessage,
+      bool registeredMessage)
+  {
+    return !registeredName || (expectsMessage && !registeredMessage);
+  }
+
+  /// <summary>
   ///     Compares visible native text with one expected payload while allowing
   ///     line wrapping and SeString whitespace differences.
   /// </summary>
@@ -1214,5 +1271,80 @@ internal abstract class QuestAddonHandlerBase
         translatedPayloadReady,
         swapEnabled,
         forceEnabled);
+  }
+
+  /// <summary>
+  ///     Logs one popup-body hover geometry decision so temporary tooltip
+  ///     diagnostics can distinguish explicit-bounds success from text-node
+  ///     fallback.
+  /// </summary>
+  /// <param name="key">The tooltip key being prepared.</param>
+  /// <param name="preferredHoverNode">
+  ///     The resolved structural node used for geometry, if any.
+  /// </param>
+  /// <param name="explicitBoundsBuilt">
+  ///     Whether explicit popup-body bounds were successfully built.
+  /// </param>
+  /// <param name="explicitTopLeft">
+  ///     The explicit bounds top-left corner when one was built.
+  /// </param>
+  /// <param name="explicitBottomRight">
+  ///     The explicit bounds bottom-right corner when one was built.
+  /// </param>
+  /// <param name="finalAnchorKind">
+  ///     The final anchor kind used for registration.
+  /// </param>
+  protected unsafe void LogPopupBodyHoverGeometryDecision(
+      string key,
+      AtkResNode* preferredHoverNode,
+      bool explicitBoundsBuilt,
+      Vector2 explicitTopLeft,
+      Vector2 explicitBottomRight,
+      HoverTooltipAnchorKind finalAnchorKind)
+  {
+    var preferredTopLeft = Vector2.Zero;
+    var preferredBottomRight = Vector2.Zero;
+    if (preferredHoverNode != null)
+    {
+      preferredTopLeft = new Vector2(
+          preferredHoverNode->ScreenX,
+          preferredHoverNode->ScreenY);
+      preferredBottomRight = new Vector2(
+          preferredHoverNode->ScreenX + Math.Max(1f, preferredHoverNode->Width),
+          preferredHoverNode->ScreenY + Math.Max(1f, preferredHoverNode->Height));
+    }
+
+    this.Dependencies.LogPopupBodyHoverGeometryDecision(
+        key,
+        DescribePopupBodyHoverNodeKind(preferredHoverNode),
+        preferredTopLeft,
+        preferredBottomRight,
+        explicitBoundsBuilt,
+        explicitTopLeft,
+        explicitBottomRight,
+        finalAnchorKind);
+  }
+
+  /// <summary>
+  ///     Describes one structural popup-body hover node for diagnostics.
+  /// </summary>
+  /// <param name="node">The structural popup-body hover node.</param>
+  /// <returns>The node-kind description used in logs.</returns>
+  private static unsafe string DescribePopupBodyHoverNodeKind(AtkResNode* node)
+  {
+    if (node == null)
+    {
+      return "none";
+    }
+
+    var visibilityPrefix = node->IsVisible() ? string.Empty : "hidden ";
+    var nodeKind = node->Type switch
+    {
+      NodeType.Collision => "collision",
+      NodeType.Text => "text node",
+      _ when (ushort)node->Type >= 1000 => "component",
+      _ => "res node",
+    };
+    return $"{visibilityPrefix}{nodeKind}";
   }
 }

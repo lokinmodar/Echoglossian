@@ -120,6 +120,8 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
       return;
     }
 
+    this.RestoreJournalResultOriginals();
+
     if (!this.Config.TranslateJournalResult ||
         this.DisableTranslationAccordingToState())
     {
@@ -292,6 +294,17 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     }
 
     this.TryCaptureJournalResultVisiblePayloads(addon);
+    var state = this.currentJournalResultHoverState;
+    if (state == null)
+    {
+      return;
+    }
+
+    if (this.JournalResultWritesNativeTranslation &&
+        state.TranslatedPayloadReady)
+    {
+      this.ApplyJournalResultNativeState(addon, state);
+    }
 
     if (!this.JournalResultWritesNativeTranslation &&
         this.ownsJournalResultNativeMutation)
@@ -704,6 +717,9 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
     }
 
     var registeredName = false;
+    var expectsMessage =
+        !string.IsNullOrWhiteSpace(state.OriginalQuestMessage) &&
+        IsTranslatedPayloadReady(state.TranslatedQuestMessage);
     if (this.TryFindReadableTextNodeByText(
             addon,
             state.OriginalQuestName,
@@ -736,11 +752,21 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
           messageNode,
           out preferredHoverNode);
       var messageHoverKey = $"JournalResult-QuestBody-{(nint)messageNode:X}";
-      if (TryBuildPopupBodyHoverBounds(
-              messageNode,
-              preferredHoverNode,
-              out var messageTopLeft,
-              out var messageBottomRight))
+      var builtExplicitBounds = TryBuildPopupBodyHoverBounds(
+          messageNode,
+          preferredHoverNode,
+          out var messageTopLeft,
+          out var messageBottomRight);
+      this.LogPopupBodyHoverGeometryDecision(
+          messageHoverKey,
+          preferredHoverNode,
+          builtExplicitBounds,
+          messageTopLeft,
+          messageBottomRight,
+          builtExplicitBounds
+              ? HoverTooltipAnchorKind.ExplicitBounds
+              : HoverTooltipAnchorKind.TextNode);
+      if (builtExplicitBounds)
       {
         this.RegisterTranslatedHoverTooltip(
             messageHoverKey,
@@ -809,7 +835,11 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
 
     this.lastAppliedDisplayMode =
         this.Config.JournalResultTranslationDisplayMode;
-    this.needsJournalResultHoverRefresh = false;
+    this.needsJournalResultHoverRefresh =
+        ShouldKeepPopupHoverRefreshPending(
+            registeredName,
+            expectsMessage,
+            registeredMessage);
   }
 
   /// <summary>
@@ -915,6 +945,15 @@ internal sealed class JournalResultHandler : QuestAddonHandlerBase
         ? state.TranslatedQuestMessagePayload
         : state.OriginalQuestMessagePayload;
     var appliedName = false;
+    if (addon->AtkValues != null && addon->AtkValuesCount > 1)
+    {
+      SetJournalResultValue(
+          &addon->AtkValues[1],
+          targetQuestNamePayload,
+          targetQuestName);
+      appliedName = true;
+    }
+
     if (this.TryFindReadableTextNodeByText(
             addon,
             state.OriginalQuestName,

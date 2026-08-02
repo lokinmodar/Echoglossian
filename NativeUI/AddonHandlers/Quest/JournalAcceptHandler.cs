@@ -19,6 +19,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
 
   private const string JournalAcceptHoverPrefix = "JournalAccept-";
 
+  private const uint JournalAcceptDescriptionTextId = 543;
+
   private const uint JournalAcceptSummaryTextId = 476;
 
   private static readonly TimeSpan JournalAcceptRetryInterval =
@@ -123,6 +125,8 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     {
       return;
     }
+
+    this.RestoreJournalAcceptOriginals();
 
     if (!this.Config.TranslateJournalAccept ||
         this.DisableTranslationAccordingToState())
@@ -344,6 +348,17 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     }
 
     this.TryPromoteJournalAcceptVisibleBodyPayload(addon);
+    var state = this.currentJournalAcceptHoverState;
+    if (state == null)
+    {
+      return;
+    }
+
+    if (this.JournalAcceptWritesNativeTranslation &&
+        state.TranslatedPayloadReady)
+    {
+      this.ApplyJournalAcceptNativeState(addon, state);
+    }
 
     if (!this.JournalAcceptWritesNativeTranslation &&
         this.ownsJournalAcceptNativeMutation)
@@ -960,6 +975,7 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
     }
 
     var registeredName = false;
+    var expectsMessage = state.TranslatedPayloadReady;
     var originalHoverQuestMessage = state.OriginalQuestMessage;
     if (this.TryFindReadableTextNodeByText(
             addon,
@@ -992,11 +1008,21 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
           messageNode,
           out preferredHoverNode);
       var messageHoverKey = $"JournalAccept-QuestBody-{(nint)messageNode:X}";
-      if (TryBuildPopupBodyHoverBounds(
-              messageNode,
-              preferredHoverNode,
-              out var messageTopLeft,
-              out var messageBottomRight))
+      var builtExplicitBounds = TryBuildPopupBodyHoverBounds(
+          messageNode,
+          preferredHoverNode,
+          out var messageTopLeft,
+          out var messageBottomRight);
+      this.LogPopupBodyHoverGeometryDecision(
+          messageHoverKey,
+          preferredHoverNode,
+          builtExplicitBounds,
+          messageTopLeft,
+          messageBottomRight,
+          builtExplicitBounds
+              ? HoverTooltipAnchorKind.ExplicitBounds
+              : HoverTooltipAnchorKind.TextNode);
+      if (builtExplicitBounds)
       {
         this.RegisterTranslatedHoverTooltip(
             messageHoverKey,
@@ -1052,7 +1078,11 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
 
     this.lastAppliedDisplayMode =
         this.Config.JournalAcceptTranslationDisplayMode;
-    this.needsJournalAcceptHoverRefresh = false;
+    this.needsJournalAcceptHoverRefresh =
+        ShouldKeepPopupHoverRefreshPending(
+            registeredName,
+            expectsMessage,
+            registeredMessage);
   }
 
   /// <summary>
@@ -1122,10 +1152,20 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
 
     if (TryFindPopupSectionBodyTextNodeByHeadingTextId(
             addon,
-            JournalAcceptSummaryTextId,
-            out var structuralMessageNode))
+            JournalAcceptDescriptionTextId,
+            out var descriptionMessageNode))
     {
-      messageNode = structuralMessageNode;
+      messageNode = descriptionMessageNode;
+      originalHoverQuestMessage = state.OriginalQuestMessage;
+      return true;
+    }
+
+    if (TryFindPopupSectionBodyTextNodeByHeadingTextId(
+            addon,
+            JournalAcceptSummaryTextId,
+            out var summaryMessageNode))
+    {
+      messageNode = summaryMessageNode;
       originalHoverQuestMessage = state.OriginalQuestMessage;
       return true;
     }
@@ -1152,7 +1192,16 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       out AtkResNode* preferredHoverNode)
   {
     preferredHoverNode = null;
-    return messageNode != null &&
+    if (messageNode == null)
+    {
+      return false;
+    }
+
+    return TryFindPopupSectionBodyHoverNodeByHeadingTextId(
+               addon,
+               JournalAcceptDescriptionTextId,
+               messageNode,
+               out preferredHoverNode) ||
            TryFindPopupSectionBodyHoverNodeByHeadingTextId(
                addon,
                JournalAcceptSummaryTextId,
@@ -1403,6 +1452,20 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
         ? state.TranslatedQuestMessage
         : state.OriginalQuestMessage;
     var appliedName = false;
+    var appliedMessage = false;
+    if (addon->AtkValues != null && addon->AtkValuesCount > 12)
+    {
+      addon->AtkValues[5].SetManagedString(targetQuestName);
+      SetJournalAcceptMessageValue(
+          &addon->AtkValues[12],
+          this.JournalAcceptWritesNativeTranslation
+              ? state.TranslatedQuestMessagePayload
+              : state.OriginalQuestMessagePayload,
+          targetQuestMessage);
+      appliedName = true;
+      appliedMessage = true;
+    }
+
     if (this.TryFindReadableTextNodeByText(
             addon,
             state.OriginalQuestName,
@@ -1413,7 +1476,6 @@ internal sealed class JournalAcceptHandler : QuestAddonHandlerBase
       appliedName = true;
     }
 
-    var appliedMessage = false;
     if (this.TryFindJournalAcceptMessageNode(
             addon,
             state,

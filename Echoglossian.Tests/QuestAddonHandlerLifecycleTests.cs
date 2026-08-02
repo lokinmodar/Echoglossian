@@ -325,6 +325,89 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures JournalAccept retries its native title and body application
+    ///     during visible draws when the current mode writes native text.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_PreDrawReappliesNativeState()
+    {
+        var refresh = typeof(JournalAcceptHandler).GetMethod(
+            "OnJournalAcceptPreDrawEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var apply = typeof(JournalAcceptHandler).GetMethod(
+            "ApplyJournalAcceptNativeState",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(refresh);
+        Assert.NotNull(apply);
+        Assert.True(
+            MethodReferences(refresh!, apply!),
+            "JournalAccept must retry its native title and body application while the addon is visible.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalAccept runtime native application rewrites the setup
+    ///     message value as well as the visible text node.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_ApplyNativeStateUpdatesSetupMessageValue()
+    {
+        var apply = typeof(JournalAcceptHandler).GetMethod(
+            "ApplyJournalAcceptNativeState",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var setValue = typeof(JournalAcceptHandler).GetMethod(
+            "SetJournalAcceptMessageValue",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(apply);
+        Assert.NotNull(setValue);
+        Assert.True(
+            MethodReferences(apply!, setValue!),
+            "JournalAccept must rewrite the setup message value when applying native translation at runtime.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalAccept restores an older native mutation before a
+    ///     new setup event replaces its runtime state.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_PreSetupRestoresOwnedNativeMutation()
+    {
+        var setup = typeof(JournalAcceptHandler).GetMethod(
+            "OnJournalAcceptEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var restore = typeof(JournalAcceptHandler).GetMethod(
+            "RestoreJournalAcceptOriginals",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(setup);
+        Assert.NotNull(restore);
+        Assert.True(
+            MethodReferences(setup!, restore!),
+            "JournalAccept must restore an older native mutation before replacing its setup state.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalAccept uses the live Description section heading for
+    ///     body hover geometry while retaining the older Summary fallback.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_UsesDescriptionHeadingForBodyPresentation()
+    {
+        var descriptionTextId = typeof(JournalAcceptHandler).GetField(
+            "JournalAcceptDescriptionTextId",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        var summaryTextId = typeof(JournalAcceptHandler).GetField(
+            "JournalAcceptSummaryTextId",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(descriptionTextId);
+        Assert.NotNull(summaryTextId);
+        Assert.Equal(543u, descriptionTextId!.GetRawConstantValue());
+        Assert.Equal(476u, summaryTextId!.GetRawConstantValue());
+    }
+
+    /// <summary>
     ///     Ensures JournalAccept reads explicit quest identity only through the
     ///     dedicated popup identity helper.
     /// </summary>
@@ -449,6 +532,55 @@ public class QuestAddonHandlerLifecycleTests
     }
 
     /// <summary>
+    ///     Ensures JournalAccept logs popup-body geometry decisions so runtime
+    ///     probes can distinguish structural-anchor failure from text-node
+    ///     fallback registration.
+    /// </summary>
+    [Fact]
+    public void JournalAcceptHandler_LogsPopupBodyHoverGeometryDecision()
+    {
+        var register = typeof(JournalAcceptHandler).GetMethod(
+            "RegisterJournalAcceptHoverTooltip",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var geometryLog = typeof(QuestAddonHandlerBase).GetMethod(
+            "LogPopupBodyHoverGeometryDecision",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(register);
+        Assert.NotNull(geometryLog);
+        Assert.True(
+            MethodReferences(register!, geometryLog!),
+            "JournalAccept must log popup-body geometry decisions before falling back to a text-node body anchor.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalAccept keeps refreshing hover registration while one
+    ///     expected direct tooltip surface is still missing after setup.
+    /// </summary>
+    /// <param name="registeredName">Whether the title node was registered.</param>
+    /// <param name="expectsMessage">Whether the body surface is expected.</param>
+    /// <param name="registeredMessage">Whether the body node was registered.</param>
+    /// <param name="expected">The expected keep-refresh decision.</param>
+    [Theory]
+    [InlineData(false, true, false, true)]
+    [InlineData(true, true, false, true)]
+    [InlineData(true, true, true, false)]
+    [InlineData(true, false, false, false)]
+    public void JournalAcceptHoverRefreshPending_WaitsForExpectedDirectTargets(
+        bool registeredName,
+        bool expectsMessage,
+        bool registeredMessage,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            QuestAddonHandlerBase.ShouldKeepPopupHoverRefreshPending(
+                registeredName,
+                expectsMessage,
+                registeredMessage));
+    }
+
+    /// <summary>
     ///     Ensures popup-section text traversal uses the shared duplicate and
     ///     node-limit guard before following native child or sibling links.
     /// </summary>
@@ -503,6 +635,69 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True(
             MethodReferences(refresh!, restore!),
             "JournalResult must restore its owned native text when the display mode switches away from native writes.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult restores an older native mutation before a
+    ///     new setup event replaces its runtime state.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_PreSetupRestoresOwnedNativeMutation()
+    {
+        var setup = typeof(JournalResultHandler).GetMethod(
+            "OnJournalResultEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var restore = typeof(JournalResultHandler).GetMethod(
+            "RestoreJournalResultOriginals",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(setup);
+        Assert.NotNull(restore);
+        Assert.True(
+            MethodReferences(setup!, restore!),
+            "JournalResult must restore an older native mutation before replacing its setup state.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult retries its native title application during
+    ///     visible draws when the current mode writes native text.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_PreDrawReappliesNativeState()
+    {
+        var refresh = typeof(JournalResultHandler).GetMethod(
+            "OnJournalResultPreDrawEvent",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var apply = typeof(JournalResultHandler).GetMethod(
+            "ApplyJournalResultNativeState",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(refresh);
+        Assert.NotNull(apply);
+        Assert.True(
+            MethodReferences(refresh!, apply!),
+            "JournalResult must retry its native title application while the addon is visible.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult runtime native application rewrites the setup
+    ///     title value as well as the visible text node.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_ApplyNativeStateUpdatesSetupTitleValue()
+    {
+        var apply = typeof(JournalResultHandler).GetMethod(
+            "ApplyJournalResultNativeState",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var setValue = typeof(JournalResultHandler).GetMethod(
+            "SetJournalResultValue",
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(apply);
+        Assert.NotNull(setValue);
+        Assert.True(
+            MethodReferences(apply!, setValue!),
+            "JournalResult must rewrite the setup title value when applying native translation at runtime.");
     }
 
     /// <summary>
@@ -741,6 +936,55 @@ public class QuestAddonHandlerLifecycleTests
         Assert.True(
             MethodReferences(register!, presentationResolver!),
             "JournalResult presentation must resolve structural body geometry only while registering hover bounds.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult logs popup-body geometry decisions so runtime
+    ///     probes can distinguish structural-anchor failure from text-node
+    ///     fallback registration.
+    /// </summary>
+    [Fact]
+    public void JournalResultHandler_LogsPopupBodyHoverGeometryDecision()
+    {
+        var register = typeof(JournalResultHandler).GetMethod(
+            "RegisterJournalResultHoverTooltip",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var geometryLog = typeof(QuestAddonHandlerBase).GetMethod(
+            "LogPopupBodyHoverGeometryDecision",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(register);
+        Assert.NotNull(geometryLog);
+        Assert.True(
+            MethodReferences(register!, geometryLog!),
+            "JournalResult must log popup-body geometry decisions before falling back to a text-node body anchor.");
+    }
+
+    /// <summary>
+    ///     Ensures JournalResult keeps refreshing hover registration while one
+    ///     expected direct tooltip surface is still missing after setup.
+    /// </summary>
+    /// <param name="registeredName">Whether the title node was registered.</param>
+    /// <param name="expectsMessage">Whether the body surface is expected.</param>
+    /// <param name="registeredMessage">Whether the body node was registered.</param>
+    /// <param name="expected">The expected keep-refresh decision.</param>
+    [Theory]
+    [InlineData(false, false, false, true)]
+    [InlineData(true, true, false, true)]
+    [InlineData(true, true, true, false)]
+    [InlineData(true, false, false, false)]
+    public void JournalResultHoverRefreshPending_WaitsForExpectedDirectTargets(
+        bool registeredName,
+        bool expectsMessage,
+        bool registeredMessage,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            QuestAddonHandlerBase.ShouldKeepPopupHoverRefreshPending(
+                registeredName,
+                expectsMessage,
+                registeredMessage));
     }
 
     /// <summary>
@@ -1353,6 +1597,15 @@ public class QuestAddonHandlerLifecycleTests
                   _,
                   _) => { },
               RegisterTranslatedHoverTooltipTextNodeBounds = null!,
+            LogPopupBodyHoverGeometryDecision = static (
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _) => { },
           };
     }
 

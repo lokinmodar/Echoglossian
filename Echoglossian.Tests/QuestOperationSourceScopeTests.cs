@@ -298,6 +298,15 @@ public class QuestOperationSourceScopeTests
                   _,
                   _) => { },
               RegisterTranslatedHoverTooltipTextNodeBounds = null!,
+            LogPopupBodyHoverGeometryDecision = static (
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _) => { },
           };
     }
 

@@ -2772,6 +2772,9 @@
                 ToastGui route that owns supported normal and error toasts.
             </summary>
             <summary>
+            Handles the temporary tooltip-registration diagnostic command.
+            </summary>
+            <summary>
                 Provides DB-first background prefetch for canonical trait payloads.
             </summary>
             <summary>
@@ -7226,6 +7229,14 @@
                 Unregisters the alternate supported-toast runtime from Dalamud's
                 normal and error-toast callbacks.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloTooltipRegisterLoggingCommand(System.String,System.String)">
+            <summary>
+            Starts or stops temporary logging for hover-tooltip registrations and
+            hover-hit transitions.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetch">
             <summary>
@@ -20281,6 +20292,25 @@
                 <see langword="null" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.ShouldKeepPopupHoverRefreshPending(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+                Determines whether popup hover registration should keep retrying on
+                visible draws until every expected direct tooltip target resolves.
+            </summary>
+            <param name="registeredName">
+                Whether the direct title target was registered.
+            </param>
+            <param name="expectsMessage">
+                Whether the popup currently expects one body tooltip target.
+            </param>
+            <param name="registeredMessage">
+                Whether the direct body target was registered.
+            </param>
+            <returns>
+                <see langword="true" /> when one expected direct target is still
+                missing and the next visible draw should retry registration.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.TextNodePayloadMatches(System.String,System.String)">
             <summary>
                 Compares visible native text with one expected payload while allowing
@@ -20440,6 +20470,36 @@
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.LogPopupBodyHoverGeometryDecision(System.String,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Numerics.Vector2,System.Numerics.Vector2,Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind)">
+            <summary>
+                Logs one popup-body hover geometry decision so temporary tooltip
+                diagnostics can distinguish explicit-bounds success from text-node
+                fallback.
+            </summary>
+            <param name="key">The tooltip key being prepared.</param>
+            <param name="preferredHoverNode">
+                The resolved structural node used for geometry, if any.
+            </param>
+            <param name="explicitBoundsBuilt">
+                Whether explicit popup-body bounds were successfully built.
+            </param>
+            <param name="explicitTopLeft">
+                The explicit bounds top-left corner when one was built.
+            </param>
+            <param name="explicitBottomRight">
+                The explicit bounds bottom-right corner when one was built.
+            </param>
+            <param name="finalAnchorKind">
+                The final anchor kind used for registration.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.DescribePopupBodyHoverNodeKind(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+            <summary>
+                Describes one structural popup-body hover node for diagnostics.
+            </summary>
+            <param name="node">The structural popup-body hover node.</param>
+            <returns>The node-kind description used in logs.</returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.TryGetQueuedTranslationDelegate">
             <summary>
                 Delegate used to read a queued quest translation from the shared
@@ -20560,6 +20620,34 @@
             <param name="swapEnabled">Optional explicit swap override.</param>
             <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.LogPopupBodyHoverGeometryDecisionDelegate">
+            <summary>
+                Delegate used to log one popup-body hover geometry decision for
+                temporary tooltip-registration diagnostics.
+            </summary>
+            <param name="key">The tooltip key being prepared.</param>
+            <param name="preferredHoverNodeKind">
+            The resolved structural node kind, if any.
+            </param>
+            <param name="preferredTopLeft">
+            The structural node top-left corner, if any.
+            </param>
+            <param name="preferredBottomRight">
+            The structural node bottom-right corner, if any.
+            </param>
+            <param name="explicitBoundsBuilt">
+            Whether explicit popup-body bounds were successfully built.
+            </param>
+            <param name="explicitTopLeft">
+            The explicit bounds top-left corner when one was built.
+            </param>
+            <param name="explicitBottomRight">
+            The explicit bounds bottom-right corner when one was built.
+            </param>
+            <param name="finalAnchorKind">
+            The final anchor kind used for registration.
+            </param>
+        </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies">
             <summary>
                 Bundles the quest-specific delegates and services needed by standalone
@@ -20630,6 +20718,11 @@
             <summary>
                 Gets or sets the bounds-based tooltip registration delegate that
                 still captures rich original text from one live text node.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.LogPopupBodyHoverGeometryDecision">
+            <summary>
+                Gets or sets the popup-body geometry diagnostic delegate.
             </summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonModeHelpers">
@@ -27953,7 +28046,7 @@
                 The live plugin configuration used to style hover tooltips.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Register(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest})">
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Register(System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Nullable{Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest},Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind)">
             <summary>
                 Registers or updates a tooltip target.
             </summary>
@@ -27981,10 +28074,255 @@
                 Clears all registered targets.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.StartRegistrationLogging(System.String,System.TimeSpan)">
+            <summary>
+            Starts a temporary diagnostic session that logs hover-tooltip
+            registrations and hover-hit transitions for the requested surface.
+            </summary>
+            <param name="surfaceFilter">The requested surface filter.</param>
+            <param name="duration">The requested watch duration.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.StopRegistrationLogging">
+            <summary>
+            Stops the current hover-tooltip registration diagnostic session.
+            </summary>
+            <returns><see langword="true" /> when a session was stopped.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.IsRegistrationLoggingActive">
+            <summary>
+            Determines whether hover-tooltip registration diagnostics are currently
+            active.
+            </summary>
+            <returns><see langword="true" /> when a session is active.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.LogBodyGeometryDecision(System.String,System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean,System.Numerics.Vector2,System.Numerics.Vector2,Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind)">
+            <summary>
+            Logs one popup-body geometry decision for an active registration
+            logging session.
+            </summary>
+            <param name="key">The tooltip key being prepared.</param>
+            <param name="preferredHoverNodeKind">
+            The resolved structural node kind, if any.
+            </param>
+            <param name="preferredTopLeft">
+            The structural node top-left corner, if any.
+            </param>
+            <param name="preferredBottomRight">
+            The structural node bottom-right corner, if any.
+            </param>
+            <param name="explicitBoundsBuilt">
+            Whether explicit popup-body bounds were successfully built.
+            </param>
+            <param name="explicitTopLeft">
+            The explicit bounds top-left corner when one was built.
+            </param>
+            <param name="explicitBottomRight">
+            The explicit bounds bottom-right corner when one was built.
+            </param>
+            <param name="finalAnchorKind">
+            The final anchor kind used for registration.
+            </param>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipManager.Draw">
             <summary>
                 Draws a tooltip for the first hovered target.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind">
+            <summary>
+            Identifies the runtime anchor used to register a hover-tooltip target.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind.Unspecified">
+            <summary>
+            The registration did not identify a more specific anchor kind.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind.TextNode">
+            <summary>
+            The registration is anchored directly to an <c>AtkTextNode</c>.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind.ResNode">
+            <summary>
+            The registration is anchored directly to a generic <c>AtkResNode</c>.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind.AddonRoot">
+            <summary>
+            The registration uses the addon root bounds.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind.ExplicitBounds">
+            <summary>
+            The registration uses explicit screen bounds.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationCommandArguments">
+            <summary>
+            Holds the parsed arguments for the temporary tooltip-registration logging
+            command.
+            </summary>
+            <param name="SurfaceFilter">The requested surface filter.</param>
+            <param name="Duration">The requested watch duration.</param>
+            <param name="IsStop">Whether the command requested a stop action.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationCommandArguments.#ctor(System.String,System.TimeSpan,System.Boolean)">
+            <summary>
+            Holds the parsed arguments for the temporary tooltip-registration logging
+            command.
+            </summary>
+            <param name="SurfaceFilter">The requested surface filter.</param>
+            <param name="Duration">The requested watch duration.</param>
+            <param name="IsStop">Whether the command requested a stop action.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationCommandArguments.SurfaceFilter">
+            <summary>The requested surface filter.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationCommandArguments.Duration">
+            <summary>The requested watch duration.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationCommandArguments.IsStop">
+            <summary>Whether the command requested a stop action.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics">
+            <summary>
+            Emits temporary diagnostic log lines for hover-tooltip registration and
+            hover-hit transitions.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.DefaultDuration">
+            <summary>
+            The default duration used when a logging session omits an explicit watch
+            length.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.MaxDuration">
+            <summary>
+            The maximum watch duration accepted by the command parser.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.#ctor(System.Action{System.String})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics" />
+            class.
+            </summary>
+            <param name="log">The runtime log sink.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.TryParseCommandArguments(System.String,Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationCommandArguments@,System.Boolean@)">
+            <summary>
+            Parses the debug command arguments for tooltip-registration logging.
+            </summary>
+            <param name="args">The raw command argument text.</param>
+            <param name="arguments">Receives the parsed command arguments.</param>
+            <param name="hasInvalidDuration">
+            Receives whether the failure was caused by a malformed duration token.
+            </param>
+            <returns><see langword="true" /> when the command parsed successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.IsActive(System.DateTime)">
+            <summary>
+            Determines whether a logging session is currently active.
+            </summary>
+            <param name="nowUtc">The current UTC timestamp.</param>
+            <returns><see langword="true" /> when a session is still active.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.Start(System.String,System.TimeSpan,System.DateTime)">
+            <summary>
+            Starts a fresh logging session for the requested surface filter.
+            </summary>
+            <param name="surfaceFilter">The requested surface filter.</param>
+            <param name="duration">The requested watch duration.</param>
+            <param name="nowUtc">The current UTC timestamp.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.Stop(System.DateTime)">
+            <summary>
+            Stops the current logging session, if any.
+            </summary>
+            <param name="nowUtc">The current UTC timestamp.</param>
+            <returns><see langword="true" /> when a session was stopped.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.LogRegister(System.String,Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean,System.Boolean,System.Boolean,System.DateTime)">
+            <summary>
+            Logs a matching hover-tooltip registration or update.
+            </summary>
+            <param name="key">The registration key.</param>
+            <param name="anchorKind">The runtime anchor kind.</param>
+            <param name="topLeft">The registered top-left corner.</param>
+            <param name="bottomRight">The registered bottom-right corner.</param>
+            <param name="enabled">Whether the target is enabled.</param>
+            <param name="displaysOriginalSwapText">
+            Whether the tooltip shows the original text in swap mode.
+            </param>
+            <param name="updated">Whether the entry replaced a prior registration.</param>
+            <param name="nowUtc">The current UTC timestamp.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.LogRemove(System.String,System.String,System.DateTime)">
+            <summary>
+            Logs a matching hover-tooltip removal.
+            </summary>
+            <param name="key">The removed registration key.</param>
+            <param name="reason">The removal reason.</param>
+            <param name="nowUtc">The current UTC timestamp.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.LogHoverChange(System.String,Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean,System.Numerics.Vector2,System.DateTime)">
+            <summary>
+            Logs hover-enter and hover-exit transitions for the currently hovered
+            registration.
+            </summary>
+            <param name="hoveredKey">The hovered registration key, if any.</param>
+            <param name="anchorKind">The hovered anchor kind.</param>
+            <param name="topLeft">The hovered top-left corner.</param>
+            <param name="bottomRight">The hovered bottom-right corner.</param>
+            <param name="displaysOriginalSwapText">
+            Whether the hovered tooltip shows original swap text.
+            </param>
+            <param name="mousePosition">The current cursor position.</param>
+            <param name="nowUtc">The current UTC timestamp.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.LogBodyGeometryDecision(System.String,System.String,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean,System.Numerics.Vector2,System.Numerics.Vector2,Echoglossian.NativeUI.Helpers.HoverTooltipAnchorKind,System.DateTime)">
+            <summary>
+            Logs one popup-body geometry decision before registration falls back to
+            a smaller text-node anchor or succeeds with explicit bounds.
+            </summary>
+            <param name="key">The registration key being prepared.</param>
+            <param name="preferredHoverNodeKind">
+            The structural node kind resolved for geometry, if any.
+            </param>
+            <param name="preferredTopLeft">
+            The resolved structural node top-left corner, if any.
+            </param>
+            <param name="preferredBottomRight">
+            The resolved structural node bottom-right corner, if any.
+            </param>
+            <param name="explicitBoundsBuilt">
+            Whether explicit popup-body bounds were successfully built.
+            </param>
+            <param name="explicitTopLeft">
+            The explicit bounds top-left corner when one was built.
+            </param>
+            <param name="explicitBottomRight">
+            The explicit bounds bottom-right corner when one was built.
+            </param>
+            <param name="finalAnchorKind">
+            The final anchor kind chosen for registration.
+            </param>
+            <param name="nowUtc">The current UTC timestamp.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.ExtractSurfaceName(System.String)">
+            <summary>
+            Extracts the leading surface prefix from a registration key.
+            </summary>
+            <param name="key">The registration key.</param>
+            <returns>The extracted surface name.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.HoverTooltipRegistrationDiagnostics.ActiveSession.Matches(System.String)">
+            <summary>
+            Determines whether the active session should log the requested
+            surface.
+            </summary>
+            <param name="surface">The surface name extracted from the key.</param>
+            <returns><see langword="true" /> when the session matches it.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.RichOriginalTextCaptureRequest">
             <summary>
@@ -35102,6 +35440,36 @@
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.AddonProbeDurationSecondsFormat">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TooltipRegisterLoggingHelpMessage">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TooltipRegisterLoggingUsage">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TooltipRegisterLoggingInvalidDurationFormat">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TooltipRegisterLoggingNoActiveSession">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TooltipRegisterLoggingStopped">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TooltipRegisterLoggingStartedFormat">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada.
             </summary>

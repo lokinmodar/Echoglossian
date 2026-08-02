@@ -178,6 +178,42 @@ internal unsafe delegate void RegisterTranslatedHoverTooltipTextNodeBoundsDelega
     bool forceEnabled = false);
 
 /// <summary>
+///     Delegate used to log one popup-body hover geometry decision for
+///     temporary tooltip-registration diagnostics.
+/// </summary>
+/// <param name="key">The tooltip key being prepared.</param>
+/// <param name="preferredHoverNodeKind">
+/// The resolved structural node kind, if any.
+/// </param>
+/// <param name="preferredTopLeft">
+/// The structural node top-left corner, if any.
+/// </param>
+/// <param name="preferredBottomRight">
+/// The structural node bottom-right corner, if any.
+/// </param>
+/// <param name="explicitBoundsBuilt">
+/// Whether explicit popup-body bounds were successfully built.
+/// </param>
+/// <param name="explicitTopLeft">
+/// The explicit bounds top-left corner when one was built.
+/// </param>
+/// <param name="explicitBottomRight">
+/// The explicit bounds bottom-right corner when one was built.
+/// </param>
+/// <param name="finalAnchorKind">
+/// The final anchor kind used for registration.
+/// </param>
+internal delegate void LogPopupBodyHoverGeometryDecisionDelegate(
+    string key,
+    string preferredHoverNodeKind,
+    Vector2 preferredTopLeft,
+    Vector2 preferredBottomRight,
+    bool explicitBoundsBuilt,
+    Vector2 explicitTopLeft,
+    Vector2 explicitBottomRight,
+    HoverTooltipAnchorKind finalAnchorKind);
+
+/// <summary>
 ///     Bundles the quest-specific delegates and services needed by standalone
 ///     quest handlers.
 /// </summary>
@@ -254,4 +290,10 @@ internal sealed class QuestAddonHandlerDependencies
   /// </summary>
   public required RegisterTranslatedHoverTooltipTextNodeBoundsDelegate
       RegisterTranslatedHoverTooltipTextNodeBounds { get; init; }
+
+  /// <summary>
+  ///     Gets or sets the popup-body geometry diagnostic delegate.
+  /// </summary>
+  public required LogPopupBodyHoverGeometryDecisionDelegate
+      LogPopupBodyHoverGeometryDecision { get; init; }
 }

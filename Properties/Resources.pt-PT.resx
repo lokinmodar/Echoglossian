@@ -639,4 +639,22 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Registros {0} carregados</value>
   </data>
+  <data name="TooltipRegisterLoggingHelpMessage" xml:space="preserve">
+    <value>Regista temporariamente as nossas hover tooltips e os respetivos hovers. Utilização: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] ou /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingUsage" xml:space="preserve">
+    <value>Utilização: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] ou /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingInvalidDurationFormat" xml:space="preserve">
+    <value>Duração inválida para o registo de tooltips. Use valores como 90s ou 15m, até {0} minutos.</value>
+  </data>
+  <data name="TooltipRegisterLoggingNoActiveSession" xml:space="preserve">
+    <value>Não existe uma sessão ativa de registo de tooltips para parar.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStopped" xml:space="preserve">
+    <value>Registo de tooltips parado.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStartedFormat" xml:space="preserve">
+    <value>Registo de tooltips iniciado para a superfície '{0}' durante {1}. Verifique o Echoglossian.log para os diagnósticos de registo e hover.</value>
+  </data>
 </root>

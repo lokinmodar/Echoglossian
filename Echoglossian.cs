@@ -39,6 +39,9 @@ public partial class Echoglossian : IDalamudPlugin
   private const string AddonProbeCommand = "/egloaddonprobe";
 
   private const string QuestProbeCommand = "/egloquestprobe";
+
+  private const string TooltipRegisterLoggingCommand =
+      "/eglotooltipregisterlogging";
 #endif
 
   /// <summary>
@@ -228,6 +231,13 @@ public partial class Echoglossian : IDalamudPlugin
         new CommandInfo(this.OnEgloQuestProbeCommand)
         {
           HelpMessage = Resources.QuestProbeHelpMessage,
+        });
+
+    CommandManager.AddHandler(
+        TooltipRegisterLoggingCommand,
+        new CommandInfo(this.OnEgloTooltipRegisterLoggingCommand)
+        {
+          HelpMessage = Resources.TooltipRegisterLoggingHelpMessage,
         });
 #endif
 
@@ -638,6 +648,7 @@ public partial class Echoglossian : IDalamudPlugin
 #if DEBUG
     CommandManager.RemoveHandler(AddonProbeCommand);
     CommandManager.RemoveHandler(QuestProbeCommand);
+    CommandManager.RemoveHandler(TooltipRegisterLoggingCommand);
 #endif
 
     if (ReferenceEquals(activeInstance, this))

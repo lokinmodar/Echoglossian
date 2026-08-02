@@ -5366,6 +5366,72 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("AddonProbeDurationSecondsFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingHelpMessage
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingHelpMessage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingUsage
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingInvalidDurationFormat
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingInvalidDurationFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingNoActiveSession
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingNoActiveSession", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingStopped
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingStopped", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingStartedFormat
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingStartedFormat", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada.

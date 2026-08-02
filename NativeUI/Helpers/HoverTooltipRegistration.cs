@@ -62,7 +62,8 @@ public partial class Echoglossian
         true,
         useGeneralFont,
         displaysOriginalSwapText,
-        richOriginalTextCaptureRequest);
+        richOriginalTextCaptureRequest,
+        HoverTooltipAnchorKind.TextNode);
   }
 
   /// <summary>
@@ -111,7 +112,8 @@ public partial class Echoglossian
         title,
         body,
         true,
-        useGeneralFont);
+        useGeneralFont,
+        anchorKind: HoverTooltipAnchorKind.ResNode);
   }
 
   /// <summary>
@@ -165,7 +167,8 @@ public partial class Echoglossian
         title,
         body,
         true,
-        useGeneralFont);
+        useGeneralFont,
+        anchorKind: HoverTooltipAnchorKind.AddonRoot);
   }
 
   /// <summary>
@@ -202,7 +205,8 @@ public partial class Echoglossian
         true,
         useGeneralFont,
         displaysOriginalSwapText,
-        richOriginalTextCaptureRequest);
+        richOriginalTextCaptureRequest,
+        HoverTooltipAnchorKind.ExplicitBounds);
   }
 
   /// <summary>
