@@ -17797,28 +17797,106 @@
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame">
             <summary>
-                Represents the projected NamePlate overlay presentation for one frame.
+                Represents live projected NamePlate overlay presentation for one frame.
             </summary>
             <param name="ScreenPosition">The projected screen-space anchor.</param>
+            <param name="DistanceToCamera">The current distance from the camera.</param>
             <param name="ScaleMultiplier">The distance-aware render scale.</param>
             <param name="AlphaMultiplier">The distance-aware render opacity.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.#ctor(System.Numerics.Vector2,System.Single,System.Single)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.#ctor(System.Numerics.Vector2,System.Single,System.Single,System.Single)">
             <summary>
-                Represents the projected NamePlate overlay presentation for one frame.
+                Represents live projected NamePlate overlay presentation for one frame.
             </summary>
             <param name="ScreenPosition">The projected screen-space anchor.</param>
+            <param name="DistanceToCamera">The current distance from the camera.</param>
             <param name="ScaleMultiplier">The distance-aware render scale.</param>
             <param name="AlphaMultiplier">The distance-aware render opacity.</param>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.ScreenPosition">
             <summary>The projected screen-space anchor.</summary>
         </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.DistanceToCamera">
+            <summary>The current distance from the camera.</summary>
+        </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.ScaleMultiplier">
             <summary>The distance-aware render scale.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame.AlphaMultiplier">
             <summary>The distance-aware render opacity.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle">
+            <summary>
+                Retains stable NamePlate translation candidates and publishes the nearest
+                candidate that resolves to a visible live frame.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.BeginNamePlateUpdate(System.Boolean,System.Int32)">
+            <summary>
+                Updates retained candidate membership for a Dalamud NamePlate update.
+            </summary>
+            <param name="isFullUpdate">
+                <see langword="true" /> when the callback contains all active nameplates;
+                otherwise, <see langword="false" />.
+            </param>
+            <param name="activeNamePlateCount">The number of active NamePlate entries.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.UpsertCandidate(Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate)">
+            <summary>
+                Adds or replaces a retained translation candidate by entity identifier.
+            </summary>
+            <param name="candidate">The stable translation candidate.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.ClearCandidates">
+            <summary>
+                Clears all retained translation candidates.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.TrySync(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Numerics.Vector2,System.Func{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate,System.Nullable{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayFrame}})">
+            <summary>
+                Resolves all retained candidates against live frame state and publishes
+                the nearest eligible candidate to the shared overlay.
+            </summary>
+            <param name="overlay">The shared NamePlate overlay.</param>
+            <param name="viewportSize">The active viewport size.</param>
+            <param name="resolveLiveFrame">
+                The callback that resolves current projection and distance state.
+            </param>
+            <returns>
+                <see langword="true" /> if a live candidate was published; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.ClearOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+                Clears all content and runtime presentation state from an overlay.
+            </summary>
+            <param name="overlay">The overlay to clear.</param>
+        </member>
+        <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate">
+            <summary>
+                Represents stable translated NamePlate data retained across UI frames.
+            </summary>
+            <param name="EntityId">The live object's stable entity identifier.</param>
+            <param name="OriginalText">The original NamePlate text.</param>
+            <param name="TranslatedText">The normalized translated NamePlate text.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.#ctor(System.UInt32,System.String,System.String)">
+            <summary>
+                Represents stable translated NamePlate data retained across UI frames.
+            </summary>
+            <param name="EntityId">The live object's stable entity identifier.</param>
+            <param name="OriginalText">The original NamePlate text.</param>
+            <param name="TranslatedText">The normalized translated NamePlate text.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.EntityId">
+            <summary>The live object's stable entity identifier.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.OriginalText">
+            <summary>The original NamePlate text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.TranslatedText">
+            <summary>The normalized translated NamePlate text.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan">
             <summary>
@@ -17928,13 +18006,14 @@
                 <see cref="T:Dalamud.Plugin.Services.INamePlateGui" /> surface.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Dalamud.Plugin.Services.IGameGui,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Action{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate},System.Func{System.String,System.String})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.#ctor(Echoglossian.Config,Echoglossian.Translators.TranslationService,Dalamud.Plugin.Services.IGameGui,Dalamud.Plugin.Services.IObjectTable,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Action{Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlatePrefetchCandidate},System.Func{System.String,System.String})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime" /> class.
             </summary>
             <param name="config">The active plugin configuration.</param>
             <param name="translationService">The shared translation service.</param>
             <param name="gameGui">The game GUI service used for world projection.</param>
+            <param name="objectTable">The object table used to resolve retained entities.</param>
             <param name="distanceAwareOverlay">
                 The shared overlay used for the overlay-only NamePlate backend.
             </param>
@@ -17976,8 +18055,8 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateTranslationRuntime.TrySyncDistanceAwareOverlayFrame(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Numerics.Vector2)">
             <summary>
-                Synchronizes the latest projected NamePlate frame to the overlay
-                bounds used by the shared UI-thread renderer.
+                Resolves retained candidates from current object, projection, and
+                camera state before synchronizing the shared overlay.
             </summary>
             <param name="overlay">The NamePlate overlay to synchronize.</param>
             <param name="viewportSize">The active viewport size.</param>
@@ -32899,6 +32978,17 @@
             </summary>
             <param name="sectionTitle">The user-facing placement section title.</param>
             <returns>The unique ImGui ID scope for the placement bucket.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.NormalizeDistanceAwareOverlayOrdering(Echoglossian.Config)">
+            <summary>
+                Normalizes distance-aware thresholds to the ordering applied by the
+                runtime presentation policy.
+            </summary>
+            <param name="config">The configuration to normalize.</param>
+            <returns>
+                <see langword="true" /> if a threshold changed; otherwise,
+                <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawMiniTalkOverlay(Echoglossian.Config)">
             <summary>

@@ -751,6 +751,7 @@ public static class OverlayTab
             0.25f,
             1f,
             "%.2f");
+        changed |= NormalizeDistanceAwareOverlayOrdering(config);
 
         if (ShouldDrawOverlaySettings(
                 config.NamePlateTranslationDisplayMode,
@@ -766,6 +767,34 @@ public static class OverlayTab
         }
 
         return changed;
+    }
+
+    /// <summary>
+    ///     Normalizes distance-aware thresholds to the ordering applied by the
+    ///     runtime presentation policy.
+    /// </summary>
+    /// <param name="config">The configuration to normalize.</param>
+    /// <returns>
+    ///     <see langword="true" /> if a threshold changed; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    internal static bool NormalizeDistanceAwareOverlayOrdering(Config config)
+    {
+        var fadeStartDistance = Math.Max(
+            config.DistanceAwareOverlayFullScaleDistance,
+            config.DistanceAwareOverlayFadeStartDistance);
+        var maxDistance = Math.Max(
+            fadeStartDistance + 0.01f,
+            config.DistanceAwareOverlayMaxDistance);
+        if (fadeStartDistance == config.DistanceAwareOverlayFadeStartDistance &&
+            maxDistance == config.DistanceAwareOverlayMaxDistance)
+        {
+            return false;
+        }
+
+        config.DistanceAwareOverlayFadeStartDistance = fadeStartDistance;
+        config.DistanceAwareOverlayMaxDistance = maxDistance;
+        return true;
     }
 
     private static bool DrawSubtitleOverlay(Config config)

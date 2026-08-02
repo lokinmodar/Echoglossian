@@ -23,6 +23,7 @@ public partial class Echoglossian
         this.configuration,
         TranslationService,
         GameGuiInterface,
+        ObjectTableInterface,
         this.namePlateOverlay,
         this.TrackNamePlatePrefetchCandidate,
         text => this.RemoveDiacritics(
