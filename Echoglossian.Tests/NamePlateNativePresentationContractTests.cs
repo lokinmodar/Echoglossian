@@ -63,11 +63,11 @@ public sealed class NamePlateNativePresentationContractTests
     }
 
     /// <summary>
-    /// Verifies that the NamePlate overlay settings tab no longer exposes ImGui
-    /// style controls for the native NamePlate presentation path.
+    /// Verifies that the NamePlate overlay settings tab exposes style controls
+    /// when the distance-aware overlay backend is available.
     /// </summary>
     [Fact]
-    public void OverlayTab_hides_nameplate_imgui_style_controls_when_nameplate_modes_are_native()
+    public void OverlayTab_shows_nameplate_overlay_controls_when_overlay_backend_is_possible()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -76,12 +76,34 @@ public sealed class NamePlateNativePresentationContractTests
             "Tabs",
             "OverlayTab.cs"));
 
-        Assert.DoesNotContain(
+        Assert.Contains(
             "ref config.NamePlateFontScale",
             source);
         Assert.Contains(
-            "Resources.NamePlateNativeReplacementHelpText",
+            "ref config.NamePlateBackgroundOpacity",
             source);
+        Assert.Contains(
+            "EnableDistanceAwareOverlays",
+            source);
+    }
+
+    /// <summary>
+    /// Verifies that the global distance-aware overlay settings are persisted
+    /// in plugin configuration.
+    /// </summary>
+    [Fact]
+    public void Config_declares_global_distance_aware_overlay_settings()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "Config.cs"));
+
+        Assert.Contains("EnableDistanceAwareOverlays", source, StringComparison.Ordinal);
+        Assert.Contains("DistanceAwareOverlayFullScaleDistance", source, StringComparison.Ordinal);
+        Assert.Contains("DistanceAwareOverlayFadeStartDistance", source, StringComparison.Ordinal);
+        Assert.Contains("DistanceAwareOverlayMaxDistance", source, StringComparison.Ordinal);
+        Assert.Contains("DistanceAwareOverlayMinScale", source, StringComparison.Ordinal);
     }
 
     /// <summary>

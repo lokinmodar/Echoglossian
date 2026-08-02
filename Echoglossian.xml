@@ -33819,6 +33819,26 @@
         <member name="P:Echoglossian.Properties.Resources.Endpoint">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Endpoint.
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayFadeStartDistanceLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Fade start distance.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayFullScaleDistanceLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Full scale distance.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayMaxDistanceLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Maximum distance.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.DistanceAwareOverlayMinScaleLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Minimum scale.
+            </summary>
+        </member>
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.ErrorSavingData">
@@ -33864,6 +33884,11 @@
         <member name="P:Echoglossian.Properties.Resources.GeminiModelTooltip15Flash">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a ⚡ Fastest and cheapest Gemini model.
+        <member name="P:Echoglossian.Properties.Resources.EnableDistanceAwareOverlaysLabel">
+            <summary>
+                Pesquisa uma cadeia de caracteres localizada semelhante a Enable distance-aware overlays.
+            </summary>
+        </member>
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.GeminiModelTooltip15Pro">

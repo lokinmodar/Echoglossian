@@ -724,7 +724,46 @@ public static class OverlayTab
             ref config.NamePlateTranslationDisplayMode);
 
         ImGui.Spacing();
-        ImGui.TextWrapped(Resources.NamePlateNativeReplacementHelpText);
+        changed |= ImGui.Checkbox(
+            Resources.EnableDistanceAwareOverlaysLabel,
+            ref config.EnableDistanceAwareOverlays);
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayFullScaleDistanceLabel,
+            ref config.DistanceAwareOverlayFullScaleDistance,
+            1f,
+            40f,
+            "%.1f");
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayFadeStartDistanceLabel,
+            ref config.DistanceAwareOverlayFadeStartDistance,
+            1f,
+            60f,
+            "%.1f");
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayMaxDistanceLabel,
+            ref config.DistanceAwareOverlayMaxDistance,
+            1f,
+            80f,
+            "%.1f");
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayMinScaleLabel,
+            ref config.DistanceAwareOverlayMinScale,
+            0.25f,
+            1f,
+            "%.2f");
+
+        if (ShouldDrawOverlaySettings(
+                config.NamePlateTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
+        {
+            changed |= DrawToastOverlaySettings(
+                ref config.NamePlateFontScale,
+                ref config.ImGuiNamePlateWindowWidthMult,
+                ref config.ImGuiNamePlateWindowPosCorrection,
+                ref config.OverlayNamePlateTextColor,
+                ref config.NamePlateBackgroundOpacity,
+                ref config.FontChangeTime);
+        }
 
         return changed;
     }

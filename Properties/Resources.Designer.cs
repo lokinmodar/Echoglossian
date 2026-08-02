@@ -1181,6 +1181,50 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("DialogueLlmOverrideSectionLabel", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Fade start distance.
+        /// </summary>
+        public static string DistanceAwareOverlayFadeStartDistanceLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayFadeStartDistanceLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Full scale distance.
+        /// </summary>
+        public static string DistanceAwareOverlayFullScaleDistanceLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayFullScaleDistanceLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Maximum distance.
+        /// </summary>
+        public static string DistanceAwareOverlayMaxDistanceLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayMaxDistanceLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Minimum scale.
+        /// </summary>
+        public static string DistanceAwareOverlayMinScaleLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayMinScaleLabel", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
@@ -1278,6 +1322,17 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("EnableDialogueGlossaryInjectionLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Enable distance-aware overlays.
+        /// </summary>
+        public static string EnableDistanceAwareOverlaysLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("EnableDistanceAwareOverlaysLabel", resourceCulture);
             }
         }
         

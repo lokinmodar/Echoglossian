@@ -1015,6 +1015,21 @@
   <data name="NamePlateOverlayHelpText" xml:space="preserve">
     <value>Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped.</value>
   </data>
+  <data name="EnableDistanceAwareOverlaysLabel" xml:space="preserve">
+    <value>Enable distance-aware overlays</value>
+  </data>
+  <data name="DistanceAwareOverlayFullScaleDistanceLabel" xml:space="preserve">
+    <value>Full scale distance</value>
+  </data>
+  <data name="DistanceAwareOverlayFadeStartDistanceLabel" xml:space="preserve">
+    <value>Fade start distance</value>
+  </data>
+  <data name="DistanceAwareOverlayMaxDistanceLabel" xml:space="preserve">
+    <value>Maximum distance</value>
+  </data>
+  <data name="DistanceAwareOverlayMinScaleLabel" xml:space="preserve">
+    <value>Minimum scale</value>
+  </data>
   <data name="NamePlateNativeReplacementHelpText" xml:space="preserve">
     <value>Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode.</value>
   </data>

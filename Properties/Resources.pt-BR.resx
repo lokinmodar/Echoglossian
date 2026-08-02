@@ -579,4 +579,19 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Registros {0} carregados</value>
   </data>
+  <data name="EnableDistanceAwareOverlaysLabel" xml:space="preserve">
+    <value>Ativar overlays com distância</value>
+  </data>
+  <data name="DistanceAwareOverlayFullScaleDistanceLabel" xml:space="preserve">
+    <value>Distância de escala total</value>
+  </data>
+  <data name="DistanceAwareOverlayFadeStartDistanceLabel" xml:space="preserve">
+    <value>Distância inicial do fade</value>
+  </data>
+  <data name="DistanceAwareOverlayMaxDistanceLabel" xml:space="preserve">
+    <value>Distância máxima</value>
+  </data>
+  <data name="DistanceAwareOverlayMinScaleLabel" xml:space="preserve">
+    <value>Escala mínima</value>
+  </data>
 </root>
