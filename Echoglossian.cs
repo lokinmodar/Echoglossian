@@ -622,6 +622,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.talkSubtitleOverlay.Dispose();
     this.toastOverlay.Dispose();
     this.errorToastOverlay.Dispose();
+    this.namePlateOverlay.Dispose();
     this.chatBubbleOverlay.Dispose();
     this.cutSceneSelectStringOverlay.Dispose();
     this.actionDetailOverlay.Dispose();

@@ -79,6 +79,21 @@ public sealed class NamePlateDistanceAwareOverlayContractTests
     }
 
     /// <summary>
+    ///     Verifies that plugin shutdown releases the NamePlate overlay owned by
+    ///     the distance-aware fallback.
+    /// </summary>
+    [Fact]
+    public void Plugin_disposes_name_plate_overlay()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "Echoglossian.cs"));
+
+        Assert.Contains("this.namePlateOverlay.Dispose();", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>
