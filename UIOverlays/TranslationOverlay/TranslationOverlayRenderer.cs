@@ -94,7 +94,10 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 : overlay.OriginalName
             : customTitle;
         var shouldUseGeneralFont = this.ShouldUseGeneralOverlayFont(config);
-        var effectiveFontScale = GetEffectiveOverlayFontScale(config.FontScale);
+        var runtimeScaleMultiplier = Math.Clamp(request.ScaleMultiplier, 0.25f, 3f);
+        var runtimeAlphaMultiplier = Math.Clamp(request.AlphaMultiplier, 0f, 1f);
+        var effectiveFontScale = GetEffectiveOverlayFontScale(
+            config.FontScale * runtimeScaleMultiplier);
         var shouldCenterOverlayText = ShouldCenterOverlayText(config.SurfaceId);
         var shouldRightAlignOverlayText =
             !shouldCenterOverlayText &&
@@ -204,6 +207,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         }
 
         var pushedStyleColor = false;
+        var pushedStyleAlpha = false;
         var beganWindow = false;
         IDisposable? fontScope = null;
         try
@@ -212,6 +216,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 ImGuiCol.Text,
                 new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1f));
             pushedStyleColor = true;
+            ImGui.PushStyleVar(ImGuiStyleVar.Alpha, runtimeAlphaMultiplier);
+            pushedStyleAlpha = true;
             if (backendKind == TextPresentationBackendKind.PlainImGui)
             {
                 fontScope = this.fontRuntime.Push(
@@ -324,9 +330,19 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 }
                 finally
                 {
-                    if (pushedStyleColor)
+                    try
                     {
-                        ImGui.PopStyleColor();
+                        if (pushedStyleAlpha)
+                        {
+                            ImGui.PopStyleVar();
+                        }
+                    }
+                    finally
+                    {
+                        if (pushedStyleColor)
+                        {
+                            ImGui.PopStyleColor();
+                        }
                     }
                 }
             }

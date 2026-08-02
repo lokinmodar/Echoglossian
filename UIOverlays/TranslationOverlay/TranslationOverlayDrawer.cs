@@ -138,6 +138,7 @@ namespace Echoglossian
         }
 
         overlay.Display = false;
+        overlay.ClearRuntimePresentation();
 
         if (clearText)
         {
@@ -645,7 +646,9 @@ namespace Echoglossian
               viewport.Size,
               overlay.Position,
               overlay.Dimensions,
-              IsPreview: false),
+              IsPreview: false,
+              ScaleMultiplier: overlay.RenderScale,
+              AlphaMultiplier: overlay.RenderAlpha),
           customTitle);
     }
   }

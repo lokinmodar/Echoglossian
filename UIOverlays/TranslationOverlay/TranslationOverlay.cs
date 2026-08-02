@@ -15,6 +15,16 @@ internal class TranslationOverlay : IDisposable
   public string CurrentText { get; set; } = string.Empty;
 
   /// <summary>
+  /// Gets or sets the runtime scale multiplier used when rendering the overlay.
+  /// </summary>
+  public float RenderScale { get; set; } = 1f;
+
+  /// <summary>
+  /// Gets or sets the runtime alpha multiplier used when rendering the overlay.
+  /// </summary>
+  public float RenderAlpha { get; set; } = 1f;
+
+  /// <summary>
   /// Gets whether the current content is original text shown through swap
   /// presentation.
   /// </summary>
@@ -72,6 +82,28 @@ internal class TranslationOverlay : IDisposable
   {
     this.DisplaysOriginalSwapText = false;
     this.RichOriginalTextPresentation = null;
+  }
+
+  /// <summary>
+  /// Updates the runtime scale and alpha modifiers for the overlay presentation.
+  /// </summary>
+  /// <param name="renderScale">The runtime scale multiplier.</param>
+  /// <param name="renderAlpha">The runtime alpha multiplier.</param>
+  internal void UpdateRuntimePresentation(
+      float renderScale,
+      float renderAlpha)
+  {
+    this.RenderScale = Math.Clamp(renderScale, 0.25f, 3f);
+    this.RenderAlpha = Math.Clamp(renderAlpha, 0f, 1f);
+  }
+
+  /// <summary>
+  /// Clears the runtime scale and alpha modifiers for the overlay presentation.
+  /// </summary>
+  internal void ClearRuntimePresentation()
+  {
+    this.RenderScale = 1f;
+    this.RenderAlpha = 1f;
   }
 
   public void Dispose()
