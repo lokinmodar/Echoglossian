@@ -1,5 +1,110 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -13,631 +118,1622 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AssetsCheckingPopupMsg" xml:space="preserve">
-    <value>Osagarriaren aktiboak berrikusten!</value>
+    <value>Checking Plugin assets!</value>
   </data>
   <data name="AssetsDownloadComplete" xml:space="preserve">
-    <value>Osagarri osoko aktiboak deskargatzea!</value>
+    <value>Downloading of plugin assets complete!</value>
   </data>
   <data name="AssetsDownloadError1stPart" xml:space="preserve">
-    <value>Osagarriaren baliabideak deskargatzean huts egitea:</value>
+    <value>Error downloading plugin assets:</value>
   </data>
   <data name="AssetsDownloadError2ndPart" xml:space="preserve">
-    <value>. Saiatu geroago. Arazoak jarraitzen badu, jarri harremanetan pluginaren garatzailearekin.</value>
+    <value>. Please retry later. If the issue persists, please contact the plugin developer.</value>
   </data>
   <data name="AssetsPresentPopupMsg" xml:space="preserve">
-    <value>Pluginaren aktibo guztiak!</value>
+    <value>All plugin assets present!</value>
   </data>
-  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="choice" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="CloseButtonLabel" xml:space="preserve">
-    <value>Itxi</value>
+    <value>Close</value>
   </data>
   <data name="ConfigTab0Name" xml:space="preserve">
-    <value>Zer, noiz eta nola</value>
+    <value>Whats, Whens and Hows</value>
   </data>
   <data name="ConfigTab1Name" xml:space="preserve">
-    <value>Talk-en konfigurazioa</value>
+    <value>Talk settings</value>
   </data>
   <data name="ConfigTab2Name" xml:space="preserve">
-    <value>Borroka-hitzaldiaren konfigurazioa</value>
+    <value>Battle Talk settings</value>
   </data>
   <data name="ConfigTab3Name" xml:space="preserve">
-    <value>Txigortuen konfigurazioa</value>
+    <value>Toast settings</value>
   </data>
   <data name="ConfigTab4Name" xml:space="preserve">
-    <value>Egunkariaren konfigurazioa</value>
+    <value>Journal</value>
   </data>
   <data name="ConfigTab5Name" xml:space="preserve">
-    <value>TalkSubtitle-ren konfigurazioa</value>
+    <value>TalkSubtitle settings</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
-    <value>Beste doikuntza batzuk</value>
+    <value>Other settings</value>
   </data>
   <data name="ConfigTab7Name" xml:space="preserve">
-    <value>Itzulpen-motorraren konfigurazioa</value>
+    <value>Translation Engine settings</value>
   </data>
   <data name="ConfigTabAbout" xml:space="preserve">
-    <value>Echoglossian buruz</value>
+    <value>About Echoglossian</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
-    <value>Echoglossian konfigurazioa</value>
+    <value>Echoglossian Configuration</value>
     <comment>Config Window title bar</comment>
   </data>
-  <data name="ContribText" xml:space="preserve">
-    <value>Mesedez, jarri iezaguzu proiektua garatzen lagundu, zenbakiak bidaliz edo kafe batekin lagunduz.</value>
+  <data name="ConfigVersionUpgradeRecommendedMessage" xml:space="preserve">
+    <value>Your saved Echoglossian configuration is from an older version. We migrated it, but reviewing and reconfiguring the plugin is recommended.</value>
   </data>
-  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="OpenConfigurationButtonLabel" xml:space="preserve">
+    <value>Open Configuration</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationNotificationText" xml:space="preserve">
+    <value>Translation is currently disabled because the selected translation engine still needs to be configured. Open the configuration window and finish the engine setup.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsNotificationText" xml:space="preserve">
+    <value>Translation is currently disabled because the selected language requires extra font assets. Open the configuration window to download or validate the required files.</value>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>Please support us either by contributing to the project development, submitting issues or helping us with a coffee.</value>
+  </data>
+  <data name="cutscenechoice" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="DisclaimerText1" xml:space="preserve">
-    <value>Plugin honen helburua da ez ingelesez, ez alemanez, ez frantsesez, ez japonieraz hitz egiten ez duen publikoarentzat arazo handienetako bat konpontzea: elkarrizketak ulertzea eta jokoaren erabiltzailearen interfazearen beste elementu batzuk ulertzea.</value>
+    <value>This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI.</value>
   </data>
   <data name="DisclaimerText2" xml:space="preserve">
-    <value>Oraingoz, Google Translateren APIren bidez bakarrik egiten ditugu itzulpen automatikoak, baina etorkizunean MLren beste itzulpen-sistema batzuk onartzeko asmoa dugu. Itzulpen kolaboratiboetara bideratutako ideiak ere baditugu, komunitateak aukeratutakoak.</value>
+    <value>For now we only do auto-translations through Google Translate API, but in the future we intend to support other ML translation systems. We even have ideas targetting crowdsourced translations, curated by the community.</value>
   </data>
   <data name="DisclaimerTitle" xml:space="preserve">
-    <value>Echoglossian buruz:</value>
+    <value>About Echoglossian:</value>
   </data>
   <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
-    <value>Osagarri gehigarrien aktiboak bigarren planoan deskargatzea. Itxaron deskarga bukatu arte konfigurazioa ireki baino lehen!</value>
+    <value>Downloading extra plugin assets in background. Please wait for the download to finish before opening settings!</value>
   </data>
   <data name="EchoglossianPathModal" xml:space="preserve">
-    <value>Kontuz!</value>
+    <value>Attention!</value>
   </data>
   <data name="EnableTranslation" xml:space="preserve">
-    <value>Testu-itzulpena denbora errealean aktibatzea</value>
+    <value>Activate game text realtime translation</value>
   </data>
   <data name="FontColorSelectLabel" xml:space="preserve">
-    <value>Gainjartze-iturriaren kolorea:</value>
+    <value>Plugin Overlay font color:</value>
   </data>
   <data name="HelpMessage" xml:space="preserve">
-    <value>Echoglossian konfigurazio leihoa ireki du</value>
+    <value>Opens Echoglossian config window</value>
     <comment>Shown in plugin install window</comment>
   </data>
   <data name="HoverTooltipIndicator" xml:space="preserve">
     <value>(?)</value>
   </data>
   <data name="ImguiAdjustmentsLabel" xml:space="preserve">
-    <value>Egokitzapena itzulpenaren gainjartzearekin lotutako aukerak:</value>
+    <value>Adjust the options related to the Plugin Overlay:</value>
   </data>
   <data name="LangIdentError" xml:space="preserve">
-    <value>Hizkuntza ezin izan zen identifikatu ziurtasun maila onargarriarekin</value>
+    <value>The language could not be identified with an acceptable degree of certainty</value>
   </data>
   <data name="LanguageNotSupportedText" xml:space="preserve">
-    <value>Aukeratutako hizkuntza ez da bateragarria gaur egun eskuragarri dagoen itzulpen backend-arekin</value>
+    <value>The selected language is not supported by the currently available translation backend</value>
   </data>
   <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
-    <value>Aukeratutako hizkuntza osagarriaren superposizioen erabilerarekin bakarrik da bateragarria, jokoaren jatorrizko iturriaren mugak direla-eta.</value>
+    <value>The selected language is only supported using Plugin Overlays due to limitations of the native game font</value>
   </data>
   <data name="LanguageSelectionTooltip" xml:space="preserve">
-    <value>Zein hizkuntzatara itzuli jokoaren elkarrizketa-koadroak.</value>
+    <value>Which language to translate the in-game dialogue boxes to.</value>
   </data>
   <data name="LanguageSelectLabelText" xml:space="preserve">
-    <value>Itzultzeko hizkuntza</value>
+    <value>Language to translate to</value>
   </data>
-  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="minfilia" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="Name" xml:space="preserve">
     <value>Echoglossian</value>
   </data>
   <data name="NEListText" xml:space="preserve">
-    <value>Egiteke dauden arazo eta zereginen zerrenda ez-zehatza honako esteka honetan eskuragarri:</value>
+    <value>The non-exhaustive list of issues and TODOs is available in the link below:</value>
   </data>
   <data name="OverlayAdjustmentOrientations" xml:space="preserve">
-    <value>Egokitu posizioa, baldin eta zure gainjartzea jokoaren erabiltzaile-interfazearen testu-koadroari lotuta ez badago.</value>
+    <value>Please adjust the position if your Plugin Overlay is not centered relative to the game's UI text box.</value>
   </data>
   <data name="OverlayColorSelectName" xml:space="preserve">
-    <value>SuperposizioaKonorea Hautatu</value>
+    <value>OverlayColorSelect</value>
   </data>
   <data name="OverlayFontColorOrientations" xml:space="preserve">
-    <value>Egin klik gainjarpen-iturriaren kolorea aukeratzeko</value>
+    <value>Click to choose the Plugin Overlay font color</value>
   </data>
   <data name="OverlayFontScaleLabel" xml:space="preserve">
-    <value>Gainjartze-iturriaren eskala doitzea</value>
+    <value>Adjust the Plugin Overlay font scale</value>
   </data>
   <data name="OverlayFontSizeLabel" xml:space="preserve">
-    <value>Gainjartze-iturriaren tamaina</value>
+    <value>Plugin Overlay font size</value>
   </data>
   <data name="OverlayFontSizeOrientations" xml:space="preserve">
-    <value>Testua gainjartzeko iturriaren tamaina hautatu</value>
+    <value>Select the font size for the Plugin Overlay text</value>
   </data>
   <data name="OverlayHeightScrollLabel" xml:space="preserve">
-    <value>Translazio-translazioaren gainjartzearen altueraren biderkatzailea</value>
+    <value>Plugin Overlay height multiplier</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
-    <value>Borroka hitzaldia (Enoniasen elkarrizketa-lerroak) itzulpena</value>
+    <value>Battle talk (Enenies dialogue lines) translation</value>
     <comment>Translation overlay window name</comment>
   </data>
   <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
-    <value>Posizio-doikuntza</value>
+    <value>Position adjustment</value>
   </data>
   <data name="OverlayToggleLabel" xml:space="preserve">
-    <value>Jokoaren erabiltzaile-interfazearen testu-koadroari buruzko testu-azala erakustea, testua itzulpenarekin ordezkatu beharrean</value>
+    <value>Display translated text in a Plugin Overlay above the game UI text box instead of replacing its text with the translation</value>
+  </data>
+  <data name="OverlayForceShowTitleToggleLabel" xml:space="preserve">
+    <value>Show a Plugin Overlay title bar with speaker name when available</value>
   </data>
   <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Translazio-gainjartzearen zabalera doitzea</value>
+    <value>Adjust Plugin Overlay width</value>
   </data>
   <data name="OverlayWidthScrollLabel" xml:space="preserve">
-    <value>Itzulpen-zabaleraren biderkatzailea</value>
+    <value>Plugin Overlay width multiplier</value>
   </data>
   <data name="PathInputInstructions" xml:space="preserve">
-    <value>Ibilbide absolutua Echoglossian karpetara (XIVLauncher karpetaren barruan -&gt; pluginConfigs)</value>
+    <value>Absolute path to Echoglossian folder (inside XIVLauncher -&gt; pluginConfigs folder)</value>
   </data>
   <data name="PathTypeInstructions" xml:space="preserve">
-    <value>Idatzi bidea eta gorde ezazu osagarriak behar bezala funtziona dezan!</value>
+    <value>Please type the path and save so the plugin can work properly!</value>
   </data>
   <data name="PatronButtonLabel" xml:space="preserve">
-    <value>Kafe bat erosi</value>
+    <value>Buy lokinmodar a Coffee</value>
   </data>
-  <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="pix" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="PixQrWindowLabel" xml:space="preserve">
-    <value>PIX QR kodea</value>
+    <value>PIX qrcode</value>
   </data>
   <data name="PixText" xml:space="preserve">
-    <value>Eskanee QR kodea PIX bat bidaltzeko, Brasilen bakarrik balio du</value>
+    <value>Scan the QR code to send me a PIX - only valid in Brazil</value>
   </data>
   <data name="PluginInterfaceLanguage" xml:space="preserve">
-    <value>Aukeratu hizkuntza osagarriaren konfigurazio leihorako</value>
+    <value>Choose the language for the plugin configuration window</value>
   </data>
   <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
-    <value>Konfigurazio leihoaren hizkuntzaInfoa:</value>
+    <value>Config Window LanguageInfo:</value>
   </data>
-  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="prttws" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="QRCodeInstructionsText" xml:space="preserve">
-    <value>Eskanee QR kodea PIX bat bidaltzeko, Brasilen bakarrik balio du</value>
+    <value>Scan the QR code to send me a PIX - only valid in Brazil</value>
   </data>
   <data name="ResetConfigsButton" xml:space="preserve">
-    <value>Konfigurazioa berrezartzea</value>
+    <value>Reset Settings</value>
   </data>
   <data name="SaveCloseButtonLabel" xml:space="preserve">
-    <value>Konfigurazio leihoa gorde eta itxi</value>
+    <value>Save and Close Config Window</value>
   </data>
   <data name="SendPixButton" xml:space="preserve">
-    <value>Bidali PIX dohaintza bat!</value>
+    <value>Send me a PIX donation!</value>
   </data>
   <data name="SettingsForGTransText" xml:space="preserve">
-    <value>Google Translateren konfigurazioa:</value>
+    <value>Settings for Google Translate:</value>
   </data>
   <data name="SettingsReset" xml:space="preserve">
-    <value>Echoglossian konfigurazioa arrakastaz aurrez zehaztutako balioetara berrezartzen da!</value>
+    <value>Echoglossian settings reset to default successfully!</value>
   </data>
   <data name="SwapTranslationTextToggle" xml:space="preserve">
-    <value>Jokoaren erabiltzaile-interfazearen elkarrizketa-koadroan, Superposizioan eta itzulian, jatorrizko elkarrizketaren testua erakustea</value>
+    <value>Show original dialogue text in a Plugin Overlay and translated text in the game UI dialogue box</value>
   </data>
   <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
-    <value>Sistemaren jakinarazpenen translazioaren gainjartzearen zabalera doitzea</value>
+    <value>Adjust toast Plugin Overlay width</value>
   </data>
   <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
-    <value>Txigortuen gainjartze-zabaleraren biderkatzailea</value>
+    <value>Toast Plugin Overlay width multiplier</value>
   </data>
   <data name="TodoUrl" xml:space="preserve">
-    <value>Githuben egiteke dauden lanen zerrenda</value>
+    <value>TODOs List on Github</value>
   </data>
   <data name="TranslateAreaToastToggleText" xml:space="preserve">
-    <value>Eremuaren izena sistema jakinarazteko mezuak jokoan itzultzea</value>
+    <value>Translate in-game Area name Toast Messages</value>
   </data>
   <data name="TransLateBattletalkToggle" xml:space="preserve">
-    <value>Borroka-diskurtsoa itzuli</value>
+    <value>Translate battle talk</value>
   </data>
   <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
-    <value>Klasea/ lana aldatzeko sistemaren mezuak itzultzea jokoan</value>
+    <value>Translate in-game Class/Job change Toast Messages</value>
   </data>
   <data name="TranslateErrorToastToggleText" xml:space="preserve">
-    <value>Jokoan akats-sistemaren jakinarazpen-mezuak itzultzea</value>
+    <value>Translate in-game Error Toast Messages</value>
   </data>
   <data name="TranslateNpcNamesToggle" xml:space="preserve">
-    <value>Elkarrizketa koadroetan NPCen izenak itzultzea</value>
+    <value>Translate NPCs names in dialogue boxes</value>
   </data>
   <data name="TranslateQuestToastToggleText" xml:space="preserve">
-    <value>Quest Toast-en mezuak itzuli jokoan</value>
+    <value>Translate in-game Quest Toast Messages</value>
   </data>
   <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
-    <value>Toast-en beste mezu miszelaneo batzuk itzuli jokoan</value>
+    <value>Translate other in-game miscellaneous Toast Messages</value>
   </data>
   <data name="TranslateTalkToggleLabel" xml:space="preserve">
-    <value>Elkarrizketak jolasean itzultzea</value>
+    <value>Translate in-game dialogues</value>
   </data>
   <data name="TranslateToastToggleText" xml:space="preserve">
-    <value>Jokoan sistemaren jakinarazpen-mezuak itzultzea</value>
+    <value>Translate in-game Toast Messages</value>
   </data>
   <data name="TranslationDisabled" xml:space="preserve">
-    <value>Itzulpenak desgaituta daude!</value>
+    <value>Translations are Disabled!</value>
   </data>
   <data name="TranslationEnabled" xml:space="preserve">
-    <value>Itzulpenak gaituta daude!</value>
+    <value>Translations are Enabled!</value>
   </data>
   <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
-    <value>Itzulpen-motor honek ez du inolako konfigurazio berezirik behar.</value>
+    <value>This translation engine does not require any special settings.</value>
   </data>
   <data name="TranslationsEnabled" xml:space="preserve">
-    <value>Itzulpenak gaituta daude!</value>
+    <value>Translations are Enabled!</value>
   </data>
   <data name="UseImGuiForToastsToggle" xml:space="preserve">
-    <value>Gainjartzea erabili sistemaren jakinarazpenen itzulpenak erakusteko (WIP)</value>
+    <value>Use a Plugin Overlay to show toast translations (WIP)</value>
   </data>
   <data name="WaitingForTranslation" xml:space="preserve">
-    <value>Itzulpenaren zain...</value>
+    <value>Awaiting translation...</value>
   </data>
   <data name="WhatToTranslateText" xml:space="preserve">
-    <value>Hautatu jarraian dagokion betilean itzuli nahi duzun testu-mota.</value>
+    <value>Select what kind of text you want to be translated in the corresponding tab below!</value>
   </data>
   <data name="WhichToastsToTranslate" xml:space="preserve">
-    <value>Jokoaren mezu-sistemaren zein jakinarazpen mota itzuliko diren hautatzea</value>
+    <value>Select which kind of in-game message toasts to translate</value>
   </data>
   <data name="ConfigTab8Name" xml:space="preserve">
-    <value>Arazoen konponketa</value>
+    <value>Troubleshooting</value>
   </data>
   <data name="PluginAssetsDownloadedText" xml:space="preserve">
-    <value>Plugin-aktiboak deskargatuak!</value>
+    <value>Plugin assets downloaded!</value>
   </data>
   <data name="PluginAssetsNotDownloadedText" xml:space="preserve">
-    <value>Testu irakurezina edo baliozkoak ez diren karaktereak ikusten badituzu itzulpen\ns-eko leihoan, osagarriaren aktibo-iturri batzuk falta edo kaltetuta egon daitezkeela adierazten duen adierazle bat.\n\n Beheko botoian klik egitean, aktiboen egiaztapena aktibatzen da eta berriro deskargatzen dira.</value>
+    <value>If you see garbled text or invalid characters in the translation window it is an indicative that some plugin asset fonts may be missing or corrupted. Clicking the button below triggers an asset check and re-downloads them.</value>
   </data>
   <data name="DownloadPluginAssetsButtonText" xml:space="preserve">
-    <value>Pluginaren aktiboen errekarga behartu</value>
+    <value>Force re-download plugin assets</value>
   </data>
   <data name="CurrentPluginAssetsStatus" xml:space="preserve">
-    <value>Osagarriaren aktiboak deskargatzen al dira?</value>
+    <value>Are the plugin assets downloaded?</value>
+  </data>
+  <data name="ManageLanguageAssetsButtonText" xml:space="preserve">
+    <value>Manage required language assets</value>
+  </data>
+  <data name="TranslationRequiresDownloadedAssetsText" xml:space="preserve">
+    <value>This language requires extra downloadable font assets before translation can be enabled.</value>
+  </data>
+  <data name="TranslationBlockedByEngineConfigurationText" xml:space="preserve">
+    <value>Configure the selected translation engine before enabling translation.</value>
+  </data>
+  <data name="TranslationBlockedByMissingAssetsStatusText" xml:space="preserve">
+    <value>Waiting for required font assets</value>
+  </data>
+  <data name="LanguageAssetsPopupBodyFormat" xml:space="preserve">
+    <value>{0} requires one or more external font assets before Echoglossian can translate safely.</value>
+  </data>
+  <data name="LanguageAssetsPopupAutoDownloadHint" xml:space="preserve">
+    <value>An automatic background download was triggered when possible. If it fails, use the controls below to place the files manually and recheck them.</value>
+  </data>
+  <data name="LanguageAssetsPopupFolderLabel" xml:space="preserve">
+    <value>Assets folder:</value>
+  </data>
+  <data name="LanguageAssetsPopupFilesLabel" xml:space="preserve">
+    <value>Required files:</value>
+  </data>
+  <data name="OpenAssetsFolderButtonText" xml:space="preserve">
+    <value>Open assets folder</value>
+  </data>
+  <data name="OpenManualDownloadLinksButtonText" xml:space="preserve">
+    <value>Open manual download links</value>
+  </data>
+  <data name="RecheckAssetsButtonText" xml:space="preserve">
+    <value>Recheck assets</value>
+  </data>
+  <data name="LanguageAssetsTroubleshootingSummaryFormat" xml:space="preserve">
+    <value>The selected language "{0}" depends on downloaded font assets. Manual files should be placed in: {1}</value>
   </data>
   <data name="ConfigTab9Name" xml:space="preserve">
-    <value>Hainbat doikuntza</value>
+    <value>Misc. Settings</value>
   </data>
   <data name="ConfigTab9Text" xml:space="preserve">
-    <value>Hainbat osagarriren aukerak eta konfigurazioak</value>
+    <value>Miscellaneous Plugin Options and Settings</value>
   </data>
   <data name="ConfigTab9CheckboxClipboardText" xml:space="preserve">
-    <value>Copie automatikoki osagarriaren azken itzulpena</value>
+    <value>Automatically copy the last translation to the Plugin Clipboard</value>
   </data>
   <data name="ConfigTab9CheckboxClipboardTooltipText" xml:space="preserve">
-    <value>Konfigurazio horrek azken itzulpena eta jatorrizko testua kopiatzen ditu portapapeles (Funtzioa Eta BattleTalk-ekin funtzionatu du)</value>
+    <value>This setting copies the last translation and source text to the clipboard (Works with Talk and BattleTalk)</value>
   </data>
   <data name="TranslateJournalToggle" xml:space="preserve">
-    <value>Misioaren izena, deskribapena eta helburuak itzultzea (WIP)</value>
+    <value>Translate quest name, description and objectives (WIP)</value>
+  </data>
+  <data name="TranslateJournalDetailToggle" xml:space="preserve">
+    <value>Translate JournalDetail</value>
   </data>
   <data name="DeeplTranslatorApiKey" xml:space="preserve">
-    <value>Gehitu Zure API de DeepL kodea</value>
+    <value>Add your DeepL API Key</value>
   </data>
   <data name="DeepLTranslatorAPIKeyLink" xml:space="preserve">
-    <value>Egin klik hemen DeepLren API klabe bat sortzeko</value>
+    <value>Click here to create a DeepL API Key</value>
   </data>
   <data name="SettingsForDeepLTransText" xml:space="preserve">
-    <value>DeepLrako aukerako doikuntzak:</value>
+    <value>Optional settings for DeepL:</value>
   </data>
   <data name="TranslationEngineChoose" xml:space="preserve">
-    <value>Itzulpen-motorra aukeratzea</value>
+    <value>Choose the translation engine</value>
+  </data>
+  <data name="DialogueLlmOverrideSectionLabel" xml:space="preserve">
+    <value>Dialogue LLM override</value>
+  </data>
+  <data name="DialogueLlmOverrideDescription" xml:space="preserve">
+    <value>Route Talk, BattleTalk, TalkSubtitle, and MiniTalk through a dedicated LLM without changing the primary engine used elsewhere.</value>
+  </data>
+  <data name="UseDialogueLlmOverrideLabel" xml:space="preserve">
+    <value>Use a dedicated LLM for dialogue-family surfaces</value>
+  </data>
+  <data name="DialogueLlmEngineLabel" xml:space="preserve">
+    <value>Dialogue LLM engine</value>
+  </data>
+  <data name="DialogueLlmOverrideNeedsConfigurationText" xml:space="preserve">
+    <value>The selected dialogue LLM override is not fully configured yet. Dialogue-family surfaces will keep using the primary engine until the override is ready.</value>
+  </data>
+  <data name="DialogueLlmOverrideMatchesPrimaryText" xml:space="preserve">
+    <value>Dialogue-family surfaces currently reuse the same engine configuration selected above.</value>
   </data>
   <data name="DeepLTransAPIKey" xml:space="preserve">
-    <value>API gakoa erabili (gomendatua)</value>
+    <value>Use API Key (recommended)</value>
   </data>
   <data name="TranslateTextsAgain" xml:space="preserve">
-    <value>Hautatutako itzulpen-motorrarekin bildutako itzulitako testuak itzuli</value>
+    <value>Translate again stored translated texts with the selected translation engine</value>
   </data>
   <data name="TranslateTalkSubtitleToggleLabel" xml:space="preserve">
-    <value>Eszenen azpitituluak itzuli</value>
+    <value>Translate Cutscene Subtitles</value>
   </data>
   <data name="ChatGptApiKey" xml:space="preserve">
-    <value>ChatGPTren API klabea</value>
+    <value>ChatGPT API Key</value>
   </data>
   <data name="SettingsForChatGptTransText" xml:space="preserve">
-    <value>ChatGPTren konfigurazioa</value>
+    <value>Settings for ChatGPT</value>
   </data>
   <data name="ChatGPTAPIKeyLink" xml:space="preserve">
-    <value>Egin klik hemen OpenAi-ren API klabe bat sortzeko</value>
+    <value>Click here to create a OpenAi API Key</value>
   </data>
   <data name="RemoveDiacriticsToggle" xml:space="preserve">
-    <value>Aztoratu itzulitako testua, zeinu diakritikoak letra arrunten baliokideekin ordezkatuz</value>
+    <value>Parse the translated text replacing diacritics with their common letter equivalents</value>
   </data>
   <data name="APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable" xml:space="preserve">
-    <value>PIIren gakoa hutsik edo ez da baliozkoa. ChatGPTren itzulpena ez da eskuragarri egongo.</value>
+    <value>API Key is empty or invalid. ChatGPT translation will not be available.</value>
   </data>
   <data name="ChatGPTTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
-    <value>[ChatGPTren itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+    <value>[ChatGPT translation unavailable. Please check your API key.]</value>
+  </data>
+  <data name="OpenAiCompatibleTranslationUnavailablePleaseCheckProviderConfiguration" xml:space="preserve">
+    <value>[OpenAI-compatible translation unavailable. Please check the endpoint, API key, and model settings.]</value>
+  </data>
+  <data name="OpenAiCompatibleProviderConfigurationIncompleteTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>OpenAI-compatible provider configuration is incomplete. Translation will not be available until endpoint, API key, and model are filled.</value>
+  </data>
+  <data name="SettingsForClaudeText" xml:space="preserve">
+    <value>Settings for Claude</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidClaudeTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API Key is empty or invalid. Claude translation will not be available.</value>
+  </data>
+  <data name="ClaudeTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Claude translation unavailable. Please check your API key.]</value>
   </data>
   <data name="TranslationError" xml:space="preserve">
-    <value>Itzulpen-akatsa:</value>
+    <value>Translation Error:</value>
   </data>
   <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
-    <value>[ DeepSeeken itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+    <value>[DeepSeek translation unavailable. Please check your API key.]</value>
   </data>
   <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
-    <value>PIIren gakoa hutsik edo ez da baliozkoa. DeepSeeken itzulpena ez da eskuragarri egongo.</value>
+    <value>API Key is empty or invalid. DeepSeek translation will not be available.</value>
   </data>
   <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
-    <value>PIIren gakoa hutsik edo ez da baliozkoa. Geminiren itzulpena ez da eskuragarri egongo.</value>
+    <value>API Key is empty or invalid. Gemini translation will not be available.</value>
   </data>
   <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
-    <value>[Geminisen itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+    <value>[Gemini translation unavailable. Please check your API key.]</value>
   </data>
   <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
-    <value>PIIren gakoa hutsik edo ez da baliozkoa. Microsoften itzulpena ez da eskuragarri egongo.</value>
+    <value>API Key is empty or invalid. Microsoft translation will not be available.</value>
   </data>
   <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
-    <value>[Microsoften itzulpena ez eskuragarri. Mesedez, egiaztatu zure API klabea.]</value>
+    <value>[Microsoft translation unavailable. Please check your API key.]</value>
   </data>
   <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
-    <value>Bidali itzulpenerako erabilitako mezua. Posizio-markagailu hauek guztiak derrigorrezkoak dira:</value>
+    <value>Customize the prompt used for translation. All of the following placeholders are required:</value>
   </data>
   <data name="AITranslatorPromptCustomization" xml:space="preserve">
-    <value>AI Translator-en abisuen pertsonalizazioa</value>
+    <value>AI Translator Prompt Customization</value>
   </data>
   <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
-    <value>⚠ Derrigorrezko posizio-markagailu bat edo gehiago falta dira!</value>
+    <value>⚠ Missing one or more required placeholders!</value>
   </data>
   <data name="ResetToDefault" xml:space="preserve">
-    <value>Aurrez zehaztutako balioak berrezartzea</value>
+    <value>Reset to Default</value>
   </data>
   <data name="LivePreviewWithSampleInput" xml:space="preserve">
-    <value>Aldez aurreko zuzeneko bista, lagin-sarrerarekin:</value>
+    <value>Live preview with sample input:</value>
   </data>
   <data name="CopyPreview" xml:space="preserve">
-    <value>Kopiaren aldez aurreko bista</value>
+    <value>Copy Preview</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>Salbatu</value>
+    <value>Save</value>
   </data>
   <data name="Preview" xml:space="preserve">
-    <value>Aurrebista</value>
+    <value>Preview</value>
+  </data>
+  <data name="PreviewImageryUnavailableText" xml:space="preserve">
+    <value>Preview imagery is unavailable in the standalone previewer.</value>
   </data>
   <data name="PromptInput" xml:space="preserve">
-    <value>PromptInput (Entrada Rápida)</value>
+    <value>PromptInput</value>
   </data>
   <data name="Editor" xml:space="preserve">
-    <value>Abisuen editorea</value>
+    <value>Prompt Editor</value>
   </data>
   <data name="ResetSettingsMessageText" xml:space="preserve">
-    <value>Echoglossian konfigurazioa aurrez zehaztutako balioetara berrezar daiteke, jarraian botoia erabiliz:</value>
+    <value>You can reset Echoglossian's configuration to default using the button below:</value>
   </data>
   <data name="ResetSettingsButtonText" xml:space="preserve">
-    <value>Aurrez zehaztutako balioei konfigurazioa berrezartzea</value>
+    <value>Reset configuration to defaults</value>
   </data>
   <data name="TalkTabTitle" xml:space="preserve">
-    <value>Hitz egin</value>
+    <value>Talk</value>
   </data>
   <data name="BattleTalkTabTitle" xml:space="preserve">
-    <value>Borroka hitzaldia</value>
+    <value>BattleTalk</value>
   </data>
   <data name="ToastTabTitle" xml:space="preserve">
-    <value>Txigortzea</value>
+    <value>Toast</value>
   </data>
   <data name="SubtitleTabTitle" xml:space="preserve">
-    <value>Hitz eginSubtulua</value>
+    <value>TalkSubtitle</value>
   </data>
   <data name="TranslateToastToggle" xml:space="preserve">
-    <value>Sistemaren mezuak itzuli</value>
+    <value>Translate Toast Messages</value>
   </data>
   <data name="SettingsForDeepSeekText" xml:space="preserve">
-    <value>DeepSeek-en konfigurazioa</value>
+    <value>Settings for DeepSeek</value>
   </data>
   <data name="SettingsForOpenRouterText" xml:space="preserve">
-    <value>OpenRouter Engine-rako konfigurazioa</value>
+    <value>Settings for OpenRouter Engine</value>
   </data>
   <data name="AWSAccessKey" xml:space="preserve">
-    <value>AWSren sarbide-gakoa</value>
+    <value>AWS Access Key</value>
   </data>
   <data name="SettingsForAmazonTranslateText" xml:space="preserve">
-    <value>Amazon Translateren konfigurazioa:</value>
+    <value>Settings for Amazon Translate:</value>
   </data>
   <data name="AWSSecretKey" xml:space="preserve">
-    <value>AWSren gako sekretua</value>
+    <value>AWS Secret Key</value>
   </data>
   <data name="Region" xml:space="preserve">
-    <value>Eskualdea</value>
+    <value>Region</value>
   </data>
   <data name="APIKey" xml:space="preserve">
-    <value>API klabea</value>
+    <value>API Key</value>
   </data>
   <data name="Endpoint" xml:space="preserve">
-    <value>Muturra</value>
+    <value>Endpoint</value>
   </data>
   <data name="SettingsForMicrosoftText" xml:space="preserve">
-    <value>Microsoft Translatorren konfigurazioa</value>
+    <value>Settings for Microsoft Translator</value>
   </data>
   <data name="MicrosoftTranslatorAPIKey" xml:space="preserve">
-    <value>Microsoft Translatorren API klabea</value>
+    <value>Microsoft Translator API Key</value>
   </data>
   <data name="ModelEndpoint" xml:space="preserve">
-    <value>Ereduaren konexio-puntua</value>
+    <value>Model endpoint</value>
   </data>
   <data name="LLMModel" xml:space="preserve">
-    <value>LLM eredua</value>
+    <value>LLM Model</value>
   </data>
   <data name="Temperature" xml:space="preserve">
-    <value>Tenperatura</value>
+    <value>Temperature</value>
   </data>
   <data name="NoSettingsForEngine" xml:space="preserve">
-    <value>Ez da doikuntzarik behar motor horretarako</value>
+    <value>No settings required for this engine</value>
   </data>
   <data name="SettingsForGeminiText" xml:space="preserve">
-    <value>Geminiserako konfigurazioa:</value>
+    <value>Settings for Google AI Studio / Gemini:</value>
   </data>
   <data name="SettingsForLibreTranslateText" xml:space="preserve">
-    <value>Translate Askearen konfigurazioa:</value>
+    <value>Settings for LibreTranslate:</value>
   </data>
   <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
-    <value>LibreTranslate-ren API-aren azken puntua</value>
+    <value>LibreTranslate API Endpoint</value>
   </data>
   <data name="SettingsForOllamaText" xml:space="preserve">
-    <value>Ollamaren konfigurazioa:</value>
+    <value>Settings for Ollama:</value>
   </data>
   <data name="YandexCloudFolderId" xml:space="preserve">
-    <value>Karpeta-IDa</value>
+    <value>Folder ID</value>
   </data>
   <data name="SettingsForYandexCloudText" xml:space="preserve">
-    <value>YandexCloud-en konfigurazioa:</value>
+    <value>Settings for YandexCloud:</value>
   </data>
   <data name="YandexCloudApiKey" xml:space="preserve">
-    <value>YandexCloud-en API klabea</value>
+    <value>YandexCloud Api Key</value>
   </data>
   <data name="ShowInCutscenesLabel" xml:space="preserve">
-    <value>Zinematiketan erakutsi</value>
+    <value>Show in Cutscenes</value>
   </data>
   <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
-    <value>Kopiatu itzulpena</value>
+    <value>Copy translation to clipboard</value>
   </data>
   <data name="FontSizeLabel" xml:space="preserve">
-    <value>Iturriaren tamaina:</value>
+    <value>Font Size:</value>
   </data>
   <data name="TranslateYesNoScreenLabel" xml:space="preserve">
-    <value>Pantaila Bai/ Ez itzuli</value>
+    <value>Translate Yes/No Screen</value>
   </data>
   <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
-    <value>CutSceneSelectString itzuli</value>
+    <value>Translate CutSceneSelectString</value>
   </data>
   <data name="TranslateSelectStringLabel" xml:space="preserve">
-    <value>SelectString itzuli</value>
+    <value>Translate SelectString</value>
+  </data>
+  <data name="TranslateSelectIconStringLabel" xml:space="preserve">
+    <value>Translate SelectIconString</value>
   </data>
   <data name="TranslateSelectOkLabel" xml:space="preserve">
-    <value>SelectOk itzuli</value>
+    <value>Translate SelectOk</value>
+  </data>
+  <data name="TranslateTooltipAddonLabel" xml:space="preserve">
+    <value>Translate Tooltip Addon</value>
+  </data>
+  <data name="TooltipAddonOverlayAppearanceSectionLabel" xml:space="preserve">
+    <value>Tooltip addon overlay appearance</value>
+  </data>
+  <data name="TooltipAddonOverlayAppearanceDescription" xml:space="preserve">
+    <value>These settings apply only when the Tooltip addon uses its anchored Plugin Overlay.</value>
+  </data>
+  <data name="TooltipAddonHideNativeTooltipWhenOverlayActiveLabel" xml:space="preserve">
+    <value>Hide native Tooltip while overlay is active</value>
+  </data>
+  <data name="TooltipAddonOverlayFontScaleAdjustmentLabel" xml:space="preserve">
+    <value>Overlay font scale</value>
+  </data>
+  <data name="TooltipAddonOverlayLineHeightScaleLabel" xml:space="preserve">
+    <value>Overlay text line height</value>
+  </data>
+  <data name="TooltipAddonOverlayPaddingLabel" xml:space="preserve">
+    <value>Overlay padding</value>
+  </data>
+  <data name="TooltipAddonOverlayTextColorLabel" xml:space="preserve">
+    <value>Overlay text color</value>
+  </data>
+  <data name="TooltipAddonOverlayBackgroundColorLabel" xml:space="preserve">
+    <value>Overlay background color</value>
+  </data>
+  <data name="TooltipAddonOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Overlay background opacity</value>
+  </data>
+  <data name="TooltipAddonOverlayMaxWidthModeLabel" xml:space="preserve">
+    <value>Overlay maximum width</value>
+  </data>
+  <data name="TooltipAddonOverlayMaxWidthMatchNativeLabel" xml:space="preserve">
+    <value>Match native tooltip</value>
+  </data>
+  <data name="TooltipAddonOverlayMaxWidthManualCapLabel" xml:space="preserve">
+    <value>Manual cap</value>
+  </data>
+  <data name="TooltipAddonOverlayManualMaxWidthLabel" xml:space="preserve">
+    <value>Overlay manual maximum width</value>
   </data>
   <data name="GeminiAPIKey" xml:space="preserve">
-    <value>Geminiren API klabea</value>
+    <value>Google AI Studio API Key</value>
   </data>
   <data name="SettingsForYandexPublic" xml:space="preserve">
-    <value>Yandex-eko itzultzaile publikoaren konfigurazioa</value>
+    <value>Settings for Yandex public Translator</value>
   </data>
   <data name="SettingsForGTranslateText" xml:space="preserve">
-    <value>GTranslate itzultzailearen konfigurazioa</value>
+    <value>Settings for GTranslate translator</value>
   </data>
   <data name="ConfigTabGeneralName" xml:space="preserve">
-    <value>Doikuntza orokorrak</value>
+    <value>General Settings</value>
   </data>
   <data name="OtherUIElementsTabTitle" xml:space="preserve">
-    <value>Erabiltzailearen interfazearen beste elementu batzuk</value>
+    <value>Other UI elements</value>
+  </data>
+  <data name="QuestWindowsTabTitle" xml:space="preserve">
+    <value>Quest windows</value>
+  </data>
+  <data name="TooltipTabTitle" xml:space="preserve">
+    <value>Details &amp; hover</value>
+  </data>
+  <data name="SelectionDialogsTabTitle" xml:space="preserve">
+    <value>Selection dialogs</value>
+  </data>
+  <data name="GameWindowsTabTitle" xml:space="preserve">
+    <value>Game windows</value>
+  </data>
+  <data name="NamePlateTabTitle" xml:space="preserve">
+    <value>Nameplates</value>
   </data>
   <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
-    <value>Ziur al zaude konfigurazio guztiak aurrez zehaztutako balioetara itzuli nahi dituzula?</value>
+    <value>Are you sure you want to reset all settings to default?</value>
   </data>
   <data name="YesReset" xml:space="preserve">
-    <value>Bai, berriro hastea</value>
+    <value>Yes, reset</value>
   </data>
   <data name="ResetSettingsToDefault" xml:space="preserve">
-    <value>Echoglossian konfigurazioa aurrez zehaztutako balioetara berrezarri</value>
+    <value>Reset ALL Echoglossian Settings to Default</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Ezeztatu</value>
+    <value>Cancel</value>
   </data>
   <data name="TranslateCharacterWindow" xml:space="preserve">
-    <value>"pertsonaia" itzulpen leihoa</value>
+    <value>Translate "Character" Window</value>
   </data>
   <data name="APIEndpoint" xml:space="preserve">
-    <value>API konexio-puntua</value>
+    <value>API Endpoint</value>
   </data>
   <data name="SettingsForLmStudioText" xml:space="preserve">
-    <value>LMStudioaren konfigurazioa:</value>
+    <value>Settings for LMStudio:</value>
   </data>
   <data name="FetchLiveModels" xml:space="preserve">
-    <value>Zuzeneko ereduak lortzea</value>
+    <value>Fetch Live Models</value>
   </data>
   <data name="Model" xml:space="preserve">
-    <value>Eredua</value>
+    <value>Model</value>
   </data>
   <data name="UseAuthentication" xml:space="preserve">
-    <value>Autentifikazioa erabili</value>
+    <value>Use Authentication</value>
   </data>
   <data name="DataInsertedUpdatedInStringArrayDatasTable" xml:space="preserve">
-    <value>StringArrayDatas taulan sartutako edo eguneratutako datuak.</value>
+    <value>Data inserted/updated in StringArrayDatas table.</value>
   </data>
   <data name="ErrorSavingData" xml:space="preserve">
     <value>ErrorSavingData: {0}</value>
   </data>
   <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
-    <value>Echoglossian datu-baseko editorea ireki du.</value>
+    <value>Opens the Echoglossian DB Editor.</value>
+  </data>
+  <data name="OpensTheTranslatorDebuggerAndMetricsWindow" xml:space="preserve">
+    <value>Opens the Translator Debugger and Metrics window.</value>
   </data>
   <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
-    <value>Eskaneatu QR kodea kriptomonedak bidaltzeko. Edozein kopuru :)</value>
+    <value>Scan the QR Code to send cryptocurrency. Any amount is appreciated :)</value>
   </data>
   <data name="CryptoQrWindowLabel" xml:space="preserve">
-    <value>Billetera kriptografikoa</value>
+    <value>Crypto Wallet</value>
   </data>
   <data name="SendCryptoButton" xml:space="preserve">
-    <value>Kriptomonedak bidali</value>
+    <value>Send crypto</value>
   </data>
-  <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="crypto" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="UnableToLoadEntityForEditing" xml:space="preserve">
-    <value>Ezin da erakundea kargatu editatzeko.</value>
+    <value>Unable to load entity for editing.</value>
   </data>
   <data name="Delete" xml:space="preserve">
-    <value>Ezabatu</value>
+    <value>Delete</value>
   </data>
   <data name="NoRecordsLoaded" xml:space="preserve">
-    <value>Ez da miaketarik egin.</value>
+    <value>No records loaded.</value>
   </data>
   <data name="NoRecordsFoundInThisTable" xml:space="preserve">
-    <value>Ez zen miaketarik aurkitu taula honetan.</value>
+    <value>No records found in this table.</value>
   </data>
   <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
-    <value>Ez erakusteko propietate eskalarrik.</value>
+    <value>No scalar properties to display.</value>
   </data>
   <data name="Reload" xml:space="preserve">
-    <value>Kargatu</value>
+    <value>Reload</value>
   </data>
   <data name="Prev" xml:space="preserve">
     <value>Prev</value>
   </data>
   <data name="Page" xml:space="preserve">
-    <value>Orrialdea</value>
+    <value>Page</value>
   </data>
   <data name="Next" xml:space="preserve">
-    <value>Hurrengo</value>
+    <value>Next</value>
   </data>
   <data name="_" xml:space="preserve">
     <value>|</value>
   </data>
   <data name="PageSize" xml:space="preserve">
-    <value>Orriaren tamaina:</value>
+    <value>Page size:</value>
   </data>
   <data name="ExportSelectedCSV" xml:space="preserve">
-    <value>Hautatutako CSV Esportatu</value>
+    <value>Export Selected CSV</value>
   </data>
   <data name="ExportPageCSV" xml:space="preserve">
-    <value>Orria entzun Orria entzun CSV esportatzea</value>
+    <value>Export Page CSV</value>
   </data>
   <data name="DeleteSelected" xml:space="preserve">
-    <value>Hautatutako ezabatzea</value>
+    <value>Delete Selected</value>
   </data>
   <data name="EchoglossianDBEditor" xml:space="preserve">
-    <value>Echoglossian datu-basearen editorea</value>
+    <value>Echoglossian DB Editor</value>
   </data>
   <data name="SelectATableToViewItsRecords" xml:space="preserve">
-    <value>Erregistroak ikusteko taula bat hautatu.</value>
+    <value>Select a table to view its records.</value>
   </data>
   <data name="Table" xml:space="preserve">
-    <value>Mahaia</value>
+    <value>Table</value>
   </data>
   <data name="RecordSaved" xml:space="preserve">
-    <value>Gordetako erregistroa!</value>
+    <value>Record Saved!</value>
   </data>
   <data name="RecordDeleted" xml:space="preserve">
-    <value>Erregistro ezabatua</value>
+    <value>Record Deleted</value>
   </data>
   <data name="DeletedNRecords" xml:space="preserve">
-    <value>Ezabatutako erregistroak {0}</value>
+    <value>Deleted {0} Records</value>
   </data>
   <data name="CopiedNRecordsToClipboard" xml:space="preserve">
-    <value>Kopiatu {errenkadak. Erregistroak kontatzea</value>
+    <value>Copied {0} records to clipboard</value>
   </data>
   <data name="Help" xml:space="preserve">
-    <value>Laguntza</value>
+    <value>Help</value>
   </data>
   <data name="TipDoubleClickARowToEdit" xml:space="preserve">
-    <value>Kontseilua: Egin klik bikoitza ilara batean, editatzeko.</value>
+    <value>Tip: Double-click a row to edit.</value>
   </data>
   <data name="CSVExportCopiesToClipboard" xml:space="preserve">
-    <value>CSV kopiak esportatu</value>
+    <value>CSV Export copies to clipboard</value>
   </data>
   <data name="LoadedNRecords" xml:space="preserve">
-    <value>{0} erregistroak kargatuta</value>
+    <value>Loaded {0} records</value>
+  </data>
+  <data name="AcceptedQuestPrefetchStartedNotification" xml:space="preserve">
+    <value>Background quest pre-translation started for {0} accepted quests.</value>
+  </data>
+  <data name="AcceptedQuestPrefetchCompletedNotification" xml:space="preserve">
+    <value>Background quest pre-translation finished for {0} accepted quests.</value>
+  </data>
+  <data name="ToDoListAwaitingQuestDataNotification" xml:space="preserve">
+    <value>ToDoList is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</value>
+  </data>
+  <data name="ScenarioTreeAwaitingQuestDataNotification" xml:space="preserve">
+    <value>ScenarioTree is waiting for stored quest data for {0} visible quests. The addon will stay untouched until all quest data is ready.</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsToggle" xml:space="preserve">
+    <value>Show quest background notifications</value>
+  </data>
+  <data name="ShowQuestProgressNotificationsDescription" xml:space="preserve">
+    <value>Shows informational notifications when background quest pre-translation starts or when quest windows are still waiting for stored quest data. Disabled by default to avoid noisy popups during normal gameplay.</value>
+  </data>
+  <data name="AddonProbeHelpMessage" xml:space="preserve">
+    <value>Dumps a recursive addon structure probe to the log. Usage: /egloaddonprobe &lt;addon name&gt; [index] or /egloaddonprobe stop</value>
+  </data>
+  <data name="QuestProbeHelpMessage" xml:space="preserve">
+    <value>Dumps a full quest data probe to the log. Usage: /egloquestprobe &lt;quest name or quest id&gt;</value>
+  </data>
+  <data name="JournalQuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Native UI translation</value>
+  </data>
+  <data name="JournalQuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Plugin Tooltip translation only</value>
+  </data>
+  <data name="JournalQuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Native UI translation + original Plugin Tooltips</value>
+  </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Journal quest display mode</value>
+  </data>
+  <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
+    <value>This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal Plugin Tooltips follow this mode directly; the global Plugin Tooltip toggle only affects other translated UI.</value>
+  </data>
+  <data name="JournalGlobalHoverTooltipsLabel" xml:space="preserve">
+    <value>Enable global Plugin Tooltips for other translated UI</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslation" xml:space="preserve">
+    <value>Native UI translation</value>
+  </data>
+  <data name="QuestDisplayModeTooltipTranslationOnly" xml:space="preserve">
+    <value>Plugin Tooltip translation only</value>
+  </data>
+  <data name="QuestDisplayModeNativeUiTranslationWithOriginalTooltips" xml:space="preserve">
+    <value>Native UI translation + original Plugin Tooltips</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Quest display mode</value>
+  </data>
+  <data name="QuestDisplayModeDescription" xml:space="preserve">
+    <value>This mode controls how this quest window is presented. Native UI writes the translation into the addon, Plugin Tooltip translation only keeps the addon intact, and Native UI translation + original Plugin Tooltips writes the translation natively while showing the original in Plugin Tooltips.</value>
+  </data>
+  <data name="TranslateJournalAcceptToggle" xml:space="preserve">
+    <value>Translate JournalAccept</value>
+  </data>
+  <data name="TranslateJournalResultToggle" xml:space="preserve">
+    <value>Translate JournalResult</value>
+  </data>
+  <data name="TranslateRecommendListToggle" xml:space="preserve">
+    <value>Translate RecommendList</value>
+  </data>
+  <data name="TranslateAreaMapToggle" xml:space="preserve">
+    <value>Translate AreaMap</value>
+  </data>
+  <data name="TranslateScenarioTreeToggle" xml:space="preserve">
+    <value>Translate ScenarioTree</value>
+  </data>
+  <data name="TranslateToDoListToggle" xml:space="preserve">
+    <value>Translate ToDoList</value>
+  </data>
+  <data name="TranslateToDoToggle" xml:space="preserve">
+    <value>Translate ToDo</value>
+  </data>
+  <data name="TranslateTextGimmickHintToggleText" xml:space="preserve">
+    <value>Translate Text Gimmick Hint</value>
+  </data>
+  <data name="OverlayTabMiniTalkText" xml:space="preserve">
+    <value>MiniTalk</value>
+  </data>
+  <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="ToastOverlayTabGeneralText" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="ToastOverlayTabScreenInfoText" xml:space="preserve">
+    <value>Screen Info</value>
+  </data>
+  <data name="ToastOverlayTabErrorText" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="ToastOverlayTabAreaText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="ToastOverlayTabClassJobText" xml:space="preserve">
+    <value>Class / Job</value>
+  </data>
+  <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayTabQuestText" xml:space="preserve">
+    <value>Quest</value>
+  </data>
+  <data name="ToastModeDescription" xml:space="preserve">
+    <value>Each toast type can choose independently between native replacement and Plugin Overlay rendering.</value>
+  </data>
+  <data name="ToastModeSwapDescription" xml:space="preserve">
+    <value>When a toast type uses Plugin Overlay mode, you can also swap the texts so the Plugin Overlay keeps the original line while the native toast shows the translation.</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveAllToastTypesWillRenderThroughOverlays" xml:space="preserve">
+    <value>Plugin Overlay-only language support is active, so all toast types will render through Plugin Overlays.</value>
+  </data>
+  <data name="OverlayOnlyLanguageActiveThisToastTypeWillRenderThroughAnOverlay" xml:space="preserve">
+    <value>Plugin Overlay-only language support is active, so this toast type will render through a Plugin Overlay.</value>
+  </data>
+  <data name="NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode" xml:space="preserve">
+    <value>Native replacement mode is active for this toast type. Plugin Overlay style controls are not used in this mode.</value>
+  </data>
+  <data name="ToastOverlayScreenInfoWideTextSectionTitle" xml:space="preserve">
+    <value>Screen Info (_WideText)</value>
+  </data>
+  <data name="ToastOverlayErrorSectionTitle" xml:space="preserve">
+    <value>Error Toast</value>
+  </data>
+  <data name="ToastOverlayAreaSectionTitle" xml:space="preserve">
+    <value>Area Toast</value>
+  </data>
+  <data name="ToastOverlayClassJobChangeSectionTitle" xml:space="preserve">
+    <value>Class / Job Change Toast</value>
+  </data>
+  <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
+    <value>Text Gimmick Hint</value>
+  </data>
+  <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
+    <value>Quest Toast</value>
+  </data>
+  <data name="ToastOverlayEnableThisToastTypeLabel" xml:space="preserve">
+    <value>Enable this toast type</value>
+  </data>
+  <data name="ToastOverlayUseOverlayForThisToastTypeLabel" xml:space="preserve">
+    <value>Use a Plugin Overlay for this toast type</value>
+  </data>
+  <data name="TranslateMiniTalkLabel" xml:space="preserve">
+    <value>Translate MiniTalk</value>
+  </data>
+  <data name="TranslateNamePlatesLabel" xml:space="preserve">
+    <value>Translate eligible world-object nameplates</value>
+  </data>
+  <data name="NamePlateOverlayHelpText" xml:space="preserve">
+    <value>Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped.</value>
+  </data>
+  <data name="EnableDistanceAwareOverlaysLabel" xml:space="preserve">
+    <value>Enable distance-aware overlays</value>
+  </data>
+  <data name="DistanceAwareOverlayFullScaleDistanceLabel" xml:space="preserve">
+    <value>Full scale distance</value>
+  </data>
+  <data name="DistanceAwareOverlayFadeStartDistanceLabel" xml:space="preserve">
+    <value>Fade start distance</value>
+  </data>
+  <data name="DistanceAwareOverlayMaxDistanceLabel" xml:space="preserve">
+    <value>Maximum distance</value>
+  </data>
+  <data name="DistanceAwareOverlayMinScaleLabel" xml:space="preserve">
+    <value>Minimum scale</value>
+  </data>
+  <data name="NamePlateNativeReplacementHelpText" xml:space="preserve">
+    <value>Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode.</value>
+  </data>
+  <data name="CutSceneSelectStringOverlayHelpText" xml:space="preserve">
+    <value>The question is used as the window title and the options are rendered one per line.</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityLabel" xml:space="preserve">
+    <value>Background opacity</value>
+  </data>
+  <data name="ToastOverlayBackgroundOpacityTooltip" xml:space="preserve">
+    <value>Controls how opaque the toast Plugin Overlay background should be. Use 0 for a fully transparent background.</value>
+  </data>
+  <data name="ToastOverlaySupportedNormalPlacementDescription" xml:space="preserve">
+    <value>Supported normal toasts currently share one callback-owned runtime. Configure their top and bottom placement buckets here.</value>
+  </data>
+  <data name="ToastOverlaySupportedNormalSharedSettingsMessage" xml:space="preserve">
+    <value>This toast type currently uses the shared top and bottom supported-normal placement settings from the Screen Info page.</value>
+  </data>
+  <data name="ToastOverlayTopPlacementTitle" xml:space="preserve">
+    <value>Top placement</value>
+  </data>
+  <data name="ToastOverlayBottomPlacementTitle" xml:space="preserve">
+    <value>Bottom placement</value>
+  </data>
+  <data name="ToastOverlayLeftPlacementTitle" xml:space="preserve">
+    <value>Left placement</value>
+  </data>
+  <data name="ToastOverlayCentrePlacementTitle" xml:space="preserve">
+    <value>Centre placement</value>
+  </data>
+  <data name="ToastOverlayRightPlacementTitle" xml:space="preserve">
+    <value>Right placement</value>
+  </data>
+  <data name="OverlayDisplayModeDescription" xml:space="preserve">
+    <value>This mode controls how the translated text is presented. Native UI writes directly into the game addon, Plugin Overlay translation only leaves the native addon untouched, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in the Plugin Overlay.</value>
+  </data>
+  <data name="OverlayDisplayModeOverlayTranslationOnly" xml:space="preserve">
+    <value>Plugin Overlay translation only</value>
+  </data>
+  <data name="OverlayDisplayModeNativeUiTranslationWithOriginalOverlay" xml:space="preserve">
+    <value>Native UI translation + original Plugin Overlay</value>
+  </data>
+  <data name="OverlayOnlyLanguageModeDescription" xml:space="preserve">
+    <value>The selected language does not support the native game font, so this surface is limited to Plugin Overlays and Plugin Tooltips.</value>
+  </data>
+  <data name="ActionAndItemTooltipsSectionLabel" xml:space="preserve">
+    <value>Action and item details</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Detail display mode</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
+    <value>This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, Plugin Overlay translation only keeps the native addon intact and uses Plugin Overlays, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in our Plugin Overlay.</value>
+  </data>
+  <data name="ActionAndItemTooltipsOverlayOnlyDescription" xml:space="preserve">
+    <value>ActionDetail and ItemDetail currently use Plugin Tooltips only. Native UI translation for these surfaces is currently unavailable.</value>
+  </data>
+  <data name="HoverTooltipAppearanceSectionLabel" xml:space="preserve">
+    <value>Hover Plugin Tooltip appearance</value>
+  </data>
+  <data name="HoverTooltipFontScaleLabel" xml:space="preserve">
+    <value>Plugin Tooltip font scale</value>
+  </data>
+  <data name="HoverTooltipMaxWidthLabel" xml:space="preserve">
+    <value>Plugin Tooltip max width</value>
+  </data>
+  <data name="HoverTooltipTextColorLabel" xml:space="preserve">
+    <value>Plugin Tooltip text color</value>
+  </data>
+  <data name="HoverTooltipBackgroundColorLabel" xml:space="preserve">
+    <value>Plugin Tooltip background color</value>
+  </data>
+  <data name="HoverTooltipBackgroundOpacityLabel" xml:space="preserve">
+    <value>Plugin Tooltip background opacity</value>
+  </data>
+  <data name="HoverTooltipAppearanceDescription" xml:space="preserve">
+    <value>These settings apply to hover Plugin Tooltips used by quest and DB-first UI surfaces.</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleLabel" xml:space="preserve">
+    <value>Texture text line height</value>
+  </data>
+  <data name="TexturePresentationLineHeightScaleDescription" xml:space="preserve">
+    <value>Applies to texture-backed complex-script text across hover tooltips and overlays.</value>
+  </data>
+  <data name="TranslateMainCommandWindow" xml:space="preserve">
+      <value>Translate Game Main Menu</value>
+  </data>
+  <data name="TranslateActionMenuWindow" xml:space="preserve">
+    <value>Translate ActionMenu Window</value>
+  </data>
+  <data name="TranslateHudWindows" xml:space="preserve">
+    <value>Translate HUD Windows</value>
+  </data>
+  <data name="TranslateOperationGuideWindow" xml:space="preserve">
+    <value>Translate Operation Guide</value>
+  </data>
+  <data name="TranslateAddonContextMenuTitleWindow" xml:space="preserve">
+    <value>Translate Addon Context Menu Title</value>
+  </data>
+  <data name="TranslateContextMenuWindow" xml:space="preserve">
+    <value>Translate Context Menu</value>
+  </data>
+  <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
+    <value>Talk translation</value>
+  </data>
+  <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
+    <value>BattleTalk translation</value>
+  </data>
+  <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
+    <value>Talk Subtitle translation</value>
+  </data>
+  <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
+    <value>MiniTalk translation</value>
+  </data>
+  <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
+    <value>CutSceneSelectString translation</value>
+  </data>
+  <data name="OverlayWindowTitleTextGimmickHintTranslation" xml:space="preserve">
+    <value>Text Gimmick Hint translation</value>
+  </data>
+  <data name="OverlayWindowTitleWideTextToastTranslation" xml:space="preserve">
+    <value>Screen Info toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleErrorToastTranslation" xml:space="preserve">
+    <value>Error Toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleAreaToastTranslation" xml:space="preserve">
+    <value>Area toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleClassJobToastTranslation" xml:space="preserve">
+    <value>Class/Job toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleQuestToastTranslation" xml:space="preserve">
+    <value>Quest toast translation</value>
+  </data>
+  <data name="OverlayWindowTitleNamePlateTranslation" xml:space="preserve">
+    <value>Nameplate translation</value>
+  </data>
+  <data name="OverlayWindowTitleChatBubbleTranslation" xml:space="preserve">
+    <value>ChatBubble translation</value>
+  </data>
+  <data name="OverlayWindowTitleActionTooltipTranslation" xml:space="preserve">
+    <value>Action tooltip translation</value>
+  </data>
+  <data name="OverlayWindowTitleItemTooltipTranslation" xml:space="preserve">
+    <value>Item tooltip translation</value>
+  </data>
+  <data name="OverlayWindowTitleTooltipAddonTranslation" xml:space="preserve">
+    <value>Tooltip addon translation</value>
+  </data>
+  <data name="CouldNotFetchOllamaModels" xml:space="preserve">
+    <value>Could not fetch models. Is Ollama running locally?</value>
+  </data>
+  <data name="ActionAndItemTooltipsToggleLabel" xml:space="preserve">
+    <value>Enable action/item detail translation</value>
+  </data>
+  <data name="NoModelsAvailable" xml:space="preserve">
+    <value>No models available.</value>
+  </data>
+  <data name="DefaultTag" xml:space="preserve">
+    <value> [default]</value>
+  </data>
+  <data name="ModelIdLabel" xml:space="preserve">
+    <value>Model ID: {0}</value>
+  </data>
+  <data name="ModelTierGpt4o" xml:space="preserve">
+    <value>GPT-4o</value>
+  </data>
+  <data name="ModelTierGpt4" xml:space="preserve">
+    <value>GPT-4</value>
+  </data>
+  <data name="ModelTierGpt35" xml:space="preserve">
+    <value>GPT-3.5</value>
+  </data>
+  <data name="ModelTierGemini15" xml:space="preserve">
+    <value>Gemini 2.5 Flash</value>
+  </data>
+  <data name="ModelTierGeminiPro" xml:space="preserve">
+    <value>Gemini 2.5 Pro</value>
+  </data>
+  <data name="ModelTierChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="ModelTierReasoner" xml:space="preserve">
+    <value>Reasoner</value>
+  </data>
+  <data name="ModelTierOpus" xml:space="preserve">
+    <value>Opus</value>
+  </data>
+  <data name="ModelTierSonnet" xml:space="preserve">
+    <value>Sonnet</value>
+  </data>
+  <data name="ModelTierHaiku" xml:space="preserve">
+    <value>Haiku</value>
+  </data>
+  <data name="ModelTierO1" xml:space="preserve">
+    <value>O1</value>
+  </data>
+  <data name="ModelTierOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="RequiredFieldMessageFormat" xml:space="preserve">
+    <value>{0} is required.</value>
+  </data>
+  <data name="OpenAnthropicApiKeys" xml:space="preserve">
+    <value>Open Anthropic API Keys</value>
+  </data>
+  <data name="LibreTranslateInstanceLabel" xml:space="preserve">
+    <value>Instance</value>
+  </data>
+  <data name="CustomLabel" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="OptionalApiKeyLabel" xml:space="preserve">
+    <value>API Key (optional)</value>
+  </data>
+  <data name="OllamaEngineUiFailedToRender" xml:space="preserve">
+    <value>Ollama engine UI failed to render.</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo" xml:space="preserve">
+    <value>⚡ Fast and affordable (4k tokens)</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt35Turbo16k" xml:space="preserve">
+    <value>⚡ 16k token context</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4" xml:space="preserve">
+    <value>🧠 More capable but slower and costly</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4Turbo" xml:space="preserve">
+    <value>🟢 Faster and cheaper GPT-4 variant</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4o" xml:space="preserve">
+    <value>👁 Multimodal and real-time model</value>
+  </data>
+  <data name="ChatGptModelTooltipGpt4oMini" xml:space="preserve">
+    <value>⚡ GPT-4o Mini - fast and compact</value>
+  </data>
+  <data name="OpenAiProviderVariantLabel" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="OpenAiProviderVariantOfficialOpenAi" xml:space="preserve">
+    <value>Official OpenAI</value>
+  </data>
+  <data name="OpenAiProviderVariantCustomOpenAiCompatible" xml:space="preserve">
+    <value>Custom OpenAI-Compatible</value>
+  </data>
+  <data name="OpenAiCompatibleProviderDescription" xml:space="preserve">
+    <value>Configure an OpenAI-compatible endpoint, API key, and model. Live model fetch is optional; if the provider does not expose /models cleanly, keep a manual model id.</value>
+  </data>
+  <data name="OpenAiCompatibleLiveModelFetchFailed" xml:space="preserve">
+    <value>Could not fetch models from the configured OpenAI-compatible provider. Keep a manual model id or verify the endpoint and credentials.</value>
+  </data>
+  <data name="OpenAiCompatibleManualModelHint" xml:space="preserve">
+    <value>Use the exact model id exposed by your OpenAI-compatible provider when live model listing is unavailable or disabled.</value>
+  </data>
+  <data name="DialogueGlossarySectionLabel" xml:space="preserve">
+    <value>Dialogue glossary</value>
+  </data>
+  <data name="DialogueGlossaryDescription" xml:space="preserve">
+    <value>Inject a structured glossary into dialogue-family LLM requests using an operator-managed JSON file.</value>
+  </data>
+  <data name="EnableDialogueGlossaryInjectionLabel" xml:space="preserve">
+    <value>Enable dialogue glossary injection</value>
+  </data>
+  <data name="DialogueGlossaryFilePathLabel" xml:space="preserve">
+    <value>Dialogue glossary file path</value>
+  </data>
+  <data name="ReloadDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Reload dialogue glossary</value>
+  </data>
+  <data name="ClearDialogueGlossaryButtonLabel" xml:space="preserve">
+    <value>Clear loaded glossary</value>
+  </data>
+  <data name="DialogueGlossaryStatusLoaded" xml:space="preserve">
+    <value>Loaded</value>
+  </data>
+  <data name="DialogueGlossaryStatusFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="DialogueGlossaryStatusIdle" xml:space="preserve">
+    <value>Idle</value>
+  </data>
+  <data name="DialogueGlossarySnapshotSummary" xml:space="preserve">
+    <value>Status: {0}  |  Entries: {1}  |  Skipped rows: {2}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotPath" xml:space="preserve">
+    <value>Last path: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotUtc" xml:space="preserve">
+    <value>Last load UTC: {0}</value>
+  </data>
+  <data name="DialogueGlossarySnapshotFailure" xml:space="preserve">
+    <value>Last glossary load failure: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerWindowTitle" xml:space="preserve">
+    <value>Translator Debugger and Metrics</value>
+  </data>
+  <data name="TranslatorDebuggerWindowDescription" xml:space="preserve">
+    <value>Aggregated runtime metrics and latest visible story-surface provenance for this session.</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslateVisibleDialogueAndPersist" xml:space="preserve">
+    <value>Retranslate Visible Story Text And Persist</value>
+  </data>
+  <data name="TranslatorDebuggerClearMetrics" xml:space="preserve">
+    <value>Clear Metrics</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueSessions" xml:space="preserve">
+    <value>Clear Dialogue Sessions</value>
+  </data>
+  <data name="TranslatorDebuggerRetranslatingVisibleDialogue" xml:space="preserve">
+    <value>Retranslating the currently visible story-facing text...</value>
+  </data>
+  <data name="TranslatorDebuggerNoMetricsRecorded" xml:space="preserve">
+    <value>No translator metrics have been recorded in this session yet.</value>
+  </data>
+  <data name="TranslatorDebuggerEngineSummary" xml:space="preserve">
+    <value>Engines: {0}  |  Live requests: {1}  |  Context-aware: {2}  |  Failures: {3}  |  Short circuits: {4}</value>
+  </data>
+  <data name="TranslatorDebuggerStructuredSummary" xml:space="preserve">
+    <value>Structured attempts: {0}  |  Structured successes: {1}  |  Glossary-assisted: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionsCount" xml:space="preserve">
+    <value>Dialogue sessions: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableEngine" xml:space="preserve">
+    <value>Engine</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableProvider" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableModel" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLiveRequests" xml:space="preserve">
+    <value>Live Requests</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableContextAware" xml:space="preserve">
+    <value>Context-Aware</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructured" xml:space="preserve">
+    <value>Structured</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableStructuredOk" xml:space="preserve">
+    <value>Structured OK</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableGlossary" xml:space="preserve">
+    <value>Glossary</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableSuccesses" xml:space="preserve">
+    <value>Successes</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableFailures" xml:space="preserve">
+    <value>Failures</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableShortCircuits" xml:space="preserve">
+    <value>Short Circuits</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableAverageMs" xml:space="preserve">
+    <value>Avg ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableMaxMs" xml:space="preserve">
+    <value>Max ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastMs" xml:space="preserve">
+    <value>Last ms</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastRequestUtc" xml:space="preserve">
+    <value>Last Request UTC</value>
+  </data>
+  <data name="TranslatorDebuggerMetricsTableLastFailure" xml:space="preserve">
+    <value>Last Failure</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionDescription" xml:space="preserve">
+    <value>Runtime-only dialogue sessions currently retained for context-aware translation.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableNamespace" xml:space="preserve">
+    <value>Namespace</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableSessionKey" xml:space="preserve">
+    <value>Session Key</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastSpeaker" xml:space="preserve">
+    <value>Last Speaker</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableRetainedTurns" xml:space="preserve">
+    <value>Retained Turns</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueSessionTableLastObservedUtc" xml:space="preserve">
+    <value>Last Observed UTC</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossarySummary" xml:space="preserve">
+    <value>Dialogue glossary enabled: {0}  |  Entries: {1}  |  Skipped rows: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryPath" xml:space="preserve">
+    <value>Configured file path: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryLoadStatus" xml:space="preserve">
+    <value>Last glossary load: {0}  |  Last load UTC: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerReloadDialogueGlossary" xml:space="preserve">
+    <value>Reload Dialogue Glossary</value>
+  </data>
+  <data name="TranslatorDebuggerClearDialogueGlossary" xml:space="preserve">
+    <value>Clear Loaded Glossary</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueGlossaryFailure" xml:space="preserve">
+    <value>Last glossary load failure: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverridePrimaryAndEffective" xml:space="preserve">
+    <value>Primary engine: {0}  |  Effective dialogue engine: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideDisabled" xml:space="preserve">
+    <value>Dialogue LLM override is currently disabled. Dialogue-family surfaces use the primary engine.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideMatchesPrimary" xml:space="preserve">
+    <value>Dialogue LLM override is enabled, but it currently matches the primary engine selection.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideActive" xml:space="preserve">
+    <value>Dialogue LLM override is active and routes dialogue-family surfaces through {0}.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideInactiveFallback" xml:space="preserve">
+    <value>Dialogue LLM override is enabled, but it is not currently active. Dialogue-family surfaces keep using the primary engine.</value>
+  </data>
+  <data name="TranslatorDebuggerDialogueOverrideNotConfigured" xml:space="preserve">
+    <value>Dialogue LLM override is enabled, but {0} is not fully configured yet. Dialogue-family surfaces keep using the primary engine.</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiProviderSummary" xml:space="preserve">
+    <value>OpenAI-family provider: {0}  |  Variant: {1}  |  Configured: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiEndpoint" xml:space="preserve">
+    <value>Endpoint: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiModelSummary" xml:space="preserve">
+    <value>Model: {0}  |  Live models: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshSummary" xml:space="preserve">
+    <value>Last model refresh: {0}  |  Provider: {1}  |  Current model count: {2}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshUtc" xml:space="preserve">
+    <value>Last refresh UTC: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshEndpoint" xml:space="preserve">
+    <value>Refresh endpoint: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerOpenAiRefreshFailure" xml:space="preserve">
+    <value>Last model refresh failure: {0}</value>
+  </data>
+  <data name="TranslatorDebuggerYes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="TranslatorDebuggerNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="TranslatorDebuggerEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="TranslatorDebuggerDisabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="TranslatorDebuggerSucceeded" xml:space="preserve">
+    <value>Succeeded</value>
+  </data>
+  <data name="TranslatorDebuggerFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="TranslatorDebuggerNeverAttempted" xml:space="preserve">
+    <value>Never attempted</value>
+  </data>
+  <data name="TranslatorDebuggerUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceSectionTitle" xml:space="preserve">
+    <value>Latest Visible Story Surface</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceDescription" xml:space="preserve">
+    <value>Most recent visible story-facing source and translated payload retained for debugger inspection.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoSnapshot" xml:space="preserve">
+    <value>No visible story-surface snapshot is currently retained.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceViewInDbManager" xml:space="preserve">
+    <value>View In DB Manager</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoColumns" xml:space="preserve">
+    <value>No visible story-surface fields are available to display.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldColumn" xml:space="preserve">
+    <value>Field</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceValueColumn" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldSurface" xml:space="preserve">
+    <value>Surface</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldProvenance" xml:space="preserve">
+    <value>Provenance</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldDbTable" xml:space="preserve">
+    <value>DB table</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldEffectiveEngine" xml:space="preserve">
+    <value>Effective engine</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldRuntimeOnlyDialogueContext" xml:space="preserve">
+    <value>Runtime-only dialogue context</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldObservedUtc" xml:space="preserve">
+    <value>Last updated (UTC)</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldOriginalSpeaker" xml:space="preserve">
+    <value>Original speaker</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldOriginalText" xml:space="preserve">
+    <value>Original text</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldOriginalOptions" xml:space="preserve">
+    <value>Original options</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedSpeaker" xml:space="preserve">
+    <value>Translated speaker</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedText" xml:space="preserve">
+    <value>Translated text</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldTranslatedOptions" xml:space="preserve">
+    <value>Translated options</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceFieldLastRetranslation" xml:space="preserve">
+    <value>Last retranslation</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameTalk" xml:space="preserve">
+    <value>Talk</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameBattleTalk" xml:space="preserve">
+    <value>BattleTalk</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameTalkSubtitle" xml:space="preserve">
+    <value>TalkSubtitle</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString" xml:space="preserve">
+    <value>CutSceneSelectString</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNameTextGimmickHint" xml:space="preserve">
+    <value>TextGimmickHint</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceProvenanceDbReuse" xml:space="preserve">
+    <value>DB reuse</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslation" xml:space="preserve">
+    <value>Fresh live translation</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceProvenanceFreshLiveTranslationRuntimeOnlyContext" xml:space="preserve">
+    <value>Fresh live translation (runtime-only dialogue context)</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoVisibleText" xml:space="preserve">
+    <value>No visible {0} text is available to retranslate.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoUsableTranslation" xml:space="preserve">
+    <value>The visible {0} text did not produce a usable translated result.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfacePersistenceFailed" xml:space="preserve">
+    <value>The visible {0} text was refreshed, but persistence failed: {1}</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfacePersistedButVisibleChanged" xml:space="preserve">
+    <value>The refreshed {0} text was persisted, but the visible content changed before it could be applied.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceRetranslatedAndPersisted" xml:space="preserve">
+    <value>The visible {0} text was retranslated and persisted.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceRetranslationFailed" xml:space="preserve">
+    <value>Retranslating the visible {0} text failed before a usable result could be applied.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceNoVisibleSurfaceAvailable" xml:space="preserve">
+    <value>No visible story-facing text is currently available to retranslate.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceUnexpectedFailure" xml:space="preserve">
+    <value>Visible story-surface retranslation failed unexpectedly before a result could be reported.</value>
+  </data>
+  <data name="TranslatorDebuggerVisibleStorySurfaceCanceled" xml:space="preserve">
+    <value>Visible story-surface retranslation was canceled before completion.</value>
+  </data>
+  <data name="GeminiModelTooltipPro" xml:space="preserve">
+    <value>⚪ Lowest-cost Gemini 2.5 Flash-Lite text model.</value>
+  </data>
+  <data name="GeminiModelTooltip15Pro" xml:space="preserve">
+    <value>🟢 Highest-quality Gemini 2.5 Pro text model.</value>
+  </data>
+  <data name="GeminiModelTooltip15Flash" xml:space="preserve">
+    <value>⚡ Default Gemini 2.5 Flash text model with balanced speed and quality.</value>
+  </data>
+  <data name="DeepSeekModelTooltipChat" xml:space="preserve">
+    <value>💬 Optimized for general chat and speed</value>
+  </data>
+  <data name="DeepSeekModelTooltipReasoner" xml:space="preserve">
+    <value>🧠 Reasoning and problem-solving tasks</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet4" xml:space="preserve">
+    <value>Balanced quality, latency, and cost for general translation.</value>
+  </data>
+  <data name="ClaudeModelTooltipSonnet37" xml:space="preserve">
+    <value>Strong general-purpose Claude alias with broad capability.</value>
+  </data>
+  <data name="ClaudeModelTooltipHaiku35" xml:space="preserve">
+    <value>Fastest Claude tier for lower latency and lower cost.</value>
+  </data>
+  <data name="ClaudeModelTooltipOpus41" xml:space="preserve">
+    <value>Highest-tier Claude model when you want maximum quality.</value>
+  </data>
+  <data name="ToastGuiCaptureForSupportedToastsLabel" xml:space="preserve">
+    <value>Use ToastGui-assisted capture for supported normal/error toasts (experimental)</value>
+  </data>
+  <data name="ToastGuiCaptureForSupportedToastsDescription" xml:space="preserve">
+    <value>Keeps overlay bounds and native replacement on the addon handlers, but listens to ToastGui callbacks to prefetch translations earlier. Quest toasts already use ToastGui; Text Gimmick Hint still uses the addon path.</value>
+  </data>
+  <data name="ToastGuiNormalToastRouteStatusLabel" xml:space="preserve">
+    <value>Supported normal toast route</value>
+  </data>
+  <data name="ToastGuiErrorToastRouteStatusLabel" xml:space="preserve">
+    <value>Supported error toast route</value>
+  </data>
+  <data name="ToastGuiQuestToastRouteStatusLabel" xml:space="preserve">
+    <value>Quest toast route</value>
+  </data>
+  <data name="ToastGuiTextGimmickHintRouteStatusLabel" xml:space="preserve">
+    <value>Text Gimmick Hint route</value>
+  </data>
+  <data name="ToastGuiRouteStateLegacyAddonHandlers" xml:space="preserve">
+    <value>Legacy addon handlers</value>
+  </data>
+  <data name="ToastGuiRouteStateCapturePrefetch" xml:space="preserve">
+    <value>ToastGui capture/prefetch</value>
+  </data>
+  <data name="ToastGuiRouteStateFullRuntime" xml:space="preserve">
+    <value>ToastGui full runtime</value>
+  </data>
+  <data name="ToastGuiRouteStateAddonHandlerOnly" xml:space="preserve">
+    <value>Addon handler only</value>
+  </data>
+  <data name="AddonProbeNoActiveWatch" xml:space="preserve">
+    <value>No active addon probe watch to stop.</value>
+  </data>
+  <data name="AddonProbeStopped" xml:space="preserve">
+    <value>Addon probe watch stopped.</value>
+  </data>
+  <data name="AddonProbeUsage" xml:space="preserve">
+    <value>Usage: /egloaddonprobe &lt;addon name&gt; [index] [duration] or /egloaddonprobe stop</value>
+  </data>
+  <data name="AddonProbeInvalidDurationFormat" xml:space="preserve">
+    <value>Invalid addon probe duration. Use values like 90s or 15m, up to {0} minutes.</value>
+  </data>
+  <data name="AddonProbeStartedFormat" xml:space="preserve">
+    <value>Addon probe watch started for '{0}'[{1}] for {2}. Check the Dalamud log for event and tree dumps.</value>
+  </data>
+  <data name="AddonProbeDurationMinuteFormat" xml:space="preserve">
+    <value>{0} minute</value>
+  </data>
+  <data name="AddonProbeDurationMinutesFormat" xml:space="preserve">
+    <value>{0} minutes</value>
+  </data>
+  <data name="AddonProbeDurationSecondFormat" xml:space="preserve">
+    <value>{0} second</value>
+  </data>
+  <data name="AddonProbeDurationSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
   </data>
   <data name="TooltipRegisterLoggingHelpMessage" xml:space="preserve">
     <value>Temporarily logs hover-tooltip registrations and hover hits. Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</value>
