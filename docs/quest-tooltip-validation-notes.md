@@ -146,7 +146,7 @@ Current mitigation:
 
 ## Runtime isolation note - 2026-04-13 20:20:09 -03:00
 
-The latest 10-minute `dalamud.log` slice suggests the quest-family runtime is
+The latest 10-minute `Echoglossian.log` slice suggests the quest-family runtime is
 still too coupled across addons.
 
 Observed state in that slice:

@@ -2,9 +2,14 @@
 
 ## Purpose
 
-`/egloaddonprobe` starts a recursive probe of a live addon and writes the result to the Dalamud log.
+`/egloaddonprobe` starts a recursive probe of a live addon and writes the result
+through `PluginRuntimeLog`.
 
-It is the main diagnostic command for understanding addon tree structure, node layout, component roots, and likely overlay anchors.
+In practice that means the probe output is mirrored to both
+`Echoglossian.log` and the Dalamud log.
+
+It is the main diagnostic command for understanding addon tree structure, node
+layout, component roots, and likely overlay anchors.
 
 ## Usage
 
@@ -71,5 +76,5 @@ Use this command when you want to:
 ## Notes
 
 - This command is diagnostic only.
-- It is intended to be paired with `dalamud.log` inspection.
+- Inspect `C:\Users\lokin\AppData\Roaming\XIVLauncher\pluginConfigs\Echoglossian\Echoglossian.log` first, then use `dalamud.log` only when cross-plugin context is needed.
 - The command is useful when working on dense addons such as Journal, ToDoList, RecommendList, ScenarioTree, and similar UI trees.

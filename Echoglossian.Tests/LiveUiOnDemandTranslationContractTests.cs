@@ -1,0 +1,206 @@
+// <copyright file="LiveUiOnDemandTranslationContractTests.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using System.IO;
+using Xunit;
+
+namespace Echoglossian.Tests;
+
+/// <summary>
+/// Verifies that live UI callbacks only apply cached translations and do not
+/// start new translation work from transient game UI handlers.
+/// </summary>
+public class LiveUiOnDemandTranslationContractTests
+{
+    /// <summary>
+    /// Ensures ActionDetail and ItemDetail live hover processing only requests
+    /// non-blocking prefetch when DB-first payloads are missing.
+    /// </summary>
+    [Fact]
+    public void StructuredTooltipRuntime_requests_missing_payload_prefetch_without_direct_translation()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "ActionItemDetailUiRuntime.cs"));
+
+        Assert.Contains(
+            "TryRequestActionDetailOnDemandPrefetch(",
+            source);
+        Assert.Contains(
+            "TryRequestItemDetailOnDemandPrefetch(",
+            source);
+        Assert.DoesNotContain(
+            "TranslationService.Translate(",
+            source);
+        Assert.DoesNotContain(
+            "TranslateAsync(",
+            source);
+    }
+
+    /// <summary>
+    /// Ensures ActionDetail and ItemDetail live-name validation can see direct
+    /// text nodes from the tooltip addon tree before deciding whether an
+    /// overlay is safe to publish.
+    /// </summary>
+    [Fact]
+    public void ActionItemDetailRuntime_uses_full_readable_text_node_resolver()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "ActionItemDetailUiRuntime.cs"));
+
+        Assert.Contains(
+            "AddonTextNodeResolvers.ResolveReadableTextNodes(addon)",
+            source);
+        Assert.DoesNotContain(
+            "AddonTextNodeResolvers.ResolveMiniTalkBubbleTextNodes(addon)",
+            source);
+    }
+
+    /// <summary>
+    /// Ensures overlay-only ActionDetail and ItemDetail rendering is keyed by
+    /// the hovered ID and translated payload rather than blocked by live
+    /// tooltip text nodes that rich tooltips often do not expose.
+    /// </summary>
+    [Fact]
+    public void StructuredTooltipRuntime_does_not_gate_overlay_only_on_live_name_match()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "ActionItemDetailUiRuntime.cs"));
+
+        Assert.Contains(
+            "RequiresStructuredTooltipLiveNameMatch(useOverlayOnly)",
+            source);
+        Assert.DoesNotContain(
+            "if (!this.HasStructuredTooltipLiveNameMatch(",
+            source);
+    }
+
+    /// <summary>
+    ///     Ensures native ActionDetail and ItemDetail mutation consumes only
+    ///     rows whose source-content hash matches the currently hovered
+    ///     payload, rather than reusing another row with the same numeric id.
+    /// </summary>
+    [Fact]
+    public void StructuredTooltipRuntime_uses_canonical_cache_matches_for_native_payloads()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "ActionItemDetailUiRuntime.cs"));
+
+        Assert.Contains(
+            "ActionTooltipCacheManager.TryFindCanonicalMatch(",
+            source);
+        Assert.Contains(
+            "TraitCacheManager.TryFindCanonicalMatch(",
+            source);
+        Assert.Contains(
+            "ItemTooltipCacheManager.TryFindCanonicalMatch(",
+            source);
+        Assert.Contains(
+            "ReferenceTextCacheRegistry.TryFindTranslatedActionCanonicalPayload(",
+            source);
+        Assert.Contains(
+            "ReferenceTextCacheRegistry.TryFindTranslatedItemCanonicalPayload(",
+            source);
+        Assert.DoesNotContain(
+            "ActionTooltipCacheManager.TryFindIdentityMatch(",
+            source);
+        Assert.DoesNotContain(
+            "TraitCacheManager.TryFindIdentityMatch(",
+            source);
+        Assert.DoesNotContain(
+            "ItemTooltipCacheManager.TryFindIdentityMatch(",
+            source);
+        Assert.DoesNotContain(
+            "ReferenceTextCacheRegistry.TryFindTranslatedActionIdentityPayload(",
+            source);
+        Assert.DoesNotContain(
+            "ReferenceTextCacheRegistry.TryFindTranslatedItemIdentityPayload(",
+            source);
+    }
+
+    /// <summary>
+    /// Ensures NamePlateGui callbacks do not enqueue translation work from
+    /// one-frame handler state. Only cached translations may be applied live.
+    /// </summary>
+    [Fact]
+    public void NamePlateRuntime_does_not_queue_live_callback_translations()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "NamePlates",
+            "NamePlateTranslationRuntime.cs"));
+
+        Assert.DoesNotContain(
+            "QueueTranslationIfNeeded(",
+            source);
+        Assert.DoesNotContain(
+            "ResolveTranslationAsync(",
+            source);
+    }
+
+    /// <summary>
+    /// Ensures native nameplate writes are protected against nested
+    /// <c>INamePlateGui.OnNamePlateUpdate</c> callbacks.
+    /// </summary>
+    [Fact]
+    public void NamePlateRuntime_guards_reentrant_update_callbacks()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "NamePlates",
+            "NamePlateTranslationRuntime.cs"));
+
+        Assert.Contains(
+            "ReentrantCallbackGuard",
+            source);
+        Assert.Contains(
+            "TryEnter()",
+            source);
+        Assert.Contains(
+            "SetField(",
+            source);
+    }
+
+    /// <summary>
+    /// Finds the repository root from the test output directory.
+    /// </summary>
+    /// <returns>The repository root directory.</returns>
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Echoglossian.sln")))
+            {
+                return current;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Unable to locate repository root.");
+    }
+}

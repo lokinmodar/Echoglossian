@@ -6,31 +6,39 @@ This document describes the **current actual** runtime translation flow for ever
 
 ## Current Stabilization Scope
 
-At the current checkpoint, the quest-family runtime is intentionally narrowed:
+At the current checkpoint, the quest-family runtime is split across four active
+subfamilies:
 
-- `Journal` and `JournalDetail` remain active as separate handler/runtime
-  surfaces
-- the other quest-family handlers remain in the repo but are not currently
-  registered
-- accepted-quest prefetch remains active so the DB can stay warm
+- `Journal` and `JournalDetail` remain active as separate DB-first
+  quest-backed surfaces
+- `JournalAccept` and `JournalResult` are active popup runtimes that prefer
+  canonical quest lookup when a reliable quest id is available and fall back to
+  dedicated popup rows otherwise
+- `_ToDoList` remains the canonical quest-backed objective list, while `ToDo`
+  is now a separate dedicated runtime with its own table and timer-node guard
+- `AreaMap` and `_NaviMap` quest labels now run through
+  `MapSurfaceStringArrayHandler`, not the older standalone `AreaMapHandler`
 
-This document still records the wider handler model for reference, but in live
-runtime validation the active stabilization target is now the Journal family.
+`ScenarioTree` and `RecommendList` remain registered, but they are not the
+current refactor front. Accepted-quest prefetch remains active so the DB can
+stay warm.
 
 ---
 
 ## Addons in scope
 
-| Addon internal name | Config flag                          | Wiring file                  |
-|---------------------|--------------------------------------|------------------------------|
-| `Journal`           | `TranslateJournal`                   | `AddonHandlerWiring.cs`      |
-| `JournalDetail`     | `TranslateJournalDetail`             | `AddonHandlerWiring.cs`      |
-| `JournalAccept`     | `TranslateJournalAccept`             | `AddonHandlerWiring.cs`      |
-| `JournalResult`     | `TranslateJournalResult`             | `AddonHandlerWiring.cs`      |
-| `RecommendList`     | `TranslateRecommendList`             | `AddonHandlerWiring.cs`      |
-| `ScenarioTree`      | `TranslateScenarioTree`              | `AddonHandlerWiring.cs`      |
-| `AreaMap`           | `TranslateAreaMap`                   | `AddonHandlerWiring.cs`      |
-| `_ToDoList`         | `TranslateToDoList`                  | `AddonHandlerWiring.cs`      |
+| Addon internal name | Config flag | Runtime owner | Wiring file |
+|---------------------|-------------|---------------|-------------|
+| `Journal` | `TranslateJournal` | `JournalHandler` + `JournalDetailHandler` selection bridge | `AddonHandlerWiring.cs` |
+| `JournalDetail` | `TranslateJournalDetail` | `JournalDetailHandler` | `AddonHandlerWiring.cs` |
+| `JournalAccept` | `TranslateJournalAccept` | `JournalAcceptHandler` | `AddonHandlerWiring.cs` |
+| `JournalResult` | `TranslateJournalResult` | `JournalResultHandler` | `AddonHandlerWiring.cs` |
+| `RecommendList` | `TranslateRecommendList` | `RecommendListHandler` | `AddonHandlerWiring.cs` |
+| `ScenarioTree` | `TranslateScenarioTree` | `ScenarioTreeHandler` | `AddonHandlerWiring.cs` |
+| `AreaMap` | `TranslateAreaMap` | `MapSurfaceStringArrayHandler` | `AddonHandlerWiring.cs` |
+| `_NaviMap` | `TranslateAreaMap` | `MapSurfaceStringArrayHandler` | `AddonHandlerWiring.cs` |
+| `_ToDoList` | `TranslateToDoList` | `ToDoListHandler` | `AddonHandlerWiring.cs` |
+| `ToDo` | `TranslateToDo` | `ToDoHandler` | `AddonHandlerWiring.cs` |
 
 Registrations are assembled in `NativeUI/Helpers/AddonHandlerWiring.cs`, registered through `NativeUI/Helpers/AddonHandlerRegistrar.cs`, and unregistered from `Echoglossian.cs` during plugin teardown.
 
@@ -110,14 +118,27 @@ Journal list.
   repo, but `Journal` and `JournalDetail` themselves are being treated as
   DB-first consumers and no longer enqueue local quest translation work.
 
-### 4. SQLite DB (`questplates` / `QuestPlate` model)
+### 4. SQLite DB owners
 
-- Permanent store, survives sessions and game restarts
-- Lookup methods:
-  - `FindQuestPlate(plate)` — by `QuestName + QuestMessage` (full content match)
-  - `FindQuestPlateByName(plate)` — by `QuestName` only (looser, used when message is not available at lookup time)
-- `InsertQuestPlate`, `UpdateQuestPlate`, `UpdateQuestPlateGameVersion` mutate it
-- `SourceContentHash` (from `QuestProgressSnapshot`) is stored per plate to detect quest text changes across game patches without a full retranslation
+- `questplates` / `QuestPlate`
+  - permanent canonical quest store, survives sessions and restarts
+  - lookup methods:
+    - `FindQuestPlate(plate)` by `QuestName + QuestMessage`
+    - `FindQuestPlateByName(plate)` by `QuestName`
+  - mutation methods:
+    - `InsertQuestPlate`
+    - `UpdateQuestPlate`
+    - `UpdateQuestPlateGameVersion`
+  - `SourceContentHash` is stored per plate to detect quest text changes across
+    game patches without a full retranslation
+- `questpopuptexts` / `QuestPopupText`
+  - dedicated fallback store for popup-style quest surfaces whose runtime
+    capture does not prove a canonical quest id
+  - currently used by `JournalAccept` and `JournalResult`
+- `todotexts` / `ToDoText`
+  - dedicated store for the standalone `ToDo` addon
+  - intentionally separate from `QuestPlate` because its instance/FATE content
+    does not reconcile safely with the canonical quest table
 
 ---
 
@@ -218,54 +239,102 @@ fallback, and that is intentional while this surface is being stabilized.
 
 ### `JournalAccept` (quest accept dialog)
 
-**Trigger event:**
+**Trigger events:**
 - `AddonEvent.PreSetup` → `JournalAcceptHandler.OnJournalAcceptEvent`
+- `AddonEvent.PreDraw` → `JournalAcceptHandler.OnJournalAcceptPreDrawEvent`
+- `AddonEvent.PreHide` / `PreFinalize` → cleanup
 
-**Why `PreSetup`:** this fires once when the addon is being built, before any node text is visible. The `AtkValues` array passed in `AddonSetupArgs` contains the raw quest data before it is written to nodes.
+**Why `PreSetup`:** the addon exposes the source title/body in setup
+`AtkValues` before the first visible draw. That allows first-frame native
+translation when the payload is already available.
 
 **Flow:**
 
-1. Guard: `args is not AddonSetupArgs` → return.
-2. Read `questName` from `setupAtkValues[5]`, `questMessage` from `setupAtkValues[12]`.
-3. Build `QuestPlate`; run `QuestProgressResolver.TryResolveQuestProgress` → `SourceContentHash`.
-4. `FindQuestPlate` → `GameVersion` check.
-5. **Cache check:** `QuestUiTranslationCache.TryGetAppliedSnapshot(questName) && TryGetAppliedSnapshot(questMessage)`:
-   - **Hit:** capture both `AppliedText` snapshots; if `UsesHoverTooltips` register `JournalAccept-{addonPtr}`; `return`.
-   - **Miss:** continue.
-6. If `foundQuestPlate` not null → use `TranslatedQuestName`, `TranslatedQuestMessage` directly.
-7. If null → `TryGetQueuedTranslation($"JournalAccept|{questName}|{questMessage}")`:
-   - Hit: decode pair via `TryDeserializeTranslationPair`.
-   - Miss: `QueueTranslation` (pair, persist InsertQuestPlate); `return`.
-8. Diacritics strip if configured.
-9. If `WritesNative`: mutate `setupAtkValues[5]` and `[12]` with `SetManagedString` (modifies the `AtkValue` array directly, so native nodes pick up the translation on setup).
-10. `Remember` both texts in `QuestUiTranslationCache`.
-11. If `UsesHoverTooltips`: register `JournalAccept-{addonPtr}` anchored to the whole addon window.
+1. `PreSetup` reads `questName` from `setupAtkValues[5]` and `questMessage`
+   from `setupAtkValues[12]`.
+2. The handler resolves the current source language and tries to prove a
+   canonical quest id through
+   `QuestPopupIdentity.TryReadJournalAcceptQuestId(...)`.
+3. It builds a quest-facing lookup row and resolves `SourceContentHash` through
+   `QuestProgressResolver` when available.
+4. It chooses the persistence target:
+   - reliable quest id: canonical `QuestPlate`
+   - no reliable quest id: dedicated `QuestPopupText`
+5. It then resolves translation in this order:
+   - current local popup state
+   - `QuestUiTranslationCache`
+   - the chosen persisted row (`QuestPlate` or `QuestPopupText`)
+   - completed shared broker result
+6. If no complete translation exists yet:
+   - remember popup-local hover state
+   - queue translation asynchronously through the shared quest broker
+   - register hover only when the active mode can render it later
+   - return without blocking setup
+7. If a complete translation exists:
+   - optionally remove diacritics for native write
+   - remember popup-local hover state and session cache
+   - if native mode is active, mutate `setupAtkValues[5]` and `[12]`
+   - register hover against readable title/body nodes when possible
+8. `PreDraw` then handles delayed broker completion, mode switches, and visible
+   node refresh:
+   - retries pending translation roughly every 2 seconds
+   - restores originals if the popup is no longer in a native-writing mode
+   - reapplies translated visible nodes when native mode is active
+   - refreshes hover targets for title and body separately
 
-**Important:** `AtkValueArray` mutation at `PreSetup` means translation happens before the addon draws its first frame — there is no screen flash of original text.
+**Hover rule:** prefer readable title/body text nodes; fall back to the whole
+addon only if those nodes are not readable.
 
-**DB table used:** `questplates` — `FindQuestPlate` (name + message).
+**DB tables used:**
+- canonical path: `questplates`
+- fallback path: `questpopuptexts`
 
 ---
 
 ### `JournalResult` (quest completion result screen)
 
-**Trigger event:**
+**Trigger events:**
 - `AddonEvent.PreSetup` → `JournalResultHandler.OnJournalResultEvent`
+- `AddonEvent.PreDraw` → `JournalResultHandler.OnJournalResultPreDrawEvent`
+- `AddonEvent.PreHide` / `PreFinalize` → cleanup
 
 **Flow:**
 
-1. Guard: `args is not AddonSetupArgs`; guard: `setupAtkValues[1].Type != ValueType.String`.
-2. Read `questNameText` from `setupAtkValues[1]`.
-3. **Cache check:** `QuestUiTranslationCache.TryGetAppliedSnapshot(questNameText)`:
-   - **Hit:** if `UsesHoverTooltips` register `JournalResult-{addonPtr}`; `return`.
-   - **Miss:** continue.
-4. Build name-only `QuestPlate`; `FindQuestPlateByName`.
-5. **DB hit:** diacritics strip if needed; `SetManagedString(setupAtkValues[1])` if `WritesNative`; `Remember`; if `UsesHoverTooltips` register; `return`.
-6. **DB miss:** `TryGetQueuedTranslation($"JournalResult|{questNameText}")`:
-   - Hit: same steps as DB hit path.
-   - Miss: `QueueTranslation` (persist InsertQuestPlate); return (no tooltip yet).
+1. `PreSetup` reads the quest title from `setupAtkValues[1]`.
+2. The handler resolves the current source language and tries to prove a
+   canonical quest id through
+   `QuestPopupIdentity.TryReadJournalResultQuestId(...)`.
+3. Lookup prefers:
+   - `FindQuestPlate(...)` when a reliable quest id exists
+   - `FindQuestPlateByName(...)` when it does not
+4. If the popup still has no reliable quest id, it also probes the dedicated
+   `QuestPopupText` fallback row.
+5. Translation resolution order is:
+   - current local popup state
+   - `QuestUiTranslationCache`
+   - preferred canonical `QuestPlate`
+   - fallback `QuestPopupText`
+   - completed shared broker result
+6. If translation is missing:
+   - remember popup-local hover state
+   - queue async translation through the shared quest broker
+   - leave setup non-blocking
+7. If translation is ready:
+   - optionally remove diacritics for native write
+   - remember popup-local state and session cache
+   - if native mode is active, write the translated title into
+     `setupAtkValues[1]`
+   - register hover on the readable title node when possible
+8. `PreDraw` then handles delayed broker completion, mode switches, visible
+   node refresh, and guarded native restore.
 
-**DB table used:** `questplates` — `FindQuestPlateByName` (name only).
+**Lookup rule:** canonical quest-id lookup wins when proven; otherwise title
+matching is the preferred canonical fallback and `QuestPopupText` remains the
+dedicated popup fallback.
+
+**DB tables used:**
+- canonical path: `questplates`
+- fallback path: `questpopuptexts`
 
 ---
 
@@ -370,26 +439,41 @@ pointers directly. The content source, however, is now DB-only.
 
 ---
 
-### `AreaMap` (quest tracker inside the map window)
+### `AreaMap` / `_NaviMap` (map-family quest labels)
 
 **Trigger events:**
-- `AddonEvent.PreRefresh` → `AreaMapHandler.OnAreaMapEvent`
+- `AddonEvent.PreRefresh` → `MapSurfaceStringArrayHandler.OnMapSurfaceEvent`
 - `AddonEvent.PreRequestedUpdate` → same
-- `AddonEvent.PreDraw` → `AreaMapHandler.OnAreaMapHoverRefreshEvent` (hover maintenance only)
+- `AddonEvent.PreDraw` → `MapSurfaceStringArrayHandler.OnMapSurfacePreDrawEvent`
+- `AddonEvent.PreHide` / `PreFinalize` → cleanup
 
-**Args type:** primarily `AddonRefreshArgs`, with a live-addon fallback for
-`PreRequestedUpdate` — if the requested-update event does not carry refresh
-args, the handler resolves `AtkUnitBase->AtkValues` from the visible addon.
+**Runtime file:**
+- `NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs`
 
 **Flow:**
 
-1. Read the quest name from `setupAtkValues[142]`.
-2. Resolve translation from `QuestUiTranslationCache`, `QuestPlate`, or the queued-translation cache.
-3. If `WritesNative`, apply the translated quest name back to `setupAtkValues[142]`.
-4. Always remember the latest `(original, translated)` pair for hover maintenance.
-5. `PreDraw` re-registers a whole-addon tooltip from that remembered pair without queueing new translation work.
+1. The handler resolves live subscribed `StringArrayData` payloads from the
+   visible addon instead of reading a fixed `AtkValue` slot.
+2. Each visible array is projected into a structured payload using
+   `MapSurfaceStringArraySchema`.
+3. Lookup is DB-first through canonical `StringArrayDatas` rows:
+   - in-memory cache first
+   - SQLite canonical row fallback second
+4. If a translated structured payload is available:
+   - native/swap mode writes translated string-array values
+   - matching visible text nodes are also updated immediately so the translated
+     text is visible before the addon redraws its backing arrays
+   - hover tooltips are registered per matching readable text node
+   - `_NaviMap` may fall back to one aggregate tooltip if no readable text-node
+     match exists; `AreaMap` does not use that aggregate fallback
+5. If translation is missing:
+   - restore plugin-owned native mutations
+   - queue one async translation per payload key
+   - suppress hot retry with a failed-payload cooldown
+6. `PreDraw` acts as a retry and late-completion gate and can skip rescans when
+   the live payload signature is still stable.
 
-**DB table used:** `questplates` — `FindQuestPlateByName` (name only).
+**Persistence backend:** canonical `stringarraydatas`.
 
 ---
 
@@ -452,6 +536,50 @@ objective rows keyed by quest row identity.
 
 ---
 
+### `ToDo` (dedicated instance/FATE objective addon)
+
+**Trigger events:**
+- `AddonEvent.PreSetup` → `ToDoHandler.OnToDoEvent`
+- `AddonEvent.PreRefresh` → same
+- `AddonEvent.PreRequestedUpdate` → same
+- `AddonEvent.PreDraw` → same, with a stable fast path
+- `AddonEvent.PreHide` / `PreFinalize` → cleanup
+
+**Runtime file:**
+- `NativeUI/AddonHandlers/Quest/ToDoHandler.cs`
+
+**Flow:**
+
+1. The handler resolves visible `AtkTextNode`s through
+   `ToDoTextNodeResolvers.ResolveVisibleTextNodes(addon)`.
+2. Timer nodes are detected and retained only for stability checks; they are
+   never translated or mutated.
+3. The handler rebuilds a source-facing payload even when the addon currently
+   shows plugin-owned translated text, so DB lookup and persistence keep the
+   original strings.
+4. It captures one immutable operation from:
+   - the payload source-content hash
+   - source language
+   - target language
+   - effective translation engine
+   - game version
+5. Lookup is DB-first through the dedicated `ToDoText` table.
+6. If a translated payload already exists:
+   - native mode writes translated text per node
+   - tooltip modes register structured hover text per node
+   - restore remains limited to handler-owned native mutations
+7. If translation is missing:
+   - the handler queues async translation and persistence without blocking the
+     lifecycle callback
+   - `PreDraw` can short-circuit repeated work when only timer text changed and
+     the rest of the node snapshot is still stable
+8. Cleanup restores only texts previously written by this handler and clears
+   the dedicated `ToDo` runtime state without touching `_ToDoList`.
+
+**Persistence backend:** dedicated `todotexts`.
+
+---
+
 ## Hover tooltip registration summary
 
 All hover registrations go through `RegisterTranslatedHoverTooltip` (in `NativeUI/Helpers/HoverTooltipRegistration.cs`) → `RegisterHoverTooltip` → `hoverTooltipManager.Register(key, topLeft, bottomRight, title, body)`.
@@ -472,11 +600,12 @@ Key patterns per addon:
 | JournalDetail body | `JournalDetail-QuestBody-{canvasOrDescNodePtr:X}` | explicit bounds rect |
 | JournalDetail completed name | `JournalDetail-CompletedQuestName-{ptr:X}` | `AtkTextNode*` |
 | JournalDetail completed body | `JournalDetail-CompletedQuestBody-{ptr:X}` | explicit bounds rect |
-| JournalAccept | `JournalAccept-{addonPtr:X}`                         | `AtkUnitBase*`          |
-| JournalResult | `JournalResult-{addonPtr:X}`                         | `AtkUnitBase*`          |
+| JournalAccept | `JournalAccept-QuestName-{ptr:X}`, `JournalAccept-QuestBody-{ptr:X}`, fallback `JournalAccept-{addonPtr:X}` | text node or addon |
+| JournalResult | `JournalResult-QuestName-{ptr:X}`, fallback `JournalResult-{addonPtr:X}` | text node or addon |
 | ScenarioTree | `ScenarioTree-{addonPtr:X}`                            | `AtkUnitBase*`        |
-| AreaMap      | `AreaMap-{addonPtr:X}-142`                             | `AtkUnitBase*`        |
+| AreaMap / _NaviMap | `MapSurface-{addonName}-{arrayIndex}-TextNode-{ptr:X}-{key}`, optional aggregate `MapSurface-_NaviMap-{arrayIndex}` | text node or addon |
 | ToDoList     | `ToDoList-{progressKey}-{i}-{j}-{nodeId}` | explicit row bounds |
+| ToDo         | `ToDo-{nodeKey}` | per text node |
 | RecommendList | `RecommendList-{questNameNodePtr:X}`                 | `AtkTextNode*`          |
 
 ---
@@ -674,10 +803,12 @@ original text just because the DB row is not warm enough yet.
 
 ## DB lookup method reference
 
-| Method                    | Match criteria                   | Used by                                   |
-|---------------------------|----------------------------------|-------------------------------------------|
-| `FindQuestPlate(plate)`   | `QuestName + QuestMessage`       | JournalDetail, JournalAccept              |
-| `FindQuestPlateByName(plate)` | `QuestName` only            | Journal list, JournalResult, ScenarioTree, ToDoList, RecommendList |
+| Method | Match criteria | Used by |
+|--------|----------------|---------|
+| `FindQuestPlate(plate)` | `QuestName + QuestMessage`, optionally strengthened by quest metadata | JournalDetail, JournalAccept, JournalResult when quest id is proven |
+| `FindQuestPlateByName(plate)` | `QuestName` only | Journal list, JournalResult fallback, ScenarioTree, ToDoList, RecommendList |
+| `FindQuestPopupText(row)` | popup addon name + ordered popup text payload | JournalAccept and JournalResult fallback when no reliable quest id exists |
+| `FindToDoText(row)` | dedicated ordered `ToDo` node payload + scope hash | `ToDo` |
 
 `FindQuestPlateByName` is inherently looser — it cannot distinguish two quests that share a name but differ in body text. This is a known gap tracked in `quest-full-pipeline-design.md` under the migration to `QuestId`-keyed lookups.
 
@@ -798,6 +929,8 @@ returns to a non-native mode.
 | JournalResult     | `NativeUI/AddonHandlers/Quest/JournalResultHandler.cs` |
 | ScenarioTree      | `NativeUI/AddonHandlers/Quest/ScenarioTreeHandler.cs`  |
 | ToDoList          | `NativeUI/AddonHandlers/Quest/ToDoListHandler.cs`      |
+| ToDo              | `NativeUI/AddonHandlers/Quest/ToDoHandler.cs`          |
+| Map surfaces      | `NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs` |
 | RecommendList     | `NativeUI/AddonHandlers/Quest/RecommendListHandler.cs` |
 | UI text cache     | `Cache/QuestUiTranslationCache.cs`                     |
 | Hover cache       | `Cache/QuestHoverTranslationCache.cs`                  |

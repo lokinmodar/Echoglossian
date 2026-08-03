@@ -43,6 +43,17 @@ internal delegate bool QueueTranslationBatchDelegate(
     Action<string[]>? onResolved = null);
 
 /// <summary>
+///     Delegate used to request background prefetch for an accepted quest.
+/// </summary>
+/// <param name="questId">The accepted quest identifier to prefetch.</param>
+/// <param name="source">
+///     The quest surface requesting the prioritized prefetch.
+/// </param>
+internal delegate void RequestAcceptedQuestPrefetchDelegate(
+    uint questId,
+    string? source = null);
+
+/// <summary>
 ///     Delegate used to remove quest hover tooltips by prefix.
 /// </summary>
 /// <param name="prefix">The tooltip key prefix to remove.</param>
@@ -141,6 +152,68 @@ internal delegate void RegisterTranslatedHoverTooltipBoundsDelegate(
     bool forceEnabled = false);
 
 /// <summary>
+///     Delegate used to register a hover tooltip from explicit screen bounds
+///     while preserving rich original capture from a live text node.
+/// </summary>
+/// <param name="key">Stable key used to refresh the tooltip target.</param>
+/// <param name="topLeft">Top-left screen coordinate.</param>
+/// <param name="bottomRight">Bottom-right screen coordinate.</param>
+/// <param name="textNode">The live text node used for rich original capture.</param>
+/// <param name="originalText">The original visible text.</param>
+/// <param name="translatedText">The translated text.</param>
+/// <param name="translatedPayloadReady">
+/// Whether the tooltip payload required by the current mode is ready.
+/// </param>
+/// <param name="swapEnabled">Optional explicit swap override.</param>
+/// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+internal unsafe delegate void RegisterTranslatedHoverTooltipTextNodeBoundsDelegate(
+    string key,
+    Vector2 topLeft,
+    Vector2 bottomRight,
+    AtkTextNode* textNode,
+    string originalText,
+    string translatedText,
+    bool translatedPayloadReady = true,
+    bool? swapEnabled = null,
+    bool forceEnabled = false);
+
+/// <summary>
+///     Delegate used to log one popup-body hover geometry decision for
+///     temporary tooltip-registration diagnostics.
+/// </summary>
+/// <param name="key">The tooltip key being prepared.</param>
+/// <param name="preferredHoverNodeKind">
+/// The resolved structural node kind, if any.
+/// </param>
+/// <param name="preferredTopLeft">
+/// The structural node top-left corner, if any.
+/// </param>
+/// <param name="preferredBottomRight">
+/// The structural node bottom-right corner, if any.
+/// </param>
+/// <param name="explicitBoundsBuilt">
+/// Whether explicit popup-body bounds were successfully built.
+/// </param>
+/// <param name="explicitTopLeft">
+/// The explicit bounds top-left corner when one was built.
+/// </param>
+/// <param name="explicitBottomRight">
+/// The explicit bounds bottom-right corner when one was built.
+/// </param>
+/// <param name="finalAnchorKind">
+/// The final anchor kind used for registration.
+/// </param>
+internal delegate void LogPopupBodyHoverGeometryDecisionDelegate(
+    string key,
+    string preferredHoverNodeKind,
+    Vector2 preferredTopLeft,
+    Vector2 preferredBottomRight,
+    bool explicitBoundsBuilt,
+    Vector2 explicitTopLeft,
+    Vector2 explicitBottomRight,
+    HoverTooltipAnchorKind finalAnchorKind);
+
+/// <summary>
 ///     Bundles the quest-specific delegates and services needed by standalone
 ///     quest handlers.
 /// </summary>
@@ -158,8 +231,14 @@ internal sealed class QuestAddonHandlerDependencies
   /// <summary>Gets or sets the name-only quest lookup delegate.</summary>
   public required Func<QuestPlate, QuestPlate?> FindQuestPlateByName { get; init; }
 
+  /// <summary>Gets or sets the dedicated popup-text lookup delegate.</summary>
+  public required Func<QuestPopupText, QuestPopupText?> FindQuestPopupText { get; init; }
+
   /// <summary>Gets or sets the quest insert delegate.</summary>
   public required Func<QuestPlate, string> InsertQuestPlate { get; init; }
+
+  /// <summary>Gets or sets the popup insert delegate.</summary>
+  public required Func<QuestPopupText, Task<string>> InsertQuestPopupTextAsync { get; init; }
 
   /// <summary>Gets or sets the quest update delegate.</summary>
   public required Func<QuestPlate, string> UpdateQuestPlate { get; init; }
@@ -182,6 +261,10 @@ internal sealed class QuestAddonHandlerDependencies
   /// <summary>Gets or sets the queued batch translation delegate.</summary>
   public required QueueTranslationBatchDelegate QueueTranslationBatch { get; init; }
 
+  /// <summary>Gets or sets the accepted-quest prefetch request delegate.</summary>
+  public required RequestAcceptedQuestPrefetchDelegate
+      RequestAcceptedQuestPrefetch { get; init; }
+
   /// <summary>Gets or sets the hover tooltip prefix removal delegate.</summary>
   public required RemoveHoverTooltipByPrefixDelegate RemoveHoverTooltipByPrefix { get; init; }
 
@@ -200,4 +283,17 @@ internal sealed class QuestAddonHandlerDependencies
   /// <summary>Gets or sets the bounds-based tooltip registration delegate.</summary>
   public required RegisterTranslatedHoverTooltipBoundsDelegate
       RegisterTranslatedHoverTooltipBounds { get; init; }
+
+  /// <summary>
+  ///     Gets or sets the bounds-based tooltip registration delegate that
+  ///     still captures rich original text from one live text node.
+  /// </summary>
+  public required RegisterTranslatedHoverTooltipTextNodeBoundsDelegate
+      RegisterTranslatedHoverTooltipTextNodeBounds { get; init; }
+
+  /// <summary>
+  ///     Gets or sets the popup-body geometry diagnostic delegate.
+  /// </summary>
+  public required LogPopupBodyHoverGeometryDecisionDelegate
+      LogPopupBodyHoverGeometryDecision { get; init; }
 }

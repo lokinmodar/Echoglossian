@@ -218,7 +218,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           sourceLanguage,
           operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue,
-          translatorResolution).ConfigureAwait(false);
+          translatorResolution,
+          originContext: "BattleTalk/Text").ConfigureAwait(false);
       var translatedName = this.ShouldTranslateBattleTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
           ? await this.translationService.TranslateAsync(
@@ -226,7 +227,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
               sourceLanguage,
               operationScope.TargetLanguageCode,
               TranslationSurfaceGroup.Dialogue,
-              translatorResolution).ConfigureAwait(false)
+              translatorResolution,
+              originContext: "BattleTalk/Speaker").ConfigureAwait(false)
           : string.Empty;
       var dialogueTranslationEngine = operationScope.TranslationEngine
                                       .GetValueOrDefault();
@@ -1038,7 +1040,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             operationScope.TargetLanguageCode,
             dialogueContext,
             TranslationSurfaceGroup.Dialogue,
-            translatorResolution).ConfigureAwait(false);
+            translatorResolution,
+            originContext: "BattleTalk/Text").ConfigureAwait(false);
 
         translatedName = string.Empty;
         if (this.ShouldTranslateBattleTalkNpcNames() && !originalName.IsNullOrEmpty())
@@ -1050,7 +1053,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
                 sourceLanguage,
                 operationScope.TargetLanguageCode,
                 TranslationSurfaceGroup.Dialogue,
-                translatorResolution).ConfigureAwait(false);
+                translatorResolution,
+                originContext: "BattleTalk/Speaker").ConfigureAwait(false);
           }
           catch (Exception ex)
           {

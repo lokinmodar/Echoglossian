@@ -153,13 +153,21 @@ internal sealed class TextGimmickHintHandler :
       this.lastFailedOriginalText = string.Empty;
     }
 
+    ToastTranslationDebugLog.Request(
+        this.GetSurfaceIdentity(),
+        "explicit-retranslate",
+        originalText,
+        this.ShouldUseOverlay(),
+        this.ShouldApplyNativeText(),
+        this.ShouldSwapTexts());
     try
     {
       var translatedText = await this.translationService.TranslateAsync(
               originalText,
               sourceLanguage,
               targetLang,
-              TranslationSurfaceGroup.Dialogue)
+              TranslationSurfaceGroup.Dialogue,
+              originContext: this.GetSurfaceIdentity())
           .ConfigureAwait(false) ?? string.Empty;
 
       if (!TranslationPersistenceGuard.IsUsableDialogueTranslation(
@@ -168,6 +176,12 @@ internal sealed class TextGimmickHintHandler :
               sourceLang,
               targetLang))
       {
+        ToastTranslationDebugLog.Failure(
+            this.GetSurfaceIdentity(),
+            "explicit-retranslate",
+            string.IsNullOrWhiteSpace(translatedText)
+                ? "empty-translation"
+                : "unusable-translation");
         lock (this.stateGate)
         {
           if (requestId == this.activeRequestId)
@@ -226,6 +240,13 @@ internal sealed class TextGimmickHintHandler :
             translatedText,
             dialogueTranslationEngine);
         this.PublishOverlay(originalText, translatedText, "explicit-retranslate");
+        if (!this.ShouldApplyNativeText())
+        {
+          ToastTranslationDebugLog.Skip(
+              this.GetSurfaceIdentity(),
+              "explicit-retranslate",
+              "native-disabled");
+        }
       }
 
       if (!persistenceSucceeded)
@@ -242,6 +263,10 @@ internal sealed class TextGimmickHintHandler :
 
       if (sourceChangedBeforeApply)
       {
+        ToastTranslationDebugLog.Skip(
+            this.GetSurfaceIdentity(),
+            "explicit-retranslate",
+            "visible-source-changed-before-apply");
         return new VisibleDialogueRetranslationResult(
             true,
             true,
@@ -260,6 +285,10 @@ internal sealed class TextGimmickHintHandler :
     }
     catch (Exception ex)
     {
+      ToastTranslationDebugLog.Failure(
+          this.GetSurfaceIdentity(),
+          "explicit-retranslate",
+          ex.Message);
       lock (this.stateGate)
       {
         if (requestId == this.activeRequestId)
@@ -397,12 +426,11 @@ internal sealed class TextGimmickHintHandler :
 
     if (this.ShouldUseOverlay())
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[{TextGimmickHintAddonName}] trigger={type} republishing overlay from resolved state");
       this.PublishOverlay(
           resolvedOriginalText,
           translatedText,
-          type.ToString());
+          type.ToString(),
+          emitDiagnostics: false);
       if (!this.ShouldSwapTexts())
       {
         return;
@@ -428,8 +456,11 @@ internal sealed class TextGimmickHintHandler :
       return;
     }
 
-    // PluginRuntimeLog.Debug(
-    //     $"[{TextGimmickHintAddonName}] trigger={type} applying native replacement");
+    ToastTranslationDebugLog.Apply(
+        this.GetSurfaceIdentity(),
+        type.ToString(),
+        "native",
+        replacementText);
     var layoutSnapshot = NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
         addon,
         textNode,
@@ -604,7 +635,18 @@ internal sealed class TextGimmickHintHandler :
           originalText,
           translatedText,
           this.NormalizeForReplacement(translatedText));
+      ToastTranslationDebugLog.Reuse(
+          this.GetSurfaceIdentity(),
+          trigger,
+          "state");
       this.PublishOverlay(originalText, translatedText, trigger);
+      if (!this.ShouldApplyNativeText())
+      {
+        ToastTranslationDebugLog.Skip(
+            this.GetSurfaceIdentity(),
+            trigger,
+            "native-disabled");
+      }
       return true;
     }
 
@@ -618,16 +660,41 @@ internal sealed class TextGimmickHintHandler :
           originalText,
           storedTranslatedText,
           storedReplacementText);
+      ToastTranslationDebugLog.Reuse(
+          this.GetSurfaceIdentity(),
+          trigger,
+          "db");
       this.PublishOverlay(
           originalText,
           storedTranslatedText,
           trigger);
+      if (!this.ShouldApplyNativeText())
+      {
+        ToastTranslationDebugLog.Skip(
+            this.GetSurfaceIdentity(),
+            trigger,
+            "native-disabled");
+      }
       return true;
     }
 
-    if (this.TryQueueTranslation(originalText, out var requestId))
+    if (this.TryQueueTranslation(
+            originalText,
+            out var requestId,
+            out var skipReason))
     {
+      ToastTranslationDebugLog.Request(
+          this.GetSurfaceIdentity(),
+          trigger,
+          originalText,
+          this.ShouldUseOverlay(),
+          this.ShouldApplyNativeText(),
+          this.ShouldSwapTexts());
       this.PublishOverlay(originalText, string.Empty, trigger);
+      ToastTranslationDebugLog.Queued(
+          this.GetSurfaceIdentity(),
+          trigger,
+          requestId);
       Task.Run(() => this.ResolveTranslationAsync(
           originalText,
           requestId,
@@ -635,6 +702,10 @@ internal sealed class TextGimmickHintHandler :
       return true;
     }
 
+    ToastTranslationDebugLog.Skip(
+        this.GetSurfaceIdentity(),
+        trigger,
+        skipReason);
     return false;
   }
 
@@ -660,12 +731,16 @@ internal sealed class TextGimmickHintHandler :
           originalText,
           sourceLanguage,
           targetLang,
-          TranslationSurfaceGroup.Dialogue).ConfigureAwait(false) ?? string.Empty;
+          TranslationSurfaceGroup.Dialogue,
+          originContext: this.GetSurfaceIdentity()).ConfigureAwait(false) ??
+                       string.Empty;
     }
     catch (Exception ex)
     {
-      // PluginRuntimeLog.Debug(
-      //     $"{this.GetType().Name}.ResolveTranslationAsync exception {ex}");
+      ToastTranslationDebugLog.Failure(
+          this.GetSurfaceIdentity(),
+          "async-resolve",
+          ex.Message);
       translatedText = string.Empty;
     }
 
@@ -675,8 +750,12 @@ internal sealed class TextGimmickHintHandler :
             sourceLang,
             targetLang))
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[{TextGimmickHintAddonName}] trigger=async-resolve empty translation for source='{originalText}'");
+      ToastTranslationDebugLog.Failure(
+          this.GetSurfaceIdentity(),
+          "async-resolve",
+          string.IsNullOrWhiteSpace(translatedText)
+              ? "empty-translation"
+              : "unusable-translation");
       lock (this.stateGate)
       {
         if (requestId == this.activeRequestId &&
@@ -692,8 +771,6 @@ internal sealed class TextGimmickHintHandler :
 
     var replacementText = this.NormalizeForReplacement(translatedText);
     var dialogueTranslationEngine = this.GetDialogueTranslationEngineId();
-    // PluginRuntimeLog.Debug(
-    //     $"[{TextGimmickHintAddonName}] trigger=async-resolve translation ready for source='{originalText}'");
     var translatedGimmickHint = new TextGimmickHintMessage(
         originalText,
         sourceLanguage.PersistenceCode,
@@ -734,6 +811,13 @@ internal sealed class TextGimmickHintHandler :
         translatedText,
         dialogueTranslationEngine);
     this.PublishOverlay(originalText, translatedText, "async-resolve");
+    if (!this.ShouldApplyNativeText())
+    {
+      ToastTranslationDebugLog.Skip(
+          this.GetSurfaceIdentity(),
+          "async-resolve",
+          "native-disabled");
+    }
   }
 
   /// <summary>
@@ -853,7 +937,8 @@ internal sealed class TextGimmickHintHandler :
   /// </returns>
   private bool TryQueueTranslation(
       string originalText,
-      out int requestId)
+      out int requestId,
+      out string skipReason)
   {
     lock (this.stateGate)
     {
@@ -864,6 +949,11 @@ internal sealed class TextGimmickHintHandler :
             this.TextMatches(this.lastFailedOriginalText, originalText))
         {
           requestId = this.activeRequestId;
+          skipReason = this.translationInFlight
+              ? "translation-in-flight"
+              : this.TextMatches(this.lastFailedOriginalText, originalText)
+                  ? "last-failed-source"
+                  : "state-already-resolved";
           return false;
         }
       }
@@ -874,6 +964,7 @@ internal sealed class TextGimmickHintHandler :
       this.currentReplacementText = string.Empty;
       this.translationInFlight = true;
       requestId = this.activeRequestId;
+      skipReason = string.Empty;
       return true;
     }
   }
@@ -909,12 +1000,18 @@ internal sealed class TextGimmickHintHandler :
   private void PublishOverlay(
       string originalText,
       string translatedText,
-      string trigger)
+      string trigger,
+      bool emitDiagnostics = true)
   {
     if (!this.ShouldUseOverlay())
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[{TextGimmickHintAddonName}] trigger={trigger} overlay disabled -> clear");
+      if (emitDiagnostics)
+      {
+        ToastTranslationDebugLog.Skip(
+            this.GetSurfaceIdentity(),
+            trigger,
+            "overlay-disabled");
+      }
       this.clearOverlay();
       return;
     }
@@ -922,15 +1019,36 @@ internal sealed class TextGimmickHintHandler :
     var overlayText = this.SelectOverlayText(originalText, translatedText);
     if (string.IsNullOrWhiteSpace(overlayText))
     {
-      // PluginRuntimeLog.Debug(
-      //     $"[{TextGimmickHintAddonName}] trigger={trigger} overlay text unavailable -> clear");
+      if (emitDiagnostics)
+      {
+        ToastTranslationDebugLog.Skip(
+            this.GetSurfaceIdentity(),
+            trigger,
+            "overlay-text-unavailable");
+      }
       this.clearOverlay();
       return;
     }
 
-    // PluginRuntimeLog.Debug(
-    //     $"[{TextGimmickHintAddonName}] trigger={trigger} publish overlay text='{overlayText}'");
+    if (emitDiagnostics)
+    {
+      ToastTranslationDebugLog.Apply(
+          this.GetSurfaceIdentity(),
+          trigger,
+          "overlay",
+          overlayText);
+    }
     this.updateOverlay(string.Empty, overlayText, string.Empty);
+  }
+
+  /// <summary>
+  ///     Builds the compact surface identity used by toast diagnostics for the
+  ///     TextGimmickHint runtime.
+  /// </summary>
+  /// <returns>The current TextGimmickHint surface identity.</returns>
+  private string GetSurfaceIdentity()
+  {
+    return "TextGimmickHint";
   }
 
   /// <summary>

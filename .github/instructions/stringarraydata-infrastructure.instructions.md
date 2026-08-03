@@ -15,6 +15,10 @@ applyTo:
 - Use failure and cooldown behavior so repaint-heavy windows do not retry every frame.
 - Do not introduce a second translation queue or a generic global mutation observer unless the design docs clearly require it.
 - Keep addon lifecycle and native update semantics intact when writing back translated values.
+- For uncertain native array, addon, or node ownership, consult official
+  Dalamud and `FFXIVClientStructs` references first, then use
+  `Exter-N/Dynamis` and `MidoriKami/VanillaPlus` as trusted reverse-engineering
+  and runtime inspection references.
 - Carry `SourceClientLanguage` through structured helpers; persist its
   `PersistenceCode` and pass the contract to `TranslationService`.
 - Reject blank, unknown, generic-provider, and ambiguous Chinese source

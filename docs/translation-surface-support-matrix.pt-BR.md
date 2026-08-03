@@ -28,14 +28,14 @@ flowchart TD
     I --> K[Superfícies de quest e journal]
     I --> L[Toasts]
     I --> M[Janelas do jogo]
-    I --> N[Família opcional de tooltips quando for reativada]
+    I --> N[Detalhes de ação/item e tooltips de hover]
 ```
 
 ## Famílias de modos de tradução
 
 | Família de modos | Modos | Utilizada por |
 | --- | --- | --- |
-| Família quest / native-window | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Superfícies da família Journal e janelas do jogo DB-first |
+| Família native-tooltip | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Superfícies da família Journal, janelas do jogo DB-first, selection dialogs e runtimes dedicados com tooltip estruturada |
 | Família overlay | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, legendas, MiniTalk, CutSceneSelectString e a família de toasts |
 
 ## Superfícies de diálogo e overlay
@@ -47,6 +47,10 @@ flowchart TD
 | TalkSubtitle | `TranslateTalkSubtitle` | Família overlay | Apresentação em overlay sem barra de título quando o modo overlay está ativo | Ativado |
 | MiniTalk | `TranslateMiniTalk` | Família overlay | Superfície nativa pequena; textos mais verbosos ainda exigem native reflow cuidadoso | Ativado |
 | CutSceneSelectString | `TranslateCutSceneSelectString` | Família overlay | A pergunta vira o título e as opções viram o corpo no modo overlay | Ativado |
+| Yes/No dialog | `TranslateYesNoScreen` | Família native-tooltip | Usa tooltips estruturadas do plugin no lugar do overlay e suporta aplicação nativa, tooltip-only e swap | Ativado |
+| SelectOk dialog | `TranslateSelectOk` | Família native-tooltip | Usa tooltips estruturadas do plugin no lugar do overlay e suporta aplicação nativa, tooltip-only e swap | Ativado |
+| SelectString dialog | `TranslateSelectString` | Família native-tooltip | Usa tooltips estruturadas do plugin no lugar do overlay e suporta aplicação nativa, tooltip-only e swap | Ativado |
+| SelectIconString dialog | `TranslateSelectIconString` | Família native-tooltip | Tem toggle e display mode próprios; usa tooltip estruturada body-only | Ativado |
 
 ## Superfícies de quest e journal
 
@@ -55,9 +59,10 @@ flowchart TD
 | Journal | `TranslateJournal` | Família quest / native-window | Superfície de lista de quests | Ativado |
 | JournalDetail | `TranslateJournalDetail` | Família quest / native-window | Layout de corpo denso; o modo nativo exige block reflow explícito | Ativado |
 | ToDoList | `TranslateToDoList` | Família quest / native-window | Rastreador de quest / lista de objetivos | Ativado |
+| ToDo | `TranslateToDo` | Família quest / native-window | Rastreador de objetivos de instância/FATE | Ativado |
 | ScenarioTree | `TranslateScenarioTree` | Família quest / native-window | Rastreador do cenário principal | Ativado |
-| JournalAccept | `TranslateJournalAccept` | Família quest / native-window | Janela de aceite de quest | Ativado |
-| JournalResult | `TranslateJournalResult` | Família quest / native-window | Janela de resultado / conclusão de quest | Ativado |
+| JournalAccept | `TranslateJournalAccept` | Família quest / native-window | Janela de aceite de quest; usa captura do popup em runtime com persistência dedicada quando não há quest id seguro | Ativado |
+| JournalResult | `TranslateJournalResult` | Família quest / native-window | Janela de resultado / conclusão de quest; prioriza lookup canônico de quest e cai para persistência de popup enquanto linhas ausentes são traduzidas em runtime | Ativado |
 | RecommendList | `TranslateRecommendList` | Família quest / native-window | Lista de recomendações | Ativado |
 | AreaMap | `TranslateAreaMap` | Família quest / native-window | Texto de quest dentro da UI de quests relacionada ao mapa | Ativado |
 
@@ -82,15 +87,15 @@ flowchart TD
 | HUD windows | `TranslateHudWindow` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
 | Operation Guide | `TranslateOperationGuideWindow` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Família quest / native-window | Runtime DB-first de janelas do jogo | Ativado |
+| Context Menu | `TranslateContextMenu` | Família native-tooltip | Runtime DB-first dedicado de cadeia de linhas com alvos de hover por linha | Ativado |
+| Tooltip addon | `TranslateTooltipAddon` | Família native-tooltip | Runtime DB-first dedicado para o addon `Tooltip`, separado de `ActionDetail` e `ItemDetail` | Ativado |
+| Action / item detail tooltips | `TranslateTooltips` | Família quest / native-window | Runtime DB-first de tooltip estruturada; o padrão é modo Plugin Tooltip, enquanto gravação nativa é opt-in e limitada a nodes seguros com texto puro | Ativado |
 
 ## Superfícies ocultas ou temporariamente restritas
 
 | Superfície | Toggle de configuração | Modos | Notas | Status da release atual |
 | --- | --- | --- | --- | --- |
-| Action / item detail tooltips | `TranslateTooltips` | Família overlay | A tradução estruturada de tooltips é desativada à força na inicialização enquanto `ActionDetail` / `ItemDetail` continuarem instáveis | Temporariamente desativado para a release |
-| Yes/No dialog | `TranslateYesNoScreen` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
-| SelectString dialog | `TranslateSelectString` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
-| SelectOk dialog | `TranslateSelectOk` | Apenas toggle | Presente no modelo de configuração e na implementação da aba, mas não está exposto atualmente no fluxo ativo da aba Overlay | Implementado, mas oculto na UI atual |
+| Nenhuma atualmente rastreada | N/A | N/A | Atualize esta seção quando uma superfície voltar a ficar intencionalmente oculta ou desativada à força | N/A |
 
 ## Notas operacionais
 

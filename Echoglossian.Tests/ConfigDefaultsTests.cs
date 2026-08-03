@@ -36,6 +36,22 @@ public class ConfigDefaultsTests
     }
 
     /// <summary>
+    ///     Ensures the DB-first ActionDetail / ItemDetail runtime is active by
+    ///     default while using the safe hover path until native payload writes
+    ///     are explicitly selected.
+    /// </summary>
+    [Fact]
+    public void TranslateTooltips_DefaultsToTrue()
+    {
+        var config = new Config();
+
+        Assert.True(config.TranslateTooltips);
+        Assert.Equal(
+            JournalTranslationDisplayMode.TooltipTranslation,
+            config.TooltipTranslationDisplayMode);
+    }
+
+    /// <summary>
     ///     Ensures hover tooltips use a slightly smaller text scale than the
     ///     global overlay default so dense RTL content remains readable.
     /// </summary>
@@ -47,6 +63,22 @@ public class ConfigDefaultsTests
 
         Assert.NotNull(field);
         Assert.Equal(0.85f, Assert.IsType<float>(field!.GetValue(config)));
+    }
+
+    /// <summary>
+    ///     Ensures the Tooltip addon anchored overlay defaults to a smaller
+    ///     text scale than generic hover tooltips so the overlay better
+    ///     matches the native tooltip text size.
+    /// </summary>
+    [Fact]
+    public void TooltipAddonOverlayFontScaleAdjustment_DefaultsToSixtyFivePercent()
+    {
+        var config = new Config();
+        var field = typeof(Config).GetField(
+            nameof(Config.TooltipAddonOverlayFontScaleAdjustment));
+
+        Assert.NotNull(field);
+        Assert.Equal(0.65f, Assert.IsType<float>(field!.GetValue(config)));
     }
 
     /// <summary>

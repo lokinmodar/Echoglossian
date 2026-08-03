@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using global::Echoglossian.NativeUI.AddonHandlers.Common;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
@@ -58,6 +60,24 @@ public partial class Echoglossian
                   this.configuration,
                   this.hoverTooltipManager,
                   TranslationService)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "SystemMenu",
+              Handler: new SystemMenuHandler(
+                  this.configuration,
+                  this.hoverTooltipManager,
+                  TranslationService)));
+    }
+
+    if (this.configuration.TranslateContextMenu)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "ContextMenu",
+              Handler: new ContextMenuHandler(
+                  this.configuration,
+                  this.hoverTooltipManager,
+                  TranslationService,
+                  this.FindContextMenuText,
+                  row => this.InsertContextMenuTextData(row))));
     }
 
     if (this.configuration.TranslateActionMenuWindow)
@@ -237,6 +257,88 @@ public partial class Echoglossian
       PluginRuntimeLog.Debug("Echoglossian", "CutSceneSelectString handler registered");
     }
 
+    if (this.configuration.TranslateYesNoScreen)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "SelectYesno",
+              Handler: new SelectYesNoHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.hoverTooltipManager,
+                  this.FindSelectionDialogText,
+                  selectionDialogText => this.InsertSelectionDialogTextData(
+                      selectionDialogText),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateSelectOk)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "SelectOk",
+              Handler: new SelectOkHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.hoverTooltipManager,
+                  this.FindSelectionDialogText,
+                  selectionDialogText => this.InsertSelectionDialogTextData(
+                      selectionDialogText),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateSelectString)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "SelectString",
+              Handler: new SelectStringHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.hoverTooltipManager,
+                  this.FindAndReturnCutSceneSelectStringMessage,
+                  selectString => Task.Run(
+                      () => InsertCutSceneSelectStringData(selectString)),
+                  this.FindSelectionDialogText,
+                  selectionDialogText => this.InsertSelectionDialogTextData(
+                      selectionDialogText),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateSelectIconString)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "SelectIconString",
+              Handler: new SelectIconStringHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.hoverTooltipManager,
+                  this.FindSelectionDialogText,
+                  selectionDialogText => this.InsertSelectionDialogTextData(
+                      selectionDialogText),
+                  text => this.RemoveDiacritics(
+                      text,
+                      this.SpecialCharsSupportedByGameFont))));
+    }
+
+    if (this.configuration.TranslateTooltipAddon)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "Tooltip",
+              Handler: new TooltipHandler(
+                  this.configuration,
+                  this.hoverTooltipManager,
+                  TranslationService,
+                  this.tooltipAddonOverlay,
+                  this.tooltipAddonAnchoredOverlayRuntime,
+                  this.FindTooltipText,
+                  this.FindTooltipTextCandidates,
+                  row => this.InsertTooltipTextData(row))));
+    }
+
     var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();
 
     var journalHandler = new JournalHandler(questAddonDependencies);
@@ -252,16 +354,60 @@ public partial class Echoglossian
         (AddonName: "JournalDetail",
             Handler: journalDetailHandler));
 
-    // Quest-family stabilization pass:
-    // keep Journal / JournalDetail / ToDoList / ScenarioTree active while each
-    // quest addon is isolated onto the canonical DB-first runtime. The other
-    // quest handlers remain in the repo but are intentionally not registered
-    // for now.
+    if (this.configuration.TranslateJournalAccept)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "JournalAccept",
+              Handler: new JournalAcceptHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateJournalResult)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "JournalResult",
+              Handler: new JournalResultHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateRecommendList)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "RecommendList",
+              Handler: new RecommendListHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateAreaMap)
+    {
+      // MapSurfaceStringArrayHandler owns AreaMap labels; the legacy
+      // AreaMapHandler rescans the same dense text-node tree on every PreDraw.
+      this.registeredAddonHandlers.Add(
+          (AddonName: "AreaMap",
+              Handler: new MapSurfaceStringArrayHandler(
+                  "AreaMap",
+                  questAddonDependencies)));
+      this.registeredAddonHandlers.Add(
+          (AddonName: "_NaviMap",
+              Handler: new MapSurfaceStringArrayHandler(
+                  "_NaviMap",
+                  questAddonDependencies)));
+    }
+
     if (this.configuration.TranslateToDoList)
     {
       this.registeredAddonHandlers.Add(
           (AddonName: "_ToDoList",
               Handler: new ToDoListHandler(questAddonDependencies)));
+    }
+
+    if (this.configuration.TranslateToDo)
+    {
+      this.registeredAddonHandlers.Add(
+          (AddonName: "ToDo",
+              Handler: new ToDoHandler(
+                  this.configuration,
+                  TranslationService,
+                  this.FindToDoText,
+                  row => this.InsertToDoTextData(row),
+                  this.hoverTooltipManager)));
     }
 
     if (this.configuration.TranslateScenarioTree)

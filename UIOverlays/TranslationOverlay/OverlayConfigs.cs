@@ -15,8 +15,15 @@ public partial class Echoglossian
     private readonly TranslationOverlay classChangeToastOverlay = new();
     private readonly TranslationOverlay chatBubbleOverlay = new();
     private readonly TranslationOverlay errorToastOverlay = new();
+    private readonly TranslationOverlay namePlateOverlay = new();
     private readonly TranslationOverlay cutSceneSelectStringOverlay = new();
+    private readonly TranslationOverlay selectYesNoOverlay = new();
+    private readonly TranslationOverlay selectOkOverlay = new();
+    private readonly TranslationOverlay selectStringOverlay = new();
     private readonly TranslationOverlay textGimmickHintOverlay = new();
+    private readonly NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime
+        tooltipAddonAnchoredOverlayRuntime = new();
+    private readonly TranslationOverlay tooltipAddonOverlay = new();
     private readonly TranslationOverlay questToastOverlay = new();
 
     // List of registered overlays
@@ -34,6 +41,20 @@ public partial class Echoglossian
     private unsafe void RegisterOverlays()
     {
         PluginRuntimeLog.Debug("Registering overlays...");
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.namePlateOverlay,
+                () => TranslationWindowConfig.FromConfigForNamePlate(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateNamePlates &&
+                    this.configuration.OverlayOnlyLanguage &&
+                    this.configuration.EnableDistanceAwareOverlays,
+                syncBeforeDraw: () =>
+                    this.namePlateTranslationRuntime.TrySyncDistanceAwareOverlayFrame(
+                        this.namePlateOverlay,
+                        ImGui.GetMainViewport().Size)));
 
         this.registeredOverlays.Add(
             new OverlayRegistration(
@@ -107,7 +128,13 @@ public partial class Echoglossian
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.toastOverlay,
-                () => TranslationWindowConfig.FromConfigForToast(this.configuration),
+                () =>
+                    NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
+                        .UseSupportedNormalToastRuntime(this.configuration)
+                        ? this.toastGuiSupportedToastRuntime
+                            .GetCurrentNormalOverlayConfig()
+                        : TranslationWindowConfig.FromConfigForToast(
+                            this.configuration),
                 isEnabled: () =>
                     NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(
                         this.configuration)
@@ -197,8 +224,7 @@ public partial class Echoglossian
         this.registeredOverlays.Add(
             new OverlayRegistration(
                 this.questToastOverlay,
-                () => TranslationWindowConfig.FromConfigForQuestToast(
-                    this.configuration),
+                () => this.questToastRuntime.GetCurrentOverlayConfig(),
                 isEnabled: () =>
                     this.configuration.TranslateToast &&
                     this.configuration.TranslateQuestToast &&
@@ -212,6 +238,22 @@ public partial class Echoglossian
                 this.chatBubbleOverlay,
                 () => TranslationWindowConfig.FromConfigForChatBubble(
                     this.configuration)));
+
+        this.registeredOverlays.Add(
+            new OverlayRegistration(
+                this.tooltipAddonOverlay,
+                () => TranslationWindowConfig.FromConfigForTooltipAddon(
+                    this.configuration),
+                isEnabled: () =>
+                    this.configuration.TranslateTooltipAddon &&
+                    NativeUI.Helpers.TooltipAddonAnchoredOverlayPresentationPolicy
+                        .UsesAnchoredOverlay(
+                            this.configuration.TooltipAddonTranslationDisplayMode,
+                            this.configuration.OverlayOnlyLanguage),
+                syncBeforeDraw: () =>
+                    this.tooltipAddonAnchoredOverlayRuntime.TrySync(
+                        this.tooltipAddonOverlay,
+                        currentFrame: null)));
 
         PluginRuntimeLog.Debug(
             $"Overlays registered: {this.registeredOverlays.Count} ");

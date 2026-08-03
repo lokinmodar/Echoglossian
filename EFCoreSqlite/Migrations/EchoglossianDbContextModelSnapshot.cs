@@ -15,7 +15,7 @@ namespace Echoglossian.EFCoreSqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
 
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ActionTooltip", b =>
                 {
@@ -375,6 +375,55 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                         .HasDatabaseName("IX_companyactiontexts_lookup");
 
                     b.ToTable("companyactiontexts", (string)null);
+                });
+
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ContextMenuText", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AddonName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("SourceContentHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddonName", "TranslationLang", "TranslationEngine", "GameVersion", "SourceContentHash")
+                        .HasDatabaseName("IX_contextmenutexts_lookup");
+
+                    b.ToTable("contextmenutexts", (string)null);
                 });
 
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.CraftActionText", b =>
@@ -948,6 +997,64 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("questplates", (string)null);
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalBody")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QuestId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("SourceContentHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SurfaceName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedBody")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SurfaceName", "TranslationLang", "TranslationEngine")
+                        .HasDatabaseName("IX_questpopuptexts_lookup");
+
+                    b.ToTable("questpopuptexts", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.LocationName", b =>
                 {
                     b.Property<int>("Id")
@@ -1156,6 +1263,49 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("mountactiontexts", (string)null);
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.NamePlateMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("NamePlateKind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalNamePlateText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("TranslatedNamePlateText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NamePlateKind", "OriginalNamePlateText", "OriginalLang", "TranslationLang", "TranslationEngine")
+                        .HasDatabaseName("IX_nameplatemessages_lookup");
+
+                    b.ToTable("nameplatemessages", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.NpcNames", b =>
                 {
                     b.Property<int>("Id")
@@ -1353,6 +1503,55 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                         .HasDatabaseName("IX_selectstrings_lookup");
 
                     b.ToTable("selectstrings", (string)null);
+                });
+
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.SelectionDialogText", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AddonName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("SourceContentHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddonName", "TranslationLang", "TranslationEngine")
+                        .HasDatabaseName("IX_selectiondialogtexts_lookup");
+
+                    b.ToTable("selectiondialogtexts", (string)null);
                 });
 
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.StringArrayDatas", b =>
@@ -1563,6 +1762,55 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("textgimmickhintmessages", (string)null);
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ToDoText", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AddonName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("SourceContentHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddonName", "TranslationLang", "TranslationEngine", "GameVersion", "SourceContentHash")
+                        .HasDatabaseName("IX_todotexts_lookup");
+
+                    b.ToTable("todotexts", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.ToastMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -1604,6 +1852,55 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                         .HasDatabaseName("IX_toastmessages_lookup");
 
                     b.ToTable("toastmessages", (string)null);
+                });
+
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.TooltipText", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AddonName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("SourceContentHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TranslatedTextsAsText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TranslationEngine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TranslationLang")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddonName", "TranslationLang", "TranslationEngine", "GameVersion", "SourceContentHash")
+                        .HasDatabaseName("IX_tooltiptexts_lookup");
+
+                    b.ToTable("tooltiptexts", (string)null);
                 });
 
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.Trait", b =>

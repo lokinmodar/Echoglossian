@@ -720,7 +720,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           sourceLanguage,
           operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue,
-          translatorResolution) ?? string.Empty;
+          translatorResolution,
+          originContext: "MiniTalk/Text") ?? string.Empty;
     }
     catch (Exception ex)
     {

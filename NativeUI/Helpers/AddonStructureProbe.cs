@@ -21,6 +21,8 @@ internal static unsafe class AddonStructureProbe
   private const int DefaultMaxNodes = 4096;
   private const int WatchSignatureMaxDepth = 16;
   private const int WatchSignatureMaxNodes = 1024;
+  private const int StringArraySampleMaxEntries = 8;
+  private const int StringArraySampleMaxTextLength = 80;
 
   private static readonly ConcurrentDictionary<string, AddonStructureProbeSnapshot>
       LatestSnapshots = new();
@@ -512,13 +514,73 @@ internal static unsafe class AddonStructureProbe
       }
 
       var subscriberIds = ReadSubscriberIds(stringArrayData->SubscribedAddons, stringArrayData->SubscribedAddonsCount);
+      var valueSample = BuildStringArrayValueSample(stringArrayData);
       var subscriptionSummary =
-          $"stringArrayIndex={arrayIndex} size={stringArrayData->Size} subscribers=[{string.Join(", ", subscriberIds)}] subscriberNames=[{ResolveSubscriberNames(subscriberIds, addonNamesById)}]";
+          $"stringArrayIndex={arrayIndex} size={stringArrayData->Size} subscribers=[{string.Join(", ", subscriberIds)}] subscriberNames=[{ResolveSubscriberNames(subscriberIds, addonNamesById)}] sampleValues=[{valueSample}]";
       snapshot.StringArraySubscriptions.Add(subscriptionSummary);
       snapshot.StringArraySubscriptionCount++;
       PluginRuntimeLog.Information(
           pluginLog,
           $"[AddonProbe] addon='{snapshot.AddonName}' index={snapshot.Index} addonId={snapshot.AddonId} {subscriptionSummary}");
+    }
+  }
+
+  /// <summary>
+  /// Builds a bounded, log-safe sample of values from a live
+  /// <see cref="StringArrayData" />.
+  /// </summary>
+  /// <param name="stringArrayData">The native string-array data.</param>
+  /// <returns>A compact sample of indexed string values.</returns>
+  private static string BuildStringArrayValueSample(
+      StringArrayData* stringArrayData)
+  {
+    if (stringArrayData == null ||
+        stringArrayData->StringArray == null ||
+        stringArrayData->Size <= 0)
+    {
+      return string.Empty;
+    }
+
+    var sampleSize = Math.Min(
+        (int)stringArrayData->Size,
+        StringArraySampleMaxEntries);
+    var samples = new List<string>(sampleSize + 1);
+    for (var index = 0; index < sampleSize; index++)
+    {
+      var text = ReadStringArrayValueForProbe(stringArrayData, index);
+      var normalizedText =
+          NormalizeForLog(text, StringArraySampleMaxTextLength) ?? "<empty>";
+      samples.Add($"{index}:'{normalizedText}'");
+    }
+
+    if (stringArrayData->Size > sampleSize)
+    {
+      samples.Add($"...+{stringArrayData->Size - sampleSize}");
+    }
+
+    return string.Join(", ", samples);
+  }
+
+  /// <summary>
+  /// Reads one StringArrayData value for debug probing without throwing out of
+  /// the probe walk.
+  /// </summary>
+  /// <param name="stringArrayData">The native string-array data.</param>
+  /// <param name="index">The value index to read.</param>
+  /// <returns>The extracted text, or an empty string.</returns>
+  private static string ReadStringArrayValueForProbe(
+      StringArrayData* stringArrayData,
+      int index)
+  {
+    try
+    {
+      return stringArrayData->StringArray[index]
+          .AsReadOnlySeStringSpan()
+          .ExtractText();
+    }
+    catch
+    {
+      return string.Empty;
     }
   }
 

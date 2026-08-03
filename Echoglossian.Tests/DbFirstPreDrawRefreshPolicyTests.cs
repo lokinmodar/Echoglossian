@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+
 using Echoglossian.NativeUI.AddonHandlers.Common;
 
 using Xunit;
@@ -66,7 +68,29 @@ public class DbFirstPreDrawRefreshPolicyTests
             hasRuntimeState: true,
             usesHoverTooltips: true,
             hasLastResolvedState: true,
+            requiresHoverTooltipLifetimeRefresh: true,
             hasVisibleAddon: false);
+
+        Assert.False(shouldShortCircuit);
+    }
+
+    /// <summary>
+    /// Ensures custom hover-fallback modes also refuse to short-circuit when
+    /// the owning addon is no longer visible.
+    /// </summary>
+    [Fact]
+    public void ShouldShortCircuit_HiddenCustomHoverFallbackAddon_ReturnsFalse()
+    {
+        var method = typeof(DbFirstPreDrawRefreshPolicy).GetMethod(
+            nameof(DbFirstPreDrawRefreshPolicy.ShouldShortCircuit),
+            BindingFlags.Public | BindingFlags.Static);
+
+        Assert.NotNull(method);
+        Assert.Equal(8, method.GetParameters().Length);
+
+        var shouldShortCircuit = Assert.IsType<bool>(method.Invoke(
+            null,
+            [true, false, false, true, false, false, true, false]));
 
         Assert.False(shouldShortCircuit);
     }

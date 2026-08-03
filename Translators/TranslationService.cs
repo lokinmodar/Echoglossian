@@ -254,8 +254,17 @@ public class TranslationService
       string callerMemberName,
       string callerFilePath)
   {
-    this.debugLog?.Invoke(
-        $"TranslationService: Translate called with text: {text}, sourceLanguage: {sourceLanguage}, targetLanguage: {targetLanguage}, surfaceGroup: {surfaceGroup}");
+    var resolvedOriginContext = ResolveOriginContext(
+        originContext,
+        callerMemberName,
+        callerFilePath);
+    this.LogTranslationRequest(
+        "Translate",
+        text,
+        sourceLanguage,
+        targetLanguage,
+        surfaceGroup,
+        resolvedOriginContext);
 
     var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
     if (!shouldTranslate)
@@ -273,7 +282,9 @@ public class TranslationService
       return sanitizedText;
     }
 
-    if (this.ShouldBypassTranslationDueToMissingLanguageAssets())
+    if (this.ShouldBypassTranslationDueToMissingLanguageAssets(
+            surfaceGroup,
+            resolvedOriginContext))
     {
       return sanitizedText;
     }
@@ -292,10 +303,6 @@ public class TranslationService
             resolvedSourceLanguage.PersistenceCode);
     var normalizedTargetLanguage =
         RuntimeLanguageHelper.NormalizeLanguage(targetLanguage);
-    var resolvedOriginContext = ResolveOriginContext(
-        originContext,
-        callerMemberName,
-        callerFilePath);
     var translatorResolution = this.ResolveTranslator(surfaceGroup);
     if (this.IsKnownFailedTranslation(
             parsedText,
@@ -482,13 +489,15 @@ public class TranslationService
   /// <param name="translatorResolution">
   /// The engine and translator instance captured for the operation.
   /// </param>
+  /// <param name="originContext">Optional explicit origin context.</param>
   /// <returns>A task containing the translated or sanitized source text.</returns>
   internal async Task<string> TranslateAsync(
       string text,
       SourceClientLanguage sourceLanguage,
       string targetLanguage,
       TranslationSurfaceGroup surfaceGroup,
-      TranslatorResolution translatorResolution)
+      TranslatorResolution translatorResolution,
+      string? originContext = null)
   {
     return await this.TranslateAsyncCore(
         text,
@@ -497,7 +506,7 @@ public class TranslationService
         null,
         surfaceGroup,
         sourceLanguage,
-        originContext: null,
+        originContext,
         callerMemberName: string.Empty,
         callerFilePath: string.Empty,
         translatorResolution).ConfigureAwait(false);
@@ -583,6 +592,7 @@ public class TranslationService
   /// <param name="translatorResolution">
   /// The engine and translator instance captured for the operation.
   /// </param>
+  /// <param name="originContext">Optional explicit origin context.</param>
   /// <returns>A task containing the translated or sanitized source text.</returns>
   internal async Task<string> TranslateAsync(
       string text,
@@ -590,7 +600,8 @@ public class TranslationService
       string targetLanguage,
       DialogueTranslationContext? dialogueContext,
       TranslationSurfaceGroup surfaceGroup,
-      TranslatorResolution translatorResolution)
+      TranslatorResolution translatorResolution,
+      string? originContext = null)
   {
     return await this.TranslateAsyncCore(
         text,
@@ -599,7 +610,7 @@ public class TranslationService
         dialogueContext,
         surfaceGroup,
         sourceLanguage,
-        originContext: null,
+        originContext,
         callerMemberName: string.Empty,
         callerFilePath: string.Empty,
         translatorResolution).ConfigureAwait(false);
@@ -705,6 +716,18 @@ public class TranslationService
       string callerFilePath,
       TranslatorResolution? translatorResolution = null)
   {
+    var resolvedOriginContext = ResolveOriginContext(
+        originContext,
+        callerMemberName,
+        callerFilePath);
+    this.LogTranslationRequest(
+        "TranslateAsync",
+        text,
+        sourceLanguage,
+        targetLanguage,
+        surfaceGroup,
+        resolvedOriginContext);
+
     var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
     if (!shouldTranslate)
     {
@@ -721,7 +744,9 @@ public class TranslationService
       return sanitizedText;
     }
 
-    if (this.ShouldBypassTranslationDueToMissingLanguageAssets())
+    if (this.ShouldBypassTranslationDueToMissingLanguageAssets(
+            surfaceGroup,
+            resolvedOriginContext))
     {
       return sanitizedText;
     }
@@ -740,10 +765,6 @@ public class TranslationService
             resolvedSourceLanguage.PersistenceCode);
     var normalizedTargetLanguage =
         RuntimeLanguageHelper.NormalizeLanguage(targetLanguage);
-    var resolvedOriginContext = ResolveOriginContext(
-        originContext,
-        callerMemberName,
-        callerFilePath);
     var resolvedTranslatorResolution = translatorResolution ??
                                        this.ResolveTranslator(surfaceGroup);
     if (this.IsKnownFailedTranslation(
@@ -975,11 +996,15 @@ public class TranslationService
   /// downloaded font assets and should therefore bypass translation work until
   /// those assets are available.
   /// </summary>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">The resolved surface or caller context.</param>
   /// <returns>
   /// <c>true</c> when translation should be bypassed because required language
   /// assets are missing; otherwise, <c>false</c>.
   /// </returns>
-  private bool ShouldBypassTranslationDueToMissingLanguageAssets()
+  private bool ShouldBypassTranslationDueToMissingLanguageAssets(
+      TranslationSurfaceGroup surfaceGroup,
+      string? originContext)
   {
     if (!AssetsManager.HasMissingRequiredAssets(SelectedLanguage))
     {
@@ -987,8 +1012,53 @@ public class TranslationService
     }
 
     this.debugLog?.Invoke(
-        "TranslationService: bypassing translation because the selected language requires missing downloaded font assets.");
+        $"[{GetSurfaceScope(surfaceGroup, originContext)}] TranslationService: bypassing translation because the selected language requires missing downloaded font assets.");
     return true;
+  }
+
+  /// <summary>
+  ///     Writes a translation request diagnostic with the best known surface
+  ///     or element identity rendered as a square-bracketed scope.
+  /// </summary>
+  /// <param name="operation">The translation-service operation name.</param>
+  /// <param name="text">The source text requested for translation.</param>
+  /// <param name="sourceLanguage">The requested provider source code.</param>
+  /// <param name="targetLanguage">The requested target language code.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">The resolved surface or caller context.</param>
+  private void LogTranslationRequest(
+      string operation,
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      TranslationSurfaceGroup surfaceGroup,
+      string? originContext)
+  {
+    if (this.debugLog == null)
+    {
+      return;
+    }
+
+    var message =
+        $"TranslationService: {operation} called with text: {text}, sourceLanguage: {sourceLanguage}, targetLanguage: {targetLanguage}, surfaceGroup: {surfaceGroup}";
+    var surfaceScope = GetSurfaceScope(surfaceGroup, originContext);
+    this.debugLog($"[{surfaceScope}] {message}");
+  }
+
+  /// <summary>
+  ///     Resolves the square-bracketed diagnostic scope for one translation
+  ///     request.
+  /// </summary>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">The resolved surface or caller context.</param>
+  /// <returns>The best available diagnostic scope.</returns>
+  private static string GetSurfaceScope(
+      TranslationSurfaceGroup surfaceGroup,
+      string? originContext)
+  {
+    return string.IsNullOrWhiteSpace(originContext)
+        ? surfaceGroup.ToString()
+        : originContext;
   }
 
   /// <summary>

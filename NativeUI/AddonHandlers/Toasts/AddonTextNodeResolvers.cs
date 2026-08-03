@@ -11,6 +11,8 @@ namespace Echoglossian.NativeUI.AddonHandlers.Toasts;
 /// </summary>
 internal static unsafe class AddonTextNodeResolvers
 {
+  private const int MaxNativeTextNodeTraversalDepth = 64;
+  private const int MaxNativeTextNodeTraversalNodes = 4096;
   private const int WideTextNodeId = 3;
 
   /// <summary>
@@ -65,7 +67,10 @@ internal static unsafe class AddonTextNodeResolvers
   {
     return addon == null
         ? null
-        : ResolveFirstReadableTextNode(addon->UldManager.NodeList, (int)addon->UldManager.NodeListCount);
+        : ResolveFirstReadableTextNode(
+            addon->UldManager.NodeList,
+            (int)addon->UldManager.NodeListCount,
+            []);
   }
 
   /// <summary>
@@ -87,6 +92,7 @@ internal static unsafe class AddonTextNodeResolvers
     }
 
     var seen = new HashSet<nint>();
+    var visitedNodes = new HashSet<nint>();
     var nodeList = addon->UldManager.NodeList;
     var nodeCount = (int)addon->UldManager.NodeListCount;
     for (var i = 0; i < nodeCount; i++)
@@ -110,7 +116,8 @@ internal static unsafe class AddonTextNodeResolvers
 
       var readableTextNode = ResolveFirstReadableTextNode(
           componentNode->Component->UldManager.NodeList,
-          (int)componentNode->Component->UldManager.NodeListCount);
+          (int)componentNode->Component->UldManager.NodeListCount,
+          visitedNodes);
       if (readableTextNode == null)
       {
         continue;
@@ -219,20 +226,33 @@ internal static unsafe class AddonTextNodeResolvers
   /// </summary>
   /// <param name="nodeList">The node list to inspect.</param>
   /// <param name="nodeCount">The number of nodes in the list.</param>
+  /// <param name="visitedNodes">
+  ///     Receives every structural node address already traversed.
+  /// </param>
+  /// <param name="depth">The current traversal depth.</param>
   /// <returns>The first readable text node, or <see langword="null" />.</returns>
   private static AtkTextNode* ResolveFirstReadableTextNode(
       AtkResNode** nodeList,
-      int nodeCount)
+      int nodeCount,
+      HashSet<nint> visitedNodes,
+      int depth = 0)
   {
-    if (nodeList == null || nodeCount <= 0)
+    if (nodeList == null ||
+        nodeCount <= 0 ||
+        depth > MaxNativeTextNodeTraversalDepth ||
+        visitedNodes.Count >= MaxNativeTextNodeTraversalNodes)
     {
       return null;
     }
 
-    for (var i = 0; i < nodeCount; i++)
+    var boundedNodeCount = Math.Min(nodeCount, MaxNativeTextNodeTraversalNodes);
+    for (var i = 0; i < boundedNodeCount; i++)
     {
       var node = nodeList[i];
-      var resolved = ResolveFirstReadableTextNode(node);
+      var resolved = ResolveFirstReadableTextNode(
+          node,
+          visitedNodes,
+          depth + 1);
       if (resolved != null)
       {
         return resolved;
@@ -379,10 +399,19 @@ internal static unsafe class AddonTextNodeResolvers
   ///     be read as non-empty text.
   /// </summary>
   /// <param name="node">The node to inspect.</param>
+  /// <param name="visitedNodes">
+  ///     Receives every structural node address already traversed.
+  /// </param>
+  /// <param name="depth">The current traversal depth.</param>
   /// <returns>The first readable text node, or <see langword="null" />.</returns>
-  private static AtkTextNode* ResolveFirstReadableTextNode(AtkResNode* node)
+  private static AtkTextNode* ResolveFirstReadableTextNode(
+      AtkResNode* node,
+      HashSet<nint> visitedNodes,
+      int depth = 0)
   {
-    if (node == null)
+    if (node == null ||
+        depth > MaxNativeTextNodeTraversalDepth ||
+        !TryVisitNodeAddress(visitedNodes, (nint)node))
     {
       return null;
     }
@@ -403,7 +432,9 @@ internal static unsafe class AddonTextNodeResolvers
       {
         var nested = ResolveFirstReadableTextNode(
             componentNode->Component->UldManager.NodeList,
-            (int)componentNode->Component->UldManager.NodeListCount);
+            (int)componentNode->Component->UldManager.NodeListCount,
+            visitedNodes,
+            depth + 1);
         if (nested != null)
         {
           return nested;
@@ -411,13 +442,19 @@ internal static unsafe class AddonTextNodeResolvers
       }
     }
 
-    var child = ResolveFirstReadableTextNode(node->ChildNode);
+    var child = ResolveFirstReadableTextNode(
+        node->ChildNode,
+        visitedNodes,
+        depth + 1);
     if (child != null)
     {
       return child;
     }
 
-    return ResolveFirstReadableTextNode(node->NextSiblingNode);
+    return ResolveFirstReadableTextNode(
+        node->NextSiblingNode,
+        visitedNodes,
+        depth);
   }
 
   /// <summary>
@@ -494,7 +531,31 @@ internal static unsafe class AddonTextNodeResolvers
       HashSet<nint> visitedNodes,
       nint nodeAddress)
   {
-    return nodeAddress != nint.Zero && visitedNodes.Add(nodeAddress);
+    return TryVisitNodeAddress(
+        visitedNodes,
+        nodeAddress,
+        MaxNativeTextNodeTraversalNodes);
+  }
+
+  /// <summary>
+  ///     Records one structural node address for the current traversal until a
+  ///     bounded walk limit has been reached.
+  /// </summary>
+  /// <param name="visitedNodes">The addresses already traversed.</param>
+  /// <param name="nodeAddress">The structural node address to record.</param>
+  /// <param name="maxVisitedNodes">The maximum number of native nodes to visit.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the node was not visited before and the
+  ///     walk remains within the limit; otherwise <see langword="false" />.
+  /// </returns>
+  internal static bool TryVisitNodeAddress(
+      HashSet<nint> visitedNodes,
+      nint nodeAddress,
+      int maxVisitedNodes)
+  {
+    return nodeAddress != nint.Zero &&
+           visitedNodes.Count < maxVisitedNodes &&
+           visitedNodes.Add(nodeAddress);
   }
 
   /// <summary>

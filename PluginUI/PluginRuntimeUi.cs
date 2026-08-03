@@ -33,6 +33,7 @@ public partial class Echoglossian
     this.TickTraitDetailPrefetch();
     this.TickReferenceTextPrefetch();
     this.TickItemDetailPrefetch();
+    this.TickNamePlatePrefetch();
 
     switch (NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
                 this.configuration.TalkTranslationDisplayMode,
@@ -61,6 +62,9 @@ public partial class Echoglossian
                 this.configuration.OverlayOnlyLanguage) ||
             NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
                 this.configuration.QuestToastTranslationDisplayMode,
+                this.configuration.OverlayOnlyLanguage) ||
+            NativeUI.Helpers.TranslationDisplayModeHelper.UsesOverlayPresentation(
+                this.configuration.NamePlateTranslationDisplayMode,
                 this.configuration.OverlayOnlyLanguage))
     {
       case true when !this.FontLoaded || this.FontLoadFailed:

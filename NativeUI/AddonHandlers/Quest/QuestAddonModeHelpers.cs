@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.Helpers;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
@@ -15,11 +17,17 @@ internal static class QuestAddonModeHelpers
   ///     tooltips.
   /// </summary>
   /// <param name="displayMode">The configured display mode.</param>
+  /// <param name="overlayOnlyLanguage">
+  ///     Whether the selected language must stay overlay-only.
+  /// </param>
   /// <returns><c>true</c> when hover tooltips should be rendered.</returns>
   internal static bool UsesHoverTooltips(
-      JournalTranslationDisplayMode displayMode)
+      JournalTranslationDisplayMode displayMode,
+      bool overlayOnlyLanguage = false)
   {
-    return displayMode != JournalTranslationDisplayMode.NativeUiTranslation;
+    return TranslationDisplayModeHelper.UsesHoverTooltips(
+        displayMode,
+        overlayOnlyLanguage);
   }
 
   /// <summary>
@@ -27,11 +35,17 @@ internal static class QuestAddonModeHelpers
   ///     text into the native addon.
   /// </summary>
   /// <param name="displayMode">The configured display mode.</param>
+  /// <param name="overlayOnlyLanguage">
+  ///     Whether the selected language must stay overlay-only.
+  /// </param>
   /// <returns><c>true</c> when native addon text should be replaced.</returns>
   internal static bool WritesNativeTranslation(
-      JournalTranslationDisplayMode displayMode)
+      JournalTranslationDisplayMode displayMode,
+      bool overlayOnlyLanguage = false)
   {
-    return displayMode != JournalTranslationDisplayMode.TooltipTranslation;
+    return TranslationDisplayModeHelper.WritesNativeTranslation(
+        displayMode,
+        overlayOnlyLanguage);
   }
 
   /// <summary>
@@ -39,13 +53,17 @@ internal static class QuestAddonModeHelpers
   ///     text.
   /// </summary>
   /// <param name="displayMode">The configured display mode.</param>
+  /// <param name="overlayOnlyLanguage">
+  ///     Whether the selected language must stay overlay-only.
+  /// </param>
   /// <returns><c>true</c> when hover tooltips should keep the original text.</returns>
   internal static bool ShowsOriginalTooltips(
-      JournalTranslationDisplayMode displayMode)
+      JournalTranslationDisplayMode displayMode,
+      bool overlayOnlyLanguage = false)
   {
-    return displayMode ==
-           JournalTranslationDisplayMode
-               .NativeUiTranslationWithOriginalTooltips;
+    return TranslationDisplayModeHelper.ShowsOriginalTooltips(
+        displayMode,
+        overlayOnlyLanguage);
   }
 
   /// <summary>
@@ -58,14 +76,19 @@ internal static class QuestAddonModeHelpers
   ///     Whether the translated payload required by the current mode is fully
   ///     ready.
   /// </param>
+  /// <param name="overlayOnlyLanguage">
+  ///     Whether the selected language must stay overlay-only.
+  /// </param>
   /// <returns>
   ///     <c>true</c> when the tooltip may be rendered for the current mode.
   /// </returns>
   internal static bool CanRenderHoverTooltip(
       JournalTranslationDisplayMode displayMode,
-      bool translatedPayloadReady)
+      bool translatedPayloadReady,
+      bool overlayOnlyLanguage = false)
   {
-    return UsesHoverTooltips(displayMode) && translatedPayloadReady;
+    return UsesHoverTooltips(displayMode, overlayOnlyLanguage) &&
+           translatedPayloadReady;
   }
 
   /// <summary>
@@ -76,12 +99,16 @@ internal static class QuestAddonModeHelpers
   /// <param name="removeDiacriticsWhenUsingReplacementQuest">
   ///     Whether the quest-family diacritics toggle is enabled.
   /// </param>
+  /// <param name="overlayOnlyLanguage">
+  ///     Whether the selected language must stay overlay-only.
+  /// </param>
   /// <returns><c>true</c> when normalization should be applied.</returns>
   internal static bool ShouldRemoveDiacritics(
       JournalTranslationDisplayMode displayMode,
-      bool removeDiacriticsWhenUsingReplacementQuest)
+      bool removeDiacriticsWhenUsingReplacementQuest,
+      bool overlayOnlyLanguage = false)
   {
-    return WritesNativeTranslation(displayMode) &&
+    return WritesNativeTranslation(displayMode, overlayOnlyLanguage) &&
            removeDiacriticsWhenUsingReplacementQuest;
   }
 }

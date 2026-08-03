@@ -229,7 +229,8 @@ internal sealed class ToastGuiCaptureRuntime
       var translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code) ?? string.Empty;
+          LangDict[LanguageInt].Code,
+          originContext: $"ToastGuiCapture/{toastType}") ?? string.Empty;
       if (string.IsNullOrWhiteSpace(translatedText))
       {
         return;

@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Text;
+
 namespace Echoglossian.NativeUI.Helpers;
 
 /// <summary>
@@ -76,6 +78,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
         snapshot,
         textNode,
         primaryContainerNode);
+    CaptureDetachedPrimaryContainer(
+        snapshot,
+        primaryContainerNode);
     return snapshot;
   }
 
@@ -134,39 +139,82 @@ internal static unsafe class NativeTextNodeLayoutHelper
   /// <param name="preferredWrapWidth">
   ///     The width that should be preserved for wrapping.
   /// </param>
+  /// <param name="allowWidthGrowth">
+  ///     Whether the text node itself may widen to the measured candidate text
+  ///     width instead of staying clamped to the preserved historical width.
+  /// </param>
+  /// <param name="measureReplacementWidthBeforeApply">
+  ///     Whether the candidate replacement text should be measured before it is
+  ///     applied so width growth can use that draw width instead of relying
+  ///     only on the historical wrap width.
+  /// </param>
+  /// <param name="replacementPayload">
+  ///     The optional rich SeString payload to write after layout flags and
+  ///     wrap width are prepared.
+  /// </param>
   /// <returns>The measured size after the text replacement.</returns>
   public static NativeTextNodeResizeResult ApplyWrappedTextAndMeasure(
       AtkTextNode* textNode,
       string replacementText,
-      ushort preferredWrapWidth)
+      ushort preferredWrapWidth,
+      bool allowWidthGrowth = false,
+      bool measureReplacementWidthBeforeApply = false,
+      byte[]? replacementPayload = null)
   {
     if (textNode == null)
     {
       return default;
     }
 
+    var resolvedWrapWidth = ResolveReplacementWrapWidth(
+        preferredWrapWidth,
+        measureReplacementWidthBeforeApply
+            ? MeasureReplacementCandidateWidth(
+                textNode,
+                replacementText)
+            : (ushort)0,
+        allowWidthGrowth);
+
     textNode->TextFlags |= TextFlags.WordWrap
                            | TextFlags.MultiLine
                            | TextFlags.AutoAdjustNodeSize;
 
-    if (preferredWrapWidth > 0)
+    if (resolvedWrapWidth > 0)
     {
-      textNode->SetWidth(preferredWrapWidth);
+      textNode->SetWidth(resolvedWrapWidth);
     }
 
-    textNode->SetText(replacementText);
+    if (replacementPayload is { Length: > 0 })
+    {
+      textNode->SetText(replacementPayload);
+    }
+    else
+    {
+      textNode->SetText(replacementText);
+    }
+
     textNode->ResizeNodeForCurrentText();
 
-    if (preferredWrapWidth > 0 &&
-        textNode->GetWidth() != preferredWrapWidth)
+    if (resolvedWrapWidth > 0)
     {
-      textNode->SetWidth(preferredWrapWidth);
+      var resolvedPostApplyWidth = ResolvePostApplyTextNodeWidth(
+          resolvedWrapWidth,
+          textNode->GetWidth(),
+          measureReplacementWidthBeforeApply);
+      if (resolvedPostApplyWidth > 0 &&
+          textNode->GetWidth() != resolvedPostApplyWidth)
+      {
+        textNode->SetWidth(resolvedPostApplyWidth);
+      }
     }
 
     TryMeasureTextNode(textNode, out var width, out var height);
-    if (preferredWrapWidth > 0)
+    if (resolvedWrapWidth > 0)
     {
-      width = preferredWrapWidth;
+      width = ResolveReplacementContainerWidth(
+          resolvedWrapWidth,
+          width,
+          measureReplacementWidthBeforeApply);
     }
 
     return new NativeTextNodeResizeResult(width, height);
@@ -192,6 +240,18 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     Whether the helper may grow container widths when the wrapped text width
   ///     exceeds the original layout.
   /// </param>
+  /// <param name="restoreHorizontalCentering">
+  ///     Whether horizontally centered text should be re-centered after width
+  ///     growth changes the immediate wrapper width.
+  /// </param>
+  /// <param name="minimumSecondaryHorizontalPadding">
+  ///     The minimum horizontal padding to preserve inside the secondary
+  ///     container when it grows.
+  /// </param>
+  /// <param name="minimumSecondaryVerticalPadding">
+  ///     The minimum vertical padding to preserve inside the secondary
+  ///     container when it grows.
+  /// </param>
   public static void ResizeFromSnapshot(
       NativeTextNodeLayoutSnapshot snapshot,
       NativeTextNodeResizeResult resizeResult,
@@ -199,7 +259,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
       AtkResNode* secondaryContainerNode = null,
       AtkResNode* anchoredXNode = null,
       bool allowWidthGrowth = false,
-      bool restoreHorizontalCentering = true)
+      bool restoreHorizontalCentering = true,
+      int minimumSecondaryHorizontalPadding = 0,
+      int minimumSecondaryVerticalPadding = 0)
   {
     var childWidth = resizeResult.Width;
     var childHeight = resizeResult.Height;
@@ -235,21 +297,75 @@ internal static unsafe class NativeTextNodeLayoutHelper
       }
     }
 
+    var hasDetachedPrimaryContainer =
+        snapshot.DetachedPrimaryContainerAddress != 0 &&
+        primaryContainerNode != null;
+    if (hasDetachedPrimaryContainer)
+    {
+      if (allowWidthGrowth && snapshot.DetachedPrimaryContainerWidth > 0)
+      {
+        var synchronizedWidth = ResolveSynchronizedContainerExtent(
+            snapshot.DetachedPrimaryContainerWidth,
+            snapshot.SecondaryContainerWidth,
+            snapshot.TextWidth,
+            resizeResult.Width,
+            minimumSecondaryHorizontalPadding);
+        if (synchronizedWidth > 0)
+        {
+          primaryContainerNode->SetWidth(synchronizedWidth);
+          childWidth = synchronizedWidth;
+        }
+      }
+
+      if (snapshot.DetachedPrimaryContainerHeight > 0)
+      {
+        var synchronizedHeight = ResolveSynchronizedContainerExtent(
+            snapshot.DetachedPrimaryContainerHeight,
+            snapshot.SecondaryContainerHeight,
+            snapshot.TextHeight,
+            resizeResult.Height,
+            minimumSecondaryVerticalPadding);
+        if (synchronizedHeight > 0)
+        {
+          primaryContainerNode->SetHeight(synchronizedHeight);
+          childHeight = synchronizedHeight;
+        }
+      }
+    }
+
     if (secondaryContainerNode != null)
     {
       if (allowWidthGrowth && snapshot.SecondaryContainerWidth > 0)
       {
-        var secondaryWidth = Math.Max(
-            snapshot.SecondaryContainerWidth,
-            resizeResult.Width + snapshot.SecondaryHorizontalPadding);
+        var secondaryWidth = hasDetachedPrimaryContainer
+            ? ResolveSynchronizedContainerExtent(
+                snapshot.DetachedPrimaryContainerWidth,
+                snapshot.SecondaryContainerWidth,
+                snapshot.TextWidth,
+                resizeResult.Width,
+                minimumSecondaryHorizontalPadding)
+            : ResolveExpandedContainerExtent(
+                snapshot.SecondaryContainerWidth,
+                snapshot.TextWidth,
+                resizeResult.Width,
+                minimumSecondaryHorizontalPadding);
         secondaryContainerNode->SetWidth((ushort)Math.Min(ushort.MaxValue, secondaryWidth));
       }
 
       if (snapshot.SecondaryContainerHeight > 0)
       {
-        var secondaryHeight = Math.Max(
-            1,
-            resizeResult.Height + snapshot.SecondaryVerticalPadding);
+        var secondaryHeight = hasDetachedPrimaryContainer
+            ? ResolveSynchronizedContainerExtent(
+                snapshot.DetachedPrimaryContainerHeight,
+                snapshot.SecondaryContainerHeight,
+                snapshot.TextHeight,
+                resizeResult.Height,
+                minimumSecondaryVerticalPadding)
+            : ResolveExpandedContainerExtent(
+                snapshot.SecondaryContainerHeight,
+                snapshot.TextHeight,
+                resizeResult.Height,
+                minimumSecondaryVerticalPadding);
         secondaryContainerNode->SetHeight((ushort)Math.Min(ushort.MaxValue, secondaryHeight));
       }
     }
@@ -360,6 +476,29 @@ internal static unsafe class NativeTextNodeLayoutHelper
       }
     }
 
+    if (snapshot.DetachedPrimaryContainerAddress != 0)
+    {
+      var detachedPrimaryContainerNode = (AtkResNode*)snapshot.DetachedPrimaryContainerAddress;
+      if (detachedPrimaryContainerNode != null)
+      {
+        if (snapshot.DetachedPrimaryContainerWidth > 0)
+        {
+          detachedPrimaryContainerNode->SetWidth(snapshot.DetachedPrimaryContainerWidth);
+        }
+
+        if (snapshot.DetachedPrimaryContainerHeight > 0)
+        {
+          detachedPrimaryContainerNode->SetHeight(snapshot.DetachedPrimaryContainerHeight);
+        }
+
+        if (restorePositions)
+        {
+          detachedPrimaryContainerNode->SetXShort(snapshot.DetachedPrimaryContainerOriginalX);
+          detachedPrimaryContainerNode->SetYShort(snapshot.DetachedPrimaryContainerOriginalY);
+        }
+      }
+    }
+
     if (snapshot.SecondaryContainerAddress != 0)
     {
       var secondaryContainerNode = (AtkResNode*)snapshot.SecondaryContainerAddress;
@@ -456,13 +595,40 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     Whether wrapper widths may grow when the current wrap width is
   ///     insufficient.
   /// </param>
+  /// <param name="restoreHorizontalCentering">
+  ///     Whether horizontally centered text should be re-centered after reflow.
+  /// </param>
+  /// <param name="additionalWrapWidth">
+  ///     Additional width to add to the preserved wrap width before applying
+  ///     the translated text.
+  /// </param>
+  /// <param name="minimumSecondaryHorizontalPadding">
+  ///     The minimum horizontal padding to preserve inside the secondary
+  ///     background when it grows.
+  /// </param>
+  /// <param name="minimumSecondaryVerticalPadding">
+  ///     The minimum vertical padding to preserve inside the secondary
+  ///     background when it grows.
+  /// </param>
+  /// <param name="measureReplacementWidthBeforeApply">
+  ///     Whether the candidate replacement text should be measured before
+  ///     native apply so width growth can use its draw width.
+  /// </param>
+  /// <param name="replacementPayload">
+  ///     The optional rich SeString payload to write while keeping the same
+  ///     replacement-text measurement and layout flow.
+  /// </param>
   public static NativeTextNodeLayoutSnapshot? ApplyTextReplacementWithInferredReflow(
       AtkUnitBase* addon,
       AtkTextNode* textNode,
       string replacementText,
       bool allowWidthGrowth = false,
       bool restoreHorizontalCentering = true,
-      ushort additionalWrapWidth = 0)
+      ushort additionalWrapWidth = 0,
+      int minimumSecondaryHorizontalPadding = 0,
+      int minimumSecondaryVerticalPadding = 0,
+      bool measureReplacementWidthBeforeApply = false,
+      byte[]? replacementPayload = null)
   {
     if (textNode == null)
     {
@@ -496,15 +662,331 @@ internal static unsafe class NativeTextNodeLayoutHelper
     var resizeResult = ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
-        preferredWrapWidth);
+        preferredWrapWidth,
+        allowWidthGrowth,
+        measureReplacementWidthBeforeApply,
+        replacementPayload);
     ResizeFromSnapshot(
         snapshot,
         resizeResult,
         containerNode,
         backgroundResNode,
         allowWidthGrowth: allowWidthGrowth,
-        restoreHorizontalCentering: restoreHorizontalCentering);
+        restoreHorizontalCentering: restoreHorizontalCentering,
+        minimumSecondaryHorizontalPadding: minimumSecondaryHorizontalPadding,
+        minimumSecondaryVerticalPadding: minimumSecondaryVerticalPadding);
     return snapshot;
+  }
+
+  /// <summary>
+  ///     Resolves the wrap width that should be applied to one replacement
+  ///     text, preserving the historical width by default and only widening to
+  ///     the candidate draw width when the caller explicitly allows it.
+  /// </summary>
+  /// <param name="preferredWrapWidth">The historical wrap width to preserve.</param>
+  /// <param name="candidateDrawWidth">
+  ///     The measured draw width of the replacement text before it is applied
+  ///     to the node.
+  /// </param>
+  /// <param name="allowWidthGrowth">
+  ///     Whether horizontal growth is allowed for this replacement.
+  /// </param>
+  /// <returns>The wrap width that should be assigned to the node.</returns>
+  public static ushort ResolveReplacementWrapWidth(
+      ushort preferredWrapWidth,
+      ushort candidateDrawWidth,
+      bool allowWidthGrowth)
+  {
+    if (allowWidthGrowth)
+    {
+      return (ushort)Math.Min(
+          ushort.MaxValue,
+          Math.Max(
+              preferredWrapWidth,
+              candidateDrawWidth));
+    }
+
+    if (preferredWrapWidth > 0)
+    {
+      return preferredWrapWidth;
+    }
+
+    return candidateDrawWidth;
+  }
+
+  /// <summary>
+  ///     Resolves the effective container width for a replacement after the
+  ///     live node has been measured.
+  /// </summary>
+  /// <param name="resolvedWrapWidth">
+  ///     The wrap width assigned before applying the replacement.
+  /// </param>
+  /// <param name="measuredWidth">
+  ///     The post-apply measured width reported by the live text node.
+  /// </param>
+  /// <param name="preferMeasuredOverflow">
+  ///     Whether callers should preserve measured overflow when it exceeds the
+  ///     assigned wrap width.
+  /// </param>
+  /// <returns>The width that should drive container resizing.</returns>
+  public static ushort ResolveReplacementContainerWidth(
+      ushort resolvedWrapWidth,
+      ushort measuredWidth,
+      bool preferMeasuredOverflow)
+  {
+    if (resolvedWrapWidth == 0)
+    {
+      return measuredWidth;
+    }
+
+    if (!preferMeasuredOverflow || measuredWidth == 0)
+    {
+      return resolvedWrapWidth;
+    }
+
+    return (ushort)Math.Min(
+        ushort.MaxValue,
+        Math.Max(
+            resolvedWrapWidth,
+            measuredWidth));
+  }
+
+  /// <summary>
+  ///     Resolves the width that should remain on the live text node after the
+  ///     game has reflowed the replacement text.
+  /// </summary>
+  /// <param name="resolvedWrapWidth">
+  ///     The wrap width assigned before applying the replacement.
+  /// </param>
+  /// <param name="postApplyNodeWidth">
+  ///     The width reported by the live node immediately after native reflow.
+  /// </param>
+  /// <param name="preferMeasuredOverflow">
+  ///     Whether callers should preserve native width growth when it exceeds
+  ///     the assigned wrap width.
+  /// </param>
+  /// <returns>The width that should remain on the text node.</returns>
+  public static ushort ResolvePostApplyTextNodeWidth(
+      ushort resolvedWrapWidth,
+      ushort postApplyNodeWidth,
+      bool preferMeasuredOverflow)
+  {
+    return ResolveReplacementContainerWidth(
+        resolvedWrapWidth,
+        postApplyNodeWidth,
+        preferMeasuredOverflow);
+  }
+
+  /// <summary>
+  ///     Resolves the effective measured text extent by combining the live node
+  ///     size with the text draw size when wrapped text still reports a stale
+  ///     one-line node height.
+  /// </summary>
+  /// <param name="liveWidth">The current live node width.</param>
+  /// <param name="liveHeight">The current live node height.</param>
+  /// <param name="drawWidth">The measured text draw width.</param>
+  /// <param name="drawHeight">The measured text draw height.</param>
+  /// <param name="textFlags">The live text flags.</param>
+  /// <returns>The effective measured width and height.</returns>
+  public static NativeTextNodeResizeResult ResolveMeasuredTextExtent(
+      ushort liveWidth,
+      ushort liveHeight,
+      ushort drawWidth,
+      ushort drawHeight,
+      TextFlags textFlags)
+  {
+    var width = liveWidth;
+    var height = liveHeight;
+    var prefersDrawSize =
+        (textFlags & (TextFlags.WordWrap |
+                      TextFlags.MultiLine |
+                      TextFlags.AutoAdjustNodeSize)) != 0;
+
+    if (prefersDrawSize)
+    {
+      width = Math.Max(width, drawWidth);
+      height = Math.Max(height, drawHeight);
+    }
+
+    if (width == 0)
+    {
+      width = drawWidth;
+    }
+
+    if (height == 0)
+    {
+      height = drawHeight;
+    }
+
+    return new NativeTextNodeResizeResult(width, height);
+  }
+
+  /// <summary>
+  ///     Splits candidate measurement text into the explicit lines that should
+  ///     be measured independently when native pre-apply width checks need the
+  ///     widest authored line instead of one concatenated paragraph.
+  /// </summary>
+  /// <param name="replacementText">The candidate replacement text.</param>
+  /// <returns>The normalized explicit lines to measure.</returns>
+  public static IReadOnlyList<string> SplitMeasurementLines(string replacementText)
+  {
+    if (string.IsNullOrEmpty(replacementText))
+    {
+      return [string.Empty];
+    }
+
+    return replacementText
+        .Replace("\r\n", "\n", StringComparison.Ordinal)
+        .Replace('\r', '\n')
+        .Split('\n');
+  }
+
+  /// <summary>
+  ///     Measures the candidate replacement text width using the node's live
+  ///     font and style fields without permanently mutating the visible text or
+  ///     preserving the node's current wrap clamp.
+  /// </summary>
+  /// <param name="textNode">The live text node whose style should be reused.</param>
+  /// <param name="replacementText">The candidate replacement text.</param>
+  /// <returns>The measured candidate width.</returns>
+  private static ushort MeasureReplacementCandidateWidth(
+      AtkTextNode* textNode,
+      string replacementText)
+  {
+    if (textNode == null ||
+        string.IsNullOrEmpty(replacementText))
+    {
+      return 0;
+    }
+
+    var originalTextFlags = textNode->TextFlags;
+    try
+    {
+      textNode->TextFlags &= ~(TextFlags.WordWrap | TextFlags.MultiLine);
+      ushort widestMeasuredWidth = 0;
+      foreach (var measurementLine in SplitMeasurementLines(replacementText))
+      {
+        widestMeasuredWidth = Math.Max(
+            widestMeasuredWidth,
+            MeasureReplacementCandidateLineWidth(
+                textNode,
+                measurementLine));
+      }
+
+      return widestMeasuredWidth;
+    }
+    finally
+    {
+      textNode->TextFlags = originalTextFlags;
+    }
+  }
+
+  /// <summary>
+  ///     Measures one explicit candidate replacement line using the node's live
+  ///     font and style fields without preserving the node's current wrap
+  ///     clamp.
+  /// </summary>
+  /// <param name="textNode">The live text node whose style should be reused.</param>
+  /// <param name="measurementLine">The explicit line to measure.</param>
+  /// <returns>The measured candidate line width.</returns>
+  private static ushort MeasureReplacementCandidateLineWidth(
+      AtkTextNode* textNode,
+      string measurementLine)
+  {
+    ushort measuredWidth = 0;
+    ushort measuredHeight = 0;
+    var utf8Length = Encoding.UTF8.GetByteCount(measurementLine);
+    Span<byte> utf8Bytes =
+        utf8Length <= 511 ? stackalloc byte[512] : new byte[utf8Length + 1];
+    if (utf8Length > 0)
+    {
+      Encoding.UTF8.GetBytes(measurementLine, utf8Bytes);
+    }
+
+    utf8Bytes[utf8Length] = 0;
+    fixed (byte* utf8Pointer = utf8Bytes)
+    {
+      textNode->GetTextDrawSize(
+          &measuredWidth,
+          &measuredHeight,
+          utf8Pointer,
+          0,
+          -1,
+          true);
+    }
+
+    return measuredWidth;
+  }
+
+  /// <summary>
+  ///     Resolves the expanded extent for a background or wrapper node while
+  ///     preserving its historical padding and enforcing an optional minimum
+  ///     cushion for dense tooltip-style surfaces.
+  /// </summary>
+  /// <param name="currentContainerExtent">The current container extent.</param>
+  /// <param name="currentTextExtent">The current text extent.</param>
+  /// <param name="measuredTextExtent">The measured text extent after reflow.</param>
+  /// <param name="minimumPadding">The minimum padding to preserve.</param>
+  /// <returns>The expanded container extent.</returns>
+  public static ushort ResolveExpandedContainerExtent(
+      ushort currentContainerExtent,
+      ushort currentTextExtent,
+      ushort measuredTextExtent,
+      int minimumPadding)
+  {
+    if (currentContainerExtent == 0)
+    {
+      return 0;
+    }
+
+    var preservedPadding = Math.Max(
+        0,
+        currentContainerExtent - currentTextExtent);
+    var effectivePadding = Math.Max(
+        preservedPadding,
+        Math.Max(0, minimumPadding));
+    var resolvedExtent = Math.Max(
+        currentContainerExtent,
+        measuredTextExtent + effectivePadding);
+    return (ushort)Math.Min(ushort.MaxValue, Math.Max(1, resolvedExtent));
+  }
+
+  /// <summary>
+  ///     Resolves one shared extent for detached tooltip-style containers that
+  ///     must stay visually aligned even when the text node does not live under
+  ///     the same native wrapper chain.
+  /// </summary>
+  /// <param name="primaryContainerExtent">The primary container extent.</param>
+  /// <param name="secondaryContainerExtent">The secondary container extent.</param>
+  /// <param name="currentTextExtent">The current text extent.</param>
+  /// <param name="measuredTextExtent">The measured text extent after reflow.</param>
+  /// <param name="minimumSecondaryPadding">
+  ///     The explicit padding that should remain inside the synchronized
+  ///     tooltip-style background.
+  /// </param>
+  /// <returns>The synchronized extent shared by both containers.</returns>
+  public static ushort ResolveSynchronizedContainerExtent(
+      ushort primaryContainerExtent,
+      ushort secondaryContainerExtent,
+      ushort currentTextExtent,
+      ushort measuredTextExtent,
+      int minimumSecondaryPadding)
+  {
+    var baseExtent = Math.Max(
+        primaryContainerExtent,
+        secondaryContainerExtent);
+    var effectiveTextExtent = Math.Max(
+        currentTextExtent,
+        measuredTextExtent);
+    var resolvedExtent = Math.Max(
+        baseExtent,
+        effectiveTextExtent + Math.Max(0, minimumSecondaryPadding));
+    if (resolvedExtent <= 0)
+    {
+      return 0;
+    }
+
+    return (ushort)Math.Min(ushort.MaxValue, Math.Max(1, resolvedExtent));
   }
 
   /// <summary>
@@ -571,19 +1053,29 @@ internal static unsafe class NativeTextNodeLayoutHelper
       return;
     }
 
-    width = textNode->GetWidth();
-    height = textNode->GetHeight();
-
-    if (width > 0 && height > 0)
-    {
-      return;
-    }
-
+    var liveWidth = textNode->GetWidth();
+    var liveHeight = textNode->GetHeight();
     ushort measuredWidth = 0;
     ushort measuredHeight = 0;
-    textNode->GetTextDrawSize(&measuredWidth, &measuredHeight);
-    width = measuredWidth;
-    height = measuredHeight;
+    var shouldMeasureDrawSize =
+        liveWidth == 0 ||
+        liveHeight == 0 ||
+        (textNode->TextFlags & (TextFlags.WordWrap |
+                                TextFlags.MultiLine |
+                                TextFlags.AutoAdjustNodeSize)) != 0;
+    if (shouldMeasureDrawSize)
+    {
+      textNode->GetTextDrawSize(&measuredWidth, &measuredHeight);
+    }
+
+    var resolvedExtent = ResolveMeasuredTextExtent(
+        liveWidth,
+        liveHeight,
+        measuredWidth,
+        measuredHeight,
+        textNode->TextFlags);
+    width = resolvedExtent.Width;
+    height = resolvedExtent.Height;
   }
 
   /// <summary>
@@ -791,6 +1283,37 @@ internal static unsafe class NativeTextNodeLayoutHelper
   }
 
   /// <summary>
+  ///     Captures the primary container separately when it is not part of the
+  ///     text node's parent chain, which is the case for simple tooltip
+  ///     addons where the root background and text node are siblings.
+  /// </summary>
+  /// <param name="snapshot">The snapshot receiving detached container data.</param>
+  /// <param name="primaryContainerNode">The resolved primary container node.</param>
+  private static void CaptureDetachedPrimaryContainer(
+      NativeTextNodeLayoutSnapshot snapshot,
+      AtkResNode* primaryContainerNode)
+  {
+    if (snapshot == null || primaryContainerNode == null)
+    {
+      return;
+    }
+
+    foreach (var ancestorSnapshot in snapshot.AncestorChain)
+    {
+      if (ancestorSnapshot.NodeAddress == (nint)primaryContainerNode)
+      {
+        return;
+      }
+    }
+
+    snapshot.DetachedPrimaryContainerAddress = (nint)primaryContainerNode;
+    snapshot.DetachedPrimaryContainerWidth = primaryContainerNode->GetWidth();
+    snapshot.DetachedPrimaryContainerHeight = primaryContainerNode->GetHeight();
+    snapshot.DetachedPrimaryContainerOriginalX = primaryContainerNode->GetXShort();
+    snapshot.DetachedPrimaryContainerOriginalY = primaryContainerNode->GetYShort();
+  }
+
+  /// <summary>
   ///     Re-centers the text node within its immediate wrapper when the original
   ///     layout was centered and width growth changed the wrapper size.
   /// </summary>
@@ -931,6 +1454,34 @@ internal sealed class NativeTextNodeLayoutSnapshot
   ///     Gets or sets the native address of the secondary container node.
   /// </summary>
   public nint SecondaryContainerAddress { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the native address of one detached primary container
+  ///     node that must be restored separately from the text wrapper chain.
+  /// </summary>
+  public nint DetachedPrimaryContainerAddress { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the detached primary container width.
+  /// </summary>
+  public ushort DetachedPrimaryContainerWidth { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the detached primary container height.
+  /// </summary>
+  public ushort DetachedPrimaryContainerHeight { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original X position of the detached primary
+  ///     container.
+  /// </summary>
+  public short DetachedPrimaryContainerOriginalX { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the original Y position of the detached primary
+  ///     container.
+  /// </summary>
+  public short DetachedPrimaryContainerOriginalY { get; set; }
 
   /// <summary>
   ///     Gets or sets the secondary container width.

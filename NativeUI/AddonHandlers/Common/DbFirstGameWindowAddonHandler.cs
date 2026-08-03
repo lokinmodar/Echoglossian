@@ -129,6 +129,17 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Gets the currently applied runtime state for the visible addon.
+    /// </summary>
+    private protected DbFirstGameWindowRuntimeState? CurrentRuntimeState
+    {
+        get
+        {
+            return this.runtimeState;
+        }
+    }
+
+    /// <summary>
     ///     Initializes a new instance of the
     ///     <see cref="DbFirstGameWindowAddonHandler" /> class.
     /// </summary>
@@ -390,6 +401,26 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Tries to persist one resolved payload pair through an addon-local
+    ///     dedicated store instead of the shared <see cref="GameWindow" />
+    ///     table.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
+    /// <param name="originalPayload">The original-facing payload.</param>
+    /// <param name="translatedPayload">The resolved translated payload.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the derived handler handled
+    ///     persistence; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool TryPersistDedicatedPayload(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload)
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Normalizes one resolved translated payload before it is applied to
     ///     the live addon surface.
     /// </summary>
@@ -566,6 +597,16 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     protected virtual bool ShouldRestoreStaleTranslatedTextNodesOnPayloadChange()
     {
         return false;
+    }
+
+    /// <summary>
+    ///     Performs addon-local follow-up work after stale translated
+    ///     text-node values have been restored before the next live capture.
+    /// </summary>
+    /// <param name="addon">The live addon.</param>
+    private protected virtual void AfterRestoreStaleTranslatedTextNodes(
+        AtkUnitBase* addon)
+    {
     }
 
     /// <summary>
@@ -768,6 +809,21 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Determines whether addon-specific hover targets are required even
+    ///     when the configured mode normally uses native text only.
+    /// </summary>
+    /// <param name="displayMode">The active display mode.</param>
+    /// <returns>
+    ///     <see langword="true" /> when custom fallback hover targets should be
+    ///     registered; otherwise <see langword="false" />.
+    /// </returns>
+    private protected virtual bool RequiresCustomHoverTooltipFallback(
+        JournalTranslationDisplayMode displayMode)
+    {
+        return false;
+    }
+
+    /// <summary>
     ///     Handles setup/refresh/update events.
     /// </summary>
     /// <param name="evt">The lifecycle event.</param>
@@ -836,6 +892,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             this.config.OverlayOnlyLanguage);
         var usesHoverTooltips =
             TranslationDisplayModeHelper.UsesHoverTooltips(displayMode);
+        var requiresCustomHoverTooltipFallback =
+            this.RequiresCustomHoverTooltipFallback(displayMode);
+        var requiresHoverTooltipLifetimeRefresh =
+            usesHoverTooltips || requiresCustomHoverTooltipFallback;
         var shouldContinueAppliedStateRefresh =
             this.ShouldContinueAppliedStateRefreshOnPreDraw();
         var refreshRequested = Interlocked.Exchange(
@@ -905,15 +965,27 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
                 hasRuntimeState: this.runtimeState != null,
                 usesHoverTooltips: usesHoverTooltips,
                 hasLastResolvedState: this.lastResolvedState != null,
-                hasVisibleAddon: !usesHoverTooltips ||
+                requiresHoverTooltipLifetimeRefresh:
+                requiresHoverTooltipLifetimeRefresh,
+                hasVisibleAddon: !requiresHoverTooltipLifetimeRefresh ||
                     this.TryGetVisibleAddon(out _)))
         {
             if (this.runtimeState != null)
             {
-                if (usesHoverTooltips)
+                if (requiresHoverTooltipLifetimeRefresh)
                 {
-                    this.hoverTooltipManager.TouchByPrefix(
-                        this.hoverTooltipKeyPrefix);
+                    if (this.TryGetVisibleAddon(out var hoverVisibleAddon))
+                    {
+                        this.RefreshAppliedHoverTooltips(
+                            hoverVisibleAddon,
+                            this.runtimeState,
+                            displayMode);
+                    }
+                    else
+                    {
+                        this.hoverTooltipManager.TouchByPrefix(
+                            this.hoverTooltipKeyPrefix);
+                    }
                 }
 
                 return;
@@ -1012,6 +1084,30 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
+    ///     Refreshes addon-owned hover presentation for one already-applied
+    ///     runtime state without performing a new DB-first resolve pass.
+    /// </summary>
+    /// <param name="addon">The currently visible addon.</param>
+    /// <param name="runtimeState">The already-applied runtime payload.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    private void RefreshAppliedHoverTooltips(
+        AtkUnitBase* addon,
+        DbFirstGameWindowRuntimeState runtimeState,
+        JournalTranslationDisplayMode displayMode)
+    {
+        if (this.TryRegisterCustomHoverTooltips(
+                addon,
+                runtimeState.OriginalPayload,
+                runtimeState.TranslatedPayload,
+                displayMode))
+        {
+            return;
+        }
+
+        this.hoverTooltipManager.TouchByPrefix(this.hoverTooltipKeyPrefix);
+    }
+
+    /// <summary>
     ///     Requests one fresh pre-draw resolve pass for this handler on the
     ///     next eligible lifecycle update.
     /// </summary>
@@ -1076,6 +1172,7 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             !livePayload.MatchesOriginal(this.runtimeState.OriginalPayload) &&
             this.TryRestoreStaleTranslatedTextNodes(addon, livePayload))
         {
+            this.AfterRestoreStaleTranslatedTextNodes(addon);
             livePayload = this.CaptureLivePayload(addon);
             if (livePayload.IsEmpty)
             {
@@ -1938,9 +2035,10 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
-    ///     Persists one resolved original/translated payload pair as a
-    ///     canonical <see cref="GameWindow" /> row using an explicit
-    ///     class/job discriminator captured by the caller.
+    ///     Persists one resolved original/translated payload pair through an
+    ///     addon-local dedicated store or the canonical
+    ///     <see cref="GameWindow" /> row path using an explicit class/job
+    ///     discriminator captured by the caller.
     /// </summary>
     /// <param name="scope">The immutable operation scope used for persistence.</param>
     /// <param name="originalPayload">The original payload.</param>
@@ -1949,6 +2047,37 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     ///     The class/job identifier to persist with the row.
     /// </param>
     internal void PersistResolvedGameWindowPayload(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        uint? classJobId)
+    {
+        if (this.TryPersistDedicatedPayload(
+                scope,
+                originalPayload,
+                translatedPayload))
+        {
+            return;
+        }
+
+        this.PersistResolvedGenericGameWindowPayload(
+            scope,
+            originalPayload,
+            translatedPayload,
+            classJobId);
+    }
+
+    /// <summary>
+    ///     Persists one resolved original/translated payload pair as a
+    ///     canonical <see cref="GameWindow" /> row.
+    /// </summary>
+    /// <param name="scope">The immutable operation scope used for persistence.</param>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The translated payload.</param>
+    /// <param name="classJobId">
+    ///     The class/job identifier to persist with the row.
+    /// </param>
+    private void PersistResolvedGenericGameWindowPayload(
         TranslationReuseScope scope,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
@@ -2706,7 +2835,8 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             }
         }
 
-        if (TranslationDisplayModeHelper.UsesHoverTooltips(displayMode))
+        if (TranslationDisplayModeHelper.UsesHoverTooltips(displayMode) ||
+            this.RequiresCustomHoverTooltipFallback(displayMode))
         {
             this.RegisterHoverTooltips(
                 addon,

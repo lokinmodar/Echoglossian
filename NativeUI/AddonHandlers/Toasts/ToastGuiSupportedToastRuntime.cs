@@ -117,6 +117,13 @@ internal sealed class ToastGuiSupportedToastRuntime
     }
 
     var requestId = this.BeginNormalRequest(originalText, options);
+    ToastTranslationDebugLog.Request(
+        this.GetCurrentNormalSurfaceIdentity(),
+        "IToastGui.Toast",
+        originalText,
+        this.ShouldUseNormalOverlay(),
+        this.ShouldApplyNativeNormalText(),
+        this.ShouldSwapNormalTexts());
     var storedToast = this.findToastMessage(
         this.BuildLookupMessage(
             NormalToastType,
@@ -127,6 +134,10 @@ internal sealed class ToastGuiSupportedToastRuntime
             originalText,
             NormalToastType))
     {
+      ToastTranslationDebugLog.Reuse(
+          this.GetCurrentNormalSurfaceIdentity(),
+          "IToastGui.Toast",
+          "db");
       this.ApplyResolvedNormalToast(
           ref message,
           originalText,
@@ -136,6 +147,10 @@ internal sealed class ToastGuiSupportedToastRuntime
     }
 
     this.PublishNormalOverlay(originalText, string.Empty, "IToastGui.Toast");
+    ToastTranslationDebugLog.Queued(
+        this.GetCurrentNormalSurfaceIdentity(),
+        "IToastGui.Toast",
+        requestId);
     Task.Run(() => this.ResolveNormalTranslationAsync(
         originalText,
         requestId,
@@ -171,6 +186,13 @@ internal sealed class ToastGuiSupportedToastRuntime
     }
 
     var requestId = this.BeginErrorRequest(originalText);
+    ToastTranslationDebugLog.Request(
+        this.GetErrorSurfaceIdentity(),
+        "IToastGui.ErrorToast",
+        originalText,
+        this.ShouldUseErrorOverlay(),
+        this.ShouldApplyNativeErrorText(),
+        this.ShouldSwapErrorTexts());
     var storedToast = this.findToastMessage(
         this.BuildLookupMessage(
             ErrorToastType,
@@ -181,6 +203,10 @@ internal sealed class ToastGuiSupportedToastRuntime
             originalText,
             ErrorToastType))
     {
+      ToastTranslationDebugLog.Reuse(
+          this.GetErrorSurfaceIdentity(),
+          "IToastGui.ErrorToast",
+          "db");
       this.ApplyResolvedErrorToast(
           ref message,
           originalText,
@@ -190,6 +216,10 @@ internal sealed class ToastGuiSupportedToastRuntime
     }
 
     this.PublishErrorOverlay(originalText, string.Empty, "IToastGui.ErrorToast");
+    ToastTranslationDebugLog.Queued(
+        this.GetErrorSurfaceIdentity(),
+        "IToastGui.ErrorToast",
+        requestId);
     Task.Run(() => this.ResolveErrorTranslationAsync(
         originalText,
         requestId,
@@ -265,6 +295,33 @@ internal sealed class ToastGuiSupportedToastRuntime
   }
 
   /// <summary>
+  ///     Gets the placement bucket reported by the latest active supported
+  ///     normal-toast callback.
+  /// </summary>
+  /// <returns>The latest supported normal-toast placement bucket.</returns>
+  internal ToastPosition GetCurrentNormalToastPosition()
+  {
+    lock (this.stateGate)
+    {
+      return this.currentNormalToastPosition;
+    }
+  }
+
+  /// <summary>
+  ///     Gets the placement-specific overlay configuration for the latest
+  ///     callback-owned normal toast.
+  /// </summary>
+  /// <returns>The placement-specific normal-toast overlay configuration.</returns>
+  internal UIOverlays.TranslationOverlay.TranslationWindowConfig
+      GetCurrentNormalOverlayConfig()
+  {
+    return UIOverlays.TranslationOverlay.TranslationWindowConfig
+        .FromConfigForSupportedNormalToastPlacement(
+            this.config,
+            this.GetCurrentNormalToastPosition());
+  }
+
+  /// <summary>
   ///     Applies one cache-hit normal toast immediately to the current callback.
   /// </summary>
   /// <param name="message">The live callback payload.</param>
@@ -289,6 +346,10 @@ internal sealed class ToastGuiSupportedToastRuntime
 
     if (!this.ShouldApplyNativeNormalText())
     {
+      ToastTranslationDebugLog.Skip(
+          this.GetCurrentNormalSurfaceIdentity(),
+          "IToastGui.Toast",
+          "native-disabled");
       return;
     }
 
@@ -297,6 +358,11 @@ internal sealed class ToastGuiSupportedToastRuntime
       this.clearNormalOverlay();
     }
 
+    ToastTranslationDebugLog.Apply(
+        this.GetCurrentNormalSurfaceIdentity(),
+        "IToastGui.Toast",
+        "native",
+        translatedText);
     message = this.NormalizeForReplacement(translatedText);
   }
 
@@ -325,6 +391,10 @@ internal sealed class ToastGuiSupportedToastRuntime
 
     if (!this.ShouldApplyNativeErrorText())
     {
+      ToastTranslationDebugLog.Skip(
+          this.GetErrorSurfaceIdentity(),
+          "IToastGui.ErrorToast",
+          "native-disabled");
       return;
     }
 
@@ -333,6 +403,11 @@ internal sealed class ToastGuiSupportedToastRuntime
       this.clearErrorOverlay();
     }
 
+    ToastTranslationDebugLog.Apply(
+        this.GetErrorSurfaceIdentity(),
+        "IToastGui.ErrorToast",
+        "native",
+        translatedText);
     message = this.NormalizeForReplacement(translatedText);
   }
 
@@ -354,15 +429,24 @@ internal sealed class ToastGuiSupportedToastRuntime
       translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code) ?? string.Empty;
+          LangDict[LanguageInt].Code,
+          originContext: this.GetCurrentNormalSurfaceIdentity()) ?? string.Empty;
     }
-    catch
+    catch (Exception ex)
     {
+      ToastTranslationDebugLog.Failure(
+          this.GetCurrentNormalSurfaceIdentity(),
+          "async-resolve",
+          ex.Message);
       return;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
+      ToastTranslationDebugLog.Failure(
+          this.GetCurrentNormalSurfaceIdentity(),
+          "async-resolve",
+          "empty-translation");
       return;
     }
 
@@ -409,15 +493,24 @@ internal sealed class ToastGuiSupportedToastRuntime
       translatedText = await this.translationService.TranslateAsync(
           originalText,
           sourceLanguage,
-          LangDict[LanguageInt].Code) ?? string.Empty;
+          LangDict[LanguageInt].Code,
+          originContext: this.GetErrorSurfaceIdentity()) ?? string.Empty;
     }
-    catch
+    catch (Exception ex)
     {
+      ToastTranslationDebugLog.Failure(
+          this.GetErrorSurfaceIdentity(),
+          "async-resolve",
+          ex.Message);
       return;
     }
 
     if (string.IsNullOrWhiteSpace(translatedText))
     {
+      ToastTranslationDebugLog.Failure(
+          this.GetErrorSurfaceIdentity(),
+          "async-resolve",
+          "empty-translation");
       return;
     }
 
@@ -601,7 +694,7 @@ internal sealed class ToastGuiSupportedToastRuntime
   private bool ShouldUseNormalOverlay()
   {
     return TranslationDisplayModeHelper.UsesOverlayPresentation(
-        ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(this.config),
+        this.GetCurrentNormalToastDisplayMode(),
         this.config.OverlayOnlyLanguage);
   }
 
@@ -616,7 +709,7 @@ internal sealed class ToastGuiSupportedToastRuntime
   private bool ShouldApplyNativeNormalText()
   {
     return TranslationDisplayModeHelper.WritesNativeTranslation(
-        ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(this.config),
+        this.GetCurrentNormalToastDisplayMode(),
         this.config.OverlayOnlyLanguage);
   }
 
@@ -631,8 +724,20 @@ internal sealed class ToastGuiSupportedToastRuntime
   private bool ShouldSwapNormalTexts()
   {
     return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
-        ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(this.config),
+        this.GetCurrentNormalToastDisplayMode(),
         this.config.OverlayOnlyLanguage);
+  }
+
+  /// <summary>
+  ///     Gets the effective placement-specific display mode for the latest
+  ///     callback-owned normal toast.
+  /// </summary>
+  /// <returns>The placement-specific display mode.</returns>
+  private JournalTranslationDisplayMode GetCurrentNormalToastDisplayMode()
+  {
+    return ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(
+        this.config,
+        this.GetCurrentNormalToastPosition());
   }
 
   /// <summary>
@@ -692,6 +797,10 @@ internal sealed class ToastGuiSupportedToastRuntime
   {
     if (!this.ShouldUseNormalOverlay())
     {
+      ToastTranslationDebugLog.Skip(
+          this.GetCurrentNormalSurfaceIdentity(),
+          trigger,
+          "overlay-disabled");
       this.clearNormalOverlay();
       return;
     }
@@ -702,10 +811,19 @@ internal sealed class ToastGuiSupportedToastRuntime
         this.ShouldSwapNormalTexts());
     if (string.IsNullOrWhiteSpace(overlayText))
     {
+      ToastTranslationDebugLog.Skip(
+          this.GetCurrentNormalSurfaceIdentity(),
+          trigger,
+          "overlay-text-unavailable");
       this.clearNormalOverlay();
       return;
     }
 
+    ToastTranslationDebugLog.Apply(
+        this.GetCurrentNormalSurfaceIdentity(),
+        trigger,
+        "overlay",
+        overlayText);
     this.updateNormalOverlay(string.Empty, overlayText, string.Empty);
   }
 
@@ -722,6 +840,10 @@ internal sealed class ToastGuiSupportedToastRuntime
   {
     if (!this.ShouldUseErrorOverlay())
     {
+      ToastTranslationDebugLog.Skip(
+          this.GetErrorSurfaceIdentity(),
+          trigger,
+          "overlay-disabled");
       this.clearErrorOverlay();
       return;
     }
@@ -732,10 +854,19 @@ internal sealed class ToastGuiSupportedToastRuntime
         this.ShouldSwapErrorTexts());
     if (string.IsNullOrWhiteSpace(overlayText))
     {
+      ToastTranslationDebugLog.Skip(
+          this.GetErrorSurfaceIdentity(),
+          trigger,
+          "overlay-text-unavailable");
       this.clearErrorOverlay();
       return;
     }
 
+    ToastTranslationDebugLog.Apply(
+        this.GetErrorSurfaceIdentity(),
+        trigger,
+        "overlay",
+        overlayText);
     this.updateErrorOverlay(string.Empty, overlayText, string.Empty);
   }
 
@@ -825,5 +956,24 @@ internal sealed class ToastGuiSupportedToastRuntime
     return this.config.RemoveDiacriticsWhenUsingReplacementTalkBTalk
         ? this.normalizeReplacementText(translatedText)
         : translatedText;
+  }
+
+  /// <summary>
+  ///     Builds the current supported normal-toast surface identity including
+  ///     placement.
+  /// </summary>
+  /// <returns>The current supported normal-toast surface identity.</returns>
+  private string GetCurrentNormalSurfaceIdentity()
+  {
+    return $"ToastGui/Normal/{this.GetCurrentNormalToastPosition()}";
+  }
+
+  /// <summary>
+  ///     Builds the current supported error-toast surface identity.
+  /// </summary>
+  /// <returns>The current supported error-toast surface identity.</returns>
+  private string GetErrorSurfaceIdentity()
+  {
+    return "ToastGui/Error";
   }
 }

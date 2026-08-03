@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.NativeUI.Helpers;
+
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -13,6 +15,19 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class StructuredTooltipTextMatchingTests
 {
+    /// <summary>
+    ///     Ensures detail tooltip native mutation stays disabled until the
+    ///     required FFXIVClientStructs mappings are available.
+    /// </summary>
+    [Fact]
+    public void GetStructuredTooltipDisplayMode_UsesPluginTooltipsOnly()
+    {
+        var result = Echoglossian.GetStructuredTooltipDisplayMode();
+
+        Assert.Equal(JournalTranslationDisplayMode.TooltipTranslation, result);
+        Assert.False(TranslationDisplayModeHelper.WritesNativeTranslation(result));
+    }
+
     /// <summary>
     ///     Ensures structured-tooltip matching collapses wrapped whitespace and
     ///     strips control-format noise before comparing live and canonical text.
@@ -115,18 +130,18 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
-    ///     Ensures native tooltip mutation is blocked when the live node is not
-    ///     plain-text safe.
+    ///     Ensures native tooltip mutation is blocked when the canonical
+    ///     payload cannot cover the visible description.
     /// </summary>
     [Fact]
-    public void CanApplyStructuredTooltipNative_BlocksNonTextOnlyNodes()
+    public void CanApplyStructuredTooltipNative_BlocksTitleOnlyPayloads()
     {
         var result = Echoglossian.CanApplyStructuredTooltipNative(
             descriptionExpected: false,
             nameNodeResolved: true,
-            nameNodeSupportsPlainTextMutation: false,
-            descriptionNodeResolved: false,
-            descriptionNodeSupportsPlainTextMutation: false);
+            nameNodeSupportsPlainTextMutation: true,
+            descriptionNodeResolved: true,
+            descriptionNodeSupportsPlainTextMutation: true);
 
         Assert.False(result);
     }
@@ -149,6 +164,157 @@ public class StructuredTooltipTextMatchingTests
     }
 
     /// <summary>
+    ///     Ensures native UI mode does not mix plugin-overlay text with an
+    ///     unmodified native tooltip when native mutation is unsafe.
+    /// </summary>
+    [Fact]
+    public void ShouldShowStructuredTooltipOverlay_NativeMutationUnavailable_HidesFallback()
+    {
+        var result = Echoglossian.ShouldShowStructuredTooltipOverlay(
+            useOverlayOnly: false,
+            useSwapOverlay: false,
+            nativeApplySucceeded: false);
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures native tooltip mutation is blocked when a resolved live
+    ///     node contains formatting payloads that plain-text writes would lose.
+    /// </summary>
+    [Fact]
+    public void CanApplyStructuredTooltipNative_BlocksNonTextOnlyNodes()
+    {
+        var result = Echoglossian.CanApplyStructuredTooltipNative(
+            descriptionExpected: true,
+            nameNodeResolved: true,
+            nameNodeSupportsPlainTextMutation: false,
+            descriptionNodeResolved: true,
+            descriptionNodeSupportsPlainTextMutation: true);
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures successful native UI mode leaves the plugin tooltip hidden.
+    /// </summary>
+    [Fact]
+    public void ShouldShowStructuredTooltipOverlay_NativeMutationSucceeded_HidesFallback()
+    {
+        var result = Echoglossian.ShouldShowStructuredTooltipOverlay(
+            useOverlayOnly: false,
+            useSwapOverlay: false,
+            nativeApplySucceeded: true);
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures cached tooltip node addresses are reused only while they are
+    ///     still present in the current addon tree.
+    /// </summary>
+    [Fact]
+    public void AreStructuredTooltipNodeAddressesCurrent_AcceptsCurrentAddresses()
+    {
+        var currentNodeAddresses = new HashSet<nint>
+        {
+            (nint)100,
+            (nint)200,
+        };
+
+        var result = Echoglossian.AreStructuredTooltipNodeAddressesCurrent(
+            currentNodeAddresses,
+            nameNodeAddress: (nint)100,
+            descriptionNodeAddress: (nint)200);
+
+        Assert.True(result);
+    }
+
+    /// <summary>
+    ///     Ensures cached tooltip node addresses are discarded when an addon
+    ///     refresh removes one of the previously resolved nodes.
+    /// </summary>
+    [Fact]
+    public void AreStructuredTooltipNodeAddressesCurrent_RejectsStaleAddresses()
+    {
+        var currentNodeAddresses = new HashSet<nint>
+        {
+            (nint)100,
+        };
+
+        var result = Echoglossian.AreStructuredTooltipNodeAddressesCurrent(
+            currentNodeAddresses,
+            nameNodeAddress: (nint)100,
+            descriptionNodeAddress: (nint)200);
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures identical numeric action ids from different source payloads
+    ///     do not reuse the same mutable native-tooltip state.
+    /// </summary>
+    [Fact]
+    public void HasStructuredTooltipContentIdentity_RejectsCollidingIdsWithDifferentSourceHashes()
+    {
+        var result = Echoglossian.HasStructuredTooltipContentIdentity(
+            leftContentId: 3,
+            leftContentKind: 1,
+            leftSourceContentHash: "LIMIT_BREAK",
+            rightContentId: 3,
+            rightContentKind: 1,
+            rightSourceContentHash: "FOLLOW");
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures native-tooltip state remains reusable for the exact same
+    ///     canonical source payload.
+    /// </summary>
+    [Fact]
+    public void HasStructuredTooltipContentIdentity_AcceptsMatchingSourceHashes()
+    {
+        var result = Echoglossian.HasStructuredTooltipContentIdentity(
+            leftContentId: 3,
+            leftContentKind: 1,
+            leftSourceContentHash: "FOLLOW",
+            rightContentId: 3,
+            rightContentKind: 1,
+            rightSourceContentHash: "FOLLOW");
+
+        Assert.True(result);
+    }
+
+    /// <summary>
+    ///     Ensures restoration never replaces text that the game has already
+    ///     repopulated for a different tooltip on a recycled native node.
+    /// </summary>
+    [Fact]
+    public void ShouldRestoreStructuredTooltipNodeText_RejectsRecycledGameText()
+    {
+        var result = Echoglossian.ShouldRestoreStructuredTooltipNodeText(
+            liveText: "Follow",
+            translatedText: "Limit Break");
+
+        Assert.False(result);
+    }
+
+    /// <summary>
+    ///     Ensures restoration remains available while the node still contains
+    ///     the translated text written by this runtime.
+    /// </summary>
+    [Fact]
+    public void ShouldRestoreStructuredTooltipNodeText_AcceptsOwnedTranslatedText()
+    {
+        var result = Echoglossian.ShouldRestoreStructuredTooltipNodeText(
+            liveText: "Quebra de limite",
+            translatedText: "Quebra de limite");
+
+        Assert.True(result);
+    }
+
+    /// <summary>
     ///     Ensures node matching prefers the plain-text-safe candidate when
     ///     two live nodes have the same text-match score.
     /// </summary>
@@ -162,10 +328,14 @@ public class StructuredTooltipTextMatchingTests
                 "Standard Step",
                 Echoglossian.NormalizeStructuredTooltipLookupText(
                     "Standard Step"),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Standard Step"),
                 false),
             new Echoglossian.StructuredTooltipTextNodeCandidate(
                 (nint)2,
                 "Standard Step",
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Standard Step"),
                 Echoglossian.NormalizeStructuredTooltipLookupText(
                     "Standard Step"),
                 true),
@@ -196,6 +366,8 @@ public class StructuredTooltipTextMatchingTests
                 "Enhanced En Avant",
                 Echoglossian.NormalizeStructuredTooltipLookupText(
                     "Enhanced En Avant"),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Enhanced En Avant"),
                 true),
         ];
 
@@ -206,6 +378,76 @@ public class StructuredTooltipTextMatchingTests
             out _);
 
         Assert.False(found);
+    }
+
+    /// <summary>
+    ///     Ensures native description matching uses the evaluated source text
+    ///     when the live node retains SeString formatting that differs from the
+    ///     canonical sheet payload.
+    /// </summary>
+    [Fact]
+    public void TryFindBestStructuredTooltipExactTextNodeCandidate_MatchesEvaluatedSourceText()
+    {
+        const string canonicalDescription =
+            "Increases movement speed. Duration: 10s (20s when not in combat).";
+        IReadOnlyList<Echoglossian.StructuredTooltipTextNodeCandidate> candidates =
+        [
+            new Echoglossian.StructuredTooltipTextNodeCandidate(
+                (nint)1,
+                "Increases movement speed. Duration: <If(Combat,10,20)>s.",
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Increases movement speed. Duration: <If(Combat,10,20)>s."),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                true),
+        ];
+
+        var found = Echoglossian.TryFindBestStructuredTooltipExactTextNodeCandidate(
+            candidates,
+            canonicalDescription,
+            excludedNodeAddress: 0,
+            out var bestCandidate);
+
+        Assert.True(found);
+        Assert.Equal((nint)1, bestCandidate.NodeAddress);
+    }
+
+    /// <summary>
+    ///     Ensures the currently visible exact match wins over a different node
+    ///     that can only be explained by its retained source payload.
+    /// </summary>
+    [Fact]
+    public void TryFindBestStructuredTooltipExactTextNodeCandidate_PrefersVisibleTextOverEvaluatedSource()
+    {
+        const string canonicalDescription = "Delivers an attack with a potency of 300.";
+        IReadOnlyList<Echoglossian.StructuredTooltipTextNodeCandidate> candidates =
+        [
+            new Echoglossian.StructuredTooltipTextNodeCandidate(
+                (nint)1,
+                "Unrelated current node.",
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    "Unrelated current node."),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                true),
+            new Echoglossian.StructuredTooltipTextNodeCandidate(
+                (nint)2,
+                canonicalDescription,
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                Echoglossian.NormalizeStructuredTooltipLookupText(
+                    canonicalDescription),
+                true),
+        ];
+
+        var found = Echoglossian.TryFindBestStructuredTooltipExactTextNodeCandidate(
+            candidates,
+            canonicalDescription,
+            excludedNodeAddress: 0,
+            out var bestCandidate);
+
+        Assert.True(found);
+        Assert.Equal((nint)2, bestCandidate.NodeAddress);
     }
 
     /// <summary>
@@ -240,5 +482,26 @@ public class StructuredTooltipTextMatchingTests
             Echoglossian.ShouldUseItemDetailAgentFallback(
                 hoveredItemId: 0,
                 hoveredActionId: 0));
+    }
+
+    /// <summary>
+    ///     Ensures a live action hover suppresses a lingering direct item
+    ///     hover before ItemDetail can render a stale overlay.
+    /// </summary>
+    [Fact]
+    public void ShouldSuppressItemDetailDuringActionHover_BlocksLingeringItemState()
+    {
+        Assert.True(
+            Echoglossian.ShouldSuppressItemDetailDuringActionHover(
+                hoveredActionId: 20,
+                isActionDetailActive: true));
+        Assert.False(
+            Echoglossian.ShouldSuppressItemDetailDuringActionHover(
+                hoveredActionId: 20,
+                isActionDetailActive: false));
+        Assert.False(
+            Echoglossian.ShouldSuppressItemDetailDuringActionHover(
+                hoveredActionId: 0,
+                isActionDetailActive: true));
     }
 }

@@ -64,7 +64,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalDetailUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.JournalDetailTranslationDisplayMode);
+          this.Config.JournalDetailTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalDetail should write translated text into the
@@ -72,7 +73,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalDetailWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.JournalDetailTranslationDisplayMode);
+          this.Config.JournalDetailTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalDetail hover tooltips should show the original
@@ -80,7 +82,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// </summary>
   private bool JournalDetailHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.JournalDetailTranslationDisplayMode);
+          this.Config.JournalDetailTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether JournalDetail may render a hover tooltip for a payload
@@ -93,7 +96,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   private bool CanRenderJournalDetailHoverTooltip(bool translatedPayloadReady) =>
       QuestAddonModeHelpers.CanRenderHoverTooltip(
           this.Config.JournalDetailTranslationDisplayMode,
-          translatedPayloadReady);
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated JournalDetail text should be normalized before
@@ -102,14 +106,19 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   private bool JournalDetailShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.JournalDetailTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
-  ///     Resolves the only native mutation action allowed for the current
-  ///     JournalDetail display mode and mutation ownership state.
+  ///     Resolves the native mutation action allowed for the current
+  ///     JournalDetail display mode, payload readiness, and mutation ownership
+  ///     state.
   /// </summary>
   /// <param name="writesNativeTranslation">
   ///     Whether the current mode writes translated text into the addon.
+  /// </param>
+  /// <param name="nativeTranslationReady">
+  ///     Whether every visible native text section has a translation.
   /// </param>
   /// <param name="ownsNativeMutation">
   ///     Whether this handler previously wrote the visible native state.
@@ -117,9 +126,10 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <returns>The native mutation action allowed for this refresh.</returns>
   internal static JournalDetailNativeMutationAction ResolveNativeMutationAction(
       bool writesNativeTranslation,
+      bool nativeTranslationReady,
       bool ownsNativeMutation)
   {
-    if (writesNativeTranslation)
+    if (writesNativeTranslation && nativeTranslationReady)
     {
       return JournalDetailNativeMutationAction.ApplyTranslation;
     }
@@ -127,6 +137,37 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
     return ownsNativeMutation
         ? JournalDetailNativeMutationAction.RestoreOriginal
         : JournalDetailNativeMutationAction.None;
+  }
+
+  /// <summary>
+  ///     Determines whether the native summary can be replaced without
+  ///     leaving untranslated supplemental source text in the visible pane.
+  /// </summary>
+  /// <param name="primarySummaryReady">
+  ///     Whether the primary summary has a translation.
+  /// </param>
+  /// <param name="additionalCanonicalSummariesReady">
+  ///     Whether every additional canonical summary has a translation.
+  /// </param>
+  /// <param name="canonicalSummaryCount">
+  ///     The canonical summary rows backing the visible pane.
+  /// </param>
+  /// <param name="hasVisibleAdditionalSummaryText">
+  ///     Whether the pane includes supplemental visible summary text.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when all visible native summary text is covered by a
+  ///     translated canonical or primary payload.
+  /// </returns>
+  internal static bool IsNativeSummaryTranslationReady(
+      bool primarySummaryReady,
+      bool additionalCanonicalSummariesReady,
+      int canonicalSummaryCount,
+      bool hasVisibleAdditionalSummaryText)
+  {
+    return primarySummaryReady &&
+           additionalCanonicalSummariesReady &&
+           (canonicalSummaryCount > 0 || !hasVisibleAdditionalSummaryText);
   }
 
   /// <summary>
@@ -200,6 +241,42 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Tries to resolve the canonical TODO row key for one visible
+  ///     JournalDetail objective, tolerating native UI line wraps inserted by
+  ///     the game while the text node repaints.
+  /// </summary>
+  /// <param name="questCanonicalData">The canonical quest payload.</param>
+  /// <param name="visibleObjectiveText">The visible JournalDetail objective text.</param>
+  /// <param name="objectiveRowKey">The matching canonical TODO row key.</param>
+  /// <returns>True when one canonical TODO row could be resolved.</returns>
+  private static bool TryResolveObjectiveRowKeyByVisibleText(
+      QuestCanonicalData? questCanonicalData,
+      string? visibleObjectiveText,
+      out string objectiveRowKey)
+  {
+    objectiveRowKey = string.Empty;
+    if (questCanonicalData == null ||
+        string.IsNullOrWhiteSpace(visibleObjectiveText))
+    {
+      return false;
+    }
+
+    foreach (var objectiveEntry in questCanonicalData
+                 .EnumerateObjectiveEntriesByVisibleText(visibleObjectiveText))
+    {
+      if (string.IsNullOrWhiteSpace(objectiveEntry.KeyText))
+      {
+        continue;
+      }
+
+      objectiveRowKey = objectiveEntry.KeyText;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
   ///     Builds the current JournalDetail cache scope key so each quest detail
   ///     view can keep its own local runtime state.
   /// </summary>
@@ -212,8 +289,14 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       string questName,
       string questMessage)
   {
-    return questProgressSnapshot?.CacheKey ??
-           $"{questName}|{questMessage}";
+    if (questProgressSnapshot is { } snapshot)
+    {
+      return string.IsNullOrWhiteSpace(snapshot.ContentHash)
+          ? snapshot.CacheKey
+          : $"{snapshot.CacheKey}:{snapshot.ContentHash}";
+    }
+
+    return $"{questName}|{questMessage}";
   }
 
   /// <summary>
@@ -496,35 +579,59 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Determines whether a JournalDetail sibling follows the primary summary
+  ///     component template. Supplemental rows deliberately have zero-width
+  ///     text nodes, so their text width is not a valid discriminator.
+  /// </summary>
+  /// <param name="summaryContainerX">The primary summary container x coordinate.</param>
+  /// <param name="summaryContainerWidth">The primary summary container width.</param>
+  /// <param name="summaryTextX">The primary summary text x coordinate.</param>
+  /// <param name="summaryTextY">The primary summary text y coordinate.</param>
+  /// <param name="candidateContainerX">The candidate summary container x coordinate.</param>
+  /// <param name="candidateContainerWidth">The candidate summary container width.</param>
+  /// <param name="candidateTextX">The candidate summary text x coordinate.</param>
+  /// <param name="candidateTextY">The candidate summary text y coordinate.</param>
+  /// <returns><c>true</c> when the candidate has the supplemental summary layout.</returns>
+  internal static bool IsSupplementalSummaryNodeLayout(
+      float summaryContainerX,
+      float summaryContainerWidth,
+      float summaryTextX,
+      float summaryTextY,
+      float candidateContainerX,
+      float candidateContainerWidth,
+      float candidateTextX,
+      float candidateTextY)
+  {
+    const float layoutTolerance = 1f;
+
+    return Math.Abs(candidateContainerX - summaryContainerX) <= layoutTolerance &&
+           Math.Abs(candidateContainerWidth - summaryContainerWidth) <= layoutTolerance &&
+           Math.Abs(candidateTextX - summaryTextX) <= layoutTolerance &&
+           Math.Abs(candidateTextY - summaryTextY) <= layoutTolerance;
+  }
+
+  /// <summary>
   ///     Collects the visible JournalDetail supplemental summary nodes in their
   ///     current display order.
   /// </summary>
-  /// <param name="journalBox">The live JournalDetail box component.</param>
-  /// <param name="descriptionNode">The live description text node.</param>
-  /// <param name="objectiveNode">The live objective text node.</param>
+  /// <param name="summaryBox">The live primary summary component.</param>
   /// <param name="summaryNode">The live primary summary text node, if any.</param>
   /// <returns>The visible supplemental summary text nodes.</returns>
   private unsafe List<nint> CollectVisibleAdditionalSummaryNodes(
-      AtkComponentBase* journalBox,
-      AtkTextNode* descriptionNode,
-      AtkTextNode* objectiveNode,
+      AtkResNode* summaryBox,
       AtkTextNode* summaryNode)
   {
     List<nint> summaryNodes = [];
-    var descriptionNodeAddress = (nint)descriptionNode;
-    var objectiveNodeAddress = (nint)objectiveNode;
-    var summaryNodeAddress = (nint)summaryNode;
-    var summaryAnchorX = summaryNode != null ? summaryNode->ScreenX : 0f;
-    var summaryAnchorY = summaryNode != null ? summaryNode->ScreenY : 0f;
-    var summaryAnchorWidth = summaryNode != null
-        ? Math.Max(1f, summaryNode->GetWidth())
-        : 0f;
-
-    for (var i = 0; i < journalBox->UldManager.NodeListCount; i++)
+    if (summaryBox == null || summaryNode == null)
     {
-      var node = journalBox->UldManager.NodeList[i];
-      if (node == null ||
-          !node->IsVisible())
+      return summaryNodes;
+    }
+
+    for (var node = summaryBox->NextSiblingNode;
+         node != null;
+         node = node->NextSiblingNode)
+    {
+      if (!node->IsVisible() || node->Type != summaryBox->Type)
       {
         continue;
       }
@@ -545,30 +652,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
 
       var summaryTextNode = summaryTextResNode->GetAsAtkTextNode();
-      if (summaryTextNode == null)
-      {
-        continue;
-      }
-
-      var summaryTextNodeAddress = (nint)summaryTextNode;
-      if (summaryTextNodeAddress == descriptionNodeAddress ||
-          summaryTextNodeAddress == objectiveNodeAddress ||
-          summaryTextNodeAddress == summaryNodeAddress)
-      {
-        continue;
-      }
-
-      var matchesLegacySummaryRange =
-          node->NodeId >= 480700 && node->NodeId <= 481200;
-      var matchesSummaryLayout = summaryNode != null &&
-                                 summaryTextNode->ScreenY >= summaryAnchorY - 4f &&
-                                 summaryTextNode->ScreenX >= summaryAnchorX - 24f &&
-                                 summaryTextNode->ScreenX <= summaryAnchorX + 64f &&
-                                 Math.Abs(
-                                     Math.Max(1f, summaryTextNode->GetWidth()) -
-                                     summaryAnchorWidth) <=
-                                 Math.Max(96f, summaryAnchorWidth * 0.75f);
-      if (!matchesLegacySummaryRange && !matchesSummaryLayout)
+      if (summaryTextNode == null || summaryTextNode == summaryNode ||
+          !IsSupplementalSummaryNodeLayout(
+              summaryBox->X,
+              summaryBox->Width,
+              summaryNode->X,
+              summaryNode->Y,
+              node->X,
+              node->Width,
+              summaryTextNode->X,
+              summaryTextNode->Y))
       {
         continue;
       }
@@ -774,6 +867,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Applies translations to the active Journal detail box.
   /// </summary>
+  /// <param name="journalDetail">The live JournalDetail addon.</param>
   /// <param name="journalBox">The journal detail component.</param>
   /// <param name="foundQuestPlate">The quest plate currently resolved from the DB.</param>
   /// <param name="questProgressSnapshot">The Lumina-backed quest progress snapshot.</param>
@@ -790,6 +884,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
   ///     Whether one or more translated payloads are still pending.
   /// </param>
   private unsafe void TranslateQuestOnJournalBox(
+      AtkUnitBase* journalDetail,
       AtkComponentBase* journalBox,
       QuestPlate? foundQuestPlate,
       QuestProgressSnapshot? questProgressSnapshot,
@@ -818,16 +913,17 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             questProgressSnapshot.Value,
             GetGameVersion())
         : null;
-    var objectiveRowKeys = questCanonicalData == null
-        ? []
-        : questCanonicalData.EnumerateObjectiveRowKeysByText(objectiveText).ToArray();
+    var objectiveRowKey = TryResolveObjectiveRowKeyByVisibleText(
+        questCanonicalData,
+        objectiveText,
+        out var resolvedObjectiveRowKey)
+        ? resolvedObjectiveRowKey
+        : string.Empty;
     this.EnsureJournalDetailScope(journalDetailScopeKey);
 
     var visibleAdditionalSummaryNodes =
         this.CollectVisibleAdditionalSummaryNodes(
-            journalBox,
-            descriptionNode,
-            objectiveNode,
+            summaryContainerNode,
             summaryNode);
 
     if (!this.TryGetJournalDetailOriginalSnapshot(
@@ -947,7 +1043,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         translatedQuestObjectiveReady = true;
       }
       else if (foundQuestPlate.TryGetTranslatedObjectiveText(
-                   objectiveRowKeys.FirstOrDefault(),
+                   objectiveRowKey,
                    originalObjectiveText,
                    out var storedObjectiveText))
       {
@@ -1011,9 +1107,15 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
         originalSummarySections);
     var translatedSummaryDisplayText = BuildQuestPlateSummarySection(
         translatedSummarySections);
-    var translatedQuestSummaryReady =
-        translatedPrimarySummaryReady &&
+    var hasVisibleAdditionalSummaryText = originalAdditionalSummaryTexts.Any(
+        text => !string.IsNullOrWhiteSpace(text));
+    var additionalCanonicalSummariesReady =
         additionalCanonicalSummaryRows.All(summary => summary.IsTranslated);
+    var translatedQuestSummaryReady = IsNativeSummaryTranslationReady(
+        translatedPrimarySummaryReady,
+        additionalCanonicalSummariesReady,
+        canonicalSummaryRows.Count,
+        hasVisibleAdditionalSummaryText);
 
     if (this.JournalDetailShouldRemoveDiacritics)
     {
@@ -1033,7 +1135,23 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
     }
 
-    if (this.JournalDetailWritesNativeTranslation)
+    var nativeTranslationReady =
+        translatedQuestNameReady &&
+        translatedQuestDescriptionReady &&
+        translatedQuestObjectiveReady &&
+        translatedQuestSummaryReady;
+    var nativeMutationAction = ResolveNativeMutationAction(
+        this.JournalDetailWritesNativeTranslation,
+        nativeTranslationReady,
+        this.ownsJournalDetailNativeMutation);
+    if (nativeMutationAction ==
+        JournalDetailNativeMutationAction.RestoreOriginal)
+    {
+      this.RestoreJournalDetailOriginals(journalDetail);
+    }
+
+    if (nativeMutationAction ==
+        JournalDetailNativeMutationAction.ApplyTranslation)
     {
       this.ownsJournalDetailNativeMutation = true;
       questNameNode->SetText(translatedQuestName);
@@ -1094,11 +1212,16 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
       }
     }
 
-    this.RememberJournalDetailCachedText(
-        journalDetailScopeKey,
-        originalQuestName,
-        translatedQuestName);
-    if (!string.IsNullOrWhiteSpace(originalQuestDescription) &&
+    if (translatedQuestNameReady)
+    {
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          originalQuestName,
+          translatedQuestName);
+    }
+
+    if (translatedQuestDescriptionReady &&
+        !string.IsNullOrWhiteSpace(originalQuestDescription) &&
         !string.IsNullOrWhiteSpace(translatedQuestDescription))
     {
       this.RememberJournalDetailCachedText(
@@ -1107,12 +1230,17 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           translatedQuestDescription);
     }
 
-    this.RememberJournalDetailCachedText(
-        journalDetailScopeKey,
-        originalObjectiveText,
-        translatedQuestObjective);
+    if (translatedQuestObjectiveReady)
+    {
+      this.RememberJournalDetailCachedText(
+          journalDetailScopeKey,
+          originalObjectiveText,
+          translatedQuestObjective);
+    }
+
     if (primaryCanonicalSummary == null &&
-        originalSummaryText != string.Empty)
+        originalSummaryText != string.Empty &&
+        translatedPrimarySummaryReady)
     {
       this.RememberJournalDetailCachedText(
           journalDetailScopeKey,
@@ -1283,11 +1411,8 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
 
     var operationSourceLanguage = sourceLanguage.Value;
 
-    var nativeMutationAction = ResolveNativeMutationAction(
-        this.JournalDetailWritesNativeTranslation,
-        this.ownsJournalDetailNativeMutation);
-    if (nativeMutationAction ==
-        JournalDetailNativeMutationAction.RestoreOriginal)
+    if (!this.JournalDetailWritesNativeTranslation &&
+        this.ownsJournalDetailNativeMutation)
     {
       this.RestoreJournalDetailOriginals(journalDetail);
     }
@@ -1455,7 +1580,20 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
             translatedQuestMessage ?? string.Empty);
       }
 
-      if (this.JournalDetailWritesNativeTranslation)
+      var nativeTranslationReady =
+          translatedQuestNameReady && translatedQuestMessageReady;
+      var nativeMutationAction = ResolveNativeMutationAction(
+          this.JournalDetailWritesNativeTranslation,
+          nativeTranslationReady,
+          this.ownsJournalDetailNativeMutation);
+      if (nativeMutationAction ==
+          JournalDetailNativeMutationAction.RestoreOriginal)
+      {
+        this.RestoreJournalDetailOriginals(journalDetail);
+      }
+
+      if (nativeMutationAction ==
+          JournalDetailNativeMutationAction.ApplyTranslation)
       {
         this.ownsJournalDetailNativeMutation = true;
         questNameNode->SetText(translatedQuestName);
@@ -1677,6 +1815,7 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           questProgressSnapshot);
 
       this.TranslateQuestOnJournalBox(
+          journalDetail,
           journalBox,
           foundQuestPlate,
           questProgressSnapshot,
@@ -1690,6 +1829,12 @@ internal sealed class JournalDetailHandler : QuestAddonHandlerBase
           summaryBox,
           summaryNode,
           out hasPendingTranslations);
+
+      if (hasPendingTranslations && questProgressSnapshot.HasValue)
+      {
+        this.RequestAcceptedQuestPrefetch(
+            questProgressSnapshot.Value.QuestId);
+      }
     }
     catch (Exception e)
     {

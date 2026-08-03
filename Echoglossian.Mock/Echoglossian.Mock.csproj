@@ -62,4 +62,8 @@
   <ItemGroup>
     <ProjectReference Include="..\\vendor\\DalaMock\\DalaMock\\DalaMock.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.5" />
+  </ItemGroup>
 </Project>

@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Game.Gui.Toast;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Toasts;
 
 /// <summary>
@@ -110,6 +112,22 @@ internal static class ToastGuiSupportedToastPolicy
       Config config)
   {
     return config.WideTextToastTranslationDisplayMode;
+  }
+
+  /// <summary>
+  ///     Gets the placement-specific display mode used by the callback-owned
+  ///     normal-toast runtime.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <param name="position">The runtime toast placement.</param>
+  /// <returns>The effective display mode for the current placement bucket.</returns>
+  public static JournalTranslationDisplayMode GetNormalToastDisplayMode(
+      Config config,
+      ToastPosition position)
+  {
+    return position == ToastPosition.Bottom
+        ? config.BottomToastTranslationDisplayMode
+        : config.TopToastTranslationDisplayMode;
   }
 
   /// <summary>

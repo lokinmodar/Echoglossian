@@ -130,6 +130,32 @@ public partial class Echoglossian
           this.configuration.OverlayOnlyLanguage);
 
   /// <summary>
+  ///     Gets whether the dedicated ToDo family should use hover tooltips.
+  /// </summary>
+  private bool ToDoUsesHoverTooltips =>
+      QuestModeUsesHoverTooltips(
+          this.configuration.ToDoTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
+
+  /// <summary>
+  ///     Gets whether the dedicated ToDo family should write translated text
+  ///     into the native addon.
+  /// </summary>
+  private bool ToDoWritesNativeTranslation =>
+      QuestModeWritesNativeTranslation(
+          this.configuration.ToDoTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
+
+  /// <summary>
+  ///     Gets whether dedicated ToDo hover tooltips should show the original
+  ///     text.
+  /// </summary>
+  private bool ToDoHoverShowsOriginal =>
+      QuestModeShowsOriginalTooltips(
+          this.configuration.ToDoTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage);
+
+  /// <summary>
   ///     Gets whether the ScenarioTree family should use hover tooltips.
   /// </summary>
   private bool ScenarioTreeUsesHoverTooltips =>

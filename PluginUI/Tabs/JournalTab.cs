@@ -29,6 +29,11 @@ public static class JournalTab
                 ref config.JournalDetailTranslationDisplayMode);
             changed |= DrawQuestFamilySection(
                 config,
+                Resources.TranslateToDoToggle,
+                ref config.TranslateToDo,
+                ref config.ToDoTranslationDisplayMode);
+            changed |= DrawQuestFamilySection(
+                config,
                 Resources.TranslateToDoListToggle,
                 ref config.TranslateToDoList,
                 ref config.ToDoListTranslationDisplayMode);

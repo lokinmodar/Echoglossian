@@ -23,6 +23,12 @@ namespace Echoglossian.UIOverlays.TextPresentation;
 /// <param name="CenterAligned">
 /// Whether the caller normally centers the content in the available region.
 /// </param>
+/// <param name="MaxWidthOverride">
+/// The optional texture wrap-width override for raster-backed text.
+/// </param>
+/// <param name="LineHeightScaleOverride">
+/// The optional texture line-height override for raster-backed text.
+/// </param>
 internal sealed record TextLayoutRequest(
     string Text,
     int LanguageId,
@@ -33,4 +39,6 @@ internal sealed record TextLayoutRequest(
     Vector4 TextColor,
     Vector4 BackgroundColor,
     TranslationOverlaySurfaceId SurfaceId,
-    bool CenterAligned);
+    bool CenterAligned,
+    float? MaxWidthOverride = null,
+    float? LineHeightScaleOverride = null);

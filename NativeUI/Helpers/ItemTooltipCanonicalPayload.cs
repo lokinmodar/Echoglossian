@@ -64,12 +64,15 @@ public sealed class ItemTooltipCanonicalPayload
     public string? TranslatedDescription { get; set; }
 
     /// <summary>
-    ///     Gets whether the payload has every translated field required for UI usage.
+    ///     Gets whether the payload has every translated field required for UI
+    ///     usage and does not retain source text as translated content.
     /// </summary>
     public bool HasCompleteTranslation =>
-        !string.IsNullOrWhiteSpace(this.TranslatedName) &&
-        (string.IsNullOrWhiteSpace(this.Description) ||
-         !string.IsNullOrWhiteSpace(this.TranslatedDescription));
+        StructuredTooltipTranslationValidation.HasCompleteMeaningfulTranslation(
+            this.Name,
+            this.Description,
+            this.TranslatedName,
+            this.TranslatedDescription);
 
     /// <summary>
     ///     Serializes the payload using a stable JSON shape.

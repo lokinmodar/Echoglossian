@@ -715,7 +715,8 @@ public sealed class CutSceneSelectStringHandler :
           chunk,
           sourceLanguage,
           targetLang,
-          surfaceGroup).ConfigureAwait(false);
+          surfaceGroup,
+          originContext: "CutSceneSelectString/Chunk").ConfigureAwait(false);
 
       if (string.IsNullOrWhiteSpace(translatedChunk))
       {
@@ -1156,7 +1157,8 @@ public sealed class CutSceneSelectStringHandler :
         text,
         sourceLanguage,
         LangDict[LanguageInt].Code,
-        surfaceGroup).ConfigureAwait(false);
+        surfaceGroup,
+        originContext: "CutSceneSelectString/Text").ConfigureAwait(false);
 
     return string.IsNullOrWhiteSpace(translatedText) ? text : translatedText;
   }

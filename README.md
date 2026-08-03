@@ -117,6 +117,8 @@ assets should be disclosed as well. Repo-local guidance lives in
 - Critical-Impact projects such as InventoryTools, AllaganMarket, CriticalCommonLib, LuminaSupplemental, DalaMock, and AllaganLib for practical Lumina/data-access patterns
 - Era-FFXIV QuestShare.Plugin for quest progression and quest-sheet resolution patterns
 - HaselDebug for addon inspection and probe patterns
+- Exter-N Dynamis for Dalamud reverse-engineering, debugging, and runtime-inspection tooling
+- MidoriKami VanillaPlus for native UI and game-behavior modification references
 - DelvUI and DelvCD for tooltip/hover UX patterns
 - ChatBubbles for bubble-style addon handling references
 

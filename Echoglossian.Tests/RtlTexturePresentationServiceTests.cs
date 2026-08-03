@@ -553,6 +553,41 @@ public class RtlTexturePresentationServiceTests
     }
 
     /// <summary>
+    /// Ensures per-request Tooltip addon overrides replace the shared texture
+    /// line-height and wrap-width defaults.
+    /// </summary>
+    [Fact]
+    public void TryRender_UsesPerRequestTooltipAddonOverrides()
+    {
+        TextureCreationRequest? capturedRequest = null;
+        using var service = new RtlTexturePresentationService(
+            new Config
+            {
+                TexturePresentationLineHeightScale = 1.1f,
+            },
+            (request, _) =>
+            {
+                capturedRequest = request;
+                return Task.FromResult<IDalamudTextureWrap>(
+                    new FakeTextureWrap(width: 220, height: 48));
+            });
+        var request = CreateRequest(2, "ar", "tooltip addon")
+            with
+            {
+                SurfaceId = TranslationOverlaySurfaceId.TooltipAddon,
+                MaxWidthOverride = 512f,
+                LineHeightScaleOverride = 0.94f,
+            };
+
+        var renderedBlock = WaitForRenderedBlock(service, request);
+        renderedBlock.Texture!.Dispose();
+
+        var actualRequest = Assert.IsType<TextureCreationRequest>(capturedRequest);
+        Assert.Equal((int?)512, actualRequest.MaxWidth);
+        Assert.Equal(0.94f, actualRequest.LineHeightScale);
+    }
+
+    /// <summary>
     /// Creates a texture layout request for one language and sample text.
     /// </summary>
     /// <param name="languageId">The target language identifier.</param>

@@ -300,7 +300,11 @@ public static class GenericAddonHandlerHelper
             TranslationSurfaceGroup.Default,
             translatorResolution.Value)
         : await service.TranslateAsync(chunk, sourceLanguage, targetLang);
-    if (string.IsNullOrWhiteSpace(translated))
+    if (string.IsNullOrWhiteSpace(translated) ||
+        string.Equals(
+            translated,
+            chunk,
+            StringComparison.Ordinal))
     {
       return;
     }

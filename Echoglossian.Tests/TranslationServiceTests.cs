@@ -3,11 +3,19 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Game;
+using Dalamud.Game.Text.Sanitizer;
+using Dalamud.Plugin.Services;
+
 using Echoglossian.Translators;
+using Echoglossian.LanguagesHandling;
+using System.Globalization;
 
 using Xunit;
 
 using Echoglossian.Properties;
+using Serilog;
+using Serilog.Events;
 
 namespace Echoglossian.Tests;
 
@@ -16,6 +24,168 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class TranslationServiceTests
 {
+    /// <summary>
+    ///     Ensures translation-service request diagnostics include the
+    ///     surface or element context as a square-bracketed prefix.
+    /// </summary>
+    [Fact]
+    public void Translate_DebugLog_IncludesOriginContextAsSurfaceScope()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var service = new TranslationService(
+            new Config
+            {
+                ChosenTransEngine = (int)Echoglossian.TransEngines.All,
+            },
+            pluginLog,
+            new Sanitizer(ClientLanguage.English));
+
+        _ = service.Translate(
+            "Steel Fangs",
+            new SourceClientLanguage("en", "en"),
+            "pt-BR",
+            originContext: "ActionTooltip/Name");
+
+        Assert.Contains(
+            pluginLog.DebugMessages,
+            message =>
+                message.StartsWith(
+                    "[ActionTooltip/Name] TranslationService: Translate called",
+                    StringComparison.Ordinal) &&
+                message.Contains("text: Steel Fangs", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures async translation-service request diagnostics include the
+    ///     surface or element context as a square-bracketed prefix.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TranslateAsync_DebugLog_IncludesOriginContextAsSurfaceScope()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var service = new TranslationService(
+            new Config
+            {
+                ChosenTransEngine = (int)Echoglossian.TransEngines.All,
+            },
+            pluginLog,
+            new Sanitizer(ClientLanguage.English));
+
+        _ = await service.TranslateAsync(
+            "Quest accepted.",
+            new SourceClientLanguage("en", "en"),
+            "pt-BR",
+            originContext: "QuestToast/Centre");
+
+        Assert.Contains(
+            pluginLog.DebugMessages,
+            message =>
+                message.StartsWith(
+                    "[QuestToast/Centre] TranslationService: TranslateAsync called",
+                    StringComparison.Ordinal) &&
+                message.Contains("text: Quest accepted.", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures captured translator-resolution requests still include a
+    ///     square-bracketed surface indicator when no explicit origin context is
+    ///     supplied by the caller.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TranslateAsync_CapturedTranslatorResolutionWithoutOriginContext_UsesSurfaceGroupScope()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var service = new TranslationService(
+            new Config
+            {
+                ChosenTransEngine = (int)Echoglossian.TransEngines.All,
+            },
+            pluginLog,
+            new Sanitizer(ClientLanguage.English));
+        var translatorResolution = service.CaptureTranslatorResolution(
+            (int)Echoglossian.TransEngines.All,
+            TranslationSurfaceGroup.Dialogue);
+
+        _ = await service.TranslateAsync(
+            "Talk line.",
+            new SourceClientLanguage("en", "en"),
+            "pt-BR",
+            TranslationSurfaceGroup.Dialogue,
+            translatorResolution);
+
+        Assert.Contains(
+            pluginLog.DebugMessages,
+            message =>
+                message.StartsWith(
+                    "[Dialogue] TranslationService: TranslateAsync called",
+                    StringComparison.Ordinal) &&
+                message.Contains("text: Talk line.", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures non-request translation-service diagnostics also include a
+    ///     square-bracketed surface indicator.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TranslateAsync_MissingLanguageAssetsBypass_UsesSurfaceScope()
+    {
+        var previousSelectedLanguage = Echoglossian.SelectedLanguage;
+        var previousAssetFiles = AssetsManager.AssetFiles;
+        var previousAssetsPath = AssetsManager.AssetsPath;
+        var tempDirectory = Directory.CreateTempSubdirectory();
+
+        try
+        {
+            Echoglossian.SelectedLanguage = new LanguageInfo(
+                "ja",
+                "Japanese",
+                "NotoSansCJKjp-Regular.otf",
+                string.Empty,
+                []);
+            AssetsManager.AssetFiles =
+            [
+                "NotoSansCJKjp-Regular.otf",
+            ];
+            AssetsManager.AssetsPath = tempDirectory.FullName;
+
+            var pluginLog = new CapturingPluginLog();
+            var service = new TranslationService(
+                new Config
+                {
+                    ChosenTransEngine = (int)Echoglossian.TransEngines.All,
+                },
+                pluginLog,
+                new Sanitizer(ClientLanguage.English));
+            var translatorResolution = service.CaptureTranslatorResolution(
+                (int)Echoglossian.TransEngines.All,
+                TranslationSurfaceGroup.Dialogue);
+
+            _ = await service.TranslateAsync(
+                "Missing assets line.",
+                new SourceClientLanguage("en", "en"),
+                "ja",
+                TranslationSurfaceGroup.Dialogue,
+                translatorResolution);
+
+            Assert.Contains(
+                pluginLog.DebugMessages,
+                message =>
+                    message.StartsWith(
+                        "[Dialogue] TranslationService: bypassing translation",
+                        StringComparison.Ordinal));
+        }
+        finally
+        {
+            Echoglossian.SelectedLanguage = previousSelectedLanguage;
+            AssetsManager.AssetFiles = previousAssetFiles;
+            AssetsManager.AssetsPath = previousAssetsPath;
+            tempDirectory.Delete(recursive: true);
+        }
+    }
+
     /// <summary>
     ///     Ensures distinct simplified and traditional Chinese client sources
     ///     retain separate failure identities while sharing the provider code.
@@ -919,6 +1089,116 @@ public class TranslationServiceTests
             this.LastDialogueContext = dialogueContext;
             this.contextAwareSourceLanguages.Add(sourceLanguage);
             return Task.FromResult(this.AsyncResult);
+        }
+    }
+
+    /// <summary>
+    ///     Captures debug messages written through the Dalamud plugin logger.
+    /// </summary>
+    private sealed class CapturingPluginLog : IPluginLog
+    {
+        private readonly List<string> debugMessages = [];
+
+        /// <summary>
+        ///     Gets captured debug messages.
+        /// </summary>
+        public IReadOnlyList<string> DebugMessages => this.debugMessages;
+
+        /// <summary>
+        ///     Gets the inert Serilog logger required by the interface.
+        /// </summary>
+        public ILogger Logger { get; } = new LoggerConfiguration().CreateLogger();
+
+        /// <summary>
+        ///     Gets or sets the minimum log level accepted by this logger.
+        /// </summary>
+        public LogEventLevel MinimumLogLevel { get; set; } = LogEventLevel.Verbose;
+
+        /// <inheritdoc/>
+        public void Fatal(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Fatal(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Error(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Error(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Warning(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Warning(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Information(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Information(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Info(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Info(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Debug(string messageTemplate, params object[] values)
+        {
+            this.debugMessages.Add(
+                values.Length == 0
+                    ? messageTemplate
+                    : string.Format(
+                        CultureInfo.InvariantCulture,
+                        messageTemplate,
+                        values));
+        }
+
+        /// <inheritdoc/>
+        public void Debug(Exception? exception, string messageTemplate, params object[] values)
+        {
+            this.Debug(messageTemplate, values);
+        }
+
+        /// <inheritdoc/>
+        public void Verbose(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Verbose(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Write(LogEventLevel level, Exception? exception, string messageTemplate, params object[] values)
+        {
+            if (level == LogEventLevel.Debug)
+            {
+                this.Debug(messageTemplate, values);
+            }
         }
     }
 }

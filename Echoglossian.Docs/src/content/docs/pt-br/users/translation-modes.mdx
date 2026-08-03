@@ -30,6 +30,12 @@ O modo swap mantém o texto traduzido na UI native e usa o overlay para mostrar 
 
 Isso é útil quando você quer a UI traduzida, mas ainda precisa da redação original por perto como referência.
 
+Algumas famílias usam uma versão equivalente baseada em tooltip ou overlay ancorada em vez de uma overlay window solta:
+
+- diálogos de seleção usam tooltips estruturadas do plugin
+- o addon `Tooltip` dedicado usa uma overlay ancorada no tooltip visível do jogo
+- NamePlates preservam a apresentação native para idiomas padrão e só trocam para o backend distance-aware overlay quando o idioma atual é overlay-only
+
 ## Como escolher
 
 Comece com o modo overlay se:
@@ -39,3 +45,13 @@ Comece com o modo overlay se:
 - você está trabalhando com uma superfície densa, como journals ou diálogos longos.
 
 Passe para o modo native ou swap apenas depois que a superfície de destino se comportar bem o bastante para a sua configuração.
+
+## Idiomas overlay-only
+
+Alguns idiomas precisam permanecer overlay-only porque o caminho de fonte native do jogo não é seguro para a cobertura de glifos ou para as exigências de shaping.
+
+Quando essa política está ativa:
+
+- modos de substituição native são normalizados para apresentação overlay ou tooltip
+- a UI native do jogo permanece somente leitura para aquela superfície
+- NamePlates usam o backend distance-aware overlay em vez de substituição native

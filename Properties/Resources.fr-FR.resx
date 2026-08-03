@@ -1,0 +1,660 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Principal</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Paramètres de conversation</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Paramètres de Battle Talk</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Paramètres toast</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Paramètres de journal</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Paramètres des info-bulles</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Autres paramètres</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Paramètres du moteur de traduction</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>À propos d’Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Configuration échoglossienne</value>
+    <comment>Config Window title bar</comment>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>S’il vous plaît soutenez-nous soit en contribuant au développement du projet, en soumettant des problèmes ou en nous aidant avec un café.</value>
+  </data>
+  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>Ce plugin vise à résoudre l’un des plus gros problèmes pour les publics qui ne parlent ni anglais, ni allemand, ni Français ni japonais : comprendre les dialogues et autres éléments de l’interface utilisateur du jeu.</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>Pour l’instant, nous ne faisons que des traductions automatiques via l’API Google Translate, mais à l’avenir, nous avons l’intention de prendre en charge d’autres systèmes de traduction ML. Nous avons même des idées ciblant les traductions participatives, organisées par la communauté.</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>À propos d’Echoglossian :</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Attention!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Activer la traduction de texte de jeu en temps réel</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Couleur de police de superposition :</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Ouvre la fenêtre de configuration Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Ajustez les options liées à la superposition de traduction :</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>La langue n’a pas pu être identifiée avec un degré de certitude acceptable</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>La langue sélectionnée n’est pas prise en charge par le backend de traduction actuellement disponible</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>La langue sélectionnée n’est prise en charge qu’à l’aide des superpositions de plugins en raison des limitations du jeu natif Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Dans quelle langue traduire les boîtes de dialogue du jeu.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Langue vers laquelle traduire</value>
+  </data>
+  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Échoglossien</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>La liste non exhaustive des problèmes et des TODO est disponible dans le lien ci-dessous:</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Veuillez ajuster la position si votre superposition n’est pas centrée par rapport à la zone de texte de l’interface utilisateur du jeu.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Cliquez pour choisir la couleur de police de superposition</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Ajuster l’échelle de police de superposition</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Taille de police de superposition</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Sélectionnez la taille de police pour la superposition de texte</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplicateur de hauteur de superposition de translation</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (lignes de dialogue Enenies) traduction</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Réglage de la position</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Afficher la superposition de texte traduit au-dessus de la zone de texte de l’interface utilisateur du jeu au lieu de remplacer son texte par la traduction</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuster la largeur de superposition de traduction</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicateur de largeur de superposition de traduction</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Chemin absolu vers le dossier Echoglossian (dans le dossier XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Veuillez taper le chemin et enregistrer pour que le plugin puisse fonctionner correctement!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Acheter lokinmodar un café</value>
+  </data>
+  <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>QRcode PIX</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Scannez le code QR pour m’envoyer un PIX - valable uniquement au Brésil</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Choisissez la langue de la fenêtre de configuration du plugin</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Langue de la fenêtre de configuration :</value>
+  </data>
+  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Scannez le code QR pour m’envoyer un PIX - valable uniquement au Brésil</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Enregistrer et fermer la fenêtre de configuration</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Envoyez-moi un don PIX!</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Paramètres de Google Traduction :</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Afficher le texte de dialogue d’origine dans superposition et traduit dans la boîte de dialogue de l’interface utilisateur du jeu</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Ajuster la largeur de superposition de translation toast</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplicateur de largeur de superposition toast</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Liste des TODO sur Github</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Traduire le nom de la zone dans le jeu Toast Messages</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Traduire le discours de bataille</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Traduire les messages toast de changement de classe/d’emploi dans le jeu</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Traduire les messages toast d’erreur dans le jeu</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Traduire les noms des PNJ dans les boîtes de dialogue</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Traduire les messages toast Quest dans le jeu</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Traduire d’autres messages toast divers dans le jeu</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Traduire les dialogues dans le jeu</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Traduire des messages toast dans le jeu</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>Les traductions sont désactivées !</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>Les traductions sont activées !</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Ce moteur de traduction ne nécessite aucun paramètre spécial.</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Traductions activées !</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Utiliser la superposition pour afficher les traductions toasts</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>En attente de traduction...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Sélectionnez le type de texte que vous souhaitez traduire</value>
+  </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Réinitialiser les paramètres</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Les paramètres Echoglossian sont réinitialisés par défaut avec succès!</value>
+  </data>
+  <data name="WhichToastsToTranslate" xml:space="preserve">
+    <value>Sélectionnez le type de toasts de message dans le jeu à traduire</value>
+  </data>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Vérification des actifs du plugin!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Téléchargement des ressources du plugin terminé!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Erreur lors du téléchargement des ressources du plug-in :</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Veuillez réessayer plus tard. Si le problème persiste, veuillez contacter le développeur du plugin.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Tous les actifs du plugin sont présents!</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Téléchargement de ressources de plug-in supplémentaires en arrière-plan. Veuillez attendre la fin du téléchargement avant d’ouvrir les paramètres!</value>
+  </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Résolution des problèmes</value>
+  </data>
+  <data name="PluginAssetsDownloadedText" xml:space="preserve">
+    <value>Plugin assets téléchargés !</value>
+  </data>
+  <data name="PluginAssetsNotDownloadedText" xml:space="preserve">
+    <value>Si vous voyez du texte brouillé ou des caractères non valides dans la fenêtre de traduction\ncela indique que certaines polices de ressources du plug-in sont peut-être manquantes ou corrompues.\n\n Cliquez sur le bouton ci-dessous pour déclencher une vérification des ressources et les télécharger à nouveau.</value>
+  </data>
+  <data name="DownloadPluginAssetsButtonText" xml:space="preserve">
+    <value>Forcer le retéléchargement des ressources du plug-in</value>
+  </data>
+  <data name="CurrentPluginAssetsStatus" xml:space="preserve">
+    <value>Les ressources du plugin sont-elles téléchargées ?</value>
+  </data>
+  <data name="ConfigTab9Name" xml:space="preserve">
+    <value>Paramètres divers</value>
+  </data>
+  <data name="ConfigTab9Text" xml:space="preserve">
+    <value>Divers Options et paramètres du plugin</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardText" xml:space="preserve">
+    <value>Copier automatiquement la dernière traduction dans le presse-papiers du plugin</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardTooltipText" xml:space="preserve">
+    <value>Ce paramètre copie la dernière traduction et le texte source dans le presse-papiers (fonctionne avec Talk et BattleTalk)</value>
+  </data>
+  <data name="TranslateJournalToggle" xml:space="preserve">
+    <value>Traduire le nom, la description et les objectifs de la quête (WIP)</value>
+  </data>
+  <data name="DeeplTranslatorApiKey" xml:space="preserve">
+    <value>Ajoutez votre clé API DeepL</value>
+  </data>
+  <data name="SettingsForDeepLTransText" xml:space="preserve">
+    <value>Paramètres optionnels pour DeepL:</value>
+  </data>
+  <data name="DeepLTranslatorAPIKeyLink" xml:space="preserve">
+    <value>Cliquez ici pour créer une clé API DeepL</value>
+  </data>
+  <data name="TranslationEngineChoose" xml:space="preserve">
+    <value>Choisissez le moteur de traduction</value>
+  </data>
+  <data name="DeepLTransAPIKey" xml:space="preserve">
+    <value>Utiliser une clé API (recommandé)</value>
+  </data>
+  <data name="TranslateTextsAgain" xml:space="preserve">
+    <value>Traduire à nouveau les textes traduits enregistrés avec le moteur de traduction sélectionné</value>
+  </data>
+  <data name="TranslateTalkSubtitleToggleLabel" xml:space="preserve">
+    <value>Traduire les sous-titres de la cinématique</value>
+  </data>
+  <data name="ChatGptApiKey" xml:space="preserve">
+    <value>Clé API ChatGPT</value>
+  </data>
+  <data name="SettingsForChatGptTransText" xml:space="preserve">
+    <value>Paramètres pour ChatGPT</value>
+  </data>
+  <data name="ChatGPTAPIKeyLink" xml:space="preserve">
+    <value>Cliquez ici pour créer une clé API OpenAi</value>
+  </data>
+  <data name="RemoveDiacriticsToggle" xml:space="preserve">
+    <value>Analysez le texte traduit en remplaçant les signes diacritiques par leurs équivalents alphabétiques habituels.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clé API est vide ou non valide. La traduction de ChatGPT ne sera pas disponible.</value>
+  </data>
+  <data name="ChatGPTTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Traduction ChatGPT indisponible. Veuillez vérifier votre clé API.]</value>
+  </data>
+  <data name="TranslationError" xml:space="preserve">
+    <value>Erreur de traduction :</value>
+  </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[La traduction de DeepSeek n’est pas disponible. Veuillez vérifier votre clé API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clé API est vide ou non valide. La traduction de DeepSeek ne sera pas disponible.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clé API est vide ou non valide. La traduction de Gemini ne sera pas disponible.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[La traduction de Gemini n’est pas disponible. Veuillez vérifier votre clé API.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>La clé API est vide ou non valide. La traduction Microsoft ne sera pas disponible.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Traduction Microsoft non disponible. Veuillez vérifier votre clé API.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Personnalisez l’invite utilisée pour la traduction. Tous les espaces réservés suivants sont requis :</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Personnalisation de l’invite AI Translator</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Il manque un ou plusieurs espaces réservés obligatoires !</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Réinitialiser par défaut</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Aperçu en direct avec entrée d’échantillon :</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Copier l’aperçu</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Sauvegarder</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Aperçu</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>Entrée d’invite</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Éditeur d’invites</value>
+  </data>
+  <data name="ResetSettingsMessageText" xml:space="preserve">
+    <value>Vous pouvez réinitialiser la configuration par défaut d’Echoglossian en utilisant le bouton ci-dessous :</value>
+  </data>
+  <data name="ResetSettingsButtonText" xml:space="preserve">
+    <value>Réinitialiser la configuration par défaut</value>
+  </data>
+  <data name="TalkTabTitle" xml:space="preserve">
+    <value>Parler</value>
+  </data>
+  <data name="BattleTalkTabTitle" xml:space="preserve">
+    <value>Discussion sur la bataille</value>
+  </data>
+  <data name="ToastTabTitle" xml:space="preserve">
+    <value>Toast</value>
+  </data>
+  <data name="SubtitleTabTitle" xml:space="preserve">
+    <value>DiscussionSous-titres</value>
+  </data>
+  <data name="TranslateToastToggle" xml:space="preserve">
+    <value>Traduire les messages toast</value>
+  </data>
+  <data name="SettingsForDeepSeekText" xml:space="preserve">
+    <value>Paramètres de DeepSeek</value>
+  </data>
+  <data name="SettingsForOpenRouterText" xml:space="preserve">
+    <value>Paramètres pour le moteur OpenRouter</value>
+  </data>
+  <data name="AWSAccessKey" xml:space="preserve">
+    <value>Clé d’accès AWS</value>
+  </data>
+  <data name="SettingsForAmazonTranslateText" xml:space="preserve">
+    <value>Paramètres d’Amazon Translate :</value>
+  </data>
+  <data name="AWSSecretKey" xml:space="preserve">
+    <value>Clé secrète AWS</value>
+  </data>
+  <data name="Region" xml:space="preserve">
+    <value>Région</value>
+  </data>
+  <data name="APIKey" xml:space="preserve">
+    <value>Clé API</value>
+  </data>
+  <data name="Endpoint" xml:space="preserve">
+    <value>Extrémité</value>
+  </data>
+  <data name="SettingsForMicrosoftText" xml:space="preserve">
+    <value>Paramètres de Microsoft Translator</value>
+  </data>
+  <data name="MicrosoftTranslatorAPIKey" xml:space="preserve">
+    <value>Clé API Microsoft Translator</value>
+  </data>
+  <data name="ModelEndpoint" xml:space="preserve">
+    <value>Point final du modèle</value>
+  </data>
+  <data name="LLMModel" xml:space="preserve">
+    <value>Modèle LLM</value>
+  </data>
+  <data name="Temperature" xml:space="preserve">
+    <value>Température</value>
+  </data>
+  <data name="NoSettingsForEngine" xml:space="preserve">
+    <value>Aucun réglage requis pour ce moteur</value>
+  </data>
+  <data name="SettingsForGeminiText" xml:space="preserve">
+    <value>Paramètres pour Gemini :</value>
+  </data>
+  <data name="SettingsForLibreTranslateText" xml:space="preserve">
+    <value>Paramètres pour LibreTranslate :</value>
+  </data>
+  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
+    <value>Point de terminaison de l’API LibreTranslate</value>
+  </data>
+  <data name="SettingsForOllamaText" xml:space="preserve">
+    <value>Paramètres pour Ollama :</value>
+  </data>
+  <data name="YandexCloudFolderId" xml:space="preserve">
+    <value>ID du dossier</value>
+  </data>
+  <data name="SettingsForYandexCloudText" xml:space="preserve">
+    <value>Paramètres pour YandexCloud :</value>
+  </data>
+  <data name="YandexCloudApiKey" xml:space="preserve">
+    <value>Clé API YandexCloud</value>
+  </data>
+  <data name="ShowInCutscenesLabel" xml:space="preserve">
+    <value>Afficher dans les cinématiques</value>
+  </data>
+  <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
+    <value>Copier la traduction dans le presse-papiers</value>
+  </data>
+  <data name="FontSizeLabel" xml:space="preserve">
+    <value>Taille de la police :</value>
+  </data>
+  <data name="TranslateYesNoScreenLabel" xml:space="preserve">
+    <value>Traduire l’écran Oui/Non</value>
+  </data>
+  <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
+    <value>Traduire CutSceneSelectString</value>
+  </data>
+  <data name="TranslateSelectStringLabel" xml:space="preserve">
+    <value>Traduire SelectString</value>
+  </data>
+  <data name="TranslateSelectOkLabel" xml:space="preserve">
+    <value>Traduire SelectOk</value>
+  </data>
+  <data name="GeminiAPIKey" xml:space="preserve">
+    <value>Clé API Gemini</value>
+  </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Paramètres de Yandex public Translator</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Paramètres du traducteur GTranslate</value>
+  </data>
+  <data name="ConfigTabGeneralName" xml:space="preserve">
+    <value>Paramètres généraux</value>
+  </data>
+  <data name="OtherUIElementsTabTitle" xml:space="preserve">
+    <value>Autres éléments de l’interface utilisateur</value>
+  </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Êtes-vous sûr de vouloir réinitialiser tous les paramètres par défaut ?</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Oui, réinitialiser</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Réinitialiser TOUS les paramètres d’Echoglossian par défaut</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>Traduire la fenêtre « Caractère »</value>
+  </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>Point de terminaison de l’API</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>Paramètres pour LMStudio :</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Récupération de modèles dynamiques</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Modèle</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Utiliser l’authentification</value>
+  </data>
+  <data name="DataInsertedUpdatedInStringArrayDatasTable" xml:space="preserve">
+    <value>Données insérées/mises à jour dans la table StringArrayDatas.</value>
+  </data>
+  <data name="ErrorSavingData" xml:space="preserve">
+    <value>ErreurSauvegardeDonnées : {0}</value>
+  </data>
+  <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
+    <value>Ouvre l’éditeur de base de données Echoglossian.</value>
+  </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Scannez le code QR pour envoyer de la crypto-monnaie. Tout montant est apprécié :)</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Portefeuille de crypto-monnaies</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Envoyer des cryptos</value>
+  </data>
+  <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Impossible de charger l’entité pour la modifier.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Aucun enregistrement n’est chargé.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Aucun document n’a été trouvé dans ce tableau.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Pas de propriétés scalaires à afficher.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Recharger</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Prev</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Prochain</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Taille de la page :</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Exporter le fichier CSV sélectionné</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Exporter le CSV de la page</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Supprimer la sélection</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Éditeur de base de données Echoglossian</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Sélectionnez une table pour afficher ses enregistrements.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Enregistrement sauvegardé !</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Enregistrement supprimé</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Enregistrements {0} supprimés</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Copié {0} les enregistrements dans le presse-papiers</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Aide</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Astuce : Double-cliquez sur une ligne à modifier.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV : Exporter des copies dans le presse-papiers</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Enregistrements {0} chargés</value>
+  </data>
+  <data name="TooltipRegisterLoggingHelpMessage" xml:space="preserve">
+    <value>Temporarily logs hover-tooltip registrations and hover hits. Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingUsage" xml:space="preserve">
+    <value>Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingInvalidDurationFormat" xml:space="preserve">
+    <value>Invalid tooltip logging duration. Use values like 90s or 15m, up to {0} minutes.</value>
+  </data>
+  <data name="TooltipRegisterLoggingNoActiveSession" xml:space="preserve">
+    <value>No active tooltip registration logging session to stop.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStopped" xml:space="preserve">
+    <value>Tooltip registration logging stopped.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStartedFormat" xml:space="preserve">
+    <value>Tooltip registration logging started for surface '{0}' for {1}. Check Echoglossian.log for register and hover-hit diagnostics.</value>
+  </data>
+</root>

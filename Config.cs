@@ -21,6 +21,18 @@ public enum JournalTranslationDisplayMode
 }
 
 /// <summary>
+///     Selects how the Tooltip addon anchored overlay limits its width.
+/// </summary>
+public enum TooltipAddonOverlayMaxWidthMode
+{
+  /// <summary>Match the visible native Tooltip addon width.</summary>
+  MatchNative = 0,
+
+  /// <summary>Use the configured manual width cap.</summary>
+  ManualCap = 1,
+}
+
+/// <summary>
 ///     Selects which provider profile the OpenAI-family engine should use.
 /// </summary>
 public enum OpenAiProviderVariant
@@ -238,6 +250,26 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode CutSceneSelectStringTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Display mode for SelectYesNo.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectYesNoTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for SelectOk.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectOkTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for SelectString.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectStringTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for SelectIconString.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode SelectIconStringTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Display mode for ScreenInfo/WideText toasts.</summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode WideTextToastTranslationDisplayMode =
@@ -268,17 +300,48 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode QuestToastTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Display mode for callback-owned top-position normal toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode TopToastTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for callback-owned bottom-position normal toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode BottomToastTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for left-aligned quest toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode QuestToastLeftTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for centred quest toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode QuestToastCentreTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for right-aligned quest toasts.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode QuestToastRightTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for world-object nameplates.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode NamePlateTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>Always show the BattleTalk overlay title bar.</summary>
   [DefaultValue(false)] public bool BattleTalkForceShowTitle = false;
 
   /// <summary>Gemini model ID used for translations.</summary>
-  [DefaultValue("gemini-pro")] public string? GeminiModel = "gemini-pro";
+  [DefaultValue("gemini-2.5-flash")]
+  public string? GeminiModel = "gemini-2.5-flash";
 
   /// <summary>
   ///     Model identifier for Gemini translations.
   /// </summary>
-  [DefaultValue("gemini-pro")]
-  public string GeminiModelId = "gemini-pro"; // or "gemini-1.5-flash"
+  [DefaultValue("gemini-2.5-flash")]
+  public string GeminiModelId = "gemini-2.5-flash";
 
   /// <summary>Prompt passed to Gemini for translation context.</summary>
   [DefaultValue("")] public string? GeminiPrompt = string.Empty;
@@ -357,6 +420,48 @@ public class Config : IPluginConfiguration
 
   /// <summary>Width multiplier for Quest toast overlays.</summary>
   [DefaultValue(1.0f)] public float ImGuiQuestToastWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for top-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiTopToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for top-position callback-owned toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiTopToastWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiBottomToastWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiBottomToastWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for left-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiQuestToastLeftWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for left-aligned quest toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiQuestToastLeftWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for centred quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiQuestToastCentreWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for centred quest toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiQuestToastCentreWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for right-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiQuestToastRightWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for right-aligned quest toast overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiQuestToastRightWindowWidthMult = 1.0f;
+
+  /// <summary>Position correction for nameplate overlays.</summary>
+  [DefaultValue(typeof(Vector2), "0, 0")]
+  public Vector2 ImGuiNamePlateWindowPosCorrection = new(0, 0);
+
+  /// <summary>Width multiplier for nameplate overlays.</summary>
+  [DefaultValue(1.0f)] public float ImGuiNamePlateWindowWidthMult = 1.0f;
 
   /// <summary>Position correction for ImGui overlay windows.</summary>
   [DefaultValue(typeof(Vector2), "0, 0")]
@@ -519,6 +624,45 @@ public class Config : IPluginConfiguration
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 OverlayQuestToastTextColor = new(1f, 1f, 1f);
 
+  /// <summary>Text color used by top-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayTopToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayBottomToastTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by left-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayQuestToastLeftTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by centred quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayQuestToastCentreTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by right-aligned quest toast overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayQuestToastRightTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Text color used by nameplate overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 OverlayNamePlateTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Whether overlay-only languages use distance-aware overlays.</summary>
+  [DefaultValue(true)] public bool EnableDistanceAwareOverlays = true;
+
+  /// <summary>Camera distance at or below which overlays use full scale.</summary>
+  [DefaultValue(8f)] public float DistanceAwareOverlayFullScaleDistance = 8f;
+
+  /// <summary>Camera distance at which overlays begin fading.</summary>
+  [DefaultValue(16f)] public float DistanceAwareOverlayFadeStartDistance = 16f;
+
+  /// <summary>Camera distance at which overlays become hidden.</summary>
+  [DefaultValue(28f)] public float DistanceAwareOverlayMaxDistance = 28f;
+
+  /// <summary>Minimum distance-aware overlay scale.</summary>
+  [DefaultValue(0.60f)] public float DistanceAwareOverlayMinScale = 0.60f;
+
   /// <summary>Background opacity used by Screen Info (_WideText) toast overlays.</summary>
   [DefaultValue(1f)] public float WideTextToastBackgroundOpacity = 1f;
 
@@ -533,6 +677,21 @@ public class Config : IPluginConfiguration
 
   /// <summary>Background opacity used by Quest toast overlays.</summary>
   [DefaultValue(1f)] public float QuestToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by top-position callback-owned toast overlays.</summary>
+  [DefaultValue(1f)] public float TopToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by bottom-position callback-owned toast overlays.</summary>
+  [DefaultValue(1f)] public float BottomToastBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by left-aligned quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastLeftBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by centred quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastCentreBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used by right-aligned quest toast overlays.</summary>
+  [DefaultValue(1f)] public float QuestToastRightBackgroundOpacity = 1f;
 
   /// <summary>Whether plugin assets have been successfully downloaded.</summary>
   [DefaultValue(false)] public bool PluginAssetsDownloaded = false;
@@ -578,8 +737,14 @@ public class Config : IPluginConfiguration
   /// <summary>Font scale used for MiniTalk overlay.</summary>
   [DefaultValue(1f)] public float MiniTalkFontScale = 1f;
 
+  /// <summary>Font scale used for nameplate overlays.</summary>
+  [DefaultValue(1f)] public float NamePlateFontScale = 1f;
+
   /// <summary>Background opacity used for MiniTalk overlays.</summary>
   [DefaultValue(1f)] public float MiniTalkBackgroundOpacity = 1f;
+
+  /// <summary>Background opacity used for nameplate overlays.</summary>
+  [DefaultValue(1f)] public float NamePlateBackgroundOpacity = 1f;
 
   [DefaultValue(typeof(Vector2), "0, 0")]
   public Vector2 ImGuiMiniTalkWindowPosCorrection = new(0, 0);
@@ -693,6 +858,14 @@ public class Config : IPluginConfiguration
   public JournalTranslationDisplayMode ActionMenuWindowTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
+  /// <summary>Translates the dedicated ContextMenu addon.</summary>
+  [DefaultValue(false)] public bool TranslateContextMenu = false;
+
+  /// <summary>Gets or sets the display mode for the ContextMenu addon.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode ContextMenuTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
   /// <summary>
   /// Gets a value indicating whether the game main menu scope is enabled.
   /// </summary>
@@ -763,6 +936,31 @@ public class Config : IPluginConfiguration
         this.RemoveDiacriticsWhenUsingReplacementTalkBTalk ||
         this.RemoveDiacriticsWhenUsingReplacementQuest;
     return this.SetNativeReplacementDiacriticsEnabled(unifiedEnabled);
+  }
+
+  /// <summary>
+  ///     Normalizes action and item detail presentation to Plugin Tooltips.
+  /// </summary>
+  /// <remarks>
+  ///     Native mutation stays disabled until the required ActionDetail and
+  ///     ItemDetail mappings are shipped by the FFXIVClientStructs version
+  ///     consumed by this plugin.
+  /// </remarks>
+  /// <returns>
+  ///     <see langword="true" /> when the persisted display mode changed;
+  ///     otherwise <see langword="false" />.
+  /// </returns>
+  public bool NormalizeStructuredTooltipPresentationSettings()
+  {
+    if (this.TooltipTranslationDisplayMode ==
+        JournalTranslationDisplayMode.TooltipTranslation)
+    {
+      return false;
+    }
+
+    this.TooltipTranslationDisplayMode =
+        JournalTranslationDisplayMode.TooltipTranslation;
+    return true;
   }
 
   /// <summary>
@@ -958,6 +1156,9 @@ public class Config : IPluginConfiguration
   /// <summary>Translate regular SelectString dialogs.</summary>
   [DefaultValue(false)] public bool TranslateSelectString = false;
 
+  /// <summary>Translate SelectIconString dialogs.</summary>
+  [DefaultValue(false)] public bool TranslateSelectIconString = false;
+
   /// <summary>Translate Talk window messages.</summary>
   [DefaultValue(false)] public bool TranslateTalk = false;
 
@@ -969,6 +1170,9 @@ public class Config : IPluginConfiguration
 
   /// <summary>Translate MiniTalk messages.</summary>
   [DefaultValue(false)] public bool TranslateMiniTalk = false;
+
+  /// <summary>Translate eligible world-object nameplates.</summary>
+  [DefaultValue(false)] public bool TranslateNamePlates = false;
 
   /// <summary>Translate Text Gimmick Hint messages.</summary>
   [DefaultValue(false)] public bool TranslateTextGimmickHint = false;
@@ -1000,9 +1204,17 @@ public class Config : IPluginConfiguration
   /// <summary>Translate To-Do List entries.</summary>
   [DefaultValue(false)] public bool TranslateToDoList = false;
 
+  /// <summary>Translate ToDo entries.</summary>
+  [DefaultValue(false)] public bool TranslateToDo = false;
+
   /// <summary>Display mode for ToDoList quest entries.</summary>
   [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
   public JournalTranslationDisplayMode ToDoListTranslationDisplayMode =
+      JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Display mode for ToDo quest entries.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode ToDoTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Display mode for ScenarioTree quest entries.</summary>
@@ -1021,15 +1233,58 @@ public class Config : IPluginConfiguration
       JournalTranslationDisplayMode.NativeUiTranslation;
 
   /// <summary>Translate UI tooltips.</summary>
-  [DefaultValue(false)] public bool TranslateTooltips = false;
+  [DefaultValue(true)] public bool TranslateTooltips = true;
+
+  /// <summary>Translate the Tooltip addon.</summary>
+  [DefaultValue(false)] public bool TranslateTooltipAddon = false;
 
   /// <summary>
-  ///     Display mode for action and item tooltips managed by the DB-first
-  ///     tooltip runtime.
+  ///     Persisted display mode for action and item tooltips managed by the
+  ///     DB-first tooltip runtime. Native modes are normalized to Plugin
+  ///     Tooltips until verified native mappings are available.
   /// </summary>
-  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  [DefaultValue(JournalTranslationDisplayMode.TooltipTranslation)]
   public JournalTranslationDisplayMode TooltipTranslationDisplayMode =
+      JournalTranslationDisplayMode.TooltipTranslation;
+
+  /// <summary>Display mode for the Tooltip addon.</summary>
+  [DefaultValue(JournalTranslationDisplayMode.NativeUiTranslation)]
+  public JournalTranslationDisplayMode TooltipAddonTranslationDisplayMode =
       JournalTranslationDisplayMode.NativeUiTranslation;
+
+  /// <summary>Text color used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 TooltipAddonOverlayTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Background color used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(typeof(Vector3), "0.08, 0.08, 0.08")]
+  public Vector3 TooltipAddonOverlayBackgroundColor = new(0.08f, 0.08f, 0.08f);
+
+  /// <summary>Background opacity used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(0.95f)] public float TooltipAddonOverlayBackgroundOpacity = 0.95f;
+
+  /// <summary>Font scale adjustment used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(0.65f)] public float TooltipAddonOverlayFontScaleAdjustment = 0.65f;
+
+  /// <summary>Line-height scale used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(0.9f)] public float TooltipAddonOverlayLineHeightScale = 0.9f;
+
+  /// <summary>
+  ///     Whether the native Tooltip addon is hidden while its anchored overlay
+  ///     is active.
+  /// </summary>
+  [DefaultValue(false)] public bool TooltipAddonHideNativeTooltipWhenOverlayActive = false;
+
+  /// <summary>Padding applied by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(8f)] public float TooltipAddonOverlayPadding = 8f;
+
+  /// <summary>Width mode used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(TooltipAddonOverlayMaxWidthMode.MatchNative)]
+  public TooltipAddonOverlayMaxWidthMode TooltipAddonOverlayMaxWidthMode =
+      TooltipAddonOverlayMaxWidthMode.MatchNative;
+
+  /// <summary>Manual maximum width used by the Tooltip addon anchored overlay.</summary>
+  [DefaultValue(720f)] public float TooltipAddonOverlayManualMaxWidth = 720f;
 
   /// <summary>Text color used by Echoglossian hover tooltips.</summary>
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
@@ -1156,8 +1411,8 @@ public class Config : IPluginConfiguration
   [DefaultValue("")] public string YandexPaidApiKey = string.Empty;
 
   /// <summary>Plugin configuration version number (used during migration).</summary>
-  [DefaultValue(15)]
-  public int Version { get; set; } = 15;
+  [DefaultValue(16)]
+  public int Version { get; set; } = 16;
 
   /// <summary>
   /// Gets or sets a value indicating whether translation should run asynchronously.

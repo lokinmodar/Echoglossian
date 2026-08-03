@@ -111,6 +111,17 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("ActionAndItemTooltipsDisplayModeDescription", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a ActionDetail and ItemDetail currently use Plugin Tooltips only. Native UI translation remains disabled until verified agent and addon mappings are available through FFXIVClientStructs.
+        /// </summary>
+        public static string ActionAndItemTooltipsOverlayOnlyDescription
+        {
+            get
+            {
+                return ResourceManager.GetString("ActionAndItemTooltipsOverlayOnlyDescription", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Detail display mode.
@@ -1170,6 +1181,50 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("DialogueLlmOverrideSectionLabel", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Fade start distance.
+        /// </summary>
+        public static string DistanceAwareOverlayFadeStartDistanceLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayFadeStartDistanceLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Full scale distance.
+        /// </summary>
+        public static string DistanceAwareOverlayFullScaleDistanceLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayFullScaleDistanceLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Maximum distance.
+        /// </summary>
+        public static string DistanceAwareOverlayMaxDistanceLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayMaxDistanceLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Minimum scale.
+        /// </summary>
+        public static string DistanceAwareOverlayMinScaleLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("DistanceAwareOverlayMinScaleLabel", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a This plugin is aimed at solving one of the biggest issues for audiences that do not speak either English, German, French or Japanese: Understanding dialogues and other elements of the Game UI..
@@ -1267,6 +1322,17 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("EnableDialogueGlossaryInjectionLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Enable distance-aware overlays.
+        /// </summary>
+        public static string EnableDistanceAwareOverlaysLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("EnableDistanceAwareOverlaysLabel", resourceCulture);
             }
         }
         
@@ -2649,6 +2715,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Nameplate translation.
+        /// </summary>
+        public static string OverlayWindowTitleNamePlateTranslation
+        {
+            get
+            {
+                return ResourceManager.GetString("OverlayWindowTitleNamePlateTranslation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Quest toast translation.
         /// </summary>
         public static string OverlayWindowTitleQuestToastTranslation
@@ -3377,6 +3454,39 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Native replacement mode is active for nameplates. Plugin Overlay style controls are not used in this mode..
+        /// </summary>
+        public static string NamePlateNativeReplacementHelpText
+        {
+            get
+            {
+                return ResourceManager.GetString("NamePlateNativeReplacementHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translates EventObject, Treasure, GatheringPoint, and Other nameplates. Player, retainer, event NPC, battle NPC, and subkind-6 battle NPC nameplates are skipped..
+        /// </summary>
+        public static string NamePlateOverlayHelpText
+        {
+            get
+            {
+                return ResourceManager.GetString("NamePlateOverlayHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Nameplates.
+        /// </summary>
+        public static string NamePlateTabTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("NamePlateTabTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Show in Cutscenes.
         /// </summary>
         public static string ShowInCutscenesLabel
@@ -3584,6 +3694,83 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("ToastOverlayScreenInfoWideTextSectionTitle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Supported normal toasts currently share one callback-owned runtime. Configure their top and bottom placement buckets here..
+        /// </summary>
+        public static string ToastOverlaySupportedNormalPlacementDescription
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlaySupportedNormalPlacementDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a This toast type currently uses the shared top and bottom supported-normal placement settings from the Screen Info page..
+        /// </summary>
+        public static string ToastOverlaySupportedNormalSharedSettingsMessage
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlaySupportedNormalSharedSettingsMessage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Top placement.
+        /// </summary>
+        public static string ToastOverlayTopPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayTopPlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Bottom placement.
+        /// </summary>
+        public static string ToastOverlayBottomPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayBottomPlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Left placement.
+        /// </summary>
+        public static string ToastOverlayLeftPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayLeftPlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Centre placement.
+        /// </summary>
+        public static string ToastOverlayCentrePlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayCentrePlacementTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Right placement.
+        /// </summary>
+        public static string ToastOverlayRightPlacementTitle
+        {
+            get
+            {
+                return ResourceManager.GetString("ToastOverlayRightPlacementTitle", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Area.
@@ -3749,6 +3936,34 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("TooltipTabTitle", resourceCulture);
             }
         }
+
+        public static string TooltipAddonOverlayAppearanceSectionLabel => ResourceManager.GetString("TooltipAddonOverlayAppearanceSectionLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayAppearanceDescription => ResourceManager.GetString("TooltipAddonOverlayAppearanceDescription", resourceCulture);
+
+        public static string TooltipAddonHideNativeTooltipWhenOverlayActiveLabel => ResourceManager.GetString("TooltipAddonHideNativeTooltipWhenOverlayActiveLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayFontScaleAdjustmentLabel => ResourceManager.GetString("TooltipAddonOverlayFontScaleAdjustmentLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayLineHeightScaleLabel => ResourceManager.GetString("TooltipAddonOverlayLineHeightScaleLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayPaddingLabel => ResourceManager.GetString("TooltipAddonOverlayPaddingLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayTextColorLabel => ResourceManager.GetString("TooltipAddonOverlayTextColorLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayBackgroundColorLabel => ResourceManager.GetString("TooltipAddonOverlayBackgroundColorLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayBackgroundOpacityLabel => ResourceManager.GetString("TooltipAddonOverlayBackgroundOpacityLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayMaxWidthModeLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthModeLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayMaxWidthMatchNativeLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthMatchNativeLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayMaxWidthManualCapLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthManualCapLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayManualMaxWidthLabel => ResourceManager.GetString("TooltipAddonOverlayManualMaxWidthLabel", resourceCulture);
+
+        public static string OverlayWindowTitleTooltipAddonTranslation => ResourceManager.GetString("OverlayWindowTitleTooltipAddonTranslation", resourceCulture);
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate ActionMenu Window.
@@ -3769,6 +3984,17 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("TranslateAddonContextMenuTitleWindow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate Context Menu.
+        /// </summary>
+        public static string TranslateContextMenuWindow
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateContextMenuWindow", resourceCulture);
             }
         }
         
@@ -3927,6 +4153,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate eligible world-object nameplates.
+        /// </summary>
+        public static string TranslateNamePlatesLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateNamePlatesLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate NPCs names in dialogue boxes.
         /// </summary>
         public static string TranslateNpcNamesToggle
@@ -4004,6 +4241,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectIconString.
+        /// </summary>
+        public static string TranslateSelectIconStringLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateSelectIconStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate SelectString.
         /// </summary>
         public static string TranslateSelectStringLabel
@@ -4011,6 +4259,17 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("TranslateSelectStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate Tooltip Addon.
+        /// </summary>
+        public static string TranslateTooltipAddonLabel
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateTooltipAddonLabel", resourceCulture);
             }
         }
         
@@ -4088,6 +4347,17 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("TranslateToDoListToggle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate ToDo.
+        /// </summary>
+        public static string TranslateToDoToggle
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslateToDoToggle", resourceCulture);
             }
         }
         
@@ -5177,6 +5447,72 @@ namespace Echoglossian.Properties
             get
             {
                 return ResourceManager.GetString("AddonProbeDurationSecondsFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingHelpMessage
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingHelpMessage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingUsage
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingInvalidDurationFormat
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingInvalidDurationFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingNoActiveSession
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingNoActiveSession", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingStopped
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingStopped", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada.
+        /// </summary>
+        public static string TooltipRegisterLoggingStartedFormat
+        {
+            get
+            {
+                return ResourceManager.GetString("TooltipRegisterLoggingStartedFormat", resourceCulture);
             }
         }
         

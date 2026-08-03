@@ -295,7 +295,9 @@ That file appends one structured block per accepted quest payload containing:
 - the projected `QuestPlate.ToString()`
 
 This is meant for validating the assembled quest shape outside the normal
-Dalamud log stream.
+gameplay log stream. Inspect the active file in the plugin config directory
+first and fall back to the archived timestamped file if rotation already
+occurred.
 
 There is now a second purpose file for the prefetch activity itself:
 
@@ -319,6 +321,10 @@ This activity file is the first place to inspect when the user sees accepted
 quest notifications but no canonical payload file, because it captures whether
 the pipeline failed before quest resolution, before queueing, or after the
 translation broker returned.
+
+Like the exclusive runtime log, these files rotate by line count and archive
+the previous file with a timestamped name before continuing in a fresh active
+file.
 
 Current save priority:
 

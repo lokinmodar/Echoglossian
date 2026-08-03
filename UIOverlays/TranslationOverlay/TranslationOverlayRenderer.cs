@@ -3,7 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Interface.ImGuiSeStringRenderer;
 using Echoglossian.PluginUI.Runtime;
+using Echoglossian.UIOverlays.TextPresentation;
 
 namespace Echoglossian.UIOverlays.TranslationOverlay;
 
@@ -64,6 +66,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
 
         string overlayText;
         bool shouldDraw;
+        bool displaysOriginalSwapText;
+        RichOriginalTextPresentation? richOriginalTextPresentation;
         overlay.Semaphore.Wait();
         try
         {
@@ -71,6 +75,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 overlay.CurrentText);
             shouldDraw = !string.IsNullOrEmpty(overlayText) &&
                          overlayText != Resources.WaitingForTranslation;
+            displaysOriginalSwapText = overlay.DisplaysOriginalSwapText;
+            richOriginalTextPresentation = overlay.RichOriginalTextPresentation;
         }
         finally
         {
@@ -88,11 +94,20 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 : overlay.OriginalName
             : customTitle;
         var shouldUseGeneralFont = this.ShouldUseGeneralOverlayFont(config);
-        var effectiveFontScale = GetEffectiveOverlayFontScale(config.FontScale);
+        var runtimeScaleMultiplier = Math.Clamp(request.ScaleMultiplier, 0.25f, 3f);
+        var runtimeAlphaMultiplier = Math.Clamp(request.AlphaMultiplier, 0f, 1f);
+        var effectiveFontScale = GetEffectiveOverlayFontScale(
+            config.FontScale * runtimeScaleMultiplier);
         var shouldCenterOverlayText = ShouldCenterOverlayText(config.SurfaceId);
         var shouldRightAlignOverlayText =
+            !shouldCenterOverlayText &&
             LanguagePresentationPolicy.ShouldRightAlign(this.configuration.Lang);
         var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2f;
+        var textureMaxWidthOverride = this.ResolveTextureMaxWidthOverride(
+            request,
+            config);
+        var textureLineHeightScaleOverride =
+            this.ResolveTextureLineHeightScaleOverride(request, config);
         var preliminaryLayout = TranslationOverlayLayoutCalculator.Calculate(
             new TranslationOverlayLayoutRequest(
                 request.ViewportPosition,
@@ -118,19 +133,39 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1f),
             Vector4.Zero,
             config.SurfaceId,
-            shouldCenterOverlayText);
+            shouldCenterOverlayText,
+            MaxWidthOverride: textureMaxWidthOverride,
+            LineHeightScaleOverride: textureLineHeightScaleOverride);
         var backendKind = TextPresentationResolver.ResolveBackendKind(textRequest);
+        var shouldRenderRichOriginalText = ShouldRenderRichOriginalText(
+            backendKind,
+            displaysOriginalSwapText && shouldUseGeneralFont,
+            shouldCenterOverlayText || shouldRightAlignOverlayText,
+            richOriginalTextPresentation);
         string[] overlayTextLines = [];
         RenderedTextBlock? bodyBlock = null;
         RenderedTextBlock? titleBlock = null;
         Vector2 measuredTextSize;
         Vector2 measuredTitleSize = Vector2.Zero;
+        TextureRenderAttemptOutcome bodyTextureOutcome =
+            TextureRenderAttemptOutcome.Rendered;
 
         if (backendKind == TextPresentationBackendKind.RtlTexture)
         {
-            bodyBlock = this.rtlTexturePresentationService.TryRender(textRequest);
+            bodyBlock = this.rtlTexturePresentationService.TryRenderDetailed(
+                textRequest,
+                out bodyTextureOutcome);
             if (bodyBlock == null)
             {
+#if DEBUG
+                OverlayTextureRenderDiagnostics.LogTextureUnavailable(
+                    this.configuration,
+                    config.SurfaceId,
+                    request,
+                    textRequest,
+                    bodyTextureOutcome,
+                    this.rtlTexturePresentationService.GetDebugStats());
+#endif
                 return NotDrawn(backendKind);
             }
 
@@ -192,6 +227,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         }
 
         var pushedStyleColor = false;
+        var pushedStyleAlpha = false;
         var beganWindow = false;
         IDisposable? fontScope = null;
         try
@@ -200,6 +236,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 ImGuiCol.Text,
                 new Vector4(config.TextColor.X, config.TextColor.Y, config.TextColor.Z, 1f));
             pushedStyleColor = true;
+            ImGui.PushStyleVar(ImGuiStyleVar.Alpha, runtimeAlphaMultiplier);
+            pushedStyleAlpha = true;
             if (backendKind == TextPresentationBackendKind.PlainImGui)
             {
                 fontScope = this.fontRuntime.Push(
@@ -260,18 +298,26 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 }
                 else
                 {
-                    foreach (var line in overlayTextLines)
+                    if (shouldRenderRichOriginalText &&
+                        DrawRichOverlayText(richOriginalTextPresentation!))
                     {
-                        if (string.IsNullOrEmpty(line))
+                        // The shared SeString renderer advances the ImGui layout.
+                    }
+                    else
+                    {
+                        foreach (var line in overlayTextLines)
                         {
-                            ImGui.Spacing();
-                            continue;
-                        }
+                            if (string.IsNullOrEmpty(line))
+                            {
+                                ImGui.Spacing();
+                                continue;
+                            }
 
-                        DrawOverlayLine(
-                            line,
-                            shouldCenterOverlayText,
-                            shouldRightAlignOverlayText);
+                            DrawOverlayLine(
+                                line,
+                                shouldCenterOverlayText,
+                                shouldRightAlignOverlayText);
+                        }
                     }
                 }
             }
@@ -281,6 +327,19 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             }
 
             overlay.ImGuiSize = ImGui.GetWindowSize();
+#if DEBUG
+            if (backendKind == TextPresentationBackendKind.RtlTexture)
+            {
+                OverlayTextureRenderDiagnostics.LogTextureDrawn(
+                    this.configuration,
+                    config.SurfaceId,
+                    request,
+                    textRequest,
+                    renderedPosition,
+                    overlay.ImGuiSize,
+                    measuredTextSize);
+            }
+#endif
             return new TranslationOverlayRenderResult(
                 true,
                 renderedPosition,
@@ -304,9 +363,19 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 }
                 finally
                 {
-                    if (pushedStyleColor)
+                    try
                     {
-                        ImGui.PopStyleColor();
+                        if (pushedStyleAlpha)
+                        {
+                            ImGui.PopStyleVar();
+                        }
+                    }
+                    finally
+                    {
+                        if (pushedStyleColor)
+                        {
+                            ImGui.PopStyleColor();
+                        }
                     }
                 }
             }
@@ -332,6 +401,32 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                forceShowTitle &&
                hasTitleBlock &&
                !string.IsNullOrWhiteSpace(resolvedTitle);
+    }
+
+    /// <summary>
+    /// Gets whether an overlay can render its copied original SeString payload
+    /// without changing the existing RTL or aligned-layout behavior.
+    /// </summary>
+    /// <param name="backendKind">The resolved text presentation backend.</param>
+    /// <param name="displaysOriginalSwapText">
+    /// Whether the overlay currently displays original swap content.
+    /// </param>
+    /// <param name="hasSpecialAlignment">
+    /// Whether the plain overlay path requires centered or right-aligned text.
+    /// </param>
+    /// <param name="presentation">The optional owned original-text payload.</param>
+    /// <returns><see langword="true" /> when rich ImGui drawing is safe.</returns>
+    internal static bool ShouldRenderRichOriginalText(
+        TextPresentationBackendKind backendKind,
+        bool displaysOriginalSwapText,
+        bool hasSpecialAlignment,
+        RichOriginalTextPresentation? presentation)
+    {
+        return !hasSpecialAlignment &&
+               RichOriginalTextPresentationPolicy.CanUseFormattedSeString(
+                   backendKind,
+                   displaysOriginalSwapText,
+                   presentation);
     }
 
     /// <summary>
@@ -440,6 +535,69 @@ internal sealed class TranslationOverlayRenderer : IDisposable
     }
 
     /// <summary>
+    /// Resolves any surface-specific texture width override required by the
+    /// current overlay request.
+    /// </summary>
+    /// <param name="request">The active render request.</param>
+    /// <param name="config">The surface configuration.</param>
+    /// <returns>The resolved raster width override, if any.</returns>
+    private float? ResolveTextureMaxWidthOverride(
+        TranslationOverlayRenderRequest request,
+        TranslationWindowConfig config)
+    {
+        if (request.TextureMaxWidthOverride.HasValue &&
+            request.TextureMaxWidthOverride.Value > 0f)
+        {
+            return request.TextureMaxWidthOverride.Value;
+        }
+
+        if (config.SurfaceId != TranslationOverlaySurfaceId.TooltipAddon)
+        {
+            return null;
+        }
+
+        var padding = Math.Max(0f, this.configuration.TooltipAddonOverlayPadding) * 2f;
+        var nativeWidth = Math.Max(64f, request.AddonSize.X - padding);
+        if (this.configuration.TooltipAddonOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.ManualCap)
+        {
+            var manualWidth = Math.Max(
+                64f,
+                this.configuration.TooltipAddonOverlayManualMaxWidth - padding);
+            return Math.Min(nativeWidth, manualWidth);
+        }
+
+        return nativeWidth;
+    }
+
+    /// <summary>
+    /// Resolves any surface-specific raster line-height override required by
+    /// the current overlay request.
+    /// </summary>
+    /// <param name="request">The active render request.</param>
+    /// <param name="config">The surface configuration.</param>
+    /// <returns>The resolved line-height override, if any.</returns>
+    private float? ResolveTextureLineHeightScaleOverride(
+        TranslationOverlayRenderRequest request,
+        TranslationWindowConfig config)
+    {
+        if (request.TextureLineHeightScaleOverride.HasValue)
+        {
+            return request.TextureLineHeightScaleOverride.Value;
+        }
+
+        if (config.SurfaceId != TranslationOverlaySurfaceId.TooltipAddon)
+        {
+            return null;
+        }
+
+        return Math.Clamp(
+            this.configuration.TooltipAddonOverlayLineHeightScale,
+            0.8f,
+            1.2f);
+    }
+
+    /// <summary>
     /// Determines whether the surface displays original text in swap mode.
     /// </summary>
     /// <param name="config">The overlay configuration being drawn.</param>
@@ -453,6 +611,9 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             TranslationOverlaySurfaceId.TalkSubtitle => this.configuration.TalkSubtitleTranslationDisplayMode,
             TranslationOverlaySurfaceId.MiniTalk => this.configuration.MiniTalkTranslationDisplayMode,
             TranslationOverlaySurfaceId.CutSceneSelectString => this.configuration.CutSceneSelectStringTranslationDisplayMode,
+            TranslationOverlaySurfaceId.SelectYesNo => this.configuration.SelectYesNoTranslationDisplayMode,
+            TranslationOverlaySurfaceId.SelectOk => this.configuration.SelectOkTranslationDisplayMode,
+            TranslationOverlaySurfaceId.SelectString => this.configuration.SelectStringTranslationDisplayMode,
             TranslationOverlaySurfaceId.TextGimmickHint => this.configuration.TextGimmickHintTranslationDisplayMode,
             TranslationOverlaySurfaceId.WideTextToast => ToastGuiSupportedToastPolicy.UseSupportedNormalToastRuntime(this.configuration)
                 ? ToastGuiSupportedToastPolicy.GetNormalToastDisplayMode(this.configuration)
@@ -461,6 +622,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             TranslationOverlaySurfaceId.AreaToast => this.configuration.AreaToastTranslationDisplayMode,
             TranslationOverlaySurfaceId.ClassChangeToast => this.configuration.ClassChangeToastTranslationDisplayMode,
             TranslationOverlaySurfaceId.QuestToast => this.configuration.QuestToastTranslationDisplayMode,
+            TranslationOverlaySurfaceId.NamePlate => this.configuration.NamePlateTranslationDisplayMode,
             _ => JournalTranslationDisplayMode.TooltipTranslation,
         };
         return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
@@ -494,26 +656,154 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         bool rightAligned)
     {
         var availableWidth = ImGui.GetContentRegionAvail().X;
-        var lineWidth = ImGui.CalcTextSize(line).X;
-        if ((!centerAligned && !rightAligned) || availableWidth <= 0f ||
-            lineWidth >= availableWidth)
+        if ((!centerAligned && !rightAligned) || availableWidth <= 0f)
         {
             ImGui.TextWrapped(line);
             return;
         }
 
-        var offset = rightAligned
-            ? Math.Max(0f, availableWidth - lineWidth)
-            : Math.Max(0f, (availableWidth - lineWidth) * 0.5f);
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
-        ImGui.TextUnformatted(line);
+        foreach (var visualLine in SplitOverlayLineForAlignment(
+                     line,
+                     availableWidth,
+                     text => ImGui.CalcTextSize(text).X))
+        {
+            var lineWidth = ImGui.CalcTextSize(visualLine).X;
+            var offset = CalculateHorizontalTextOffset(
+                availableWidth,
+                lineWidth,
+                centerAligned,
+                rightAligned);
+            if (offset > 0f)
+            {
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+            }
+
+            ImGui.TextUnformatted(visualLine);
+        }
+    }
+
+    /// <summary>
+    /// Draws one copied original SeString through Dalamud's ImGui renderer.
+    /// </summary>
+    /// <param name="presentation">The owned original-text payload to draw.</param>
+    /// <returns><see langword="true" /> when the rich payload was drawn.</returns>
+    private static bool DrawRichOverlayText(
+        RichOriginalTextPresentation presentation)
+    {
+        if (!presentation.TryGetSeStringPayload(out var payload))
+        {
+            return false;
+        }
+
+        try
+        {
+            var drawParams = new SeStringDrawParams
+            {
+                Font = ImGui.GetFont(),
+                ScreenOffset = ImGui.GetCursorScreenPos(),
+                FontSize = ImGui.GetFontSize(),
+                WrapWidth = Math.Max(1f, ImGui.GetContentRegionAvail().X),
+            };
+            ImGuiHelpers.SeStringWrapped(payload.Span, drawParams);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Splits one logical overlay line into visual lines that can be aligned
+    /// individually without hyphenating words.
+    /// </summary>
+    /// <param name="line">The logical source line.</param>
+    /// <param name="availableWidth">The available content width.</param>
+    /// <param name="measureTextWidth">The active-font text measurement delegate.</param>
+    /// <returns>The visual lines to draw.</returns>
+    internal static IReadOnlyList<string> SplitOverlayLineForAlignment(
+        string line,
+        float availableWidth,
+        Func<string, float> measureTextWidth)
+    {
+        if (string.IsNullOrWhiteSpace(line) ||
+            availableWidth <= 0f ||
+            measureTextWidth(line) <= availableWidth)
+        {
+            return [line];
+        }
+
+        var words = line.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length <= 1)
+        {
+            return [line];
+        }
+
+        var visualLines = new List<string>();
+        var currentLine = string.Empty;
+        foreach (var word in words)
+        {
+            if (string.IsNullOrEmpty(currentLine))
+            {
+                currentLine = word;
+                continue;
+            }
+
+            var candidateLine = $"{currentLine} {word}";
+            if (measureTextWidth(candidateLine) <= availableWidth)
+            {
+                currentLine = candidateLine;
+                continue;
+            }
+
+            visualLines.Add(currentLine);
+            currentLine = word;
+        }
+
+        if (!string.IsNullOrEmpty(currentLine))
+        {
+            visualLines.Add(currentLine);
+        }
+
+        return visualLines.Count > 0 ? visualLines : [line];
+    }
+
+    /// <summary>
+    /// Calculates the horizontal text offset for the requested alignment.
+    /// </summary>
+    /// <param name="availableWidth">The available content width.</param>
+    /// <param name="contentWidth">The measured content width.</param>
+    /// <param name="centerAligned">Whether the surface explicitly centers text.</param>
+    /// <param name="rightAligned">Whether the language presentation requests right alignment.</param>
+    /// <returns>The horizontal offset to apply before drawing the content.</returns>
+    internal static float CalculateHorizontalTextOffset(
+        float availableWidth,
+        float contentWidth,
+        bool centerAligned,
+        bool rightAligned)
+    {
+        if (availableWidth <= 0f || contentWidth >= availableWidth)
+        {
+            return 0f;
+        }
+
+        if (centerAligned)
+        {
+            return Math.Max(0f, (availableWidth - contentWidth) * 0.5f);
+        }
+
+        return rightAligned
+            ? Math.Max(0f, availableWidth - contentWidth)
+            : 0f;
     }
 
     /// <summary>
     /// Draws a texture-backed text block with its requested horizontal alignment.
     /// </summary>
     /// <param name="block">The texture-backed text block to draw.</param>
-    /// <param name="centerAligned">Whether to center a non-RTL block.</param>
+    /// <param name="centerAligned">Whether to center the block.</param>
     private static void DrawRenderedTextBlock(
         RenderedTextBlock block,
         bool centerAligned)
@@ -526,11 +816,11 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         var availableWidth = ImGui.GetContentRegionAvail().X;
         if (availableWidth > 0f && block.MeasuredSize.X < availableWidth)
         {
-            var offset = block.RightAligned
-                ? Math.Max(0f, availableWidth - block.MeasuredSize.X)
-                : centerAligned
-                    ? Math.Max(0f, (availableWidth - block.MeasuredSize.X) * 0.5f)
-                    : 0f;
+            var offset = CalculateHorizontalTextOffset(
+                availableWidth,
+                block.MeasuredSize.X,
+                centerAligned,
+                block.RightAligned);
             if (offset > 0f)
             {
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
@@ -545,7 +835,7 @@ internal sealed class TranslationOverlayRenderer : IDisposable
     /// </summary>
     /// <param name="surfaceId">The overlay surface identifier.</param>
     /// <returns><see langword="true" /> when text is centered.</returns>
-    private static bool ShouldCenterOverlayText(TranslationOverlaySurfaceId surfaceId)
+    internal static bool ShouldCenterOverlayText(TranslationOverlaySurfaceId surfaceId)
     {
         return surfaceId == TranslationOverlaySurfaceId.TalkSubtitle ||
                surfaceId is TranslationOverlaySurfaceId.TextGimmickHint
@@ -553,7 +843,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                    or TranslationOverlaySurfaceId.ErrorToast
                    or TranslationOverlaySurfaceId.AreaToast
                    or TranslationOverlaySurfaceId.ClassChangeToast
-                   or TranslationOverlaySurfaceId.QuestToast;
+                   or TranslationOverlaySurfaceId.QuestToast
+                   or TranslationOverlaySurfaceId.NamePlate;
     }
 
     /// <summary>

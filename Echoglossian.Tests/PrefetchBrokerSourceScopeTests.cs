@@ -5,9 +5,12 @@
 
 using System.Collections.Concurrent;
 
+using Dalamud.Game.Gui.NamePlate;
+
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Echoglossian.LanguagesHandling;
+using Echoglossian.NativeUI.AddonHandlers.NamePlates;
 using Echoglossian.NativeUI.Helpers;
 
 using Xunit;
@@ -66,10 +69,12 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     [InlineData(PrefetchFamily.ActionDetail)]
     [InlineData(PrefetchFamily.ReferenceText)]
     [InlineData(PrefetchFamily.AcceptedQuest)]
+    [InlineData(PrefetchFamily.NamePlate)]
     public async Task PrefetchOperation_QueuedNameAfterLiveScopeChanges_PersistsCanonicalAndNameRowsInCapturedScope(
         PrefetchFamily family)
     {
         var configuration = CreateConfiguration();
+        var expectedPersistedRows = GetExpectedPersistedRowCount(family);
         var liveSource = new SourceClientLanguage("chs", "zh-CN");
         var resolverGate = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
@@ -128,8 +133,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         Assert.EndsWith(ExpectedBrokerScope, chsBrokerKey);
         Assert.EndsWith("|Scope|cht|iw|8|False", chtBrokerKey);
         Assert.NotEqual(chsBrokerKey, chtBrokerKey);
-        AssertCanonicalAndNameRows(chsRows, chsCapturedScope);
-        AssertCanonicalAndNameRows(chtRows, chtCapturedScope);
+        AssertPersistedRows(family, chsRows, chsCapturedScope);
+        AssertPersistedRows(family, chtRows, chtCapturedScope);
         AssertLiveScopeMutated(configuration, liveSource);
         return;
 
@@ -169,7 +174,7 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         void PersistChs(object row)
         {
             chsPersistedRows.Enqueue(row);
-            if (chsPersistedRows.Count == 2)
+            if (chsPersistedRows.Count == expectedPersistedRows)
             {
                 chsPersistenceCompletion.TrySetResult(
                     chsPersistedRows.ToArray());
@@ -179,7 +184,7 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         void PersistCht(object row)
         {
             chtPersistedRows.Enqueue(row);
-            if (chtPersistedRows.Count == 2)
+            if (chtPersistedRows.Count == expectedPersistedRows)
             {
                 chtPersistenceCompletion.TrySetResult(
                     chtPersistedRows.ToArray());
@@ -196,6 +201,7 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     [InlineData(PrefetchFamily.ActionDetail)]
     [InlineData(PrefetchFamily.ReferenceText)]
     [InlineData(PrefetchFamily.AcceptedQuest)]
+    [InlineData(PrefetchFamily.NamePlate)]
     public void PrefetchOperation_CachedNameAfterLiveScopeChanges_PersistsCanonicalAndNameRowsInCapturedScope(
         PrefetchFamily family)
     {
@@ -227,7 +233,7 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
             new TranslationReuseScope("chs", "pt-BR", 4, true),
             capturedScope);
         Assert.EndsWith(ExpectedBrokerScope, capturedBrokerKey);
-        AssertCanonicalAndNameRows(persistedRows, capturedScope);
+        AssertPersistedRows(family, persistedRows, capturedScope);
         AssertLiveScopeMutated(configuration, liveSource);
         Assert.Equal(0, brokerQueueCalls);
         Assert.Equal(0, translatorCalls);
@@ -257,6 +263,7 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     [InlineData(PrefetchFamily.ActionDetail)]
     [InlineData(PrefetchFamily.ReferenceText)]
     [InlineData(PrefetchFamily.AcceptedQuest)]
+    [InlineData(PrefetchFamily.NamePlate)]
     public void PrefetchEntry_UnknownSource_DoesNotReachBroker(
         PrefetchFamily family)
     {
@@ -294,6 +301,71 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
             translatedText = string.Empty;
             return false;
         }
+    }
+
+    /// <summary>
+    ///     Ensures one ActionDetail persistence merge replaces a source-
+    ///     equivalent description with the queued translated description
+    ///     instead of treating the stale payload as complete.
+    /// </summary>
+    [Fact]
+    public void ActionDetailPrefetch_SourceEquivalentDescription_IsReplacedDuringCanonicalMerge()
+    {
+        var originalPayload = new ActionTooltipCanonicalPayload
+        {
+            ActionId = 15997,
+            Name = "Standard Step",
+            Description = "Begin dancing, granting yourself Standard Step.",
+        };
+        var stalePayload = new ActionTooltipCanonicalPayload
+        {
+            ActionId = originalPayload.ActionId,
+            Name = originalPayload.Name,
+            Description = originalPayload.Description,
+            TranslatedName = "Passo padrão",
+            TranslatedDescription = originalPayload.Description,
+        };
+        var staleRow = new ActionTooltip
+        {
+            CanonicalPayloadAsText = stalePayload.Serialize(),
+        };
+        var scope = new TranslationReuseScope("chs", "pt-BR", 4, true);
+        var createRow = typeof(PluginEntry).GetMethod(
+            "CreateActionDetailTranslationRow",
+            System.Reflection.BindingFlags.NonPublic |
+            System.Reflection.BindingFlags.Static);
+
+        Assert.NotNull(createRow);
+
+        var mergedRow = (ActionTooltip?)createRow!.Invoke(
+            null,
+            [
+                originalPayload,
+                "test-version",
+                scope,
+                (Func<ActionTooltip, ActionTooltip?>)(_ => staleRow),
+                (TryGetPrefetchTranslationDelegate)((string key, out string translatedText) =>
+                {
+                    if (key.Contains("|Description|", StringComparison.Ordinal))
+                    {
+                        translatedText = "Comece a dancar e conceda a si mesmo Passo padrao.";
+                        return true;
+                    }
+
+                    translatedText = string.Empty;
+                    return false;
+                }),
+                null,
+                null,
+            ]);
+
+        Assert.NotNull(mergedRow);
+        Assert.Equal(
+            "Passo padrão",
+            mergedRow!.TranslatedActionName);
+        Assert.Equal(
+            "Comece a dancar e conceda a si mesmo Passo padrao.",
+            mergedRow.TranslatedActionDescription);
     }
 
     private static PrefetchTranslationDispatchResult RunOperation(
@@ -376,6 +448,19 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                     out capturedSourceLanguage,
                     out capturedScope,
                     out _),
+            PrefetchFamily.NamePlate =>
+                PluginEntry.RunNamePlatePrefetchOperationEntry(
+                    new NamePlatePrefetchCandidate(
+                        NamePlateKind.EventObject,
+                        "Original nameplate"),
+                    sourceLanguageResolver,
+                    configuration,
+                    tryGetTranslation,
+                    queueTranslation,
+                    Translate,
+                    row => persistRow(row),
+                    out capturedSourceLanguage,
+                    out capturedScope),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(family),
                 family,
@@ -385,7 +470,8 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         string Translate(
             string sourceText,
             SourceClientLanguage sourceLanguage,
-            string targetLanguage)
+            string targetLanguage,
+            string originContext)
         {
             onTranslate?.Invoke();
             return "translated text";
@@ -467,6 +553,10 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
                 row.OriginalLang ?? string.Empty,
                 row.TranslationLang ?? string.Empty,
                 row.TranslationEngine),
+            NamePlateMessage row => (
+                row.OriginalLang ?? string.Empty,
+                row.TranslationLang ?? string.Empty,
+                row.TranslationEngine),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(persistedRow),
                 persistedRow,
@@ -497,6 +587,41 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
     }
 
     /// <summary>
+    ///     Asserts the persistence shape and captured scope for a prefetch
+    ///     family.
+    /// </summary>
+    /// <param name="family">The prefetch family under test.</param>
+    /// <param name="persistedRows">The rows sent to production persistence.</param>
+    /// <param name="expectedScope">The expected captured scope.</param>
+    private static void AssertPersistedRows(
+        PrefetchFamily family,
+        IReadOnlyCollection<object> persistedRows,
+        TranslationReuseScope expectedScope)
+    {
+        if (family == PrefetchFamily.NamePlate)
+        {
+            var row = Assert.IsType<NamePlateMessage>(
+                Assert.Single(persistedRows));
+
+            AssertCapturedRowScope(row, expectedScope);
+            Assert.False(string.IsNullOrWhiteSpace(row.TranslatedNamePlateText));
+            return;
+        }
+
+        AssertCanonicalAndNameRows(persistedRows, expectedScope);
+    }
+
+    /// <summary>
+    ///     Gets the expected persistence callback count for one prefetch family.
+    /// </summary>
+    /// <param name="family">The prefetch family under test.</param>
+    /// <returns>The expected persistence callback count.</returns>
+    private static int GetExpectedPersistedRowCount(PrefetchFamily family)
+    {
+        return family == PrefetchFamily.NamePlate ? 1 : 2;
+    }
+
+    /// <summary>
     ///     Gets the family-specific translated name from one persisted row.
     /// </summary>
     /// <param name="persistedRow">The persisted production row.</param>
@@ -508,6 +633,7 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
             ActionTooltip row => row.TranslatedActionName,
             ReferenceTextRowBase row => row.TranslatedName,
             QuestPlate row => row.TranslatedQuestName,
+            NamePlateMessage row => row.TranslatedNamePlateText,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(persistedRow),
                 persistedRow,
@@ -534,5 +660,10 @@ public class PrefetchBrokerSourceScopeTests : IDisposable
         ///     Accepted-quest prefetch.
         /// </summary>
         AcceptedQuest,
+
+        /// <summary>
+        ///     NamePlateGui world-object name prefetch.
+        /// </summary>
+        NamePlate,
     }
 }
