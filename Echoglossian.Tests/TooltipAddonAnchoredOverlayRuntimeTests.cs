@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.UIOverlays.TextPresentation;
 using Echoglossian.UIOverlays.TranslationOverlay;
 
 using System.Numerics;
@@ -36,6 +37,7 @@ public sealed class TooltipAddonAnchoredOverlayRuntimeTests
             frame,
             "مرحبا",
             displaysOriginalSwapText: false,
+            richOriginalTextPresentation: null,
             renderScaleAdjustment: 1.1f);
 
         Assert.True(overlay.Display);
@@ -71,6 +73,7 @@ public sealed class TooltipAddonAnchoredOverlayRuntimeTests
             visibleFrame,
             "Travel",
             displaysOriginalSwapText: true,
+            richOriginalTextPresentation: null,
             renderScaleAdjustment: 1f);
 
         var synced = runtime.TrySync(overlay, hiddenFrame);
@@ -79,6 +82,37 @@ public sealed class TooltipAddonAnchoredOverlayRuntimeTests
         Assert.Equal(visibleFrame.Position, overlay.Position);
         Assert.Equal(visibleFrame.Size, overlay.Dimensions);
         Assert.True(overlay.DisplaysOriginalSwapText);
+    }
+
+    /// <summary>
+    /// Ensures publish retains a rich original payload when swap presentation
+    /// should render the original Tooltip text through the overlay.
+    /// </summary>
+    [Fact]
+    public void Publish_PreservesRichOriginalPresentationForSwapContent()
+    {
+        using var overlay = new TranslationOverlay();
+        var runtime = new TooltipAddonAnchoredOverlayRuntime();
+        var frame = new TooltipAddonOverlayFrame(
+            Position: new Vector2(280f, 160f),
+            Size: new Vector2(400f, 120f),
+            NativeScale: 1f,
+            NativeVisible: true);
+        var presentation = new RichOriginalTextPresentation(
+            "Original title\nOriginal body",
+            new byte[] { 0x02, 0x03 });
+
+        runtime.Publish(
+            overlay,
+            frame,
+            "Original title\nOriginal body",
+            displaysOriginalSwapText: true,
+            richOriginalTextPresentation: presentation,
+            renderScaleAdjustment: 1f);
+
+        Assert.True(overlay.Display);
+        Assert.True(overlay.DisplaysOriginalSwapText);
+        Assert.Same(presentation, overlay.RichOriginalTextPresentation);
     }
 
     /// <summary>

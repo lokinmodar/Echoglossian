@@ -1264,7 +1264,7 @@ public class Config : IPluginConfiguration
   [DefaultValue(0.95f)] public float TooltipAddonOverlayBackgroundOpacity = 0.95f;
 
   /// <summary>Font scale adjustment used by the Tooltip addon anchored overlay.</summary>
-  [DefaultValue(0.85f)] public float TooltipAddonOverlayFontScaleAdjustment = 0.85f;
+  [DefaultValue(0.65f)] public float TooltipAddonOverlayFontScaleAdjustment = 0.65f;
 
   /// <summary>Line-height scale used by the Tooltip addon anchored overlay.</summary>
   [DefaultValue(0.9f)] public float TooltipAddonOverlayLineHeightScale = 0.9f;

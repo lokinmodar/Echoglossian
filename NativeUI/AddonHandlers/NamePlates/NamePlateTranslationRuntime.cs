@@ -6,6 +6,7 @@
 using Dalamud.Game.Gui.NamePlate;
 
 using Echoglossian.Cache;
+using Echoglossian.NativeUI.Helpers;
 
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 
@@ -176,14 +177,30 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   {
     if (this.disposed || !this.ShouldUseDistanceAwareOverlayBackend())
     {
-      this.ClearDistanceAwareOverlay();
+      this.ClearDistanceAwareOverlay(
+          this.disposed
+              ? "sync-skipped-disposed"
+              : "sync-skipped-backend-disabled");
       return false;
     }
 
-    return this.distanceAwareOverlayLifecycle.TrySync(
+    var synchronized = this.distanceAwareOverlayLifecycle.TrySync(
         overlay,
         viewportSize,
         this.ResolveLiveDistanceAwareOverlayFrame);
+    OverlayPublicationDiagnostics.Log(
+        "NamePlateOverlayDiag",
+        synchronized ? "sync-visible" : "sync-not-visible",
+        $"{synchronized}|{MathF.Round(viewportSize.X / 32f)},{MathF.Round(viewportSize.Y / 32f)}",
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"{synchronized}|{MathF.Round(viewportSize.X / 32f)},{MathF.Round(viewportSize.Y / 32f)}|" +
+            $"{overlay.Display}|{OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText)}"),
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"viewport={OverlayPublicationDiagnostics.FormatVector(viewportSize)} overlayDisplay={overlay.Display} " +
+            $"textLen={overlay.CurrentText.Length} preview='{OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText)}'"));
+    return synchronized;
   }
 
   private void ProcessNamePlate(
@@ -205,6 +222,20 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     if (NamePlateCacheManager.TryFindMatch(kind, originalText, scope) is { } cached &&
         !string.IsNullOrWhiteSpace(cached.TranslatedNamePlateText))
     {
+      OverlayPublicationDiagnostics.Log(
+          "NamePlateOverlayDiag",
+          "cache-hit",
+          $"{kind}|{OverlayPublicationDiagnostics.BuildPreview(originalText)}",
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"{kind}|{OverlayPublicationDiagnostics.BuildPreview(originalText)}|" +
+              $"{OverlayPublicationDiagnostics.BuildPreview(cached.TranslatedNamePlateText)}"),
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"kind={kind} originalLen={originalText.Length} " +
+              $"originalPreview='{OverlayPublicationDiagnostics.BuildPreview(originalText)}' " +
+              $"translatedLen={cached.TranslatedNamePlateText.Length} " +
+              $"translatedPreview='{OverlayPublicationDiagnostics.BuildPreview(cached.TranslatedNamePlateText)}'"));
       this.ApplyResolvedNamePlate(
           handler,
           originalText,
@@ -222,7 +253,21 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
   {
     if (this.ShouldSuppressTranslatedPresentation())
     {
-      this.ClearDistanceAwareOverlay();
+      OverlayPublicationDiagnostics.Log(
+          "NamePlateOverlayDiag",
+          "presentation-suppressed",
+          OverlayPublicationDiagnostics.BuildPreview(originalText),
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"{OverlayPublicationDiagnostics.BuildPreview(originalText)}|" +
+              $"{this.config.OverlayOnlyLanguage}|{this.config.EnableDistanceAwareOverlays}"),
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"overlayOnlyLanguage={this.config.OverlayOnlyLanguage} " +
+              $"distanceAwareEnabled={this.config.EnableDistanceAwareOverlays} " +
+              $"originalPreview='{OverlayPublicationDiagnostics.BuildPreview(originalText)}' " +
+              $"translatedPreview='{OverlayPublicationDiagnostics.BuildPreview(translatedText)}'"));
+      this.ClearDistanceAwareOverlay("presentation-suppressed");
       return;
     }
 
@@ -268,26 +313,52 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
       string originalText,
       string translatedText)
   {
-    var gameObject = handler.GameObject;
-    if (gameObject == null)
+    var gameObjectId = handler.GameObjectId;
+    if (gameObjectId == 0ul)
     {
       return;
     }
 
+    var gameObject = handler.GameObject;
+    var entityId = gameObject?.EntityId ?? 0u;
+
+    OverlayPublicationDiagnostics.Log(
+        "NamePlateOverlayDiag",
+        "retain-candidate",
+        $"{gameObjectId}|{OverlayPublicationDiagnostics.BuildPreview(originalText)}",
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"{gameObjectId}|{OverlayPublicationDiagnostics.BuildPreview(originalText)}|" +
+            $"{OverlayPublicationDiagnostics.BuildPreview(translatedText)}"),
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"gameObjectId={gameObjectId} entityId={entityId} originalLen={originalText.Length} " +
+            $"originalPreview='{OverlayPublicationDiagnostics.BuildPreview(originalText)}' " +
+            $"translatedLen={translatedText.Length} translatedPreview='{OverlayPublicationDiagnostics.BuildPreview(translatedText)}'"));
     this.distanceAwareOverlayLifecycle.UpsertCandidate(
         new NamePlateDistanceAwareOverlayCandidate(
-            gameObject.EntityId,
+            gameObjectId,
             originalText,
             TranslationOverlayTextNormalizationHelper.NormalizeForDisplay(
-                translatedText)));
+                translatedText),
+            entityId));
   }
 
   private NamePlateDistanceAwareOverlayFrame? ResolveLiveDistanceAwareOverlayFrame(
       NamePlateDistanceAwareOverlayCandidate candidate)
   {
-    var gameObject = this.objectTable.SearchByEntityId(candidate.EntityId);
+    var gameObject = this.objectTable.SearchById(candidate.GameObjectId);
     if (gameObject == null)
     {
+      OverlayPublicationDiagnostics.Log(
+          "NamePlateOverlayDiag",
+          "resolve-frame-miss",
+          $"{candidate.GameObjectId}|missing-object",
+          $"{candidate.GameObjectId}|missing-object",
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"gameObjectId={candidate.GameObjectId} entityId={candidate.EntityId} " +
+              $"reason=missing-object originalPreview='{OverlayPublicationDiagnostics.BuildPreview(candidate.OriginalText)}'"));
       return null;
     }
 
@@ -297,6 +368,20 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
     if (!this.gameGui.WorldToScreen(worldAnchor, out var screenPosition, out var inView) ||
         !inView)
     {
+      OverlayPublicationDiagnostics.Log(
+          "NamePlateOverlayDiag",
+          "resolve-frame-miss",
+          $"{candidate.GameObjectId}|projection",
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"{candidate.GameObjectId}|projection|{inView}|" +
+              $"{MathF.Round(worldAnchor.X):0},{MathF.Round(worldAnchor.Y):0},{MathF.Round(worldAnchor.Z):0}"),
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"gameObjectId={candidate.GameObjectId} entityId={candidate.EntityId} " +
+              $"reason={(inView ? "world-to-screen-failed" : "not-in-view")} " +
+              $"worldAnchor=({worldAnchor.X:0.0},{worldAnchor.Y:0.0},{worldAnchor.Z:0.0}) " +
+              $"originalPreview='{OverlayPublicationDiagnostics.BuildPreview(candidate.OriginalText)}'"));
       return null;
     }
 
@@ -309,9 +394,40 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
         this.config.DistanceAwareOverlayMinScale);
     if (!presentation.IsVisible)
     {
+      OverlayPublicationDiagnostics.Log(
+          "NamePlateOverlayDiag",
+          "resolve-frame-miss",
+          $"{candidate.GameObjectId}|distance",
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"{candidate.GameObjectId}|distance|{distanceToCamera:0.##}|{presentation.Scale:0.##}|{presentation.Alpha:0.##}"),
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"gameObjectId={candidate.GameObjectId} entityId={candidate.EntityId} " +
+              $"reason=distance-clipped distance={distanceToCamera:0.##} " +
+              $"scale={presentation.Scale:0.##} alpha={presentation.Alpha:0.##} " +
+              $"screen={OverlayPublicationDiagnostics.FormatVector(screenPosition)} " +
+              $"originalPreview='{OverlayPublicationDiagnostics.BuildPreview(candidate.OriginalText)}'"));
       return null;
     }
 
+    OverlayPublicationDiagnostics.Log(
+        "NamePlateOverlayDiag",
+        "resolve-frame-hit",
+        $"{candidate.GameObjectId}|{OverlayPublicationDiagnostics.BuildPreview(candidate.OriginalText)}",
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"{candidate.GameObjectId}|{OverlayPublicationDiagnostics.BuildPreview(candidate.OriginalText)}|" +
+            $"{MathF.Round(distanceToCamera):0}|{presentation.Scale:0.##}|{presentation.Alpha:0.##}|" +
+            $"{OverlayPublicationDiagnostics.RoundVector(screenPosition).X:0},{OverlayPublicationDiagnostics.RoundVector(screenPosition).Y:0}"),
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"gameObjectId={candidate.GameObjectId} entityId={candidate.EntityId} " +
+            $"distance={distanceToCamera:0.##} " +
+            $"screen={OverlayPublicationDiagnostics.FormatVector(screenPosition)} " +
+            $"scale={presentation.Scale:0.##} alpha={presentation.Alpha:0.##} " +
+            $"originalPreview='{OverlayPublicationDiagnostics.BuildPreview(candidate.OriginalText)}' " +
+            $"translatedPreview='{OverlayPublicationDiagnostics.BuildPreview(candidate.TranslatedText)}'"));
     return new NamePlateDistanceAwareOverlayFrame(
         screenPosition,
         distanceToCamera,
@@ -319,11 +435,12 @@ internal sealed class NamePlateTranslationRuntime : IDisposable
         presentation.Alpha);
   }
 
-  private void ClearDistanceAwareOverlay()
+  private void ClearDistanceAwareOverlay(string reason = "unspecified")
   {
     this.distanceAwareOverlayLifecycle.ClearCandidates();
     NamePlateDistanceAwareOverlayLifecycle.ClearOverlay(
-        this.distanceAwareOverlay);
+        this.distanceAwareOverlay,
+        reason);
   }
 
   private unsafe float ResolveDistanceToCamera(Vector3 worldAnchor)

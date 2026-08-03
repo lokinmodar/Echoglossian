@@ -30,7 +30,7 @@ public sealed class NamePlateDistanceAwareOverlayLifecycleTests
         var lifecycle = new NamePlateDistanceAwareOverlayLifecycle();
         lifecycle.BeginNamePlateUpdate(isFullUpdate: false, activeNamePlateCount: 1);
         lifecycle.UpsertCandidate(new NamePlateDistanceAwareOverlayCandidate(
-            100u,
+            100ul,
             "Original",
             "Translated"));
 
@@ -74,18 +74,20 @@ public sealed class NamePlateDistanceAwareOverlayLifecycleTests
         var lifecycle = new NamePlateDistanceAwareOverlayLifecycle();
         lifecycle.BeginNamePlateUpdate(isFullUpdate: true, activeNamePlateCount: 2);
         lifecycle.UpsertCandidate(new NamePlateDistanceAwareOverlayCandidate(
-            20u,
+            20ul,
             "Near Original",
-            "Near Translation"));
+            "Near Translation",
+            EntityId: 1u));
         lifecycle.UpsertCandidate(new NamePlateDistanceAwareOverlayCandidate(
-            10u,
+            10ul,
             "Far Original",
-            "Far Translation"));
+            "Far Translation",
+            EntityId: 1u));
 
         Assert.True(lifecycle.TrySync(
             overlay,
             new Vector2(1000f, 600f),
-            candidate => candidate.EntityId == 20u
+            candidate => candidate.GameObjectId == 20ul
                 ? new NamePlateDistanceAwareOverlayFrame(
                     new Vector2(200f, 100f),
                     5f,
@@ -113,18 +115,18 @@ public sealed class NamePlateDistanceAwareOverlayLifecycleTests
         var lifecycle = new NamePlateDistanceAwareOverlayLifecycle();
         lifecycle.BeginNamePlateUpdate(isFullUpdate: false, activeNamePlateCount: 2);
         lifecycle.UpsertCandidate(new NamePlateDistanceAwareOverlayCandidate(
-            1u,
+            1ul,
             "Visible Original",
             "Visible Translation"));
         lifecycle.UpsertCandidate(new NamePlateDistanceAwareOverlayCandidate(
-            2u,
+            2ul,
             "Invalid Original",
             "Invalid Translation"));
 
         Assert.True(lifecycle.TrySync(
             overlay,
             new Vector2(1000f, 600f),
-            candidate => candidate.EntityId == 1u
+            candidate => candidate.GameObjectId == 1ul
                 ? new NamePlateDistanceAwareOverlayFrame(
                     new Vector2(200f, 100f),
                     8f,
@@ -148,7 +150,7 @@ public sealed class NamePlateDistanceAwareOverlayLifecycleTests
         var lifecycle = new NamePlateDistanceAwareOverlayLifecycle();
         lifecycle.BeginNamePlateUpdate(isFullUpdate: false, activeNamePlateCount: 1);
         lifecycle.UpsertCandidate(new NamePlateDistanceAwareOverlayCandidate(
-            100u,
+            100ul,
             "Original",
             "Translated"));
         Assert.True(lifecycle.TrySync(
@@ -183,7 +185,7 @@ public sealed class NamePlateDistanceAwareOverlayLifecycleTests
         var lifecycle = new NamePlateDistanceAwareOverlayLifecycle();
         lifecycle.BeginNamePlateUpdate(isFullUpdate: false, activeNamePlateCount: 1);
         lifecycle.UpsertCandidate(new NamePlateDistanceAwareOverlayCandidate(
-            100u,
+            100ul,
             "Original",
             "Translated"));
         Assert.True(lifecycle.TrySync(

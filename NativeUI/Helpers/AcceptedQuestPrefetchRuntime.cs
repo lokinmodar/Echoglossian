@@ -15,6 +15,8 @@ public partial class Echoglossian
 
   private const bool AcceptedQuestPrefetchEmitDalamudLog = true;
 
+  private const bool AcceptedQuestPrefetchEmitCanonicalDiagnostic = false;
+
   private static readonly TimeSpan AcceptedQuestPrefetchTickInterval =
       TimeSpan.FromSeconds(2);
 
@@ -22,6 +24,9 @@ public partial class Echoglossian
 
   private readonly AcceptedQuestPrefetchRequestQueue
       acceptedQuestPrefetchRequestedQuestQueue = new();
+
+  private readonly AsyncSerialActionPump acceptedQuestPrefetchActionPump =
+      new();
 
   private string acceptedQuestPrefetchSignature = string.Empty;
 
@@ -32,6 +37,8 @@ public partial class Echoglossian
   private bool acceptedQuestPrefetchNotificationActive;
 
   private int acceptedQuestPrefetchNotificationQuestCount;
+
+  private int acceptedQuestPrefetchGeneration;
 
   /// <summary>
   ///     Ticks the accepted-quest prefetch runtime so active quests can be
@@ -87,7 +94,7 @@ public partial class Echoglossian
                out var requestedQuestId,
                out var requestSources))
     {
-      this.PrefetchAcceptedQuest(
+      this.ScheduleAcceptedQuestPrefetch(
           requestedQuestId,
           requestSources);
       processedQuestIds.Add(requestedQuestId);
@@ -105,7 +112,7 @@ public partial class Echoglossian
         continue;
       }
 
-      this.PrefetchAcceptedQuest(questId);
+      this.ScheduleAcceptedQuestPrefetch(questId);
       processedQuestCount++;
     }
 
@@ -174,6 +181,7 @@ public partial class Echoglossian
   /// </summary>
   private void ClearAcceptedQuestPrefetchState()
   {
+    Interlocked.Increment(ref this.acceptedQuestPrefetchGeneration);
     this.acceptedQuestPrefetchQueue.Clear();
     this.acceptedQuestPrefetchRequestedQuestQueue.Clear();
     this.acceptedQuestPrefetchQueueIndex = 0;
@@ -263,17 +271,47 @@ public partial class Echoglossian
   }
 
   /// <summary>
-  ///     Prefetches the canonical text for one accepted quest and schedules any
-  ///     missing translations through the shared paced broker.
+  ///     Captures one accepted-quest snapshot on the plugin tick and queues the
+  ///     heavy canonical prefetch work onto a serialized background worker.
   /// </summary>
   /// <param name="questId">The accepted quest identifier.</param>
   /// <param name="requestSources">
   ///     The visible quest surfaces that explicitly requested this prioritized
   ///     prefetch cycle.
   /// </param>
-  private void PrefetchAcceptedQuest(
+  private void ScheduleAcceptedQuestPrefetch(
       uint questId,
       string? requestSources = null)
+  {
+    if (!this.TryCaptureAcceptedQuestPrefetchWorkItem(
+            questId,
+            requestSources,
+            out var workItem))
+    {
+      return;
+    }
+
+    this.acceptedQuestPrefetchActionPump.Enqueue(
+        () => this.ProcessAcceptedQuestPrefetchWorkItem(workItem));
+  }
+
+  /// <summary>
+  ///     Captures one immutable accepted-quest prefetch work item from the
+  ///     current live quest state.
+  /// </summary>
+  /// <param name="questId">The accepted quest identifier.</param>
+  /// <param name="requestSources">
+  ///     The visible quest surfaces that explicitly requested this prioritized
+  ///     prefetch cycle.
+  /// </param>
+  /// <param name="workItem">
+  ///     The captured background work item when snapshot capture succeeds.
+  /// </param>
+  /// <returns><see langword="true" /> when a complete work item was captured.</returns>
+  private bool TryCaptureAcceptedQuestPrefetchWorkItem(
+      uint questId,
+      string? requestSources,
+      out AcceptedQuestPrefetchWorkItem workItem)
   {
     var requestSourceLabel = string.IsNullOrWhiteSpace(requestSources)
         ? "accepted-quest-scan"
@@ -282,7 +320,7 @@ public partial class Echoglossian
         "quest-start",
         questId,
         detail:
-        $"source={requestSourceLabel}; Accepted-quest prefetch tick picked this quest for processing.");
+        $"source={requestSourceLabel}; Accepted-quest prefetch tick queued this quest for background processing.");
 
     if (!QuestProgressResolver.TryResolveQuestProgress(
             questId.ToString(CultureInfo.InvariantCulture),
@@ -292,18 +330,53 @@ public partial class Echoglossian
           "resolve-failed",
           questId,
           detail: "QuestProgressResolver could not resolve live progress for this accepted quest.");
+      workItem = default;
+      return false;
+    }
+
+    if (!TryCapturePrefetchOperationScope(
+            ResolveCurrentPrefetchSourceLanguage,
+            this.configuration,
+            out var sourceLanguage,
+            out var scope))
+    {
+      workItem = default;
+      return false;
+    }
+
+    workItem = new AcceptedQuestPrefetchWorkItem(
+        questProgressSnapshot,
+        QuestCanonicalData.Create(
+            questProgressSnapshot,
+            GetGameVersion()),
+        sourceLanguage,
+        scope,
+        Volatile.Read(ref this.acceptedQuestPrefetchGeneration));
+    return true;
+  }
+
+  /// <summary>
+  ///     Prefetches the canonical text for one captured accepted quest and
+  ///     schedules any missing translations through the shared paced broker.
+  /// </summary>
+  /// <param name="workItem">The captured accepted-quest prefetch work item.</param>
+  private void ProcessAcceptedQuestPrefetchWorkItem(
+      AcceptedQuestPrefetchWorkItem workItem)
+  {
+    if (workItem.Generation !=
+        Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
+    {
       return;
     }
 
-    var questCanonicalData = QuestCanonicalData.Create(
-        questProgressSnapshot,
-        GetGameVersion());
+    var questProgressSnapshot = workItem.QuestProgressSnapshot;
+    var questCanonicalData = workItem.QuestCanonicalData;
     var currentQuestSequenceText = questCanonicalData.CurrentSequenceText;
     var translationService = TranslationService;
     var nameDispatchResult = RunAcceptedQuestPrefetchOperationEntry(
         questCanonicalData,
-        ResolveCurrentPrefetchSourceLanguage,
-        this.configuration,
+        workItem.SourceLanguage,
+        workItem.Scope,
         this.TryGetQueuedTranslation,
         this.QueueTranslation,
         (sourceText, capturedSource, targetLanguage, originContext) =>
@@ -328,8 +401,6 @@ public partial class Echoglossian
               translatedText: questPlate.TranslatedQuestName);
           this.UpdateQuestPlate(questPlate);
         },
-        out var sourceLanguage,
-        out var scope,
         out var existingQuestPlate);
     if (existingQuestPlate == null)
     {
@@ -374,26 +445,26 @@ public partial class Echoglossian
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage,
-        scope);
+        workItem.SourceLanguage,
+        workItem.Scope);
     this.PrefetchAcceptedQuestSummaries(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage,
-        scope);
+        workItem.SourceLanguage,
+        workItem.Scope);
     this.PrefetchAcceptedQuestObjectives(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage,
-        scope);
+        workItem.SourceLanguage,
+        workItem.Scope);
     this.PrefetchAcceptedQuestSystemRows(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        sourceLanguage,
-        scope);
+        workItem.SourceLanguage,
+        workItem.Scope);
   }
 
   /// <summary>
@@ -1107,7 +1178,9 @@ public partial class Echoglossian
       QuestCanonicalData questCanonicalData,
       QuestPlate questPlate)
   {
-    if (questCanonicalData == null || questPlate == null)
+    if (!AcceptedQuestPrefetchEmitCanonicalDiagnostic ||
+        questCanonicalData == null ||
+        questPlate == null)
     {
       return;
     }
@@ -1215,10 +1288,16 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="phase">The lifecycle phase being logged.</param>
   /// <returns><c>true</c> when the phase should appear in the Dalamud log.</returns>
-  private static bool ShouldEmitAcceptedQuestPrefetchDalamudLog(string phase)
+  internal static bool ShouldEmitAcceptedQuestPrefetchDalamudLog(string phase)
   {
     return phase is "request-queued" or
-        "resolve-failed" ||
+        "request-skip-duplicate" or
+        "resolved" or
+        "resolve-failed" or
+        "translation-queued" or
+        "translation-already-in-flight" or
+        "translation-cache-hit" or
+        "translation-resolved" ||
         phase.EndsWith("-failed", StringComparison.Ordinal);
   }
 
@@ -1358,6 +1437,13 @@ public partial class Echoglossian
       return null;
     }
   }
+
+  private readonly record struct AcceptedQuestPrefetchWorkItem(
+      QuestProgressSnapshot QuestProgressSnapshot,
+      QuestCanonicalData QuestCanonicalData,
+      SourceClientLanguage SourceLanguage,
+      TranslationReuseScope Scope,
+      int Generation);
 }
 
 

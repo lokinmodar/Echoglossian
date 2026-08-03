@@ -3936,6 +3936,34 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("TooltipTabTitle", resourceCulture);
             }
         }
+
+        public static string TooltipAddonOverlayAppearanceSectionLabel => ResourceManager.GetString("TooltipAddonOverlayAppearanceSectionLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayAppearanceDescription => ResourceManager.GetString("TooltipAddonOverlayAppearanceDescription", resourceCulture);
+
+        public static string TooltipAddonHideNativeTooltipWhenOverlayActiveLabel => ResourceManager.GetString("TooltipAddonHideNativeTooltipWhenOverlayActiveLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayFontScaleAdjustmentLabel => ResourceManager.GetString("TooltipAddonOverlayFontScaleAdjustmentLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayLineHeightScaleLabel => ResourceManager.GetString("TooltipAddonOverlayLineHeightScaleLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayPaddingLabel => ResourceManager.GetString("TooltipAddonOverlayPaddingLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayTextColorLabel => ResourceManager.GetString("TooltipAddonOverlayTextColorLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayBackgroundColorLabel => ResourceManager.GetString("TooltipAddonOverlayBackgroundColorLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayBackgroundOpacityLabel => ResourceManager.GetString("TooltipAddonOverlayBackgroundOpacityLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayMaxWidthModeLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthModeLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayMaxWidthMatchNativeLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthMatchNativeLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayMaxWidthManualCapLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthManualCapLabel", resourceCulture);
+
+        public static string TooltipAddonOverlayManualMaxWidthLabel => ResourceManager.GetString("TooltipAddonOverlayManualMaxWidthLabel", resourceCulture);
+
+        public static string OverlayWindowTitleTooltipAddonTranslation => ResourceManager.GetString("OverlayWindowTitleTooltipAddonTranslation", resourceCulture);
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translate ActionMenu Window.

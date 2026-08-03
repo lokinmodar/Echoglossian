@@ -46,6 +46,61 @@ public sealed class TooltipAddonNativePresentationContractTests
     }
 
     /// <summary>
+    ///     Ensures the native Tooltip path attempts to project translated text
+    ///     onto a captured readable SeString payload before falling back to
+    ///     plain-text writes.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_NativeMode_ProjectsReadablePayloadsBeforeFallback()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ReadableSeStringPayloadHelper.ProjectReadablePayloadBytes(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "replacementPayload:",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the shared native reflow helper can apply rich SeString
+    ///     payload bytes instead of always degrading translated nodes to plain
+    ///     text.
+    /// </summary>
+    [Fact]
+    public void NativeTextNodeLayoutHelper_CanApplyReadablePayloadBytes()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "NativeTextNodeLayoutHelper.cs"));
+
+        Assert.Contains(
+            "byte[]? replacementPayload",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "textNode->SetText(replacementPayload);",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the dedicated Tooltip handler normalizes wrapped SeString
     ///     payloads before persistence and compares live native text by meaning
     ///     instead of raw wrap-marker bytes.
@@ -190,6 +245,36 @@ public sealed class TooltipAddonNativePresentationContractTests
         Assert.True(
             appearanceIndex < tooltipAddonIndex,
             "Tooltip addon controls should render after hover appearance settings.");
+    }
+
+    /// <summary>
+    ///     Ensures the Tooltip addon anchored overlay is cleared and native
+    ///     visibility can be restored when native presentation retakes
+    ///     ownership.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_ClearsAnchoredOverlayWhenNativeModeOwnsPresentation()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "ClearAnchoredOverlay",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TooltipAddonHideNativeTooltipWhenOverlayActive",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TryBuildTooltipAddonOverlayFrame",
+            source,
+            StringComparison.Ordinal);
     }
 
     private static DirectoryInfo FindRepositoryRoot()

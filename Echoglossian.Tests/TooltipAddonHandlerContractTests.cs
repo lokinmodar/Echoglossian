@@ -123,6 +123,89 @@ public sealed class TooltipAddonHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures the Tooltip addon routes tooltip and swap modes through the
+    ///     anchored overlay runtime instead of direct hover-tooltip
+    ///     registration in the handler.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_UsesAnchoredOverlayRuntimeForTooltipAndSwapModes()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "TooltipAddonAnchoredOverlayRuntime",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TryRegisterCustomHoverTooltips",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TooltipAddonAnchoredOverlayPresentationPolicy.UsesAnchoredOverlay(",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "hoverTooltipManager.Register(",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the shared DB-first stable PreDraw short-circuit can
+    ///     republish addon-owned custom hover content instead of only touching
+    ///     generic hover-tooltip lifetimes.
+    /// </summary>
+    [Fact]
+    public void DbFirstHandler_StablePreDrawRefreshesCustomHoverFallbacks()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "DbFirstGameWindowAddonHandler.cs"));
+
+        Assert.Contains(
+            "private void RefreshAppliedHoverTooltips(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.RefreshAppliedHoverTooltips(",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures Tooltip anchored-overlay frame resolution uses the tooltip
+    ///     addon's direct root-node field instead of relying only on the
+    ///     ULD-manager root pointer, which is null for some live Tooltip
+    ///     variants.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_AnchoredOverlayFrameUsesDirectTooltipRootNode()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "addon->RootNode",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

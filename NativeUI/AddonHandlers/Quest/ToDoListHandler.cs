@@ -21,6 +21,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       TimeSpan.FromSeconds(2);
 
   private readonly Dictionary<string, ToDoRuntimeEntry> toDoRuntimeEntries = [];
+  private readonly Dictionary<string, string> toDoQuestDiagnosticStates = [];
   private readonly HashSet<string> toDoNativeMutationKeys = [];
 
   private readonly QuestWaitingNotificationGate toDoListWaitingNotificationGate
@@ -386,6 +387,15 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
 
     var originalQuestText = this.ResolveOriginalToDoText(visibleQuest.QuestRow);
     blockingQuestLabel = originalQuestText;
+    var diagnosticKey = this.BuildToDoQuestDiagnosticKey(
+        visibleQuest.QuestRow,
+        originalQuestText);
+    var objectiveRows = visibleQuest.Objectives
+        .Select(
+            objectiveRow => (
+                ObjectiveRow: objectiveRow,
+                OriginalText: this.ResolveOriginalToDoText(objectiveRow)))
+        .ToArray();
 
     if (!QuestTodoProgressResolver.TryResolveQuestTodoProgress(
             originalQuestText,
@@ -396,35 +406,54 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               visibleQuest,
               sourceLanguage,
               out var fallbackTranslatedQuestTitle);
-      if (QuestLuminaResolver.TryResolveQuestId(
+      var trackableObjectiveCount = objectiveRows.Count(
+          objectiveRow => this.ShouldTrackObjectiveRow(objectiveRow.OriginalText));
+      var shouldRequestAcceptedQuestPrefetch =
+          ShouldRequestAcceptedQuestPrefetchWhenTodoProgressUnavailable(
+              resolvedFallbackQuestTitle);
+      var shouldKeepRetryingWithoutTodoProgress =
+          ShouldKeepRetryingWithoutTodoProgress(
+              resolvedFallbackQuestTitle,
+              trackableObjectiveCount);
+      if (shouldRequestAcceptedQuestPrefetch &&
+          QuestLuminaResolver.TryResolveQuestId(
               originalQuestText,
               out var pendingQuestIdText) &&
           QuestProgressResolver.TryResolveAcceptedQuestId(
               pendingQuestIdText,
               out var acceptedQuestId))
       {
-        PluginRuntimeLog.Debug(
-            ToDoListAddonName,
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"pending-prefetch|{acceptedQuestId}"),
             "request-prefetch questId={QuestId} title='{QuestTitle}' reason='todo-progress-unavailable'",
             acceptedQuestId,
             this.SummarizeDiagnosticText(originalQuestText));
         this.RequestAcceptedQuestPrefetch(acceptedQuestId);
       }
-      else
+      else if (shouldRequestAcceptedQuestPrefetch)
       {
-        PluginRuntimeLog.Debug(
-            ToDoListAddonName,
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            "pending-noacceptedquest|todo-progress-unavailable",
             "resolve-pending title='{QuestTitle}' reason='todo-progress-unavailable'",
             this.SummarizeDiagnosticText(originalQuestText));
       }
 
       if (resolvedFallbackQuestTitle)
       {
-        PluginRuntimeLog.Debug(
-            ToDoListAddonName,
-            "resolve-fallback title='{QuestTitle}' translatedReady=true objectiveCount={ObjectiveCount}",
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"fallback|{trackableObjectiveCount}|{shouldRequestAcceptedQuestPrefetch}|{shouldKeepRetryingWithoutTodoProgress}"),
+            "resolve-fallback title='{QuestTitle}' translatedReady=true trackableObjectiveCount={ObjectiveCount} requestPrefetch={RequestPrefetch} retryLocal={RetryLocal}",
             this.SummarizeDiagnosticText(originalQuestText),
-            visibleQuest.Objectives.Count);
+            trackableObjectiveCount,
+            shouldRequestAcceptedQuestPrefetch,
+            shouldKeepRetryingWithoutTodoProgress);
       }
 
       runtimeEntries.Add(
@@ -437,19 +466,18 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
                   : originalQuestText,
               translatedPayloadReady: resolvedFallbackQuestTitle));
 
-      foreach (var objectiveRow in visibleQuest.Objectives)
+      foreach (var objectiveRow in objectiveRows)
       {
-        var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
         runtimeEntries.Add(
             this.CreateObjectiveRuntimeEntry(
-                objectiveRow,
+                objectiveRow.ObjectiveRow,
                 progressKey: string.Empty,
-                originalObjectiveText,
-                originalObjectiveText,
+                objectiveRow.OriginalText,
+                objectiveRow.OriginalText,
                 translatedPayloadReady: false));
       }
 
-      return false;
+      return !shouldKeepRetryingWithoutTodoProgress;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
@@ -464,8 +492,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     if (foundQuestPlate == null ||
         string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestName))
     {
-      PluginRuntimeLog.Debug(
-          ToDoListAddonName,
+      this.LogToDoQuestDiagnosticState(
+          diagnosticKey,
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"pending-quest-translation|{todoProgressSnapshot.QuestProgress.QuestId}|{todoProgressSnapshot.CacheKey}"),
           "resolve-pending questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' reason='quest-translation-missing'",
           todoProgressSnapshot.QuestProgress.QuestId,
           todoProgressSnapshot.CacheKey,
@@ -507,8 +538,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
          objectiveIndex < visibleQuest.Objectives.Count;
          objectiveIndex++)
     {
-      var objectiveRow = visibleQuest.Objectives[objectiveIndex];
-      var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
+      var objectiveRow = objectiveRows[objectiveIndex].ObjectiveRow;
+      var originalObjectiveText = objectiveRows[objectiveIndex].OriginalText;
       if (!this.ShouldTrackObjectiveRow(originalObjectiveText))
       {
         runtimeEntries.Add(
@@ -530,8 +561,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               visibleQuest.Objectives.Count,
               out var translatedObjectiveText))
       {
-        PluginRuntimeLog.Debug(
-            ToDoListAddonName,
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"pending-objective-translation|{todoProgressSnapshot.QuestProgress.QuestId}|{todoProgressSnapshot.CacheKey}|{objectiveIndex}|{originalObjectiveText}"),
             "resolve-pending questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' objectiveIndex={ObjectiveIndex} objective='{ObjectiveText}' reason='objective-translation-missing'",
             todoProgressSnapshot.QuestProgress.QuestId,
             todoProgressSnapshot.CacheKey,
@@ -559,8 +593,11 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               translatedPayloadReady: true));
     }
 
-    PluginRuntimeLog.Debug(
-        ToDoListAddonName,
+    this.LogToDoQuestDiagnosticState(
+        diagnosticKey,
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"resolved|{todoProgressSnapshot.QuestProgress.QuestId}|{todoProgressSnapshot.CacheKey}|{visibleQuest.Objectives.Count}"),
         "resolve questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' objectiveCount={ObjectiveCount}",
         todoProgressSnapshot.QuestProgress.QuestId,
         todoProgressSnapshot.CacheKey,
@@ -599,6 +636,109 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
 
     translatedQuestTitle = foundFallbackQuestPlate.TranslatedQuestName;
     return true;
+  }
+
+  /// <summary>
+  ///     Gets whether missing live TODO progress should still queue accepted
+  ///     quest prefetch work.
+  /// </summary>
+  /// <param name="hasFallbackTranslatedTitle">
+  ///     Whether a persisted translated title already exists.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when accepted-quest prefetch can still add missing DB
+  ///     data for the current visible quest.
+  /// </returns>
+  internal static bool ShouldRequestAcceptedQuestPrefetchWhenTodoProgressUnavailable(
+      bool hasFallbackTranslatedTitle)
+  {
+    return !hasFallbackTranslatedTitle;
+  }
+
+  /// <summary>
+  ///     Gets whether the ToDoList should keep locally retrying a visible
+  ///     quest while the live TODO progress snapshot is still unavailable.
+  /// </summary>
+  /// <param name="hasFallbackTranslatedTitle">
+  ///     Whether a persisted translated title already exists.
+  /// </param>
+  /// <param name="trackableObjectiveCount">
+  ///     The number of visible objective rows that still depend on live TODO
+  ///     progress to map into canonical translated rows.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when local retries should continue.
+  /// </returns>
+  internal static bool ShouldKeepRetryingWithoutTodoProgress(
+      bool hasFallbackTranslatedTitle,
+      int trackableObjectiveCount)
+  {
+    return !hasFallbackTranslatedTitle || trackableObjectiveCount > 0;
+  }
+
+  /// <summary>
+  ///     Gets whether one ToDoList quest diagnostic state changed enough to
+  ///     warrant a fresh debug log line.
+  /// </summary>
+  /// <param name="previousState">The last emitted diagnostic state.</param>
+  /// <param name="nextState">The candidate diagnostic state.</param>
+  /// <returns>
+  ///     <c>true</c> when the diagnostic state changed.
+  /// </returns>
+  internal static bool ShouldEmitToDoQuestDiagnosticState(
+      string? previousState,
+      string nextState)
+  {
+    return !string.Equals(
+        previousState,
+        nextState,
+        StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Emits one ToDoList quest debug line only when the per-quest
+  ///     diagnostic state changed since the last emission.
+  /// </summary>
+  /// <param name="diagnosticKey">The stable visible-quest diagnostic key.</param>
+  /// <param name="nextState">The candidate diagnostic state.</param>
+  /// <param name="messageTemplate">The structured log template.</param>
+  /// <param name="propertyValues">The structured property values.</param>
+  private void LogToDoQuestDiagnosticState(
+      string diagnosticKey,
+      string nextState,
+      string messageTemplate,
+      params object[] propertyValues)
+  {
+    this.toDoQuestDiagnosticStates.TryGetValue(
+        diagnosticKey,
+        out var previousState);
+    if (!ShouldEmitToDoQuestDiagnosticState(
+            previousState,
+            nextState))
+    {
+      return;
+    }
+
+    this.toDoQuestDiagnosticStates[diagnosticKey] = nextState;
+    PluginRuntimeLog.Debug(
+        ToDoListAddonName,
+        messageTemplate,
+        propertyValues);
+  }
+
+  /// <summary>
+  ///     Builds one stable diagnostic key for a visible ToDoList quest row.
+  /// </summary>
+  /// <param name="questRow">The visible quest row.</param>
+  /// <param name="originalQuestText">The resolved original quest text.</param>
+  /// <returns>The stable diagnostic key.</returns>
+  private string BuildToDoQuestDiagnosticKey(
+      ToDoItem questRow,
+      string originalQuestText)
+  {
+    return string.Create(
+        CultureInfo.InvariantCulture,
+        $"{questRow.IndexI}|{questRow.IndexJ}|{questRow.NodeId}|{originalQuestText}");
   }
 
   /// <summary>
@@ -1257,6 +1397,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private void OnToDoListCleanupEvent(AddonEvent type, AddonArgs args)
   {
     this.toDoRuntimeEntries.Clear();
+    this.toDoQuestDiagnosticStates.Clear();
     this.toDoNativeMutationKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
     this.currentToDoListDataReady = false;
@@ -1276,6 +1417,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     }
 
     this.toDoRuntimeEntries.Clear();
+    this.toDoQuestDiagnosticStates.Clear();
     this.toDoNativeMutationKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
     this.currentToDoListDataReady = false;

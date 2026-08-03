@@ -147,12 +147,25 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         RenderedTextBlock? titleBlock = null;
         Vector2 measuredTextSize;
         Vector2 measuredTitleSize = Vector2.Zero;
+        TextureRenderAttemptOutcome bodyTextureOutcome =
+            TextureRenderAttemptOutcome.Rendered;
 
         if (backendKind == TextPresentationBackendKind.RtlTexture)
         {
-            bodyBlock = this.rtlTexturePresentationService.TryRender(textRequest);
+            bodyBlock = this.rtlTexturePresentationService.TryRenderDetailed(
+                textRequest,
+                out bodyTextureOutcome);
             if (bodyBlock == null)
             {
+#if DEBUG
+                OverlayTextureRenderDiagnostics.LogTextureUnavailable(
+                    this.configuration,
+                    config.SurfaceId,
+                    request,
+                    textRequest,
+                    bodyTextureOutcome,
+                    this.rtlTexturePresentationService.GetDebugStats());
+#endif
                 return NotDrawn(backendKind);
             }
 
@@ -314,6 +327,19 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             }
 
             overlay.ImGuiSize = ImGui.GetWindowSize();
+#if DEBUG
+            if (backendKind == TextPresentationBackendKind.RtlTexture)
+            {
+                OverlayTextureRenderDiagnostics.LogTextureDrawn(
+                    this.configuration,
+                    config.SurfaceId,
+                    request,
+                    textRequest,
+                    renderedPosition,
+                    overlay.ImGuiSize,
+                    measuredTextSize);
+            }
+#endif
             return new TranslationOverlayRenderResult(
                 true,
                 renderedPosition,

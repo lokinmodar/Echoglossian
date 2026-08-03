@@ -148,13 +148,18 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     applied so width growth can use that draw width instead of relying
   ///     only on the historical wrap width.
   /// </param>
+  /// <param name="replacementPayload">
+  ///     The optional rich SeString payload to write after layout flags and
+  ///     wrap width are prepared.
+  /// </param>
   /// <returns>The measured size after the text replacement.</returns>
   public static NativeTextNodeResizeResult ApplyWrappedTextAndMeasure(
       AtkTextNode* textNode,
       string replacementText,
       ushort preferredWrapWidth,
       bool allowWidthGrowth = false,
-      bool measureReplacementWidthBeforeApply = false)
+      bool measureReplacementWidthBeforeApply = false,
+      byte[]? replacementPayload = null)
   {
     if (textNode == null)
     {
@@ -179,7 +184,15 @@ internal static unsafe class NativeTextNodeLayoutHelper
       textNode->SetWidth(resolvedWrapWidth);
     }
 
-    textNode->SetText(replacementText);
+    if (replacementPayload is { Length: > 0 })
+    {
+      textNode->SetText(replacementPayload);
+    }
+    else
+    {
+      textNode->SetText(replacementText);
+    }
+
     textNode->ResizeNodeForCurrentText();
 
     if (resolvedWrapWidth > 0)
@@ -601,6 +614,10 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     Whether the candidate replacement text should be measured before
   ///     native apply so width growth can use its draw width.
   /// </param>
+  /// <param name="replacementPayload">
+  ///     The optional rich SeString payload to write while keeping the same
+  ///     replacement-text measurement and layout flow.
+  /// </param>
   public static NativeTextNodeLayoutSnapshot? ApplyTextReplacementWithInferredReflow(
       AtkUnitBase* addon,
       AtkTextNode* textNode,
@@ -610,7 +627,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       ushort additionalWrapWidth = 0,
       int minimumSecondaryHorizontalPadding = 0,
       int minimumSecondaryVerticalPadding = 0,
-      bool measureReplacementWidthBeforeApply = false)
+      bool measureReplacementWidthBeforeApply = false,
+      byte[]? replacementPayload = null)
   {
     if (textNode == null)
     {
@@ -646,7 +664,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
         replacementText,
         preferredWrapWidth,
         allowWidthGrowth,
-        measureReplacementWidthBeforeApply);
+        measureReplacementWidthBeforeApply,
+        replacementPayload);
     ResizeFromSnapshot(
         snapshot,
         resizeResult,

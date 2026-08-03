@@ -579,10 +579,11 @@ public partial class Echoglossian : IDalamudPlugin
       ItemTooltipCacheManager.Clear();
       TooltipTextCacheManager.Clear();
       DbFirstGameWindowAddonHandler.ClearSessionCaches();
-      QuestLuminaResolver.Clear();
+    QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();
     this.ClearAcceptedQuestPrefetchState();
+    this.acceptedQuestPrefetchActionPump.Dispose();
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
     this.ClearNamePlatePrefetchState();

@@ -27,6 +27,42 @@ internal sealed record TextureCreationRequest(
     bool RightToLeft);
 
 /// <summary>
+/// Describes the outcome of one texture-backed render probe.
+/// </summary>
+internal enum TextureRenderAttemptOutcome
+{
+  /// <summary>
+  /// The request resolved a cached texture and can render immediately.
+  /// </summary>
+  Rendered,
+
+  /// <summary>
+  /// The texture service has already been disposed.
+  /// </summary>
+  Disposed,
+
+  /// <summary>
+  /// The request is cooling down after a recent generation failure.
+  /// </summary>
+  CoolingDown,
+
+  /// <summary>
+  /// The exact request is already pending generation.
+  /// </summary>
+  PendingExisting,
+
+  /// <summary>
+  /// The bounded pending-work capacity is full.
+  /// </summary>
+  QueueFull,
+
+  /// <summary>
+  /// The request was admitted and queued for future generation.
+  /// </summary>
+  Enqueued,
+}
+
+/// <summary>
 /// Generates and caches texture-backed render blocks for complex-script text.
 /// </summary>
 internal sealed class RtlTexturePresentationService : IDisposable
@@ -211,6 +247,24 @@ internal sealed class RtlTexturePresentationService : IDisposable
   /// </returns>
   public RenderedTextBlock? TryRender(TextLayoutRequest request)
   {
+    return this.TryRenderDetailed(request, out _);
+  }
+
+  /// <summary>
+  /// Tries to produce a measured render block for the provided texture-backed
+  /// presentation request while also reporting the exact decision path.
+  /// </summary>
+  /// <param name="request">The presentation request.</param>
+  /// <param name="outcome">The exact render decision outcome.</param>
+  /// <returns>
+  /// The rendered block when cached generation has completed; otherwise,
+  /// <see langword="null"/> while creation is pending, cooling down, the
+  /// service is disposed, or the bounded work queue is full.
+  /// </returns>
+  internal RenderedTextBlock? TryRenderDetailed(
+      TextLayoutRequest request,
+      out TextureRenderAttemptOutcome outcome)
+  {
     var creationRequest = this.BuildTextureCreationRequest(request);
     var cacheKey = BuildCacheKey(creationRequest);
 
@@ -218,6 +272,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
     {
       if (this.disposed)
       {
+        outcome = TextureRenderAttemptOutcome.Disposed;
         return null;
       }
 
@@ -226,6 +281,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
 
       if (this.TryGetCachedTextureLease(cacheKey, out var cachedTexture))
       {
+        outcome = TextureRenderAttemptOutcome.Rendered;
         return this.CreateRenderedBlock(request, cachedTexture);
       }
 
@@ -235,12 +291,19 @@ internal sealed class RtlTexturePresentationService : IDisposable
           retryState.RetryAfterUtc > now)
       {
         this.TouchRetryState(retryState);
+        outcome = TextureRenderAttemptOutcome.CoolingDown;
         return null;
       }
 
-      if (generation.PendingByKey.ContainsKey(cacheKey) ||
-          generation.PendingByKey.Count >= this.pendingTextureCapacity)
+      if (generation.PendingByKey.ContainsKey(cacheKey))
       {
+        outcome = TextureRenderAttemptOutcome.PendingExisting;
+        return null;
+      }
+
+      if (generation.PendingByKey.Count >= this.pendingTextureCapacity)
+      {
+        outcome = TextureRenderAttemptOutcome.QueueFull;
         return null;
       }
 
@@ -252,6 +315,7 @@ internal sealed class RtlTexturePresentationService : IDisposable
       generation.PendingByKey.Add(cacheKey, work);
       generation.Queue.Enqueue(work);
       this.EnsureTextureWorkers(generation);
+      outcome = TextureRenderAttemptOutcome.Enqueued;
       return null;
     }
   }

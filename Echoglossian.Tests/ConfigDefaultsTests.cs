@@ -66,6 +66,22 @@ public class ConfigDefaultsTests
     }
 
     /// <summary>
+    ///     Ensures the Tooltip addon anchored overlay defaults to a smaller
+    ///     text scale than generic hover tooltips so the overlay better
+    ///     matches the native tooltip text size.
+    /// </summary>
+    [Fact]
+    public void TooltipAddonOverlayFontScaleAdjustment_DefaultsToSixtyFivePercent()
+    {
+        var config = new Config();
+        var field = typeof(Config).GetField(
+            nameof(Config.TooltipAddonOverlayFontScaleAdjustment));
+
+        Assert.NotNull(field);
+        Assert.Equal(0.65f, Assert.IsType<float>(field!.GetValue(config)));
+    }
+
+    /// <summary>
     ///     Ensures hover tooltips can use a wider layout cap than the legacy
     ///     hardcoded width so long RTL paragraphs do not collapse into a tall
     ///     column.

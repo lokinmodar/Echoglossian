@@ -974,8 +974,18 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
             {
                 if (requiresHoverTooltipLifetimeRefresh)
                 {
-                    this.hoverTooltipManager.TouchByPrefix(
-                        this.hoverTooltipKeyPrefix);
+                    if (this.TryGetVisibleAddon(out var hoverVisibleAddon))
+                    {
+                        this.RefreshAppliedHoverTooltips(
+                            hoverVisibleAddon,
+                            this.runtimeState,
+                            displayMode);
+                    }
+                    else
+                    {
+                        this.hoverTooltipManager.TouchByPrefix(
+                            this.hoverTooltipKeyPrefix);
+                    }
                 }
 
                 return;
@@ -1071,6 +1081,30 @@ public abstract unsafe class DbFirstGameWindowAddonHandler
     private protected void ClearRegisteredHoverTooltips()
     {
         this.hoverTooltipManager.RemoveByPrefix(this.hoverTooltipKeyPrefix);
+    }
+
+    /// <summary>
+    ///     Refreshes addon-owned hover presentation for one already-applied
+    ///     runtime state without performing a new DB-first resolve pass.
+    /// </summary>
+    /// <param name="addon">The currently visible addon.</param>
+    /// <param name="runtimeState">The already-applied runtime payload.</param>
+    /// <param name="displayMode">The active display mode.</param>
+    private void RefreshAppliedHoverTooltips(
+        AtkUnitBase* addon,
+        DbFirstGameWindowRuntimeState runtimeState,
+        JournalTranslationDisplayMode displayMode)
+    {
+        if (this.TryRegisterCustomHoverTooltips(
+                addon,
+                runtimeState.OriginalPayload,
+                runtimeState.TranslatedPayload,
+                displayMode))
+        {
+            return;
+        }
+
+        this.hoverTooltipManager.TouchByPrefix(this.hoverTooltipKeyPrefix);
     }
 
     /// <summary>

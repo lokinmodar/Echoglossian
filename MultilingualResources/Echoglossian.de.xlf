@@ -2115,6 +2115,106 @@
           <source>{0} seconds</source>
           <target state="new">{0} seconds</target>
         </trans-unit>
+        <trans-unit id="TooltipRegisterLoggingHelpMessage" translate="yes" xml:space="preserve">
+          <source>Temporarily logs hover-tooltip registrations and hover hits. Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</source>
+          <target state="new">Temporarily logs hover-tooltip registrations and hover hits. Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</target>
+        </trans-unit>
+        <trans-unit id="TooltipRegisterLoggingUsage" translate="yes" xml:space="preserve">
+          <source>Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</source>
+          <target state="new">Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</target>
+        </trans-unit>
+        <trans-unit id="TooltipRegisterLoggingInvalidDurationFormat" translate="yes" xml:space="preserve">
+          <source>Invalid tooltip logging duration. Use values like 90s or 15m, up to {0} minutes.</source>
+          <target state="new">Invalid tooltip logging duration. Use values like 90s or 15m, up to {0} minutes.</target>
+        </trans-unit>
+        <trans-unit id="TooltipRegisterLoggingNoActiveSession" translate="yes" xml:space="preserve">
+          <source>No active tooltip registration logging session to stop.</source>
+          <target state="new">No active tooltip registration logging session to stop.</target>
+        </trans-unit>
+        <trans-unit id="TooltipRegisterLoggingStopped" translate="yes" xml:space="preserve">
+          <source>Tooltip registration logging stopped.</source>
+          <target state="new">Tooltip registration logging stopped.</target>
+        </trans-unit>
+        <trans-unit id="TooltipRegisterLoggingStartedFormat" translate="yes" xml:space="preserve">
+          <source>Tooltip registration logging started for surface '{0}' for {1}. Check Echoglossian.log for register and hover-hit diagnostics.</source>
+          <target state="new">Tooltip registration logging started for surface '{0}' for {1}. Check Echoglossian.log for register and hover-hit diagnostics.</target>
+        </trans-unit>
+        <trans-unit id="EnableDistanceAwareOverlaysLabel" translate="yes" xml:space="preserve">
+          <source>Enable distance-aware overlays</source>
+          <target state="new">Enable distance-aware overlays</target>
+        </trans-unit>
+        <trans-unit id="DistanceAwareOverlayFullScaleDistanceLabel" translate="yes" xml:space="preserve">
+          <source>Full scale distance</source>
+          <target state="new">Full scale distance</target>
+        </trans-unit>
+        <trans-unit id="DistanceAwareOverlayFadeStartDistanceLabel" translate="yes" xml:space="preserve">
+          <source>Fade start distance</source>
+          <target state="new">Fade start distance</target>
+        </trans-unit>
+        <trans-unit id="DistanceAwareOverlayMaxDistanceLabel" translate="yes" xml:space="preserve">
+          <source>Maximum distance</source>
+          <target state="new">Maximum distance</target>
+        </trans-unit>
+        <trans-unit id="DistanceAwareOverlayMinScaleLabel" translate="yes" xml:space="preserve">
+          <source>Minimum scale</source>
+          <target state="new">Minimum scale</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayAppearanceSectionLabel" translate="yes" xml:space="preserve">
+          <source>Tooltip addon overlay appearance</source>
+          <target state="new">Tooltip addon overlay appearance</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayAppearanceDescription" translate="yes" xml:space="preserve">
+          <source>These settings apply only when the Tooltip addon uses its anchored Plugin Overlay.</source>
+          <target state="new">These settings apply only when the Tooltip addon uses its anchored Plugin Overlay.</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonHideNativeTooltipWhenOverlayActiveLabel" translate="yes" xml:space="preserve">
+          <source>Hide native Tooltip while overlay is active</source>
+          <target state="new">Hide native Tooltip while overlay is active</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayFontScaleAdjustmentLabel" translate="yes" xml:space="preserve">
+          <source>Overlay font scale</source>
+          <target state="new">Overlay font scale</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayLineHeightScaleLabel" translate="yes" xml:space="preserve">
+          <source>Overlay text line height</source>
+          <target state="new">Overlay text line height</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayPaddingLabel" translate="yes" xml:space="preserve">
+          <source>Overlay padding</source>
+          <target state="new">Overlay padding</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayTextColorLabel" translate="yes" xml:space="preserve">
+          <source>Overlay text color</source>
+          <target state="new">Overlay text color</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayBackgroundColorLabel" translate="yes" xml:space="preserve">
+          <source>Overlay background color</source>
+          <target state="new">Overlay background color</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayBackgroundOpacityLabel" translate="yes" xml:space="preserve">
+          <source>Overlay background opacity</source>
+          <target state="new">Overlay background opacity</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayMaxWidthModeLabel" translate="yes" xml:space="preserve">
+          <source>Overlay maximum width</source>
+          <target state="new">Overlay maximum width</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayMaxWidthMatchNativeLabel" translate="yes" xml:space="preserve">
+          <source>Match native tooltip</source>
+          <target state="new">Match native tooltip</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayMaxWidthManualCapLabel" translate="yes" xml:space="preserve">
+          <source>Manual cap</source>
+          <target state="new">Manual cap</target>
+        </trans-unit>
+        <trans-unit id="TooltipAddonOverlayManualMaxWidthLabel" translate="yes" xml:space="preserve">
+          <source>Overlay manual maximum width</source>
+          <target state="new">Overlay manual maximum width</target>
+        </trans-unit>
+        <trans-unit id="OverlayWindowTitleTooltipAddonTranslation" translate="yes" xml:space="preserve">
+          <source>Tooltip addon translation</source>
+          <target state="new">Tooltip addon translation</target>
+        </trans-unit>
       </group>
     </body>
   </file>

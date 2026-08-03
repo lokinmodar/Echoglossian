@@ -6,6 +6,7 @@
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.UIOverlays.TranslationOverlay;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,6 +29,10 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     private readonly Func<TooltipText, IReadOnlyList<TooltipText>>
         findTooltipTextCandidates;
     private readonly Func<TooltipText, Task<string>> insertTooltipTextAsync;
+    private readonly TooltipAddonAnchoredOverlayRuntime
+        tooltipAddonAnchoredOverlayRuntime;
+    private readonly TranslationOverlay tooltipAddonOverlay;
+    private bool nativeTooltipHiddenByOverlay;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="TooltipHandler" />
@@ -36,6 +41,12 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     /// <param name="configuration">The plugin configuration.</param>
     /// <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
     /// <param name="translationService">The translation service.</param>
+    /// <param name="tooltipAddonOverlay">
+    ///     The shared anchored overlay surface for the Tooltip addon.
+    /// </param>
+    /// <param name="tooltipAddonAnchoredOverlayRuntime">
+    ///     The Tooltip addon anchored overlay state runtime.
+    /// </param>
     /// <param name="findTooltipText">Resolves a persisted Tooltip payload.</param>
     /// <param name="findTooltipTextCandidates">
     ///     Resolves candidate Tooltip payloads for canonical original
@@ -48,6 +59,8 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         Config configuration,
         HoverTooltipManager hoverTooltipManager,
         TranslationService translationService,
+        TranslationOverlay tooltipAddonOverlay,
+        TooltipAddonAnchoredOverlayRuntime tooltipAddonAnchoredOverlayRuntime,
         Func<TooltipText, TooltipText?> findTooltipText,
         Func<TooltipText, IReadOnlyList<TooltipText>> findTooltipTextCandidates,
         Func<TooltipText, Task<string>> insertTooltipTextAsync)
@@ -62,6 +75,9 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
             displayModeSelector: static configuration =>
                 configuration.TooltipAddonTranslationDisplayMode)
     {
+        this.tooltipAddonOverlay = tooltipAddonOverlay;
+        this.tooltipAddonAnchoredOverlayRuntime =
+            tooltipAddonAnchoredOverlayRuntime;
         this.findTooltipText = findTooltipText;
         this.findTooltipTextCandidates = findTooltipTextCandidates;
         this.insertTooltipTextAsync = insertTooltipTextAsync;
@@ -80,9 +96,66 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
+    protected override void OnPreDrawEvent(AddonEvent evt, AddonArgs args)
+    {
+        var addon = ResolveTooltipAddonInstance();
+        var temporarilyRestoredVisibility = false;
+        if (this.nativeTooltipHiddenByOverlay &&
+            addon != null &&
+            !addon->IsVisible)
+        {
+            addon->IsVisible = true;
+            temporarilyRestoredVisibility = true;
+        }
+
+        base.OnPreDrawEvent(evt, args);
+
+        addon = ResolveTooltipAddonInstance();
+        if (!this.HandlerConfig.TranslateTooltipAddon)
+        {
+            this.ClearAnchoredOverlay(addon, "pre-draw-translation-disabled");
+            return;
+        }
+
+        if (addon == null)
+        {
+            this.ClearAnchoredOverlay(
+                addon: null,
+                reason: "pre-draw-addon-unavailable");
+            return;
+        }
+
+        if (!TooltipAddonAnchoredOverlayPresentationPolicy.UsesAnchoredOverlay(
+                this.HandlerConfig.TooltipAddonTranslationDisplayMode,
+                this.HandlerConfig.OverlayOnlyLanguage))
+        {
+            this.ClearAnchoredOverlay(addon, "pre-draw-anchored-overlay-disabled");
+            return;
+        }
+
+        if (!this.HandlerConfig.TooltipAddonHideNativeTooltipWhenOverlayActive)
+        {
+            if (this.nativeTooltipHiddenByOverlay)
+            {
+                addon->IsVisible = true;
+                this.nativeTooltipHiddenByOverlay = false;
+            }
+
+            return;
+        }
+
+        if (temporarilyRestoredVisibility &&
+            this.nativeTooltipHiddenByOverlay)
+        {
+            addon->IsVisible = false;
+        }
+    }
+
+    /// <inheritdoc />
     protected override void OnCleanupEvent(AddonEvent evt, AddonArgs args)
     {
         base.OnCleanupEvent(evt, args);
+        this.ClearAnchoredOverlay(ResolveTooltipAddonInstance());
         this.appliedLayoutSnapshots.Clear();
         this.pendingCapturedTexts.Clear();
     }
@@ -91,6 +164,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     public override void OnPluginUnload()
     {
         base.OnPluginUnload();
+        this.ClearAnchoredOverlay(ResolveTooltipAddonInstance());
         this.appliedLayoutSnapshots.Clear();
         this.pendingCapturedTexts.Clear();
     }
@@ -311,6 +385,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     private protected override void AfterRestoreStaleTranslatedTextNodes(
         AtkUnitBase* addon)
     {
+        this.ClearAnchoredOverlay(addon);
         this.RestoreAppliedLayoutSnapshots(addon);
     }
 
@@ -334,6 +409,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload sourcePayload,
         DbFirstGameWindowPayload targetPayload)
     {
+        this.ClearAnchoredOverlay(addon);
         var ordinalsByNodeId = new Dictionary<uint, int>();
 
         foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
@@ -369,6 +445,15 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                 continue;
             }
 
+            var sourceTextPayload =
+                ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(
+                    textNode,
+                    sourceText);
+            var replacementPayload =
+                ReadableSeStringPayloadHelper.ProjectReadablePayloadBytes(
+                    sourceTextPayload,
+                    sourceText,
+                    targetText);
             var layoutSnapshot =
                 NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
                     addon,
@@ -380,7 +465,8 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                     minimumSecondaryHorizontalPadding:
                     MinimumTooltipBackgroundHorizontalPadding,
                     minimumSecondaryVerticalPadding:
-                    MinimumTooltipBackgroundVerticalPadding);
+                    MinimumTooltipBackgroundVerticalPadding,
+                    replacementPayload: replacementPayload);
             if (layoutSnapshot != null)
             {
                 this.appliedLayoutSnapshots[textNodeKey] = layoutSnapshot;
@@ -388,6 +474,197 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         }
 
         return true;
+    }
+
+    /// <inheritdoc />
+    private protected override bool TryRegisterCustomHoverTooltips(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        JournalTranslationDisplayMode displayMode)
+    {
+        if (!TooltipAddonAnchoredOverlayPresentationPolicy.UsesAnchoredOverlay(
+                displayMode,
+                this.HandlerConfig.OverlayOnlyLanguage))
+        {
+            OverlayPublicationDiagnostics.Log(
+                "TooltipAddonOverlayDiag",
+                "register-skip",
+                $"{displayMode}|{this.HandlerConfig.OverlayOnlyLanguage}",
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{displayMode}|{this.HandlerConfig.OverlayOnlyLanguage}"),
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"displayMode={displayMode} overlayOnlyLanguage={this.HandlerConfig.OverlayOnlyLanguage} " +
+                    $"nativeHiddenByOverlay={this.nativeTooltipHiddenByOverlay}"));
+            this.ClearAnchoredOverlay(addon, "register-anchored-overlay-disabled");
+            return false;
+        }
+
+        if (!this.TryBuildTooltipAddonOverlayFrame(addon, out var frame))
+        {
+            this.ClearAnchoredOverlay(addon, "register-frame-build-failed");
+            return true;
+        }
+
+        var originalBody = BuildTooltipOverlayBody(originalPayload);
+        var translatedBody = BuildTooltipOverlayBody(translatedPayload);
+        var showsOriginalOverlayText =
+            TooltipAddonAnchoredOverlayPresentationPolicy.ShowsOriginalOverlayText(
+                displayMode,
+                this.HandlerConfig.OverlayOnlyLanguage);
+        var overlayBody =
+            TooltipAddonAnchoredOverlayPresentationPolicy.SelectOverlayBody(
+                displayMode,
+                this.HandlerConfig.OverlayOnlyLanguage,
+                originalBody,
+                translatedBody);
+        var richOriginalTextPresentation = showsOriginalOverlayText
+            ? this.TryBuildTooltipAddonRichOriginalTextPresentation(
+                addon,
+                originalPayload,
+                originalBody)
+            : null;
+        if (string.IsNullOrWhiteSpace(overlayBody))
+        {
+            OverlayPublicationDiagnostics.Log(
+                "TooltipAddonOverlayDiag",
+                "register-empty-body",
+                $"{displayMode}|{this.HandlerConfig.OverlayOnlyLanguage}",
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{displayMode}|{this.HandlerConfig.OverlayOnlyLanguage}|" +
+                    $"{OverlayPublicationDiagnostics.BuildPreview(originalBody)}|" +
+                    $"{OverlayPublicationDiagnostics.BuildPreview(translatedBody)}"),
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"displayMode={displayMode} overlayOnlyLanguage={this.HandlerConfig.OverlayOnlyLanguage} " +
+                    $"originalLen={originalBody.Length} originalPreview='{OverlayPublicationDiagnostics.BuildPreview(originalBody)}' " +
+                    $"translatedLen={translatedBody.Length} translatedPreview='{OverlayPublicationDiagnostics.BuildPreview(translatedBody)}'"));
+            this.ClearAnchoredOverlay(addon, "register-overlay-body-empty");
+            return true;
+        }
+
+        OverlayPublicationDiagnostics.Log(
+            "TooltipAddonOverlayDiag",
+            "register-publish",
+            $"{displayMode}|{OverlayPublicationDiagnostics.BuildPreview(overlayBody)}",
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"{displayMode}|{this.HandlerConfig.OverlayOnlyLanguage}|" +
+                $"{showsOriginalOverlayText}|" +
+                $"{this.HandlerConfig.TooltipAddonHideNativeTooltipWhenOverlayActive}|" +
+                $"{richOriginalTextPresentation != null}|" +
+                $"{OverlayPublicationDiagnostics.BuildPreview(overlayBody)}|" +
+                $"{OverlayPublicationDiagnostics.RoundVector(frame.Position).X:0},{OverlayPublicationDiagnostics.RoundVector(frame.Position).Y:0}|" +
+                $"{OverlayPublicationDiagnostics.RoundVector(frame.Size).X:0},{OverlayPublicationDiagnostics.RoundVector(frame.Size).Y:0}|" +
+                $"{frame.NativeScale:0.##}|{frame.NativeVisible}"),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"displayMode={displayMode} overlayOnlyLanguage={this.HandlerConfig.OverlayOnlyLanguage} " +
+                $"showsOriginal={showsOriginalOverlayText} " +
+                $"hideNativeWhenOverlayActive={this.HandlerConfig.TooltipAddonHideNativeTooltipWhenOverlayActive} " +
+                $"richOriginalPresentationReady={richOriginalTextPresentation != null} " +
+                $"framePos={OverlayPublicationDiagnostics.FormatVector(frame.Position)} frameSize={OverlayPublicationDiagnostics.FormatVector(frame.Size)} " +
+                $"frameNativeScale={frame.NativeScale:0.##} frameNativeVisible={frame.NativeVisible} " +
+                $"bodyLen={overlayBody.Length} preview='{OverlayPublicationDiagnostics.BuildPreview(overlayBody)}'"));
+        this.tooltipAddonAnchoredOverlayRuntime.Publish(
+            this.tooltipAddonOverlay,
+            frame,
+            overlayBody,
+            showsOriginalOverlayText,
+            richOriginalTextPresentation,
+            renderScaleAdjustment: 1f);
+
+        if (this.HandlerConfig.TooltipAddonHideNativeTooltipWhenOverlayActive)
+        {
+            addon->IsVisible = false;
+            this.nativeTooltipHiddenByOverlay = true;
+        }
+        else
+        {
+            if (this.nativeTooltipHiddenByOverlay)
+            {
+                addon->IsVisible = true;
+            }
+
+            this.nativeTooltipHiddenByOverlay = false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Tries to build one combined rich original-text presentation for the
+    ///     anchored Tooltip overlay from the live native text nodes.
+    /// </summary>
+    /// <param name="addon">The live Tooltip addon.</param>
+    /// <param name="originalPayload">The canonical original payload.</param>
+    /// <param name="originalBody">The plain original overlay body.</param>
+    /// <returns>
+    ///     The combined rich original presentation, or <see langword="null" />
+    ///     when one or more source segments could not be captured safely.
+    /// </returns>
+    private RichOriginalTextPresentation? TryBuildTooltipAddonRichOriginalTextPresentation(
+        AtkUnitBase* addon,
+        DbFirstGameWindowPayload originalPayload,
+        string originalBody)
+    {
+        if (addon == null ||
+            string.IsNullOrWhiteSpace(originalBody) ||
+            originalPayload.TextNodes.Count == 0)
+        {
+            return null;
+        }
+
+        var capturedPayloads = new Dictionary<string, byte[]>(
+            StringComparer.Ordinal);
+        var ordinalsByNodeId = new Dictionary<uint, int>();
+        foreach (var nodeAddress in this.ResolveTextNodeAddresses(addon))
+        {
+            var textNode = (AtkTextNode*)nodeAddress;
+            if (textNode == null ||
+                !this.IsEffectivelyVisible((AtkResNode*)textNode))
+            {
+                continue;
+            }
+
+            var nodeKey = DbFirstTextNodeKeyAllocator.ConsumeVisibleNode(
+                ordinalsByNodeId,
+                textNode->AtkResNode.NodeId);
+            if (!originalPayload.TextNodes.TryGetValue(nodeKey, out var expectedText) ||
+                string.IsNullOrWhiteSpace(expectedText))
+            {
+                continue;
+            }
+
+            var payload = ReadableSeStringPayloadHelper.TryCaptureMatchingPayload(
+                textNode,
+                expectedText);
+            if (payload == null || payload.Length == 0)
+            {
+                return null;
+            }
+
+            capturedPayloads[nodeKey] = payload;
+        }
+
+        var orderedPayloads = new List<byte[]?>(originalPayload.TextNodes.Count);
+        foreach (var (nodeKey, _) in GetOrderedTextNodes(originalPayload.TextNodes))
+        {
+            if (!capturedPayloads.TryGetValue(nodeKey, out var payload) ||
+                payload.Length == 0)
+            {
+                return null;
+            }
+
+            orderedPayloads.Add(payload);
+        }
+
+        return TooltipAddonRichOriginalTextPresentationFactory.Create(
+            originalBody,
+            orderedPayloads);
     }
 
     /// <summary>
@@ -473,6 +750,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         DbFirstGameWindowPayload originalPayload)
     {
+        this.ClearAnchoredOverlay(addon, "after-restore-payload");
         this.RestoreAppliedLayoutSnapshots(addon);
     }
 
@@ -671,6 +949,146 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         {
             this.appliedLayoutSnapshots.Remove(restoredKey);
         }
+    }
+
+    /// <summary>
+    ///     Clears Tooltip addon anchored overlay state and restores native
+    ///     visibility when this handler hid the native tooltip.
+    /// </summary>
+    /// <param name="addon">The live Tooltip addon, if available.</param>
+    private void ClearAnchoredOverlay(
+        AtkUnitBase* addon,
+        string reason = "unspecified")
+    {
+        OverlayPublicationDiagnostics.Log(
+            "TooltipAddonOverlayDiag",
+            "handler-clear",
+            reason,
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"{reason}|{this.tooltipAddonOverlay.Display}|{this.nativeTooltipHiddenByOverlay}|" +
+                $"{OverlayPublicationDiagnostics.BuildPreview(this.tooltipAddonOverlay.CurrentText)}"),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"reason={reason} overlayDisplay={this.tooltipAddonOverlay.Display} " +
+                $"nativeTooltipHiddenByOverlay={this.nativeTooltipHiddenByOverlay} addonAvailable={addon != null} " +
+                $"textLen={this.tooltipAddonOverlay.CurrentText.Length} " +
+                $"preview='{OverlayPublicationDiagnostics.BuildPreview(this.tooltipAddonOverlay.CurrentText)}'"));
+        this.tooltipAddonAnchoredOverlayRuntime.Clear(this.tooltipAddonOverlay);
+        if (addon != null && this.nativeTooltipHiddenByOverlay)
+        {
+            addon->IsVisible = true;
+        }
+
+        this.nativeTooltipHiddenByOverlay = false;
+    }
+
+    /// <summary>
+    ///     Builds the current Tooltip addon anchor frame for the dedicated
+    ///     anchored overlay runtime.
+    /// </summary>
+    /// <param name="addon">The live Tooltip addon.</param>
+    /// <param name="frame">Receives the resolved anchor frame.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the Tooltip root bounds were
+    ///     available; otherwise <see langword="false" />.
+    /// </returns>
+    private bool TryBuildTooltipAddonOverlayFrame(
+        AtkUnitBase* addon,
+        out TooltipAddonOverlayFrame frame)
+    {
+        frame = default;
+        var rootNode = addon == null
+            ? null
+            : (addon->RootNode != null
+                ? addon->RootNode
+                : addon->UldManager.RootNode);
+        if (addon == null || rootNode == null)
+        {
+            OverlayPublicationDiagnostics.Log(
+                "TooltipAddonOverlayDiag",
+                "frame-build-failed",
+                addon == null ? "addon-null" : "root-null",
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{(addon == null ? "addon-null" : "root-null")}|" +
+                    $"{addon != null && addon->RootNode != null}|" +
+                    $"{addon != null && addon->UldManager.RootNode != null}"),
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"reason={(addon == null ? "addon-null" : "root-null")} " +
+                    $"directRootAvailable={addon != null && addon->RootNode != null} " +
+                    $"uldRootAvailable={addon != null && addon->UldManager.RootNode != null}"));
+            return false;
+        }
+
+        if (!rootNode->IsVisible())
+        {
+            OverlayPublicationDiagnostics.Log(
+                "TooltipAddonOverlayDiag",
+                "frame-build-failed",
+                "root-invisible",
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{rootNode->ScreenX}|{rootNode->ScreenY}|{rootNode->Width}|{rootNode->Height}|{addon->IsVisible}"),
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"reason=root-invisible addonVisible={addon->IsVisible} " +
+                    $"rootPos=({rootNode->ScreenX:0.0},{rootNode->ScreenY:0.0}) rootSize=({rootNode->Width:0.0},{rootNode->Height:0.0})"));
+            return false;
+        }
+
+        var nativeScale = addon->Scale > 0f ? addon->Scale : 1f;
+        frame = new TooltipAddonOverlayFrame(
+            new Vector2(rootNode->ScreenX, rootNode->ScreenY),
+            new Vector2(
+                Math.Max(1f, rootNode->Width * nativeScale),
+                Math.Max(1f, rootNode->Height * nativeScale)),
+            nativeScale,
+            addon->IsVisible);
+        OverlayPublicationDiagnostics.Log(
+            "TooltipAddonOverlayDiag",
+            "frame-built",
+            $"{MathF.Round(frame.Position.X / 16f)},{MathF.Round(frame.Position.Y / 16f)}",
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"{OverlayPublicationDiagnostics.RoundVector(frame.Position).X:0},{OverlayPublicationDiagnostics.RoundVector(frame.Position).Y:0}|" +
+                $"{OverlayPublicationDiagnostics.RoundVector(frame.Size).X:0},{OverlayPublicationDiagnostics.RoundVector(frame.Size).Y:0}|" +
+                $"{frame.NativeScale:0.##}|{frame.NativeVisible}"),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"framePos={OverlayPublicationDiagnostics.FormatVector(frame.Position)} " +
+                $"frameSize={OverlayPublicationDiagnostics.FormatVector(frame.Size)} " +
+                $"nativeScale={frame.NativeScale:0.##} nativeVisible={frame.NativeVisible}"));
+        return true;
+    }
+
+    /// <summary>
+    ///     Builds one newline-delimited tooltip overlay body from the ordered
+    ///     text-node payload.
+    /// </summary>
+    /// <param name="payload">The ordered payload.</param>
+    /// <returns>The overlay body text.</returns>
+    private static string BuildTooltipOverlayBody(
+        DbFirstGameWindowPayload payload)
+    {
+        return string.Join(
+            "\n",
+            GetOrderedTextNodes(payload.TextNodes)
+                .Select(static pair => pair.Value));
+    }
+
+    /// <summary>
+    ///     Resolves the live Tooltip addon even when this handler previously
+    ///     hid it for anchored overlay presentation.
+    /// </summary>
+    /// <returns>The live Tooltip addon instance, if any.</returns>
+    private static AtkUnitBase* ResolveTooltipAddonInstance()
+    {
+        var atkStage = AtkStage.Instance();
+        return atkStage == null
+            ? null
+            : atkStage->RaptureAtkUnitManager->GetAddonByName("Tooltip");
     }
 
     /// <summary>

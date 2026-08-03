@@ -1490,10 +1490,7 @@
                 payload.
             </summary>
             <param name="row">The row to inspect.</param>
-            <returns>
-                <see langword="true" /> when the row contains translated Tooltip
-                text; otherwise <see langword="false" />.
-            </returns>
+            <returns><c>true</c> when translated Tooltip text is present.</returns>
         </member>
         <member name="T:Echoglossian.Cache.TraitCacheManager">
             <summary>
@@ -1827,6 +1824,17 @@
             <summary>
                 Clears the in-memory cache.
             </summary>
+        </member>
+        <member name="T:Echoglossian.TooltipAddonOverlayMaxWidthMode">
+            <summary>
+                Selects how the Tooltip addon anchored overlay limits its width.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.TooltipAddonOverlayMaxWidthMode.MatchNative">
+            <summary>Match the visible native Tooltip addon width.</summary>
+        </member>
+        <member name="F:Echoglossian.TooltipAddonOverlayMaxWidthMode.ManualCap">
+            <summary>Use the configured manual width cap.</summary>
         </member>
         <member name="T:Echoglossian.OpenAiProviderVariant">
             <summary>
@@ -2709,6 +2717,36 @@
         </member>
         <member name="F:Echoglossian.Config.TooltipAddonTranslationDisplayMode">
             <summary>Display mode for the Tooltip addon.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayTextColor">
+            <summary>Text color used by the Tooltip addon anchored overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayBackgroundColor">
+            <summary>Background color used by the Tooltip addon anchored overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayBackgroundOpacity">
+            <summary>Background opacity used by the Tooltip addon anchored overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayFontScaleAdjustment">
+            <summary>Font scale adjustment used by the Tooltip addon anchored overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayLineHeightScale">
+            <summary>Line-height scale used by the Tooltip addon anchored overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonHideNativeTooltipWhenOverlayActive">
+            <summary>
+                Whether the native Tooltip addon is hidden while its anchored overlay
+                is active.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayPadding">
+            <summary>Padding applied by the Tooltip addon anchored overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayMaxWidthMode">
+            <summary>Width mode used by the Tooltip addon anchored overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TooltipAddonOverlayManualMaxWidth">
+            <summary>Manual maximum width used by the Tooltip addon anchored overlay.</summary>
         </member>
         <member name="F:Echoglossian.Config.HoverTooltipTextColor">
             <summary>Text color used by Echoglossian hover tooltips.</summary>
@@ -4317,16 +4355,38 @@
             </summary>
             <returns>True when the background prefetch should run.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuest(System.UInt32,System.String)">
+        <member name="M:Echoglossian.Echoglossian.ScheduleAcceptedQuestPrefetch(System.UInt32,System.String)">
             <summary>
-                Prefetches the canonical text for one accepted quest and schedules any
-                missing translations through the shared paced broker.
+                Captures one accepted-quest snapshot on the plugin tick and queues the
+                heavy canonical prefetch work onto a serialized background worker.
             </summary>
             <param name="questId">The accepted quest identifier.</param>
             <param name="requestSources">
                 The visible quest surfaces that explicitly requested this prioritized
                 prefetch cycle.
             </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryCaptureAcceptedQuestPrefetchWorkItem(System.UInt32,System.String,Echoglossian.Echoglossian.AcceptedQuestPrefetchWorkItem@)">
+            <summary>
+                Captures one immutable accepted-quest prefetch work item from the
+                current live quest state.
+            </summary>
+            <param name="questId">The accepted quest identifier.</param>
+            <param name="requestSources">
+                The visible quest surfaces that explicitly requested this prioritized
+                prefetch cycle.
+            </param>
+            <param name="workItem">
+                The captured background work item when snapshot capture succeeds.
+            </param>
+            <returns><see langword="true" /> when a complete work item was captured.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ProcessAcceptedQuestPrefetchWorkItem(Echoglossian.Echoglossian.AcceptedQuestPrefetchWorkItem)">
+            <summary>
+                Prefetches the canonical text for one captured accepted quest and
+                schedules any missing translations through the shared paced broker.
+            </summary>
+            <param name="workItem">The captured accepted-quest prefetch work item.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
             <summary>
@@ -15932,6 +15992,15 @@
                 Removes every hover tooltip currently registered by this handler.
             </summary>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RefreshAppliedHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowRuntimeState,Echoglossian.JournalTranslationDisplayMode)">
+            <summary>
+                Refreshes addon-owned hover presentation for one already-applied
+                runtime state without performing a new DB-first resolve pass.
+            </summary>
+            <param name="addon">The currently visible addon.</param>
+            <param name="runtimeState">The already-applied runtime payload.</param>
+            <param name="displayMode">The active display mode.</param>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RequestPreDrawRefresh">
             <summary>
                 Requests one fresh pre-draw resolve pass for this handler on the
@@ -17032,7 +17101,7 @@
                 Handles DB-first translation for the Tooltip addon.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,Echoglossian.EFCoreSqlite.Models.TooltipText},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Collections.Generic.IReadOnlyList{Echoglossian.EFCoreSqlite.Models.TooltipText}},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Threading.Tasks.Task{System.String}})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime,System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,Echoglossian.EFCoreSqlite.Models.TooltipText},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Collections.Generic.IReadOnlyList{Echoglossian.EFCoreSqlite.Models.TooltipText}},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Threading.Tasks.Task{System.String}})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler" />
                 class.
@@ -17040,6 +17109,12 @@
             <param name="configuration">The plugin configuration.</param>
             <param name="hoverTooltipManager">The shared hover-tooltip manager.</param>
             <param name="translationService">The translation service.</param>
+            <param name="tooltipAddonOverlay">
+                The shared anchored overlay surface for the Tooltip addon.
+            </param>
+            <param name="tooltipAddonAnchoredOverlayRuntime">
+                The Tooltip addon anchored overlay state runtime.
+            </param>
             <param name="findTooltipText">Resolves a persisted Tooltip payload.</param>
             <param name="findTooltipTextCandidates">
                 Resolves candidate Tooltip payloads for canonical original
@@ -17053,6 +17128,9 @@
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldRefreshAppliedStateOnPreDraw">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.OnPreDrawEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.OnCleanupEvent(Dalamud.Game.Addon.Lifecycle.AddonEvent,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs)">
@@ -17093,6 +17171,22 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryRegisterCustomHoverTooltips(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.JournalTranslationDisplayMode)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryBuildTooltipAddonRichOriginalTextPresentation(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String)">
+            <summary>
+                Tries to build one combined rich original-text presentation for the
+                anchored Tooltip overlay from the live native text nodes.
+            </summary>
+            <param name="addon">The live Tooltip addon.</param>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="originalBody">The plain original overlay body.</param>
+            <returns>
+                The combined rich original presentation, or <see langword="null" />
+                when one or more source segments could not be captured safely.
+            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ResolvePreferredCaptureText(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String)">
             <summary>
@@ -17159,6 +17253,40 @@
                 does not accumulate stale dimensions across distinct payloads.
             </summary>
             <param name="addon">The live addon.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ClearAnchoredOverlay(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,System.String)">
+            <summary>
+                Clears Tooltip addon anchored overlay state and restores native
+                visibility when this handler hid the native tooltip.
+            </summary>
+            <param name="addon">The live Tooltip addon, if available.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryBuildTooltipAddonOverlayFrame(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame@)">
+            <summary>
+                Builds the current Tooltip addon anchor frame for the dedicated
+                anchored overlay runtime.
+            </summary>
+            <param name="addon">The live Tooltip addon.</param>
+            <param name="frame">Receives the resolved anchor frame.</param>
+            <returns>
+                <see langword="true" /> when the Tooltip root bounds were
+                available; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.BuildTooltipOverlayBody(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Builds one newline-delimited tooltip overlay body from the ordered
+                text-node payload.
+            </summary>
+            <param name="payload">The ordered payload.</param>
+            <returns>The overlay body text.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ResolveTooltipAddonInstance">
+            <summary>
+                Resolves the live Tooltip addon even when this handler previously
+                hid it for anchored overlay presentation.
+            </summary>
+            <returns>The live Tooltip addon instance, if any.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.GetOrderedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
             <summary>
@@ -17850,7 +17978,8 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.UpsertCandidate(Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate)">
             <summary>
-                Adds or replaces a retained translation candidate by entity identifier.
+                Adds or replaces a retained translation candidate by game object
+                identifier.
             </summary>
             <param name="candidate">The stable translation candidate.</param>
         </member>
@@ -17874,7 +18003,7 @@
                 <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.ClearOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayLifecycle.ClearOverlay(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.String)">
             <summary>
                 Clears all content and runtime presentation state from an overlay.
             </summary>
@@ -17884,26 +18013,31 @@
             <summary>
                 Represents stable translated NamePlate data retained across UI frames.
             </summary>
-            <param name="EntityId">The live object's stable entity identifier.</param>
+            <param name="GameObjectId">The live object's stable game object identifier.</param>
             <param name="OriginalText">The original NamePlate text.</param>
             <param name="TranslatedText">The normalized translated NamePlate text.</param>
+            <param name="EntityId">The live object's entity identifier, when available.</param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.#ctor(System.UInt32,System.String,System.String)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.#ctor(System.UInt64,System.String,System.String,System.UInt32)">
             <summary>
                 Represents stable translated NamePlate data retained across UI frames.
             </summary>
-            <param name="EntityId">The live object's stable entity identifier.</param>
+            <param name="GameObjectId">The live object's stable game object identifier.</param>
             <param name="OriginalText">The original NamePlate text.</param>
             <param name="TranslatedText">The normalized translated NamePlate text.</param>
+            <param name="EntityId">The live object's entity identifier, when available.</param>
         </member>
-        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.EntityId">
-            <summary>The live object's stable entity identifier.</summary>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.GameObjectId">
+            <summary>The live object's stable game object identifier.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.OriginalText">
             <summary>The original NamePlate text.</summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.TranslatedText">
             <summary>The normalized translated NamePlate text.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateDistanceAwareOverlayCandidate.EntityId">
+            <summary>The live object's entity identifier, when available.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.NamePlates.NamePlateNativePresentationPlan">
             <summary>
@@ -22326,6 +22460,64 @@
             <param name="sourceLanguage">The resolved source language.</param>
             <param name="translatedQuestTitle">The reused translated quest title.</param>
             <returns><c>true</c> when a persisted translated quest title exists.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ShouldRequestAcceptedQuestPrefetchWhenTodoProgressUnavailable(System.Boolean)">
+            <summary>
+                Gets whether missing live TODO progress should still queue accepted
+                quest prefetch work.
+            </summary>
+            <param name="hasFallbackTranslatedTitle">
+                Whether a persisted translated title already exists.
+            </param>
+            <returns>
+                <c>true</c> when accepted-quest prefetch can still add missing DB
+                data for the current visible quest.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ShouldKeepRetryingWithoutTodoProgress(System.Boolean,System.Int32)">
+            <summary>
+                Gets whether the ToDoList should keep locally retrying a visible
+                quest while the live TODO progress snapshot is still unavailable.
+            </summary>
+            <param name="hasFallbackTranslatedTitle">
+                Whether a persisted translated title already exists.
+            </param>
+            <param name="trackableObjectiveCount">
+                The number of visible objective rows that still depend on live TODO
+                progress to map into canonical translated rows.
+            </param>
+            <returns>
+                <c>true</c> when local retries should continue.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.ShouldEmitToDoQuestDiagnosticState(System.String,System.String)">
+            <summary>
+                Gets whether one ToDoList quest diagnostic state changed enough to
+                warrant a fresh debug log line.
+            </summary>
+            <param name="previousState">The last emitted diagnostic state.</param>
+            <param name="nextState">The candidate diagnostic state.</param>
+            <returns>
+                <c>true</c> when the diagnostic state changed.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.LogToDoQuestDiagnosticState(System.String,System.String,System.String,System.Object[])">
+            <summary>
+                Emits one ToDoList quest debug line only when the per-quest
+                diagnostic state changed since the last emission.
+            </summary>
+            <param name="diagnosticKey">The stable visible-quest diagnostic key.</param>
+            <param name="nextState">The candidate diagnostic state.</param>
+            <param name="messageTemplate">The structured log template.</param>
+            <param name="propertyValues">The structured property values.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.BuildToDoQuestDiagnosticKey(Echoglossian.ToDoItem,System.String)">
+            <summary>
+                Builds one stable diagnostic key for a visible ToDoList quest row.
+            </summary>
+            <param name="questRow">The visible quest row.</param>
+            <param name="originalQuestText">The resolved original quest text.</param>
+            <returns>The stable diagnostic key.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.ToDoListHandler.TryResolveTranslatedObjectiveText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestCanonicalData,Echoglossian.QuestTodoProgressSnapshot,System.String,System.Int32,System.Int32,System.String@)">
             <summary>
@@ -28291,6 +28483,16 @@
             </param>
             <param name="writer">The log sink to use.</param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.IsScopeEnabled(System.String)">
+            <summary>
+                Gets whether one diagnostic scope should emit investigation logs.
+            </summary>
+            <param name="scope">The stable diagnostic scope name.</param>
+            <returns>
+                <see langword="true" /> when the scope should emit; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.DiagnosticTelemetryHelper.GetEffectiveCooldown(System.Nullable{System.TimeSpan})">
             <summary>
                 Resolves the effective cooldown for one telemetry emission.
@@ -29203,7 +29405,7 @@
             </param>
             <returns>The preferred wrap width to preserve.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16,System.Boolean,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16,System.Boolean,System.Boolean,System.Byte[])">
             <summary>
                 Applies translated text to a node using the existing wrap width and the
                 minimum multiline flags required for the game to recompute size.
@@ -29221,6 +29423,10 @@
                 Whether the candidate replacement text should be measured before it is
                 applied so width growth can use that draw width instead of relying
                 only on the historical wrap width.
+            </param>
+            <param name="replacementPayload">
+                The optional rich SeString payload to write after layout flags and
+                wrap width are prepared.
             </param>
             <returns>The measured size after the text replacement.</returns>
         </member>
@@ -29286,7 +29492,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16,System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16,System.Int32,System.Int32,System.Boolean,System.Byte[])">
             <summary>
                 Applies translated text to a node and grows its wrapper chain plus the
                 nearest nine-grid background using inferred padding from the current
@@ -29317,6 +29523,10 @@
             <param name="measureReplacementWidthBeforeApply">
                 Whether the candidate replacement text should be measured before
                 native apply so width growth can use its draw width.
+            </param>
+            <param name="replacementPayload">
+                The optional rich SeString payload to write while keeping the same
+                replacement-text measurement and layout flow.
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveReplacementWrapWidth(System.UInt16,System.UInt16,System.Boolean)">
@@ -29794,6 +30004,87 @@
             <summary>
                 The original vertical padding between this wrapper and its child.
             </summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics">
+            <summary>
+            Emits temporary, deduplicated DEBUG diagnostics for overlay publication and
+            synchronization boundaries while overlay visibility regressions are under
+            investigation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.Log(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Logs one deduplicated overlay-publication diagnostic in <c>DEBUG</c>
+            builds.
+            </summary>
+            <param name="scope">The logical diagnostic scope.</param>
+            <param name="state">The current publication or sync state.</param>
+            <param name="dedupeKey">The stable deduplication key.</param>
+            <param name="signature">The event-state signature.</param>
+            <param name="details">The formatted diagnostic details.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.IsScopeEnabled(System.String)">
+            <summary>
+                Gets whether one logical diagnostic scope is currently enabled.
+            </summary>
+            <param name="scope">The logical diagnostic scope.</param>
+            <returns>
+                <see langword="true" /> when the scope should emit DEBUG
+                diagnostics; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.BuildPreview(System.String,System.Int32)">
+            <summary>
+            Builds one short preview suitable for diagnostic logs and dedupe keys.
+            </summary>
+            <param name="text">The source text.</param>
+            <param name="maxLength">The maximum preview length.</param>
+            <returns>The normalized preview.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.FormatVector(System.Numerics.Vector2)">
+            <summary>
+            Formats one vector value for diagnostic logs.
+            </summary>
+            <param name="value">The vector value.</param>
+            <returns>The formatted vector.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.RoundVector(System.Numerics.Vector2,System.Single)">
+            <summary>
+            Rounds one vector to a coarse step size for diagnostic signatures.
+            </summary>
+            <param name="value">The source vector.</param>
+            <param name="step">The rounding step.</param>
+            <returns>The rounded vector.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.ShouldEmit(System.String,System.String)">
+            <summary>
+            Determines whether one deduplicated emission should be written.
+            </summary>
+            <param name="key">The stable event key.</param>
+            <param name="signature">The event-state signature.</param>
+            <returns><see langword="true" /> when the event should be emitted.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.EmissionState">
+            <summary>
+            Captures the last emitted signature and emission time for one
+            diagnostic key.
+            </summary>
+            <param name="Signature">The emitted diagnostic signature.</param>
+            <param name="EmittedAtUtc">The last emission time in UTC.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.EmissionState.#ctor(System.String,System.DateTime)">
+            <summary>
+            Captures the last emitted signature and emission time for one
+            diagnostic key.
+            </summary>
+            <param name="Signature">The emitted diagnostic signature.</param>
+            <param name="EmittedAtUtc">The last emission time in UTC.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.EmissionState.Signature">
+            <summary>The emitted diagnostic signature.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.OverlayPublicationDiagnostics.EmissionState.EmittedAtUtc">
+            <summary>The last emission time in UTC.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.PayloadStabilityTracker">
             <summary>
@@ -30566,6 +30857,136 @@
             <param name="sourceText">The canonical source text.</param>
             <param name="candidateText">The translated candidate text.</param>
             <returns><see langword="true" /> when both values are source-equivalent.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayPresentationPolicy">
+            <summary>
+                Defines the Tooltip addon's anchored-overlay presentation policy.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayPresentationPolicy.UsesAnchoredOverlay(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Gets whether the effective display mode uses the anchored overlay.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">Whether native mutation is unavailable.</param>
+            <returns><c>true</c> when the anchored overlay should be used.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayPresentationPolicy.ShowsOriginalOverlayText(Echoglossian.JournalTranslationDisplayMode,System.Boolean)">
+            <summary>
+                Gets whether the anchored overlay should show original text.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">Whether native mutation is unavailable.</param>
+            <returns><c>true</c> when original text should be shown.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayPresentationPolicy.SelectOverlayBody(Echoglossian.JournalTranslationDisplayMode,System.Boolean,System.String,System.String)">
+            <summary>
+                Selects the anchored overlay body for the effective display mode.
+            </summary>
+            <param name="displayMode">The configured display mode.</param>
+            <param name="overlayOnlyLanguage">Whether native mutation is unavailable.</param>
+            <param name="originalText">The original text.</param>
+            <param name="translatedText">The translated text.</param>
+            <returns>The text to render in the anchored overlay.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime">
+            <summary>
+            Retains Tooltip addon overlay state while the native tooltip is visible or
+            intentionally hidden.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime.Publish(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame,System.String,System.Boolean,Echoglossian.UIOverlays.TextPresentation.RichOriginalTextPresentation,System.Single)">
+            <summary>
+            Publishes the current Tooltip addon overlay content and anchor state.
+            </summary>
+            <param name="overlay">The shared Tooltip addon overlay.</param>
+            <param name="frame">The current live Tooltip addon frame.</param>
+            <param name="text">The overlay body text.</param>
+            <param name="displaysOriginalSwapText">
+            Whether the overlay is presenting original swap text.
+            </param>
+            <param name="richOriginalTextPresentation">
+            The optional copied original SeString payload used for swap
+            presentation.
+            </param>
+            <param name="renderScaleAdjustment">
+            The additional render-scale adjustment requested by configuration.
+            </param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime.TrySync(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,System.Nullable{Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame})">
+            <summary>
+            Synchronizes the shared Tooltip addon overlay to the newest live frame,
+            or the last visible frame when the native tooltip is hidden.
+            </summary>
+            <param name="overlay">The shared Tooltip addon overlay.</param>
+            <param name="currentFrame">The live Tooltip addon frame, if any.</param>
+            <returns>
+            <see langword="true"/> when the overlay remains displayable; otherwise,
+            <see langword="false"/>.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime.Clear(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay)">
+            <summary>
+            Clears retained Tooltip addon overlay state.
+            </summary>
+            <param name="overlay">The shared Tooltip addon overlay.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime.ResolveActiveFrame(System.Nullable{Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame})">
+            <summary>
+            Resolves the best frame for the active Tooltip addon overlay.
+            </summary>
+            <param name="currentFrame">The current live frame, if any.</param>
+            <returns>The best available frame, if any.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame">
+            <summary>
+            Captures one Tooltip addon overlay anchor snapshot.
+            </summary>
+            <param name="Position">The anchored overlay position.</param>
+            <param name="Size">The anchored overlay size.</param>
+            <param name="NativeScale">The native UI scale resolved for the tooltip.</param>
+            <param name="NativeVisible">Whether the native tooltip is still visible.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame.#ctor(System.Numerics.Vector2,System.Numerics.Vector2,System.Single,System.Boolean)">
+            <summary>
+            Captures one Tooltip addon overlay anchor snapshot.
+            </summary>
+            <param name="Position">The anchored overlay position.</param>
+            <param name="Size">The anchored overlay size.</param>
+            <param name="NativeScale">The native UI scale resolved for the tooltip.</param>
+            <param name="NativeVisible">Whether the native tooltip is still visible.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame.Position">
+            <summary>The anchored overlay position.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame.Size">
+            <summary>The anchored overlay size.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame.NativeScale">
+            <summary>The native UI scale resolved for the tooltip.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.TooltipAddonOverlayFrame.NativeVisible">
+            <summary>Whether the native tooltip is still visible.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.TooltipAddonRichOriginalTextPresentationFactory">
+            <summary>
+            Builds one combined rich original-text presentation for Tooltip addon swap
+            overlays from the ordered native text-node payload segments.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.TooltipAddonRichOriginalTextPresentationFactory.Create(System.String,System.Collections.Generic.IReadOnlyList{System.Byte[]})">
+            <summary>
+            Creates one combined rich original-text presentation from the ordered
+            Tooltip text-node payload segments.
+            </summary>
+            <param name="plainText">The readable plain-text fallback.</param>
+            <param name="payloadSegments">
+            The ordered payload segments, one per visible Tooltip text node.
+            </param>
+            <returns>
+            The combined presentation when every segment is available; otherwise,
+            <see langword="null" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.TooltipPayloadRecoveryHelper">
             <summary>
@@ -33141,8 +33562,7 @@
         </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TooltipTab">
             <summary>
-                Renders the settings tab for action/item detail presentation plus shared
-                hover-tooltip appearance.
+                Renders the settings tab for tooltip presentation and appearance.
             </summary>
         </member>
         <member name="M:Echoglossian.PluginUI.Tabs.TooltipTab.Draw(Echoglossian.Config)">
@@ -39063,6 +39483,41 @@
         <member name="P:Echoglossian.UIOverlays.TextPresentation.TextureCreationRequest.RightToLeft">
             <summary>Whether the text uses RTL direction.</summary>
         </member>
+        <member name="T:Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome">
+            <summary>
+            Describes the outcome of one texture-backed render probe.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome.Rendered">
+            <summary>
+            The request resolved a cached texture and can render immediately.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome.Disposed">
+            <summary>
+            The texture service has already been disposed.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome.CoolingDown">
+            <summary>
+            The request is cooling down after a recent generation failure.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome.PendingExisting">
+            <summary>
+            The exact request is already pending generation.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome.QueueFull">
+            <summary>
+            The bounded pending-work capacity is full.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome.Enqueued">
+            <summary>
+            The request was admitted and queued for future generation.
+            </summary>
+        </member>
         <member name="T:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService">
             <summary>
             Generates and caches texture-backed render blocks for complex-script text.
@@ -39138,6 +39593,19 @@
             The rendered block when cached generation has completed; otherwise,
             <see langword="null"/> while creation is pending, cooling down, or the
             bounded work queue is full.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.TryRenderDetailed(Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome@)">
+            <summary>
+            Tries to produce a measured render block for the provided texture-backed
+            presentation request while also reporting the exact decision path.
+            </summary>
+            <param name="request">The presentation request.</param>
+            <param name="outcome">The exact render decision outcome.</param>
+            <returns>
+            The rendered block when cached generation has completed; otherwise,
+            <see langword="null"/> while creation is pending, cooling down, the
+            service is disposed, or the bounded work queue is full.
             </returns>
         </member>
         <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.BeginDrawFrame">
@@ -39300,6 +39768,13 @@
             </summary>
             <param name="request">The source layout request.</param>
             <returns>The resolved width or <see langword="null"/>.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.ResolveLineHeightScale(Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest)">
+            <summary>
+            Resolves the line-height scale for one raster-backed request.
+            </summary>
+            <param name="request">The source layout request.</param>
+            <returns>The clamped line-height scale.</returns>
         </member>
         <member name="M:Echoglossian.UIOverlays.TextPresentation.RtlTexturePresentationService.ToColor(System.Numerics.Vector4)">
             <summary>
@@ -39589,8 +40064,14 @@
             <param name="CenterAligned">
             Whether the caller normally centers the content in the available region.
             </param>
+            <param name="MaxWidthOverride">
+            The optional texture wrap-width override for raster-backed text.
+            </param>
+            <param name="LineHeightScaleOverride">
+            The optional texture line-height override for raster-backed text.
+            </param>
         </member>
-        <member name="M:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.#ctor(System.String,System.Int32,System.String,System.Single,System.Single,System.Boolean,System.Numerics.Vector4,System.Numerics.Vector4,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,System.Boolean)">
+        <member name="M:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.#ctor(System.String,System.Int32,System.String,System.Single,System.Single,System.Boolean,System.Numerics.Vector4,System.Numerics.Vector4,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,System.Boolean,System.Nullable{System.Single},System.Nullable{System.Single})">
             <summary>
             Describes one translated text presentation request for an ImGui-owned
             surface.
@@ -39608,6 +40089,12 @@
             <param name="SurfaceId">The surface requesting presentation.</param>
             <param name="CenterAligned">
             Whether the caller normally centers the content in the available region.
+            </param>
+            <param name="MaxWidthOverride">
+            The optional texture wrap-width override for raster-backed text.
+            </param>
+            <param name="LineHeightScaleOverride">
+            The optional texture line-height override for raster-backed text.
             </param>
         </member>
         <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.Text">
@@ -39642,6 +40129,16 @@
         <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.CenterAligned">
             <summary>
             Whether the caller normally centers the content in the available region.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.MaxWidthOverride">
+            <summary>
+            The optional texture wrap-width override for raster-backed text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest.LineHeightScaleOverride">
+            <summary>
+            The optional texture line-height override for raster-backed text.
             </summary>
         </member>
         <member name="T:Echoglossian.UIOverlays.TextPresentation.TextPresentationBackendKind">
@@ -39697,6 +40194,109 @@
             <param name="maxDistance">The distance at which the overlay becomes hidden.</param>
             <param name="minScale">The minimum scale reached at the maximum distance.</param>
             <returns>The resolved distance-aware presentation state.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics">
+            <summary>
+            Emits temporary, deduplicated diagnostics for texture-backed overlay render
+            passes while complex-script overlay regressions are under investigation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.LogTextureUnavailable(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome,System.ValueTuple{System.Int32,System.Int64,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32})">
+            <summary>
+            Logs one texture-backed overlay render pass that did not reach a drawn
+            state because the backing texture was unavailable.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <param name="surfaceId">The overlay surface identifier.</param>
+            <param name="request">The active overlay render request.</param>
+            <param name="textRequest">The resolved text-layout request.</param>
+            <param name="outcome">The texture-render decision.</param>
+            <param name="stats">The current RTL texture backend stats.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.LogTextureDrawn(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2)">
+            <summary>
+            Logs one successful texture-backed overlay draw.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <param name="surfaceId">The overlay surface identifier.</param>
+            <param name="request">The active overlay render request.</param>
+            <param name="textRequest">The resolved text-layout request.</param>
+            <param name="renderedPosition">The actual rendered window position.</param>
+            <param name="renderedSize">The actual rendered window size.</param>
+            <param name="bodySize">The measured body-text size.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.ShouldLog(Echoglossian.Config)">
+            <summary>
+            Determines whether texture-overlay diagnostics should run for the current
+            language mode.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <returns><see langword="true" /> when diagnostics should log.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.ShouldEmit(System.String,System.String)">
+            <summary>
+            Determines whether a deduplicated diagnostic line should be emitted.
+            </summary>
+            <param name="key">The stable diagnostic event key.</param>
+            <param name="signature">The event-state signature.</param>
+            <returns><see langword="true" /> when the line should be emitted.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.BuildPreviewKey(System.String)">
+            <summary>
+            Builds the preview key used for deduplication.
+            </summary>
+            <param name="text">The source text.</param>
+            <returns>The stable preview key.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.BuildPreview(System.String)">
+            <summary>
+            Builds a short preview for diagnostic log lines.
+            </summary>
+            <param name="text">The source text.</param>
+            <returns>The shortened preview text.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.RoundVector(System.Numerics.Vector2,System.Single)">
+            <summary>
+            Rounds a vector to a coarse step size for deduplication.
+            </summary>
+            <param name="value">The source vector.</param>
+            <param name="step">The coarse rounding step.</param>
+            <returns>The rounded vector.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.RoundToStep(System.Single,System.Single)">
+            <summary>
+            Rounds a scalar to the requested step size.
+            </summary>
+            <param name="value">The source value.</param>
+            <param name="step">The rounding step.</param>
+            <returns>The rounded scalar.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.FormatVector(System.Numerics.Vector2)">
+            <summary>
+            Formats a vector for diagnostic log output.
+            </summary>
+            <param name="value">The vector value.</param>
+            <returns>The formatted vector.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState">
+            <summary>
+            Captures the last emitted signature and time for one diagnostic key.
+            </summary>
+            <param name="Signature">The emitted diagnostic-state signature.</param>
+            <param name="EmittedAtUtc">The time the signature was emitted.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.#ctor(System.String,System.DateTime)">
+            <summary>
+            Captures the last emitted signature and time for one diagnostic key.
+            </summary>
+            <param name="Signature">The emitted diagnostic-state signature.</param>
+            <param name="EmittedAtUtc">The time the signature was emitted.</param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.Signature">
+            <summary>The emitted diagnostic-state signature.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.EmittedAtUtc">
+            <summary>The time the signature was emitted.</summary>
         </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.RenderScale">
             <summary>
@@ -39990,6 +40590,24 @@
             <param name="finalWrapWidth">The final calculated content wrap width.</param>
             <returns>The width available while measuring or rasterizing text.</returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ResolveTextureMaxWidthOverride(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
+            <summary>
+            Resolves any surface-specific texture width override required by the
+            current overlay request.
+            </summary>
+            <param name="request">The active render request.</param>
+            <param name="config">The surface configuration.</param>
+            <returns>The resolved raster width override, if any.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ResolveTextureLineHeightScaleOverride(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
+            <summary>
+            Resolves any surface-specific raster line-height override required by
+            the current overlay request.
+            </summary>
+            <param name="request">The active render request.</param>
+            <param name="config">The surface configuration.</param>
+            <returns>The resolved line-height override, if any.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderer.ShouldUseGeneralOverlayFont(Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig)">
             <summary>
             Determines whether the surface displays original text in swap mode.
@@ -40080,8 +40698,14 @@
             <param name="IsPreview">Whether the request comes from the standalone previewer.</param>
             <param name="ScaleMultiplier">The runtime overlay scale multiplier.</param>
             <param name="AlphaMultiplier">The runtime overlay alpha multiplier.</param>
+            <param name="TextureMaxWidthOverride">
+            The optional texture wrap-width override for raster-backed text.
+            </param>
+            <param name="TextureLineHeightScaleOverride">
+            The optional line-height override for raster-backed text.
+            </param>
         </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.#ctor(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean,System.Single,System.Single)">
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.#ctor(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Boolean,System.Single,System.Single,System.Nullable{System.Single},System.Nullable{System.Single})">
             <summary>
             Describes one translation overlay render pass.
             </summary>
@@ -40094,6 +40718,12 @@
             <param name="IsPreview">Whether the request comes from the standalone previewer.</param>
             <param name="ScaleMultiplier">The runtime overlay scale multiplier.</param>
             <param name="AlphaMultiplier">The runtime overlay alpha multiplier.</param>
+            <param name="TextureMaxWidthOverride">
+            The optional texture wrap-width override for raster-backed text.
+            </param>
+            <param name="TextureLineHeightScaleOverride">
+            The optional line-height override for raster-backed text.
+            </param>
         </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.Overlay">
             <summary>The visible overlay state.</summary>
@@ -40121,6 +40751,16 @@
         </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.AlphaMultiplier">
             <summary>The runtime overlay alpha multiplier.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.TextureMaxWidthOverride">
+            <summary>
+            The optional texture wrap-width override for raster-backed text.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest.TextureLineHeightScaleOverride">
+            <summary>
+            The optional line-height override for raster-backed text.
+            </summary>
         </member>
         <member name="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderResult">
             <summary>
@@ -40220,6 +40860,9 @@
         </member>
         <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.ChatBubble">
             <summary>Chat bubble overlay.</summary>
+        </member>
+        <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.TooltipAddon">
+            <summary>Tooltip addon anchored overlay.</summary>
         </member>
         <member name="F:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId.ActionDetail">
             <summary>ActionDetail overlay.</summary>
@@ -40364,6 +41007,14 @@
             </summary>
             <param name="config">The active plugin configuration.</param>
             <returns>The nameplate overlay configuration.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForTooltipAddon(Echoglossian.Config)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
+            provided <see cref="T:Echoglossian.Config"/> for the Tooltip addon anchored overlay.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <returns>The Tooltip addon anchored-overlay configuration.</returns>
         </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForQuestToastPlacement(Echoglossian.Config,Dalamud.Game.Gui.Toast.QuestToastPosition)">
             <summary>

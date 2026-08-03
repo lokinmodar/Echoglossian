@@ -79,6 +79,27 @@ public sealed class NamePlateDistanceAwareOverlayContractTests
     }
 
     /// <summary>
+    ///     Verifies that retained NamePlate overlay candidates use the
+    ///     game's object identifier for re-resolution instead of the unstable
+    ///     event-object entity identifier path.
+    /// </summary>
+    [Fact]
+    public void NamePlateRuntime_re_resolves_retained_candidates_by_game_object_id()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "NamePlates",
+            "NamePlateTranslationRuntime.cs"));
+
+        Assert.Contains("handler.GameObjectId", source, StringComparison.Ordinal);
+        Assert.Contains("SearchById(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("SearchByEntityId(", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Verifies that plugin shutdown releases the NamePlate overlay owned by
     ///     the distance-aware fallback.
     /// </summary>

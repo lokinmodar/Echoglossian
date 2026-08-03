@@ -332,6 +332,8 @@ public partial class Echoglossian
                   this.configuration,
                   this.hoverTooltipManager,
                   TranslationService,
+                  this.tooltipAddonOverlay,
+                  this.tooltipAddonAnchoredOverlayRuntime,
                   this.FindTooltipText,
                   this.FindTooltipTextCandidates,
                   row => this.InsertTooltipTextData(row))));

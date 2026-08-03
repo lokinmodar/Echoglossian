@@ -25,6 +25,10 @@ internal sealed class TooltipAddonAnchoredOverlayRuntime
     /// <param name="displaysOriginalSwapText">
     /// Whether the overlay is presenting original swap text.
     /// </param>
+    /// <param name="richOriginalTextPresentation">
+    /// The optional copied original SeString payload used for swap
+    /// presentation.
+    /// </param>
     /// <param name="renderScaleAdjustment">
     /// The additional render-scale adjustment requested by configuration.
     /// </param>
@@ -33,6 +37,7 @@ internal sealed class TooltipAddonAnchoredOverlayRuntime
         TooltipAddonOverlayFrame frame,
         string text,
         bool displaysOriginalSwapText,
+        RichOriginalTextPresentation? richOriginalTextPresentation,
         float renderScaleAdjustment)
     {
         if (frame.NativeVisible || this.lastVisibleFrame == null)
@@ -45,6 +50,29 @@ internal sealed class TooltipAddonAnchoredOverlayRuntime
             0.25f,
             3f);
         var activeFrame = this.ResolveActiveFrame(frame) ?? frame;
+        OverlayPublicationDiagnostics.Log(
+            "TooltipAddonOverlayDiag",
+            "runtime-publish",
+            OverlayPublicationDiagnostics.BuildPreview(text),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"{OverlayPublicationDiagnostics.BuildPreview(text)}|" +
+                $"{frame.NativeVisible}|{activeFrame.NativeVisible}|" +
+                $"{activeFrame.NativeScale:0.##}|{this.renderScaleAdjustment:0.##}|" +
+                $"{OverlayPublicationDiagnostics.RoundVector(activeFrame.Position).X:0}," +
+                $"{OverlayPublicationDiagnostics.RoundVector(activeFrame.Position).Y:0}|" +
+                $"{OverlayPublicationDiagnostics.RoundVector(activeFrame.Size).X:0}," +
+                $"{OverlayPublicationDiagnostics.RoundVector(activeFrame.Size).Y:0}"),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"currentPos={OverlayPublicationDiagnostics.FormatVector(frame.Position)} " +
+                $"currentSize={OverlayPublicationDiagnostics.FormatVector(frame.Size)} " +
+                $"currentNativeScale={frame.NativeScale:0.##} currentNativeVisible={frame.NativeVisible} " +
+                $"activePos={OverlayPublicationDiagnostics.FormatVector(activeFrame.Position)} " +
+                $"activeSize={OverlayPublicationDiagnostics.FormatVector(activeFrame.Size)} " +
+                $"activeNativeScale={activeFrame.NativeScale:0.##} activeNativeVisible={activeFrame.NativeVisible} " +
+                $"renderScaleAdjustment={this.renderScaleAdjustment:0.##} displaysOriginal={displaysOriginalSwapText} " +
+                $"textLen={text.Length} preview='{OverlayPublicationDiagnostics.BuildPreview(text)}'"));
         overlay.Position = activeFrame.Position;
         overlay.Dimensions = activeFrame.Size;
         overlay.UpdateRuntimePresentation(
@@ -53,7 +81,9 @@ internal sealed class TooltipAddonAnchoredOverlayRuntime
         overlay.CurrentName = string.Empty;
         overlay.OriginalName = string.Empty;
         overlay.CurrentText = text ?? string.Empty;
-        overlay.UpdateContentPresentation(displaysOriginalSwapText, presentation: null);
+        overlay.UpdateContentPresentation(
+            displaysOriginalSwapText,
+            richOriginalTextPresentation);
         overlay.Display = !string.IsNullOrWhiteSpace(text);
     }
 
@@ -74,6 +104,14 @@ internal sealed class TooltipAddonAnchoredOverlayRuntime
         var resolvedFrame = this.ResolveActiveFrame(currentFrame);
         if (resolvedFrame == null)
         {
+            OverlayPublicationDiagnostics.Log(
+                "TooltipAddonOverlayDiag",
+                "runtime-sync-clear",
+                "no-frame",
+                "no-frame",
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"overlayDisplay={overlay.Display} lastVisibleFrame={this.lastVisibleFrame.HasValue}"));
             this.Clear(overlay);
             return false;
         }
@@ -83,6 +121,27 @@ internal sealed class TooltipAddonAnchoredOverlayRuntime
         overlay.UpdateRuntimePresentation(
             resolvedFrame.Value.NativeScale * this.renderScaleAdjustment,
             1f);
+        OverlayPublicationDiagnostics.Log(
+            "TooltipAddonOverlayDiag",
+            "runtime-sync",
+            OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"{OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText)}|" +
+                $"{currentFrame.HasValue}|{resolvedFrame.Value.NativeVisible}|" +
+                $"{resolvedFrame.Value.NativeScale:0.##}|{this.renderScaleAdjustment:0.##}|" +
+                $"{OverlayPublicationDiagnostics.RoundVector(resolvedFrame.Value.Position).X:0}," +
+                $"{OverlayPublicationDiagnostics.RoundVector(resolvedFrame.Value.Position).Y:0}|" +
+                $"{OverlayPublicationDiagnostics.RoundVector(resolvedFrame.Value.Size).X:0}," +
+                $"{OverlayPublicationDiagnostics.RoundVector(resolvedFrame.Value.Size).Y:0}|" +
+                $"{overlay.Display}"),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"currentFramePresent={currentFrame.HasValue} resolvedPos={OverlayPublicationDiagnostics.FormatVector(resolvedFrame.Value.Position)} " +
+                $"resolvedSize={OverlayPublicationDiagnostics.FormatVector(resolvedFrame.Value.Size)} " +
+                $"resolvedNativeScale={resolvedFrame.Value.NativeScale:0.##} resolvedNativeVisible={resolvedFrame.Value.NativeVisible} " +
+                $"renderScaleAdjustment={this.renderScaleAdjustment:0.##} overlayDisplay={overlay.Display} " +
+                $"textLen={overlay.CurrentText.Length} preview='{OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText)}'"));
         return overlay.Display;
     }
 
@@ -92,6 +151,17 @@ internal sealed class TooltipAddonAnchoredOverlayRuntime
     /// <param name="overlay">The shared Tooltip addon overlay.</param>
     internal void Clear(TranslationOverlay overlay)
     {
+        OverlayPublicationDiagnostics.Log(
+            "TooltipAddonOverlayDiag",
+            "runtime-clear",
+            OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"{OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText)}|{overlay.Display}|{this.lastVisibleFrame.HasValue}"),
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"overlayDisplay={overlay.Display} lastVisibleFrame={this.lastVisibleFrame.HasValue} " +
+                $"textLen={overlay.CurrentText.Length} preview='{OverlayPublicationDiagnostics.BuildPreview(overlay.CurrentText)}'"));
         this.lastVisibleFrame = null;
         this.renderScaleAdjustment = 1f;
         overlay.Display = false;
