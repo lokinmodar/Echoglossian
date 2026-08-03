@@ -11,6 +11,7 @@ This page is the public version of the current translation-surface inventory. It
 | --- | --- | --- |
 | Quest / native-window family | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal-family surfaces and DB-first game windows |
 | Overlay family | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, subtitles, MiniTalk, CutSceneSelectString, and toast-family surfaces |
+| Native / distance-aware hybrid family | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | NamePlates use native presentation for standard languages and distance-aware overlay fallback for overlay-only languages |
 
 ## Dialogue And Overlay Surfaces
 
@@ -21,6 +22,10 @@ This page is the public version of the current translation-surface inventory. It
 | TalkSubtitle | `TranslateTalkSubtitle` | Enabled |
 | MiniTalk | `TranslateMiniTalk` | Enabled |
 | CutSceneSelectString | `TranslateCutSceneSelectString` | Enabled |
+| Yes/No dialog | `TranslateYesNoScreen` | Enabled; uses the native-tooltip family rather than an overlay window |
+| SelectString dialog | `TranslateSelectString` | Enabled; uses the native-tooltip family rather than an overlay window |
+| SelectIconString dialog | `TranslateSelectIconString` | Enabled; uses the native-tooltip family rather than an overlay window |
+| SelectOk dialog | `TranslateSelectOk` | Enabled; uses the native-tooltip family rather than an overlay window |
 
 ## Quest And Journal Surfaces
 
@@ -56,18 +61,24 @@ This page is the public version of the current translation-surface inventory. It
 | HUD windows | `TranslateHudWindow` | Enabled |
 | Operation Guide | `TranslateOperationGuideWindow` | Enabled |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Enabled |
+| Tooltip addon | `TranslateTooltipAddon` | Enabled; tooltip-only and swap use a dedicated overlay anchored to the live game tooltip |
 | Action / item detail tooltips | `TranslateTooltips` | Enabled; defaults to Plugin Tooltip mode |
+
+## World-Space And NamePlate Surfaces
+
+| Surface | Toggle | Status |
+| --- | --- | --- |
+| NamePlates | `TranslateNamePlates` | Enabled; overlay-only languages use the distance-aware overlay backend |
 
 ## Hidden Or Temporarily Restricted Surfaces
 
 | Surface | Toggle | Public status |
 | --- | --- | --- |
-| Yes/No dialog | `TranslateYesNoScreen` | Implemented but hidden in current UI |
-| SelectString dialog | `TranslateSelectString` | Implemented but hidden in current UI |
-| SelectOk dialog | `TranslateSelectOk` | Implemented but hidden in current UI |
+| None currently tracked | N/A | Update this section when a surface becomes intentionally hidden or restricted again |
 
 ## Operational Notes
 
 - Some languages require downloaded font assets before translation can activate safely.
 - Overlay-only languages are normalized away from native replacement modes when native display would be unsafe.
+- NamePlates keep native presentation for standard languages, but switch to the distance-aware overlay backend when the current language is overlay-only.
 - A surface may exist in config or code but still be intentionally hidden or disabled in a release.

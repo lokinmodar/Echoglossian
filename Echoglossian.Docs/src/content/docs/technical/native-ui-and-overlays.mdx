@@ -22,11 +22,17 @@ Overlay state is managed through the overlay layer, not by individual handlers o
 
 Handlers publish content and synchronize bounds, but the overlay itself is a separate concern.
 
+Two current examples matter here:
+
+- the dedicated `Tooltip` addon now uses an overlay anchored directly to the live game tooltip for tooltip-only and swap presentation
+- `NamePlate` uses the shared renderer through a distance-aware overlay backend when the active language is overlay-only
+
 ## Native Mutation Rules
 
 - Overlay-only mode must not mutate native nodes or payloads.
 - Native mode may write translated text into supported native surfaces.
 - Swap mode keeps translated native text and publishes the original through the overlay.
+- If a language is globally overlay-only, mode resolution must collapse away from native mutation for that surface family.
 
 ## Current Native-Layout Reality
 
@@ -36,6 +42,8 @@ Examples:
 
 - `TalkSubtitle` can inject replacement text earlier through `AtkValue` payloads.
 - `BattleTalk`, `MiniTalk`, and several toast-family surfaces still rely on late native text-node mutation plus shared reflow logic.
+- Journal-family surfaces now explicitly restore visible native state before translation-signature resets so language changes start from the original live text.
+- The dedicated `Tooltip` addon keeps one shared capture/cache/DB pipeline across native and anchored-overlay presentation backends.
 
 When visuals are wrong, first classify the problem:
 

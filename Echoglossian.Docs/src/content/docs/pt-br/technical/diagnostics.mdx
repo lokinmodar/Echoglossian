@@ -21,6 +21,20 @@ Use o comando addon probe preferido do repositório ao investigar comportamento 
 
 Essa é a primeira ferramenta a buscar quando uma família específica de addons se comporta diferente do esperado.
 
+Para superfícies com hover-tooltip em builds `DEBUG`, também existe um logger temporário focado:
+
+```text
+/eglotooltipregisterlogging <surface|all> [duration]
+/eglotooltipregisterlogging stop
+```
+
+Use-o quando precisar confirmar:
+
+- qual superfície realmente registrou o hover target
+- qual tipo de âncora foi usado
+- quais bounds foram publicados para a área de hit
+- quando ocorreram as transições de hover-enter e hover-exit
+
 ## Validação de build e test
 
 Validação padrão do plugin:
@@ -35,7 +49,6 @@ Validação do site docs:
 ```powershell
 Set-Location .\Echoglossian.Docs
 npm.cmd run test:locales
-npm.cmd run check:locales
 npm.cmd run check
 npm.cmd run build
 ```
@@ -45,3 +58,4 @@ npm.cmd run build
 - prefira lifecycle helpers e probes focados em vez de debug spam em hot paths
 - remova logging temporário de investigação assim que o problema estiver entendido
 - classifique runtime issues por estágio antes de mudar código
+- inspecione primeiro o `Echoglossian.log`; use `dalamud.log` principalmente quando precisar de contexto entre plugins
