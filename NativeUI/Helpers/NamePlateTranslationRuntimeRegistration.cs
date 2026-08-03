@@ -41,6 +41,19 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Recreates the NamePlate runtime so it captures the current shared
+  ///     translation service after live language or provider changes.
+  /// </summary>
+  private void RebuildNamePlateTranslationRuntime()
+  {
+    this.UnregisterNamePlateTranslationRuntime();
+    this.namePlateTranslationRuntime.Dispose();
+    this.namePlateTranslationRuntime = this.CreateNamePlateTranslationRuntime();
+    this.RegisterNamePlateTranslationRuntime();
+    NamePlateGuiInterface.RequestRedraw();
+  }
+
+  /// <summary>
   ///     Unregisters the NamePlateGui runtime from Dalamud.
   /// </summary>
   private void UnregisterNamePlateTranslationRuntime()

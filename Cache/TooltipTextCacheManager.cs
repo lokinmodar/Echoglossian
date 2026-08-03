@@ -14,6 +14,8 @@ namespace Echoglossian.Cache;
 /// </summary>
 public static class TooltipTextCacheManager
 {
+    private static readonly ReaderWriterLockSlim CacheLock =
+        new(LockRecursionPolicy.NoRecursion);
     private static readonly Dictionary<string, List<TooltipText>> Cache =
         new(StringComparer.Ordinal);
     private static readonly Dictionary<string, TooltipText> ExactCache =
@@ -27,7 +29,21 @@ public static class TooltipTextCacheManager
     ///     Gets a value indicating whether the cache was preloaded from the
     ///     current session database.
     /// </summary>
-    public static bool IsPreloaded => isPreloaded;
+    public static bool IsPreloaded
+    {
+        get
+        {
+            CacheLock.EnterReadLock();
+            try
+            {
+                return isPreloaded;
+            }
+            finally
+            {
+                CacheLock.ExitReadLock();
+            }
+        }
+    }
 
     /// <summary>
     ///     Gets the monotonically increasing cache revision.
@@ -54,23 +70,41 @@ public static class TooltipTextCacheManager
                 .OrderBy(row => row.Id)
                 .ToList();
 
-            Cache.Clear();
-            ExactCache.Clear();
-            ScopeCache.Clear();
-            foreach (var row in allRows)
+            CacheLock.EnterWriteLock();
+            try
             {
-                IndexRecord(row);
+                Cache.Clear();
+                ExactCache.Clear();
+                ScopeCache.Clear();
+                foreach (var row in allRows)
+                {
+                    IndexRecord(row);
+                }
+
+                isPreloaded = true;
+                Interlocked.Increment(ref revision);
+            }
+            finally
+            {
+                CacheLock.ExitWriteLock();
             }
 
-            isPreloaded = true;
-            Interlocked.Increment(ref revision);
             PluginRuntimeLog.Debug(
                 "TooltipTextCacheManager",
                 $"Loaded {allRows.Count} TooltipText rows into {Cache.Count} addon buckets.");
         }
         catch (Exception ex)
         {
-            isPreloaded = false;
+            CacheLock.EnterWriteLock();
+            try
+            {
+                isPreloaded = false;
+            }
+            finally
+            {
+                CacheLock.ExitWriteLock();
+            }
+
             PluginRuntimeLog.Error(
                 "TooltipTextCacheManager",
                 $"Failed to preload cache: {ex}");
@@ -93,14 +127,22 @@ public static class TooltipTextCacheManager
             return;
         }
 
-        var existing = TryFindExistingCacheRow(newRecord);
-        if (existing != null)
+        CacheLock.EnterWriteLock();
+        try
         {
-            RemoveIndexedRecord(existing);
-        }
+            var existing = TryFindExistingCacheRow(newRecord);
+            if (existing != null)
+            {
+                RemoveIndexedRecord(existing);
+            }
 
-        IndexRecord(newRecord);
-        Interlocked.Increment(ref revision);
+            IndexRecord(newRecord);
+            Interlocked.Increment(ref revision);
+        }
+        finally
+        {
+            CacheLock.ExitWriteLock();
+        }
     }
 
     /// <summary>
@@ -129,33 +171,41 @@ public static class TooltipTextCacheManager
             return null;
         }
 
-        if (scope.RequireMatchingEngine)
+        CacheLock.EnterReadLock();
+        try
         {
-            return ExactCache.TryGetValue(
-                BuildExactKey(
-                    addonName,
-                    scope.SourceLanguageCode,
-                    scope.TargetLanguageCode,
-                    scope.TranslationEngine,
-                    gameVersion,
-                    originalTextsAsText,
-                    sourceContentHash),
-                out var exactMatch) &&
-                scope.Matches(
-                    exactMatch.OriginalLang,
-                    exactMatch.TranslationLang,
-                    exactMatch.TranslationEngine)
-                ? exactMatch
-                : null;
-        }
+            if (scope.RequireMatchingEngine)
+            {
+                return ExactCache.TryGetValue(
+                    BuildExactKey(
+                        addonName,
+                        scope.SourceLanguageCode,
+                        scope.TargetLanguageCode,
+                        scope.TranslationEngine,
+                        gameVersion,
+                        originalTextsAsText,
+                        sourceContentHash),
+                    out var exactMatch) &&
+                    scope.Matches(
+                        exactMatch.OriginalLang,
+                        exactMatch.TranslationLang,
+                        exactMatch.TranslationEngine)
+                    ? exactMatch
+                    : null;
+            }
 
-        return GetScopedRows(addonName, scope, gameVersion)?
-            .FirstOrDefault(row =>
-                row.SourceContentHash == sourceContentHash &&
-                string.Equals(
-                    row.OriginalTextsAsText,
-                    originalTextsAsText,
-                    StringComparison.Ordinal));
+            return GetScopedRows(addonName, scope, gameVersion)?
+                .FirstOrDefault(row =>
+                    row.SourceContentHash == sourceContentHash &&
+                    string.Equals(
+                        row.OriginalTextsAsText,
+                        originalTextsAsText,
+                        StringComparison.Ordinal));
+        }
+        finally
+        {
+            CacheLock.ExitReadLock();
+        }
     }
 
     /// <summary>
@@ -180,13 +230,21 @@ public static class TooltipTextCacheManager
             return [];
         }
 
-        var scopedRows = GetScopedRows(addonName, scope, gameVersion);
-        return scopedRows == null
-            ? []
-            : scopedRows
-                .OrderByDescending(static row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
-                .ThenByDescending(static row => row.Id)
-                .ToList();
+        CacheLock.EnterReadLock();
+        try
+        {
+            var scopedRows = GetScopedRows(addonName, scope, gameVersion);
+            return scopedRows == null
+                ? []
+                : scopedRows
+                    .OrderByDescending(static row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
+                    .ThenByDescending(static row => row.Id)
+                    .ToList();
+        }
+        finally
+        {
+            CacheLock.ExitReadLock();
+        }
     }
 
     /// <summary>
@@ -194,11 +252,20 @@ public static class TooltipTextCacheManager
     /// </summary>
     public static void Clear()
     {
-        Cache.Clear();
-        ExactCache.Clear();
-        ScopeCache.Clear();
-        isPreloaded = false;
-        Interlocked.Increment(ref revision);
+        CacheLock.EnterWriteLock();
+        try
+        {
+            Cache.Clear();
+            ExactCache.Clear();
+            ScopeCache.Clear();
+            isPreloaded = false;
+            Interlocked.Increment(ref revision);
+        }
+        finally
+        {
+            CacheLock.ExitWriteLock();
+        }
+
         PluginRuntimeLog.Debug(
             "TooltipTextCacheManager",
             "Cleared TooltipText cache.");

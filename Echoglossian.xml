@@ -6513,6 +6513,12 @@
                 Registers the NamePlateGui runtime with Dalamud.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.RebuildNamePlateTranslationRuntime">
+            <summary>
+                Recreates the NamePlate runtime so it captures the current shared
+                translation service after live language or provider changes.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.UnregisterNamePlateTranslationRuntime">
             <summary>
                 Unregisters the NamePlateGui runtime from Dalamud.

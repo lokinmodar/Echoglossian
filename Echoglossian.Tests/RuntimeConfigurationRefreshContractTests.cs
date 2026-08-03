@@ -49,6 +49,61 @@ public sealed class RuntimeConfigurationRefreshContractTests
     }
 
     /// <summary>
+    ///     Ensures a live translator rebuild also recreates the NamePlate
+    ///     runtime so it cannot keep using a stale captured
+    ///     <c>TranslationService</c> instance after language or provider
+    ///     changes.
+    /// </summary>
+    [Fact]
+    public void Translation_refresh_rebuilds_nameplate_runtime_when_translation_signature_changes()
+    {
+        var root = FindRepositoryRoot();
+        var refreshSource = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "RuntimeConfigurationRefresh.cs"));
+        var registrationSource = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "NamePlateTranslationRuntimeRegistration.cs"));
+
+        var rebuildServiceCall = refreshSource.IndexOf(
+            "this.RebuildTranslationServiceSafely();",
+            StringComparison.Ordinal);
+        var rebuildNamePlateCall = refreshSource.IndexOf(
+            "this.RebuildNamePlateTranslationRuntime();",
+            StringComparison.Ordinal);
+        var signatureUpdate = refreshSource.IndexOf(
+            "this.translationRuntimeSignature = translationSignature;",
+            StringComparison.Ordinal);
+
+        Assert.True(rebuildServiceCall >= 0);
+        Assert.True(rebuildNamePlateCall > rebuildServiceCall);
+        Assert.True(signatureUpdate > rebuildNamePlateCall);
+        Assert.Contains(
+            "private void RebuildNamePlateTranslationRuntime()",
+            registrationSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.UnregisterNamePlateTranslationRuntime();",
+            registrationSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.namePlateTranslationRuntime.Dispose();",
+            registrationSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.namePlateTranslationRuntime = this.CreateNamePlateTranslationRuntime();",
+            registrationSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.RegisterNamePlateTranslationRuntime();",
+            registrationSource,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the current test directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

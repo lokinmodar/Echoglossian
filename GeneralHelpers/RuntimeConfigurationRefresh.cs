@@ -70,6 +70,7 @@ public partial class Echoglossian
       this.RebuildTranslationServiceSafely();
       this.RebuildQueuedTranslationBroker();
       this.RebuildToastGuiRuntimes();
+      this.RebuildNamePlateTranslationRuntime();
       this.translationRuntimeSignature = translationSignature;
       this.addonHandlerRegistrationSignature = null;
     }

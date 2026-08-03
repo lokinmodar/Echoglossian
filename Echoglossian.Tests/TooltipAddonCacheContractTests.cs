@@ -60,6 +60,41 @@ public sealed class TooltipAddonCacheContractTests
             StringComparison.Ordinal);
     }
 
+    /// <summary>
+    ///     Ensures the dedicated Tooltip cache protects its shared in-memory
+    ///     indexes from concurrent hot-path reads and asynchronous writes.
+    /// </summary>
+    [Fact]
+    public void TooltipTextCacheManager_synchronizes_shared_indexes()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "Cache",
+            "TooltipTextCacheManager.cs"));
+
+        Assert.Contains(
+            "ReaderWriterLockSlim",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "EnterReadLock()",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ExitReadLock()",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "EnterWriteLock()",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ExitWriteLock()",
+            source,
+            StringComparison.Ordinal);
+    }
+
     private static DirectoryInfo FindRepositoryRoot()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);
