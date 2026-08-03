@@ -7,8 +7,8 @@ It focuses on:
 
 - where source text is captured
 - which persistence table owns the translated history
-- how native apply, tooltip presentation, and restore are driven
-- where the current mode contract differs from the older overlay path
+- how native apply, anchored overlay, hover presentation, and restore are driven
+- where the dedicated `Tooltip` addon now diverges from the older hover-only path
 
 ## Scope
 
@@ -33,16 +33,25 @@ Current display modes:
 - `TooltipTranslation`
 - `NativeUiTranslationWithOriginalTooltips`
 
-The same display contract is also used by the dedicated `Tooltip` addon
-runtime.
-
-Mode rules:
+Mode rules for selection dialogs:
 
 - native-only mode writes translated text into the native addon
 - tooltip mode leaves the native addon untouched and uses structured hover
   tooltips
 - swap mode keeps translated native text and exposes the original text through
   plugin hover tooltips
+
+The dedicated `Tooltip` addon uses the same mode enum, but its presentation
+backend now differs:
+
+- `NativeUiTranslation` stays native-only
+- `TooltipTranslation` publishes an anchored overlay on top of the visible game
+  `Tooltip` addon
+- `NativeUiTranslationWithOriginalTooltips` keeps translated native text and
+  publishes an anchored overlay showing the original text
+
+`TooltipTranslation` and swap for addon `Tooltip` no longer rely on
+`HoverTooltipManager`.
 
 ## Registration map
 
@@ -74,6 +83,8 @@ Dedicated config ownership:
 - `Tooltip`
   - `TranslateTooltipAddon`
   - `TooltipAddonTranslationDisplayMode`
+  - `TooltipAddonHideNativeTooltipWhenOverlayActive`
+  - `TooltipAddonOverlay*`
 
 ## Selection-dialog shared runtime
 
@@ -221,16 +232,23 @@ Base runtime:
 
 - `NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs`
 
-### Flow
+Anchored overlay runtime:
+
+- `NativeUI/Helpers/TooltipAddonAnchoredOverlayRuntime.cs`
+
+### Shared data pipeline
+
+All three `Tooltip` display modes share the same data path:
 
 ```text
 Tooltip addon lifecycle
   -> capture readable visible text nodes
   -> normalize ordered node payload
-  -> dedicated TooltipText lookup
+  -> TooltipTextCacheManager lookup
+  -> DB lookup on cache miss
   -> async translation when missing
-  -> dedicated persistence
-  -> native apply / structured hover / guarded restore
+  -> dedicated TooltipText persistence
+  -> mode-specific presentation backend
 ```
 
 Detailed flow:
@@ -238,7 +256,8 @@ Detailed flow:
 1. The handler captures readable visible text nodes only.
 2. The ordered source payload is normalized by text-node key
    (`nodeId:ordinal`) so duplicate visible nodes keep stable ordering.
-3. Lookup uses the dedicated `TooltipText` table keyed by:
+3. `TooltipTextCacheManager` is the fast path for all display modes.
+4. Cache misses fall back to the dedicated `TooltipText` table keyed by:
    - addon name
    - ordered original text JSON
    - source language
@@ -246,20 +265,76 @@ Detailed flow:
    - effective engine
    - game version
    - source-content hash
-4. If the payload is missing, the shared DB-first GameWindow base queues async
-   translation.
-5. Persisted translated rows are projected back onto the current visible
+5. If the payload is still missing, the shared DB-first GameWindow base queues
+   async translation.
+6. Persisted translated rows are projected back onto the current visible
    text-node keys before apply.
-6. Presentation then follows the current display mode:
-   - native mode may replace safe readable text nodes
-   - tooltip mode leaves native text untouched and uses hover
-   - swap mode writes translated native text and shows original hover text
+7. Presentation then follows the current display mode backend.
+
+### Mode-specific presentation backends
+
+#### `NativeUiTranslation`
+
+- uses the shared `TooltipText` pipeline
+- applies translated text directly to the native `Tooltip` addon
+- publishes no anchored overlay
+- restores only handler-owned native mutations
+
+#### `TooltipTranslation`
+
+- uses the shared `TooltipText` pipeline
+- leaves native tooltip text untouched
+- publishes an anchored overlay against the live `Tooltip` root bounds
+- can optionally hide the native tooltip while the overlay is active
+- restores native visibility immediately when overlay publication clears
+
+#### `NativeUiTranslationWithOriginalTooltips`
+
+- uses the shared `TooltipText` pipeline
+- applies translated native text
+- publishes an anchored overlay showing the original text
+- prefers one combined rich original-text presentation rebuilt from captured
+  `SeString` payload segments when every visible text-node payload is available
+- falls back to the plain ordered joined text body when one rich payload segment
+  cannot be recovered safely
+
+### Anchored overlay behavior
+
+The dedicated `Tooltip` overlay no longer registers a hover target over the
+game tooltip.
+
+Current anchoring rules:
+
+- the anchor source is the live `Tooltip` addon root rectangle
+- publication requires a visible addon, a valid frame, and resolved mode
+  content
+- overlay clear restores native visibility when this runtime hid it
+- mode changes, payload changes, addon hide, and runtime cleanup clear the
+  overlay before the next presentation path becomes active
+
+### Sizing and renderer behavior
+
+The anchored overlay sizes itself from the native tooltip geometry first.
+
+Current policy:
+
+- base position and size come from the live `Tooltip` addon root bounds
+- native addon scale is carried into the overlay frame
+- user `TooltipAddonOverlay*` settings act as adjustments on top of the
+  native-derived geometry
+- standard languages continue through the shared ImGui text renderer
+- RTL and texture-backed languages continue through
+  `RtlTexturePresentationService`
+
+This is deliberately separate from the generic hover-tooltip sizing path.
 
 ### Persistence notes
 
 - `Tooltip` uses the dedicated `TooltipText` entity family.
 - This keeps the addon separate from `ActionDetail` / `ItemDetail` and other
   prefetch-backed tooltip surfaces.
+- The same persisted row is reused regardless of whether the active backend is
+  native or anchored overlay.
 
 ## Related source files
 
@@ -270,5 +345,8 @@ Detailed flow:
 | Selection capture policy | `NativeUI/AddonHandlers/SelectionDialogs/SelectionDialogCapturePolicy.cs` |
 | Text-node helpers | `NativeUI/AddonHandlers/SelectionDialogs/SelectionDialogNodeResolvers.cs` |
 | Dedicated Tooltip runtime | `NativeUI/AddonHandlers/Common/TooltipHandler.cs` |
+| Tooltip anchored overlay policy | `NativeUI/Helpers/TooltipAddonAnchoredOverlayPresentationPolicy.cs` |
+| Tooltip anchored overlay state | `NativeUI/Helpers/TooltipAddonAnchoredOverlayRuntime.cs` |
+| Tooltip rich original presentation | `NativeUI/Helpers/TooltipAddonRichOriginalTextPresentationFactory.cs` |
 | Hover registration | `NativeUI/Helpers/HoverTooltipRegistration.cs` |
 | Hover manager | `NativeUI/Helpers/HoverTooltipManager.cs` |

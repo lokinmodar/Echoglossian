@@ -15,6 +15,31 @@ Keep Echoglossian's localization build safe for:
 - `MultilingualResources/*.xlf` remain optional localization assets and are not
   required for the plugin build to succeed.
 
+## Locale Naming Rules
+
+Localized runtime resources now use locale-specific file names instead of
+neutral culture names wherever the runtime needs a concrete locale.
+
+Current rule set:
+
+- keep `Resources.resx` as the invariant/root resource file
+- use locale-specific runtime resource files such as:
+  - `Resources.pt-PT.resx`
+  - `Resources.pt-BR.resx`
+  - `Resources.de-DE.resx`
+- do not reintroduce neutral runtime resource files such as `Resources.pt.resx`
+  when the runtime expects one concrete locale
+
+Runtime culture normalization now treats:
+
+- `pt` as `pt-PT`
+- `pt-PT` as `pt-PT`
+- `pt-BR` as its own separate locale
+
+`DefaultPluginCulture` is normalized on startup and when configuration is
+saved, so persisted plugin culture values converge to the locale-specific form
+used by the current runtime.
+
 ## Build-Safe Rule
 
 The plugin build must not depend on the Visual Studio installation of the
@@ -48,13 +73,20 @@ be required by CI or by `DalamudPluginsD17`.
 1. Add or update keys in `Properties/Resources.resx`.
 2. Add localized values in the corresponding `Properties/Resources.*.resx`
    files.
-3. Build normally:
+3. If you add or rename a runtime locale, also update the docs-site locale map
+   and validate it:
+
+```powershell
+node .\Echoglossian.Docs\scripts\check-locales.mjs
+```
+
+4. Build normally:
 
 ```powershell
 dotnet build Echoglossian.sln -c Debug --no-restore
 ```
 
-4. Commit the updated `.resx` files and the generated
+5. Commit the updated `.resx` files and the generated
    `Properties/Resources.Designer.cs`.
 
 ## Local Plogon-Like Verification
@@ -92,4 +124,6 @@ same critical MSBuild properties and is useful for quick validation.
 - It keeps the plugin compatible with the official Dalamud plugin build
   pipeline.
 - It avoids hidden Visual Studio-only build dependencies.
+- It keeps locale naming consistent between plugin resources and the docs-site
+  locale registry.
 - It preserves the normal `Resources.SomeString` usage pattern in the codebase.

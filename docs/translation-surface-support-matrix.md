@@ -31,6 +31,7 @@ flowchart TD
     I --> L[Toasts]
     I --> M[Game windows]
     I --> N[Action/item details and hover tooltips]
+    I --> O[World-space and nameplate surfaces]
 ```
 
 ## Translation Mode Families
@@ -39,6 +40,7 @@ flowchart TD
 | --- | --- | --- |
 | Native-tooltip family | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal-family surfaces, DB-first game windows, selection dialogs, and dedicated runtimes with structured hover tooltips |
 | Overlay family | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, subtitles, MiniTalk, CutSceneSelectString, and toast-family surfaces |
+| Native / distance-aware hybrid family | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | `NamePlate` (`NamePlates`) uses native presentation for standard languages and distance-aware overlay fallback for overlay-only languages |
 
 ## Dialog and Overlay Surfaces
 
@@ -90,8 +92,14 @@ flowchart TD
 | Operation Guide | `TranslateOperationGuideWindow` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest / native-window family | DB-first game-window runtime | Enabled |
 | Context Menu | `TranslateContextMenu` | Native-tooltip family | Dedicated DB-first row-chain runtime with row-local hover targets | Enabled |
-| Tooltip addon | `TranslateTooltipAddon` | Native-tooltip family | Dedicated DB-first runtime for the `Tooltip` addon, separate from `ActionDetail` and `ItemDetail` | Enabled |
+| Tooltip addon | `TranslateTooltipAddon` | Native-tooltip family | Dedicated DB-first runtime for the `Tooltip` addon, separate from `ActionDetail` and `ItemDetail`; `Tooltip Translation` and swap now use an anchored overlay on the live game tooltip | Enabled |
 | Action / item detail tooltips | `TranslateTooltips` | Quest / native-window family | DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes | Enabled |
+
+## World-space And NamePlate Surfaces
+
+| Surface | Config Toggle | Modes | Notes | Current Release Status |
+| --- | --- | --- | --- | --- |
+| NamePlates | `TranslateNamePlates` | Native / distance-aware hybrid family | Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend | Enabled |
 
 ## Hidden or Temporarily Restricted Surfaces
 
@@ -106,6 +114,7 @@ flowchart TD
 | Global activation | Translation does not stay enabled unless the selected engine is valid and configured for the selected language |
 | Downloaded font assets | Some languages require downloaded font assets before translation can be activated safely |
 | Overlay-only languages | When the language is overlay-only, native-replacement display modes are normalized to overlay/tooltip presentation |
+| Distance-aware overlay fallback | `NamePlates` use distance-based scale, fade, and max-distance cutoff when the active language is overlay-only |
 | Surface-level activation | Each family still requires its own per-surface toggle even after global translation is enabled |
 | Release gating | A surface may exist in config or code but still be intentionally hidden or force-disabled in a given release |
 
