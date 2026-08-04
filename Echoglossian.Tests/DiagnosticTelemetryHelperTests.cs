@@ -119,4 +119,24 @@ public class DiagnosticTelemetryHelperTests
         Assert.True(first);
         Assert.True(second);
     }
+
+    /// <summary>
+    ///     Ensures investigation-only structured-tooltip telemetry stays
+    ///     silent once the debugging pass is complete.
+    /// </summary>
+    [Fact]
+    public void TryBeginEmit_DisablesMutedStructuredTooltipScope()
+    {
+        var helper = new DiagnosticTelemetryHelper(
+            "StructuredDetailDiag",
+            TimeSpan.FromSeconds(2));
+        var observedAtUtc = new DateTime(2026, 08, 03, 1, 0, 0, DateTimeKind.Utc);
+
+        var allowed = helper.TryBeginEmit(
+            "overlay-draw",
+            "sig-a",
+            observedAtUtc);
+
+        Assert.False(allowed);
+    }
 }

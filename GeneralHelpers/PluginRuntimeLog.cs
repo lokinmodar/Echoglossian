@@ -40,7 +40,7 @@ internal static class PluginRuntimeLog
   [Conditional("DEBUG")]
   public static void Debug(IPluginLog pluginLog, string message)
   {
-    pluginLog.Debug(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Debug, message);
   }
 
   /// <summary>
@@ -55,7 +55,11 @@ internal static class PluginRuntimeLog
       string messageTemplate,
       params object[] values)
   {
-    pluginLog.Debug(messageTemplate, values);
+    WriteStructured(
+        pluginLog,
+        PluginRuntimeLogLevel.Debug,
+        messageTemplate,
+        values);
   }
 
   /// <summary>
@@ -68,10 +72,11 @@ internal static class PluginRuntimeLog
     var pluginLog = Echoglossian.PluginLog;
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Debug, message);
       return;
     }
 
-    pluginLog.Debug(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Debug, message);
   }
 
   /// <summary>
@@ -85,10 +90,17 @@ internal static class PluginRuntimeLog
     var pluginLog = Echoglossian.PluginLog;
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(
+          PluginRuntimeLogLevel.Debug,
+          RenderStructuredMessage(null, messageTemplate, values));
       return;
     }
 
-    pluginLog.Debug(messageTemplate, values);
+    WriteStructured(
+        pluginLog,
+        PluginRuntimeLogLevel.Debug,
+        messageTemplate,
+        values);
   }
 
   /// <summary>
@@ -100,12 +112,14 @@ internal static class PluginRuntimeLog
   public static void Debug(string scope, string message)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formatted = Format(scope, message);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Debug, formatted);
       return;
     }
 
-    pluginLog.Debug(Format(scope, message));
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Debug, formatted);
   }
 
   /// <summary>
@@ -121,12 +135,20 @@ internal static class PluginRuntimeLog
       params object[] values)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formattedTemplate = Format(scope, messageTemplate);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(
+          PluginRuntimeLogLevel.Debug,
+          RenderStructuredMessage(null, formattedTemplate, values));
       return;
     }
 
-    pluginLog.Debug(Format(scope, messageTemplate), values);
+    WriteStructured(
+        pluginLog,
+        PluginRuntimeLogLevel.Debug,
+        formattedTemplate,
+        values);
   }
 
   /// <summary>
@@ -141,12 +163,14 @@ internal static class PluginRuntimeLog
       string message)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formatted = Format(scope, message);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(level, formatted);
       return;
     }
 
-    Write(pluginLog, level, scope, message);
+    WriteDirect(pluginLog, level, formatted);
   }
 
   /// <summary>
@@ -161,10 +185,11 @@ internal static class PluginRuntimeLog
     var pluginLog = Echoglossian.PluginLog;
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(level, message);
       return;
     }
 
-    Write(pluginLog, level, string.Empty, message);
+    WriteDirect(pluginLog, level, message);
   }
 
   /// <summary>
@@ -194,33 +219,8 @@ internal static class PluginRuntimeLog
       string scope,
       string message)
   {
-    if (level == PluginRuntimeLogLevel.Debug)
-    {
-#if DEBUG
-      pluginLog.Debug(Format(scope, message));
-#endif
-      return;
-    }
-
     var formatted = Format(scope, message);
-    switch (level)
-    {
-      case PluginRuntimeLogLevel.Verbose:
-        pluginLog.Verbose(formatted);
-        break;
-      case PluginRuntimeLogLevel.Information:
-        pluginLog.Information(formatted);
-        break;
-      case PluginRuntimeLogLevel.Warning:
-        pluginLog.Warning(formatted);
-        break;
-      case PluginRuntimeLogLevel.Error:
-        pluginLog.Error(formatted);
-        break;
-      default:
-        pluginLog.Information(formatted);
-        break;
-    }
+    WriteDirect(pluginLog, level, formatted);
   }
 
   /// <summary>
@@ -232,10 +232,11 @@ internal static class PluginRuntimeLog
     var pluginLog = Echoglossian.PluginLog;
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Verbose, message);
       return;
     }
 
-    pluginLog.Verbose(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Verbose, message);
   }
 
   /// <summary>
@@ -245,7 +246,7 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Verbose(IPluginLog pluginLog, string message)
   {
-    pluginLog.Verbose(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Verbose, message);
   }
 
   /// <summary>
@@ -256,12 +257,14 @@ internal static class PluginRuntimeLog
   public static void Verbose(string scope, string message)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formatted = Format(scope, message);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Verbose, formatted);
       return;
     }
 
-    pluginLog.Verbose(Format(scope, message));
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Verbose, formatted);
   }
 
   /// <summary>
@@ -273,10 +276,11 @@ internal static class PluginRuntimeLog
     var pluginLog = Echoglossian.PluginLog;
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Information, message);
       return;
     }
 
-    pluginLog.Information(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Information, message);
   }
 
   /// <summary>
@@ -286,7 +290,7 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Information(IPluginLog pluginLog, string message)
   {
-    pluginLog.Information(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Information, message);
   }
 
   /// <summary>
@@ -297,12 +301,14 @@ internal static class PluginRuntimeLog
   public static void Information(string scope, string message)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formatted = Format(scope, message);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Information, formatted);
       return;
     }
 
-    pluginLog.Information(Format(scope, message));
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Information, formatted);
   }
 
   /// <summary>
@@ -314,10 +320,11 @@ internal static class PluginRuntimeLog
     var pluginLog = Echoglossian.PluginLog;
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Warning, message);
       return;
     }
 
-    pluginLog.Warning(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Warning, message);
   }
 
   /// <summary>
@@ -327,7 +334,7 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Warning(IPluginLog pluginLog, string message)
   {
-    pluginLog.Warning(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Warning, message);
   }
 
   /// <summary>
@@ -338,12 +345,14 @@ internal static class PluginRuntimeLog
   public static void Warning(string scope, string message)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formatted = Format(scope, message);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Warning, formatted);
       return;
     }
 
-    pluginLog.Warning(Format(scope, message));
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Warning, formatted);
   }
 
   /// <summary>
@@ -354,12 +363,15 @@ internal static class PluginRuntimeLog
   public static void Warning(Exception exception, string message)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formatted = FormatExceptionMessage(message, exception);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Warning, formatted);
       return;
     }
 
     pluginLog.Warning(exception, message);
+    PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Warning, formatted);
   }
 
   /// <summary>
@@ -371,10 +383,11 @@ internal static class PluginRuntimeLog
     var pluginLog = Echoglossian.PluginLog;
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Error, message);
       return;
     }
 
-    pluginLog.Error(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Error, message);
   }
 
   /// <summary>
@@ -384,7 +397,7 @@ internal static class PluginRuntimeLog
   /// <param name="message">The message to write.</param>
   public static void Error(IPluginLog pluginLog, string message)
   {
-    pluginLog.Error(message);
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Error, message);
   }
 
   /// <summary>
@@ -395,12 +408,134 @@ internal static class PluginRuntimeLog
   public static void Error(string scope, string message)
   {
     var pluginLog = Echoglossian.PluginLog;
+    var formatted = Format(scope, message);
     if (pluginLog == null)
     {
+      PluginRuntimeFileLog.Write(PluginRuntimeLogLevel.Error, formatted);
       return;
     }
 
-    pluginLog.Error(Format(scope, message));
+    WriteDirect(pluginLog, PluginRuntimeLogLevel.Error, formatted);
+  }
+
+  private static void WriteDirect(
+      IPluginLog pluginLog,
+      PluginRuntimeLogLevel level,
+      string message)
+  {
+    switch (level)
+    {
+      case PluginRuntimeLogLevel.Debug:
+#if DEBUG
+        pluginLog.Debug(message);
+        PluginRuntimeFileLog.Write(level, message);
+#endif
+        return;
+      case PluginRuntimeLogLevel.Verbose:
+        pluginLog.Verbose(message);
+        break;
+      case PluginRuntimeLogLevel.Information:
+        pluginLog.Information(message);
+        break;
+      case PluginRuntimeLogLevel.Warning:
+        pluginLog.Warning(message);
+        break;
+      case PluginRuntimeLogLevel.Error:
+        pluginLog.Error(message);
+        break;
+      default:
+        pluginLog.Information(message);
+        break;
+    }
+
+    PluginRuntimeFileLog.Write(level, message);
+  }
+
+  private static void WriteStructured(
+      IPluginLog pluginLog,
+      PluginRuntimeLogLevel level,
+      string messageTemplate,
+      params object[] values)
+  {
+    switch (level)
+    {
+      case PluginRuntimeLogLevel.Debug:
+#if DEBUG
+        pluginLog.Debug(messageTemplate, values);
+        PluginRuntimeFileLog.Write(
+            level,
+            RenderStructuredMessage(pluginLog, messageTemplate, values));
+#endif
+        return;
+      case PluginRuntimeLogLevel.Verbose:
+        pluginLog.Verbose(messageTemplate, values);
+        break;
+      case PluginRuntimeLogLevel.Information:
+        pluginLog.Information(messageTemplate, values);
+        break;
+      case PluginRuntimeLogLevel.Warning:
+        pluginLog.Warning(messageTemplate, values);
+        break;
+      case PluginRuntimeLogLevel.Error:
+        pluginLog.Error(messageTemplate, values);
+        break;
+      default:
+        pluginLog.Information(messageTemplate, values);
+        break;
+    }
+
+    PluginRuntimeFileLog.Write(
+        level,
+        RenderStructuredMessage(pluginLog, messageTemplate, values));
+  }
+
+  private static string RenderStructuredMessage(
+      IPluginLog? pluginLog,
+      string messageTemplate,
+      params object[] values)
+  {
+    if (values.Length == 0)
+    {
+      return messageTemplate;
+    }
+
+    if (pluginLog != null &&
+        pluginLog.Logger.BindMessageTemplate(
+            messageTemplate,
+            values,
+            out var parsedTemplate,
+            out var properties))
+    {
+      var propertyMap = properties.ToDictionary(
+          property => property.Name,
+          property => property.Value,
+          StringComparer.Ordinal);
+      return parsedTemplate.Render(propertyMap);
+    }
+
+    var renderedValues = string.Join(
+        ", ",
+        values.Select(RenderFallbackValue));
+    return $"{messageTemplate} | values: {renderedValues}";
+  }
+
+  private static string RenderFallbackValue(object? value)
+  {
+    return value switch
+    {
+      null => "<null>",
+      string text => text,
+      _ => Convert.ToString(value, CultureInfo.InvariantCulture) ??
+           value.ToString() ??
+           "<null>",
+    };
+  }
+
+  private static string FormatExceptionMessage(
+      string message,
+      Exception exception)
+  {
+    return $"{message}{Environment.NewLine}{exception}";
   }
 
   /// <summary>

@@ -5,6 +5,8 @@
 
 using System.Collections.Concurrent;
 
+using FFXIVClientStructs.FFXIV.Application.Network.WorkDefinitions;
+
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -30,6 +32,126 @@ internal static class QuestProgressResolver
     {
         QuestProgressCache.Clear();
         PluginRuntimeLog.Debug("[QuestProgressResolver] Cleared quest progress cache.");
+    }
+
+    /// <summary>
+    ///     Collects the currently accepted live quest identifiers from the
+    ///     quest manager.
+    /// </summary>
+    /// <param name="acceptedQuestIds">The accepted live quest identifiers.</param>
+    /// <returns>True when at least one accepted quest was collected.</returns>
+    internal static unsafe bool TryCollectAcceptedQuestIds(
+        out List<uint> acceptedQuestIds)
+    {
+        acceptedQuestIds = [];
+
+        var questManager = QuestManager.Instance();
+        if (questManager == null)
+        {
+            return false;
+        }
+
+        HashSet<uint> seenQuestIds = [];
+        foreach (ref QuestWork questWork in questManager->NormalQuests)
+        {
+            if (questWork.QuestId != 0 &&
+                seenQuestIds.Add(questWork.QuestId))
+            {
+                acceptedQuestIds.Add(questWork.QuestId);
+            }
+        }
+
+        foreach (ref DailyQuestWork dailyQuestWork in questManager->DailyQuests)
+        {
+            if (dailyQuestWork.QuestId != 0 &&
+                seenQuestIds.Add(dailyQuestWork.QuestId))
+            {
+                acceptedQuestIds.Add(dailyQuestWork.QuestId);
+            }
+        }
+
+        acceptedQuestIds.Sort();
+        return acceptedQuestIds.Count > 0;
+    }
+
+    /// <summary>
+    ///     Tries to resolve the currently accepted live quest identifier that
+    ///     corresponds to one Lumina or runtime quest id.
+    /// </summary>
+    /// <param name="questIdText">The quest id resolved from Lumina or the runtime.</param>
+    /// <param name="acceptedQuestId">
+    ///     The accepted live quest id used by <see cref="QuestManager" />.
+    /// </param>
+    /// <returns>True when the quest is currently accepted by the player.</returns>
+    internal static bool TryResolveAcceptedQuestId(
+        string? questIdText,
+        out uint acceptedQuestId)
+    {
+        acceptedQuestId = 0;
+
+        if (string.IsNullOrWhiteSpace(questIdText) ||
+            !uint.TryParse(
+                questIdText,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var questId))
+        {
+            return false;
+        }
+
+        return TryResolveAcceptedQuestId(questId, out acceptedQuestId);
+    }
+
+    /// <summary>
+    ///     Tries to resolve the currently accepted live quest identifier that
+    ///     corresponds to one Lumina or runtime quest id.
+    /// </summary>
+    /// <param name="questId">The quest id resolved from Lumina or the runtime.</param>
+    /// <param name="acceptedQuestId">
+    ///     The accepted live quest id used by <see cref="QuestManager" />.
+    /// </param>
+    /// <returns>True when the quest is currently accepted by the player.</returns>
+    internal static unsafe bool TryResolveAcceptedQuestId(
+        uint questId,
+        out uint acceptedQuestId)
+    {
+        acceptedQuestId = 0;
+
+        var runtimeQuestId = (ushort)(questId & 0xFFFF);
+        if (runtimeQuestId == 0)
+        {
+            return false;
+        }
+
+        var questManager = QuestManager.Instance();
+        if (questManager == null)
+        {
+            return false;
+        }
+
+        foreach (ref QuestWork questWork in questManager->NormalQuests)
+        {
+            if (questWork.QuestId != runtimeQuestId)
+            {
+                continue;
+            }
+
+            acceptedQuestId = questWork.QuestId;
+            return true;
+        }
+
+        foreach (ref DailyQuestWork dailyQuestWork in questManager->DailyQuests)
+        {
+            if (dailyQuestWork.QuestId != runtimeQuestId)
+            {
+                continue;
+            }
+
+            acceptedQuestId = dailyQuestWork.QuestId;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -256,7 +378,7 @@ internal static class QuestProgressResolver
 /// <param name="QuestSequence">The live quest sequence.</param>
 /// <param name="QuestName">The quest name resolved from Lumina.</param>
 /// <param name="QuestSheetName">The text sheet name used for the quest.</param>
-/// <param name="QuestSteps">The TODO row texts (active objectives).</param>
+/// <param name="QuestSteps">The complete canonical TODO row texts from the quest sheet.</param>
 /// <param name="QuestSeqTexts">The SEQ row texts (journal summaries per phase).</param>
 /// <param name="QuestSystemTexts">The SYSTEM row texts (cinematic captions).</param>
 /// <param name="ContentHash">A stable content fingerprint of all translatable row texts.</param>

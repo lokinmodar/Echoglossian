@@ -5,6 +5,7 @@
 
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Text;
 using Echoglossian.EFCoreSqlite.Models.Journal;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -30,6 +31,8 @@ public static class QuestLuminaResolver
 
     private static Dictionary<string, string>? questNameIndex;
 
+    private static HashSet<string>? ambiguousQuestNames;
+
     /// <summary>
     ///     Clears cached Lumina quest lookups.
     /// </summary>
@@ -39,6 +42,7 @@ public static class QuestLuminaResolver
         lock (QuestIndexLock)
         {
             questNameIndex = null;
+            ambiguousQuestNames = null;
         }
 
         PluginRuntimeLog.Debug("[QuestLuminaResolver] Cleared quest Lumina caches.");
@@ -81,7 +85,7 @@ public static class QuestLuminaResolver
     {
         questId = string.Empty;
 
-        var normalizedQuestName = NormalizeQuestName(questName);
+        var normalizedQuestName = NormalizeQuestNameForLookup(questName);
         if (normalizedQuestName.Length == 0)
         {
             return false;
@@ -107,7 +111,8 @@ public static class QuestLuminaResolver
         }
 
         var questIndex = GetQuestNameIndex(questSheet);
-        if (!questIndex.TryGetValue(normalizedQuestName, out var resolvedQuestId) ||
+        if (ambiguousQuestNames?.Contains(normalizedQuestName) == true ||
+            !questIndex.TryGetValue(normalizedQuestName, out var resolvedQuestId) ||
             string.IsNullOrWhiteSpace(resolvedQuestId))
         {
             return false;
@@ -134,11 +139,12 @@ public static class QuestLuminaResolver
             }
 
             var index = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var ambiguousNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var quest in questSheet)
             {
                 var questName = GetQuestNameText(quest);
-                var normalizedQuestName = NormalizeQuestName(questName);
+                var normalizedQuestName = NormalizeQuestNameForLookup(questName);
                 if (normalizedQuestName.Length == 0)
                 {
                     continue;
@@ -150,10 +156,21 @@ public static class QuestLuminaResolver
                     continue;
                 }
 
+                if (index.TryGetValue(normalizedQuestName, out var existingQuestId) &&
+                    !string.Equals(
+                        existingQuestId,
+                        questId,
+                        StringComparison.Ordinal))
+                {
+                    ambiguousNames.Add(normalizedQuestName);
+                    continue;
+                }
+
                 index.TryAdd(normalizedQuestName, questId);
             }
 
             questNameIndex = index;
+            ambiguousQuestNames = ambiguousNames;
             return questNameIndex;
         }
     }
@@ -188,11 +205,31 @@ public static class QuestLuminaResolver
         return quest.Id.ExtractText().Trim();
     }
 
-    private static string NormalizeQuestName(string? questName)
+    /// <summary>
+    ///     Normalizes one visible quest title for a Lumina title lookup.
+    /// </summary>
+    /// <param name="questName">The raw visible or sheet-backed title.</param>
+    /// <returns>The normalized title without private-use icon glyphs.</returns>
+    internal static string NormalizeQuestNameForLookup(string? questName)
     {
-        return string.IsNullOrWhiteSpace(questName)
-            ? string.Empty
-            : questName.Trim();
+        if (string.IsNullOrWhiteSpace(questName))
+        {
+            return string.Empty;
+        }
+
+        var normalizedText = new StringBuilder(questName.Length);
+        foreach (var character in questName)
+        {
+            if (char.GetUnicodeCategory(character) ==
+                UnicodeCategory.PrivateUse)
+            {
+                continue;
+            }
+
+            normalizedText.Append(character);
+        }
+
+        return normalizedText.ToString().Trim();
     }
 }
 

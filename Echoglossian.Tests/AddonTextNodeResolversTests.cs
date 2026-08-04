@@ -34,4 +34,23 @@ public class AddonTextNodeResolversTests
             visitedNodes,
             (nint)0x200));
     }
+
+    /// <summary>
+    ///     Ensures one resolver walk stops before unbounded native node traversal
+    ///     can overflow the process stack.
+    /// </summary>
+    [Fact]
+    public void TryVisitNodeAddress_RejectsWhenTraversalLimitReached()
+    {
+        var visitedNodes = new HashSet<nint>
+        {
+            (nint)0x100,
+            (nint)0x200,
+        };
+
+        Assert.False(AddonTextNodeResolvers.TryVisitNodeAddress(
+            visitedNodes,
+            (nint)0x300,
+            maxVisitedNodes: 2));
+    }
 }

@@ -15,6 +15,14 @@ namespace Echoglossian.UIOverlays.TranslationOverlay;
 /// <param name="AddonPosition">The source addon position.</param>
 /// <param name="AddonSize">The source addon dimensions.</param>
 /// <param name="IsPreview">Whether the request comes from the standalone previewer.</param>
+/// <param name="ScaleMultiplier">The runtime overlay scale multiplier.</param>
+/// <param name="AlphaMultiplier">The runtime overlay alpha multiplier.</param>
+/// <param name="TextureMaxWidthOverride">
+/// The optional texture wrap-width override for raster-backed text.
+/// </param>
+/// <param name="TextureLineHeightScaleOverride">
+/// The optional line-height override for raster-backed text.
+/// </param>
 internal sealed record TranslationOverlayRenderRequest(
     TranslationOverlay Overlay,
     TranslationWindowConfig WindowConfig,
@@ -22,4 +30,8 @@ internal sealed record TranslationOverlayRenderRequest(
     Vector2 ViewportSize,
     Vector2 AddonPosition,
     Vector2 AddonSize,
-    bool IsPreview);
+    bool IsPreview,
+    float ScaleMultiplier,
+    float AlphaMultiplier,
+    float? TextureMaxWidthOverride = null,
+    float? TextureLineHeightScaleOverride = null);

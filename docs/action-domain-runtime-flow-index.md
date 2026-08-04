@@ -15,10 +15,10 @@ cache ownership, and runtime behavior stay unambiguous.
    - owner: `*ActionText` families plus `MainCommandText`
    - entrypoint: `TickReferenceTextPrefetch()`
 
-3. `_MainCommand` live addon runtime
+3. Main-menu live addon runtime family
    - doc: [maincommand-addon-gamewindow-flow.md](/C:/Dante/_dalamud/Echoglossian/docs/maincommand-addon-gamewindow-flow.md)
-   - owner: `GameWindow`
-   - entrypoint: `MainCommandHandler`
+   - owner: `GameWindow` for `_MainCommand`, `AddonContextMenuTitle`, and `SystemMenu`; dedicated `ContextMenuText` for `ContextMenu`
+   - entrypoint: `MainCommandHandler`, `AddonContextMenuTitleHandler`, `SystemMenuHandler`, `ContextMenuHandler`
 
 4. `ActionMenu` live runtime
    - doc: [actionmenu-runtime-flow.md](/C:/Dante/_dalamud/Echoglossian/docs/actionmenu-runtime-flow.md)

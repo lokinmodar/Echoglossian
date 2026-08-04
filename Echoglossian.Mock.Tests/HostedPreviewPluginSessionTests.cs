@@ -4,10 +4,14 @@
 // </copyright>
 
 using Echoglossian.Mock.Hosting;
+using Echoglossian.NativeUI.AddonHandlers.Quest;
+using Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
+using Echoglossian.NativeUI.Handlers;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -59,6 +63,32 @@ public sealed class HostedPreviewPluginSessionTests
     }
 
     /// <summary>
+    /// Verifies that startup does not forcibly disable the ActionDetail /
+    /// ItemDetail runtime after the user enables it in configuration.
+    /// </summary>
+    /// <returns>A task that completes after hosted startup loads the configuration.</returns>
+    [Fact]
+    public async Task StartAsync_preserves_action_item_detail_translation_settings()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(
+            config: new global::Echoglossian.Config
+            {
+                TranslateTooltips = true,
+                TooltipTranslationDisplayMode =
+                    global::Echoglossian.JournalTranslationDisplayMode.TooltipTranslation,
+            });
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            fixture.Options);
+
+        var activeConfiguration = GetActiveConfiguration(session.Plugin);
+
+        activeConfiguration.TranslateTooltips.Should().BeTrue();
+        activeConfiguration.TooltipTranslationDisplayMode.Should().Be(
+            global::Echoglossian.JournalTranslationDisplayMode.TooltipTranslation);
+    }
+
+    /// <summary>
     /// Verifies that hosted startup seeds the database used by the production plugin configuration directory.
     /// </summary>
     /// <returns>A task that completes after hosted startup copies the preview-owned database clone.</returns>
@@ -96,6 +126,109 @@ public sealed class HostedPreviewPluginSessionTests
         session.StateRoot.FullName.Should().Be(fixture.Options.StateRoot.FullName);
         session.PluginSavePath.FullName.Should().Be(fixture.Options.PluginSavePath.FullName);
         session.ConfigPath.FullName.Should().Be(fixture.Options.ConfigPath.FullName);
+    }
+
+    /// <summary>
+    /// Verifies that the remaining quest-family handlers are active in the
+    /// real plugin when their config toggles are enabled under DalaMock.
+    /// </summary>
+    /// <returns>A task that completes after hosted startup wires the addon handlers.</returns>
+    [Fact]
+    public async Task StartAsync_registers_remaining_quest_family_handlers_when_enabled()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(
+            config: new global::Echoglossian.Config
+            {
+                TranslateJournalAccept = true,
+                TranslateJournalResult = true,
+                TranslateRecommendList = true,
+                TranslateAreaMap = true,
+            });
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            fixture.Options);
+
+        var registeredHandlers = GetRegisteredAddonHandlers(session.Plugin);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "JournalAccept" &&
+            entry.Handler is JournalAcceptHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "JournalResult" &&
+            entry.Handler is JournalResultHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "RecommendList" &&
+            entry.Handler is RecommendListHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "AreaMap" &&
+            entry.Handler is MapSurfaceStringArrayHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "_NaviMap" &&
+            entry.Handler is MapSurfaceStringArrayHandler);
+    }
+
+    /// <summary>
+    /// Verifies that hosted startup wires the generic selection-dialog
+    /// handlers when their config toggles are enabled.
+    /// </summary>
+    /// <returns>A task that completes after hosted startup wires the addon handlers.</returns>
+    [Fact]
+    public async Task StartAsync_registers_selection_dialog_handlers_when_enabled()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(
+            config: new global::Echoglossian.Config
+            {
+                TranslateYesNoScreen = true,
+                TranslateSelectOk = true,
+                TranslateSelectString = true,
+            });
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            fixture.Options);
+
+        var registeredHandlers = GetRegisteredAddonHandlers(session.Plugin);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectYesno" &&
+            entry.Handler is SelectYesNoHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectOk" &&
+            entry.Handler is SelectOkHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectString" &&
+            entry.Handler is SelectStringHandler);
+        registeredHandlers.Should().Contain(entry =>
+            entry.AddonName == "SelectIconString" &&
+            entry.Handler is SelectIconStringHandler);
+    }
+
+    private static IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)>
+        GetRegisteredAddonHandlers(global::Echoglossian.Echoglossian plugin)
+    {
+        var handlersField = typeof(global::Echoglossian.Echoglossian).GetField(
+            "registeredAddonHandlers",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        handlersField.Should().NotBeNull();
+        return handlersField!.GetValue(plugin)
+            .Should()
+            .BeAssignableTo<List<(string AddonName, IAddonTranslationHandler Handler)>>()
+            .Subject;
+    }
+
+    /// <summary>
+    /// Gets the active production configuration from the hosted plugin.
+    /// </summary>
+    /// <param name="plugin">The hosted production plugin.</param>
+    /// <returns>The active configuration instance.</returns>
+    private static global::Echoglossian.Config GetActiveConfiguration(
+        global::Echoglossian.Echoglossian plugin)
+    {
+        var configurationField = typeof(global::Echoglossian.Echoglossian).GetField(
+            "configuration",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        configurationField.Should().NotBeNull();
+        return configurationField!.GetValue(plugin)
+            .Should()
+            .BeAssignableTo<global::Echoglossian.Config>()
+            .Subject;
     }
 }
 

@@ -26,28 +26,6 @@ public unsafe partial class Echoglossian
     private static readonly TimeSpan ItemDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
 
-    private static readonly InventoryType[] PrefetchInventoryTypes =
-    [
-        InventoryType.Inventory1,
-        InventoryType.Inventory2,
-        InventoryType.Inventory3,
-        InventoryType.Inventory4,
-        InventoryType.EquippedItems,
-        InventoryType.ArmoryMainHand,
-        InventoryType.ArmoryOffHand,
-        InventoryType.ArmoryHead,
-        InventoryType.ArmoryBody,
-        InventoryType.ArmoryHands,
-        InventoryType.ArmoryWaist,
-        InventoryType.ArmoryLegs,
-        InventoryType.ArmoryFeets,
-        InventoryType.ArmoryEar,
-        InventoryType.ArmoryNeck,
-        InventoryType.ArmoryWrist,
-        InventoryType.ArmoryRings,
-        InventoryType.ArmorySoulCrystal,
-    ];
-
     private readonly List<uint> itemDetailPrefetchQueue = [];
 
     private string itemDetailPrefetchSignature = string.Empty;
@@ -153,7 +131,7 @@ public unsafe partial class Echoglossian
     {
         return this.configuration.Translate &&
                this.configuration.TranslateTooltips &&
-               ClientStateInterface.IsLoggedIn;
+               FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess();
     }
 
     /// <summary>
@@ -164,7 +142,7 @@ public unsafe partial class Echoglossian
     private bool ShouldPrefetchActionAdjacentCanonicalTooltips()
     {
         return this.configuration.Translate &&
-               ClientStateInterface.IsLoggedIn &&
+               FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() &&
                (this.configuration.TranslateTooltips ||
                 this.configuration.TranslateActionMenuWindow);
     }
@@ -240,7 +218,10 @@ public unsafe partial class Echoglossian
             () => TranslationService.Translate(
                 originalPayload.Name,
                 sourceLanguage,
-                LangDict[LanguageInt].Code),
+                LangDict[LanguageInt].Code,
+                originContext: BuildItemDetailOriginContext(
+                    originalPayload,
+                    "Name")),
             translatedName => this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
                 sourceLanguage,
@@ -259,7 +240,10 @@ public unsafe partial class Echoglossian
         SourceClientLanguage sourceLanguage)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedItemDescription))
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Description,
+                    existingRow.TranslatedItemDescription) != null)
         {
             return;
         }
@@ -282,7 +266,10 @@ public unsafe partial class Echoglossian
             () => TranslationService.Translate(
                 originalPayload.Description,
                 sourceLanguage,
-                LangDict[LanguageInt].Code),
+                LangDict[LanguageInt].Code,
+                originContext: BuildItemDetailOriginContext(
+                    originalPayload,
+                    "Description")),
             translatedDescription => this.ApplyItemDetailTranslation(
                 originalPayload.ItemId,
                 sourceLanguage,
@@ -336,6 +323,16 @@ public unsafe partial class Echoglossian
             !string.IsNullOrWhiteSpace(translatedDescription)
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
+        translatedPayload.TranslatedName =
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Name,
+                    translatedPayload.TranslatedName);
+        translatedPayload.TranslatedDescription =
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Description,
+                    translatedPayload.TranslatedDescription);
         this.TryPopulatePendingItemDetailTranslations(
             originalPayload,
             translatedPayload);
@@ -408,6 +405,19 @@ public unsafe partial class Echoglossian
     }
 
     /// <summary>
+    ///     Builds the diagnostic surface identity for one item-tooltip field.
+    /// </summary>
+    /// <param name="payload">The canonical item-tooltip payload.</param>
+    /// <param name="fieldName">The translated field name.</param>
+    /// <returns>The diagnostic surface identity.</returns>
+    private static string BuildItemDetailOriginContext(
+        ItemTooltipCanonicalPayload payload,
+        string fieldName)
+    {
+        return $"ItemTooltip/{payload.ItemId}/{fieldName}";
+    }
+
+    /// <summary>
     ///     Tries to collect tracked item ids from inventory, armory, equipment, and hotbars.
     /// </summary>
     /// <param name="itemIds">The collected item ids.</param>
@@ -423,10 +433,10 @@ public unsafe partial class Echoglossian
         }
 
         HashSet<uint> uniqueItemIds = [];
-        foreach (var inventoryType in PrefetchInventoryTypes)
+        foreach (var inventoryType in Enum.GetValues<InventoryType>())
         {
             var container = inventoryManager->GetInventoryContainer(inventoryType);
-            if (container == null || !container->IsLoaded || container->Items == null)
+            if (container == null || !container->IsLoaded || container->Size == 0 || container->Items == null)
             {
                 continue;
             }

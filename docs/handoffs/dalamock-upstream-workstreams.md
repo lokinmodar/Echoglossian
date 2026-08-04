@@ -2,6 +2,12 @@
 
 Snapshot date: 2026-07-18
 
+Status update 2026-07-19: the `CreateDebouncer` workstream is superseded for
+stable Dalamud 15.0.2.3 because stable does not expose `IDebouncer`. The
+remaining upstream blocker for removing Echoglossian's DalaMock vendor is the
+`PluginLoader` `AssemblyLocation` fix plus a released DalaMock package that
+contains it.
+
 This handoff is the entry point for a separate chat focused on upstreaming the
 current Echoglossian-hosted preview compatibility fixes into `DalaMock`.
 
@@ -43,15 +49,13 @@ glue.
 
 ## Workstreams
 
-1. [DalaMock `CreateDebouncer` Compatibility](./dalamock-upstream-create-debouncer.md)
+1. [DalaMock `CreateDebouncer` Compatibility](./dalamock-upstream-create-debouncer.md) (superseded for stable)
 2. [DalaMock Hosted Plugin Loader Assembly Resolution](./dalamock-upstream-plugin-loader-assembly-resolution.md)
 
 ## What belongs upstream
 
-Only these two areas are currently strong upstream candidates:
+Only this area is currently a strong stable upstream candidate:
 
-- `DalaMock/Mocks/DalamudServices/MockFramework.cs`
-  - add `CreateDebouncer(TimeSpan, Action)`
 - `DalaMock/Plugin/PluginLoader.cs`
   - resolve plugin assembly identity correctly when hosted startup uses an async
     adapter plus `PluginLoadSettings.AssemblyLocation`
@@ -73,9 +77,10 @@ Those are local hosting accommodations, not generic DalaMock fixes.
 
 1. create or use a dedicated DalaMock clone or fork
 2. confirm the vendored `6.1.7` files match the intended upstream base
-3. upstream the `CreateDebouncer` fix first
-4. upstream the `PluginLoader` assembly-resolution fix second
-5. once both are accepted or available in a release, return to Echoglossian and:
+3. do not upstream `CreateDebouncer` for stable unless the official Dalamud API
+   changes again
+4. upstream the `PluginLoader` assembly-resolution fix
+5. once that fix is accepted and available in a release, return to Echoglossian and:
    - remove or reduce the vendored delta
    - switch back to package consumption if that becomes practical
 
@@ -101,6 +106,6 @@ DalaMock tests there as part of the PR.
 
 > Continue from `docs/handoffs/dalamock-upstream-workstreams.md`. Use the
 > vendored `vendor/DalaMock` tree in the Echoglossian previewer worktree as the
-> known-good patch basis, but keep the PR scope DalaMock-only. Start with the
-> `CreateDebouncer` compatibility fix, then handle the hosted `PluginLoader`
-> assembly-resolution fix in a separate upstreamable change.
+> known-good patch basis, but keep the PR scope DalaMock-only. Do not resume
+> `CreateDebouncer` for stable; focus on the hosted `PluginLoader`
+> assembly-resolution fix.

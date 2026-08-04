@@ -10,6 +10,23 @@ namespace Echoglossian;
 /// </summary>
 public partial class Echoglossian
 {
+    private static readonly HashSet<int> NativeReplacementDiacriticsFallbackLanguageIds =
+    [
+        24,
+        25,
+        44,
+        60,
+        61,
+        80,
+        83,
+        87,
+        91,
+        104,
+        105,
+        109,
+        110,
+    ];
+
     private readonly Dictionary<int, LanguageInfo> languagesDictionary = CreateLanguagesDictionary();
 
     /// <summary>
@@ -18,7 +35,7 @@ public partial class Echoglossian
     /// <returns>The default language metadata dictionary.</returns>
     internal static Dictionary<int, LanguageInfo> CreateLanguagesDictionary()
     {
-        return new Dictionary<int, LanguageInfo>
+        var languages = new Dictionary<int, LanguageInfo>
         {
         [0] = new LanguageInfo(
             @"af",
@@ -1173,5 +1190,25 @@ public partial class Echoglossian
             string.Empty,
             new List<int>()),
         };
+
+        ApplyNativeReplacementDiacriticsFallbackEligibility(languages);
+        return languages;
+    }
+
+    /// <summary>
+    ///     Marks the current manually-curated language set that may expose the
+    ///     optional native replacement diacritics fallback.
+    /// </summary>
+    /// <param name="languages">The language metadata dictionary to update.</param>
+    private static void ApplyNativeReplacementDiacriticsFallbackEligibility(
+        Dictionary<int, LanguageInfo> languages)
+    {
+        foreach (var languageId in NativeReplacementDiacriticsFallbackLanguageIds)
+        {
+            if (languages.TryGetValue(languageId, out var language))
+            {
+                language.SupportsNativeReplacementDiacriticsFallback = true;
+            }
+        }
     }
 }

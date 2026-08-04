@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.Collections.Concurrent;
+using Dalamud.Interface.ImGuiSeStringRenderer;
 using Echoglossian.PluginUI.Helpers;
 
 namespace Echoglossian.NativeUI.Helpers;
@@ -19,7 +20,10 @@ public sealed class HoverTooltipManager
     private readonly TimeSpan staleEntryLifetime = TimeSpan.FromSeconds(30);
     private readonly Config config;
     private readonly UINewFontHandler fontHandler;
+    private readonly HoverTooltipRegistrationDiagnostics registrationDiagnostics;
     private readonly RtlTexturePresentationService rtlTexturePresentationService;
+    private readonly Func<RichOriginalTextCaptureRequest, RichOriginalTextPresentation?>
+        richOriginalTextPresentationCapturer;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="HoverTooltipManager" />
@@ -31,25 +35,46 @@ public sealed class HoverTooltipManager
     internal HoverTooltipManager(
         Config config,
         UINewFontHandler fontHandler,
-        RtlTexturePresentationService rtlTexturePresentationService)
+        RtlTexturePresentationService rtlTexturePresentationService,
+        Func<RichOriginalTextCaptureRequest, RichOriginalTextPresentation?>
+            richOriginalTextPresentationCapturer)
     {
         this.config = config;
         this.fontHandler = fontHandler;
+        this.registrationDiagnostics = new HoverTooltipRegistrationDiagnostics(
+            message => PluginRuntimeLog.Debug(message));
         this.rtlTexturePresentationService = rtlTexturePresentationService;
+        this.richOriginalTextPresentationCapturer =
+            richOriginalTextPresentationCapturer;
     }
 
     /// <summary>
     ///     Registers or updates a tooltip target.
     /// </summary>
-    public void Register(
+    internal void Register(
         string key,
         Vector2 topLeft,
         Vector2 bottomRight,
         string title,
         string body,
         bool enabled = true,
-        bool useGeneralFont = false)
+        bool useGeneralFont = false,
+        bool displaysOriginalSwapText = false,
+        RichOriginalTextCaptureRequest? richOriginalTextCaptureRequest = null,
+        HoverTooltipAnchorKind anchorKind = HoverTooltipAnchorKind.Unspecified)
     {
+        this.entries.TryGetValue(key, out var previousEntry);
+        var richOriginalBodyPresentation =
+            HoverTooltipRichOriginalPresentationResolver.Resolve(
+                previousEntry?.Body,
+                previousEntry?.DisplaysOriginalSwapText ?? false,
+                previousEntry?.RichOriginalBodyCaptureResolved ?? false,
+                previousEntry?.RichOriginalBodyPresentation,
+                body,
+                displaysOriginalSwapText,
+                richOriginalTextCaptureRequest,
+                this.richOriginalTextPresentationCapturer,
+                out var richOriginalBodyCaptureResolved);
         var newEntry = new HoverTooltipEntry(
             topLeft,
             bottomRight,
@@ -57,9 +82,23 @@ public sealed class HoverTooltipManager
             body,
             enabled,
             useGeneralFont,
+            displaysOriginalSwapText,
+            richOriginalBodyCaptureResolved,
+            richOriginalBodyPresentation,
+            HoverTooltipRegistrationDiagnostics.ExtractSurfaceName(key),
+            anchorKind,
             DateTime.UtcNow);
 
         this.entries[key] = newEntry;
+        this.registrationDiagnostics.LogRegister(
+            key,
+            anchorKind,
+            topLeft,
+            bottomRight,
+            enabled,
+            displaysOriginalSwapText,
+            updated: previousEntry != null,
+            DateTime.UtcNow);
     }
 
     /// <summary>
@@ -67,7 +106,15 @@ public sealed class HoverTooltipManager
     /// </summary>
     public void Remove(string key)
     {
-        this.entries.TryRemove(key, out _);
+        if (!this.entries.TryRemove(key, out _))
+        {
+            return;
+        }
+
+        this.registrationDiagnostics.LogRemove(
+            key,
+            "remove",
+            DateTime.UtcNow);
     }
 
     /// <summary>
@@ -83,7 +130,15 @@ public sealed class HoverTooltipManager
                 continue;
             }
 
-            this.entries.TryRemove(key, out _);
+            if (!this.entries.TryRemove(key, out _))
+            {
+                continue;
+            }
+
+            this.registrationDiagnostics.LogRemove(
+                key,
+                "prefix-remove",
+                DateTime.UtcNow);
         }
     }
 
@@ -113,8 +168,97 @@ public sealed class HoverTooltipManager
     /// </summary>
     public void Clear()
     {
+        foreach (var (key, _) in this.entries)
+        {
+            this.registrationDiagnostics.LogRemove(
+                key,
+                "clear",
+                DateTime.UtcNow);
+        }
+
         this.entries.Clear();
         PluginRuntimeLog.Debug("[HoverTooltipManager] Cleared hover tooltip entries.");
+    }
+
+    /// <summary>
+    /// Starts a temporary diagnostic session that logs hover-tooltip
+    /// registrations and hover-hit transitions for the requested surface.
+    /// </summary>
+    /// <param name="surfaceFilter">The requested surface filter.</param>
+    /// <param name="duration">The requested watch duration.</param>
+    internal void StartRegistrationLogging(string surfaceFilter, TimeSpan duration)
+    {
+        this.registrationDiagnostics.Start(
+            surfaceFilter,
+            duration,
+            DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Stops the current hover-tooltip registration diagnostic session.
+    /// </summary>
+    /// <returns><see langword="true" /> when a session was stopped.</returns>
+    internal bool StopRegistrationLogging()
+    {
+        return this.registrationDiagnostics.Stop(DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Determines whether hover-tooltip registration diagnostics are currently
+    /// active.
+    /// </summary>
+    /// <returns><see langword="true" /> when a session is active.</returns>
+    internal bool IsRegistrationLoggingActive()
+    {
+        return this.registrationDiagnostics.IsActive(DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Logs one popup-body geometry decision for an active registration
+    /// logging session.
+    /// </summary>
+    /// <param name="key">The tooltip key being prepared.</param>
+    /// <param name="preferredHoverNodeKind">
+    /// The resolved structural node kind, if any.
+    /// </param>
+    /// <param name="preferredTopLeft">
+    /// The structural node top-left corner, if any.
+    /// </param>
+    /// <param name="preferredBottomRight">
+    /// The structural node bottom-right corner, if any.
+    /// </param>
+    /// <param name="explicitBoundsBuilt">
+    /// Whether explicit popup-body bounds were successfully built.
+    /// </param>
+    /// <param name="explicitTopLeft">
+    /// The explicit bounds top-left corner when one was built.
+    /// </param>
+    /// <param name="explicitBottomRight">
+    /// The explicit bounds bottom-right corner when one was built.
+    /// </param>
+    /// <param name="finalAnchorKind">
+    /// The final anchor kind used for registration.
+    /// </param>
+    internal void LogBodyGeometryDecision(
+        string key,
+        string preferredHoverNodeKind,
+        Vector2 preferredTopLeft,
+        Vector2 preferredBottomRight,
+        bool explicitBoundsBuilt,
+        Vector2 explicitTopLeft,
+        Vector2 explicitBottomRight,
+        HoverTooltipAnchorKind finalAnchorKind)
+    {
+        this.registrationDiagnostics.LogBodyGeometryDecision(
+            key,
+            preferredHoverNodeKind,
+            preferredTopLeft,
+            preferredBottomRight,
+            explicitBoundsBuilt,
+            explicitTopLeft,
+            explicitBottomRight,
+            finalAnchorKind,
+            DateTime.UtcNow);
     }
 
     /// <summary>
@@ -160,6 +304,14 @@ public sealed class HoverTooltipManager
         }
 
         this.RemoveStaleEntries(hoveredKey);
+        this.registrationDiagnostics.LogHoverChange(
+            hoveredKey,
+            hoveredEntry?.AnchorKind ?? HoverTooltipAnchorKind.Unspecified,
+            hoveredEntry?.TopLeft ?? default,
+            hoveredEntry?.BottomRight ?? default,
+            hoveredEntry?.DisplaysOriginalSwapText ?? false,
+            mousePosition,
+            DateTime.UtcNow);
 
         if (hoveredKey == null || hoveredEntry == null)
         {
@@ -244,7 +396,20 @@ public sealed class HoverTooltipManager
                 ImGui.Separator();
             }
 
-            DrawPlainTooltipText(body, shouldRightAlign);
+            var canDrawRichOriginalBody =
+                RichOriginalTextPresentationPolicy.CanUseFormattedSeString(
+                    TextPresentationBackendKind.PlainImGui,
+                    hoveredEntry.DisplaysOriginalSwapText,
+                    hoveredEntry.RichOriginalBodyPresentation);
+            if (!canDrawRichOriginalBody ||
+                !DrawRichTooltipText(
+                    hoveredEntry.RichOriginalBodyPresentation!,
+                    HoverTooltipLayoutPolicy.ResolveRichOriginalImGuiMaxWidth(
+                        this.config,
+                        ImGui.GetMainViewport().Size.X)))
+            {
+                DrawPlainTooltipText(body, shouldRightAlign);
+            }
         }
         finally
         {
@@ -278,7 +443,15 @@ public sealed class HoverTooltipManager
                 continue;
             }
 
-            this.entries.TryRemove(key, out _);
+            if (!this.entries.TryRemove(key, out _))
+            {
+                continue;
+            }
+
+            this.registrationDiagnostics.LogRemove(
+                key,
+                "stale",
+                DateTime.UtcNow);
         }
     }
 
@@ -387,6 +560,42 @@ public sealed class HoverTooltipManager
         }
     }
 
+    private static bool DrawRichTooltipText(
+        RichOriginalTextPresentation presentation,
+        float maximumWidth)
+    {
+        if (!presentation.TryGetSeStringPayload(out var payload))
+        {
+            return false;
+        }
+
+        try
+        {
+            var wrapWidth = Math.Max(1f, maximumWidth);
+            ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + wrapWidth);
+            try
+            {
+                var drawParams = new SeStringDrawParams
+                {
+                    Font = ImGui.GetFont(),
+                    ScreenOffset = ImGui.GetCursorScreenPos(),
+                    FontSize = ImGui.GetFontSize(),
+                    WrapWidth = wrapWidth,
+                };
+                ImGuiHelpers.SeStringWrapped(payload.Span, drawParams);
+                return true;
+            }
+            finally
+            {
+                ImGui.PopTextWrapPos();
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private RenderedTextBlock? TryRenderTooltipTextBlock(
         string text,
         bool useGeneralFont,
@@ -432,6 +641,11 @@ public sealed class HoverTooltipManager
         string Body,
         bool Enabled,
         bool UseGeneralFont,
+        bool DisplaysOriginalSwapText,
+        bool RichOriginalBodyCaptureResolved,
+        RichOriginalTextPresentation? RichOriginalBodyPresentation,
+        string Surface,
+        HoverTooltipAnchorKind AnchorKind,
         DateTime LastUpdatedUtc);
 }
 

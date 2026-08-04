@@ -107,7 +107,9 @@ internal sealed class PreviewCanvas : IDisposable
             layout.Size,
             scaledBounds.Position,
             scaledBounds.Size,
-            IsPreview: true);
+            IsPreview: true,
+            ScaleMultiplier: 1f,
+            AlphaMultiplier: 1f);
         return this.renderer.Draw(request, state.Title);
     }
 

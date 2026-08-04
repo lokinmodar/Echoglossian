@@ -1,0 +1,227 @@
+// <copyright file="TooltipAddonHandlerContractTests.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using System.IO;
+
+using Xunit;
+
+namespace Echoglossian.Tests;
+
+/// <summary>
+///     Guards the dedicated Tooltip addon runtime wiring contract.
+/// </summary>
+public sealed class TooltipAddonHandlerContractTests
+{
+    /// <summary>
+    ///     Ensures changing only the Tooltip addon toggle invalidates addon
+    ///     handler registration.
+    /// </summary>
+    [Fact]
+    public void AddonHandlerRegistrationSignature_ChangesWhenTooltipAddonToggleChanges()
+    {
+        var disabled = new Config { TranslateTooltipAddon = false };
+        var enabled = new Config { TranslateTooltipAddon = true };
+
+        Assert.NotEqual(
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(disabled),
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(enabled));
+    }
+
+    /// <summary>
+    ///     Ensures addon wiring registers the dedicated Tooltip handler.
+    /// </summary>
+    [Fact]
+    public void AddonHandlerWiring_RegistersTooltipHandler()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "AddonHandlerWiring.cs"));
+
+        Assert.Contains("(AddonName: \"Tooltip\"", source, StringComparison.Ordinal);
+        Assert.Contains("new TooltipHandler(", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the dedicated Tooltip handler uses its own config and
+    ///     text-node DB-first runtime.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_UsesDedicatedConfigAndTextNodeRuntime()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains("addonName: \"Tooltip\"", source, StringComparison.Ordinal);
+        Assert.Contains("configuration.TranslateTooltipAddon", source, StringComparison.Ordinal);
+        Assert.Contains("configuration.TooltipAddonTranslationDisplayMode", source, StringComparison.Ordinal);
+        Assert.Contains("useAtkValues: false", source, StringComparison.Ordinal);
+        Assert.Contains("useTextNodes: true", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the dedicated Tooltip handler canonicalizes captured text
+    ///     against the active runtime state and uses the shared native reflow
+    ///     helper so layout can be restored cleanly between shows.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_UsesRuntimeCanonicalizationAndNativeReflowRestore()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "TooltipPayloadRecoveryHelper.CanonicalizeLiveTextNodes(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ShouldRestoreStaleTranslatedTextNodesOnPayloadChange()",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "minimumSecondaryHorizontalPadding:",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "minimumSecondaryVerticalPadding:",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "FlattenTextNodesForTranslation(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TryRebuildTranslatedTextNodes(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "HasCompatibleSemanticLineStructure(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the Tooltip addon routes tooltip and swap modes through the
+    ///     anchored overlay runtime instead of direct hover-tooltip
+    ///     registration in the handler.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_UsesAnchoredOverlayRuntimeForTooltipAndSwapModes()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "TooltipAddonAnchoredOverlayRuntime",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TryRegisterCustomHoverTooltips",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TooltipAddonAnchoredOverlayPresentationPolicy.UsesAnchoredOverlay(",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "hoverTooltipManager.Register(",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the shared DB-first stable PreDraw short-circuit can
+    ///     republish addon-owned custom hover content instead of only touching
+    ///     generic hover-tooltip lifetimes.
+    /// </summary>
+    [Fact]
+    public void DbFirstHandler_StablePreDrawRefreshesCustomHoverFallbacks()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "DbFirstGameWindowAddonHandler.cs"));
+
+        Assert.Contains(
+            "private void RefreshAppliedHoverTooltips(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.RefreshAppliedHoverTooltips(",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures Tooltip anchored-overlay frame resolution uses the tooltip
+    ///     addon's direct root-node field instead of relying only on the
+    ///     ULD-manager root pointer, which is null for some live Tooltip
+    ///     variants.
+    /// </summary>
+    [Fact]
+    public void TooltipHandler_AnchoredOverlayFrameUsesDirectTooltipRootNode()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Common",
+            "TooltipHandler.cs"));
+
+        Assert.Contains(
+            "addon->RootNode",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Finds the repository root from the test output directory.
+    /// </summary>
+    /// <returns>The repository root directory.</returns>
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Echoglossian.sln")))
+            {
+                return current;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Unable to locate repository root.");
+    }
+}

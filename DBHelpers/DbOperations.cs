@@ -6,6 +6,8 @@
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite.Models;
 
+using Dalamud.Game.Gui.NamePlate;
+
 namespace Echoglossian;
 
 /// <summary>
@@ -17,6 +19,8 @@ public partial class Echoglossian
 
   public ToastMessage? FoundToastMessage { get; set; }
 
+  public static NamePlateMessage? FoundNamePlateMessage { get; set; }
+
   public static BattleTalkMessage? FoundBattleTalkMessage { get; set; }
 
   public static TalkSubtitleMessage? FoundTalkSubtitleMessage { get; set; }
@@ -26,6 +30,8 @@ public partial class Echoglossian
   public static TextGimmickHintMessage? FoundTextGimmickHintMessage { get; set; }
 
   public static SelectString? FoundSelectStringMessage { get; set; }
+
+  public static SelectionDialogText? FoundSelectionDialogText { get; set; }
 
   public static GameWindow? FoundGameWindow { get; set; }
 
@@ -287,6 +293,42 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Finds and returns a translated world-object nameplate row using the
+  ///     shared in-memory nameplate cache.
+  /// </summary>
+  /// <param name="namePlateMessage">Formatted nameplate message to find.</param>
+  /// <returns>The matching row, or <see langword="null" />.</returns>
+  public NamePlateMessage? FindAndReturnNamePlateMessage(
+      NamePlateMessage namePlateMessage)
+  {
+    try
+    {
+      if (namePlateMessage.NamePlateKind == null ||
+          string.IsNullOrWhiteSpace(namePlateMessage.OriginalNamePlateText) ||
+          !TranslationReuseScope.TryCreate(
+              this.configuration,
+              namePlateMessage.TranslationEngine,
+              out var scope))
+      {
+        FoundNamePlateMessage = null;
+        return null;
+      }
+
+      FoundNamePlateMessage = NamePlateCacheManager.TryFindMatch(
+          (NamePlateKind)namePlateMessage.NamePlateKind.Value,
+          namePlateMessage.OriginalNamePlateText,
+          scope);
+      return FoundNamePlateMessage;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindAndReturnNamePlateMessage exception {e}");
+      FoundNamePlateMessage = null;
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Finds and returns an ErrorToastMessage from the database.
   /// </summary>
   /// <param name="toastMessage">Formatted ErrorToastMessage to be found in the database</param>
@@ -444,81 +486,62 @@ public partial class Echoglossian
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
 
       QuestPlate? localFoundQuestPlate = null;
-      var matchedByQuestId = false;
+      var hasQuestId = !string.IsNullOrWhiteSpace(questPlate.QuestId);
 
       // Look up without GameVersion so that cross-patch reuse is possible.
-      if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
+      if (hasQuestId)
       {
-        var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questIdMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
-        matchedByQuestId = localFoundQuestPlate != null;
-
-        if (localFoundQuestPlate == null)
-        {
-          return null;
-        }
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questIdMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
       if (localFoundQuestPlate == null &&
-          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
           !string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
       {
-        var questMessageMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questMessageMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
             t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questMessageMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
+        if (hasQuestId)
+        {
+          questMessageMatches = questMessageMatches.Where(t =>
+              t.QuestId == questPlate.QuestId ||
+              t.QuestId == null ||
+              t.QuestId == string.Empty);
+        }
+
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questMessageMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
       if (localFoundQuestPlate == null &&
-          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
+          !hasQuestId &&
           !string.IsNullOrWhiteSpace(questPlate.QuestName))
       {
-        var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questNameMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questNameMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
-      if (localFoundQuestPlate == null ||
-          (!matchedByQuestId &&
-           localFoundQuestPlate.OriginalQuestMessage !=
-           questPlate.OriginalQuestMessage))
+      if (localFoundQuestPlate == null)
       {
         return null;
       }
 
-      // Content-hash check: when the incoming plate carries a hash (meaning the
-      // snapshot was resolved from the live sheet) compare it with what is stored.
-      // A mismatch means quest content changed in a patch → need retranslation.
-      // An empty stored hash means a legacy row → retranslate once to populate it.
-      var incomingHash = questPlate.SourceContentHash;
-      var storedHash = localFoundQuestPlate.SourceContentHash;
-      if (!string.IsNullOrEmpty(incomingHash) &&
-          !string.Equals(incomingHash, storedHash, StringComparison.Ordinal))
-      {
-        // Content changed or missing — signal the caller to retranslate.
-        return null;
-      }
-
-      localFoundQuestPlate.UpdateFieldsFromText();
       return localFoundQuestPlate;
     }
     catch (Exception e)
@@ -581,70 +604,114 @@ public partial class Echoglossian
       questPlate.GameVersion ??= GetGameVersion();
       QuestLuminaResolver.TryPopulateQuestId(questPlate);
 
-      // Prefer QuestId lookup (stable primary key) when available so that two
-      // quests sharing a display name are never confused. Fall back to name-only
-      // match for legacy rows that were stored before QuestId was populated.
       QuestPlate? localFoundQuestPlate = null;
-      var matchedByQuestId = false;
+      var hasQuestId = !string.IsNullOrWhiteSpace(questPlate.QuestId);
 
-      if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
+      // Prefer QuestId lookup (stable primary key) when available so that two
+      // quests sharing a display name are never confused. Fall back to a
+      // legacy-compatible name lookup when only pre-canonical rows exist.
+      if (hasQuestId)
       {
-        var questIdMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questIdMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestId == questPlate.QuestId &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questIdMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
-        matchedByQuestId = localFoundQuestPlate != null;
-
-        if (localFoundQuestPlate == null)
-        {
-          return null;
-        }
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questIdMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
       if (localFoundQuestPlate == null &&
-          string.IsNullOrWhiteSpace(questPlate.QuestId) &&
           !string.IsNullOrWhiteSpace(questPlate.QuestName))
       {
-        var questNameMatch = context.QuestPlate.AsNoTracking().Where(t =>
+        var questNameMatches = context.QuestPlate.AsNoTracking().Where(t =>
             t.QuestName == questPlate.QuestName &&
-            t.TranslationLang == questPlate.TranslationLang);
+            t.TranslationLang == scope.TargetLanguageCode);
 
-        localFoundQuestPlate = questNameMatch.AsEnumerable().FirstOrDefault(t =>
-            scope.Matches(
-                t.OriginalLang,
-                t.TranslationLang,
-                t.TranslationEngine));
+        if (hasQuestId)
+        {
+          questNameMatches = questNameMatches.Where(t =>
+              t.QuestId == questPlate.QuestId ||
+              t.QuestId == null ||
+              t.QuestId == string.Empty);
+        }
+
+        localFoundQuestPlate = SelectPreferredQuestPlate(
+            questNameMatches.AsEnumerable(),
+            questPlate,
+            scope);
       }
 
-      if (localFoundQuestPlate == null ||
-          (!matchedByQuestId &&
-           localFoundQuestPlate.QuestName != questPlate.QuestName))
-      {
-        return null;
-      }
-
-      // Content-hash check: same semantics as FindQuestPlate.
-      // When the caller sets SourceContentHash on the incoming plate, a mismatch
-      // means quest content changed → retranslate. Empty incoming hash is a
-      // no-op so callers that don't resolve a snapshot still get the old behavior.
-      var incomingHash = questPlate.SourceContentHash;
-      var storedHash = localFoundQuestPlate.SourceContentHash;
-      if (!string.IsNullOrEmpty(incomingHash) &&
-          !string.Equals(incomingHash, storedHash, StringComparison.Ordinal))
-      {
-        return null;
-      }
-
-      localFoundQuestPlate.UpdateFieldsFromText();
       return localFoundQuestPlate;
     }
     catch (Exception e)
     {
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds dedicated quest-popup text without requiring a canonical quest
+  ///     row to exist.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to look up.</param>
+  /// <returns>The matching popup row, if one exists.</returns>
+  public QuestPopupText? FindQuestPopupText(QuestPopupText questPopupText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              questPopupText.TranslationEngine,
+              out var scope) ||
+          string.IsNullOrWhiteSpace(questPopupText.SurfaceName))
+      {
+        return null;
+      }
+
+      var surfaceMatches = context.QuestPopupTexts.AsNoTracking().Where(t =>
+          t.SurfaceName == questPopupText.SurfaceName &&
+          t.TranslationLang == scope.TargetLanguageCode);
+      QuestPopupText? localFoundQuestPopupText = null;
+      var hasQuestId = !string.IsNullOrWhiteSpace(questPopupText.QuestId);
+
+      if (hasQuestId)
+      {
+        var questIdMatches = surfaceMatches.Where(t =>
+            t.QuestId == questPopupText.QuestId);
+        localFoundQuestPopupText = SelectPreferredQuestPopupText(
+            questIdMatches.AsEnumerable(),
+            questPopupText,
+            scope);
+      }
+
+      if (localFoundQuestPopupText == null)
+      {
+        var popupTextMatches = surfaceMatches.Where(t =>
+            t.OriginalTitle == questPopupText.OriginalTitle &&
+            t.OriginalBody == questPopupText.OriginalBody);
+
+        if (hasQuestId)
+        {
+          popupTextMatches = popupTextMatches.Where(t =>
+              t.QuestId == questPopupText.QuestId ||
+              t.QuestId == null ||
+              t.QuestId == string.Empty);
+        }
+
+        localFoundQuestPopupText = SelectPreferredQuestPopupText(
+            popupTextMatches.AsEnumerable(),
+            questPopupText,
+            scope);
+      }
+
+      return localFoundQuestPopupText;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindQuestPopupText exception: {e}");
       return null;
     }
   }
@@ -847,6 +914,310 @@ public partial class Echoglossian
     {
       PluginRuntimeLog.Debug($"FindAndReturnCutSceneSelectStringMessage exception {e}");
       return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds and returns a generic selection-dialog payload from the
+  ///     dedicated selection-dialog table.
+  /// </summary>
+  /// <param name="selectionDialogText">
+  ///     The formatted selection-dialog payload to find.
+  /// </param>
+  /// <returns>
+  ///     The found <see cref="SelectionDialogText" />, or
+  ///     <see langword="null" />.
+  /// </returns>
+  public SelectionDialogText? FindSelectionDialogText(
+      SelectionDialogText selectionDialogText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              selectionDialogText.TranslationEngine,
+              out var scope) ||
+          string.IsNullOrWhiteSpace(selectionDialogText.AddonName) ||
+          string.IsNullOrWhiteSpace(selectionDialogText.OriginalTextsAsText))
+      {
+        FoundSelectionDialogText = null;
+        return null;
+      }
+
+      var candidates = context.SelectionDialogTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == selectionDialogText.AddonName &&
+              t.OriginalTextsAsText == selectionDialogText.OriginalTextsAsText)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  selectionDialogText.TranslationLang) &&
+              scope.Matches(
+                  t.OriginalLang,
+                  t.TranslationLang,
+                  t.TranslationEngine));
+      var localFoundSelectionDialogText = SelectPreferredSelectionDialogText(
+          candidates,
+          selectionDialogText);
+      if (localFoundSelectionDialogText == null ||
+          !ShouldSaveToDB(localFoundSelectionDialogText.TranslatedTextsAsText))
+      {
+        FoundSelectionDialogText = null;
+        return null;
+      }
+
+      FoundSelectionDialogText = localFoundSelectionDialogText;
+      return localFoundSelectionDialogText;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindSelectionDialogText exception {e}");
+      FoundSelectionDialogText = null;
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds a dedicated ContextMenu payload scoped by addon, source hash,
+  ///     game version, target language, and translation engine.
+  /// </summary>
+  /// <param name="contextMenuText">The ContextMenu payload to find.</param>
+  /// <returns>
+  ///     The matching <see cref="ContextMenuText" />, or
+  ///     <see langword="null" />.
+  /// </returns>
+  public ContextMenuText? FindContextMenuText(ContextMenuText contextMenuText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (string.IsNullOrWhiteSpace(contextMenuText.AddonName) ||
+          string.IsNullOrWhiteSpace(contextMenuText.OriginalTextsAsText) ||
+          string.IsNullOrWhiteSpace(contextMenuText.GameVersion) ||
+          string.IsNullOrWhiteSpace(contextMenuText.SourceContentHash))
+      {
+        return null;
+      }
+
+      return context.ContextMenuTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == contextMenuText.AddonName &&
+              t.OriginalTextsAsText == contextMenuText.OriginalTextsAsText &&
+              t.GameVersion == contextMenuText.GameVersion &&
+              t.SourceContentHash == contextMenuText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  contextMenuText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  contextMenuText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == contextMenuText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindContextMenuText exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds a dedicated ToDo payload scoped by addon, source hash, game
+  ///     version, target language, and translation engine.
+  /// </summary>
+  /// <param name="toDoText">The ToDo payload to find.</param>
+  /// <returns>
+  ///     The matching <see cref="ToDoText" />, or <see langword="null" />.
+  /// </returns>
+  public ToDoText? FindToDoText(ToDoText toDoText)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (string.IsNullOrWhiteSpace(toDoText.AddonName) ||
+          string.IsNullOrWhiteSpace(toDoText.OriginalTextsAsText) ||
+          string.IsNullOrWhiteSpace(toDoText.GameVersion) ||
+          string.IsNullOrWhiteSpace(toDoText.SourceContentHash))
+      {
+        return null;
+      }
+
+      return context.ToDoTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == toDoText.AddonName &&
+              t.OriginalTextsAsText == toDoText.OriginalTextsAsText &&
+              t.GameVersion == toDoText.GameVersion &&
+              t.SourceContentHash == toDoText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  toDoText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(t.OriginalLang, toDoText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == toDoText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindToDoText exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds a dedicated Tooltip addon payload scoped by addon, source hash,
+  ///     game version, target language, and translation engine.
+  /// </summary>
+  /// <param name="tooltipText">The Tooltip payload to find.</param>
+  /// <returns>
+  ///     The matching <see cref="TooltipText" />, or <see langword="null" />.
+  /// </returns>
+  public TooltipText? FindTooltipText(TooltipText tooltipText)
+  {
+    try
+    {
+      if (string.IsNullOrWhiteSpace(tooltipText.AddonName) ||
+          string.IsNullOrWhiteSpace(tooltipText.OriginalTextsAsText) ||
+          string.IsNullOrWhiteSpace(tooltipText.GameVersion) ||
+          string.IsNullOrWhiteSpace(tooltipText.SourceContentHash))
+      {
+        return null;
+      }
+
+      var scope = new TranslationReuseScope(
+          tooltipText.OriginalLang ?? string.Empty,
+          tooltipText.TranslationLang ?? string.Empty,
+          tooltipText.TranslationEngine,
+          this.configuration.TranslateAlreadyTranslatedTexts);
+      var cached = TooltipTextCacheManager.TryFindMatch(
+          tooltipText.AddonName,
+          scope,
+          tooltipText.GameVersion,
+          tooltipText.OriginalTextsAsText,
+          tooltipText.SourceContentHash);
+      if (cached != null || TooltipTextCacheManager.IsPreloaded)
+      {
+        return cached;
+      }
+
+      using var context = new EchoglossianDbContext(ConfigDirectory);
+      var persisted = context.TooltipTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == tooltipText.AddonName &&
+              t.OriginalTextsAsText == tooltipText.OriginalTextsAsText &&
+              t.GameVersion == tooltipText.GameVersion &&
+              t.SourceContentHash == tooltipText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  tooltipText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  tooltipText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == tooltipText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+      if (persisted != null)
+      {
+        TooltipTextCacheManager.Update(persisted);
+      }
+
+      return persisted;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindTooltipText exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds dedicated Tooltip addon payload candidates scoped by addon,
+  ///     source language, target language, translation engine, and game
+  ///     version so the runtime can recover the canonical original payload
+  ///     even after the live tooltip text has been wrapped or mutated.
+  /// </summary>
+  /// <param name="tooltipText">The Tooltip payload probe to match.</param>
+  /// <returns>The ordered candidate rows for recovery.</returns>
+  public IReadOnlyList<TooltipText> FindTooltipTextCandidates(
+      TooltipText tooltipText)
+  {
+    try
+    {
+      if (string.IsNullOrWhiteSpace(tooltipText.AddonName) ||
+          string.IsNullOrWhiteSpace(tooltipText.GameVersion))
+      {
+        return [];
+      }
+
+      var scope = new TranslationReuseScope(
+          tooltipText.OriginalLang ?? string.Empty,
+          tooltipText.TranslationLang ?? string.Empty,
+          tooltipText.TranslationEngine,
+          this.configuration.TranslateAlreadyTranslatedTexts);
+      var cached = TooltipTextCacheManager.GetCandidates(
+          tooltipText.AddonName,
+          scope,
+          tooltipText.GameVersion);
+      if (cached.Count > 0 || TooltipTextCacheManager.IsPreloaded)
+      {
+        return cached;
+      }
+
+      using var context = new EchoglossianDbContext(ConfigDirectory);
+      var persisted = context.TooltipTexts
+          .AsNoTracking()
+          .Where(t =>
+              t.AddonName == tooltipText.AddonName &&
+              t.GameVersion == tooltipText.GameVersion)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  tooltipText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  tooltipText.OriginalLang) &&
+              (!this.configuration.TranslateAlreadyTranslatedTexts ||
+               t.TranslationEngine == tooltipText.TranslationEngine) &&
+              ShouldSaveToDB(t.TranslatedTextsAsText))
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .ToList();
+      foreach (var row in persisted)
+      {
+        TooltipTextCacheManager.Update(row);
+      }
+
+      return persisted;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindTooltipTextCandidates exception {e}");
+      return [];
     }
   }
 
@@ -1376,6 +1747,213 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Inserts or refreshes one generic selection-dialog row in the
+  ///     dedicated selection-dialog table.
+  /// </summary>
+  /// <param name="selectionDialogText">
+  ///     The generic selection-dialog row to save.
+  /// </param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertSelectionDialogTextData(
+      SelectionDialogText selectionDialogText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(selectionDialogText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      selectionDialogText.GameVersion ??= GetGameVersion();
+      var existingSelectionDialogText = TryFindSelectionDialogTextForSave(
+          context,
+          selectionDialogText);
+      if (existingSelectionDialogText != null)
+      {
+        MergeSelectionDialogTextValues(
+            existingSelectionDialogText,
+            selectionDialogText);
+        existingSelectionDialogText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data merged into SelectionDialogTexts table.";
+      }
+
+      context.SelectionDialogTexts.Attach(selectionDialogText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to SelectionDialogTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or updates a dedicated ContextMenu payload without sharing
+  ///     selection-dialog or game-window persistence.
+  /// </summary>
+  /// <param name="contextMenuText">The ContextMenu payload to persist.</param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertContextMenuTextData(
+      ContextMenuText contextMenuText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(contextMenuText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      contextMenuText.GameVersion ??= GetGameVersion();
+      var existingContextMenuText = context.ContextMenuTexts
+          .Where(t =>
+              t.AddonName == contextMenuText.AddonName &&
+              t.OriginalTextsAsText == contextMenuText.OriginalTextsAsText &&
+              t.GameVersion == contextMenuText.GameVersion &&
+              t.SourceContentHash == contextMenuText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  contextMenuText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  contextMenuText.OriginalLang) &&
+              t.TranslationEngine == contextMenuText.TranslationEngine)
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+      if (existingContextMenuText != null)
+      {
+        existingContextMenuText.TranslatedTextsAsText =
+            contextMenuText.TranslatedTextsAsText;
+        existingContextMenuText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data updated in ContextMenuTexts table.";
+      }
+
+      context.ContextMenuTexts.Attach(contextMenuText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to ContextMenuTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or updates a dedicated ToDo payload without sharing
+  ///     game-window, quest, or selection-dialog persistence.
+  /// </summary>
+  /// <param name="toDoText">The ToDo payload to persist.</param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertToDoTextData(ToDoText toDoText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(toDoText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      toDoText.GameVersion ??= GetGameVersion();
+      var existingToDoText = context.ToDoTexts
+          .Where(t =>
+              t.AddonName == toDoText.AddonName &&
+              t.OriginalTextsAsText == toDoText.OriginalTextsAsText &&
+              t.GameVersion == toDoText.GameVersion &&
+              t.SourceContentHash == toDoText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(t.TranslationLang, toDoText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(t.OriginalLang, toDoText.OriginalLang) &&
+              t.TranslationEngine == toDoText.TranslationEngine)
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+      if (existingToDoText != null)
+      {
+        existingToDoText.TranslatedTextsAsText = toDoText.TranslatedTextsAsText;
+        existingToDoText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data updated in ToDoTexts table.";
+      }
+
+      context.ToDoTexts.Attach(toDoText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to ToDoTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or updates a dedicated Tooltip addon payload without sharing
+  ///     game-window or selection-dialog persistence.
+  /// </summary>
+  /// <param name="tooltipText">The Tooltip payload to persist.</param>
+  /// <returns>A status message describing the persistence result.</returns>
+  public async Task<string> InsertTooltipTextData(TooltipText tooltipText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(tooltipText.TranslatedTextsAsText))
+      {
+        return "No data to save.";
+      }
+
+      tooltipText.GameVersion ??= GetGameVersion();
+      var existingTooltipText = context.TooltipTexts
+          .Where(t =>
+              t.AddonName == tooltipText.AddonName &&
+              t.OriginalTextsAsText == tooltipText.OriginalTextsAsText &&
+              t.GameVersion == tooltipText.GameVersion &&
+              t.SourceContentHash == tooltipText.SourceContentHash)
+          .AsEnumerable()
+          .Where(t =>
+              RuntimeLanguageHelper.LanguagesMatch(
+                  t.TranslationLang,
+                  tooltipText.TranslationLang) &&
+              LegacyWriteSourceLanguagesMatch(
+                  t.OriginalLang,
+                  tooltipText.OriginalLang) &&
+              t.TranslationEngine == tooltipText.TranslationEngine)
+          .OrderByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+          .ThenByDescending(t => t.Id)
+          .FirstOrDefault();
+      if (existingTooltipText != null)
+      {
+        existingTooltipText.TranslatedTextsAsText =
+            tooltipText.TranslatedTextsAsText;
+        existingTooltipText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        TooltipTextCacheManager.Update(existingTooltipText);
+        return "Data updated in TooltipTexts table.";
+      }
+
+      context.TooltipTexts.Attach(tooltipText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      TooltipTextCacheManager.Update(tooltipText);
+      return "Data inserted to TooltipTexts table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
   ///  Inserts a ToastMessage record into the database.
   /// </summary>
   /// <param name="toastMessage">Formatted ToastMessage to be inserted into the database</param>
@@ -1488,6 +2066,49 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Inserts a world-object nameplate translation record into the database
+  ///     and updates the in-memory nameplate cache.
+  /// </summary>
+  /// <param name="namePlateMessage">Formatted nameplate row to persist.</param>
+  /// <returns>The persistence result message.</returns>
+  public string InsertNamePlateMessageData(NamePlateMessage namePlateMessage)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!ShouldSaveToDB(namePlateMessage.TranslatedNamePlateText))
+      {
+        return "No data to save.";
+      }
+
+      if (namePlateMessage.NamePlateKind != null &&
+          !string.IsNullOrWhiteSpace(namePlateMessage.OriginalNamePlateText) &&
+          TranslationReuseScope.TryCreate(
+              this.configuration,
+              namePlateMessage.TranslationEngine,
+              out var scope) &&
+          NamePlateCacheManager.TryFindMatch(
+              (NamePlateKind)namePlateMessage.NamePlateKind.Value,
+              namePlateMessage.OriginalNamePlateText,
+              scope) != null)
+      {
+        return "Data already in the Db.";
+      }
+
+      context.NamePlateMessages.Add(namePlateMessage);
+      context.SaveChanges();
+      NamePlateCacheManager.Update(namePlateMessage);
+
+      return "Data inserted to NamePlateMessages table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
   /// Inserts a QuestPlate record into the database.
   /// </summary>
   /// <param name="questPlate">Formatted QuestPlate to be inserted into the database</param>
@@ -1527,6 +2148,39 @@ public partial class Echoglossian
       context.SaveChanges();
 
       return "Data inserted to QuestPlate table.";
+    }
+    catch (Exception e)
+    {
+      return $"ErrorSavingData: {e}";
+    }
+  }
+
+  /// <summary>
+  ///     Inserts or merges dedicated quest-popup text without blocking the
+  ///     caller's UI lifecycle path.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to persist.</param>
+  /// <returns>The persistence result.</returns>
+  public async Task<string> InsertQuestPopupTextData(QuestPopupText questPopupText)
+  {
+    await using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      var existingQuestPopupText = TryFindQuestPopupTextForSave(
+          context,
+          questPopupText);
+      if (existingQuestPopupText != null)
+      {
+        MergeQuestPopupTextValues(existingQuestPopupText, questPopupText);
+        existingQuestPopupText.UpdatedDate = DateTime.Now;
+        await context.SaveChangesAsync().ConfigureAwait(false);
+        return "Data merged into QuestPopupTexts table.";
+      }
+
+      context.QuestPopupTexts.Attach(questPopupText);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return "Data inserted to QuestPopupTexts table.";
     }
     catch (Exception e)
     {
@@ -1594,27 +2248,22 @@ public partial class Echoglossian
   {
     questPlate.GameVersion ??= GetGameVersion();
     var hasGameVersion = !string.IsNullOrWhiteSpace(questPlate.GameVersion);
+    var hasQuestId = !string.IsNullOrWhiteSpace(questPlate.QuestId);
 
-    if (!string.IsNullOrWhiteSpace(questPlate.QuestId))
+    if (hasQuestId)
     {
       var questIdMatches = context.QuestPlate.Where(t =>
           t.QuestId == questPlate.QuestId &&
-          t.TranslationLang == questPlate.TranslationLang &&
           t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
-      var questIdMatch = questIdMatches
-          .AsEnumerable()
-          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
-              t.OriginalLang,
-              questPlate.OriginalLang));
+      var questIdMatch = SelectPreferredQuestPlateForSave(
+          questIdMatches.AsEnumerable(),
+          questPlate);
 
       if (questIdMatch != null)
       {
-        questIdMatch.UpdateFieldsFromText();
         return questIdMatch;
       }
-
-      return null;
     }
 
     if (!string.IsNullOrWhiteSpace(questPlate.OriginalQuestMessage))
@@ -1622,39 +2271,808 @@ public partial class Echoglossian
       var questMessageMatches = context.QuestPlate.Where(t =>
           t.QuestName == questPlate.QuestName &&
           t.OriginalQuestMessage == questPlate.OriginalQuestMessage &&
-          t.TranslationLang == questPlate.TranslationLang &&
           t.TranslationEngine == questPlate.TranslationEngine &&
           (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
-      var questMessageMatch = questMessageMatches
-          .AsEnumerable()
-          .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
-              t.OriginalLang,
-              questPlate.OriginalLang));
+      if (hasQuestId)
+      {
+        questMessageMatches = questMessageMatches.Where(t =>
+            t.QuestId == questPlate.QuestId ||
+            t.QuestId == null ||
+            t.QuestId == string.Empty);
+      }
+
+      var questMessageMatch = SelectPreferredQuestPlateForSave(
+          questMessageMatches.AsEnumerable(),
+          questPlate);
 
       if (questMessageMatch != null)
       {
-        questMessageMatch.UpdateFieldsFromText();
         return questMessageMatch;
       }
     }
 
     var questNameMatches = context.QuestPlate.Where(t =>
         t.QuestName == questPlate.QuestName &&
-        t.TranslationLang == questPlate.TranslationLang &&
         t.TranslationEngine == questPlate.TranslationEngine &&
         (!hasGameVersion || t.GameVersion == questPlate.GameVersion));
-    var questNameMatch = questNameMatches
-        .AsEnumerable()
-        .FirstOrDefault(t => LegacyWriteSourceLanguagesMatch(
-            t.OriginalLang,
-            questPlate.OriginalLang));
-
-    if (questNameMatch != null)
+    if (hasQuestId)
     {
-      questNameMatch.UpdateFieldsFromText();
+      questNameMatches = questNameMatches.Where(t =>
+          t.QuestId == questPlate.QuestId ||
+          t.QuestId == null ||
+          t.QuestId == string.Empty);
     }
 
-    return questNameMatch;
+    return SelectPreferredQuestPlateForSave(
+        questNameMatches.AsEnumerable(),
+        questPlate);
+  }
+
+  /// <summary>
+  ///     Selects the preferred persisted quest plate for runtime reads,
+  ///     favoring canonical rows with a matching hash and the most complete
+  ///     translated payload when duplicates exist.
+  /// </summary>
+  /// <param name="candidateQuestPlates">The candidate persisted quest plates.</param>
+  /// <param name="requestedQuestPlate">The requested quest plate.</param>
+  /// <param name="scope">The resolved translation reuse scope.</param>
+  /// <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
+  private static QuestPlate? SelectPreferredQuestPlate(
+      IEnumerable<QuestPlate> candidateQuestPlates,
+      QuestPlate requestedQuestPlate,
+      TranslationReuseScope scope)
+  {
+    QuestPlate? preferredQuestPlate = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPlate in candidateQuestPlates)
+    {
+      if (!scope.Matches(
+              candidateQuestPlate.OriginalLang,
+              candidateQuestPlate.TranslationLang,
+              candidateQuestPlate.TranslationEngine) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPlate.OriginalLang,
+              requestedQuestPlate.OriginalLang) ||
+          !IsQuestPlateContentHashCompatible(
+              candidateQuestPlate,
+              requestedQuestPlate))
+      {
+        continue;
+      }
+
+      candidateQuestPlate.UpdateFieldsFromText();
+
+      var identityScore = ComputeQuestPlateIdentityScore(
+          candidateQuestPlate,
+          requestedQuestPlate);
+      var completenessScore = ComputeQuestPlateCompletenessScore(
+          candidateQuestPlate);
+      var updatedDate = candidateQuestPlate.UpdatedDate ??
+                        candidateQuestPlate.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPlate != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPlate.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPlate = candidateQuestPlate;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPlate.Id;
+    }
+
+    return preferredQuestPlate;
+  }
+
+  /// <summary>
+  ///     Selects the preferred persisted quest plate for save/merge
+  ///     operations, favoring canonical rows and the most complete payload when
+  ///     duplicate candidates exist.
+  /// </summary>
+  /// <param name="candidateQuestPlates">The candidate persisted quest plates.</param>
+  /// <param name="requestedQuestPlate">The incoming quest plate.</param>
+  /// <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
+  private static QuestPlate? SelectPreferredQuestPlateForSave(
+      IEnumerable<QuestPlate> candidateQuestPlates,
+      QuestPlate requestedQuestPlate)
+  {
+    QuestPlate? preferredQuestPlate = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPlate in candidateQuestPlates)
+    {
+      if (!RuntimeLanguageHelper.LanguagesMatch(
+              candidateQuestPlate.TranslationLang,
+              requestedQuestPlate.TranslationLang) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPlate.OriginalLang,
+              requestedQuestPlate.OriginalLang))
+      {
+        continue;
+      }
+
+      candidateQuestPlate.UpdateFieldsFromText();
+
+      var identityScore = ComputeQuestPlateIdentityScore(
+          candidateQuestPlate,
+          requestedQuestPlate);
+      var completenessScore = ComputeQuestPlateCompletenessScore(
+          candidateQuestPlate);
+      var updatedDate = candidateQuestPlate.UpdatedDate ??
+                        candidateQuestPlate.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPlate != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPlate != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPlate.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPlate = candidateQuestPlate;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPlate.Id;
+    }
+
+    return preferredQuestPlate;
+  }
+
+  /// <summary>
+  ///     Gets the identity score for one candidate quest plate relative to the
+  ///     requested quest plate.
+  /// </summary>
+  /// <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+  /// <param name="requestedQuestPlate">The requested quest plate.</param>
+  /// <returns>The identity score. Higher values are preferred.</returns>
+  private static int ComputeQuestPlateIdentityScore(
+      QuestPlate candidateQuestPlate,
+      QuestPlate requestedQuestPlate)
+  {
+    var identityScore = 0;
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.QuestId) &&
+        string.Equals(
+            candidateQuestPlate.QuestId,
+            requestedQuestPlate.QuestId,
+            StringComparison.Ordinal))
+    {
+      identityScore += 256;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.SourceContentHash) &&
+        string.Equals(
+            candidateQuestPlate.SourceContentHash,
+            requestedQuestPlate.SourceContentHash,
+            StringComparison.Ordinal))
+    {
+      identityScore += 128;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.QuestTextSheetName) &&
+        string.Equals(
+            candidateQuestPlate.QuestTextSheetName,
+            requestedQuestPlate.QuestTextSheetName,
+            StringComparison.Ordinal))
+    {
+      identityScore += 64;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.GameVersion) &&
+        string.Equals(
+            candidateQuestPlate.GameVersion,
+            requestedQuestPlate.GameVersion,
+            StringComparison.Ordinal))
+    {
+      identityScore += 32;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.OriginalQuestMessage) &&
+        string.Equals(
+            candidateQuestPlate.OriginalQuestMessage,
+            requestedQuestPlate.OriginalQuestMessage,
+            StringComparison.Ordinal))
+    {
+      identityScore += 16;
+    }
+
+    if (!string.IsNullOrWhiteSpace(requestedQuestPlate.QuestName) &&
+        string.Equals(
+            candidateQuestPlate.QuestName,
+            requestedQuestPlate.QuestName,
+            StringComparison.Ordinal))
+    {
+      identityScore += 8;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.QuestId))
+    {
+      identityScore += 4;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.SourceContentHash))
+    {
+      identityScore += 2;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.QuestTextSheetName))
+    {
+      identityScore += 1;
+    }
+
+    return identityScore;
+  }
+
+  /// <summary>
+  ///     Gets the completeness score for one candidate quest plate.
+  /// </summary>
+  /// <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+  /// <returns>The completeness score. Higher values are preferred.</returns>
+  private static int ComputeQuestPlateCompletenessScore(
+      QuestPlate candidateQuestPlate)
+  {
+    var completenessScore = 0;
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.TranslatedQuestName))
+    {
+      completenessScore += 64;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.TranslatedQuestMessage))
+    {
+      completenessScore += 64;
+    }
+
+    completenessScore += Math.Min(
+        candidateQuestPlate.TranslatedObjectiveRowsByKey.Count,
+        32) * 4;
+    completenessScore += Math.Min(
+        candidateQuestPlate.TranslatedSummaryRowsByKey.Count,
+        32) * 4;
+    completenessScore += Math.Min(
+        candidateQuestPlate.TranslatedSystemRowsByKey.Count,
+        32) * 4;
+    completenessScore += Math.Min(
+        candidateQuestPlate.CanonicalRows.Count,
+        32) * 2;
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.QuestTextSheetName))
+    {
+      completenessScore += 8;
+    }
+
+    if (!string.IsNullOrWhiteSpace(candidateQuestPlate.SourceContentHash))
+    {
+      completenessScore += 8;
+    }
+
+    return completenessScore;
+  }
+
+  /// <summary>
+  ///     Selects the preferred dedicated quest-popup row for runtime reads.
+  /// </summary>
+  /// <param name="candidateQuestPopupTexts">The candidate popup rows.</param>
+  /// <param name="requestedQuestPopupText">The requested popup row.</param>
+  /// <param name="scope">The resolved translation reuse scope.</param>
+  /// <returns>The preferred popup row, or <see langword="null" />.</returns>
+  private static QuestPopupText? SelectPreferredQuestPopupText(
+      IEnumerable<QuestPopupText> candidateQuestPopupTexts,
+      QuestPopupText requestedQuestPopupText,
+      TranslationReuseScope scope)
+  {
+    QuestPopupText? preferredQuestPopupText = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPopupText in candidateQuestPopupTexts)
+    {
+      if (!scope.Matches(
+              candidateQuestPopupText.OriginalLang,
+              candidateQuestPopupText.TranslationLang,
+              candidateQuestPopupText.TranslationEngine) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPopupText.OriginalLang,
+              requestedQuestPopupText.OriginalLang))
+      {
+        continue;
+      }
+
+      var identityScore = 0;
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.QuestId) &&
+          string.Equals(
+              candidateQuestPopupText.QuestId,
+              requestedQuestPopupText.QuestId,
+              StringComparison.Ordinal))
+      {
+        identityScore += 16;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.SourceContentHash) &&
+          string.Equals(
+              candidateQuestPopupText.SourceContentHash,
+              requestedQuestPopupText.SourceContentHash,
+              StringComparison.Ordinal))
+      {
+        identityScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalBody) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalBody,
+              requestedQuestPopupText.OriginalBody,
+              StringComparison.Ordinal))
+      {
+        identityScore += 4;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalTitle) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalTitle,
+              requestedQuestPopupText.OriginalTitle,
+              StringComparison.Ordinal))
+      {
+        identityScore += 2;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.QuestId))
+      {
+        identityScore += 1;
+      }
+
+      var completenessScore = 0;
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedTitle))
+      {
+        completenessScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedBody))
+      {
+        completenessScore += 8;
+      }
+
+      var updatedDate = candidateQuestPopupText.UpdatedDate ??
+                        candidateQuestPopupText.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPopupText != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPopupText.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPopupText = candidateQuestPopupText;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPopupText.Id;
+    }
+
+    return preferredQuestPopupText;
+  }
+
+  /// <summary>
+  ///     Gets whether one persisted quest plate is compatible with the
+  ///     requested quest plate's content hash semantics.
+  /// </summary>
+  /// <param name="candidateQuestPlate">The candidate persisted quest plate.</param>
+  /// <param name="requestedQuestPlate">The requested quest plate.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the candidate may be reused; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private static bool IsQuestPlateContentHashCompatible(
+      QuestPlate candidateQuestPlate,
+      QuestPlate requestedQuestPlate)
+  {
+    if (string.IsNullOrWhiteSpace(requestedQuestPlate.SourceContentHash))
+    {
+      return true;
+    }
+
+    return string.Equals(
+        candidateQuestPlate.SourceContentHash,
+        requestedQuestPlate.SourceContentHash,
+        StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Finds an existing popup row to merge into during save operations.
+  /// </summary>
+  /// <param name="context">The active DB context.</param>
+  /// <param name="questPopupText">The incoming popup row.</param>
+  /// <returns>The preferred existing popup row, if one exists.</returns>
+  private static QuestPopupText? TryFindQuestPopupTextForSave(
+      EchoglossianDbContext context,
+      QuestPopupText questPopupText)
+  {
+    var surfaceMatches = context.QuestPopupTexts.Where(t =>
+        t.SurfaceName == questPopupText.SurfaceName &&
+        RuntimeLanguageHelper.LanguagesMatch(
+            t.TranslationLang,
+            questPopupText.TranslationLang));
+    var hasQuestId = !string.IsNullOrWhiteSpace(questPopupText.QuestId);
+
+    if (hasQuestId)
+    {
+      var questIdMatches = surfaceMatches.Where(t =>
+          t.QuestId == questPopupText.QuestId);
+      var exactQuestIdMatch = SelectPreferredQuestPopupTextForSave(
+          questIdMatches.AsEnumerable(),
+          questPopupText);
+      if (exactQuestIdMatch != null)
+      {
+        return exactQuestIdMatch;
+      }
+    }
+
+    var popupTextMatches = surfaceMatches.Where(t =>
+        t.OriginalTitle == questPopupText.OriginalTitle &&
+        t.OriginalBody == questPopupText.OriginalBody);
+
+    if (hasQuestId)
+    {
+      popupTextMatches = popupTextMatches.Where(t =>
+          t.QuestId == questPopupText.QuestId ||
+          t.QuestId == null ||
+          t.QuestId == string.Empty);
+    }
+
+    return SelectPreferredQuestPopupTextForSave(
+        popupTextMatches.AsEnumerable(),
+        questPopupText);
+  }
+
+  /// <summary>
+  ///     Selects the preferred popup row for save/merge operations.
+  /// </summary>
+  /// <param name="candidateQuestPopupTexts">The candidate popup rows.</param>
+  /// <param name="requestedQuestPopupText">The incoming popup row.</param>
+  /// <returns>The preferred popup row, or <see langword="null" />.</returns>
+  private static QuestPopupText? SelectPreferredQuestPopupTextForSave(
+      IEnumerable<QuestPopupText> candidateQuestPopupTexts,
+      QuestPopupText requestedQuestPopupText)
+  {
+    QuestPopupText? preferredQuestPopupText = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateQuestPopupText in candidateQuestPopupTexts)
+    {
+      if (!RuntimeLanguageHelper.LanguagesMatch(
+              candidateQuestPopupText.TranslationLang,
+              requestedQuestPopupText.TranslationLang) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateQuestPopupText.OriginalLang,
+              requestedQuestPopupText.OriginalLang))
+      {
+        continue;
+      }
+
+      var identityScore = 0;
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.QuestId) &&
+          string.Equals(
+              candidateQuestPopupText.QuestId,
+              requestedQuestPopupText.QuestId,
+              StringComparison.Ordinal))
+      {
+        identityScore += 16;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.SourceContentHash) &&
+          string.Equals(
+              candidateQuestPopupText.SourceContentHash,
+              requestedQuestPopupText.SourceContentHash,
+              StringComparison.Ordinal))
+      {
+        identityScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalBody) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalBody,
+              requestedQuestPopupText.OriginalBody,
+              StringComparison.Ordinal))
+      {
+        identityScore += 4;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedQuestPopupText.OriginalTitle) &&
+          string.Equals(
+              candidateQuestPopupText.OriginalTitle,
+              requestedQuestPopupText.OriginalTitle,
+              StringComparison.Ordinal))
+      {
+        identityScore += 2;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.QuestId))
+      {
+        identityScore += 1;
+      }
+
+      var completenessScore = 0;
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedTitle))
+      {
+        completenessScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(candidateQuestPopupText.TranslatedBody))
+      {
+        completenessScore += 8;
+      }
+
+      var updatedDate = candidateQuestPopupText.UpdatedDate ??
+                        candidateQuestPopupText.CreatedDate ??
+                        DateTime.MinValue;
+
+      if (preferredQuestPopupText != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredQuestPopupText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateQuestPopupText.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredQuestPopupText = candidateQuestPopupText;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateQuestPopupText.Id;
+    }
+
+    return preferredQuestPopupText;
+  }
+
+  /// <summary>
+  ///     Finds an existing generic selection-dialog row that should be merged
+  ///     with the incoming save payload instead of creating a duplicate row.
+  /// </summary>
+  /// <param name="context">The active database context.</param>
+  /// <param name="selectionDialogText">The incoming selection-dialog row.</param>
+  /// <returns>
+  ///     The existing row to merge, or <see langword="null" /> when no
+  ///     reusable row exists.
+  /// </returns>
+  private static SelectionDialogText? TryFindSelectionDialogTextForSave(
+      EchoglossianDbContext context,
+      SelectionDialogText selectionDialogText)
+  {
+    return context.SelectionDialogTexts
+        .Where(t =>
+            t.AddonName == selectionDialogText.AddonName &&
+            t.OriginalTextsAsText == selectionDialogText.OriginalTextsAsText)
+        .AsEnumerable()
+        .Where(t =>
+            RuntimeLanguageHelper.LanguagesMatch(
+                t.TranslationLang,
+                selectionDialogText.TranslationLang) &&
+            LegacyWriteSourceLanguagesMatch(
+                t.OriginalLang,
+                selectionDialogText.OriginalLang))
+        .OrderByDescending(t =>
+            !string.IsNullOrWhiteSpace(selectionDialogText.SourceContentHash) &&
+            string.Equals(
+                t.SourceContentHash,
+                selectionDialogText.SourceContentHash,
+                StringComparison.Ordinal))
+        .ThenByDescending(t =>
+            !string.IsNullOrWhiteSpace(selectionDialogText.GameVersion) &&
+            string.Equals(
+                t.GameVersion,
+                selectionDialogText.GameVersion,
+                StringComparison.Ordinal))
+        .ThenByDescending(t => t.UpdatedDate ?? t.CreatedDate ?? DateTime.MinValue)
+        .ThenByDescending(t => t.Id)
+        .FirstOrDefault();
+  }
+
+  /// <summary>
+  ///     Selects the preferred generic selection-dialog lookup candidate.
+  /// </summary>
+  /// <param name="candidateSelectionDialogTexts">
+  ///     The candidate selection-dialog rows.
+  /// </param>
+  /// <param name="requestedSelectionDialogText">
+  ///     The requested selection-dialog row.
+  /// </param>
+  /// <returns>The preferred row, or <see langword="null" />.</returns>
+  private static SelectionDialogText? SelectPreferredSelectionDialogText(
+      IEnumerable<SelectionDialogText> candidateSelectionDialogTexts,
+      SelectionDialogText requestedSelectionDialogText)
+  {
+    SelectionDialogText? preferredSelectionDialogText = null;
+    var preferredIdentityScore = int.MinValue;
+    var preferredCompletenessScore = int.MinValue;
+    var preferredUpdatedDate = DateTime.MinValue;
+    var preferredId = int.MinValue;
+
+    foreach (var candidateSelectionDialogText in candidateSelectionDialogTexts)
+    {
+      if (!RuntimeLanguageHelper.LanguagesMatch(
+              candidateSelectionDialogText.TranslationLang,
+              requestedSelectionDialogText.TranslationLang) ||
+          !LegacyWriteSourceLanguagesMatch(
+              candidateSelectionDialogText.OriginalLang,
+              requestedSelectionDialogText.OriginalLang))
+      {
+        continue;
+      }
+
+      var identityScore = 0;
+      if (!string.IsNullOrWhiteSpace(requestedSelectionDialogText.SourceContentHash) &&
+          string.Equals(
+              candidateSelectionDialogText.SourceContentHash,
+              requestedSelectionDialogText.SourceContentHash,
+              StringComparison.Ordinal))
+      {
+        identityScore += 8;
+      }
+
+      if (!string.IsNullOrWhiteSpace(requestedSelectionDialogText.GameVersion) &&
+          string.Equals(
+              candidateSelectionDialogText.GameVersion,
+              requestedSelectionDialogText.GameVersion,
+              StringComparison.Ordinal))
+      {
+        identityScore += 4;
+      }
+
+      var completenessScore = 0;
+      if (ShouldSaveToDB(candidateSelectionDialogText.TranslatedTextsAsText))
+      {
+        completenessScore += 4;
+      }
+
+      var updatedDate = candidateSelectionDialogText.UpdatedDate ??
+                        candidateSelectionDialogText.CreatedDate ??
+                        DateTime.MinValue;
+      if (preferredSelectionDialogText != null &&
+          identityScore < preferredIdentityScore)
+      {
+        continue;
+      }
+
+      if (preferredSelectionDialogText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore < preferredCompletenessScore)
+      {
+        continue;
+      }
+
+      if (preferredSelectionDialogText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate < preferredUpdatedDate)
+      {
+        continue;
+      }
+
+      if (preferredSelectionDialogText != null &&
+          identityScore == preferredIdentityScore &&
+          completenessScore == preferredCompletenessScore &&
+          updatedDate == preferredUpdatedDate &&
+          candidateSelectionDialogText.Id <= preferredId)
+      {
+        continue;
+      }
+
+      preferredSelectionDialogText = candidateSelectionDialogText;
+      preferredIdentityScore = identityScore;
+      preferredCompletenessScore = completenessScore;
+      preferredUpdatedDate = updatedDate;
+      preferredId = candidateSelectionDialogText.Id;
+    }
+
+    return preferredSelectionDialogText;
   }
 
   /// <summary>
@@ -1778,6 +3196,101 @@ public partial class Echoglossian
 
       target.PruneTranslatedRowsToCanonicalPayload();
     }
+
+  /// <summary>
+  ///     Merges generic selection-dialog values without overwriting populated
+  ///     translated fields with empties.
+  /// </summary>
+  /// <param name="target">The existing selection-dialog row.</param>
+  /// <param name="source">The incoming selection-dialog row.</param>
+  private static void MergeSelectionDialogTextValues(
+      SelectionDialogText target,
+      SelectionDialogText source)
+  {
+    if (target == null || source == null)
+    {
+      return;
+    }
+
+    target.AddonName = string.IsNullOrWhiteSpace(source.AddonName)
+        ? target.AddonName
+        : source.AddonName;
+    target.OriginalTextsAsText =
+        string.IsNullOrWhiteSpace(source.OriginalTextsAsText)
+            ? target.OriginalTextsAsText
+            : source.OriginalTextsAsText;
+    target.OriginalLang = string.IsNullOrWhiteSpace(source.OriginalLang)
+        ? target.OriginalLang
+        : source.OriginalLang;
+    target.TranslatedTextsAsText =
+        string.IsNullOrWhiteSpace(source.TranslatedTextsAsText)
+            ? target.TranslatedTextsAsText
+            : source.TranslatedTextsAsText;
+    target.TranslationLang = string.IsNullOrWhiteSpace(source.TranslationLang)
+        ? target.TranslationLang
+        : source.TranslationLang;
+    target.TranslationEngine = source.TranslationEngine ??
+                               target.TranslationEngine;
+    target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion)
+        ? target.GameVersion
+        : source.GameVersion;
+    target.SourceContentHash = string.IsNullOrWhiteSpace(source.SourceContentHash)
+        ? target.SourceContentHash
+        : source.SourceContentHash;
+    target.CreatedDate ??= source.CreatedDate;
+    target.UpdatedDate = DateTime.Now;
+  }
+
+  /// <summary>
+  ///     Merges popup-table values without overwriting already populated
+  ///     translated fields with empties.
+  /// </summary>
+  /// <param name="target">The existing popup row.</param>
+  /// <param name="source">The incoming popup row.</param>
+  private static void MergeQuestPopupTextValues(
+      QuestPopupText target,
+      QuestPopupText source)
+  {
+    if (target == null || source == null)
+    {
+      return;
+    }
+
+    target.SurfaceName = string.IsNullOrWhiteSpace(source.SurfaceName)
+        ? target.SurfaceName
+        : source.SurfaceName;
+    target.QuestId = string.IsNullOrWhiteSpace(source.QuestId)
+        ? target.QuestId
+        : source.QuestId;
+    target.OriginalTitle = string.IsNullOrWhiteSpace(source.OriginalTitle)
+        ? target.OriginalTitle
+        : source.OriginalTitle;
+    target.OriginalBody = string.IsNullOrWhiteSpace(source.OriginalBody)
+        ? target.OriginalBody
+        : source.OriginalBody;
+    target.OriginalLang = string.IsNullOrWhiteSpace(source.OriginalLang)
+        ? target.OriginalLang
+        : source.OriginalLang;
+    target.TranslatedTitle = string.IsNullOrWhiteSpace(source.TranslatedTitle)
+        ? target.TranslatedTitle
+        : source.TranslatedTitle;
+    target.TranslatedBody = string.IsNullOrWhiteSpace(source.TranslatedBody)
+        ? target.TranslatedBody
+        : source.TranslatedBody;
+    target.TranslationLang = string.IsNullOrWhiteSpace(source.TranslationLang)
+        ? target.TranslationLang
+        : source.TranslationLang;
+    target.TranslationEngine = source.TranslationEngine ??
+                               target.TranslationEngine;
+    target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion)
+        ? target.GameVersion
+        : source.GameVersion;
+    target.SourceContentHash = string.IsNullOrWhiteSpace(source.SourceContentHash)
+        ? target.SourceContentHash
+        : source.SourceContentHash;
+    target.CreatedDate ??= source.CreatedDate;
+    target.UpdatedDate = DateTime.Now;
+  }
 
   /// <summary>
   /// Inserts or updates a GameWindow record in the database, ensuring uniqueness

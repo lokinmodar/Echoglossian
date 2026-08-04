@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.Translators;
 
 using Xunit;
 
@@ -177,5 +178,163 @@ public class DbFirstStructuredStringArrayHelperTests
                 out _);
 
         Assert.False(projected);
+    }
+
+    /// <summary>
+    ///     Ensures malformed batch responses do not leave map StringArrayData
+    ///     payloads permanently incomplete and retried by the runtime.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslatePayloadAsync_UsesOrderedDelimitedBatchWhenBatchDropsKeys()
+    {
+        var originalPayload = MapSurfaceStringArraySchema.BuildPayload(
+            "_NaviMap",
+            52,
+            new Dictionary<int, string?>
+            {
+                [0] = "ui/map/w1eb/00/w1eb00_m",
+                [1] = "Cliffhanger",
+                [2] = "Fair Skies",
+            });
+        var translator = new DroppingBatchKeysTranslator();
+        var translationService = new TranslationService(text => text, translator);
+
+        var translatedPayload = await DbFirstStructuredStringArrayHelper
+            .TranslatePayloadAsync(
+                originalPayload,
+                translationService,
+                new SourceClientLanguage("en", "en"),
+                "pt-BR",
+                originContext: "_NaviMap StringArrayData");
+
+        Assert.Equal("Penhasco", translatedPayload.Slots[1].TranslatedText);
+        Assert.Equal("Ceu limpo", translatedPayload.Slots[2].TranslatedText);
+        Assert.True(DbFirstStructuredStringArrayHelper.TryProjectTranslatedPayload(
+            originalPayload,
+            translatedPayload,
+            out var projection));
+        Assert.Equal("Penhasco", projection.StringArrayValues[1]);
+        Assert.Equal("Ceu limpo", projection.StringArrayValues[2]);
+        Assert.Contains(
+            "0|Cliffhanger|1|Fair Skies",
+            translator.Requests);
+        Assert.DoesNotContain("Cliffhanger", translator.Requests);
+        Assert.DoesNotContain("Fair Skies", translator.Requests);
+        Assert.Single(translator.Requests);
+    }
+
+    /// <summary>
+    ///     Ensures canonical keyed batch responses remain supported while the
+    ///     request payload uses shorter numeric transport keys.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslatePayloadAsync_AcceptsCanonicalKeyedBatchResponses()
+    {
+        var originalPayload = MapSurfaceStringArraySchema.BuildPayload(
+            "_NaviMap",
+            52,
+            new Dictionary<int, string?>
+            {
+                [0] = "ui/map/w1eb/00/w1eb00_m",
+                [1] = "Cliffhanger",
+                [2] = "Fair Skies",
+            });
+        var translator = new CanonicalKeyedBatchTranslator();
+        var translationService = new TranslationService(text => text, translator);
+
+        var translatedPayload = await DbFirstStructuredStringArrayHelper
+            .TranslatePayloadAsync(
+                originalPayload,
+                translationService,
+                new SourceClientLanguage("en", "en"),
+                "pt-BR",
+                originContext: "_NaviMap StringArrayData");
+
+        Assert.Equal("Penhasco", translatedPayload.Slots[1].TranslatedText);
+        Assert.Equal("Ceu limpo", translatedPayload.Slots[2].TranslatedText);
+        Assert.Contains(
+            "0|Cliffhanger|1|Fair Skies",
+            translator.Requests);
+        Assert.DoesNotContain("Cliffhanger", translator.Requests);
+        Assert.DoesNotContain("Fair Skies", translator.Requests);
+        Assert.Single(translator.Requests);
+    }
+
+    private sealed class DroppingBatchKeysTranslator : ITranslator
+    {
+        /// <summary>
+        ///     Gets every request received by the translator.
+        /// </summary>
+        public List<string> Requests { get; } = [];
+
+        /// <inheritdoc />
+        public string Translate(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return this.ResolveTranslation(text);
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return Task.FromResult<string?>(this.ResolveTranslation(text));
+        }
+
+        private string ResolveTranslation(string text)
+        {
+            this.Requests.Add(text);
+            return text switch
+            {
+                "0|Cliffhanger|1|Fair Skies" => "Penhasco|Ceu limpo",
+                "Cliffhanger" => "Penhasco",
+                "Fair Skies" => "Ceu limpo",
+                _ => text,
+            };
+        }
+    }
+
+    private sealed class CanonicalKeyedBatchTranslator : ITranslator
+    {
+        /// <summary>
+        ///     Gets every request received by the translator.
+        /// </summary>
+        public List<string> Requests { get; } = [];
+
+        /// <inheritdoc />
+        public string Translate(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return this.ResolveTranslation(text);
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return Task.FromResult<string?>(this.ResolveTranslation(text));
+        }
+
+        private string ResolveTranslation(string text)
+        {
+            this.Requests.Add(text);
+            return text switch
+            {
+                "0|Cliffhanger|1|Fair Skies" => "k1|Penhasco|k2|Ceu limpo",
+                "Cliffhanger" => "Penhasco",
+                "Fair Skies" => "Ceu limpo",
+                _ => text,
+            };
+        }
     }
 }

@@ -23,6 +23,8 @@ Use these repo sources first:
 - docs/textnode-clientstructs-analysis.md
 - docs/maincommand-sheet-flow.md
 - docs/action-reference-text-sheet-flow.md
+- https://github.com/Exter-N/Dynamis
+- https://github.com/MidoriKami/VanillaPlus
 
 ## Workflow
 
@@ -51,6 +53,8 @@ Use these repo sources first:
    capture, apply, stale recovery, and restore; filtered visible nodes consume
    an ordinal.
 13. Invalidate old scope-owned state before publishing a new generation.
+14. Route temporary runtime diagnostics through `PluginRuntimeLog` and inspect
+    `Echoglossian.log` before filtering `dalamud.log`.
 
 ## Completion checks
 

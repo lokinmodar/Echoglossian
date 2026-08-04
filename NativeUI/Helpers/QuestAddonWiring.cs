@@ -19,7 +19,9 @@ public partial class Echoglossian
       TranslationService = TranslationService,
       FindQuestPlate = this.FindQuestPlate,
       FindQuestPlateByName = this.FindQuestPlateByName,
+      FindQuestPopupText = this.FindQuestPopupText,
       InsertQuestPlate = this.InsertQuestPlate,
+      InsertQuestPopupTextAsync = this.InsertQuestPopupTextData,
       UpdateQuestPlate = this.UpdateQuestPlate,
       UpdateQuestPlateGameVersion = this.UpdateQuestPlateGameVersion,
       NormalizeText = text => this.RemoveDiacritics(
@@ -29,6 +31,7 @@ public partial class Echoglossian
       TryGetQueuedTranslation = this.TryGetQueuedTranslation,
       QueueTranslation = this.QueueTranslation,
       QueueTranslationBatch = this.QueueTranslationBatch,
+      RequestAcceptedQuestPrefetch = this.RequestAcceptedQuestPrefetch,
       RemoveHoverTooltipByPrefix =
           prefix => this.hoverTooltipManager.RemoveByPrefix(prefix),
       RegisterTranslatedHoverTooltipAddon =
@@ -75,6 +78,29 @@ public partial class Echoglossian
                   translatedPayloadReady,
                   swapEnabled,
                   forceEnabled),
+      RegisterTranslatedHoverTooltipTextNodeBounds =
+          (key, topLeft, bottomRight, textNode, originalText, translatedText, translatedPayloadReady, swapEnabled, forceEnabled) =>
+              this.RegisterTranslatedHoverTooltip(
+                  key,
+                  topLeft,
+                  bottomRight,
+                  textNode,
+                  originalText,
+                  translatedText,
+                  translatedPayloadReady,
+                  swapEnabled,
+                  forceEnabled),
+      LogPopupBodyHoverGeometryDecision =
+          (key, preferredHoverNodeKind, preferredTopLeft, preferredBottomRight, explicitBoundsBuilt, explicitTopLeft, explicitBottomRight, finalAnchorKind) =>
+              this.hoverTooltipManager.LogBodyGeometryDecision(
+                  key,
+                  preferredHoverNodeKind,
+                  preferredTopLeft,
+                  preferredBottomRight,
+                  explicitBoundsBuilt,
+                  explicitTopLeft,
+                  explicitBottomRight,
+                  finalAnchorKind),
     };
   }
 }

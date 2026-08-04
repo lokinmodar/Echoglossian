@@ -12,7 +12,11 @@ namespace Echoglossian;
 /// </summary>
 internal static class DiagnosticFileEmitter
 {
+    private static readonly TimeSpan FlushTimeout = TimeSpan.FromSeconds(5);
     private static readonly Lock SyncRoot = new();
+    private static readonly Dictionary<string, long> LineCountsByFilePath = new(StringComparer.OrdinalIgnoreCase);
+    private static AsyncSerialActionPump actionPump = new();
+    private static int? maxLineCountOverride;
 
     /// <summary>
     ///     Appends a structured diagnostic block to a purpose-named log file in
@@ -44,22 +48,61 @@ internal static class DiagnosticFileEmitter
         var filePath = Path.Combine(
             Echoglossian.ConfigDirectory,
             $"{safeFileName}.log");
-        var blockBuilder = new StringBuilder();
-        blockBuilder.AppendLine(
-            $"===== {DateTimeOffset.Now:O} | {title} =====");
-        blockBuilder.AppendLine(content.TrimEnd());
-        blockBuilder.AppendLine();
+        var blockLines = BuildBlockLines(title, content);
+
+        actionPump.Enqueue(() => WriteBlock(filePath, blockLines));
+
+        return filePath;
+    }
+
+    /// <summary>
+    ///     Clears cached line counts and restores the default line cap for
+    ///     isolated tests.
+    /// </summary>
+    internal static void ResetForTests()
+    {
+        var previousPump = actionPump;
+        actionPump = new AsyncSerialActionPump();
+        previousPump.Dispose();
 
         lock (SyncRoot)
         {
-            Directory.CreateDirectory(Echoglossian.ConfigDirectory);
-            File.AppendAllText(
-                filePath,
-                blockBuilder.ToString(),
-                Encoding.UTF8);
+            LineCountsByFilePath.Clear();
+            maxLineCountOverride = null;
         }
+    }
 
-        return filePath;
+    /// <summary>
+    ///     Overrides the line-count rotation threshold for isolated tests.
+    /// </summary>
+    /// <param name="maxLineCount">The maximum active-file line count.</param>
+    internal static void SetMaxLineCountForTests(int maxLineCount)
+    {
+        lock (SyncRoot)
+        {
+            maxLineCountOverride = maxLineCount > 0
+                ? maxLineCount
+                : RotatingLogFileSupport.DefaultMaxLineCount;
+        }
+    }
+
+    /// <summary>
+    ///     Waits for the background diagnostic writer to flush queued blocks.
+    /// </summary>
+    internal static void FlushForTests()
+    {
+        if (!actionPump.Flush(FlushTimeout))
+        {
+            throw new TimeoutException("Timed out while flushing DiagnosticFileEmitter.");
+        }
+    }
+
+    /// <summary>
+    ///     Stops accepting new diagnostic blocks and drains the pending queue.
+    /// </summary>
+    internal static void Shutdown()
+    {
+        _ = actionPump.Shutdown(FlushTimeout);
     }
 
     private static string BuildSafeFileName(string purpose)
@@ -83,5 +126,78 @@ internal static class DiagnosticFileEmitter
         }
 
         return sanitizedPurpose;
+    }
+
+    private static List<string> BuildBlockLines(string title, string content)
+    {
+        var blockLines = new List<string>
+        {
+            $"===== {DateTimeOffset.Now:O} | {title} =====",
+        };
+
+        blockLines.AddRange(
+            RotatingLogFileSupport.EnumerateLines(content.TrimEnd()));
+        blockLines.Add(string.Empty);
+        return blockLines;
+    }
+
+    private static int GetMaxLineCount()
+    {
+        return maxLineCountOverride ?? RotatingLogFileSupport.DefaultMaxLineCount;
+    }
+
+    private static void WriteBlock(
+        string filePath,
+        IReadOnlyList<string> blockLines)
+    {
+        lock (SyncRoot)
+        {
+            var directory = Path.GetDirectoryName(filePath);
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                return;
+            }
+
+            Directory.CreateDirectory(directory);
+            var currentLineCount = GetTrackedLineCount(filePath);
+            var maxLineCount = GetMaxLineCount();
+            if (currentLineCount >= maxLineCount ||
+                (currentLineCount > 0 &&
+                 currentLineCount + blockLines.Count > maxLineCount))
+            {
+                RotatingLogFileSupport.RotateActiveFile(filePath);
+                currentLineCount = 0;
+                LineCountsByFilePath[filePath] = 0;
+            }
+
+            using var writer = new StreamWriter(
+                new FileStream(
+                    filePath,
+                    FileMode.Append,
+                    FileAccess.Write,
+                    FileShare.ReadWrite),
+                new UTF8Encoding(false));
+            foreach (var line in blockLines)
+            {
+                writer.WriteLine(line);
+            }
+
+            writer.Flush();
+            LineCountsByFilePath[filePath] = currentLineCount + blockLines.Count;
+        }
+    }
+
+    private static long GetTrackedLineCount(string filePath)
+    {
+        if (LineCountsByFilePath.TryGetValue(filePath, out var lineCount))
+        {
+            return lineCount;
+        }
+
+        lineCount = RotatingLogFileSupport.CountExistingLinesUpTo(
+            filePath,
+            GetMaxLineCount());
+        LineCountsByFilePath[filePath] = lineCount;
+        return lineCount;
     }
 }

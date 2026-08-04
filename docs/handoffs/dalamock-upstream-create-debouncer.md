@@ -2,12 +2,19 @@
 
 Snapshot date: 2026-07-18
 
-This handoff isolates the first upstream DalaMock fix that blocked hosted
-preview startup for Echoglossian.
+Status update 2026-07-19: this handoff is superseded for stable Dalamud.
+Stable Dalamud 15.0.2.3 does not expose `IDebouncer`; keeping the local
+`CreateDebouncer` patch breaks builds against stable binaries. Do not execute
+this handoff unless targeting a staging-only API after rechecking the official
+Dalamud contract.
+
+This handoff originally isolated a staging-only DalaMock fix that appeared to
+block hosted preview startup for Echoglossian.
 
 ## Goal
 
-Add compatibility for the current Dalamud `IFramework` contract by implementing:
+Historical staging-only goal: add compatibility for a non-stable Dalamud
+`IFramework` contract by implementing:
 
 ```csharp
 IDebouncer CreateDebouncer(TimeSpan throttleTime, Action action)
@@ -19,7 +26,7 @@ on DalaMock's `MockFramework`.
 
 This is not Echoglossian-specific behavior.
 
-The DalaMock `6.1.7` package and source do not implement the current
+The DalaMock `6.1.7` package and source did not implement the staging
 `IFramework.CreateDebouncer(TimeSpan, Action)` member. That causes hosted plugin
 startup to fail during type loading before most plugin-specific behavior
 matters.
@@ -47,23 +54,20 @@ Target file:
 
 ## Local patch shape
 
-The vendored copy already contains the intended compatibility fix:
+The vendored copy no longer contains this compatibility fix on the stable branch:
 
-- implement `CreateDebouncer(TimeSpan, Action)` on `MockFramework`
-- provide a small internal `IDebouncer` implementation
-- back that implementation with the existing `RunOnTick` path so behavior stays
-  aligned with the mock framework's scheduling model
+- the former `CreateDebouncer(TimeSpan, Action)` implementation was removed
+- the former internal `IDebouncer` implementation was removed
+- stable validation should fail if this staging-only member is reintroduced
 
-Keep the upstream patch narrow. Do not mix in plugin-loader or Echoglossian
-adapter changes here.
+Keep any future staging-only experiment separate from the stable upstream PR.
 
 ## Acceptance criteria
 
-1. DalaMock compiles against the current Dalamud service contract without
-   missing `CreateDebouncer`.
-2. Hosted plugin startup no longer fails at type-load time because of
-   `MockFramework`.
-3. The patch does not require Echoglossian-specific code.
+1. DalaMock compiles against stable Dalamud without `IDebouncer`.
+2. Hosted plugin startup continues to be covered by the `PluginLoader`
+   `AssemblyLocation` fix instead.
+3. No staging-only API is reintroduced into stable-targeted code.
 
 ## Suggested validation
 
@@ -74,9 +78,8 @@ dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --n
 dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1
 ```
 
-If working in a DalaMock clone, add or run a DalaMock-local test that exercises
-`MockFramework.CreateDebouncer` directly or indirectly through a hosted plugin
-startup path.
+If working in a DalaMock clone, do not add `CreateDebouncer` tests unless the
+target branch intentionally tracks staging Dalamud.
 
 ## Out of scope
 
@@ -87,12 +90,11 @@ startup path.
 
 ## Sync-back note
 
-After an upstream PR exists or merges, return to Echoglossian and decide whether
-the vendored copy can be reduced, rebased, or replaced by a released package.
+After an upstream release includes the remaining `PluginLoader` fix, return to
+Echoglossian and decide whether the vendored copy can be removed.
 
 ## Quick resume prompt
 
-> Continue from `docs/handoffs/dalamock-upstream-create-debouncer.md`. Use the
-> vendored `vendor/DalaMock` tree from the Echoglossian previewer worktree as
-> the concrete patch source, but keep the PR scoped to `MockFramework` and the
-> current Dalamud `CreateDebouncer` contract only.
+> Do not resume `docs/handoffs/dalamock-upstream-create-debouncer.md` for stable
+> Dalamud. Recheck the official Dalamud API first; stable 15.0.2.3 does not
+> expose `IDebouncer`.

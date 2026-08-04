@@ -3,7 +3,11 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+
+using Echoglossian.LanguagesHandling;
 using Echoglossian.PluginUI.Helpers;
+using PluginEntry = Echoglossian.Echoglossian;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -65,5 +69,41 @@ public class PromptTemplateManagerTests
     Assert.Equal(
         "Translate Pray return from English to Portuguese (Brazil).",
         rendered);
+  }
+
+  /// <summary>
+  ///     Ensures prompt preview helpers can resolve the configured target
+  ///     language display name from the runtime language registry.
+  /// </summary>
+  [Fact]
+  public void GetConfiguredTargetLanguageDisplayName_UsesConfiguredLanguageName()
+  {
+    var previousLanguages = PluginEntry.LangDict;
+
+    try
+    {
+      PluginEntry.LangDict = new Dictionary<int, LanguageInfo>
+      {
+          [81] = new LanguageInfo(
+              "pt-BR",
+              "Portuguese (Brazil)",
+              string.Empty,
+              string.Empty,
+              []),
+      };
+
+      var method = typeof(RuntimeLanguageHelper).GetMethod(
+          "GetConfiguredTargetLanguageDisplayName",
+          BindingFlags.Public | BindingFlags.Static);
+
+      Assert.NotNull(method);
+      var result = method!.Invoke(null, [81]);
+
+      Assert.Equal("Portuguese (Brazil)", result);
+    }
+    finally
+    {
+      PluginEntry.LangDict = previousLanguages;
+    }
   }
 }

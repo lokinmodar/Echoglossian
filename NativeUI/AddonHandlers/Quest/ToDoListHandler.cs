@@ -21,6 +21,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       TimeSpan.FromSeconds(2);
 
   private readonly Dictionary<string, ToDoRuntimeEntry> toDoRuntimeEntries = [];
+  private readonly Dictionary<string, string> toDoQuestDiagnosticStates = [];
   private readonly HashSet<string> toDoNativeMutationKeys = [];
 
   private readonly QuestWaitingNotificationGate toDoListWaitingNotificationGate
@@ -30,6 +31,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private bool hasPendingToDoListTranslations;
 
   private JournalTranslationDisplayMode? lastAppliedDisplayMode;
+  private string? lastVisibleToDoRequestedUpdateSignature;
 
   private DateTime nextToDoListRetryUtc = DateTime.MinValue;
 
@@ -52,7 +54,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ToDoListUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.ToDoListTranslationDisplayMode);
+          this.Config.ToDoListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ToDoList family should write translated text into the
@@ -60,7 +63,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ToDoListWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.ToDoListTranslationDisplayMode);
+          this.Config.ToDoListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ToDoList family hover tooltips should show the
@@ -68,7 +72,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ToDoListHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.ToDoListTranslationDisplayMode);
+          this.Config.ToDoListTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated ToDoList text should be normalized before
@@ -77,7 +82,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private bool ToDoListShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.ToDoListTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Refreshes the ToDoList runtime from canonical quest data and the DB.
@@ -96,6 +102,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
       this.currentToDoListDataReady = false;
       this.lastAppliedDisplayMode = null;
+      this.lastVisibleToDoRequestedUpdateSignature = null;
       return;
     }
 
@@ -106,6 +113,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     }
 
     var visibleQuests = this.CollectVisibleToDoQuests(todoList);
+    var visibleSignature =
+        this.BuildVisibleToDoRequestedUpdateSignature(visibleQuests);
     var runtimeEntries = new Dictionary<string, ToDoRuntimeEntry>(
         StringComparer.Ordinal);
     HashSet<string> blockingQuestLabels = new(StringComparer.Ordinal);
@@ -139,6 +148,10 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     this.currentToDoListDataReady = availability.HasRenderableEntries;
     this.hasPendingToDoListTranslations =
         availability.HasPendingTranslations;
+    this.lastVisibleToDoRequestedUpdateSignature =
+        runtimeEntries.Count > 0
+            ? visibleSignature
+            : null;
 
     if (!availability.HasRenderableEntries)
     {
@@ -374,30 +387,97 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
 
     var originalQuestText = this.ResolveOriginalToDoText(visibleQuest.QuestRow);
     blockingQuestLabel = originalQuestText;
+    var diagnosticKey = this.BuildToDoQuestDiagnosticKey(
+        visibleQuest.QuestRow,
+        originalQuestText);
+    var objectiveRows = visibleQuest.Objectives
+        .Select(
+            objectiveRow => (
+                ObjectiveRow: objectiveRow,
+                OriginalText: this.ResolveOriginalToDoText(objectiveRow)))
+        .ToArray();
 
     if (!QuestTodoProgressResolver.TryResolveQuestTodoProgress(
             originalQuestText,
             out var todoProgressSnapshot))
     {
+      var resolvedFallbackQuestTitle =
+          this.TryResolveToDoListFallbackQuestTitle(
+              visibleQuest,
+              sourceLanguage,
+              out var fallbackTranslatedQuestTitle);
+      var trackableObjectiveCount = objectiveRows.Count(
+          objectiveRow => this.ShouldTrackObjectiveRow(objectiveRow.OriginalText));
+      var shouldRequestAcceptedQuestPrefetch =
+          ShouldRequestAcceptedQuestPrefetchWhenTodoProgressUnavailable(
+              resolvedFallbackQuestTitle);
+      var shouldKeepRetryingWithoutTodoProgress =
+          ShouldKeepRetryingWithoutTodoProgress(
+              resolvedFallbackQuestTitle,
+              trackableObjectiveCount);
+      if (shouldRequestAcceptedQuestPrefetch &&
+          QuestLuminaResolver.TryResolveQuestId(
+              originalQuestText,
+              out var pendingQuestIdText) &&
+          QuestProgressResolver.TryResolveAcceptedQuestId(
+              pendingQuestIdText,
+              out var acceptedQuestId))
+      {
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"pending-prefetch|{acceptedQuestId}"),
+            "request-prefetch questId={QuestId} title='{QuestTitle}' reason='todo-progress-unavailable'",
+            acceptedQuestId,
+            this.SummarizeDiagnosticText(originalQuestText));
+        this.RequestAcceptedQuestPrefetch(acceptedQuestId);
+      }
+      else if (shouldRequestAcceptedQuestPrefetch)
+      {
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            "pending-noacceptedquest|todo-progress-unavailable",
+            "resolve-pending title='{QuestTitle}' reason='todo-progress-unavailable'",
+            this.SummarizeDiagnosticText(originalQuestText));
+      }
+
+      if (resolvedFallbackQuestTitle)
+      {
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"fallback|{trackableObjectiveCount}|{shouldRequestAcceptedQuestPrefetch}|{shouldKeepRetryingWithoutTodoProgress}"),
+            "resolve-fallback title='{QuestTitle}' translatedReady=true trackableObjectiveCount={ObjectiveCount} requestPrefetch={RequestPrefetch} retryLocal={RetryLocal}",
+            this.SummarizeDiagnosticText(originalQuestText),
+            trackableObjectiveCount,
+            shouldRequestAcceptedQuestPrefetch,
+            shouldKeepRetryingWithoutTodoProgress);
+      }
+
       runtimeEntries.Add(
           this.CreateQuestRuntimeEntry(
               visibleQuest.QuestRow,
               progressKey: string.Empty,
               originalQuestText,
-              originalQuestText));
+              resolvedFallbackQuestTitle
+                  ? fallbackTranslatedQuestTitle
+                  : originalQuestText,
+              translatedPayloadReady: resolvedFallbackQuestTitle));
 
-      foreach (var objectiveRow in visibleQuest.Objectives)
+      foreach (var objectiveRow in objectiveRows)
       {
-        var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
         runtimeEntries.Add(
             this.CreateObjectiveRuntimeEntry(
-                objectiveRow,
+                objectiveRow.ObjectiveRow,
                 progressKey: string.Empty,
-                originalObjectiveText,
-                originalObjectiveText));
+                objectiveRow.OriginalText,
+                objectiveRow.OriginalText,
+                translatedPayloadReady: false));
       }
 
-      return false;
+      return !shouldKeepRetryingWithoutTodoProgress;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
@@ -405,19 +485,31 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
         sourceLanguage.PersistenceCode,
-        LangDict[LanguageInt].Code,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now);
     var foundQuestPlate = this.FindQuestPlate(questPlate);
     if (foundQuestPlate == null ||
         string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestName))
     {
+      this.LogToDoQuestDiagnosticState(
+          diagnosticKey,
+          string.Create(
+              CultureInfo.InvariantCulture,
+              $"pending-quest-translation|{todoProgressSnapshot.QuestProgress.QuestId}|{todoProgressSnapshot.CacheKey}"),
+          "resolve-pending questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' reason='quest-translation-missing'",
+          todoProgressSnapshot.QuestProgress.QuestId,
+          todoProgressSnapshot.CacheKey,
+          this.SummarizeDiagnosticText(originalQuestText));
+      this.RequestAcceptedQuestPrefetch(
+          todoProgressSnapshot.QuestProgress.QuestId);
       runtimeEntries.Add(
           this.CreateQuestRuntimeEntry(
               visibleQuest.QuestRow,
               todoProgressSnapshot.CacheKey,
               originalQuestText,
-              originalQuestText));
+              originalQuestText,
+              translatedPayloadReady: false));
 
       foreach (var objectiveRow in visibleQuest.Objectives)
       {
@@ -427,7 +519,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
                 objectiveRow,
                 todoProgressSnapshot.CacheKey,
                 originalObjectiveText,
-                originalObjectiveText));
+                originalObjectiveText,
+                translatedPayloadReady: false));
       }
 
       return false;
@@ -438,34 +531,15 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
             visibleQuest.QuestRow,
             todoProgressSnapshot.CacheKey,
             originalQuestText,
-            foundQuestPlate.TranslatedQuestName));
+            foundQuestPlate.TranslatedQuestName,
+            translatedPayloadReady: true));
 
-    var canonicalObjectiveRows = todoProgressSnapshot.QuestProgress.QuestSteps
-        .Where(step => !string.IsNullOrWhiteSpace(step.Text))
-        .ToArray();
-    var trackedObjectiveRows = visibleQuest.Objectives
-        .Where(item => this.ShouldTrackObjectiveRow(this.ResolveOriginalToDoText(item)))
-        .ToArray();
-    if (trackedObjectiveRows.Length > canonicalObjectiveRows.Length)
+    for (var objectiveIndex = 0;
+         objectiveIndex < visibleQuest.Objectives.Count;
+         objectiveIndex++)
     {
-      foreach (var objectiveRow in visibleQuest.Objectives)
-      {
-        var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
-        runtimeEntries.Add(
-            this.CreateObjectiveRuntimeEntry(
-                objectiveRow,
-                todoProgressSnapshot.CacheKey,
-                originalObjectiveText,
-                originalObjectiveText));
-      }
-
-      return false;
-    }
-
-    var trackedObjectiveIndex = 0;
-    foreach (var objectiveRow in visibleQuest.Objectives)
-    {
-      var originalObjectiveText = this.ResolveOriginalToDoText(objectiveRow);
+      var objectiveRow = objectiveRows[objectiveIndex].ObjectiveRow;
+      var originalObjectiveText = objectiveRows[objectiveIndex].OriginalText;
       if (!this.ShouldTrackObjectiveRow(originalObjectiveText))
       {
         runtimeEntries.Add(
@@ -473,23 +547,40 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
                 objectiveRow,
                 todoProgressSnapshot.CacheKey,
                 originalObjectiveText,
-                originalObjectiveText));
+                originalObjectiveText,
+                translatedPayloadReady: false));
         continue;
       }
 
-      var canonicalObjectiveRow = canonicalObjectiveRows[trackedObjectiveIndex++];
-      if (!foundQuestPlate.TryGetTranslatedObjectiveText(
-              canonicalObjectiveRow.KeyText,
-              canonicalObjectiveRow.Text,
-              out var translatedObjectiveText) ||
-          string.IsNullOrWhiteSpace(translatedObjectiveText))
+      if (!this.TryResolveTranslatedObjectiveText(
+              foundQuestPlate,
+              questCanonicalData,
+              todoProgressSnapshot,
+              originalObjectiveText,
+              objectiveIndex,
+              visibleQuest.Objectives.Count,
+              out var translatedObjectiveText))
       {
+        this.LogToDoQuestDiagnosticState(
+            diagnosticKey,
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"pending-objective-translation|{todoProgressSnapshot.QuestProgress.QuestId}|{todoProgressSnapshot.CacheKey}|{objectiveIndex}|{originalObjectiveText}"),
+            "resolve-pending questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' objectiveIndex={ObjectiveIndex} objective='{ObjectiveText}' reason='objective-translation-missing'",
+            todoProgressSnapshot.QuestProgress.QuestId,
+            todoProgressSnapshot.CacheKey,
+            this.SummarizeDiagnosticText(originalQuestText),
+            objectiveIndex,
+            this.SummarizeDiagnosticText(originalObjectiveText));
+        this.RequestAcceptedQuestPrefetch(
+            todoProgressSnapshot.QuestProgress.QuestId);
         runtimeEntries.Add(
             this.CreateObjectiveRuntimeEntry(
                 objectiveRow,
                 todoProgressSnapshot.CacheKey,
                 originalObjectiveText,
-                originalObjectiveText));
+                originalObjectiveText,
+                translatedPayloadReady: false));
         return false;
       }
 
@@ -498,10 +589,229 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               objectiveRow,
               todoProgressSnapshot.CacheKey,
               originalObjectiveText,
-              translatedObjectiveText));
+              translatedObjectiveText,
+              translatedPayloadReady: true));
     }
 
+    this.LogToDoQuestDiagnosticState(
+        diagnosticKey,
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"resolved|{todoProgressSnapshot.QuestProgress.QuestId}|{todoProgressSnapshot.CacheKey}|{visibleQuest.Objectives.Count}"),
+        "resolve questId={QuestId} cacheKey='{CacheKey}' title='{QuestTitle}' objectiveCount={ObjectiveCount}",
+        todoProgressSnapshot.QuestProgress.QuestId,
+        todoProgressSnapshot.CacheKey,
+        this.SummarizeDiagnosticText(originalQuestText),
+        visibleQuest.Objectives.Count);
     return true;
+  }
+
+  /// <summary>
+  ///     Attempts to reuse one persisted quest-title translation by matching
+  ///     the visible ToDoList quest text against existing QuestPlate rows when
+  ///     live todo progress is not available yet.
+  /// </summary>
+  /// <param name="visibleQuest">The visible quest row and grouped objectives.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="translatedQuestTitle">The reused translated quest title.</param>
+  /// <returns><c>true</c> when a persisted translated quest title exists.</returns>
+  private bool TryResolveToDoListFallbackQuestTitle(
+      ToDoVisibleQuest visibleQuest,
+      SourceClientLanguage sourceLanguage,
+      out string translatedQuestTitle)
+  {
+    translatedQuestTitle = string.Empty;
+
+    var originalQuestText = this.ResolveOriginalToDoText(visibleQuest.QuestRow);
+    var fallbackQuestPlate = this.CreateQuestPlate(
+        sourceLanguage,
+        originalQuestText,
+        string.Empty);
+    var foundFallbackQuestPlate = this.FindQuestPlateByName(fallbackQuestPlate);
+    if (foundFallbackQuestPlate == null ||
+        string.IsNullOrWhiteSpace(foundFallbackQuestPlate.TranslatedQuestName))
+    {
+      return false;
+    }
+
+    translatedQuestTitle = foundFallbackQuestPlate.TranslatedQuestName;
+    return true;
+  }
+
+  /// <summary>
+  ///     Gets whether missing live TODO progress should still queue accepted
+  ///     quest prefetch work.
+  /// </summary>
+  /// <param name="hasFallbackTranslatedTitle">
+  ///     Whether a persisted translated title already exists.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when accepted-quest prefetch can still add missing DB
+  ///     data for the current visible quest.
+  /// </returns>
+  internal static bool ShouldRequestAcceptedQuestPrefetchWhenTodoProgressUnavailable(
+      bool hasFallbackTranslatedTitle)
+  {
+    return !hasFallbackTranslatedTitle;
+  }
+
+  /// <summary>
+  ///     Gets whether the ToDoList should keep locally retrying a visible
+  ///     quest while the live TODO progress snapshot is still unavailable.
+  /// </summary>
+  /// <param name="hasFallbackTranslatedTitle">
+  ///     Whether a persisted translated title already exists.
+  /// </param>
+  /// <param name="trackableObjectiveCount">
+  ///     The number of visible objective rows that still depend on live TODO
+  ///     progress to map into canonical translated rows.
+  /// </param>
+  /// <returns>
+  ///     <c>true</c> when local retries should continue.
+  /// </returns>
+  internal static bool ShouldKeepRetryingWithoutTodoProgress(
+      bool hasFallbackTranslatedTitle,
+      int trackableObjectiveCount)
+  {
+    return !hasFallbackTranslatedTitle || trackableObjectiveCount > 0;
+  }
+
+  /// <summary>
+  ///     Gets whether one ToDoList quest diagnostic state changed enough to
+  ///     warrant a fresh debug log line.
+  /// </summary>
+  /// <param name="previousState">The last emitted diagnostic state.</param>
+  /// <param name="nextState">The candidate diagnostic state.</param>
+  /// <returns>
+  ///     <c>true</c> when the diagnostic state changed.
+  /// </returns>
+  internal static bool ShouldEmitToDoQuestDiagnosticState(
+      string? previousState,
+      string nextState)
+  {
+    return !string.Equals(
+        previousState,
+        nextState,
+        StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Emits one ToDoList quest debug line only when the per-quest
+  ///     diagnostic state changed since the last emission.
+  /// </summary>
+  /// <param name="diagnosticKey">The stable visible-quest diagnostic key.</param>
+  /// <param name="nextState">The candidate diagnostic state.</param>
+  /// <param name="messageTemplate">The structured log template.</param>
+  /// <param name="propertyValues">The structured property values.</param>
+  private void LogToDoQuestDiagnosticState(
+      string diagnosticKey,
+      string nextState,
+      string messageTemplate,
+      params object[] propertyValues)
+  {
+    this.toDoQuestDiagnosticStates.TryGetValue(
+        diagnosticKey,
+        out var previousState);
+    if (!ShouldEmitToDoQuestDiagnosticState(
+            previousState,
+            nextState))
+    {
+      return;
+    }
+
+    this.toDoQuestDiagnosticStates[diagnosticKey] = nextState;
+    PluginRuntimeLog.Debug(
+        ToDoListAddonName,
+        messageTemplate,
+        propertyValues);
+  }
+
+  /// <summary>
+  ///     Builds one stable diagnostic key for a visible ToDoList quest row.
+  /// </summary>
+  /// <param name="questRow">The visible quest row.</param>
+  /// <param name="originalQuestText">The resolved original quest text.</param>
+  /// <returns>The stable diagnostic key.</returns>
+  private string BuildToDoQuestDiagnosticKey(
+      ToDoItem questRow,
+      string originalQuestText)
+  {
+    return string.Create(
+        CultureInfo.InvariantCulture,
+        $"{questRow.IndexI}|{questRow.IndexJ}|{questRow.NodeId}|{originalQuestText}");
+  }
+
+  /// <summary>
+  ///     Tries to resolve the translated text for one visible ToDoList
+  ///     objective row, preferring canonical text matches and then falling
+  ///     back to the live objective-progress window.
+  /// </summary>
+  /// <param name="questPlate">The persisted quest plate.</param>
+  /// <param name="questCanonicalData">The canonical quest data.</param>
+  /// <param name="todoProgressSnapshot">The live todo progress snapshot.</param>
+  /// <param name="originalObjectiveText">The visible source objective text.</param>
+  /// <param name="objectiveIndex">The objective index within the visible quest block.</param>
+  /// <param name="visibleObjectiveCount">The number of visible objective rows.</param>
+  /// <param name="translatedObjectiveText">The resolved translated objective text.</param>
+  /// <returns><c>true</c> when a translated objective row was resolved.</returns>
+  private bool TryResolveTranslatedObjectiveText(
+      QuestPlate questPlate,
+      QuestCanonicalData questCanonicalData,
+      QuestTodoProgressSnapshot todoProgressSnapshot,
+      string originalObjectiveText,
+      int objectiveIndex,
+      int visibleObjectiveCount,
+      out string translatedObjectiveText)
+  {
+    translatedObjectiveText = string.Empty;
+    HashSet<string> triedRowKeys = new(StringComparer.Ordinal);
+
+    foreach (var objectiveEntry in questCanonicalData
+                 .EnumerateObjectiveEntriesByVisibleText(originalObjectiveText))
+    {
+      if (string.IsNullOrWhiteSpace(objectiveEntry.KeyText) ||
+          !triedRowKeys.Add(objectiveEntry.KeyText))
+      {
+        continue;
+      }
+
+      if (!questPlate.TryGetTranslatedObjectiveText(
+              objectiveEntry.KeyText,
+              objectiveEntry.Text,
+              out translatedObjectiveText) ||
+          string.IsNullOrWhiteSpace(translatedObjectiveText))
+      {
+        continue;
+      }
+
+      return true;
+    }
+
+    var activeObjectiveEntries = questCanonicalData.GetActiveObjectiveEntries(
+        todoProgressSnapshot.ObjectiveProgress,
+        todoProgressSnapshot.ObjectiveCount);
+    if (activeObjectiveEntries.Count == 0)
+    {
+      return false;
+    }
+
+    if (visibleObjectiveCount == activeObjectiveEntries.Count &&
+        objectiveIndex >= 0 &&
+        objectiveIndex < activeObjectiveEntries.Count)
+    {
+      var activeObjectiveEntry = activeObjectiveEntries[objectiveIndex];
+      if (!string.IsNullOrWhiteSpace(activeObjectiveEntry.KeyText) &&
+          questPlate.TryGetTranslatedObjectiveText(
+              activeObjectiveEntry.KeyText,
+              activeObjectiveEntry.Text,
+              out translatedObjectiveText) &&
+          !string.IsNullOrWhiteSpace(translatedObjectiveText))
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /// <summary>
@@ -516,7 +826,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       ToDoItem questRow,
       string progressKey,
       string originalText,
-      string translatedText)
+      string translatedText,
+      bool translatedPayloadReady)
   {
     return new ToDoRuntimeEntry(
         this.BuildToDoRuntimeEntryKey(
@@ -529,7 +840,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         questRow.IndexJ,
         questRow.NodeId,
         originalText,
-        translatedText);
+        translatedText,
+        translatedPayloadReady);
   }
 
   /// <summary>
@@ -544,7 +856,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       ToDoItem objectiveRow,
       string progressKey,
       string originalText,
-      string translatedText)
+      string translatedText,
+      bool translatedPayloadReady)
   {
     return new ToDoRuntimeEntry(
         this.BuildToDoRuntimeEntryKey(
@@ -557,7 +870,8 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         objectiveRow.IndexJ,
         objectiveRow.NodeId,
         originalText,
-        translatedText);
+        translatedText,
+        translatedPayloadReady);
   }
 
   /// <summary>
@@ -618,6 +932,77 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Builds one stable requested-update signature from the currently
+  ///     visible translatable ToDoList rows so timer-only repaints can reuse
+  ///     the existing translated snapshot.
+  /// </summary>
+  /// <param name="visibleQuests">The currently visible quest rows.</param>
+  /// <returns>The stable requested-update signature.</returns>
+  private string BuildVisibleToDoRequestedUpdateSignature(
+      IReadOnlyList<ToDoVisibleQuest> visibleQuests)
+  {
+    List<string> parts = [];
+    foreach (var visibleQuest in visibleQuests)
+    {
+      parts.Add(this.BuildVisibleToDoRequestedUpdateSignaturePart(
+          visibleQuest.QuestRow));
+      foreach (var objectiveRow in visibleQuest.Objectives)
+      {
+        parts.Add(this.BuildVisibleToDoRequestedUpdateSignaturePart(
+            objectiveRow));
+      }
+    }
+
+    return string.Join("\n", parts);
+  }
+
+  /// <summary>
+  ///     Builds one stable requested-update signature part for a visible
+  ///     ToDoList row.
+  /// </summary>
+  /// <param name="todoItem">The visible row.</param>
+  /// <returns>The stable requested-update signature part.</returns>
+  private string BuildVisibleToDoRequestedUpdateSignaturePart(ToDoItem todoItem)
+  {
+    return string.Create(
+        CultureInfo.InvariantCulture,
+        $"{todoItem.IndexI}|{todoItem.IndexJ}|{todoItem.NodeId}|{this.ResolveOriginalToDoText(todoItem)}");
+  }
+
+  /// <summary>
+  ///     Attempts to reuse the current translated ToDoList snapshot when a
+  ///     requested-update repaint changed only non-translatable nodes.
+  /// </summary>
+  /// <param name="todoList">The live ToDoList addon.</param>
+  /// <returns>
+  ///     <c>true</c> when the current presentation was safely reused.
+  /// </returns>
+  private unsafe bool TryReuseCurrentToDoPresentation(AtkUnitBase* todoList)
+  {
+    if (todoList == null ||
+        this.lastAppliedDisplayMode != this.Config.ToDoListTranslationDisplayMode ||
+        string.IsNullOrWhiteSpace(this.lastVisibleToDoRequestedUpdateSignature) ||
+        this.toDoRuntimeEntries.Count == 0)
+    {
+      return false;
+    }
+
+    var visibleQuests = this.CollectVisibleToDoQuests(todoList);
+    var currentSignature =
+        this.BuildVisibleToDoRequestedUpdateSignature(visibleQuests);
+    if (!string.Equals(
+            currentSignature,
+            this.lastVisibleToDoRequestedUpdateSignature,
+            StringComparison.Ordinal))
+    {
+      return false;
+    }
+
+    this.ApplyToDoListPresentation(todoList);
+    return true;
+  }
+
+  /// <summary>
   ///     Applies the current ToDoList presentation mode using only the local
   ///     runtime entries resolved from the DB.
   /// </summary>
@@ -640,6 +1025,16 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
               runtimeEntry.IndexJ,
               out var textNode))
       {
+        continue;
+      }
+
+      if (!runtimeEntry.TranslatedPayloadReady)
+      {
+        if (this.toDoNativeMutationKeys.Remove(runtimeEntry.Key))
+        {
+          textNode->SetText(runtimeEntry.OriginalText ?? string.Empty);
+        }
+
         continue;
       }
 
@@ -745,9 +1140,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       return;
     }
 
-    var translatedPayloadReady =
-        !string.IsNullOrWhiteSpace(runtimeEntry.TranslatedText);
-    if (!translatedPayloadReady)
+    if (!runtimeEntry.TranslatedPayloadReady)
     {
       this.RemoveHoverTooltipsByPrefix(runtimeEntry.Key);
       return;
@@ -766,7 +1159,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
           bottomRight,
           runtimeEntry.OriginalText,
           runtimeEntry.TranslatedText,
-          translatedPayloadReady,
+          runtimeEntry.TranslatedPayloadReady,
           this.ToDoListHoverShowsOriginal,
           forceEnabled: true);
       return;
@@ -786,7 +1179,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         textNode,
         runtimeEntry.OriginalText,
         runtimeEntry.TranslatedText,
-        translatedPayloadReady,
+        runtimeEntry.TranslatedPayloadReady,
         this.ToDoListHoverShowsOriginal,
         forceEnabled: true,
         denseHitbox: true);
@@ -936,6 +1329,12 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// <param name="args">The lifecycle arguments.</param>
   private unsafe void OnToDoListEvent(AddonEvent type, AddonArgs args)
   {
+    if (TryGetVisibleToDoList(out var todoList) &&
+        this.TryReuseCurrentToDoPresentation(todoList))
+    {
+      return;
+    }
+
     this.RefreshToDoList();
   }
 
@@ -960,6 +1359,7 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
       this.currentToDoListDataReady = false;
       this.lastAppliedDisplayMode = null;
+      this.lastVisibleToDoRequestedUpdateSignature = null;
       return;
     }
 
@@ -997,11 +1397,13 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   private void OnToDoListCleanupEvent(AddonEvent type, AddonArgs args)
   {
     this.toDoRuntimeEntries.Clear();
+    this.toDoQuestDiagnosticStates.Clear();
     this.toDoNativeMutationKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
     this.currentToDoListDataReady = false;
     this.hasPendingToDoListTranslations = false;
     this.lastAppliedDisplayMode = null;
+    this.lastVisibleToDoRequestedUpdateSignature = null;
     this.nextToDoListRetryUtc = DateTime.MinValue;
     this.ClearToDoListWaitingState();
   }
@@ -1015,11 +1417,13 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
     }
 
     this.toDoRuntimeEntries.Clear();
+    this.toDoQuestDiagnosticStates.Clear();
     this.toDoNativeMutationKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(ToDoListHoverPrefix);
     this.currentToDoListDataReady = false;
     this.hasPendingToDoListTranslations = false;
     this.lastAppliedDisplayMode = null;
+    this.lastVisibleToDoRequestedUpdateSignature = null;
     this.nextToDoListRetryUtc = DateTime.MinValue;
     this.ClearToDoListWaitingState();
   }
@@ -1044,6 +1448,10 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
   /// <param name="NodeId">The backing node id.</param>
   /// <param name="OriginalText">The original source text.</param>
   /// <param name="TranslatedText">The translated text from the DB.</param>
+  /// <param name="TranslatedPayloadReady">
+  ///     Whether the runtime row already has translated payload that can be
+  ///     applied natively or shown through plugin hover tooltips.
+  /// </param>
   private sealed record ToDoRuntimeEntry(
       string Key,
       string ProgressKey,
@@ -1051,5 +1459,6 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
       int IndexJ,
       uint NodeId,
       string OriginalText,
-      string TranslatedText);
+      string TranslatedText,
+      bool TranslatedPayloadReady);
 }

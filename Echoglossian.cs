@@ -39,6 +39,9 @@ public partial class Echoglossian : IDalamudPlugin
   private const string AddonProbeCommand = "/egloaddonprobe";
 
   private const string QuestProbeCommand = "/egloquestprobe";
+
+  private const string TooltipRegisterLoggingCommand =
+      "/eglotooltipregisterlogging";
 #endif
 
   /// <summary>
@@ -136,6 +139,7 @@ public partial class Echoglossian : IDalamudPlugin
 
   private readonly bool pluginAssetsState;
   private QuestToastRuntime questToastRuntime;
+  private NamePlateTranslationRuntime namePlateTranslationRuntime;
   private ToastGuiCaptureRuntime toastGuiCaptureRuntime;
   private ToastGuiSupportedToastRuntime toastGuiSupportedToastRuntime;
   private readonly IDalamudTextureWrap talkImage;
@@ -144,9 +148,11 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly object runtimeTranslationFailureNotificationLock = new();
   private readonly Dictionary<string, DateTime> runtimeTranslationFailureNotificationTimes =
       new(StringComparer.Ordinal);
+  private string? namePlatePresentationSignature;
   private string? structuredDialogueGlossaryRuntimeSignature;
   private string? translationActivationBlockedNotificationSignature;
   private string? translationRuntimeSignature;
+  private bool translationRefreshRestoreApplied;
   private bool runtimeConfigurationDirty;
   private bool runtimeConfigurationReady;
 
@@ -175,6 +181,14 @@ public partial class Echoglossian : IDalamudPlugin
   {
     var persistedConfig = PluginInterface.GetPluginConfig() as Config;
     this.configuration = persistedConfig ?? new Config();
+    var normalizedPluginCulture = PluginCultureLocaleHelper.NormalizePersistedCultureName(
+        this.configuration.DefaultPluginCulture);
+    var pluginCultureChanged = !string.Equals(
+        this.configuration.DefaultPluginCulture,
+        normalizedPluginCulture,
+        StringComparison.Ordinal);
+    this.configuration.DefaultPluginCulture = normalizedPluginCulture;
+    this.cultureInfo = new CultureInfo(normalizedPluginCulture);
     if (persistedConfig == null)
     {
       PluginInterface.SavePluginConfig(this.configuration);
@@ -182,8 +196,6 @@ public partial class Echoglossian : IDalamudPlugin
 
     var loadedConfigVersion = this.configuration.Version;
     var currentConfigVersion = new Config().Version;
-    this.DisableStructuredTooltipTranslationForRelease();
-
     ConfigDirectory = PluginInterface.GetPluginConfigDirectory() +
                       Path.DirectorySeparatorChar;
 
@@ -222,6 +234,13 @@ public partial class Echoglossian : IDalamudPlugin
         {
           HelpMessage = Resources.QuestProbeHelpMessage,
         });
+
+    CommandManager.AddHandler(
+        TooltipRegisterLoggingCommand,
+        new CommandInfo(this.OnEgloTooltipRegisterLoggingCommand)
+        {
+          HelpMessage = Resources.TooltipRegisterLoggingHelpMessage,
+        });
 #endif
 
     this.startupAudit.Mark(PluginStartupStage.CommandHandlersRegistered);
@@ -242,8 +261,6 @@ public partial class Echoglossian : IDalamudPlugin
       PluginRuntimeLog.Error($"Error creating or using database: {e}");
     }
 
-    this.cultureInfo =
-        new CultureInfo(this.configuration.DefaultPluginCulture);
     AssetsManager.AssetsPath =
         $"{PluginInterface.AssemblyLocation.DirectoryName}{Path.DirectorySeparatorChar}Font{Path.DirectorySeparatorChar}";
     AssetsManager.AssetFiles =
@@ -278,9 +295,14 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.MigrateOverlayStyleSettings();
     this.MigrateOverlayDisplayModes();
+    this.MigrateToastPlacementSettings();
     this.MigrateGameMainMenuTranslationSettings();
     this.MigrateTranslationEngineSelection(loadedConfigVersion);
-    if (this.configuration.NormalizeNativeReplacementDiacriticsSettings())
+    var normalizedTooltipSettings =
+        this.configuration.NormalizeNativeReplacementDiacriticsSettings();
+    normalizedTooltipSettings |= this.configuration
+        .NormalizeStructuredTooltipPresentationSettings();
+    if (normalizedTooltipSettings || pluginCultureChanged)
     {
       SaveConfig(this.configuration);
     }
@@ -365,7 +387,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.hoverTooltipManager = new HoverTooltipManager(
         this.configuration,
         UINewFontHandler,
-        this.rtlTexturePresentationService);
+        this.rtlTexturePresentationService,
+        CaptureRichOriginalTextPresentation);
     this.RegisterStructuredTooltipLifecycleHandlers();
     this.startupAudit.Mark(PluginStartupStage.RuntimeServicesBuilt);
 
@@ -376,12 +399,14 @@ public partial class Echoglossian : IDalamudPlugin
 
     DbFirstGameWindowAddonHandler.ClearSessionCaches();
     GameWindowCacheManager.Preload(ConfigDirectory);
+    NamePlateCacheManager.Preload(ConfigDirectory);
     StringArrayDataCacheManager.Preload(ConfigDirectory);
     TranslationFailureCacheManager.Preload(ConfigDirectory);
     ActionTooltipCacheManager.Preload(ConfigDirectory);
     TraitCacheManager.Preload(ConfigDirectory);
     ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
     ItemTooltipCacheManager.Preload(ConfigDirectory);
+    TooltipTextCacheManager.Preload(ConfigDirectory);
     this.RefreshStructuredDialogueGlossaryRuntime();
     this.startupAudit.Mark(PluginStartupStage.RuntimeCachesPreloaded);
 
@@ -394,6 +419,8 @@ public partial class Echoglossian : IDalamudPlugin
     this.RegisterToastGuiSupportedToastRuntime();
     this.toastGuiCaptureRuntime = this.CreateToastGuiCaptureRuntime();
     this.RegisterToastGuiCaptureRuntime();
+    this.namePlateTranslationRuntime = this.CreateNamePlateTranslationRuntime();
+    this.RegisterNamePlateTranslationRuntime();
 
     this.EgloAddonHandler();
     this.startupAudit.Mark(PluginStartupStage.AddonHandlersRegistered);
@@ -415,6 +442,8 @@ public partial class Echoglossian : IDalamudPlugin
     activeInstance = this;
     this.structuredDialogueGlossaryRuntimeSignature =
         this.ComputeStructuredDialogueGlossaryRuntimeSignature();
+    this.namePlatePresentationSignature =
+        this.ComputeNamePlatePresentationSignature();
     this.translationRuntimeSignature =
         this.ComputeTranslationRuntimeSignature();
     this.addonHandlerRegistrationSignature =
@@ -432,25 +461,14 @@ public partial class Echoglossian : IDalamudPlugin
   [PluginService]
   public static ICommandManager CommandManager { get; set; } = null!;
 
-  /// <summary>
-  ///     Temporarily disables the structured tooltip feature family for release
-  ///     builds while <c>ActionDetail</c> and <c>ItemDetail</c> remain unstable.
-  /// </summary>
-  private void DisableStructuredTooltipTranslationForRelease()
-  {
-    if (!this.configuration.TranslateTooltips)
-    {
-      return;
-    }
-
-    this.configuration.TranslateTooltips = false;
-    PluginInterface.SavePluginConfig(this.configuration);
-  }
-
   [PluginService]
   public static IFramework FrameworkInterface { get; set; } = null!;
 
   [PluginService] public static IGameGui GameGuiInterface { get; set; } = null!;
+
+  [PluginService] public static INamePlateGui NamePlateGuiInterface { get; set; } = null!;
+
+  [PluginService] public static IObjectTable ObjectTableInterface { get; set; } = null!;
 
   [PluginService]
   public static IChatGui ChatGuiInterface { get; set; } = null!;
@@ -553,18 +571,22 @@ public partial class Echoglossian : IDalamudPlugin
       QuestHoverTranslationCache.Clear();
       StringArrayDataCacheManager.Clear();
       GameWindowCacheManager.Clear();
+      NamePlateCacheManager.Clear();
       TranslationFailureCacheManager.Clear();
       ActionTooltipCacheManager.Clear();
       TraitCacheManager.Clear();
       ReferenceTextCacheRegistry.ClearAll();
       ItemTooltipCacheManager.Clear();
+      TooltipTextCacheManager.Clear();
       DbFirstGameWindowAddonHandler.ClearSessionCaches();
-      QuestLuminaResolver.Clear();
+    QuestLuminaResolver.Clear();
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();
     this.ClearAcceptedQuestPrefetchState();
+    this.acceptedQuestPrefetchActionPump.Dispose();
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
+    this.ClearNamePlatePrefetchState();
 
 #if DEBUG
     this.StopAllAddonProbeWatches();
@@ -573,6 +595,8 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterQuestToastRuntime();
       this.UnregisterToastGuiSupportedToastRuntime();
       this.UnregisterToastGuiCaptureRuntime();
+      this.UnregisterNamePlateTranslationRuntime();
+      this.namePlateTranslationRuntime.Dispose();
       this.queuedTranslationBroker.Dispose();
       this.translationOverlayRenderer.Dispose();
       this.uiFontRuntime.Dispose();
@@ -600,6 +624,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.talkSubtitleOverlay.Dispose();
     this.toastOverlay.Dispose();
     this.errorToastOverlay.Dispose();
+    this.namePlateOverlay.Dispose();
     this.chatBubbleOverlay.Dispose();
     this.cutSceneSelectStringOverlay.Dispose();
     this.actionDetailOverlay.Dispose();
@@ -631,6 +656,7 @@ public partial class Echoglossian : IDalamudPlugin
 #if DEBUG
     CommandManager.RemoveHandler(AddonProbeCommand);
     CommandManager.RemoveHandler(QuestProbeCommand);
+    CommandManager.RemoveHandler(TooltipRegisterLoggingCommand);
 #endif
 
     if (ReferenceEquals(activeInstance, this))
@@ -639,6 +665,8 @@ public partial class Echoglossian : IDalamudPlugin
     }
 
     this.startupAudit.Mark(PluginStartupStage.DisposeComplete);
+    DiagnosticFileEmitter.Shutdown();
+    PluginRuntimeFileLog.Shutdown();
   }
 
 }

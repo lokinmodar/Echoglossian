@@ -26,6 +26,8 @@ public static class OverlayTab
         Resources.QuestWindowsTabTitle,
         Resources.SelectionDialogsTabTitle,
         Resources.GameWindowsTabTitle,
+        Resources.TooltipTabTitle,
+        Resources.NamePlateTabTitle,
     };
 
     private static readonly string[] ToastOverlayTabs =
@@ -105,11 +107,17 @@ public static class OverlayTab
             case 7:
                 changed |= QuestWindowsTab.Draw(config);
                 break;
-           /*  case 8:
+            case 8:
                 changed |= SelectionDialogsTab.Draw(config);
-                break; */
+                break;
             case 9:
                 changed |= GameWindowsTab.Draw(config);
+                break;
+            case 10:
+                changed |= TooltipTab.Draw(config);
+                break;
+            case 11:
+                changed |= DrawNamePlateOverlay(config);
                 break;
         }
 
@@ -273,17 +281,20 @@ public static class OverlayTab
                 changed |= DrawToastGeneralPage(config);
                 break;
             case 1:
-                changed |= DrawToastTypePage(
-                    config,
-                    Resources.ToastOverlayScreenInfoWideTextSectionTitle,
-                    ref config.TranslateWideTextToast,
-                    ref config.WideTextToastTranslationDisplayMode,
-                    ref config.WideTextToastFontScale,
-                    ref config.ImGuiWideTextToastWindowWidthMult,
-                    ref config.ImGuiWideTextToastWindowPosCorrection,
-                    ref config.OverlayWideTextToastTextColor,
-                    ref config.WideTextToastBackgroundOpacity,
-                    ref config.FontChangeTime);
+                changed |= NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
+                    .UseSupportedNormalToastRuntime(config)
+                    ? DrawSupportedNormalToastPlacementPage(config)
+                    : DrawToastTypePage(
+                        config,
+                        Resources.ToastOverlayScreenInfoWideTextSectionTitle,
+                        ref config.TranslateWideTextToast,
+                        ref config.WideTextToastTranslationDisplayMode,
+                        ref config.WideTextToastFontScale,
+                        ref config.ImGuiWideTextToastWindowWidthMult,
+                        ref config.ImGuiWideTextToastWindowPosCorrection,
+                        ref config.OverlayWideTextToastTextColor,
+                        ref config.WideTextToastBackgroundOpacity,
+                        ref config.FontChangeTime);
                 break;
             case 2:
                 changed |= DrawToastTypePage(
@@ -299,30 +310,40 @@ public static class OverlayTab
                     ref config.FontChangeTime);
                 break;
             case 3:
-                changed |= DrawToastTypePage(
-                    config,
-                    Resources.ToastOverlayAreaSectionTitle,
-                    ref config.TranslateAreaToast,
-                    ref config.AreaToastTranslationDisplayMode,
-                    ref config.AreaToastFontScale,
-                    ref config.ImGuiAreaToastWindowWidthMult,
-                    ref config.ImGuiAreaToastWindowPosCorrection,
-                    ref config.OverlayAreaToastTextColor,
-                    ref config.AreaToastBackgroundOpacity,
-                    ref config.FontChangeTime);
+                changed |= NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
+                    .UseSupportedNormalToastRuntime(config)
+                    ? DrawSupportedNormalToastMemberPage(
+                        Resources.ToastOverlayAreaSectionTitle,
+                        ref config.TranslateAreaToast)
+                    : DrawToastTypePage(
+                        config,
+                        Resources.ToastOverlayAreaSectionTitle,
+                        ref config.TranslateAreaToast,
+                        ref config.AreaToastTranslationDisplayMode,
+                        ref config.AreaToastFontScale,
+                        ref config.ImGuiAreaToastWindowWidthMult,
+                        ref config.ImGuiAreaToastWindowPosCorrection,
+                        ref config.OverlayAreaToastTextColor,
+                        ref config.AreaToastBackgroundOpacity,
+                        ref config.FontChangeTime);
                 break;
             case 4:
-                changed |= DrawToastTypePage(
-                    config,
-                    Resources.ToastOverlayClassJobChangeSectionTitle,
-                    ref config.TranslateClassChangeToast,
-                    ref config.ClassChangeToastTranslationDisplayMode,
-                    ref config.ClassChangeToastFontScale,
-                    ref config.ImGuiClassChangeToastWindowWidthMult,
-                    ref config.ImGuiClassChangeToastWindowPosCorrection,
-                    ref config.OverlayClassChangeToastTextColor,
-                    ref config.ClassChangeToastBackgroundOpacity,
-                    ref config.FontChangeTime);
+                changed |= NativeUI.AddonHandlers.Toasts.ToastGuiSupportedToastPolicy
+                    .UseSupportedNormalToastRuntime(config)
+                    ? DrawSupportedNormalToastMemberPage(
+                        Resources.ToastOverlayClassJobChangeSectionTitle,
+                        ref config.TranslateClassChangeToast)
+                    : DrawToastTypePage(
+                        config,
+                        Resources.ToastOverlayClassJobChangeSectionTitle,
+                        ref config.TranslateClassChangeToast,
+                        ref config.ClassChangeToastTranslationDisplayMode,
+                        ref config.ClassChangeToastFontScale,
+                        ref config.ImGuiClassChangeToastWindowWidthMult,
+                        ref config.ImGuiClassChangeToastWindowPosCorrection,
+                        ref config.OverlayClassChangeToastTextColor,
+                        ref config.ClassChangeToastBackgroundOpacity,
+                        ref config.FontChangeTime);
                 break;
             case 5:
                 changed |= DrawToastTypePage(
@@ -338,17 +359,7 @@ public static class OverlayTab
                     ref config.FontChangeTime);
                 break;
             case 6:
-                changed |= DrawToastTypePage(
-                    config,
-                    Resources.ToastOverlayQuestSectionTitle,
-                    ref config.TranslateQuestToast,
-                    ref config.QuestToastTranslationDisplayMode,
-                    ref config.QuestToastFontScale,
-                    ref config.ImGuiQuestToastWindowWidthMult,
-                    ref config.ImGuiQuestToastWindowPosCorrection,
-                    ref config.OverlayQuestToastTextColor,
-                    ref config.QuestToastBackgroundOpacity,
-                    ref config.FontChangeTime);
+                changed |= DrawQuestToastPlacementPage(config);
                 break;
         }
 
@@ -491,6 +502,299 @@ public static class OverlayTab
             ref fontChangeTime);
 
         return changed;
+    }
+
+    private static bool DrawSupportedNormalToastPlacementPage(Config config)
+    {
+        var changed = false;
+
+        ImGui.TextUnformatted(Resources.ToastOverlayScreenInfoWideTextSectionTitle);
+        ImGui.Separator();
+        ImGui.TextWrapped(Resources.ToastOverlaySupportedNormalPlacementDescription);
+        ImGui.Spacing();
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateScreenInfoToastToggleText,
+            ref config.TranslateWideTextToast);
+
+        if (ImGui.SliderFloat(
+                Resources.OverlayFontScaleLabel,
+                ref config.WideTextToastFontScale,
+                0.25f,
+                3f,
+                "%.2f"))
+        {
+            changed = true;
+            config.FontChangeTime = DateTime.Now.Ticks;
+        }
+
+        changed |= DrawToastPlacementBucket(
+            config,
+            Resources.ToastOverlayTopPlacementTitle,
+            ref config.TopToastTranslationDisplayMode,
+            ref config.ImGuiTopToastWindowWidthMult,
+            ref config.ImGuiTopToastWindowPosCorrection,
+            ref config.OverlayTopToastTextColor,
+            ref config.TopToastBackgroundOpacity,
+            config.WideTextToastFontScale,
+            ref config.FontChangeTime);
+        changed |= DrawToastPlacementBucket(
+            config,
+            Resources.ToastOverlayBottomPlacementTitle,
+            ref config.BottomToastTranslationDisplayMode,
+            ref config.ImGuiBottomToastWindowWidthMult,
+            ref config.ImGuiBottomToastWindowPosCorrection,
+            ref config.OverlayBottomToastTextColor,
+            ref config.BottomToastBackgroundOpacity,
+            config.WideTextToastFontScale,
+            ref config.FontChangeTime);
+
+        return changed;
+    }
+
+    private static bool DrawSupportedNormalToastMemberPage(
+        string sectionTitle,
+        ref bool isEnabled)
+    {
+        var changed = false;
+
+        ImGui.TextUnformatted(sectionTitle);
+        ImGui.Separator();
+
+        changed |= ImGui.Checkbox(
+            Resources.ToastOverlayEnableThisToastTypeLabel,
+            ref isEnabled);
+
+        if (isEnabled)
+        {
+            ImGui.Spacing();
+            ImGui.TextWrapped(
+                Resources.ToastOverlaySupportedNormalSharedSettingsMessage);
+        }
+
+        return changed;
+    }
+
+    private static bool DrawQuestToastPlacementPage(Config config)
+    {
+        var changed = false;
+
+        ImGui.TextUnformatted(Resources.ToastOverlayQuestSectionTitle);
+        ImGui.Separator();
+
+        changed |= ImGui.Checkbox(
+            Resources.ToastOverlayEnableThisToastTypeLabel,
+            ref config.TranslateQuestToast);
+
+        if (!config.TranslateQuestToast)
+        {
+            return changed;
+        }
+
+        if (ImGui.SliderFloat(
+                Resources.OverlayFontScaleLabel,
+                ref config.QuestToastFontScale,
+                0.25f,
+                3f,
+                "%.2f"))
+        {
+            changed = true;
+            config.FontChangeTime = DateTime.Now.Ticks;
+        }
+
+        changed |= DrawToastPlacementBucket(
+            config,
+            Resources.ToastOverlayLeftPlacementTitle,
+            ref config.QuestToastLeftTranslationDisplayMode,
+            ref config.ImGuiQuestToastLeftWindowWidthMult,
+            ref config.ImGuiQuestToastLeftWindowPosCorrection,
+            ref config.OverlayQuestToastLeftTextColor,
+            ref config.QuestToastLeftBackgroundOpacity,
+            config.QuestToastFontScale,
+            ref config.FontChangeTime);
+        changed |= DrawToastPlacementBucket(
+            config,
+            Resources.ToastOverlayCentrePlacementTitle,
+            ref config.QuestToastCentreTranslationDisplayMode,
+            ref config.ImGuiQuestToastCentreWindowWidthMult,
+            ref config.ImGuiQuestToastCentreWindowPosCorrection,
+            ref config.OverlayQuestToastCentreTextColor,
+            ref config.QuestToastCentreBackgroundOpacity,
+            config.QuestToastFontScale,
+            ref config.FontChangeTime);
+        changed |= DrawToastPlacementBucket(
+            config,
+            Resources.ToastOverlayRightPlacementTitle,
+            ref config.QuestToastRightTranslationDisplayMode,
+            ref config.ImGuiQuestToastRightWindowWidthMult,
+            ref config.ImGuiQuestToastRightWindowPosCorrection,
+            ref config.OverlayQuestToastRightTextColor,
+            ref config.QuestToastRightBackgroundOpacity,
+            config.QuestToastFontScale,
+            ref config.FontChangeTime);
+
+        return changed;
+    }
+
+    private static bool DrawToastPlacementBucket(
+        Config config,
+        string sectionTitle,
+        ref JournalTranslationDisplayMode displayMode,
+        ref float widthMult,
+        ref Vector2 positionCorrection,
+        ref Vector3 textColor,
+        ref float backgroundOpacity,
+        float sharedFontScale,
+        ref long fontChangeTime)
+    {
+        var changed = false;
+
+        using var bucketId = ImRaii.PushId(
+            BuildToastPlacementBucketId(sectionTitle));
+
+        ImGui.Spacing();
+        ImGui.TextUnformatted(sectionTitle);
+        ImGui.Separator();
+
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            sectionTitle,
+            ref displayMode);
+
+        if (!ShouldDrawOverlaySettings(
+                displayMode,
+                config.OverlayOnlyLanguage))
+        {
+            ImGui.TextWrapped(
+                Resources.NativeReplacementModeIsActiveForThisToastTypeOverlayStyleControlsAreNotUsedInThisMode);
+            return changed;
+        }
+
+        var placementFontScale = sharedFontScale;
+        changed |= DrawToastOverlaySettings(
+            ref placementFontScale,
+            ref widthMult,
+            ref positionCorrection,
+            ref textColor,
+            ref backgroundOpacity,
+            ref fontChangeTime);
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Builds a stable ImGui ID scope for one toast placement bucket.
+    /// </summary>
+    /// <param name="sectionTitle">The user-facing placement section title.</param>
+    /// <returns>The unique ImGui ID scope for the placement bucket.</returns>
+    internal static string BuildToastPlacementBucketId(string sectionTitle)
+    {
+        return $"ToastPlacementBucket:{sectionTitle}";
+    }
+
+    private static bool DrawNamePlateOverlay(Config config)
+    {
+        var changed = false;
+
+        using var scrollingChildNamePlate = ImRaii.Child(
+            "NamePlateOverlaySettings",
+            new Vector2(-1, -1),
+            false,
+            ImGuiWindowFlags.NoBackground);
+
+        if (!scrollingChildNamePlate)
+        {
+            return false;
+        }
+
+        changed |= ImGui.Checkbox(
+            Resources.TranslateNamePlatesLabel,
+            ref config.TranslateNamePlates);
+
+        if (!config.TranslateNamePlates)
+        {
+            return changed;
+        }
+
+        ImGui.TextWrapped(Resources.NamePlateOverlayHelpText);
+
+        changed |= DrawOverlayDisplayModeCombo(
+            config,
+            "NamePlateDisplayMode",
+            ref config.NamePlateTranslationDisplayMode);
+
+        ImGui.Spacing();
+        changed |= ImGui.Checkbox(
+            Resources.EnableDistanceAwareOverlaysLabel,
+            ref config.EnableDistanceAwareOverlays);
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayFullScaleDistanceLabel,
+            ref config.DistanceAwareOverlayFullScaleDistance,
+            1f,
+            40f,
+            "%.1f");
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayFadeStartDistanceLabel,
+            ref config.DistanceAwareOverlayFadeStartDistance,
+            1f,
+            60f,
+            "%.1f");
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayMaxDistanceLabel,
+            ref config.DistanceAwareOverlayMaxDistance,
+            1f,
+            80f,
+            "%.1f");
+        changed |= ImGui.SliderFloat(
+            Resources.DistanceAwareOverlayMinScaleLabel,
+            ref config.DistanceAwareOverlayMinScale,
+            0.25f,
+            1f,
+            "%.2f");
+        changed |= NormalizeDistanceAwareOverlayOrdering(config);
+
+        if (ShouldDrawOverlaySettings(
+                config.NamePlateTranslationDisplayMode,
+                config.OverlayOnlyLanguage))
+        {
+            changed |= DrawToastOverlaySettings(
+                ref config.NamePlateFontScale,
+                ref config.ImGuiNamePlateWindowWidthMult,
+                ref config.ImGuiNamePlateWindowPosCorrection,
+                ref config.OverlayNamePlateTextColor,
+                ref config.NamePlateBackgroundOpacity,
+                ref config.FontChangeTime);
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    ///     Normalizes distance-aware thresholds to the ordering applied by the
+    ///     runtime presentation policy.
+    /// </summary>
+    /// <param name="config">The configuration to normalize.</param>
+    /// <returns>
+    ///     <see langword="true" /> if a threshold changed; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    internal static bool NormalizeDistanceAwareOverlayOrdering(Config config)
+    {
+        var fadeStartDistance = Math.Max(
+            config.DistanceAwareOverlayFullScaleDistance,
+            config.DistanceAwareOverlayFadeStartDistance);
+        var maxDistance = Math.Max(
+            fadeStartDistance + 0.01f,
+            config.DistanceAwareOverlayMaxDistance);
+        if (fadeStartDistance == config.DistanceAwareOverlayFadeStartDistance &&
+            maxDistance == config.DistanceAwareOverlayMaxDistance)
+        {
+            return false;
+        }
+
+        config.DistanceAwareOverlayFadeStartDistance = fadeStartDistance;
+        config.DistanceAwareOverlayMaxDistance = maxDistance;
+        return true;
     }
 
     private static bool DrawSubtitleOverlay(Config config)

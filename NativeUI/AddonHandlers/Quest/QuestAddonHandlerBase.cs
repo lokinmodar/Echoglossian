@@ -3,6 +3,10 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Runtime.CompilerServices;
+
+using Echoglossian.NativeUI.Helpers;
+
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
@@ -11,6 +15,19 @@ namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 internal abstract class QuestAddonHandlerBase
     : IAddonTranslationHandler, IPluginUnloadAwareAddonHandler
 {
+  private const int PopupSectionBodySearchMaxSiblingCount = 6;
+
+  private const int PopupSectionBodySubtreeSearchMaxDepth = 64;
+
+  private const int PopupSectionBodySubtreeSearchMaxNodeCount = 4096;
+
+  private const int PopupBodyHoverAncestorSearchMaxNodeCount =
+      PopupSectionBodySearchMaxSiblingCount;
+
+  private const float PopupBodyHoverHorizontalPadding = 8f;
+
+  private const float PopupBodyHoverVerticalPadding = 4f;
+
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>>
       eventHandlers = new();
 
@@ -102,7 +119,7 @@ internal abstract class QuestAddonHandlerBase
         string.Empty,
         string.Empty,
         questId,
-        LangDict[LanguageInt].Code,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now,
@@ -134,11 +151,48 @@ internal abstract class QuestAddonHandlerBase
         translatedQuestName,
         translatedQuestMessage,
         questId,
-        LangDict[LanguageInt].Code,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now,
         DateTime.Now,
         GetGameVersion());
+  }
+
+  /// <summary>
+  ///     Creates a dedicated quest-popup snapshot using the captured source
+  ///     language and current engine settings.
+  /// </summary>
+  /// <param name="surfaceName">The popup surface name.</param>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
+  /// <param name="originalTitle">The original popup title.</param>
+  /// <param name="originalBody">The original popup body.</param>
+  /// <param name="translatedTitle">The translated popup title.</param>
+  /// <param name="translatedBody">The translated popup body.</param>
+  /// <param name="questId">The optional canonical quest id.</param>
+  /// <returns>A dedicated quest-popup row.</returns>
+  protected QuestPopupText CreateQuestPopupText(
+      string surfaceName,
+      SourceClientLanguage sourceLanguage,
+      string originalTitle,
+      string originalBody,
+      string translatedTitle = "",
+      string translatedBody = "",
+      string? questId = null)
+  {
+    return new QuestPopupText(
+        surfaceName,
+        questId,
+        originalTitle,
+        originalBody,
+        sourceLanguage.PersistenceCode,
+        translatedTitle,
+        translatedBody,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
+        this.Config.ChosenTransEngine,
+        GetGameVersion(),
+        sourceContentHash: null,
+        DateTime.Now,
+        DateTime.Now);
   }
 
   /// <summary>
@@ -154,7 +208,8 @@ internal abstract class QuestAddonHandlerBase
     return this.TranslationService.Translate(
         text,
         sourceLanguage,
-        LangDict[LanguageInt].Code);
+        LangDict[LanguageInt].Code,
+        originContext: $"{this.GetType().Name}/Text");
   }
 
   /// <summary>
@@ -171,7 +226,8 @@ internal abstract class QuestAddonHandlerBase
     return this.TranslationService.TranslateAsync(
         text,
         sourceLanguage,
-        LangDict[LanguageInt].Code);
+        LangDict[LanguageInt].Code,
+        originContext: $"{this.GetType().Name}/Text");
   }
 
   /// <summary>
@@ -222,6 +278,47 @@ internal abstract class QuestAddonHandlerBase
         sourceTexts,
         sourceLanguage,
         onResolved);
+  }
+
+  /// <summary>
+  ///     Normalizes one visible quest text for concise runtime diagnostics.
+  /// </summary>
+  /// <param name="text">The source text to normalize.</param>
+  /// <param name="maxLength">The maximum diagnostic length.</param>
+  /// <returns>The normalized and truncated diagnostic text.</returns>
+  protected string SummarizeDiagnosticText(
+      string? text,
+      int maxLength = 96)
+  {
+    if (string.IsNullOrWhiteSpace(text))
+    {
+      return string.Empty;
+    }
+
+    var normalizedText = text.ReplaceLineEndings(" ").Trim();
+    if (normalizedText.Length <= maxLength)
+    {
+      return normalizedText;
+    }
+
+    return normalizedText[..Math.Max(0, maxLength - 3)] + "...";
+  }
+
+  /// <summary>
+  ///     Requests that the shared accepted-quest prefetch runtime resolve and
+  ///     persist any missing canonical translations for the specified quest.
+  /// </summary>
+  /// <param name="questId">The accepted quest identifier to prefetch.</param>
+  /// <param name="callerMemberName">
+  ///     The calling quest-handler member used to tag diagnostic output.
+  /// </param>
+  protected void RequestAcceptedQuestPrefetch(
+      uint questId,
+      [CallerMemberName] string? callerMemberName = null)
+  {
+    var source =
+        $"{this.GetType().Name}.{callerMemberName ?? nameof(this.RequestAcceptedQuestPrefetch)}";
+    this.Dependencies.RequestAcceptedQuestPrefetch(questId, source);
   }
 
   /// <summary>
@@ -278,6 +375,638 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Finds a visible readable text node whose current native text matches
+  ///     either the original or translated payload.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="originalText">The original source text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <param name="textNode">The matched text node, if any.</param>
+  /// <returns><c>true</c> when a matching text node was found.</returns>
+  protected unsafe bool TryFindReadableTextNodeByText(
+      AtkUnitBase* addon,
+      string originalText,
+      string translatedText,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (addon == null)
+    {
+      return false;
+    }
+
+    foreach (var nodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
+    {
+      var candidate = (AtkTextNode*)nodeAddress;
+      if (candidate == null || !candidate->IsVisible())
+      {
+        continue;
+      }
+
+      var visibleText = ReadReadableTextNode(candidate);
+      if (TextNodePayloadMatches(visibleText, originalText) ||
+          TextNodePayloadMatches(visibleText, translatedText))
+      {
+        textNode = candidate;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Resolves the first visible popup body text node that belongs to the
+  ///     section immediately preceding one heading text node with the supplied
+  ///     sheet-text identifier.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="headingTextId">
+  ///     The sheet-text identifier carried by the visible section heading.
+  /// </param>
+  /// <param name="textNode">The resolved visible body node, if any.</param>
+  /// <returns><c>true</c> when the popup body node was found.</returns>
+  protected static unsafe bool TryFindPopupSectionBodyTextNodeByHeadingTextId(
+      AtkUnitBase* addon,
+      uint headingTextId,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (addon == null ||
+        !TryFindVisibleTextNodeByTextId(
+            addon,
+            headingTextId,
+            out var headingNode))
+    {
+      return false;
+    }
+
+    var inspectedSiblingCount = 0;
+    for (var candidate = ((AtkResNode*)headingNode)->PrevSiblingNode;
+         candidate != null &&
+         inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
+         candidate = candidate->PrevSiblingNode, inspectedSiblingCount++)
+    {
+      if (TryFindPopupSectionBodyTextNodeFromCandidate(
+              candidate,
+              headingNode,
+              out textNode))
+      {
+        return true;
+      }
+    }
+
+    inspectedSiblingCount = 0;
+    for (var candidate = ((AtkResNode*)headingNode)->NextSiblingNode;
+         candidate != null &&
+         inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
+         candidate = candidate->NextSiblingNode, inspectedSiblingCount++)
+    {
+      if (TryFindPopupSectionBodyTextNodeFromCandidate(
+              candidate,
+              headingNode,
+              out textNode))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Resolves the structural popup section that contains one previously
+  ///     selected body text node for presentation geometry.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="headingTextId">
+  ///     The sheet-text identifier carried by the visible section heading.
+  /// </param>
+  /// <param name="textNode">The previously selected live body text node.</param>
+  /// <param name="hoverNode">
+  ///     The structural section node that owns the body node, if any.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when the matching presentation section was
+  ///     found; otherwise, <see langword="false" />.
+  /// </returns>
+  protected static unsafe bool TryFindPopupSectionBodyHoverNodeByHeadingTextId(
+      AtkUnitBase* addon,
+      uint headingTextId,
+      AtkTextNode* textNode,
+      out AtkResNode* hoverNode)
+  {
+    hoverNode = null;
+    if (addon == null || textNode == null ||
+        !TryFindVisibleTextNodeByTextId(
+            addon,
+            headingTextId,
+            out var headingNode))
+    {
+      return false;
+    }
+
+    var inspectedSiblingCount = 0;
+    for (var candidate = ((AtkResNode*)headingNode)->PrevSiblingNode;
+         candidate != null &&
+         inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
+         candidate = candidate->PrevSiblingNode, inspectedSiblingCount++)
+    {
+      if (TryFindPopupSectionBodyTextNodeFromCandidate(
+              candidate,
+              headingNode,
+              out var candidateTextNode) &&
+          candidateTextNode == textNode)
+      {
+        hoverNode = candidate;
+        return true;
+      }
+    }
+
+    inspectedSiblingCount = 0;
+    for (var candidate = ((AtkResNode*)headingNode)->NextSiblingNode;
+         candidate != null &&
+         inspectedSiblingCount < PopupSectionBodySearchMaxSiblingCount;
+         candidate = candidate->NextSiblingNode, inspectedSiblingCount++)
+    {
+      if (TryFindPopupSectionBodyTextNodeFromCandidate(
+              candidate,
+              headingNode,
+              out var candidateTextNode) &&
+          candidateTextNode == textNode)
+      {
+        hoverNode = candidate;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Builds explicit hover bounds for a popup body by selecting the best
+  ///     structural region associated with its live text node.
+  /// </summary>
+  /// <param name="textNode">The live popup body text node.</param>
+  /// <param name="preferredHoverNode">
+  ///     The optional structural body node returned by the section resolver.
+  /// </param>
+  /// <param name="topLeft">The resolved hover top-left coordinate.</param>
+  /// <param name="bottomRight">The resolved hover bottom-right coordinate.</param>
+  /// <returns>
+  ///     <see langword="true" /> when a structural region was selected;
+  ///     otherwise, <see langword="false" />.
+  /// </returns>
+  protected static unsafe bool TryBuildPopupBodyHoverBounds(
+      AtkTextNode* textNode,
+      AtkResNode* preferredHoverNode,
+      out Vector2 topLeft,
+      out Vector2 bottomRight)
+  {
+    topLeft = Vector2.Zero;
+    bottomRight = Vector2.Zero;
+    if (textNode == null || !textNode->IsVisible())
+    {
+      return false;
+    }
+
+    var textLeft = textNode->ScreenX;
+    var textTop = textNode->ScreenY;
+    var textWidth = Math.Max(1f, textNode->GetWidth());
+    var textHeight = Math.Max(1f, textNode->GetHeight());
+    var textRight = textLeft + textWidth;
+    var textBottom = textTop + textHeight;
+    List<PopupBodyHoverCandidate> candidates = [];
+    List<nint> candidateAddresses = [];
+    HashSet<nint> visitedCandidates = [];
+
+    AddPopupBodyHoverCandidate(
+        preferredHoverNode,
+        textLeft,
+        textTop,
+        textRight,
+        textBottom,
+        isSectionBounded: preferredHoverNode != null,
+        distanceFromText: 0,
+        candidates,
+        candidateAddresses,
+        visitedCandidates);
+
+    if (preferredHoverNode != null &&
+        preferredHoverNode != (AtkResNode*)textNode)
+    {
+      List<(nint Address, int Distance)> sectionAncestors = [];
+      HashSet<nint> visitedAncestors = [];
+      var ancestorDistance = 1;
+      var inspectedAncestorCount = 0;
+      var ancestor = textNode->AtkResNode.ParentNode;
+      for (; ancestor != null &&
+             PopupBodyHoverGeometryHelper.TryVisitSectionBoundedTraversalNode(
+                 (nint)ancestor,
+                 (nint)preferredHoverNode,
+                 inspectedAncestorCount,
+                 PopupBodyHoverAncestorSearchMaxNodeCount,
+                 visitedAncestors);
+           ancestor = ancestor->ParentNode, ancestorDistance++, inspectedAncestorCount++)
+      {
+        if ((ushort)ancestor->Type >= 1000)
+        {
+          sectionAncestors.Add(((nint)ancestor, ancestorDistance));
+        }
+      }
+
+      if (ancestor == preferredHoverNode)
+      {
+        foreach (var sectionAncestor in sectionAncestors)
+        {
+          AddPopupBodyHoverCandidate(
+              (AtkResNode*)sectionAncestor.Address,
+              textLeft,
+              textTop,
+              textRight,
+              textBottom,
+              isSectionBounded: true,
+              distanceFromText: sectionAncestor.Distance,
+              candidates,
+              candidateAddresses,
+              visitedCandidates);
+        }
+      }
+    }
+
+    var selectedIndex = PopupBodyHoverGeometryHelper.SelectCandidateIndex(
+        textWidth,
+        textHeight,
+        candidates);
+    if (selectedIndex < 0 || selectedIndex >= candidateAddresses.Count)
+    {
+      return false;
+    }
+
+    var selectedNode = (AtkResNode*)candidateAddresses[selectedIndex];
+    if (selectedNode == null || !selectedNode->IsVisible())
+    {
+      return false;
+    }
+
+    var selectedLeft = selectedNode->ScreenX;
+    var selectedTop = selectedNode->ScreenY;
+    var selectedRight = selectedLeft + Math.Max(1f, selectedNode->Width);
+    var selectedBottom = selectedTop + Math.Max(1f, selectedNode->Height);
+    topLeft = new Vector2(
+        Math.Min(textLeft, selectedLeft) - PopupBodyHoverHorizontalPadding,
+        Math.Min(textTop, selectedTop) - PopupBodyHoverVerticalPadding);
+    bottomRight = new Vector2(
+        Math.Max(textRight, selectedRight) + PopupBodyHoverHorizontalPadding,
+        Math.Max(textBottom, selectedBottom) + PopupBodyHoverVerticalPadding);
+    return bottomRight.X > topLeft.X && bottomRight.Y > topLeft.Y;
+  }
+
+  /// <summary>
+  ///     Adds one visible native popup-body geometry candidate when it
+  ///     intersects the live body text rectangle.
+  /// </summary>
+  /// <param name="candidateNode">The candidate native node.</param>
+  /// <param name="textLeft">The live body text left coordinate.</param>
+  /// <param name="textTop">The live body text top coordinate.</param>
+  /// <param name="textRight">The live body text right coordinate.</param>
+  /// <param name="textBottom">The live body text bottom coordinate.</param>
+  /// <param name="isSectionBounded">
+  ///     Whether bounded structural traversal associated the candidate with
+  ///     the resolved popup body section.
+  /// </param>
+  /// <param name="distanceFromText">The structural distance from the text node.</param>
+  /// <param name="candidates">The pure candidate snapshots to populate.</param>
+  /// <param name="candidateAddresses">The native pointers mapped to snapshots.</param>
+  /// <param name="visitedCandidates">The native-pointer deduplication set.</param>
+  private static unsafe void AddPopupBodyHoverCandidate(
+      AtkResNode* candidateNode,
+      float textLeft,
+      float textTop,
+      float textRight,
+      float textBottom,
+      bool isSectionBounded,
+      int distanceFromText,
+      List<PopupBodyHoverCandidate> candidates,
+      List<nint> candidateAddresses,
+      HashSet<nint> visitedCandidates)
+  {
+    if (candidateNode == null ||
+        !candidateNode->IsVisible() ||
+        !visitedCandidates.Add((nint)candidateNode))
+    {
+      return;
+    }
+
+    var width = Math.Max(1f, candidateNode->Width);
+    var height = Math.Max(1f, candidateNode->Height);
+    var left = candidateNode->ScreenX;
+    var top = candidateNode->ScreenY;
+    var right = left + width;
+    var bottom = top + height;
+    var containsText =
+        (left <= textLeft && top <= textTop && right >= textRight &&
+         bottom >= textBottom) ||
+        (left < textRight && right > textLeft && top < textBottom &&
+         bottom > textTop);
+    candidates.Add(
+        new PopupBodyHoverCandidate(
+            width,
+            height,
+            IsVisible: true,
+            ContainsText: containsText,
+            IsCollision: candidateNode->Type == NodeType.Collision,
+            IsComponent: (ushort)candidateNode->Type >= 1000,
+            IsSectionBounded: isSectionBounded,
+            DistanceFromText: distanceFromText));
+    candidateAddresses.Add((nint)candidateNode);
+  }
+
+  /// <summary>
+  ///     Reads the best plain-text representation available from a native text
+  ///     node without mutating the node.
+  /// </summary>
+  /// <param name="textNode">The text node to read.</param>
+  /// <returns>The readable text, or an empty string.</returns>
+  protected static unsafe string ReadReadableTextNode(AtkTextNode* textNode)
+  {
+    return ReadableSeStringPayloadHelper.ReadReadableTextNode(textNode);
+  }
+
+  /// <summary>
+  ///     Finds one visible readable text node whose sheet-text identifier
+  ///     matches the supplied value.
+  /// </summary>
+  /// <param name="addon">The live addon instance to inspect.</param>
+  /// <param name="textId">The sheet-text identifier to resolve.</param>
+  /// <param name="textNode">The matched visible text node, if any.</param>
+  /// <returns><c>true</c> when a matching heading node was found.</returns>
+  private static unsafe bool TryFindVisibleTextNodeByTextId(
+      AtkUnitBase* addon,
+      uint textId,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (addon == null)
+    {
+      return false;
+    }
+
+    foreach (var nodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
+    {
+      var candidate = (AtkTextNode*)nodeAddress;
+      if (candidate == null ||
+          !candidate->IsVisible() ||
+          candidate->TextId != textId)
+      {
+        continue;
+      }
+
+      textNode = candidate;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Tries to resolve the first visible text-node descendant from one
+  ///     structural popup section candidate that precedes the target heading.
+  /// </summary>
+  /// <param name="candidate">The structural section candidate.</param>
+  /// <param name="headingNode">The heading node that owns the section.</param>
+  /// <param name="textNode">The resolved body text node, if any.</param>
+  /// <returns><c>true</c> when the candidate exposes one visible body node.</returns>
+  private static unsafe bool TryFindPopupSectionBodyTextNodeFromCandidate(
+      AtkResNode* candidate,
+      AtkTextNode* headingNode,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (candidate == null || !candidate->IsVisible())
+    {
+      return false;
+    }
+
+    var excludedNode = (AtkResNode*)headingNode;
+    if (candidate->Type == NodeType.Text && candidate != excludedNode)
+    {
+      textNode = candidate->GetAsAtkTextNode();
+      if (textNode != null && textNode->IsVisible())
+      {
+        return true;
+      }
+
+      return false;
+    }
+
+    HashSet<nint> visitedNodes = [];
+    if ((ushort)candidate->Type >= 1000)
+    {
+      var componentNode = (AtkComponentNode*)candidate;
+      if (componentNode->Component != null &&
+          TryFindFirstVisibleTextNodeInSubtree(
+              componentNode->Component->UldManager.RootNode,
+              headingNode,
+              visitedNodes,
+              depth: 0,
+              out textNode))
+      {
+        return true;
+      }
+    }
+
+    if (TryFindFirstVisibleTextNodeInSubtree(
+            candidate->ChildNode,
+            headingNode,
+            visitedNodes,
+            depth: 0,
+            out textNode))
+    {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Walks one visible node subtree in draw order and returns the first
+  ///     visible text node that is not the excluded heading.
+  /// </summary>
+  /// <param name="node">The subtree root to inspect.</param>
+  /// <param name="excludedTextNode">The heading node that must be skipped.</param>
+  /// <param name="visitedNodes">The visited native-node addresses.</param>
+  /// <param name="depth">The current structural traversal depth.</param>
+  /// <param name="textNode">The resolved visible text node, if any.</param>
+  /// <returns><c>true</c> when a visible text node was found.</returns>
+  private static unsafe bool TryFindFirstVisibleTextNodeInSubtree(
+      AtkResNode* node,
+      AtkTextNode* excludedTextNode,
+      HashSet<nint> visitedNodes,
+      int depth,
+      out AtkTextNode* textNode)
+  {
+    textNode = null;
+    if (node == null || depth > PopupSectionBodySubtreeSearchMaxDepth)
+    {
+      return false;
+    }
+
+    for (var current = node; current != null; current = current->NextSiblingNode)
+    {
+      if (!AddonTextNodeResolvers.TryVisitNodeAddress(
+              visitedNodes,
+              (nint)current,
+              PopupSectionBodySubtreeSearchMaxNodeCount))
+      {
+        break;
+      }
+
+      if (!current->IsVisible())
+      {
+        continue;
+      }
+
+      if (current->Type == NodeType.Text)
+      {
+        var candidateTextNode = current->GetAsAtkTextNode();
+        if (candidateTextNode != null && candidateTextNode != excludedTextNode)
+        {
+          textNode = candidateTextNode;
+          return true;
+        }
+      }
+
+      if ((ushort)current->Type >= 1000)
+      {
+        var componentNode = (AtkComponentNode*)current;
+        if (componentNode->Component != null &&
+            TryFindFirstVisibleTextNodeInSubtree(
+                componentNode->Component->UldManager.RootNode,
+                excludedTextNode,
+                visitedNodes,
+                depth + 1,
+                out textNode))
+        {
+          return true;
+        }
+      }
+
+      if (TryFindFirstVisibleTextNodeInSubtree(
+              current->ChildNode,
+              excludedTextNode,
+              visitedNodes,
+              depth + 1,
+              out textNode))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Chooses the safest readable representation for one native text node.
+  /// </summary>
+  /// <param name="currentText">
+  ///     The direct current text returned by the live <see cref="Utf8String" />
+  ///     wrapper.
+  /// </param>
+  /// <param name="originalText">
+  ///     The readable text extracted from the node's structured original
+  ///     payload.
+  /// </param>
+  /// <param name="legacyText">
+  ///     The legacy SeString buffer read fallback.
+  /// </param>
+  /// <returns>The preferred readable text for matching and hover work.</returns>
+  private static string ResolveReadableTextNodeText(
+      string currentText,
+      string originalText,
+      string legacyText)
+  {
+    return ReadableSeStringPayloadHelper.ResolveReadableTextNodeText(
+        currentText,
+        originalText,
+        legacyText);
+  }
+
+  /// <summary>
+  ///     Projects translated readable text onto a captured SeString payload so
+  ///     native mutation can preserve original formatting macros when the raw
+  ///     payload still matches the expected readable source text.
+  /// </summary>
+  /// <param name="originalPayload">The captured original SeString bytes.</param>
+  /// <param name="originalText">The expected readable original text.</param>
+  /// <param name="translatedText">The translated readable text.</param>
+  /// <returns>
+  ///     The projected payload bytes when payload reuse succeeds; otherwise,
+  ///     <see langword="null" />.
+  /// </returns>
+  protected static byte[]? ProjectReadablePayloadBytes(
+      byte[]? originalPayload,
+      string originalText,
+      string translatedText)
+  {
+    return ReadableSeStringPayloadHelper.ProjectReadablePayloadBytes(
+        originalPayload,
+        originalText,
+        translatedText);
+  }
+
+  /// <summary>
+  ///     Determines whether popup hover registration should keep retrying on
+  ///     visible draws until every expected direct tooltip target resolves.
+  /// </summary>
+  /// <param name="registeredName">
+  ///     Whether the direct title target was registered.
+  /// </param>
+  /// <param name="expectsMessage">
+  ///     Whether the popup currently expects one body tooltip target.
+  /// </param>
+  /// <param name="registeredMessage">
+  ///     Whether the direct body target was registered.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when one expected direct target is still
+  ///     missing and the next visible draw should retry registration.
+  /// </returns>
+  internal static bool ShouldKeepPopupHoverRefreshPending(
+      bool registeredName,
+      bool expectsMessage,
+      bool registeredMessage)
+  {
+    return !registeredName || (expectsMessage && !registeredMessage);
+  }
+
+  /// <summary>
+  ///     Compares visible native text with one expected payload while allowing
+  ///     line wrapping and SeString whitespace differences.
+  /// </summary>
+  /// <param name="visibleText">The text read from the native node.</param>
+  /// <param name="expectedText">The expected original or translated payload.</param>
+  /// <returns><c>true</c> when the texts describe the same payload.</returns>
+  private static bool TextNodePayloadMatches(
+      string visibleText,
+      string expectedText)
+  {
+    return ReadableSeStringPayloadHelper.PayloadMatches(
+        visibleText,
+        expectedText);
+  }
+
+  /// <summary>
+  ///     Normalizes readable native text for popup text-node matching.
+  /// </summary>
+  /// <param name="text">The text to normalize.</param>
+  /// <returns>The normalized text.</returns>
+  protected static string NormalizeReadableText(string text)
+  {
+    return ReadableSeStringPayloadHelper.NormalizeReadableText(text);
+  }
+
+  /// <summary>
   ///     Normalizes quest text before writing it to the native UI.
   /// </summary>
   /// <param name="text">The text to normalize.</param>
@@ -318,6 +1047,16 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Resolves dedicated popup text using the popup lookup delegate.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to look up.</param>
+  /// <returns>The matching popup row, if one exists.</returns>
+  protected QuestPopupText? FindQuestPopupText(QuestPopupText questPopupText)
+  {
+    return this.Dependencies.FindQuestPopupText(questPopupText);
+  }
+
+  /// <summary>
   ///     Persists a quest plate insert into the database.
   /// </summary>
   /// <param name="questPlate">The quest plate to insert.</param>
@@ -325,6 +1064,16 @@ internal abstract class QuestAddonHandlerBase
   protected string InsertQuestPlate(QuestPlate questPlate)
   {
     return this.Dependencies.InsertQuestPlate(questPlate);
+  }
+
+  /// <summary>
+  ///     Persists a quest-popup insert into the database asynchronously.
+  /// </summary>
+  /// <param name="questPopupText">The popup row to insert.</param>
+  /// <returns>The persistence result.</returns>
+  protected Task<string> InsertQuestPopupTextAsync(QuestPopupText questPopupText)
+  {
+    return this.Dependencies.InsertQuestPopupTextAsync(questPopupText);
   }
 
   /// <summary>
@@ -484,5 +1233,118 @@ internal abstract class QuestAddonHandlerBase
         translatedPayloadReady,
         swapEnabled,
         forceEnabled);
+  }
+
+  /// <summary>
+  ///     Registers a hover tooltip using explicit screen bounds while
+  ///     preserving rich original capture from a live text node.
+  /// </summary>
+  /// <param name="key">Stable key used to refresh the tooltip target.</param>
+  /// <param name="topLeft">Top-left screen coordinate.</param>
+  /// <param name="bottomRight">Bottom-right screen coordinate.</param>
+  /// <param name="textNode">The live text node used for rich original capture.</param>
+  /// <param name="originalText">The original visible text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <param name="translatedPayloadReady">
+  /// Whether the tooltip payload required by the current mode is ready.
+  /// </param>
+  /// <param name="swapEnabled">Optional explicit swap override.</param>
+  /// <param name="forceEnabled">Whether to register even if tooltips are disabled.</param>
+  protected unsafe void RegisterTranslatedHoverTooltip(
+      string key,
+      Vector2 topLeft,
+      Vector2 bottomRight,
+      AtkTextNode* textNode,
+      string originalText,
+      string translatedText,
+      bool translatedPayloadReady = true,
+      bool? swapEnabled = null,
+      bool forceEnabled = false)
+  {
+    this.Dependencies.RegisterTranslatedHoverTooltipTextNodeBounds(
+        key,
+        topLeft,
+        bottomRight,
+        textNode,
+        originalText,
+        translatedText,
+        translatedPayloadReady,
+        swapEnabled,
+        forceEnabled);
+  }
+
+  /// <summary>
+  ///     Logs one popup-body hover geometry decision so temporary tooltip
+  ///     diagnostics can distinguish explicit-bounds success from text-node
+  ///     fallback.
+  /// </summary>
+  /// <param name="key">The tooltip key being prepared.</param>
+  /// <param name="preferredHoverNode">
+  ///     The resolved structural node used for geometry, if any.
+  /// </param>
+  /// <param name="explicitBoundsBuilt">
+  ///     Whether explicit popup-body bounds were successfully built.
+  /// </param>
+  /// <param name="explicitTopLeft">
+  ///     The explicit bounds top-left corner when one was built.
+  /// </param>
+  /// <param name="explicitBottomRight">
+  ///     The explicit bounds bottom-right corner when one was built.
+  /// </param>
+  /// <param name="finalAnchorKind">
+  ///     The final anchor kind used for registration.
+  /// </param>
+  protected unsafe void LogPopupBodyHoverGeometryDecision(
+      string key,
+      AtkResNode* preferredHoverNode,
+      bool explicitBoundsBuilt,
+      Vector2 explicitTopLeft,
+      Vector2 explicitBottomRight,
+      HoverTooltipAnchorKind finalAnchorKind)
+  {
+    var preferredTopLeft = Vector2.Zero;
+    var preferredBottomRight = Vector2.Zero;
+    if (preferredHoverNode != null)
+    {
+      preferredTopLeft = new Vector2(
+          preferredHoverNode->ScreenX,
+          preferredHoverNode->ScreenY);
+      preferredBottomRight = new Vector2(
+          preferredHoverNode->ScreenX + Math.Max(1f, preferredHoverNode->Width),
+          preferredHoverNode->ScreenY + Math.Max(1f, preferredHoverNode->Height));
+    }
+
+    this.Dependencies.LogPopupBodyHoverGeometryDecision(
+        key,
+        DescribePopupBodyHoverNodeKind(preferredHoverNode),
+        preferredTopLeft,
+        preferredBottomRight,
+        explicitBoundsBuilt,
+        explicitTopLeft,
+        explicitBottomRight,
+        finalAnchorKind);
+  }
+
+  /// <summary>
+  ///     Describes one structural popup-body hover node for diagnostics.
+  /// </summary>
+  /// <param name="node">The structural popup-body hover node.</param>
+  /// <returns>The node-kind description used in logs.</returns>
+  private static unsafe string DescribePopupBodyHoverNodeKind(AtkResNode* node)
+  {
+    if (node == null)
+    {
+      return "none";
+    }
+
+    var visibilityPrefix = node->IsVisible() ? string.Empty : "hidden ";
+    var nodeKind = node->Type switch
+    {
+      NodeType.Collision => "collision",
+      NodeType.Text => "text node",
+      _ when (ushort)node->Type >= 1000 => "component",
+      _ => "res node",
+    };
+    return $"{visibilityPrefix}{nodeKind}";
   }
 }

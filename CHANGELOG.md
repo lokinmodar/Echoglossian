@@ -7,12 +7,40 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0718.2006`
+## Submitted Release `v4.2601.0802.2355`
+
+This package submits the large native UI translation runtime expansion merged
+through [PR #240](https://github.com/lokinmodar/Echoglossian/pull/240), with a
+focus on broader surface coverage, persistence-backed reuse, and safer native
+and overlay presentation behavior.
+
+Highlights:
+
+- restored selection-dialog translation and added a dedicated DB-first
+  `Tooltip` addon runtime with structured original-text presentation, anchored
+  overlays, canonical payload recovery, and hardened native wrapping
+- expanded and stabilized quest-family coverage across `Journal*`,
+  `_ToDoList`, `ScenarioTree`, `RecommendList`, and `AreaMap`, including popup
+  persistence, accepted-quest prefetch, objective matching, and strict
+  overlay-only native-state protection
+- added native nameplate presentation plus distance-aware overlay fallback with
+  configurable scale, fade, cutoff, and per-frame synchronization
+- added dedicated persistence-backed `ContextMenu` and `ToDo` runtimes,
+  placement-aware toast controls, action/item detail translation controls, and
+  stronger tooltip cache hydration
+- normalized locale-specific plugin resources and expanded focused runtime
+  diagnostics through the rotating `Echoglossian.log` workflow
+
+## Published Release `v4.2601.0718.2006`
 
 This package submits the latest `v4-series` head after the 2026-07-17
 MiniTalk hotfix release and focuses on OpenRouter recovery plus hosted preview
 infrastructure that will support future UI validation without relying on
 external mock-package drift.
+
+Published in `DalamudPluginsD17` via
+[PR #9031](https://github.com/goatcorp/DalamudPluginsD17/pull/9031) on
+2026-07-19.
 
 Highlights:
 

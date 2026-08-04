@@ -152,6 +152,11 @@ internal sealed class DiagnosticTelemetryHelper
         ArgumentException.ThrowIfNullOrWhiteSpace(category);
         ArgumentException.ThrowIfNullOrWhiteSpace(signature);
 
+        if (!IsScopeEnabled(this.scope))
+        {
+            return false;
+        }
+
         var effectiveCooldown = this.GetEffectiveCooldown(cooldown);
         if (this.emissionStates.TryGetValue(category, out var currentState) &&
             string.Equals(
@@ -224,6 +229,22 @@ internal sealed class DiagnosticTelemetryHelper
         }
 
         writer($"[{this.scope}:{category}] {message}");
+    }
+
+    /// <summary>
+    ///     Gets whether one diagnostic scope should emit investigation logs.
+    /// </summary>
+    /// <param name="scope">The stable diagnostic scope name.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the scope should emit; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    private static bool IsScopeEnabled(string scope)
+    {
+        return !string.Equals(
+            scope,
+            "StructuredDetailDiag",
+            StringComparison.Ordinal);
     }
 
     /// <summary>

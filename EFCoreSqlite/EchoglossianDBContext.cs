@@ -41,6 +41,26 @@ public class EchoglossianDbContext : DbContext
 
   public DbSet<SelectString> SelectString { get; set; }
 
+  /// <summary>
+  ///     Gets or sets the generic selection-dialog translation rows.
+  /// </summary>
+  public DbSet<SelectionDialogText> SelectionDialogTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the dedicated ContextMenu translation rows.
+  /// </summary>
+  public DbSet<ContextMenuText> ContextMenuTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the dedicated ToDo translation rows.
+  /// </summary>
+  public DbSet<ToDoText> ToDoTexts { get; set; }
+
+  /// <summary>
+  ///     Gets or sets the dedicated Tooltip addon translation rows.
+  /// </summary>
+  public DbSet<TooltipText> TooltipTexts { get; set; }
+
   public DbSet<GameWindow> GameWindow { get; set; }
 
   public DbSet<TalkSubtitleMessage> TalkSubtitleMessage { get; set; }
@@ -49,6 +69,11 @@ public class EchoglossianDbContext : DbContext
 
   public DbSet<TextGimmickHintMessage> TextGimmickHintMessage { get; set; }
 
+  /// <summary>
+  ///     Gets or sets the translated world-object nameplate rows.
+  /// </summary>
+  public DbSet<NamePlateMessage> NamePlateMessages { get; set; }
+
   public DbSet<ToastMessage> ToastMessage { get; set; }
 
   public DbSet<TalkMessage> TalkMessage { get; set; }
@@ -56,6 +81,12 @@ public class EchoglossianDbContext : DbContext
   public DbSet<BattleTalkMessage> BattleTalkMessage { get; set; }
 
   public DbSet<QuestPlate> QuestPlate { get; set; }
+
+  /// <summary>
+  ///     Gets or sets dedicated quest-popup text rows that are not yet safe to
+  ///     reconcile into canonical quest tables.
+  /// </summary>
+  public DbSet<QuestPopupText> QuestPopupTexts { get; set; }
 
   public DbSet<NpcNames> NpcName { get; set; }
 
@@ -199,6 +230,48 @@ public class EchoglossianDbContext : DbContext
           s.TranslationEngine
         })
         .HasDatabaseName("IX_selectstrings_lookup");
+    modelBuilder.Entity<SelectionDialogText>().ToTable("selectiondialogtexts");
+    modelBuilder.Entity<SelectionDialogText>()
+        .HasIndex(s => new
+        {
+          s.AddonName,
+          s.TranslationLang,
+          s.TranslationEngine
+        })
+        .HasDatabaseName("IX_selectiondialogtexts_lookup");
+    modelBuilder.Entity<ContextMenuText>().ToTable("contextmenutexts");
+    modelBuilder.Entity<ContextMenuText>()
+        .HasIndex(t => new
+        {
+          t.AddonName,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_contextmenutexts_lookup");
+    modelBuilder.Entity<ToDoText>().ToTable("todotexts");
+    modelBuilder.Entity<ToDoText>()
+        .HasIndex(t => new
+        {
+          t.AddonName,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_todotexts_lookup");
+    modelBuilder.Entity<TooltipText>().ToTable("tooltiptexts");
+    modelBuilder.Entity<TooltipText>()
+        .HasIndex(t => new
+        {
+          t.AddonName,
+          t.TranslationLang,
+          t.TranslationEngine,
+          t.GameVersion,
+          t.SourceContentHash
+        })
+        .HasDatabaseName("IX_tooltiptexts_lookup");
     modelBuilder.Entity<GameWindow>().ToTable("gamewindows");
     modelBuilder.Entity<GameWindow>()
         .HasIndex(g => new
@@ -246,6 +319,18 @@ public class EchoglossianDbContext : DbContext
           t.TranslationEngine
         })
         .HasDatabaseName("IX_textgimmickhintmessages_lookup");
+    modelBuilder.Entity<NamePlateMessage>()
+        .ToTable("nameplatemessages");
+    modelBuilder.Entity<NamePlateMessage>()
+        .HasIndex(t => new
+        {
+          t.NamePlateKind,
+          t.OriginalNamePlateText,
+          t.OriginalLang,
+          t.TranslationLang,
+          t.TranslationEngine
+        })
+        .HasDatabaseName("IX_nameplatemessages_lookup");
     modelBuilder.Entity<ToastMessage>().ToTable("toastmessages");
     modelBuilder.Entity<ToastMessage>()
         .HasIndex(t => new
@@ -292,6 +377,15 @@ public class EchoglossianDbContext : DbContext
           q.GameVersion
         })
         .HasDatabaseName("IX_questplates_questid_lookup");
+    modelBuilder.Entity<QuestPopupText>().ToTable("questpopuptexts");
+    modelBuilder.Entity<QuestPopupText>()
+        .HasIndex(q => new
+        {
+          q.SurfaceName,
+          q.TranslationLang,
+          q.TranslationEngine
+        })
+        .HasDatabaseName("IX_questpopuptexts_lookup");
     modelBuilder.Entity<NpcNames>().ToTable("npcnames");
     modelBuilder.Entity<LocationName>().ToTable("locationnames");
     modelBuilder.Entity<TranslationFailure>().ToTable("translationfailures");

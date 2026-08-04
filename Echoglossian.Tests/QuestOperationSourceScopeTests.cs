@@ -267,7 +267,9 @@ public class QuestOperationSourceScopeTests
             TranslationService = new TranslationService(text => text, translator),
             FindQuestPlate = recorder.FindQuestPlate,
             FindQuestPlateByName = recorder.FindQuestPlate,
+            FindQuestPopupText = _ => null,
             InsertQuestPlate = recorder.InsertQuestPlate,
+            InsertQuestPopupTextAsync = _ => Task.FromResult(string.Empty),
             UpdateQuestPlate = static _ => string.Empty,
             UpdateQuestPlateGameVersion = static (_, _) => { },
             NormalizeText = static text => text,
@@ -281,11 +283,22 @@ public class QuestOperationSourceScopeTests
             },
             QueueTranslation = recorder.QueueTranslation,
             QueueTranslationBatch = static (_, _, _, _) => false,
+            RequestAcceptedQuestPrefetch = static (_, _) => { },
             RemoveHoverTooltipByPrefix = static _ => { },
             RegisterTranslatedHoverTooltipAddon = null!,
             RegisterTranslatedHoverTooltipTextNode = null!,
             RegisterTranslatedHoverTooltipResNode = null!,
-            RegisterTranslatedHoverTooltipBounds = static (
+              RegisterTranslatedHoverTooltipBounds = static (
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _) => { },
+              RegisterTranslatedHoverTooltipTextNodeBounds = null!,
+            LogPopupBodyHoverGeometryDecision = static (
                 _,
                 _,
                 _,
@@ -294,7 +307,7 @@ public class QuestOperationSourceScopeTests
                 _,
                 _,
                 _) => { },
-        };
+          };
     }
 
     /// <summary>

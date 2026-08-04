@@ -22,12 +22,17 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
 
   private const int JobScenarioValueIndex = 2;
 
+  private const uint ScenarioTreeQuestTitleNodeId = 6;
+
+  private const int ScenarioTreeTextNodeValueIndexOffset = 1000;
+
   private static readonly TimeSpan ScenarioTreeRetryInterval =
       TimeSpan.FromSeconds(2);
 
   private readonly Dictionary<int, ScenarioTreeRuntimeEntry>
       scenarioTreeRuntimeEntries = [];
   private readonly HashSet<int> scenarioTreeNativeMutationIndices = [];
+  private readonly HashSet<nint> scenarioTreeNativeMutationTextNodeKeys = [];
 
   private readonly QuestWaitingNotificationGate
       scenarioTreeWaitingNotificationGate = new();
@@ -61,12 +66,31 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         this.OnScenarioTreeCleanupEvent);
   }
 
+  /// <inheritdoc />
+  public override unsafe void OnPluginUnload()
+  {
+    if (TryGetVisibleScenarioTree(out _, out var atkValues))
+    {
+      this.RestoreScenarioTreeOriginals(atkValues);
+    }
+
+    this.scenarioTreeRuntimeEntries.Clear();
+    this.scenarioTreeNativeMutationIndices.Clear();
+    this.scenarioTreeNativeMutationTextNodeKeys.Clear();
+    this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
+    this.currentScenarioTreeDataReady = false;
+    this.lastAppliedDisplayMode = null;
+    this.nextScenarioTreeRetryUtc = DateTime.MinValue;
+    this.ClearScenarioTreeWaitingState();
+  }
+
   /// <summary>
   ///     Gets whether the ScenarioTree family should use hover tooltips.
   /// </summary>
   private bool ScenarioTreeUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.ScenarioTreeTranslationDisplayMode);
+          this.Config.ScenarioTreeTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ScenarioTree family should write translated text into
@@ -74,7 +98,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ScenarioTreeWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.ScenarioTreeTranslationDisplayMode);
+          this.Config.ScenarioTreeTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the ScenarioTree family hover tooltips should show the
@@ -82,7 +107,8 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   private bool ScenarioTreeHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.ScenarioTreeTranslationDisplayMode);
+          this.Config.ScenarioTreeTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether translated ScenarioTree text should be normalized before
@@ -91,7 +117,19 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   private bool ScenarioTreeShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.ScenarioTreeTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
+
+  /// <summary>
+  ///     Determines whether translated ScenarioTree slot text is ready for
+  ///     native application or tooltip rendering.
+  /// </summary>
+  /// <param name="translatedQuestText">The translated ScenarioTree text.</param>
+  /// <returns><c>true</c> when the translated text exists.</returns>
+  internal static bool IsTranslatedPayloadReady(string? translatedQuestText)
+  {
+    return !string.IsNullOrWhiteSpace(translatedQuestText);
+  }
 
   /// <summary>
   ///     Refreshes the ScenarioTree runtime from canonical quest data and the
@@ -120,7 +158,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       return;
     }
 
-    var visibleEntries = this.CollectVisibleScenarioTreeEntries(atkValues);
+    var visibleEntries = this.CollectVisibleScenarioTreeEntries(addon, atkValues);
     if (visibleEntries.Count == 0)
     {
       this.scenarioTreeRuntimeEntries.Clear();
@@ -187,7 +225,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         ScenarioTreeAddonName);
     atkValues = null;
 
-    if (addon == null || !addon->IsVisible || addon->AtkValues == null)
+    if (addon == null || !addon->IsVisible)
     {
       return false;
     }
@@ -199,12 +237,52 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// <summary>
   ///     Collects the currently visible ScenarioTree quest slots.
   /// </summary>
+  /// <param name="addon">The live ScenarioTree addon.</param>
   /// <param name="atkValues">The live addon payload.</param>
   /// <returns>The visible quest slots.</returns>
   private unsafe List<ScenarioTreeVisibleEntry> CollectVisibleScenarioTreeEntries(
+      AtkUnitBase* addon,
+      AtkValue* atkValues)
+  {
+    var atkValueEntries = this.CollectScenarioTreeAtkValueEntries(atkValues);
+    var titleTextNodeEntries = this.CollectScenarioTreeTitleTextNodeEntries(
+        addon,
+        atkValueEntries);
+    if (titleTextNodeEntries.Count == 0)
+    {
+      return atkValueEntries;
+    }
+
+    HashSet<string> titleTexts = new(StringComparer.Ordinal);
+    foreach (var titleTextNodeEntry in titleTextNodeEntries)
+    {
+      titleTexts.Add(titleTextNodeEntry.OriginalText);
+    }
+
+    foreach (var atkValueEntry in atkValueEntries)
+    {
+      if (!titleTexts.Contains(atkValueEntry.OriginalText))
+      {
+        titleTextNodeEntries.Add(atkValueEntry);
+      }
+    }
+
+    return titleTextNodeEntries;
+  }
+
+  /// <summary>
+  ///     Collects visible ScenarioTree rows from the historical AtkValue slots.
+  /// </summary>
+  /// <param name="atkValues">The live addon payload.</param>
+  /// <returns>The visible AtkValue-backed quest slots.</returns>
+  private unsafe List<ScenarioTreeVisibleEntry> CollectScenarioTreeAtkValueEntries(
       AtkValue* atkValues)
   {
     List<ScenarioTreeVisibleEntry> visibleEntries = [];
+    if (atkValues == null)
+    {
+      return visibleEntries;
+    }
 
     foreach (var questSlot in CollectScenarioTreeQuestSlots())
     {
@@ -228,7 +306,56 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
           new ScenarioTreeVisibleEntry(
               questSlot.ValueIndex,
               questSlot.QuestRowId,
-              originalText));
+              originalText,
+              TextNodeKey: nint.Zero));
+    }
+
+    return visibleEntries;
+  }
+
+  /// <summary>
+  ///     Collects ScenarioTree title nodes observed by addon probing.
+  /// </summary>
+  /// <param name="addon">The live ScenarioTree addon.</param>
+  /// <param name="atkValueEntries">The AtkValue-backed rows, if any.</param>
+  /// <returns>The visible text-node-backed quest title rows.</returns>
+  private unsafe List<ScenarioTreeVisibleEntry>
+      CollectScenarioTreeTitleTextNodeEntries(
+          AtkUnitBase* addon,
+          IReadOnlyCollection<ScenarioTreeVisibleEntry> atkValueEntries)
+  {
+    List<ScenarioTreeVisibleEntry> visibleEntries = [];
+    var nextValueIndex = ScenarioTreeTextNodeValueIndexOffset;
+
+    foreach (var textNodeAddress in ResolveScenarioTreeVisibleTitleTextNodes(addon))
+    {
+      var textNode = (AtkTextNode*)textNodeAddress;
+      if (!TryReadScenarioTreeVisibleTitleText(textNode, out var visibleText))
+      {
+        continue;
+      }
+
+      var valueIndex = nextValueIndex++;
+      var originalText = this.ResolveOriginalScenarioTreeText(
+          valueIndex,
+          visibleText,
+          textNodeKey: textNodeAddress);
+      if (string.IsNullOrWhiteSpace(originalText))
+      {
+        continue;
+      }
+
+      var matchingAtkValueEntry = atkValueEntries.FirstOrDefault(
+          entry => string.Equals(
+              entry.OriginalText,
+              originalText,
+              StringComparison.Ordinal));
+      visibleEntries.Add(
+          new ScenarioTreeVisibleEntry(
+              valueIndex,
+              matchingAtkValueEntry?.QuestRowId ?? 0,
+              originalText,
+              textNodeAddress));
     }
 
     return visibleEntries;
@@ -260,11 +387,43 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
             visibleEntry.QuestRowId,
             out var todoProgressSnapshot))
     {
+      if (this.TryResolveScenarioTreeFallbackTranslation(
+              visibleEntry,
+              sourceLanguage,
+              out var fallbackTranslatedText))
+      {
+        PluginRuntimeLog.Debug(
+            ScenarioTreeAddonName,
+            "resolve-fallback valueIndex={ValueIndex} questRowId={QuestRowId} text='{QuestText}' translatedReady=true",
+            visibleEntry.ValueIndex,
+            visibleEntry.QuestRowId,
+            this.SummarizeDiagnosticText(visibleEntry.OriginalText));
+        runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
+            visibleEntry.ValueIndex,
+            progressKey: string.Empty,
+            visibleEntry.OriginalText,
+            fallbackTranslatedText,
+            visibleEntry.TextNodeKey);
+        return true;
+      }
+
+      if (visibleEntry.QuestRowId != 0)
+      {
+        PluginRuntimeLog.Debug(
+            ScenarioTreeAddonName,
+            "resolve-pending valueIndex={ValueIndex} questRowId={QuestRowId} text='{QuestText}' reason='todo-progress-unavailable'",
+            visibleEntry.ValueIndex,
+            visibleEntry.QuestRowId,
+            this.SummarizeDiagnosticText(visibleEntry.OriginalText));
+        this.RequestAcceptedQuestPrefetch(visibleEntry.QuestRowId);
+      }
+
       runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
           visibleEntry.ValueIndex,
           progressKey: string.Empty,
           visibleEntry.OriginalText,
-          visibleEntry.OriginalText);
+          visibleEntry.OriginalText,
+          visibleEntry.TextNodeKey);
       return false;
     }
 
@@ -273,31 +432,169 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
         GetGameVersion());
     var questPlate = questCanonicalData.ToQuestPlate(
         sourceLanguage.PersistenceCode,
-        LangDict[LanguageInt].Code,
+        RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now);
     var foundQuestPlate = this.FindQuestPlate(questPlate);
-    if (foundQuestPlate == null ||
-        !this.TryResolveScenarioTreeTranslatedText(
+    if (foundQuestPlate != null &&
+        this.TryResolveScenarioTreeTranslatedText(
             visibleEntry,
             questCanonicalData,
             foundQuestPlate,
             out var translatedText))
     {
+      PluginRuntimeLog.Debug(
+          ScenarioTreeAddonName,
+          "resolve valueIndex={ValueIndex} questId={QuestId} cacheKey='{CacheKey}' text='{QuestText}' translatedReady=true",
+          visibleEntry.ValueIndex,
+          todoProgressSnapshot.QuestProgress.QuestId,
+          todoProgressSnapshot.CacheKey,
+          this.SummarizeDiagnosticText(visibleEntry.OriginalText));
       runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
           visibleEntry.ValueIndex,
           todoProgressSnapshot.CacheKey,
           visibleEntry.OriginalText,
-          visibleEntry.OriginalText);
-      return false;
+          translatedText,
+          visibleEntry.TextNodeKey);
+      return true;
     }
+
+    PluginRuntimeLog.Debug(
+        ScenarioTreeAddonName,
+        "resolve-pending valueIndex={ValueIndex} questId={QuestId} cacheKey='{CacheKey}' text='{QuestText}' reason='translation-missing'",
+        visibleEntry.ValueIndex,
+        todoProgressSnapshot.QuestProgress.QuestId,
+        todoProgressSnapshot.CacheKey,
+        this.SummarizeDiagnosticText(visibleEntry.OriginalText));
+    this.RequestAcceptedQuestPrefetch(
+        todoProgressSnapshot.QuestProgress.QuestId);
 
     runtimeEntry = this.CreateScenarioTreeRuntimeEntry(
         visibleEntry.ValueIndex,
         todoProgressSnapshot.CacheKey,
         visibleEntry.OriginalText,
-        translatedText);
-    return true;
+        visibleEntry.OriginalText,
+        visibleEntry.TextNodeKey);
+    return false;
+  }
+
+  /// <summary>
+  ///     Resolves ScenarioTree text from the broker cache or from a legacy
+  ///     visible-text row when canonical quest data is not ready yet.
+  /// </summary>
+  /// <param name="visibleEntry">The visible ScenarioTree slot.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <param name="progressKey">The stable quest progress key, if known.</param>
+  /// <param name="translatedText">The resolved translated text.</param>
+  /// <returns><c>true</c> when translated text is available.</returns>
+  private bool TryResolveScenarioTreeFallbackTranslation(
+      ScenarioTreeVisibleEntry visibleEntry,
+      SourceClientLanguage sourceLanguage,
+      out string translatedText)
+  {
+    translatedText = string.Empty;
+
+    var fallbackQuestPlate = this.CreateQuestPlate(
+        sourceLanguage,
+        visibleEntry.OriginalText,
+        string.Empty);
+    var foundFallbackQuestPlate = this.FindQuestPlateByName(fallbackQuestPlate);
+    if (foundFallbackQuestPlate != null &&
+        IsTranslatedPayloadReady(foundFallbackQuestPlate.TranslatedQuestName))
+    {
+      translatedText =
+          foundFallbackQuestPlate.TranslatedQuestName ?? string.Empty;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Applies a ScenarioTree objective-row translation when the source text
+  ///     matches canonical objective rows.
+  /// </summary>
+  /// <param name="questPlate">The quest plate being updated.</param>
+  /// <param name="questCanonicalData">The canonical quest payload.</param>
+  /// <param name="originalText">The visible source text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <returns><c>true</c> when at least one objective row was updated.</returns>
+  private bool TryApplyScenarioTreeObjectiveTranslation(
+      QuestPlate questPlate,
+      QuestCanonicalData questCanonicalData,
+      string originalText,
+      string translatedText)
+  {
+    var applied = false;
+    foreach (var rowKey in questCanonicalData.EnumerateObjectiveRowKeysByText(
+                 originalText))
+    {
+      questPlate.SetTranslatedObjectiveText(
+          rowKey,
+          originalText,
+          translatedText);
+      applied = true;
+    }
+
+    return applied;
+  }
+
+  /// <summary>
+  ///     Applies a ScenarioTree summary-row translation when the source text
+  ///     matches canonical summary rows.
+  /// </summary>
+  /// <param name="questPlate">The quest plate being updated.</param>
+  /// <param name="questCanonicalData">The canonical quest payload.</param>
+  /// <param name="originalText">The visible source text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <returns><c>true</c> when at least one summary row was updated.</returns>
+  private bool TryApplyScenarioTreeSummaryTranslation(
+      QuestPlate questPlate,
+      QuestCanonicalData questCanonicalData,
+      string originalText,
+      string translatedText)
+  {
+    var applied = false;
+    foreach (var rowKey in questCanonicalData.EnumerateSummaryRowKeysByText(
+                 originalText))
+    {
+      questPlate.SetTranslatedSummaryText(
+          rowKey,
+          originalText,
+          translatedText);
+      applied = true;
+    }
+
+    return applied;
+  }
+
+  /// <summary>
+  ///     Applies a ScenarioTree system-row translation when the source text
+  ///     matches canonical system rows.
+  /// </summary>
+  /// <param name="questPlate">The quest plate being updated.</param>
+  /// <param name="questCanonicalData">The canonical quest payload.</param>
+  /// <param name="originalText">The visible source text.</param>
+  /// <param name="translatedText">The translated text.</param>
+  /// <returns><c>true</c> when at least one system row was updated.</returns>
+  private bool TryApplyScenarioTreeSystemTranslation(
+      QuestPlate questPlate,
+      QuestCanonicalData questCanonicalData,
+      string originalText,
+      string translatedText)
+  {
+    var applied = false;
+    foreach (var rowKey in questCanonicalData.EnumerateSystemRowKeysByText(
+                 originalText))
+    {
+      questPlate.SetTranslatedSystemText(
+          rowKey,
+          originalText,
+          translatedText);
+      applied = true;
+    }
+
+    return applied;
   }
 
   /// <summary>
@@ -523,19 +820,25 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// <param name="progressKey">The stable quest progress key.</param>
   /// <param name="originalText">The original source text.</param>
   /// <param name="translatedText">The translated text.</param>
+  /// <param name="textNodeKey">The backing visible text-node key, if any.</param>
   /// <returns>The runtime entry.</returns>
   private ScenarioTreeRuntimeEntry CreateScenarioTreeRuntimeEntry(
       int valueIndex,
       string progressKey,
       string originalText,
-      string translatedText)
+      string translatedText,
+      nint textNodeKey)
   {
     return new ScenarioTreeRuntimeEntry(
-        this.BuildScenarioTreeRuntimeEntryKey(progressKey, valueIndex),
+        this.BuildScenarioTreeRuntimeEntryKey(
+            progressKey,
+            valueIndex,
+            textNodeKey),
         progressKey,
         valueIndex,
         originalText,
-        translatedText);
+        translatedText,
+        textNodeKey);
   }
 
   /// <summary>
@@ -543,15 +846,20 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="progressKey">The quest progress key.</param>
   /// <param name="valueIndex">The addon value index.</param>
+  /// <param name="textNodeKey">The backing visible text-node key, if any.</param>
   /// <returns>The stable runtime key.</returns>
   private string BuildScenarioTreeRuntimeEntryKey(
       string progressKey,
-      int valueIndex)
+      int valueIndex,
+      nint textNodeKey)
   {
     var effectiveProgressKey = string.IsNullOrWhiteSpace(progressKey)
         ? "pending"
         : progressKey;
-    return $"{ScenarioTreeHoverPrefix}{effectiveProgressKey}-{valueIndex}";
+    var stableNodeKey = textNodeKey == nint.Zero
+        ? valueIndex.ToString(CultureInfo.InvariantCulture)
+        : $"node-{textNodeKey:X}";
+    return $"{ScenarioTreeHoverPrefix}{effectiveProgressKey}-{stableNodeKey}";
   }
 
   /// <summary>
@@ -561,12 +869,27 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="valueIndex">The addon value index.</param>
   /// <param name="visibleText">The current visible text.</param>
+  /// <param name="textNodeKey">The backing visible text-node key, if any.</param>
   /// <returns>The original source text for that slot.</returns>
   private string ResolveOriginalScenarioTreeText(
       int valueIndex,
-      string visibleText)
+      string visibleText,
+      nint textNodeKey = 0)
   {
-    if (this.scenarioTreeRuntimeEntries.TryGetValue(valueIndex, out var previousEntry) &&
+    ScenarioTreeRuntimeEntry? previousEntry = null;
+    if (textNodeKey != nint.Zero)
+    {
+      previousEntry = this.scenarioTreeRuntimeEntries.Values.FirstOrDefault(
+          entry => entry.TextNodeKey == textNodeKey);
+    }
+    else
+    {
+      this.scenarioTreeRuntimeEntries.TryGetValue(
+          valueIndex,
+          out previousEntry);
+    }
+
+    if (previousEntry is not null &&
         !string.IsNullOrWhiteSpace(previousEntry.OriginalText))
     {
       return QuestAddonOriginalTextHelper.ResolveOriginalVisibleText(
@@ -600,8 +923,21 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     {
       if (this.ScenarioTreeWritesNativeTranslation)
       {
-        var displayText = this.GetScenarioTreeTranslatedDisplayText(runtimeEntry.TranslatedText);
-        atkValues[runtimeEntry.ValueIndex].SetManagedString(displayText ?? string.Empty);
+        if (runtimeEntry.TextNodeKey != nint.Zero)
+        {
+          this.ApplyScenarioTreeTextNodePresentation(runtimeEntry);
+          continue;
+        }
+
+        if (atkValues == null)
+        {
+          continue;
+        }
+
+        var displayText = this.GetScenarioTreeTranslatedDisplayText(
+            runtimeEntry.TranslatedText);
+        atkValues[runtimeEntry.ValueIndex].SetManagedString(
+            displayText ?? string.Empty);
         this.scenarioTreeNativeMutationIndices.Add(runtimeEntry.ValueIndex);
       }
     }
@@ -633,6 +969,17 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   {
     foreach (var runtimeEntry in this.scenarioTreeRuntimeEntries.Values)
     {
+      if (runtimeEntry.TextNodeKey != nint.Zero)
+      {
+        this.RestoreScenarioTreeTextNodeOriginal(runtimeEntry);
+        continue;
+      }
+
+      if (atkValues == null)
+      {
+        continue;
+      }
+
       if (!this.scenarioTreeNativeMutationIndices.Remove(runtimeEntry.ValueIndex))
       {
         continue;
@@ -643,6 +990,49 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     }
 
     this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
+  }
+
+  /// <summary>
+  ///     Applies a translated ScenarioTree title directly to the visible text
+  ///     node observed by addon probing.
+  /// </summary>
+  /// <param name="runtimeEntry">The text-node-backed runtime entry.</param>
+  private unsafe void ApplyScenarioTreeTextNodePresentation(
+      ScenarioTreeRuntimeEntry runtimeEntry)
+  {
+    var textNode = (AtkTextNode*)runtimeEntry.TextNodeKey;
+    if (textNode == null || !textNode->IsVisible())
+    {
+      return;
+    }
+
+    var displayText = this.GetScenarioTreeTranslatedDisplayText(
+        runtimeEntry.TranslatedText);
+    textNode->NodeText.SetString(displayText ?? string.Empty);
+    this.scenarioTreeNativeMutationTextNodeKeys.Add(runtimeEntry.TextNodeKey);
+  }
+
+  /// <summary>
+  ///     Restores a ScenarioTree text node only if this handler previously
+  ///     wrote translated text into it.
+  /// </summary>
+  /// <param name="runtimeEntry">The text-node-backed runtime entry.</param>
+  private unsafe void RestoreScenarioTreeTextNodeOriginal(
+      ScenarioTreeRuntimeEntry runtimeEntry)
+  {
+    if (!this.scenarioTreeNativeMutationTextNodeKeys.Remove(
+            runtimeEntry.TextNodeKey))
+    {
+      return;
+    }
+
+    var textNode = (AtkTextNode*)runtimeEntry.TextNodeKey;
+    if (textNode == null)
+    {
+      return;
+    }
+
+    textNode->NodeText.SetString(runtimeEntry.OriginalText ?? string.Empty);
   }
 
   /// <summary>
@@ -676,6 +1066,33 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
     var orderedEntries = this.scenarioTreeRuntimeEntries.Values
         .OrderBy(entry => entry.ValueIndex)
         .ToList();
+    var textNodeEntries = orderedEntries
+        .Where(entry => entry.TextNodeKey != nint.Zero)
+        .ToList();
+    if (textNodeEntries.Count != 0)
+    {
+      foreach (var runtimeEntry in textNodeEntries)
+      {
+        var textNode = (AtkTextNode*)runtimeEntry.TextNodeKey;
+        if (textNode == null || !textNode->IsVisible())
+        {
+          continue;
+        }
+
+        this.RegisterTranslatedHoverTooltip(
+            runtimeEntry.Key,
+            textNode,
+            runtimeEntry.OriginalText,
+            runtimeEntry.TranslatedText,
+            translatedPayloadReady: true,
+            swapEnabled: this.ScenarioTreeHoverShowsOriginal,
+            forceEnabled: true,
+            denseHitbox: true);
+      }
+
+      return;
+    }
+
     var originalText = string.Join(
         $"{Environment.NewLine}{Environment.NewLine}",
         orderedEntries
@@ -809,7 +1226,7 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// </summary>
   /// <param name="type">The lifecycle event.</param>
   /// <param name="args">The lifecycle arguments.</param>
-  private void OnScenarioTreeCleanupEvent(AddonEvent type, AddonArgs args)
+  private unsafe void OnScenarioTreeCleanupEvent(AddonEvent type, AddonArgs args)
   {
     if (!string.Equals(
             args.AddonName,
@@ -819,13 +1236,132 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
       return;
     }
 
+    if (TryGetVisibleScenarioTree(out _, out var atkValues))
+    {
+      this.RestoreScenarioTreeOriginals(atkValues);
+    }
+
     this.scenarioTreeRuntimeEntries.Clear();
     this.scenarioTreeNativeMutationIndices.Clear();
+    this.scenarioTreeNativeMutationTextNodeKeys.Clear();
     this.RemoveHoverTooltipsByPrefix(ScenarioTreeHoverPrefix);
     this.currentScenarioTreeDataReady = false;
     this.lastAppliedDisplayMode = null;
     this.nextScenarioTreeRetryUtc = DateTime.MinValue;
     this.ClearScenarioTreeWaitingState();
+  }
+
+  /// <summary>
+  ///     Resolves the visible ScenarioTree quest title text nodes observed by
+  ///     addon probing.
+  /// </summary>
+  /// <param name="addon">The live ScenarioTree addon.</param>
+  /// <returns>The visible quest-title text node addresses.</returns>
+  private static unsafe List<nint> ResolveScenarioTreeVisibleTitleTextNodes(
+      AtkUnitBase* addon)
+  {
+    List<nint> titleTextNodes = [];
+    foreach (var textNodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
+    {
+      var textNode = (AtkTextNode*)textNodeAddress;
+      if (TryReadScenarioTreeVisibleTitleText(textNode, out _))
+      {
+        titleTextNodes.Add(textNodeAddress);
+      }
+    }
+
+    return titleTextNodes;
+  }
+
+  /// <summary>
+  ///     Reads a ScenarioTree quest title from the probed visible text node.
+  /// </summary>
+  /// <param name="textNode">The candidate text node.</param>
+  /// <param name="visibleText">The readable visible title text.</param>
+  /// <returns><c>true</c> when the node contains a quest title.</returns>
+  private static unsafe bool TryReadScenarioTreeVisibleTitleText(
+      AtkTextNode* textNode,
+      out string visibleText)
+  {
+    visibleText = string.Empty;
+    if (textNode == null ||
+        !textNode->IsVisible() ||
+        textNode->AtkResNode.NodeId != ScenarioTreeQuestTitleNodeId)
+    {
+      return false;
+    }
+
+    visibleText = ReadScenarioTreeTextNodeText(textNode).Trim();
+    return IsScenarioTreeQuestTitleCandidate(visibleText);
+  }
+
+  /// <summary>
+  ///     Determines whether visible ScenarioTree text should be treated as a
+  ///     quest title.
+  /// </summary>
+  /// <param name="visibleText">The text read from the native node.</param>
+  /// <returns><c>true</c> when the text is suitable for translation.</returns>
+  private static bool IsScenarioTreeQuestTitleCandidate(string visibleText)
+  {
+    if (string.IsNullOrWhiteSpace(visibleText))
+    {
+      return false;
+    }
+
+    return !visibleText.StartsWith("X:", StringComparison.OrdinalIgnoreCase) &&
+           !string.Equals(
+               visibleText,
+               "Current Main Scenario Quest",
+               StringComparison.Ordinal) &&
+           !visibleText.Contains(
+               "Confirm Destination",
+               StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Reads the best plain-text representation from a ScenarioTree text
+  ///     node.
+  /// </summary>
+  /// <param name="textNode">The ScenarioTree text node.</param>
+  /// <returns>The readable text, or an empty string.</returns>
+  private static unsafe string ReadScenarioTreeTextNodeText(AtkTextNode* textNode)
+  {
+    if (textNode == null)
+    {
+      return string.Empty;
+    }
+
+    var currentText = textNode->NodeText.ToString();
+    if (!string.IsNullOrWhiteSpace(currentText))
+    {
+      return currentText;
+    }
+
+    try
+    {
+      var originalText = textNode->OriginalTextPointer
+          .AsReadOnlySeStringSpan()
+          .ExtractText();
+      if (!string.IsNullOrWhiteSpace(originalText))
+      {
+        return originalText;
+      }
+    }
+    catch
+    {
+      // Keep falling through to the legacy buffer read below.
+    }
+
+    try
+    {
+      return MemoryHelper.ReadSeStringAsString(
+          out _,
+          (nint)textNode->NodeText.StringPtr.Value);
+    }
+    catch
+    {
+      return string.Empty;
+    }
   }
 
   /// <summary>
@@ -863,10 +1399,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// <param name="ValueIndex">The addon value index.</param>
   /// <param name="QuestRowId">The resolved quest row id from AgentScenarioTree.</param>
   /// <param name="OriginalText">The original visible text.</param>
+  /// <param name="TextNodeKey">The backing visible text-node key, if any.</param>
   private sealed record ScenarioTreeVisibleEntry(
       int ValueIndex,
       uint QuestRowId,
-      string OriginalText);
+      string OriginalText,
+      nint TextNodeKey);
 
   /// <summary>
   ///     Represents one native ScenarioTree quest slot resolved from the agent.
@@ -885,10 +1423,12 @@ internal sealed class ScenarioTreeHandler : QuestAddonHandlerBase
   /// <param name="ValueIndex">The addon value index.</param>
   /// <param name="OriginalText">The original source text.</param>
   /// <param name="TranslatedText">The translated text from the DB.</param>
+  /// <param name="TextNodeKey">The backing visible text-node key, if any.</param>
   private sealed record ScenarioTreeRuntimeEntry(
       string Key,
       string ProgressKey,
       int ValueIndex,
       string OriginalText,
-      string TranslatedText);
+      string TranslatedText,
+      nint TextNodeKey);
 }

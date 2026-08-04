@@ -36,6 +36,10 @@ public static class HostedPreviewPluginSessionFactory
         PrepareHostedConfiguration(options);
         var effectiveDatabasePath = PrepareHostedDatabase(options);
 
+        var serviceReplacements = options.ServiceReplacements is null
+            ? []
+            : new Dictionary<Type, Type>(options.ServiceReplacements);
+
         var container = new MockContainer(
             new MockDalamudConfiguration
             {
@@ -44,7 +48,7 @@ public static class HostedPreviewPluginSessionFactory
                 PluginSavePath = options.PluginSavePath,
             },
             builder => { },
-            [],
+            serviceReplacements,
             false);
 
         try

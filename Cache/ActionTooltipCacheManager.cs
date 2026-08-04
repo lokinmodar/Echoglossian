@@ -5,6 +5,7 @@
 
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.NativeUI.Helpers;
 
 namespace Echoglossian.Cache;
 
@@ -911,10 +912,12 @@ public static class ActionTooltipCacheManager
     /// </returns>
     private static bool HasCompleteTranslation(ActionTooltip row)
     {
-        return !string.IsNullOrWhiteSpace(row.TranslatedActionName) &&
-               (string.IsNullOrWhiteSpace(row.ActionDescription) ||
-                !string.IsNullOrWhiteSpace(
-                    row.TranslatedActionDescription));
+        return StructuredTooltipTranslationValidation
+            .HasCompleteMeaningfulTranslation(
+                row.ActionName,
+                row.ActionDescription,
+                row.TranslatedActionName,
+                row.TranslatedActionDescription);
     }
 
     /// <summary>

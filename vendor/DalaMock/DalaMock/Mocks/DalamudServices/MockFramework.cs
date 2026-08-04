@@ -75,13 +75,6 @@ public class MockFramework : IDisposable, IFramework, IMockService
     /// <inheritdoc/>
     public bool IsFrameworkUnloading { get; internal set; }
 
-    /// <inheritdoc/>
-    public IDebouncer CreateDebouncer(TimeSpan delay, System.Action action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-        return new MockDebouncer(this, delay, action);
-    }
-
     public TaskFactory GetTaskFactory()
     {
         throw new NotImplementedException();
@@ -426,105 +419,6 @@ public class MockFramework : IDisposable, IFramework, IMockService
     private delegate bool OnUpdateDetour(IntPtr framework);
 
     private delegate IntPtr OnDestroyDetour(); // OnDestroyDelegate
-
-    private sealed class MockDebouncer : IDebouncer
-    {
-        private readonly System.Action action;
-        private readonly TimeSpan delay;
-        private readonly MockFramework framework;
-        private readonly object syncRoot = new();
-        private CancellationTokenSource? cancellationTokenSource;
-        private bool disposed;
-
-        internal MockDebouncer(MockFramework framework, TimeSpan delay, System.Action action)
-        {
-            this.framework = framework;
-            this.delay = delay;
-            this.action = action;
-        }
-
-        /// <inheritdoc/>
-        public bool IsPending { get; private set; }
-
-        /// <inheritdoc/>
-        public void Debounce()
-        {
-            CancellationTokenSource cts;
-            lock (this.syncRoot)
-            {
-                ObjectDisposedException.ThrowIf(this.disposed, this);
-
-                this.cancellationTokenSource?.Cancel();
-                this.cancellationTokenSource?.Dispose();
-
-                cts = new CancellationTokenSource();
-                this.cancellationTokenSource = cts;
-                this.IsPending = true;
-            }
-
-            _ = this.framework.RunOnTick(
-                () => this.ExecutePendingAction(cts),
-                this.delay,
-                cancellationToken: cts.Token);
-        }
-
-        /// <inheritdoc/>
-        public void Cancel()
-        {
-            CancellationTokenSource? cts;
-            lock (this.syncRoot)
-            {
-                cts = this.cancellationTokenSource;
-                this.cancellationTokenSource = null;
-                this.IsPending = false;
-            }
-
-            cts?.Cancel();
-            cts?.Dispose();
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            lock (this.syncRoot)
-            {
-                if (this.disposed)
-                {
-                    return;
-                }
-
-                this.disposed = true;
-            }
-
-            this.Cancel();
-        }
-
-        private void ExecutePendingAction(CancellationTokenSource scheduledCts)
-        {
-            lock (this.syncRoot)
-            {
-                if (!ReferenceEquals(this.cancellationTokenSource, scheduledCts) || this.disposed)
-                {
-                    return;
-                }
-
-                this.cancellationTokenSource = null;
-                this.IsPending = false;
-            }
-
-            try
-            {
-                if (!scheduledCts.IsCancellationRequested)
-                {
-                    this.action();
-                }
-            }
-            finally
-            {
-                scheduledCts.Dispose();
-            }
-        }
-    }
 
     private abstract class RunOnNextTickTaskBase
     {

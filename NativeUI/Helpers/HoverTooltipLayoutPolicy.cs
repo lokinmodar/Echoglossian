@@ -53,6 +53,20 @@ internal static class HoverTooltipLayoutPolicy
   }
 
   /// <summary>
+  ///     Resolves a stable maximum width for rich original SeString text
+  ///     rendered directly by ImGui inside an auto-sized hover tooltip.
+  /// </summary>
+  /// <param name="config">The live plugin configuration.</param>
+  /// <param name="viewportWidth">The current main-viewport width.</param>
+  /// <returns>The stable rich-text wrap width.</returns>
+  public static float ResolveRichOriginalImGuiMaxWidth(
+      Config config,
+      float viewportWidth)
+  {
+    return ResolveTextureMaxWidth(config, viewportWidth);
+  }
+
+  /// <summary>
   ///     Resolves the maximum width used for texture-backed hover tooltips,
   ///     including adaptive widening for long text and optional measured
   ///     candidate selection for very long text.

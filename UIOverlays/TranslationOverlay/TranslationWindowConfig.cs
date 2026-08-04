@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Dalamud.Game.Gui.Toast;
+
 namespace Echoglossian.UIOverlays.TranslationOverlay;
 
 /// <summary>
@@ -26,6 +28,15 @@ internal enum TranslationOverlaySurfaceId
     /// <summary>CutSceneSelectString overlay.</summary>
     CutSceneSelectString,
 
+    /// <summary>SelectYesNo overlay.</summary>
+    SelectYesNo,
+
+    /// <summary>SelectOk overlay.</summary>
+    SelectOk,
+
+    /// <summary>SelectString overlay.</summary>
+    SelectString,
+
     /// <summary>Text Gimmick Hint overlay.</summary>
     TextGimmickHint,
 
@@ -44,8 +55,14 @@ internal enum TranslationOverlaySurfaceId
     /// <summary>Quest toast overlay.</summary>
     QuestToast,
 
+    /// <summary>Nameplate overlay.</summary>
+    NamePlate,
+
     /// <summary>Chat bubble overlay.</summary>
     ChatBubble,
+
+    /// <summary>Tooltip addon anchored overlay.</summary>
+    TooltipAddon,
 
     /// <summary>ActionDetail overlay.</summary>
     ActionDetail,
@@ -95,13 +112,18 @@ internal record TranslationWindowConfig(
       TranslationOverlaySurfaceId.TalkSubtitle => FromConfigTalkSubtitle(config),
       TranslationOverlaySurfaceId.MiniTalk => FromConfigForMiniTalk(config),
       TranslationOverlaySurfaceId.CutSceneSelectString => FromConfigForCutSceneSelectString(config),
+      TranslationOverlaySurfaceId.SelectYesNo => FromConfigForSelectYesNo(config),
+      TranslationOverlaySurfaceId.SelectOk => FromConfigForSelectOk(config),
+      TranslationOverlaySurfaceId.SelectString => FromConfigForSelectString(config),
       TranslationOverlaySurfaceId.TextGimmickHint => FromConfigForTextGimmickHint(config),
       TranslationOverlaySurfaceId.WideTextToast => FromConfigForWideTextToast(config),
       TranslationOverlaySurfaceId.ErrorToast => FromConfigForErrorToast(config),
       TranslationOverlaySurfaceId.AreaToast => FromConfigForAreaToast(config),
       TranslationOverlaySurfaceId.ClassChangeToast => FromConfigForClassChangeToast(config),
       TranslationOverlaySurfaceId.QuestToast => FromConfigForQuestToast(config),
+      TranslationOverlaySurfaceId.NamePlate => FromConfigForNamePlate(config),
       TranslationOverlaySurfaceId.ChatBubble => FromConfigForChatBubble(config),
+      TranslationOverlaySurfaceId.TooltipAddon => FromConfigForTooltipAddon(config),
       TranslationOverlaySurfaceId.ActionDetail or TranslationOverlaySurfaceId.ItemDetail =>
           throw new NotSupportedException(
               $"The {surfaceId} surface is rendered through the tooltip path."),
@@ -214,6 +236,72 @@ internal record TranslationWindowConfig(
   }
 
   /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for SelectYesNo overlays.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForSelectYesNo(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.SelectYesNo,
+        DefaultTitle: Resources.SelectionDialogsTabTitle,
+        FontScale: config.CutSceneSelectStringFontScale,
+        WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
+        HeightMultiplier: 1.5f,
+        TextColor: new Vector4(config.OverlayCutSceneSelectStringTextColor.X, config.OverlayCutSceneSelectStringTextColor.Y, config.OverlayCutSceneSelectStringTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiCutSceneSelectStringWindowPosCorrection,
+        ForceShowTitle: true,
+        BackgroundOpacity: config.CutSceneSelectStringBackgroundOpacity,
+        NoBackground: config.CutSceneSelectStringBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for SelectOk overlays.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForSelectOk(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.SelectOk,
+        DefaultTitle: Resources.SelectionDialogsTabTitle,
+        FontScale: config.CutSceneSelectStringFontScale,
+        WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
+        HeightMultiplier: 1.5f,
+        TextColor: new Vector4(config.OverlayCutSceneSelectStringTextColor.X, config.OverlayCutSceneSelectStringTextColor.Y, config.OverlayCutSceneSelectStringTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiCutSceneSelectStringWindowPosCorrection,
+        ForceShowTitle: true,
+        BackgroundOpacity: config.CutSceneSelectStringBackgroundOpacity,
+        NoBackground: config.CutSceneSelectStringBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for SelectString overlays.
+  /// </summary>
+  /// <param name="config"></param>
+  /// <returns></returns>
+  public static TranslationWindowConfig FromConfigForSelectString(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.SelectString,
+        DefaultTitle: Resources.SelectionDialogsTabTitle,
+        FontScale: config.CutSceneSelectStringFontScale,
+        WidthMultiplier: config.ImGuiCutSceneSelectStringWindowWidthMult,
+        HeightMultiplier: 1.5f,
+        TextColor: new Vector4(config.OverlayCutSceneSelectStringTextColor.X, config.OverlayCutSceneSelectStringTextColor.Y, config.OverlayCutSceneSelectStringTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiCutSceneSelectStringWindowPosCorrection,
+        ForceShowTitle: true,
+        BackgroundOpacity: config.CutSceneSelectStringBackgroundOpacity,
+        NoBackground: config.CutSceneSelectStringBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
   /// Creates a <see cref="TranslationWindowConfig"/> instance based on the provided <see cref="Config"/> for text gimmick hint translations.
   /// </summary>
   /// <param name="config"></param>
@@ -264,6 +352,45 @@ internal record TranslationWindowConfig(
         PosCorrection: config.ImGuiWideTextToastWindowPosCorrection,
         ForceShowTitle: false,
         BackgroundOpacity: config.WideTextToastBackgroundOpacity,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance for one
+  /// callback-owned normal-toast placement bucket.
+  /// </summary>
+  /// <param name="config">The active configuration.</param>
+  /// <param name="position">The runtime toast placement.</param>
+  /// <returns>The placement-specific overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForSupportedNormalToastPlacement(
+      Config config,
+      ToastPosition position)
+  {
+    var (widthMultiplier, posCorrection, textColor, backgroundOpacity) =
+        position == ToastPosition.Bottom
+            ? (
+                config.ImGuiBottomToastWindowWidthMult,
+                config.ImGuiBottomToastWindowPosCorrection,
+                config.OverlayBottomToastTextColor,
+                config.BottomToastBackgroundOpacity)
+            : (
+                config.ImGuiTopToastWindowWidthMult,
+                config.ImGuiTopToastWindowPosCorrection,
+                config.OverlayTopToastTextColor,
+                config.TopToastBackgroundOpacity);
+
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.WideTextToast,
+        DefaultTitle: Resources.OverlayWindowTitleWideTextToastTranslation,
+        FontScale: config.WideTextToastFontScale,
+        WidthMultiplier: widthMultiplier,
+        HeightMultiplier: 2.0f,
+        TextColor: new Vector4(textColor.X, textColor.Y, textColor.Z, 1.0f),
+        PosCorrection: posCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: backgroundOpacity,
+        NoBackground: backgroundOpacity <= 0f,
         CenterOnAddon: true,
         AutoSizeToTextWithMaxWidth: true);
   }
@@ -356,6 +483,110 @@ internal record TranslationWindowConfig(
         ForceShowTitle: false,
         BackgroundOpacity: config.QuestToastBackgroundOpacity,
         NoBackground: config.QuestToastBackgroundOpacity <= 0f,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for world-object nameplate translations.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The nameplate overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForNamePlate(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.NamePlate,
+        DefaultTitle: Resources.OverlayWindowTitleNamePlateTranslation,
+        FontScale: config.NamePlateFontScale,
+        WidthMultiplier: config.ImGuiNamePlateWindowWidthMult,
+        HeightMultiplier: 1.0f,
+        TextColor: new Vector4(config.OverlayNamePlateTextColor.X, config.OverlayNamePlateTextColor.Y, config.OverlayNamePlateTextColor.Z, 1.0f),
+        PosCorrection: config.ImGuiNamePlateWindowPosCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.NamePlateBackgroundOpacity,
+        NoBackground: config.NamePlateBackgroundOpacity <= 0f,
+        CenterOnAddon: true,
+        AutoSizeToTextWithMaxWidth: true);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for the Tooltip addon anchored overlay.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <returns>The Tooltip addon anchored-overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForTooltipAddon(Config config)
+  {
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.TooltipAddon,
+        DefaultTitle: Resources.OverlayWindowTitleTooltipAddonTranslation,
+        FontScale: config.TooltipAddonOverlayFontScaleAdjustment,
+        WidthMultiplier: 1.0f,
+        HeightMultiplier: 1.0f,
+        TextColor: new Vector4(
+            config.TooltipAddonOverlayTextColor.X,
+            config.TooltipAddonOverlayTextColor.Y,
+            config.TooltipAddonOverlayTextColor.Z,
+            1.0f),
+        PosCorrection: Vector2.Zero,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.TooltipAddonOverlayBackgroundOpacity,
+        AutoSizeToTextWithMaxWidth: true,
+        ExpandWidthToFitText:
+            config.TooltipAddonOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.MatchNative,
+        MaxWidthViewportFraction:
+            config.TooltipAddonOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.ManualCap
+                ? Math.Clamp(
+                    config.TooltipAddonOverlayManualMaxWidth / 1920f,
+                    0.10f,
+                    0.90f)
+                : 0f);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance for one
+  /// quest-toast placement bucket.
+  /// </summary>
+  /// <param name="config">The active configuration.</param>
+  /// <param name="position">The runtime quest-toast placement.</param>
+  /// <returns>The placement-specific overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForQuestToastPlacement(
+      Config config,
+      QuestToastPosition position)
+  {
+    var (widthMultiplier, posCorrection, textColor, backgroundOpacity) =
+        position switch
+        {
+          QuestToastPosition.Left => (
+              config.ImGuiQuestToastLeftWindowWidthMult,
+              config.ImGuiQuestToastLeftWindowPosCorrection,
+              config.OverlayQuestToastLeftTextColor,
+              config.QuestToastLeftBackgroundOpacity),
+          QuestToastPosition.Right => (
+              config.ImGuiQuestToastRightWindowWidthMult,
+              config.ImGuiQuestToastRightWindowPosCorrection,
+              config.OverlayQuestToastRightTextColor,
+              config.QuestToastRightBackgroundOpacity),
+          _ => (
+              config.ImGuiQuestToastCentreWindowWidthMult,
+              config.ImGuiQuestToastCentreWindowPosCorrection,
+              config.OverlayQuestToastCentreTextColor,
+              config.QuestToastCentreBackgroundOpacity),
+        };
+
+    return new TranslationWindowConfig(
+        SurfaceId: TranslationOverlaySurfaceId.QuestToast,
+        DefaultTitle: Resources.OverlayWindowTitleQuestToastTranslation,
+        FontScale: config.QuestToastFontScale,
+        WidthMultiplier: widthMultiplier,
+        HeightMultiplier: 2.0f,
+        TextColor: new Vector4(textColor.X, textColor.Y, textColor.Z, 1.0f),
+        PosCorrection: posCorrection,
+        ForceShowTitle: false,
+        BackgroundOpacity: backgroundOpacity,
+        NoBackground: backgroundOpacity <= 0f,
         AutoSizeToTextWithMaxWidth: true);
   }
 

@@ -25,6 +25,8 @@ Use these repo sources first:
 - docs/textnode-clientstructs-analysis.md
 - NativeUI/Helpers/DbFirstStructuredStringArrayHelper.cs
 - DBHelpers/StringArrayDataPersistenceHelper.cs
+- https://github.com/Exter-N/Dynamis
+- https://github.com/MidoriKami/VanillaPlus
 
 ## Workflow
 
@@ -39,6 +41,8 @@ Use these repo sources first:
    source identity and pass the contract to `TranslationService`.
 9. Treat blank, generic-provider, unknown, and ambiguous Chinese legacy source
    provenance as non-reusable, and keep overlay-only paths non-mutating.
+10. Route temporary runtime diagnostics through `PluginRuntimeLog` and inspect
+    `Echoglossian.log` before filtering `dalamud.log`.
 
 ## Completion checks
 

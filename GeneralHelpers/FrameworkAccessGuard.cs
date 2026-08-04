@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+
 namespace Echoglossian;
 
 /// <summary>
@@ -11,6 +13,9 @@ namespace Echoglossian;
 /// </summary>
 internal static unsafe class FrameworkAccessGuard
 {
+  private static readonly PlayerScopedFrameworkReadinessGate
+      PlayerScopedReadinessGate = new(TimeSpan.FromSeconds(10));
+
   /// <summary>
   /// Determines whether the current client session is ready for native
   /// framework-backed singleton access.
@@ -23,6 +28,40 @@ internal static unsafe class FrameworkAccessGuard
   {
     return Echoglossian.ClientStateInterface != null &&
            Echoglossian.ClientStateInterface.IsLoggedIn;
+  }
+
+  /// <summary>
+  /// Determines whether player-scoped native runtime work can safely touch
+  /// game state that may lag behind the login flag during zone transitions.
+  /// </summary>
+  /// <returns>
+  /// <see langword="true" /> when the client is logged in and player state has
+  /// a current class/job id; otherwise, <see langword="false" />.
+  /// </returns>
+  public static bool IsClientReadyForPlayerScopedFrameworkAccess()
+  {
+    if (!IsClientReadyForFrameworkAccess())
+    {
+      PlayerScopedReadinessGate.Reset();
+      return false;
+    }
+
+    try
+    {
+      var playerState = PlayerState.Instance();
+      var localPlayer = Echoglossian.ObjectTableInterface?.LocalPlayer;
+      return PlayerScopedReadinessGate.IsReady(
+          Echoglossian.ClientStateInterface.IsLoggedIn,
+          Echoglossian.ClientStateInterface.TerritoryType,
+          localPlayer?.IsValid() == true,
+          playerState != null ? playerState->CurrentClassJobId : (byte)0,
+          DateTime.UtcNow);
+    }
+    catch (InvalidOperationException)
+    {
+      PlayerScopedReadinessGate.Reset();
+      return false;
+    }
   }
 
   /// <summary>

@@ -41,6 +41,12 @@ public class LanguageInfo
 
     public List<int>? SupportedEngines { get; set; }
 
+    /// <summary>
+    ///     Gets or sets a value indicating whether this language is explicitly
+    ///     eligible for the optional native UI replacement diacritics fallback.
+    /// </summary>
+    public bool SupportsNativeReplacementDiacriticsFallback { get; set; }
+
     public bool IsEngineSupported(int engineId)
     {
         return this.SupportedEngines?.Contains(engineId) == true;

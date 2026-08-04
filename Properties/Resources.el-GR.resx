@@ -1,0 +1,660 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Έλεγχος στοιχείων Plugin!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Η λήψη των περιουσιακών στοιχείων plugin ολοκληρώθηκε!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Σφάλμα κατά τη λήψη στοιχείων προσθηκών:</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Προσπαθήστε ξανά αργότερα. Εάν το πρόβλημα παραμένει, επικοινωνήστε με τον προγραμματιστή της προσθήκης.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Όλα τα στοιχεία plugin υπάρχουν!</value>
+  </data>
+  <data name="choice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\choice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Κλείνω</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Τι, πότε είναι και πώς</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Ρυθμίσεις ομιλίας</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Ρυθμίσεις Battle Talk</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Αναδυόμενες ρυθμίσεις</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Ρυθμίσεις χρονικού</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Ρυθμίσεις υποτίτλων TalkSubtitle</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Άλλες ρυθμίσεις</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Ρυθμίσεις μηχανισμού μετάφρασης</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Σχετικά με το Echoglossian</value>
+  </data>
+  <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>Ηχογλωσσιανή διαμόρφωση</value>
+    <comment>Config Window title bar</comment>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>Υποστηρίξτε μας είτε συμβάλλοντας στην ανάπτυξη του έργου, υποβάλλοντας θέματα ή βοηθώντας μας με έναν καφέ.</value>
+  </data>
+  <data name="cutscenechoice" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\cutscenechoice.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>Αυτό το πρόσθετο στοχεύει στην επίλυση ενός από τα μεγαλύτερα ζητήματα για το κοινό που δεν μιλάει αγγλικά, γερμανικά, γαλλικά ή ιαπωνικά: Κατανόηση των διαλόγων και άλλων στοιχείων της διεπαφής χρήστη του παιχνιδιού.</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>Προς το παρόν κάνουμε αυτόματες μεταφράσεις μόνο μέσω του API της Μετάφρασης Google, αλλά στο μέλλον σκοπεύουμε να υποστηρίξουμε άλλα συστήματα μετάφρασης ML. Έχουμε ακόμη και ιδέες που στοχεύουν σε μεταφράσεις πληθοπορισμού, επιμελημένες από την κοινότητα.</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>Σχετικά με το Echoglossian:</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Λήψη επιπλέον στοιχείων plugin στο παρασκήνιο. Περιμένετε να ολοκληρωθεί η λήψη πριν ανοίξετε τις ρυθμίσεις!</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Προσοχή!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Ενεργοποιήστε τη μετάφραση κειμένου παιχνιδιού σε πραγματικό χρόνο</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Χρώμα γραμματοσειράς επικάλυψης:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Ανοίγει το παράθυρο ρύθμισης παραμέτρων Echoglossian</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="HoverTooltipIndicator" xml:space="preserve">
+    <value>(?)</value>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Προσαρμόστε τις επιλογές που σχετίζονται με την επικάλυψη μετάφρασης:</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Η γλώσσα δεν μπορούσε να προσδιοριστεί με αποδεκτό βαθμό βεβαιότητας</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Η επιλεγμένη γλώσσα δεν υποστηρίζεται από το τρέχον διαθέσιμο backend μετάφρασης</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Η επιλεγμένη γλώσσα υποστηρίζεται μόνο χρησιμοποιώντας τις επικαλύψεις plugin λόγω περιορισμών της εγγενούς γραμματοσειράς παιχνιδιού</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Σε ποια γλώσσα θα μεταφραστούν τα πλαίσια διαλόγου εντός του παιχνιδιού.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Γλώσσα προς μετάφραση</value>
+  </data>
+  <data name="logo" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\logo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="minfilia" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\minfilia.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Ηχογλωσσιανός</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>Ο μη εξαντλητικός κατάλογος θεμάτων και TODO είναι διαθέσιμος στον παρακάτω σύνδεσμο:</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Προσαρμόστε τη θέση εάν η επικάλυψη δεν είναι κεντραρισμένη σε σχέση με το πλαίσιο κειμένου διεπαφής χρήστη του παιχνιδιού.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>ΕπικάλυψηΧρώμαΕπιλογή</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Κάντε κλικ για να επιλέξετε το χρώμα γραμματοσειράς επικάλυψης</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Προσαρμογή της κλίμακας γραμματοσειράς επικάλυψης</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Μέγεθος γραμματοσειράς επικάλυψης</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Επιλέξτε το μέγεθος γραμματοσειράς για την επικάλυψη κειμένου</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Πολλαπλασιαστής ύψους επικάλυψης μετάφρασης</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Ομιλία μάχης (γραμμές διαλόγου Enenies) μετάφραση</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Ρύθμιση θέσης</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Εμφάνιση επικάλυψης μεταφρασμένου κειμένου πάνω από το πλαίσιο κειμένου περιβάλλοντος εργασίας χρήστη παιχνιδιού αντί να αντικαταστήσετε το κείμενό του με τη μετάφραση</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Προσαρμογή πλάτους επικάλυψης μετάφρασης</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Πολλαπλασιαστής πλάτους επικάλυψης μετάφρασης</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Απόλυτη διαδρομή προς το φάκελο Echoglossian (μέσα στο φάκελο XIVLauncher -&gt; pluginConfigs)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Πληκτρολογήστε τη διαδρομή και αποθηκεύστε έτσι ώστε το plugin να μπορεί να λειτουργήσει σωστά!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Αγοράστε lokinmodar έναν καφέ</value>
+  </data>
+  <data name="pix" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pix.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Σαρώστε τον κωδικό QR για να μου στείλετε ένα PIX - ισχύει μόνο στη Βραζιλία</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Επιλέξτε τη γλώσσα για το παράθυρο διαμόρφωσης του πρόσθετου</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Παράθυρο ρυθμίσεων LanguageInfo:</value>
+  </data>
+  <data name="prttws" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\prttws.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Σαρώστε τον κωδικό QR για να μου στείλετε ένα PIX - ισχύει μόνο στη Βραζιλία</value>
+  </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Επαναφορά ρυθμίσεων</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Αποθήκευση και κλείσιμο παραθύρου ρύθμισης παραμέτρων</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Στείλτε μου μια δωρεά PIX!</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Ρυθμίσεις για τη Μετάφραση Google:</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian ρυθμίσεις επαναφορά στην προεπιλογή με επιτυχία!</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Εμφάνιση κειμένου διαλόγου "Πρωτότυπο" στην "Επικάλυψη" και "Μεταφρασμένο" στο παράθυρο διαλόγου "Περιβάλλον εργασίας χρήστη παιχνιδιού"</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Προσαρμογή πλάτους επικάλυψης αναδυόμενης μετάφρασης</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Πολλαπλασιαστής πλάτους επικάλυψης τοστ</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>Λίστα TODO στο Github</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Μετάφραση αναδυόμενων μηνυμάτων ονόματος περιοχής εντός παιχνιδιού</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Μετάφραση ομιλίας μάχης</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Μετάφραση αναδυόμενων μηνυμάτων αλλαγής τάξης / εργασίας εντός παιχνιδιού</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Μετάφραση αναδυόμενων μηνυμάτων σφάλματος εντός παιχνιδιού</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Μετάφραση ονομάτων NPC σε παράθυρα διαλόγου</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Μετάφραση μηνυμάτων Quest Toast εντός παιχνιδιού</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Μετάφραση άλλων διαφόρων αναδυόμενων μηνυμάτων εντός του παιχνιδιού</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Μετάφραση διαλόγων εντός παιχνιδιού</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Μετάφραση αναδυόμενων μηνυμάτων εντός παιχνιδιού</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>Οι μεταφράσεις είναι απενεργοποιημένες!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>Οι μεταφράσεις είναι ενεργοποιημένες!</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Αυτή η μηχανή μετάφρασης δεν απαιτεί ειδικές ρυθμίσεις.</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Οι μεταφράσεις είναι ενεργοποιημένες!</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Χρήση επικάλυψης για εμφάνιση αναδυόμενων μεταφράσεων (WIP)</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Εν αναμονή μετάφρασης...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Επιλέξτε τι είδους κείμενο θέλετε να μεταφραστεί στην αντίστοιχη καρτέλα παρακάτω!</value>
+  </data>
+  <data name="WhichToastsToTranslate" xml:space="preserve">
+    <value>Επιλέξτε το είδος των αναδυόμενων μηνυμάτων εντός του παιχνιδιού που θα μεταφραστούν</value>
+  </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Αντιμετώπιση προβλημάτων</value>
+  </data>
+  <data name="PluginAssetsDownloadedText" xml:space="preserve">
+    <value>Λήψη στοιχείων plugin!</value>
+  </data>
+  <data name="PluginAssetsNotDownloadedText" xml:space="preserve">
+    <value>Εάν δείτε αλλοιωμένο κείμενο ή μη έγκυρους χαρακτήρες στο παράθυρο μετάφρασης\nit είναι ενδεικτικό ότι ορισμένες γραμματοσειρές στοιχείων προσθέτων ενδέχεται να λείπουν ή να είναι κατεστραμμένες.\n\n Κάνοντας κλικ στο παρακάτω κουμπί, ενεργοποιείται ένας έλεγχος στοιχείων και γίνεται εκ νέου λήψη τους.</value>
+  </data>
+  <data name="DownloadPluginAssetsButtonText" xml:space="preserve">
+    <value>Αναγκαστική εκ νέου λήψη στοιχείων plugin</value>
+  </data>
+  <data name="CurrentPluginAssetsStatus" xml:space="preserve">
+    <value>Γίνεται λήψη των στοιχείων της προσθήκης;</value>
+  </data>
+  <data name="ConfigTab9Name" xml:space="preserve">
+    <value>Διάφορα. Ρυθμίσεις</value>
+  </data>
+  <data name="ConfigTab9Text" xml:space="preserve">
+    <value>Διάφορες επιλογές και ρυθμίσεις plugin</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardText" xml:space="preserve">
+    <value>Αυτόματη αντιγραφή της τελευταίας μετάφρασης στο Πρόχειρο της προσθήκης</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardTooltipText" xml:space="preserve">
+    <value>Αυτή η ρύθμιση αντιγράφει την τελευταία μετάφραση και το κείμενο προέλευσης στο πρόχειρο (Works with Talk και BattleTalk)</value>
+  </data>
+  <data name="TranslateJournalToggle" xml:space="preserve">
+    <value>Μετάφραση ονόματος, περιγραφής και στόχων αναζήτησης (WIP)</value>
+  </data>
+  <data name="DeeplTranslatorApiKey" xml:space="preserve">
+    <value>Προσθέστε το κλειδί API DeepL</value>
+  </data>
+  <data name="DeepLTranslatorAPIKeyLink" xml:space="preserve">
+    <value>Κάντε κλικ εδώ για να δημιουργήσετε ένα κλειδί API DeepL</value>
+  </data>
+  <data name="SettingsForDeepLTransText" xml:space="preserve">
+    <value>Προαιρετικές ρυθμίσεις για το DeepL:</value>
+  </data>
+  <data name="TranslationEngineChoose" xml:space="preserve">
+    <value>Επιλέξτε τη μηχανή μετάφρασης</value>
+  </data>
+  <data name="DeepLTransAPIKey" xml:space="preserve">
+    <value>Χρήση κλειδιού API (συνιστάται)</value>
+  </data>
+  <data name="TranslateTextsAgain" xml:space="preserve">
+    <value>Μεταφράστε ξανά αποθηκευμένα μεταφρασμένα κείμενα με την επιλεγμένη μηχανή μετάφρασης</value>
+  </data>
+  <data name="TranslateTalkSubtitleToggleLabel" xml:space="preserve">
+    <value>Μετάφραση Cutscene Subtitles</value>
+  </data>
+  <data name="ChatGptApiKey" xml:space="preserve">
+    <value>Κλειδί API ChatGPT</value>
+  </data>
+  <data name="SettingsForChatGptTransText" xml:space="preserve">
+    <value>Ρυθμίσεις για το ChatGPT</value>
+  </data>
+  <data name="ChatGPTAPIKeyLink" xml:space="preserve">
+    <value>Κάντε κλικ εδώ για να δημιουργήσετε ένα κλειδί API OpenAi</value>
+  </data>
+  <data name="RemoveDiacriticsToggle" xml:space="preserve">
+    <value>Αναλύστε το μεταφρασμένο κείμενο αντικαθιστώντας τα διακριτικά με τα κοινά ισοδύναμά τους γράμματα</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση του ChatGPT δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="ChatGPTTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση του ChatGPT δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="TranslationError" xml:space="preserve">
+    <value>Μεταφραστικό λάθος:</value>
+  </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση DeepSeek δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση DeepSeek δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση Gemini δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση Gemini δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>Το κλειδί API είναι κενό ή δεν είναι έγκυρο. Η μετάφραση της Microsoft δεν θα είναι διαθέσιμη.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Η μετάφραση της Microsoft δεν είναι διαθέσιμη. Ελέγξτε το κλειδί API σας.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Προσαρμόστε την προτροπή που χρησιμοποιείται για τη μετάφραση. Απαιτούνται όλα τα ακόλουθα σύμβολα κράτησης θέσης:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Προσαρμογή προτροπής μεταφραστή AI</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Λείπουν ένα ή περισσότερα απαιτούμενα σύμβολα κράτησης θέσης!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Επαναφορά στην προεπιλογή</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Ζωντανή προεπισκόπηση με εισαγωγή δείγματος:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Αντιγραφή προεπισκόπησης</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Σώζω</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Προεπισκόπηση</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Επεξεργαστής προτροπής</value>
+  </data>
+  <data name="ResetSettingsMessageText" xml:space="preserve">
+    <value>Μπορείτε να επαναφέρετε τη διαμόρφωση του Echoglossian στην προεπιλογή χρησιμοποιώντας το παρακάτω κουμπί:</value>
+  </data>
+  <data name="ResetSettingsButtonText" xml:space="preserve">
+    <value>Επαναφορά ρύθμισης παραμέτρων στις προεπιλογές</value>
+  </data>
+  <data name="TalkTabTitle" xml:space="preserve">
+    <value>Μιλώ</value>
+  </data>
+  <data name="BattleTalkTabTitle" xml:space="preserve">
+    <value>BattleTalk</value>
+  </data>
+  <data name="ToastTabTitle" xml:space="preserve">
+    <value>Πρόποση</value>
+  </data>
+  <data name="SubtitleTabTitle" xml:space="preserve">
+    <value>ΣυζήτησηΥπότιτλος</value>
+  </data>
+  <data name="TranslateToastToggle" xml:space="preserve">
+    <value>Μετάφραση αναδυόμενων μηνυμάτων</value>
+  </data>
+  <data name="SettingsForDeepSeekText" xml:space="preserve">
+    <value>Ρυθμίσεις για το DeepSeek</value>
+  </data>
+  <data name="SettingsForOpenRouterText" xml:space="preserve">
+    <value>Ρυθμίσεις για το OpenRouter Engine</value>
+  </data>
+  <data name="AWSAccessKey" xml:space="preserve">
+    <value>Κλειδί πρόσβασης AWS</value>
+  </data>
+  <data name="SettingsForAmazonTranslateText" xml:space="preserve">
+    <value>Ρυθμίσεις για το Amazon Translate:</value>
+  </data>
+  <data name="AWSSecretKey" xml:space="preserve">
+    <value>Μυστικό κλειδί AWS</value>
+  </data>
+  <data name="Region" xml:space="preserve">
+    <value>Περιοχή</value>
+  </data>
+  <data name="APIKey" xml:space="preserve">
+    <value>Κλειδί API</value>
+  </data>
+  <data name="Endpoint" xml:space="preserve">
+    <value>Τελικό σημείο</value>
+  </data>
+  <data name="SettingsForMicrosoftText" xml:space="preserve">
+    <value>Ρυθμίσεις για το Microsoft Translator</value>
+  </data>
+  <data name="MicrosoftTranslatorAPIKey" xml:space="preserve">
+    <value>Κλειδί API του Microsoft Translator</value>
+  </data>
+  <data name="ModelEndpoint" xml:space="preserve">
+    <value>Τελικό σημείο μοντέλου</value>
+  </data>
+  <data name="LLMModel" xml:space="preserve">
+    <value>Μοντέλο LLM</value>
+  </data>
+  <data name="Temperature" xml:space="preserve">
+    <value>Θερμοκρασία</value>
+  </data>
+  <data name="NoSettingsForEngine" xml:space="preserve">
+    <value>Δεν απαιτούνται ρυθμίσεις για αυτόν τον κινητήρα</value>
+  </data>
+  <data name="SettingsForGeminiText" xml:space="preserve">
+    <value>Ρυθμίσεις για τους Διδύμους:</value>
+  </data>
+  <data name="SettingsForLibreTranslateText" xml:space="preserve">
+    <value>Ρυθμίσεις για το LibreTranslate:</value>
+  </data>
+  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
+    <value>Τελικό σημείο API LibreTranslate</value>
+  </data>
+  <data name="SettingsForOllamaText" xml:space="preserve">
+    <value>Ρυθμίσεις για το Ollama:</value>
+  </data>
+  <data name="YandexCloudFolderId" xml:space="preserve">
+    <value>Αναγνωριστικό φακέλου</value>
+  </data>
+  <data name="SettingsForYandexCloudText" xml:space="preserve">
+    <value>Ρυθμίσεις για το YandexCloud:</value>
+  </data>
+  <data name="YandexCloudApiKey" xml:space="preserve">
+    <value>Κλειδί API YandexCloud</value>
+  </data>
+  <data name="ShowInCutscenesLabel" xml:space="preserve">
+    <value>Εμφάνιση σε cutscenes</value>
+  </data>
+  <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
+    <value>Αντιγραφή μετάφρασης στο πρόχειρο</value>
+  </data>
+  <data name="FontSizeLabel" xml:space="preserve">
+    <value>Μέγεθος γραμματοσειράς:</value>
+  </data>
+  <data name="TranslateYesNoScreenLabel" xml:space="preserve">
+    <value>Μετάφραση οθόνης Ναι/Όχι</value>
+  </data>
+  <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
+    <value>Μετάφραση του CutSceneSelectString</value>
+  </data>
+  <data name="TranslateSelectStringLabel" xml:space="preserve">
+    <value>Μετάφραση του SelectString</value>
+  </data>
+  <data name="TranslateSelectOkLabel" xml:space="preserve">
+    <value>Μετάφραση του SelectOk</value>
+  </data>
+  <data name="GeminiAPIKey" xml:space="preserve">
+    <value>Κλειδί API Gemini</value>
+  </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Ρυθμίσεις για το δημόσιο μεταφραστή Yandex</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Ρυθμίσεις για GTranslate μεταφραστής</value>
+  </data>
+  <data name="ConfigTabGeneralName" xml:space="preserve">
+    <value>Γενικές ρυθμίσεις</value>
+  </data>
+  <data name="OtherUIElementsTabTitle" xml:space="preserve">
+    <value>Άλλα στοιχεία περιβάλλοντος εργασίας χρήστη</value>
+  </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Είστε βέβαιοι ότι θέλετε να επαναφέρετε όλες τις ρυθμίσεις στις προεπιλογές;</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Ναι, επαναφορά</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Επαναφέρετε ΟΛΕΣ τις ρυθμίσεις Echoglossian στις προεπιλογές</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Ακυρώνω</value>
+  </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>Μετάφραση του παραθύρου "χαρακτήρας"</value>
+  </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>Τελικό σημείο API</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>Ρυθμίσεις για το LMStudio:</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Λήψη ζωντανών μοντέλων</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Υπόδειγμα</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Χρήση ελέγχου ταυτότητας</value>
+  </data>
+  <data name="DataInsertedUpdatedInStringArrayDatasTable" xml:space="preserve">
+    <value>Δεδομένα που εισάγονται/ενημερώνονται στον πίνακα StringArrayDatas.</value>
+  </data>
+  <data name="ErrorSavingData" xml:space="preserve">
+    <value>ErrorSavingData: {0}</value>
+  </data>
+  <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
+    <value>Ανοίγει το Echoglossian DB Editor.</value>
+  </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Σαρώστε τον κωδικό QR για να στείλετε κρυπτογράφηση. Οποιοδήποτε ποσό εκτιμάται :)</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Πορτοφόλι κρυπτογράφησης</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Αποστολή κρύπτο</value>
+  </data>
+  <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Δεν είναι δυνατή η φόρτωση οντότητας για επεξεργασία.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Διαγράφω</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Δεν έχουν φορτωθεί εγγραφές.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Δεν βρέθηκαν εγγραφές σε αυτόν τον πίνακα.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Δεν υπάρχουν ανυσματικές ιδιότητες για εμφάνιση.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Φορτώσετε εκ νέου</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Προηγούμενο</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Σελίδα</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Επόμενος</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Μέγεθος σελίδας:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Εξαγωγή επιλεγμένου CSV</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Εξαγωγή σελίδας CSV</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Διαγραφή επιλεγμένων</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Echoglossian DB Editor</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Επιλέξτε έναν πίνακα για να προβάλετε τις εγγραφές του.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Τραπέζι</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Η εγγραφή αποθηκεύτηκε!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Η εγγραφή διαγράφηκε</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Διαγραμμένες εγγραφές {0}</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Αντιγραφή {0} εγγραφές στο πρόχειρο</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Βοήθεια</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Συμβουλή: Κάντε διπλό κλικ σε μια γραμμή για επεξεργασία.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV Εξαγωγή αντιγράφων στο πρόχειρο</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Φορτωμένες εγγραφές {0}</value>
+  </data>
+  <data name="TooltipRegisterLoggingHelpMessage" xml:space="preserve">
+    <value>Temporarily logs hover-tooltip registrations and hover hits. Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingUsage" xml:space="preserve">
+    <value>Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingInvalidDurationFormat" xml:space="preserve">
+    <value>Invalid tooltip logging duration. Use values like 90s or 15m, up to {0} minutes.</value>
+  </data>
+  <data name="TooltipRegisterLoggingNoActiveSession" xml:space="preserve">
+    <value>No active tooltip registration logging session to stop.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStopped" xml:space="preserve">
+    <value>Tooltip registration logging stopped.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStartedFormat" xml:space="preserve">
+    <value>Tooltip registration logging started for surface '{0}' for {1}. Check Echoglossian.log for register and hover-hit diagnostics.</value>
+  </data>
+</root>

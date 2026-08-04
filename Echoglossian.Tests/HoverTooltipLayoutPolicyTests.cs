@@ -58,6 +58,33 @@ public class HoverTooltipLayoutPolicyTests
     }
 
     /// <summary>
+    ///     Ensures rich SeString originals receive the same stable width cap
+    ///     as texture-backed tooltips instead of consulting an auto-sized
+    ///     tooltip window's remaining content width.
+    /// </summary>
+    /// <param name="viewportWidth">The current main-viewport width.</param>
+    /// <param name="expected">The expected stable wrap width.</param>
+    [Theory]
+    [InlineData(1920f, 720f)]
+    [InlineData(1280f, 537.6f)]
+    public void ResolveRichOriginalImGuiMaxWidth_UsesStableViewportCap(
+        float viewportWidth,
+        float expected)
+    {
+        var config = new Config
+        {
+            HoverTooltipMaxWidth = 720f,
+        };
+
+        Assert.Equal(
+            expected,
+            HoverTooltipLayoutPolicy.ResolveRichOriginalImGuiMaxWidth(
+                config,
+                viewportWidth),
+            precision: 3);
+    }
+
+    /// <summary>
     ///     Ensures short tooltip text keeps using the base width and does not
     ///     pay for measurement callbacks.
     /// </summary>

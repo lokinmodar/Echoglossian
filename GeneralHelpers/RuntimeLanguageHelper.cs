@@ -131,6 +131,23 @@ public static class RuntimeLanguageHelper
     }
 
     /// <summary>
+    ///     Gets the configured translation target language as the user-facing
+    ///     display name currently registered at runtime.
+    /// </summary>
+    /// <param name="languageIndex">The configured target-language index.</param>
+    /// <returns>The configured target language display name.</returns>
+    public static string GetConfiguredTargetLanguageDisplayName(int languageIndex)
+    {
+        if (!LangDict.TryGetValue(languageIndex, out var languageInfo) ||
+            string.IsNullOrWhiteSpace(languageInfo.LanguageName))
+        {
+            return string.Empty;
+        }
+
+        return languageInfo.LanguageName;
+    }
+
+    /// <summary>
     ///     Determines whether two language values represent the same effective
     ///     language.
     /// </summary>

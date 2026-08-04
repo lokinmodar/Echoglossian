@@ -75,14 +75,19 @@ public static class GeminiModelManager
 
                 var displayName = id switch
                 {
-                    "gemini-pro" => "🔷 Gemini Pro",
-                    "gemini-1.5-pro" => "🟢 Gemini 1.5 Pro",
-                    "gemini-1.5-flash" => "⚡ Gemini 1.5 Flash",
+                    "gemini-2.5-flash" => "⚡ Gemini 2.5 Flash",
+                    "gemini-2.5-flash-lite" => "⚪ Gemini 2.5 Flash-Lite",
+                    "gemini-2.5-pro" => "🟢 Gemini 2.5 Pro",
                     _ => $"🧩 {id}",
                 };
 
-                var isMini = id.Contains("flash");
-                var isTurbo = id.Contains("flash") || id.Contains("pro");
+                var isMini = id.Contains("flash", StringComparison.OrdinalIgnoreCase);
+                var isTurbo = id.Contains("flash", StringComparison.OrdinalIgnoreCase) ||
+                              id.Contains("pro", StringComparison.OrdinalIgnoreCase);
+                var isDefault = string.Equals(
+                    id,
+                    "gemini-2.5-flash",
+                    StringComparison.OrdinalIgnoreCase);
                 var supportsText = true;
                 var supportsVision = false;
 
@@ -94,7 +99,7 @@ public static class GeminiModelManager
                         supportsVision,
                         isTurbo,
                         isMini,
-                        false,
+                        isDefault,
                         "Gemini"));
             }
 

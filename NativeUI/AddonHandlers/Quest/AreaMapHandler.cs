@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
-
 namespace Echoglossian.NativeUI.AddonHandlers.Quest;
 
 /// <summary>
@@ -17,11 +15,33 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
 
   private const string AreaMapHoverPrefix = "AreaMap-";
 
-  private string areaMapHoverOriginalText = string.Empty;
+  private static readonly Regex AreaMapLevelQuestTextPattern =
+      new(
+          @"^(?<levelPrefix>Lv\.\s*\d+\s+)(?<questName>\S.*)$",
+          RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-  private string areaMapHoverTranslatedText = string.Empty;
+  private static readonly TimeSpan AreaMapRetryInterval =
+      TimeSpan.FromSeconds(2);
 
   private readonly Dictionary<string, AreaMapTextCacheEntry> areaMapTextCache = [];
+
+  private nint areaMapQuestNameNodeKey;
+
+  private string areaMapQuestLevelPrefix = string.Empty;
+
+  private string areaMapOriginalQuestNameText = string.Empty;
+
+  private string areaMapTranslatedQuestNameText = string.Empty;
+
+  private bool hasPendingAreaMapTranslation;
+
+  private bool needsAreaMapApplicationRefresh = true;
+
+  private bool ownsAreaMapNativeMutation;
+
+  private JournalTranslationDisplayMode? lastAppliedDisplayMode;
+
+  private DateTime nextAreaMapRetryUtc = DateTime.MinValue;
 
   /// <summary>
   ///     Initializes a new instance of the <see cref="AreaMapHandler" /> class.
@@ -32,7 +52,7 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   {
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnAreaMapEvent);
     this.RegisterHandler(AddonEvent.PreRequestedUpdate, this.OnAreaMapEvent);
-    this.RegisterHandler(AddonEvent.PreDraw, this.OnAreaMapHoverRefreshEvent);
+    this.RegisterHandler(AddonEvent.PreDraw, this.OnAreaMapPreDrawEvent);
     this.RegisterHandler(AddonEvent.PreHide, this.OnAreaMapCleanupEvent);
     this.RegisterHandler(AddonEvent.PreFinalize, this.OnAreaMapCleanupEvent);
   }
@@ -42,7 +62,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// </summary>
   private bool AreaMapUsesHoverTooltips =>
       QuestAddonModeHelpers.UsesHoverTooltips(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the AreaMap family should write translated text into the
@@ -50,7 +71,8 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// </summary>
   private bool AreaMapWritesNativeTranslation =>
       QuestAddonModeHelpers.WritesNativeTranslation(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
   ///     Gets whether the AreaMap family hover tooltips should show the
@@ -58,16 +80,43 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// </summary>
   private bool AreaMapHoverShowsOriginal =>
       QuestAddonModeHelpers.ShowsOriginalTooltips(
-          this.Config.AreaMapTranslationDisplayMode);
+          this.Config.AreaMapTranslationDisplayMode,
+          this.Config.OverlayOnlyLanguage);
 
   /// <summary>
-  ///     Gets whether the AreaMap family should strip diacritics from
-  ///     translated text before it is written to the native UI.
+  ///     Gets whether translated AreaMap text should be normalized before being
+  ///     written to the native UI.
   /// </summary>
   private bool AreaMapShouldRemoveDiacritics =>
       QuestAddonModeHelpers.ShouldRemoveDiacritics(
           this.Config.AreaMapTranslationDisplayMode,
-          this.Config.RemoveDiacriticsWhenUsingReplacementQuest);
+          this.Config.RemoveDiacriticsWhenUsingReplacementQuest,
+          this.Config.OverlayOnlyLanguage);
+
+  /// <summary>
+  ///     Gets whether AreaMap may render a hover tooltip for a payload whose
+  ///     translated content is ready.
+  /// </summary>
+  /// <param name="translatedPayloadReady">
+  ///     Whether the translated payload required by the current mode is ready.
+  /// </param>
+  /// <returns><c>true</c> when the hover tooltip may be rendered.</returns>
+  private bool CanRenderAreaMapHoverTooltip(bool translatedPayloadReady) =>
+      QuestAddonModeHelpers.CanRenderHoverTooltip(
+          this.Config.AreaMapTranslationDisplayMode,
+          translatedPayloadReady,
+          this.Config.OverlayOnlyLanguage);
+
+  /// <summary>
+  ///     Determines whether translated AreaMap quest text is ready for native
+  ///     application or tooltip rendering.
+  /// </summary>
+  /// <param name="translatedQuestText">The translated AreaMap quest text.</param>
+  /// <returns><c>true</c> when the translated text exists.</returns>
+  internal static bool IsTranslatedPayloadReady(string? translatedQuestText)
+  {
+    return !string.IsNullOrWhiteSpace(translatedQuestText);
+  }
 
   /// <summary>
   ///     Handles AreaMap refresh and requested-update events.
@@ -76,292 +125,628 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   /// <param name="args">The addon lifecycle arguments.</param>
   private unsafe void OnAreaMapEvent(AddonEvent type, AddonArgs args)
   {
-    if (!this.Config.TranslateAreaMap)
-    {
-      return;
-    }
-
-    if (!this.TryResolveAreaMapAtkValues(args, out var setupAtkValues))
-    {
-      return;
-    }
-
-    try
-    {
-      if (setupAtkValues[142].Type != ValueType.String ||
-          setupAtkValues[142].String.ToString() == string.Empty)
-      {
-        return;
-      }
-
-      var questNameText = MemoryHelper.ReadSeStringAsString(
-          out _,
-          (nint)setupAtkValues[142].String.Value);
-      if (questNameText == string.Empty)
-      {
-        return;
-      }
-
-      if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-              out var sourceLanguage))
-      {
-        return;
-      }
-
-      if (this.TryGetAreaMapCachedText(
-              questNameText,
-              out var appliedQuestSnapshot))
-      {
-        this.RememberAreaMapHoverTexts(
-            appliedQuestSnapshot.OriginalText,
-            appliedQuestSnapshot.TranslatedText);
-
-        if (this.AreaMapWritesNativeTranslation)
-        {
-          setupAtkValues[142].SetManagedString(
-              appliedQuestSnapshot.TranslatedText);
-        }
-
-        if (this.AreaMapUsesHoverTooltips)
-        {
-          var addon = AtkStage.Instance()->RaptureAtkUnitManager
-              ->GetAddonByName(AreaMapAddonName);
-          this.RegisterTranslatedHoverTooltip(
-              $"AreaMap-{(nint)addon:X}-142",
-              addon,
-              appliedQuestSnapshot.OriginalText,
-              appliedQuestSnapshot.TranslatedText,
-              swapEnabled: this.AreaMapHoverShowsOriginal,
-              forceEnabled: true,
-              denseHitbox: true);
-        }
-
-        return;
-      }
-
-      var questPlate = this.CreateQuestPlate(
-          sourceLanguage,
-          questNameText,
-          string.Empty);
-      var foundQuestPlate = this.FindQuestPlateByName(questPlate);
-      var cacheKey = $"AreaMap|{questNameText}";
-      if (foundQuestPlate != null)
-      {
-#if DEBUG
-        PluginRuntimeLog.Debug(
-            $"Name from database: {questNameText} -> {foundQuestPlate.TranslatedQuestName}");
-#endif
-        if (this.AreaMapShouldRemoveDiacritics)
-        {
-          foundQuestPlate.TranslatedQuestName = this.NormalizeQuestText(
-              foundQuestPlate.TranslatedQuestName ?? string.Empty);
-        }
-
-        this.RememberAreaMapHoverTexts(
-            questNameText,
-            foundQuestPlate.TranslatedQuestName ?? string.Empty);
-        this.RememberAreaMapCachedText(
-            questNameText,
-            foundQuestPlate.TranslatedQuestName ?? string.Empty);
-
-        if (this.AreaMapWritesNativeTranslation)
-        {
-          setupAtkValues[142].SetManagedString(
-              foundQuestPlate.TranslatedQuestName);
-        }
-
-        if (this.AreaMapUsesHoverTooltips)
-        {
-          var addon = AtkStage.Instance()->RaptureAtkUnitManager
-              ->GetAddonByName(AreaMapAddonName);
-          this.RegisterTranslatedHoverTooltip(
-              $"AreaMap-{(nint)addon:X}-142",
-              addon,
-              questNameText,
-              foundQuestPlate.TranslatedQuestName ?? string.Empty,
-              swapEnabled: this.AreaMapHoverShowsOriginal,
-              forceEnabled: true,
-              denseHitbox: true);
-        }
-
-        return;
-      }
-
-      if (this.TryGetQueuedTranslation(cacheKey, out var cachedTranslatedName))
-      {
-        var translatedNameText = cachedTranslatedName;
-#if DEBUG
-        PluginRuntimeLog.Debug(
-            $"Name translated: {questNameText} -> {translatedNameText}");
-#endif
-        if (this.AreaMapShouldRemoveDiacritics)
-        {
-          translatedNameText = this.NormalizeQuestText(translatedNameText);
-        }
-
-        this.RememberAreaMapHoverTexts(
-            questNameText,
-            translatedNameText);
-        this.RememberAreaMapCachedText(
-            questNameText,
-            translatedNameText);
-
-        if (this.AreaMapWritesNativeTranslation)
-        {
-          setupAtkValues[142].SetManagedString(translatedNameText);
-        }
-
-        if (this.AreaMapUsesHoverTooltips)
-        {
-          var addon = AtkStage.Instance()->RaptureAtkUnitManager
-              ->GetAddonByName(AreaMapAddonName);
-          this.RegisterTranslatedHoverTooltip(
-              $"AreaMap-{(nint)addon:X}-142",
-              addon,
-              questNameText,
-              translatedNameText,
-              swapEnabled: this.AreaMapHoverShowsOriginal,
-              forceEnabled: true,
-              denseHitbox: true);
-        }
-
-        return;
-      }
-
-      this.RememberAreaMapHoverTexts(questNameText, questNameText);
-
-      this.QueueTranslation(
-          cacheKey,
-          () => this.Translate(questNameText, sourceLanguage),
-          translatedNameText =>
-          {
-            var translatedQuestPlate = this.CreateTranslatedQuestPlate(
-                sourceLanguage,
-                questNameText,
-                string.Empty,
-                translatedNameText,
-                string.Empty);
-
-            var result = this.InsertQuestPlate(translatedQuestPlate);
-#if DEBUG
-            PluginRuntimeLog.Debug(
-                $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
-#endif
-          });
-    }
-    catch (Exception e)
-    {
-      PluginRuntimeLog.Error("Exception at AreaMapHandler: " + e);
-    }
+    this.ProcessAreaMap(args, queueMissingTranslation: true);
   }
 
   /// <summary>
-  ///     Resolves the live AreaMap ATK value array for refresh and requested-
-  ///     update events.
+  ///     Refreshes AreaMap application and hover targets after delayed
+  ///     translations settle.
   /// </summary>
-  /// <param name="args">The lifecycle arguments for the current event.</param>
-  /// <param name="atkValues">The resolved ATK value pointer.</param>
-  /// <returns>True when a usable ATK value array was found.</returns>
-  private unsafe bool TryResolveAreaMapAtkValues(
-      AddonArgs args,
-      out AtkValue* atkValues)
+  /// <param name="type">The addon lifecycle event.</param>
+  /// <param name="args">The addon lifecycle arguments.</param>
+  private unsafe void OnAreaMapPreDrawEvent(AddonEvent type, AddonArgs args)
   {
-    atkValues = null;
+    if (!this.TryGetVisibleAreaMap(out var addon))
+    {
+      return;
+    }
 
-    if (!string.Equals(args.AddonName, AreaMapAddonName, StringComparison.Ordinal))
+    if (!this.Config.TranslateAreaMap ||
+        this.DisableTranslationAccordingToState())
+    {
+      this.RestoreAreaMapOriginal(null);
+      this.ClearAreaMapRuntimeState(removeHoverTooltips: true);
+      return;
+    }
+
+    if (!this.TryResolveAreaMapQuestTextNode(
+            addon,
+            out var questNameNode,
+            out var visibleQuestText))
+    {
+      this.RemoveHoverTooltipsByPrefix(AreaMapHoverPrefix);
+      this.needsAreaMapApplicationRefresh = true;
+      return;
+    }
+
+    var shouldRefresh =
+        this.needsAreaMapApplicationRefresh ||
+        this.lastAppliedDisplayMode != this.Config.AreaMapTranslationDisplayMode ||
+        this.areaMapQuestNameNodeKey != (nint)questNameNode ||
+        !this.AreaMapVisibleTextMatchesCurrent(visibleQuestText.QuestName) ||
+        (this.hasPendingAreaMapTranslation &&
+         DateTime.UtcNow >= this.nextAreaMapRetryUtc);
+    if (shouldRefresh)
+    {
+      this.TryRefreshAreaMapPendingTranslation();
+      this.ProcessAreaMap(addon, queueMissingTranslation: true);
+      return;
+    }
+
+    this.ApplyAreaMapPresentation(questNameNode);
+  }
+
+  /// <summary>
+  ///     Processes the visible AreaMap quest row by resolving cached or
+  ///     persisted translations, applying the selected display mode, and
+  ///     optionally queueing missing background translations.
+  /// </summary>
+  /// <param name="args">The addon lifecycle arguments, if available.</param>
+  /// <param name="queueMissingTranslation">
+  ///     Whether missing text should be sent to the shared translation broker.
+  /// </param>
+  private unsafe void ProcessAreaMap(
+      AddonArgs? args,
+      bool queueMissingTranslation)
+  {
+    if (args != null &&
+        !string.Equals(args.AddonName, AreaMapAddonName, StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    if (!this.TryGetVisibleAreaMap(out var addon))
+    {
+      return;
+    }
+
+    this.ProcessAreaMap(addon, queueMissingTranslation);
+  }
+
+  /// <summary>
+  ///     Processes the visible AreaMap quest row from the live addon.
+  /// </summary>
+  /// <param name="addon">The visible AreaMap addon.</param>
+  /// <param name="queueMissingTranslation">
+  ///     Whether missing text should be sent to the shared translation broker.
+  /// </param>
+  private unsafe void ProcessAreaMap(
+      AtkUnitBase* addon,
+      bool queueMissingTranslation)
+  {
+    if (!this.Config.TranslateAreaMap ||
+        this.DisableTranslationAccordingToState())
+    {
+      this.RestoreAreaMapOriginal(null);
+      this.ClearAreaMapRuntimeState(removeHoverTooltips: true);
+      return;
+    }
+
+    if (!this.TryResolveAreaMapQuestTextNode(
+            addon,
+            out var questNameNode,
+            out var visibleQuestText))
+    {
+      this.RemoveHoverTooltipsByPrefix(AreaMapHoverPrefix);
+      this.needsAreaMapApplicationRefresh = true;
+      return;
+    }
+
+    if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
+            out var sourceLanguage))
+    {
+      return;
+    }
+
+    var originalQuestText = this.ResolveOriginalAreaMapText(
+        visibleQuestText.QuestName);
+    if (this.TryResolveAreaMapTranslation(
+            sourceLanguage,
+            originalQuestText,
+            visibleQuestText.QuestName,
+            out var translatedQuestText))
+    {
+      this.RememberAreaMapRuntimeState(
+          (nint)questNameNode,
+          visibleQuestText.LevelPrefix,
+          originalQuestText,
+          translatedQuestText);
+      this.RememberAreaMapCachedText(originalQuestText, translatedQuestText);
+      this.hasPendingAreaMapTranslation = false;
+      this.nextAreaMapRetryUtc = DateTime.MinValue;
+      this.ApplyAreaMapPresentation(questNameNode);
+      return;
+    }
+
+    this.RememberAreaMapRuntimeState(
+        (nint)questNameNode,
+        visibleQuestText.LevelPrefix,
+        originalQuestText,
+        string.Empty);
+    this.hasPendingAreaMapTranslation = true;
+    this.nextAreaMapRetryUtc = DateTime.UtcNow + AreaMapRetryInterval;
+    if (queueMissingTranslation)
+    {
+      this.QueueAreaMapTranslation(sourceLanguage, originalQuestText);
+    }
+
+    this.ApplyAreaMapPresentation(questNameNode);
+  }
+
+  /// <summary>
+  ///     Tries to resolve the visible AreaMap addon.
+  /// </summary>
+  /// <param name="addon">The visible AreaMap addon.</param>
+  /// <returns><c>true</c> when AreaMap is visible.</returns>
+  private unsafe bool TryGetVisibleAreaMap(out AtkUnitBase* addon)
+  {
+    addon = AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName(
+        AreaMapAddonName);
+    return addon != null && addon->IsVisible;
+  }
+
+  /// <summary>
+  ///     Resolves the visible AreaMap quest text nodes observed by addon
+  ///     probing.
+  /// </summary>
+  /// <param name="addon">The visible AreaMap addon.</param>
+  /// <returns>The visible quest text node addresses.</returns>
+  private static unsafe List<nint> ResolveAreaMapQuestTextNodes(
+      AtkUnitBase* addon)
+  {
+    List<nint> questTextNodes = [];
+    foreach (var textNodeAddress in AddonTextNodeResolvers.ResolveReadableTextNodes(addon))
+    {
+      var textNode = (AtkTextNode*)textNodeAddress;
+      if (TryReadAreaMapQuestText(textNode, out _))
+      {
+        questTextNodes.Add(textNodeAddress);
+      }
+    }
+
+    return questTextNodes;
+  }
+
+  /// <summary>
+  ///     Resolves the first visible AreaMap quest text node and parsed text.
+  /// </summary>
+  /// <param name="addon">The visible AreaMap addon.</param>
+  /// <param name="questNameNode">The resolved quest-name text node.</param>
+  /// <param name="visibleQuestText">The parsed visible quest text.</param>
+  /// <returns><c>true</c> when a visible quest row exists.</returns>
+  private unsafe bool TryResolveAreaMapQuestTextNode(
+      AtkUnitBase* addon,
+      out AtkTextNode* questNameNode,
+      out AreaMapVisibleQuestText visibleQuestText)
+  {
+    questNameNode = null;
+    visibleQuestText = default;
+
+    foreach (var textNodeAddress in ResolveAreaMapQuestTextNodes(addon))
+    {
+      var textNode = (AtkTextNode*)textNodeAddress;
+      if (!TryReadAreaMapQuestText(textNode, out visibleQuestText))
+      {
+        continue;
+      }
+
+      questNameNode = textNode;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Reads and parses an AreaMap quest text node.
+  /// </summary>
+  /// <param name="textNode">The candidate text node.</param>
+  /// <param name="visibleQuestText">The parsed AreaMap quest text.</param>
+  /// <returns><c>true</c> when the node contains a quest title.</returns>
+  private static unsafe bool TryReadAreaMapQuestText(
+      AtkTextNode* textNode,
+      out AreaMapVisibleQuestText visibleQuestText)
+  {
+    visibleQuestText = default;
+    var visibleText = ReadAreaMapTextNodeText(textNode);
+    if (string.IsNullOrWhiteSpace(visibleText))
     {
       return false;
     }
 
-    if (args is AddonRefreshArgs refreshArgs)
-    {
-      atkValues = (AtkValue*)refreshArgs.AtkValues;
-      return atkValues != null;
-    }
-
-    var addon = AtkStage.Instance()->RaptureAtkUnitManager
-        ->GetAddonByName(AreaMapAddonName);
-    if (addon == null || !addon->IsVisible || addon->AtkValues == null)
+    var match = AreaMapLevelQuestTextPattern.Match(visibleText.Trim());
+    if (!match.Success)
     {
       return false;
     }
 
-    atkValues = addon->AtkValues;
+    var levelPrefix = match.Groups["levelPrefix"].Value;
+    var questName = match.Groups["questName"].Value.Trim();
+    if (string.IsNullOrWhiteSpace(questName))
+    {
+      return false;
+    }
+
+    visibleQuestText = new AreaMapVisibleQuestText(levelPrefix, questName);
     return true;
   }
 
   /// <summary>
-  ///     Refreshes the AreaMap hover target every draw using the most recently
-  ///     resolved text pair without queueing new translations.
+  ///     Reads the best plain-text representation from an AreaMap text node.
   /// </summary>
-  /// <param name="type">The addon lifecycle event.</param>
-  /// <param name="args">The addon lifecycle arguments.</param>
-  private unsafe void OnAreaMapHoverRefreshEvent(AddonEvent type, AddonArgs args)
+  /// <param name="textNode">The AreaMap text node.</param>
+  /// <returns>The readable text, or an empty string.</returns>
+  private static unsafe string ReadAreaMapTextNodeText(AtkTextNode* textNode)
   {
-    if (!this.Config.TranslateAreaMap || !this.AreaMapUsesHoverTooltips)
+    if (textNode == null)
     {
-      return;
+      return string.Empty;
     }
 
-    if (string.IsNullOrWhiteSpace(this.areaMapHoverOriginalText) &&
-        string.IsNullOrWhiteSpace(this.areaMapHoverTranslatedText))
+    var currentText = textNode->NodeText.ToString();
+    if (!string.IsNullOrWhiteSpace(currentText))
     {
-      return;
+      return currentText;
     }
 
+    try
+    {
+      var originalText = textNode->OriginalTextPointer
+          .AsReadOnlySeStringSpan()
+          .ExtractText();
+      if (!string.IsNullOrWhiteSpace(originalText))
+      {
+        return originalText;
+      }
+    }
+    catch
+    {
+      // Keep falling through to the legacy buffer read below.
+    }
+
+    try
+    {
+      return MemoryHelper.ReadSeStringAsString(
+          out _,
+          (nint)textNode->NodeText.StringPtr.Value);
+    }
+    catch
+    {
+      return string.Empty;
+    }
+  }
+
+  /// <summary>
+  ///     Resolves a translated AreaMap quest text from local state, the DB, or
+  ///     the shared translation queue.
+  /// </summary>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
+  /// <param name="originalQuestText">The original AreaMap quest text.</param>
+  /// <param name="visibleQuestText">The current visible AreaMap text.</param>
+  /// <param name="translatedQuestText">The resolved translated text.</param>
+  /// <returns><c>true</c> when a translated quest text exists.</returns>
+  private bool TryResolveAreaMapTranslation(
+      SourceClientLanguage sourceLanguage,
+      string originalQuestText,
+      string visibleQuestText,
+      out string translatedQuestText)
+  {
+    translatedQuestText = string.Empty;
     if (this.TryGetAreaMapCachedText(
-            this.areaMapHoverOriginalText,
-            out var cachedAreaMapText))
+            originalQuestText,
+            out var cachedAreaMapText) &&
+        IsTranslatedPayloadReady(cachedAreaMapText.TranslatedText))
     {
-      this.areaMapHoverOriginalText = cachedAreaMapText.OriginalText;
-      this.areaMapHoverTranslatedText = cachedAreaMapText.TranslatedText;
+      translatedQuestText = cachedAreaMapText.TranslatedText;
+      return true;
+    }
+
+    var questPlate = this.CreateQuestPlate(
+        sourceLanguage,
+        originalQuestText,
+        string.Empty);
+    var foundQuestPlate = this.FindQuestPlateByName(questPlate);
+    if (foundQuestPlate == null &&
+        !string.Equals(
+            originalQuestText,
+            visibleQuestText,
+            StringComparison.Ordinal))
+    {
+      questPlate = this.CreateQuestPlate(
+          sourceLanguage,
+          visibleQuestText,
+          string.Empty);
+      foundQuestPlate = this.FindQuestPlateByName(questPlate);
+    }
+
+    if (foundQuestPlate != null &&
+        IsTranslatedPayloadReady(foundQuestPlate.TranslatedQuestName))
+    {
+      translatedQuestText = foundQuestPlate.TranslatedQuestName ?? string.Empty;
+      return true;
+    }
+
+    if (this.TryGetQueuedTranslation(
+            BuildAreaMapCacheKey(originalQuestText),
+            out var queuedAreaMapTranslation) &&
+        IsTranslatedPayloadReady(queuedAreaMapTranslation))
+    {
+      translatedQuestText = queuedAreaMapTranslation;
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  ///     Attempts to promote a pending AreaMap payload from the broker cache.
+  /// </summary>
+  /// <returns><c>true</c> when translated text became available.</returns>
+  private bool TryRefreshAreaMapPendingTranslation()
+  {
+    if (!this.hasPendingAreaMapTranslation ||
+        string.IsNullOrWhiteSpace(this.areaMapOriginalQuestNameText))
+    {
+      return false;
+    }
+
+    if (!this.TryGetQueuedTranslation(
+            BuildAreaMapCacheKey(this.areaMapOriginalQuestNameText),
+            out var translatedQuestText) ||
+        !IsTranslatedPayloadReady(translatedQuestText))
+    {
+      this.nextAreaMapRetryUtc = DateTime.UtcNow + AreaMapRetryInterval;
+      return false;
+    }
+
+    this.RememberAreaMapRuntimeState(
+        this.areaMapQuestNameNodeKey,
+        this.areaMapQuestLevelPrefix,
+        this.areaMapOriginalQuestNameText,
+        translatedQuestText);
+    this.RememberAreaMapCachedText(
+        this.areaMapOriginalQuestNameText,
+        translatedQuestText);
+    this.hasPendingAreaMapTranslation = false;
+    this.nextAreaMapRetryUtc = DateTime.MinValue;
+    return true;
+  }
+
+  /// <summary>
+  ///     Enqueues one AreaMap quest text through the shared quest broker.
+  /// </summary>
+  /// <param name="sourceLanguage">The operation-captured source identity.</param>
+  /// <param name="questText">The original AreaMap quest text.</param>
+  private void QueueAreaMapTranslation(
+      SourceClientLanguage sourceLanguage,
+      string questText)
+  {
+    if (string.IsNullOrWhiteSpace(questText))
+    {
+      return;
+    }
+
+    this.QueueTranslation(
+        BuildAreaMapCacheKey(questText),
+        () => this.Translate(questText, sourceLanguage),
+        translatedQuestText =>
+        {
+          if (!IsTranslatedPayloadReady(translatedQuestText))
+          {
+            return;
+          }
+
+          var translatedQuestPlate = this.CreateTranslatedQuestPlate(
+              sourceLanguage,
+              questText,
+              string.Empty,
+              translatedQuestText,
+              string.Empty);
+
+          var result = this.InsertQuestPlate(translatedQuestPlate);
+#if DEBUG
+          PluginRuntimeLog.Debug(
+              $"Using QuestPlate Replace - QuestPlate DB Insert operation result: {result}");
+#endif
+        });
+  }
+
+  /// <summary>
+  ///     Applies the current AreaMap presentation mode to native text and hover
+  ///     tooltip state.
+  /// </summary>
+  /// <param name="questNameNode">The live AreaMap quest text node.</param>
+  private unsafe void ApplyAreaMapPresentation(AtkTextNode* questNameNode)
+  {
+    var translatedPayloadReady = IsTranslatedPayloadReady(
+        this.areaMapTranslatedQuestNameText);
+    if (this.AreaMapWritesNativeTranslation && translatedPayloadReady)
+    {
+      questNameNode->NodeText.SetString(
+          this.BuildAreaMapTranslatedDisplayText(
+              this.areaMapTranslatedQuestNameText));
+      this.ownsAreaMapNativeMutation = true;
     }
     else
     {
-      var cacheKey = $"AreaMap|{this.areaMapHoverOriginalText}";
-      if (this.TryGetQueuedTranslation(cacheKey, out var queuedAreaMapTranslation))
-      {
-        var translatedAreaMapText = queuedAreaMapTranslation;
-        if (this.AreaMapShouldRemoveDiacritics)
-        {
-          translatedAreaMapText = this.NormalizeQuestText(
-              translatedAreaMapText ?? string.Empty);
-        }
-
-        this.RememberAreaMapCachedText(
-            this.areaMapHoverOriginalText,
-            translatedAreaMapText);
-        this.areaMapHoverTranslatedText = translatedAreaMapText;
-      }
+      this.RestoreAreaMapOriginal(questNameNode);
     }
 
-    var addon = AtkStage.Instance()->RaptureAtkUnitManager
-        ->GetAddonByName(AreaMapAddonName);
-    if (addon == null || !addon->IsVisible)
+    if (this.AreaMapUsesHoverTooltips)
+    {
+      this.RegisterAreaMapHoverTooltip(questNameNode, translatedPayloadReady);
+    }
+    else
+    {
+      this.RemoveHoverTooltipsByPrefix(AreaMapHoverPrefix);
+    }
+
+    this.lastAppliedDisplayMode = this.Config.AreaMapTranslationDisplayMode;
+    this.needsAreaMapApplicationRefresh = false;
+  }
+
+  /// <summary>
+  ///     Restores the original AreaMap native text when this handler previously
+  ///     wrote a native translation.
+  /// </summary>
+  /// <param name="questNameNode">The live AreaMap quest text node, if known.</param>
+  private unsafe void RestoreAreaMapOriginal(AtkTextNode* questNameNode)
+  {
+    if (!this.ownsAreaMapNativeMutation ||
+        string.IsNullOrWhiteSpace(this.areaMapOriginalQuestNameText))
     {
       return;
     }
 
+    var targetNode = questNameNode != null
+        ? questNameNode
+        : (AtkTextNode*)this.areaMapQuestNameNodeKey;
+    if (targetNode == null)
+    {
+      return;
+    }
+
+    targetNode->NodeText.SetString(
+        BuildAreaMapDisplayText(
+            this.areaMapQuestLevelPrefix,
+            this.areaMapOriginalQuestNameText));
+    this.ownsAreaMapNativeMutation = false;
+  }
+
+  /// <summary>
+  ///     Registers or suppresses the AreaMap hover tooltip for the current
+  ///     resolved text pair.
+  /// </summary>
+  /// <param name="questNameNode">The live AreaMap quest text node.</param>
+  /// <param name="translatedPayloadReady">
+  ///     Whether the translated text required by the tooltip exists.
+  /// </param>
+  private unsafe void RegisterAreaMapHoverTooltip(
+      AtkTextNode* questNameNode,
+      bool translatedPayloadReady)
+  {
+    if (questNameNode == null || !questNameNode->IsVisible())
+    {
+      return;
+    }
+
+    var originalDisplayText = BuildAreaMapDisplayText(
+        this.areaMapQuestLevelPrefix,
+        this.areaMapOriginalQuestNameText);
+    var translatedDisplayText = translatedPayloadReady
+        ? this.BuildAreaMapTranslatedDisplayText(
+            this.areaMapTranslatedQuestNameText)
+        : string.Empty;
+
     this.RegisterTranslatedHoverTooltip(
-        $"AreaMap-{(nint)addon:X}-142",
-        addon,
-        this.areaMapHoverOriginalText,
-        this.areaMapHoverTranslatedText,
+        $"{AreaMapHoverPrefix}{(nint)questNameNode:X}",
+        questNameNode,
+        originalDisplayText,
+        translatedDisplayText,
+        translatedPayloadReady: this.CanRenderAreaMapHoverTooltip(
+            translatedPayloadReady),
         swapEnabled: this.AreaMapHoverShowsOriginal,
         forceEnabled: true,
         denseHitbox: true);
   }
 
   /// <summary>
-  ///     Remembers the latest AreaMap hover text pair so the tooltip can be
-  ///     refreshed on draw without recomputing translations.
+  ///     Resolves the original AreaMap text even if the addon currently shows
+  ///     a translated value written by a previous native mode.
   /// </summary>
-  /// <param name="originalText">The current original AreaMap quest text.</param>
-  /// <param name="translatedText">The current translated AreaMap quest text.</param>
-  private void RememberAreaMapHoverTexts(string originalText, string translatedText)
+  /// <param name="visibleText">The current visible AreaMap quest title.</param>
+  /// <returns>The original source title backing the current AreaMap row.</returns>
+  private string ResolveOriginalAreaMapText(string visibleText)
   {
-    this.areaMapHoverOriginalText = originalText ?? string.Empty;
-    this.areaMapHoverTranslatedText = translatedText ?? string.Empty;
+    return QuestAddonOriginalTextHelper.ResolveOriginalVisibleText(
+        visibleText,
+        this.areaMapOriginalQuestNameText,
+        this.GetAreaMapTranslatedDisplayText(
+            this.areaMapTranslatedQuestNameText));
+  }
+
+  /// <summary>
+  ///     Checks whether the visible AreaMap title belongs to the current
+  ///     runtime state.
+  /// </summary>
+  /// <param name="visibleText">The visible AreaMap title without level prefix.</param>
+  /// <returns><c>true</c> when the visible title matches current state.</returns>
+  private bool AreaMapVisibleTextMatchesCurrent(string visibleText)
+  {
+    if (string.IsNullOrWhiteSpace(this.areaMapOriginalQuestNameText))
+    {
+      return false;
+    }
+
+    return string.Equals(
+               visibleText,
+               this.areaMapOriginalQuestNameText,
+               StringComparison.Ordinal) ||
+           string.Equals(
+               visibleText,
+               this.GetAreaMapTranslatedDisplayText(
+                   this.areaMapTranslatedQuestNameText),
+               StringComparison.Ordinal);
+  }
+
+  /// <summary>
+  ///     Normalizes translated AreaMap text before it is written into the
+  ///     native UI.
+  /// </summary>
+  /// <param name="translatedText">The translated text.</param>
+  /// <returns>The translated text as it should be displayed natively.</returns>
+  private string GetAreaMapTranslatedDisplayText(string translatedText)
+  {
+    if (!this.AreaMapShouldRemoveDiacritics)
+    {
+      return translatedText;
+    }
+
+    return this.NormalizeQuestText(translatedText ?? string.Empty);
+  }
+
+  /// <summary>
+  ///     Builds an AreaMap display string from the level prefix and quest title.
+  /// </summary>
+  /// <param name="levelPrefix">The visible level prefix.</param>
+  /// <param name="questName">The visible quest title.</param>
+  /// <returns>The full display string.</returns>
+  private static string BuildAreaMapDisplayText(
+      string levelPrefix,
+      string questName)
+  {
+    return $"{levelPrefix ?? string.Empty}{questName ?? string.Empty}";
+  }
+
+  /// <summary>
+  ///     Builds the translated AreaMap display string.
+  /// </summary>
+  /// <param name="translatedText">The translated quest title.</param>
+  /// <returns>The translated display string with the original level prefix.</returns>
+  private string BuildAreaMapTranslatedDisplayText(string translatedText)
+  {
+    return BuildAreaMapDisplayText(
+        this.areaMapQuestLevelPrefix,
+        this.GetAreaMapTranslatedDisplayText(translatedText));
+  }
+
+  /// <summary>
+  ///     Remembers the latest AreaMap runtime text pair.
+  /// </summary>
+  /// <param name="questNameNodeKey">The stable AreaMap text node pointer.</param>
+  /// <param name="levelPrefix">The visible level prefix.</param>
+  /// <param name="originalText">The current original AreaMap quest title.</param>
+  /// <param name="translatedText">The current translated AreaMap quest title.</param>
+  private void RememberAreaMapRuntimeState(
+      nint questNameNodeKey,
+      string levelPrefix,
+      string originalText,
+      string translatedText)
+  {
+    this.areaMapQuestNameNodeKey = questNameNodeKey;
+    this.areaMapQuestLevelPrefix = levelPrefix ?? string.Empty;
+    this.areaMapOriginalQuestNameText = originalText ?? string.Empty;
+    this.areaMapTranslatedQuestNameText = translatedText ?? string.Empty;
   }
 
   /// <summary>
@@ -373,8 +758,29 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
   {
     if (string.Equals(args.AddonName, AreaMapAddonName, StringComparison.Ordinal))
     {
-      this.areaMapHoverOriginalText = string.Empty;
-      this.areaMapHoverTranslatedText = string.Empty;
+      this.ClearAreaMapRuntimeState(removeHoverTooltips: true);
+    }
+  }
+
+  /// <summary>
+  ///     Clears AreaMap runtime state.
+  /// </summary>
+  /// <param name="removeHoverTooltips">
+  ///     Whether registered hover targets should also be removed.
+  /// </param>
+  private void ClearAreaMapRuntimeState(bool removeHoverTooltips)
+  {
+    this.areaMapQuestNameNodeKey = nint.Zero;
+    this.areaMapQuestLevelPrefix = string.Empty;
+    this.areaMapOriginalQuestNameText = string.Empty;
+    this.areaMapTranslatedQuestNameText = string.Empty;
+    this.hasPendingAreaMapTranslation = false;
+    this.needsAreaMapApplicationRefresh = true;
+    this.ownsAreaMapNativeMutation = false;
+    this.lastAppliedDisplayMode = null;
+    this.nextAreaMapRetryUtc = DateTime.MinValue;
+    if (removeHoverTooltips)
+    {
       this.RemoveHoverTooltipsByPrefix(AreaMapHoverPrefix);
     }
   }
@@ -389,7 +795,16 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       string originalText,
       out AreaMapTextCacheEntry cachedText)
   {
-    return this.areaMapTextCache.TryGetValue(originalText, out cachedText);
+    if (this.areaMapTextCache.TryGetValue(
+            originalText,
+            out var foundCachedText))
+    {
+      cachedText = foundCachedText;
+      return true;
+    }
+
+    cachedText = null!;
+    return false;
   }
 
   /// <summary>
@@ -402,10 +817,30 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       string originalText,
       string translatedText)
   {
-    this.areaMapTextCache[originalText ?? string.Empty] = new AreaMapTextCacheEntry(
-        originalText ?? string.Empty,
-        translatedText ?? string.Empty);
+    this.areaMapTextCache[originalText ?? string.Empty] =
+        new AreaMapTextCacheEntry(
+            originalText ?? string.Empty,
+            translatedText ?? string.Empty);
   }
+
+  /// <summary>
+  ///     Builds the shared broker cache key for one AreaMap quest text.
+  /// </summary>
+  /// <param name="questText">The original AreaMap quest text.</param>
+  /// <returns>The stable cache key.</returns>
+  private static string BuildAreaMapCacheKey(string questText)
+  {
+    return $"AreaMap|{questText}";
+  }
+
+  /// <summary>
+  ///     Captures one parsed visible AreaMap quest row.
+  /// </summary>
+  /// <param name="LevelPrefix">The visible level prefix.</param>
+  /// <param name="QuestName">The visible quest title without level prefix.</param>
+  private readonly record struct AreaMapVisibleQuestText(
+      string LevelPrefix,
+      string QuestName);
 
   /// <summary>
   ///     Captures the handler-local AreaMap text-cache payload.
@@ -416,5 +851,3 @@ internal sealed class AreaMapHandler : QuestAddonHandlerBase
       string OriginalText,
       string TranslatedText);
 }
-
-

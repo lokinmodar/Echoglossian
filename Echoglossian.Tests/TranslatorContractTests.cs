@@ -6,7 +6,11 @@
 using Echoglossian.PluginUI.Helpers;
 using Echoglossian.Translators;
 using Echoglossian.Translators.LibreTranslate;
-using Echoglossian.PluginUI.Helpers;
+
+using Dalamud.Plugin.Services;
+using Serilog;
+using Serilog.Events;
+using System.Globalization;
 
 using Xunit;
 
@@ -83,6 +87,30 @@ public class TranslatorContractTests
         Assert.Contains("language=pt-BR", url, StringComparison.Ordinal);
         Assert.Contains("term=Blue%20Magic%20Spellbook", url, StringComparison.Ordinal);
         Assert.Contains("strategy=2", url, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures recoverable Google response-shape failures are logged as
+    ///     warnings instead of errors.
+    /// </summary>
+    [Fact]
+    public void Google_LogRecoverableResponseFailure_UsesWarning()
+    {
+        var pluginLog = new CapturingPluginLog();
+
+        GoogleTranslator.LogRecoverableResponseFailure(
+            pluginLog,
+            "Dzemael Darkhold",
+            200,
+            "OK",
+            "{ \"status\": 404 }");
+
+        Assert.Empty(pluginLog.ErrorMessages);
+        Assert.Single(pluginLog.WarningMessages);
+        Assert.Contains(
+            "returned no translateResponse.translateText",
+            pluginLog.WarningMessages[0],
+            StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -177,4 +205,118 @@ public class TranslatorContractTests
             LibreTranslateTranslator.DetermineEndpoint(deConfig));
     }
 
+    private sealed class CapturingPluginLog : IPluginLog
+    {
+        private readonly List<string> errorMessages = [];
+        private readonly List<string> warningMessages = [];
+
+        /// <summary>
+        ///     Gets captured error messages.
+        /// </summary>
+        public IReadOnlyList<string> ErrorMessages => this.errorMessages;
+
+        /// <summary>
+        ///     Gets captured warning messages.
+        /// </summary>
+        public IReadOnlyList<string> WarningMessages => this.warningMessages;
+
+        /// <summary>
+        ///     Gets the inert Serilog logger required by the interface.
+        /// </summary>
+        public ILogger Logger { get; } = new LoggerConfiguration().CreateLogger();
+
+        /// <summary>
+        ///     Gets or sets the minimum log level accepted by this logger.
+        /// </summary>
+        public LogEventLevel MinimumLogLevel { get; set; } = LogEventLevel.Verbose;
+
+        /// <inheritdoc/>
+        public void Fatal(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Fatal(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Error(string messageTemplate, params object[] values)
+        {
+            this.errorMessages.Add(Format(messageTemplate, values));
+        }
+
+        /// <inheritdoc/>
+        public void Error(Exception? exception, string messageTemplate, params object[] values)
+        {
+            this.errorMessages.Add(Format(messageTemplate, values));
+        }
+
+        /// <inheritdoc/>
+        public void Warning(string messageTemplate, params object[] values)
+        {
+            this.warningMessages.Add(Format(messageTemplate, values));
+        }
+
+        /// <inheritdoc/>
+        public void Warning(Exception? exception, string messageTemplate, params object[] values)
+        {
+            this.warningMessages.Add(Format(messageTemplate, values));
+        }
+
+        /// <inheritdoc/>
+        public void Information(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Information(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Info(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Info(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Debug(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Debug(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Verbose(string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Verbose(Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Write(LogEventLevel level, Exception? exception, string messageTemplate, params object[] values)
+        {
+        }
+
+        private static string Format(string messageTemplate, object[] values)
+        {
+            return values.Length == 0
+                ? messageTemplate
+                : string.Format(
+                    CultureInfo.InvariantCulture,
+                    messageTemplate,
+                    values);
+        }
+    }
 }

@@ -254,6 +254,55 @@ internal sealed class QuestCanonicalData
     }
 
     /// <summary>
+    ///     Enumerates canonical objective entries whose source text matches the
+    ///     supplied visible text, including a normalized fallback for
+    ///     live-progress surfaces that append counters like <c>0/4</c>.
+    /// </summary>
+    /// <param name="sourceText">The visible objective text.</param>
+    /// <returns>The matching canonical objective entries.</returns>
+    public IEnumerable<QuestProgressEntry> EnumerateObjectiveEntriesByVisibleText(string? sourceText)
+    {
+        return EnumerateEntriesByVisibleText(this.QuestProgressSnapshot.QuestSteps, sourceText);
+    }
+
+    /// <summary>
+    ///     Gets the currently active canonical objective entries using the live
+    ///     todo progress window reported by the game.
+    /// </summary>
+    /// <param name="objectiveProgress">The current live objective start index.</param>
+    /// <param name="objectiveCount">The number of live visible objectives.</param>
+    /// <returns>The ordered active objective entries.</returns>
+    public IReadOnlyList<QuestProgressEntry> GetActiveObjectiveEntries(
+        int objectiveProgress,
+        int objectiveCount)
+    {
+        var objectiveEntries = this.QuestProgressSnapshot.QuestSteps
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.Text))
+            .ToArray();
+        if (objectiveEntries.Length == 0 || objectiveCount <= 0)
+        {
+            return [];
+        }
+
+        var clampedStartIndex = Math.Clamp(
+            objectiveProgress,
+            0,
+            objectiveEntries.Length - 1);
+        var clampedCount = Math.Min(
+            objectiveCount,
+            objectiveEntries.Length - clampedStartIndex);
+        if (clampedCount <= 0)
+        {
+            return [];
+        }
+
+        return objectiveEntries
+            .Skip(clampedStartIndex)
+            .Take(clampedCount)
+            .ToArray();
+    }
+
+    /// <summary>
     ///     Enumerates canonical system row keys whose source text matches the
     ///     supplied visible text.
     /// </summary>
@@ -364,5 +413,63 @@ internal sealed class QuestCanonicalData
 
             yield return entry.KeyText;
         }
+    }
+
+    private static IEnumerable<QuestProgressEntry> EnumerateEntriesByVisibleText(
+        IEnumerable<QuestProgressEntry> entries,
+        string? sourceText)
+    {
+        if (string.IsNullOrWhiteSpace(sourceText))
+        {
+            yield break;
+        }
+
+        var normalizedSourceText = NormalizeVisibleObjectiveText(sourceText);
+        foreach (var entry in entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.KeyText) ||
+                string.IsNullOrWhiteSpace(entry.Text))
+            {
+                continue;
+            }
+
+            if (string.Equals(entry.Text, sourceText, StringComparison.Ordinal))
+            {
+                yield return entry;
+                continue;
+            }
+
+            if (normalizedSourceText.Length == 0)
+            {
+                continue;
+            }
+
+            var normalizedEntryText = NormalizeVisibleObjectiveText(entry.Text);
+            if (string.Equals(
+                    normalizedEntryText,
+                    normalizedSourceText,
+                    StringComparison.Ordinal))
+            {
+                yield return entry;
+            }
+        }
+    }
+
+    private static string NormalizeVisibleObjectiveText(string? sourceText)
+    {
+        if (string.IsNullOrWhiteSpace(sourceText))
+        {
+            return string.Empty;
+        }
+
+        var normalizedText = Regex.Replace(
+            sourceText.Trim(),
+            @"\s+\d+\s*/\s*\d+\s*$",
+            string.Empty);
+        normalizedText = normalizedText
+            .Replace("\r", " ", StringComparison.Ordinal)
+            .Replace("\n", " ", StringComparison.Ordinal);
+        normalizedText = Regex.Replace(normalizedText, @"\s+", " ");
+        return normalizedText.Trim();
     }
 }

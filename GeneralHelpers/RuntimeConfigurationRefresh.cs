@@ -65,12 +65,25 @@ public partial class Echoglossian
 
     if (translationChanged)
     {
+      this.RestoreVisibleAddonPresentationStateBeforeRuntimeReset();
       this.ResetRuntimeTranslationPresentationState();
       this.RebuildTranslationServiceSafely();
       this.RebuildQueuedTranslationBroker();
       this.RebuildToastGuiRuntimes();
+      this.RebuildNamePlateTranslationRuntime();
       this.translationRuntimeSignature = translationSignature;
       this.addonHandlerRegistrationSignature = null;
+    }
+
+    var namePlatePresentationSignature =
+        this.ComputeNamePlatePresentationSignature();
+    if (!string.Equals(
+            namePlatePresentationSignature,
+            this.namePlatePresentationSignature,
+            StringComparison.Ordinal))
+    {
+      NamePlateGuiInterface.RequestRedraw();
+      this.namePlatePresentationSignature = namePlatePresentationSignature;
     }
 
     var addonHandlerSignature =
@@ -190,6 +203,24 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Computes a signature for config values that change how NamePlate
+  ///     translations are presented so the runtime can request a redraw only
+  ///     when its native title-field semantics change.
+  /// </summary>
+  /// <returns>A stable serialized signature.</returns>
+  private string ComputeNamePlatePresentationSignature()
+  {
+    return JsonConvert.SerializeObject(
+        new
+        {
+          this.configuration.Translate,
+          this.configuration.TranslateNamePlates,
+          this.configuration.NamePlateTranslationDisplayMode,
+          this.configuration.OverlayOnlyLanguage,
+        });
+  }
+
+  /// <summary>
   ///     Refreshes the shared structured dialogue glossary store from the
   ///     current configuration.
   /// </summary>
@@ -218,27 +249,46 @@ public partial class Echoglossian
   /// <returns>A stable serialized signature.</returns>
   private string ComputeAddonHandlerRegistrationSignature()
   {
+    return ComputeAddonHandlerRegistrationSignature(this.configuration);
+  }
+
+  /// <summary>
+  ///     Computes a signature for config values that determine which addon
+  ///     handlers should be registered.
+  /// </summary>
+  /// <param name="configuration">The configuration to evaluate.</param>
+  /// <returns>A stable serialized signature.</returns>
+  internal static string ComputeAddonHandlerRegistrationSignature(
+      Config configuration)
+  {
     return JsonConvert.SerializeObject(
         new
         {
-          this.configuration.TranslateOperationGuideWindow,
-          this.configuration.TranslateHudWindow,
-          this.configuration.TranslateGameMainMenu,
-          this.configuration.TranslateActionMenuWindow,
-          this.configuration.TranslateCharacterWindow,
-          this.configuration.TranslateTalk,
-          this.configuration.TranslateBattleTalk,
-          this.configuration.TranslateTalkSubtitle,
-          this.configuration.TranslateMiniTalk,
-          this.configuration.TranslateCutSceneSelectString,
-          this.configuration.TranslateToDoList,
-          this.configuration.TranslateScenarioTree,
-          this.configuration.TranslateToast,
-          this.configuration.TranslateWideTextToast,
-          this.configuration.TranslateErrorToast,
-          this.configuration.TranslateAreaToast,
-          this.configuration.TranslateClassChangeToast,
-          this.configuration.TranslateTextGimmickHint,
+          configuration.TranslateOperationGuideWindow,
+          configuration.TranslateHudWindow,
+          configuration.TranslateGameMainMenu,
+          configuration.TranslateActionMenuWindow,
+          configuration.TranslateContextMenu,
+          configuration.TranslateCharacterWindow,
+          configuration.TranslateTalk,
+          configuration.TranslateBattleTalk,
+          configuration.TranslateTalkSubtitle,
+          configuration.TranslateMiniTalk,
+          configuration.TranslateCutSceneSelectString,
+          configuration.TranslateYesNoScreen,
+          configuration.TranslateSelectOk,
+          configuration.TranslateSelectString,
+          configuration.TranslateSelectIconString,
+          configuration.TranslateToDoList,
+          configuration.TranslateToDo,
+          configuration.TranslateScenarioTree,
+          configuration.TranslateTooltipAddon,
+          configuration.TranslateToast,
+          configuration.TranslateWideTextToast,
+          configuration.TranslateErrorToast,
+          configuration.TranslateAreaToast,
+          configuration.TranslateClassChangeToast,
+          configuration.TranslateTextGimmickHint,
         });
   }
 
@@ -272,17 +322,44 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Restores visible addon-owned presentation state before shared
+  ///     translation caches and runtimes are cleared for a live translation
+  ///     configuration change.
+  /// </summary>
+  private void RestoreVisibleAddonPresentationStateBeforeRuntimeReset()
+  {
+    if (this.translationRefreshRestoreApplied ||
+        this.registeredAddonHandlers == null)
+    {
+      return;
+    }
+
+    foreach (var (_, handler) in this.registeredAddonHandlers)
+    {
+      if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
+      {
+        unloadAwareHandler.OnPluginUnload();
+      }
+    }
+
+    this.translationRefreshRestoreApplied = true;
+  }
+
+  /// <summary>
   ///     Re-registers addon handlers according to the current config.
   /// </summary>
   private void RefreshAddonHandlerRegistrations()
   {
     if (this.registeredAddonHandlers != null)
     {
-      foreach (var (_, handler) in this.registeredAddonHandlers)
+      if (!this.translationRefreshRestoreApplied)
       {
-        if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
+        foreach (var (_, handler) in this.registeredAddonHandlers)
         {
-          unloadAwareHandler.OnPluginUnload();
+          if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
+          {
+            unloadAwareHandler.OnPluginUnload();
+          }
         }
       }
 
@@ -293,6 +370,7 @@ public partial class Echoglossian
 
     this.hoverTooltipManager.Clear();
     this.EgloAddonHandler();
+    this.translationRefreshRestoreApplied = false;
   }
 
   /// <summary>
@@ -329,5 +407,6 @@ public partial class Echoglossian
     this.ClearItemDetailPrefetchState();
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
+    this.ClearNamePlatePrefetchState();
   }
 }

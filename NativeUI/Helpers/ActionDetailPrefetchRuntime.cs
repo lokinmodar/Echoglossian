@@ -39,11 +39,13 @@ internal delegate bool QueuePrefetchTranslationDelegate(
 /// <param name="sourceText">The source text to translate.</param>
 /// <param name="sourceLanguage">The captured source language.</param>
 /// <param name="targetLanguage">The captured target language.</param>
+/// <param name="originContext">The surface and element context for diagnostics.</param>
 /// <returns>The translated text.</returns>
 internal delegate string ResolvePrefetchTranslationDelegate(
     string sourceText,
     SourceClientLanguage sourceLanguage,
-    string targetLanguage);
+    string targetLanguage,
+    string originContext);
 
 /// <summary>
 ///     Describes how one production prefetch dispatch entered the broker.
@@ -82,13 +84,7 @@ public unsafe partial class Echoglossian
     private static readonly TimeSpan ActionDetailPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
 
-    private static readonly TimeSpan ActionDetailOnDemandPrefetchCooldown =
-        TimeSpan.FromSeconds(10);
-
     private readonly List<uint> actionDetailPrefetchQueue = [];
-
-    private readonly Dictionary<string, DateTime> actionDetailOnDemandPrefetchUtcByScope =
-        [];
 
     private string actionDetailPrefetchSignature = string.Empty;
 
@@ -157,57 +153,9 @@ public unsafe partial class Echoglossian
     private void ClearActionDetailPrefetchState()
     {
         this.actionDetailPrefetchQueue.Clear();
-        this.actionDetailOnDemandPrefetchUtcByScope.Clear();
         this.actionDetailPrefetchQueueIndex = 0;
         this.actionDetailPrefetchSignature = string.Empty;
         this.actionDetailPrefetchLastTickUtc = DateTime.MinValue;
-    }
-
-    /// <summary>
-    ///     Requests one on-demand canonical action-tooltip prefetch when the
-    ///     live tooltip runtime encounters a hovered action that does not yet
-    ///     exist in translated storage.
-    /// </summary>
-    /// <param name="actionId">The hovered action identifier.</param>
-    /// <param name="currentClassJobId">The current class-job identifier.</param>
-    /// <returns>
-    ///     <see langword="true" /> when one prefetch was scheduled for this
-    ///     scope; otherwise <see langword="false" />.
-    /// </returns>
-    private bool TryRequestActionDetailOnDemandPrefetch(
-        uint actionId,
-        byte currentClassJobId)
-    {
-        if (actionId == 0 ||
-            !this.ShouldPrefetchActionAdjacentCanonicalTooltips() ||
-            !TryBuildActionTooltipCanonicalPayload(
-                actionId,
-                currentClassJobId,
-                out _) ||
-            !RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage) ||
-            !this.TryCreateCapturedTranslationScope(
-                sourceLanguage,
-                out var scope))
-        {
-            return false;
-        }
-
-        var scopeKey = BuildTranslationReuseScopedKey(
-            $"ActionDetailOnDemand|{actionId}|{GetGameVersion() ?? string.Empty}",
-            scope);
-        var utcNow = DateTime.UtcNow;
-        if (this.actionDetailOnDemandPrefetchUtcByScope.TryGetValue(
-                scopeKey,
-                out var lastQueuedUtc) &&
-            utcNow - lastQueuedUtc < ActionDetailOnDemandPrefetchCooldown)
-        {
-            return false;
-        }
-
-        this.actionDetailOnDemandPrefetchUtcByScope[scopeKey] = utcNow;
-        this.PrefetchActionDetail(actionId, currentClassJobId);
-        return true;
     }
 
     /// <summary>
@@ -233,11 +181,12 @@ public unsafe partial class Echoglossian
             this.configuration,
             this.TryGetQueuedTranslation,
             this.QueueTranslation,
-            (sourceText, capturedSource, targetLanguage) =>
+            (sourceText, capturedSource, targetLanguage, originContext) =>
                 translationService.Translate(
                     sourceText,
                     capturedSource,
-                    targetLanguage),
+                    targetLanguage,
+                    originContext: originContext),
             this.FindActionTooltip,
             row => this.InsertActionTooltip(row),
             out var sourceLanguage,
@@ -269,7 +218,10 @@ public unsafe partial class Echoglossian
         TranslationReuseScope scope)
     {
         if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedActionDescription))
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Description,
+                    existingRow.TranslatedActionDescription) != null)
         {
             return;
         }
@@ -284,7 +236,10 @@ public unsafe partial class Echoglossian
             () => translationService.Translate(
                 originalPayload.Description,
                 sourceLanguage,
-                scope.TargetLanguageCode),
+                scope.TargetLanguageCode,
+                originContext: BuildActionDetailOriginContext(
+                    originalPayload,
+                    "Description")),
             (translatedDescription, capturedScope, _) =>
                 this.ApplyActionDetailTranslation(
                     originalPayload.ActionId,
@@ -383,6 +338,16 @@ public unsafe partial class Echoglossian
             !string.IsNullOrWhiteSpace(translatedDescription)
                 ? translatedDescription
                 : translatedPayload.TranslatedDescription;
+        translatedPayload.TranslatedName =
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Name,
+                    translatedPayload.TranslatedName);
+        translatedPayload.TranslatedDescription =
+            StructuredTooltipTranslationValidation
+                .GetMeaningfulTranslationOrNull(
+                    originalPayload.Description,
+                    translatedPayload.TranslatedDescription);
         TryPopulatePendingActionDetailTranslations(
             originalPayload,
             translatedPayload,
@@ -624,7 +589,8 @@ public unsafe partial class Echoglossian
             () => translate(
                 originalPayload.Name,
                 sourceLanguage,
-                scope.TargetLanguageCode),
+                scope.TargetLanguageCode,
+                BuildActionDetailOriginContext(originalPayload, "Name")),
             (translatedName, capturedScope, _) =>
             {
                 var translatedRow = CreateActionDetailTranslationRow(
@@ -651,6 +617,19 @@ public unsafe partial class Echoglossian
             out var sourceLanguage)
             ? sourceLanguage
             : null;
+    }
+
+    /// <summary>
+    ///     Builds the diagnostic surface identity for one action-tooltip field.
+    /// </summary>
+    /// <param name="payload">The canonical action-tooltip payload.</param>
+    /// <param name="fieldName">The translated field name.</param>
+    /// <returns>The diagnostic surface identity.</returns>
+    private static string BuildActionDetailOriginContext(
+        ActionTooltipCanonicalPayload payload,
+        string fieldName)
+    {
+        return $"ActionTooltip/{payload.ActionId}/{fieldName}";
     }
 
     /// <summary>
@@ -899,23 +878,7 @@ public unsafe partial class Echoglossian
     /// <returns>The evaluated visible text.</returns>
     private static string EvaluateSheetText(ReadOnlySeString text)
     {
-        var evaluator = SeStringEvaluator;
-        if (evaluator == null)
-        {
-            return text.ExtractText();
-        }
-
-        try
-        {
-            return evaluator.Evaluate(
-                    text,
-                    language: ClientStateInterface.ClientLanguage)
-                .ExtractText();
-        }
-        catch
-        {
-            return text.ExtractText();
-        }
+        return EvaluateStructuredTooltipSourceText(text.AsSpan());
     }
 
     /// <summary>

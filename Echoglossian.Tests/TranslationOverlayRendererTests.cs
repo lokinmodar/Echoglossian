@@ -113,6 +113,54 @@ public sealed class TranslationOverlayRendererTests
     }
 
     /// <summary>
+    /// Ensures explicitly centered overlay surfaces stay centered even when
+    /// the active language normally requests right alignment.
+    /// </summary>
+    [Fact]
+    public void CalculateHorizontalTextOffset_CenterAlignmentWinsOverRightAlignment()
+    {
+        var actual = TranslationOverlayRenderer.CalculateHorizontalTextOffset(
+            availableWidth: 300f,
+            contentWidth: 100f,
+            centerAligned: true,
+            rightAligned: true);
+
+        Assert.Equal(100f, actual);
+    }
+
+    /// <summary>
+    /// Ensures centered toast-style overlays wrap on word boundaries so every
+    /// visual line can be centered independently.
+    /// </summary>
+    [Fact]
+    public void SplitOverlayLineForAlignment_WrapsWordsForAlignedText()
+    {
+        var actual = TranslationOverlayRenderer.SplitOverlayLineForAlignment(
+            "alpha beta gamma",
+            availableWidth: 10f,
+            measureTextWidth: text => text.Length);
+
+        Assert.Equal(["alpha beta", "gamma"], actual);
+    }
+
+    /// <summary>
+    /// Ensures all toast overlay surfaces opt into centered text.
+    /// </summary>
+    /// <param name="surfaceId">The toast surface identifier.</param>
+    [Theory]
+    [InlineData((int)TranslationOverlaySurfaceId.WideTextToast)]
+    [InlineData((int)TranslationOverlaySurfaceId.ErrorToast)]
+    [InlineData((int)TranslationOverlaySurfaceId.AreaToast)]
+    [InlineData((int)TranslationOverlaySurfaceId.ClassChangeToast)]
+    [InlineData((int)TranslationOverlaySurfaceId.QuestToast)]
+    public void ShouldCenterOverlayText_CentersToastSurfaces(
+        int surfaceId)
+    {
+        Assert.True(TranslationOverlayRenderer.ShouldCenterOverlayText(
+            (TranslationOverlaySurfaceId)surfaceId));
+    }
+
+    /// <summary>
     /// Ensures raw SeString line-break payload markers become real overlay line
     /// breaks instead of invalid glyph boxes.
     /// </summary>

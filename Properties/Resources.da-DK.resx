@@ -1,0 +1,632 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CloseButtonLabel" xml:space="preserve">
+    <value>Luk</value>
+  </data>
+  <data name="ConfigTab0Name" xml:space="preserve">
+    <value>Hoved</value>
+  </data>
+  <data name="ConfigTab1Name" xml:space="preserve">
+    <value>Indstillinger for tale</value>
+  </data>
+  <data name="ConfigTab2Name" xml:space="preserve">
+    <value>Indstillinger for kampsnak</value>
+  </data>
+  <data name="ConfigTab3Name" xml:space="preserve">
+    <value>Indstillinger for toast</value>
+  </data>
+  <data name="ConfigTab4Name" xml:space="preserve">
+    <value>Kladdeindstillinger</value>
+  </data>
+  <data name="ConfigTab5Name" xml:space="preserve">
+    <value>Indstillinger for værktøjstip</value>
+  </data>
+  <data name="ConfigTab6Name" xml:space="preserve">
+    <value>Andre indstillinger</value>
+  </data>
+  <data name="ConfigTab7Name" xml:space="preserve">
+    <value>Indstillinger for oversættelsesprogram</value>
+  </data>
+  <data name="ConfigTabAbout" xml:space="preserve">
+    <value>Om Echoglossian</value>
+  </data>
+  <data name="ContribText" xml:space="preserve">
+    <value>Støt os enten ved at bidrage til projektudviklingen, indsende problemer eller hjælpe os med en kop kaffe.</value>
+  </data>
+  <data name="DisclaimerText1" xml:space="preserve">
+    <value>Dette plugin har til formål at løse et af de største problemer for publikum, der ikke taler hverken engelsk, tysk, fransk eller japansk: Forståelse af dialoger og andre elementer i game UI.</value>
+  </data>
+  <data name="DisclaimerText2" xml:space="preserve">
+    <value>For nu gør vi kun auto-oversættelser via Google Translate API, men i fremtiden har vi til hensigt at støtte andre ML oversættelsessystemer. Vi har endda ideer rettet mod crowdsourced oversættelser, kurateret af samfundet.</value>
+  </data>
+  <data name="DisclaimerTitle" xml:space="preserve">
+    <value>Om Echoglossian:</value>
+  </data>
+  <data name="EchoglossianPathModal" xml:space="preserve">
+    <value>Pas på!</value>
+  </data>
+  <data name="EnableTranslation" xml:space="preserve">
+    <value>Aktivere oversættelse af spiltekst i realtid</value>
+  </data>
+  <data name="FontColorSelectLabel" xml:space="preserve">
+    <value>Overlejre skriftfarve:</value>
+  </data>
+  <data name="HelpMessage" xml:space="preserve">
+    <value>Åbner vinduet Echoglossian config</value>
+    <comment>Shown in plugin install window</comment>
+  </data>
+  <data name="ImguiAdjustmentsLabel" xml:space="preserve">
+    <value>Juster de indstillinger, der er relateret til oversættelsesoverlejringen:</value>
+  </data>
+  <data name="LangIdentError" xml:space="preserve">
+    <value>Sproget kunne ikke identificeres med en acceptabel grad af sikkerhed</value>
+  </data>
+  <data name="LanguageNotSupportedText" xml:space="preserve">
+    <value>Det valgte sprog understøttes ikke af den aktuelt tilgængelige oversættelses-backend</value>
+  </data>
+  <data name="LanguageOnlySupportedUsingOverlay" xml:space="preserve">
+    <value>Det valgte sprog understøttes kun ved hjælp af plugin-overlejringer på grund af begrænsningerne i det oprindelige spil Font</value>
+  </data>
+  <data name="LanguageSelectionTooltip" xml:space="preserve">
+    <value>Hvilket sprog du skal oversætte de in-game dialogbokse til.</value>
+  </data>
+  <data name="LanguageSelectLabelText" xml:space="preserve">
+    <value>Sprog, der skal oversættes til</value>
+  </data>
+  <data name="NEListText" xml:space="preserve">
+    <value>Den ikke-udtømmende liste over spørgsmål og TODO'er er tilgængelig i linket nedenfor:</value>
+  </data>
+  <data name="OverlayAdjustmentOrientations" xml:space="preserve">
+    <value>Juster placeringen, hvis overlejringen ikke er centreret i forhold til spillets tekstboks til brugergrænsefladen.</value>
+  </data>
+  <data name="OverlayColorSelectName" xml:space="preserve">
+    <value>OverlayColorSelect</value>
+  </data>
+  <data name="OverlayFontColorOrientations" xml:space="preserve">
+    <value>Klik her for at vælge skriftfarven overlejring</value>
+  </data>
+  <data name="OverlayFontScaleLabel" xml:space="preserve">
+    <value>Justere skriftskalaen Overlejring</value>
+  </data>
+  <data name="OverlayFontSizeLabel" xml:space="preserve">
+    <value>Overlejring af skriftstørrelse</value>
+  </data>
+  <data name="OverlayFontSizeOrientations" xml:space="preserve">
+    <value>Vælge skriftstørrelsen for tekstoverlejringen</value>
+  </data>
+  <data name="OverlayHeightScrollLabel" xml:space="preserve">
+    <value>Multiplikator for overlejring af oversættelsesoverlejring</value>
+  </data>
+  <data name="OverlayName" xml:space="preserve">
+    <value>Battle talk (Enenies dialog linjer) oversættelse</value>
+    <comment>Translation overlay window name</comment>
+  </data>
+  <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
+    <value>Positionsjustering</value>
+  </data>
+  <data name="OverlayToggleLabel" xml:space="preserve">
+    <value>Vis oversat tekstoverlejring over tekstboksen i brugergrænsefladen i spillet i stedet for at erstatte teksten med oversættelsen</value>
+  </data>
+  <data name="OverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Juster bredden af overlejring af oversættelse</value>
+  </data>
+  <data name="OverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplikator for overlejring af oversættelsesoverlejring</value>
+  </data>
+  <data name="PathInputInstructions" xml:space="preserve">
+    <value>Absolut sti til Echoglossian mappe (inde XIVLauncher -&gt; pluginConfigs mappe)</value>
+  </data>
+  <data name="PathTypeInstructions" xml:space="preserve">
+    <value>Skriv stien og gem, så plugin kan fungere korrekt!</value>
+  </data>
+  <data name="PatronButtonLabel" xml:space="preserve">
+    <value>Køb lokinmodar en kop kaffe</value>
+  </data>
+  <data name="PixQrWindowLabel" xml:space="preserve">
+    <value>PIX-qrcode</value>
+  </data>
+  <data name="PixText" xml:space="preserve">
+    <value>Scan QR-koden for at sende mig en PIX - kun gyldig i Brasilien</value>
+  </data>
+  <data name="PluginInterfaceLanguage" xml:space="preserve">
+    <value>Vælg sproget til plugin-konfigurationsvinduet</value>
+  </data>
+  <data name="PluginInterfaceLanguageSelectorText" xml:space="preserve">
+    <value>Config Vindue Sprog:</value>
+  </data>
+  <data name="QRCodeInstructionsText" xml:space="preserve">
+    <value>Scan QR-koden for at sende mig en PIX - kun gyldig i Brasilien</value>
+  </data>
+  <data name="SaveCloseButtonLabel" xml:space="preserve">
+    <value>Vinduet Gem og luk Config</value>
+  </data>
+  <data name="SendPixButton" xml:space="preserve">
+    <value>Send mig en PIX donation!</value>
+  </data>
+  <data name="SettingsForGTransText" xml:space="preserve">
+    <value>Indstillinger for Google Translate:</value>
+  </data>
+  <data name="SwapTranslationTextToggle" xml:space="preserve">
+    <value>Vis original dialogtekst i Overlejring og Oversat i dialogboksen Spilgrænseflade</value>
+  </data>
+  <data name="ToastOverlayWidthMultiplierOrientations" xml:space="preserve">
+    <value>Juster bredden af overlejring af toastoversættelse</value>
+  </data>
+  <data name="ToastOverlayWidthScrollLabel" xml:space="preserve">
+    <value>Multiplikator for toastoverlejringsbredde</value>
+  </data>
+  <data name="TodoUrl" xml:space="preserve">
+    <value>TODOs Liste på Github</value>
+  </data>
+  <data name="TranslateAreaToastToggleText" xml:space="preserve">
+    <value>Oversæt toastbeskeder i spillet</value>
+  </data>
+  <data name="TransLateBattletalkToggle" xml:space="preserve">
+    <value>Oversæt kampsnak</value>
+  </data>
+  <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
+    <value>Oversæt toastbeskeder i spillet</value>
+  </data>
+  <data name="TranslateErrorToastToggleText" xml:space="preserve">
+    <value>Oversæt fejlmeddelelser i spillet</value>
+  </data>
+  <data name="TranslateNpcNamesToggle" xml:space="preserve">
+    <value>Oversætte NPC'ers navne i dialogbokse</value>
+  </data>
+  <data name="TranslateQuestToastToggleText" xml:space="preserve">
+    <value>Oversæt quest-toastbeskeder i spillet</value>
+  </data>
+  <data name="TranslateScreenInfoToastToggleText" xml:space="preserve">
+    <value>Oversæt andre forskellige toastbeskeder i spillet</value>
+  </data>
+  <data name="TranslateTalkToggleLabel" xml:space="preserve">
+    <value>Oversæt dialoger i spillet</value>
+  </data>
+  <data name="TranslateToastToggleText" xml:space="preserve">
+    <value>Oversæt toastbeskeder i spillet</value>
+  </data>
+  <data name="TranslationDisabled" xml:space="preserve">
+    <value>Oversættelser er deaktiveret!</value>
+  </data>
+  <data name="TranslationEnabled" xml:space="preserve">
+    <value>Oversættelser er aktiveret!</value>
+  </data>
+  <data name="TranslationEngineSettingsNotRequired" xml:space="preserve">
+    <value>Dette oversættelsesprogram kræver ingen specielle indstillinger.</value>
+  </data>
+  <data name="TranslationsEnabled" xml:space="preserve">
+    <value>Oversættelser aktiveret!</value>
+  </data>
+  <data name="UseImGuiForToastsToggle" xml:space="preserve">
+    <value>Brug overlejring til at vise Toasts-oversættelser</value>
+  </data>
+  <data name="WaitingForTranslation" xml:space="preserve">
+    <value>Afventer oversættelse...</value>
+  </data>
+  <data name="WhatToTranslateText" xml:space="preserve">
+    <value>Vælg hvilken slags tekst du vil have oversat i den tilsvarende fane nedenfor!</value>
+  </data>
+  <data name="ResetConfigsButton" xml:space="preserve">
+    <value>Nulstil indstillinger</value>
+  </data>
+  <data name="SettingsReset" xml:space="preserve">
+    <value>Echoglossian-indstillinger nulstilles til standard!</value>
+  </data>
+  <data name="WhichToastsToTranslate" xml:space="preserve">
+    <value>Vælg, hvilken type skåltaler for beskeder i spillet der skal oversættes</value>
+  </data>
+  <data name="AssetsCheckingPopupMsg" xml:space="preserve">
+    <value>Kontrol af plugin-aktiver!</value>
+  </data>
+  <data name="AssetsDownloadComplete" xml:space="preserve">
+    <value>Download af plugin-aktiver komplet!</value>
+  </data>
+  <data name="AssetsDownloadError1stPart" xml:space="preserve">
+    <value>Fejl ved download af plugin-aktiver:</value>
+  </data>
+  <data name="AssetsDownloadError2ndPart" xml:space="preserve">
+    <value>. Prøv igen senere. Hvis problemet fortsætter, skal du kontakte pluginudvikleren.</value>
+  </data>
+  <data name="AssetsPresentPopupMsg" xml:space="preserve">
+    <value>Alle plugin-aktiver til stede!</value>
+  </data>
+  <data name="DownloadingAssetsPopupMsg" xml:space="preserve">
+    <value>Download af ekstra plugin-aktiver i baggrunden. Vent venligst på, at downloadet er færdigt, før du åbner indstillingerne!</value>
+  </data>
+  <data name="ConfigTab8Name" xml:space="preserve">
+    <value>Fejlfinding</value>
+  </data>
+  <data name="PluginAssetsDownloadedText" xml:space="preserve">
+    <value>Plugin aktiver downloadet!</value>
+  </data>
+  <data name="PluginAssetsNotDownloadedText" xml:space="preserve">
+    <value>Hvis du ser forvansket tekst eller ugyldige tegn i oversættelsesvinduet\ndet er en indikation af, at nogle plugin-aktivskrifttyper muligvis mangler eller er beskadiget.\n\n Hvis du klikker på knappen nedenfor, udløser det en aktivkontrol og downloader dem igen.</value>
+  </data>
+  <data name="DownloadPluginAssetsButtonText" xml:space="preserve">
+    <value>Tving plugin-aktiver til at downloade plugin-aktiver igen</value>
+  </data>
+  <data name="CurrentPluginAssetsStatus" xml:space="preserve">
+    <value>Downloades plugin-aktiverne?</value>
+  </data>
+  <data name="ConfigTab9Name" xml:space="preserve">
+    <value>Diverse indstillinger</value>
+  </data>
+  <data name="ConfigTab9Text" xml:space="preserve">
+    <value>Diverse plugin-indstillinger og indstillinger</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardText" xml:space="preserve">
+    <value>Kopier automatisk den sidste oversættelse til plugin-udklipsholderen</value>
+  </data>
+  <data name="ConfigTab9CheckboxClipboardTooltipText" xml:space="preserve">
+    <value>Denne indstilling kopierer den seneste oversættelse og kildetekst til Udklipsholder (Works with Talk og BattleTalk)</value>
+  </data>
+  <data name="TranslateJournalToggle" xml:space="preserve">
+    <value>Oversæt opgavenavn, beskrivelse og mål (WIP)</value>
+  </data>
+  <data name="DeeplTranslatorApiKey" xml:space="preserve">
+    <value>Tilføj din DeepL API-nøgle</value>
+  </data>
+  <data name="SettingsForDeepLTransText" xml:space="preserve">
+    <value>Valgfrie indstillinger for DeepL:</value>
+  </data>
+  <data name="DeepLTranslatorAPIKeyLink" xml:space="preserve">
+    <value>Klik her for at oprette en DeepL API-nøgle</value>
+  </data>
+  <data name="TranslationEngineChoose" xml:space="preserve">
+    <value>Vælg oversættelsesmotoren</value>
+  </data>
+  <data name="DeepLTransAPIKey" xml:space="preserve">
+    <value>Brug API-nøgle (anbefales)</value>
+  </data>
+  <data name="TranslateTextsAgain" xml:space="preserve">
+    <value>Oversæt igen gemte oversatte tekster med den valgte oversættelsesmotor</value>
+  </data>
+  <data name="TranslateTalkSubtitleToggleLabel" xml:space="preserve">
+    <value>Oversæt cutscene undertekster</value>
+  </data>
+  <data name="ChatGptApiKey" xml:space="preserve">
+    <value>ChatGPT API-nøgle</value>
+  </data>
+  <data name="SettingsForChatGptTransText" xml:space="preserve">
+    <value>Indstillinger for ChatGPT</value>
+  </data>
+  <data name="ChatGPTAPIKeyLink" xml:space="preserve">
+    <value>Klik her for at oprette en OpenAi API-nøgle</value>
+  </data>
+  <data name="RemoveDiacriticsToggle" xml:space="preserve">
+    <value>Fortolk den oversatte tekst og erstatte diakritiske tegn med deres almindelige bogstavækvivalenter</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidChatGPTTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API-nøglen er tom eller ugyldig. ChatGPT-oversættelse vil ikke være tilgængelig.</value>
+  </data>
+  <data name="ChatGPTTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[ChatGPT-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</value>
+  </data>
+  <data name="TranslationError" xml:space="preserve">
+    <value>Oversættelsesfejl:</value>
+  </data>
+  <data name="DeepSeekTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[DeepSeek-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidDeepSeekTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API-nøglen er tom eller ugyldig. DeepSeek-oversættelse vil ikke være tilgængelig.</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidGeminiTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API-nøglen er tom eller ugyldig. Tvillingerne kan ikke oversættes til flere Tvillinger.</value>
+  </data>
+  <data name="GeminiTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Tvillingernes oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</value>
+  </data>
+  <data name="APIKeyIsEmptyOrInvalidMicrosoftTranslationWillNotBeAvailable" xml:space="preserve">
+    <value>API-nøglen er tom eller ugyldig. Microsoft-oversættelse vil ikke være tilgængelig.</value>
+  </data>
+  <data name="MicrosoftTranslationUnavailablePleaseCheckYourAPIKey" xml:space="preserve">
+    <value>[Microsoft-oversættelse er ikke tilgængelig. Tjek venligst din API-nøgle.]</value>
+  </data>
+  <data name="CustomizeThePromptUsedForTranslationAllOfTheFollowingPlaceholdersAreRequired" xml:space="preserve">
+    <value>Tilpas den prompt, der bruges til oversættelse. Alle følgende pladsholdere er påkrævet:</value>
+  </data>
+  <data name="AITranslatorPromptCustomization" xml:space="preserve">
+    <value>Tilpasning af AI-oversætterprompter</value>
+  </data>
+  <data name="MissingOneOrMoreRequiredPlaceholders" xml:space="preserve">
+    <value>⚠ Mangler en eller flere påkrævede pladsholdere!</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Nulstil til standard</value>
+  </data>
+  <data name="LivePreviewWithSampleInput" xml:space="preserve">
+    <value>Live preview med sample input:</value>
+  </data>
+  <data name="CopyPreview" xml:space="preserve">
+    <value>Kopi Eksempel</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Spare</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PromptInput" xml:space="preserve">
+    <value>PromptInput</value>
+  </data>
+  <data name="Editor" xml:space="preserve">
+    <value>Prompt Editor</value>
+  </data>
+  <data name="ResetSettingsMessageText" xml:space="preserve">
+    <value>Du kan nulstille Echoglossian-konfigurationen til standard ved hjælp af knappen nedenfor:</value>
+  </data>
+  <data name="ResetSettingsButtonText" xml:space="preserve">
+    <value>Nulstil konfiguration til standardindstillinger</value>
+  </data>
+  <data name="TalkTabTitle" xml:space="preserve">
+    <value>Tale</value>
+  </data>
+  <data name="BattleTalkTabTitle" xml:space="preserve">
+    <value>BattleTalk</value>
+  </data>
+  <data name="ToastTabTitle" xml:space="preserve">
+    <value>Ristet brød</value>
+  </data>
+  <data name="SubtitleTabTitle" xml:space="preserve">
+    <value>TalkUndertekst</value>
+  </data>
+  <data name="TranslateToastToggle" xml:space="preserve">
+    <value>Oversæt toastbeskeder</value>
+  </data>
+  <data name="SettingsForDeepSeekText" xml:space="preserve">
+    <value>Indstillinger for DeepSeek</value>
+  </data>
+  <data name="SettingsForOpenRouterText" xml:space="preserve">
+    <value>Indstillinger for OpenRouter Engine</value>
+  </data>
+  <data name="AWSAccessKey" xml:space="preserve">
+    <value>AWS-adgangsnøgle</value>
+  </data>
+  <data name="SettingsForAmazonTranslateText" xml:space="preserve">
+    <value>Indstillinger for Amazon Translate:</value>
+  </data>
+  <data name="AWSSecretKey" xml:space="preserve">
+    <value>AWS hemmelig nøgle</value>
+  </data>
+  <data name="Region" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="APIKey" xml:space="preserve">
+    <value>API-nøgle</value>
+  </data>
+  <data name="Endpoint" xml:space="preserve">
+    <value>Slutpunkt</value>
+  </data>
+  <data name="SettingsForMicrosoftText" xml:space="preserve">
+    <value>Indstillinger for Microsoft Translator</value>
+  </data>
+  <data name="MicrosoftTranslatorAPIKey" xml:space="preserve">
+    <value>Microsoft Translator API-nøgle</value>
+  </data>
+  <data name="ModelEndpoint" xml:space="preserve">
+    <value>Modellens slutpunkt</value>
+  </data>
+  <data name="LLMModel" xml:space="preserve">
+    <value>LLM-model</value>
+  </data>
+  <data name="Temperature" xml:space="preserve">
+    <value>Temperatur</value>
+  </data>
+  <data name="NoSettingsForEngine" xml:space="preserve">
+    <value>Ingen indstillinger kræves til denne motor</value>
+  </data>
+  <data name="SettingsForGeminiText" xml:space="preserve">
+    <value>Indstillinger for Gemini:</value>
+  </data>
+  <data name="SettingsForLibreTranslateText" xml:space="preserve">
+    <value>Indstillinger for LibreTranslate:</value>
+  </data>
+  <data name="LibreTranslateAPIEndpoint" xml:space="preserve">
+    <value>LibreTranslate API-slutpunkt</value>
+  </data>
+  <data name="SettingsForOllamaText" xml:space="preserve">
+    <value>Indstillinger for Ollama:</value>
+  </data>
+  <data name="YandexCloudFolderId" xml:space="preserve">
+    <value>Mappe-id</value>
+  </data>
+  <data name="SettingsForYandexCloudText" xml:space="preserve">
+    <value>Indstillinger for YandexCloud:</value>
+  </data>
+  <data name="YandexCloudApiKey" xml:space="preserve">
+    <value>YandexCloud API-nøgle</value>
+  </data>
+  <data name="ShowInCutscenesLabel" xml:space="preserve">
+    <value>Vis i mellemsekvenser</value>
+  </data>
+  <data name="CopyTranslationToClipboardLabel" xml:space="preserve">
+    <value>Kopier oversættelse til udklipsholder</value>
+  </data>
+  <data name="FontSizeLabel" xml:space="preserve">
+    <value>Skrifttypestørrelse:</value>
+  </data>
+  <data name="TranslateYesNoScreenLabel" xml:space="preserve">
+    <value>Oversæt Ja/Nej-skærm</value>
+  </data>
+  <data name="TranslateCutSceneSelectStringLabel" xml:space="preserve">
+    <value>Oversæt CutSceneSelectString</value>
+  </data>
+  <data name="TranslateSelectStringLabel" xml:space="preserve">
+    <value>Oversæt SelectString</value>
+  </data>
+  <data name="TranslateSelectOkLabel" xml:space="preserve">
+    <value>Oversæt SelectOk</value>
+  </data>
+  <data name="GeminiAPIKey" xml:space="preserve">
+    <value>Gemini API-nøgle</value>
+  </data>
+  <data name="SettingsForYandexPublic" xml:space="preserve">
+    <value>Indstillinger for Yandex public Translator</value>
+  </data>
+  <data name="SettingsForGTranslateText" xml:space="preserve">
+    <value>Indstillinger for GTranslate oversætter</value>
+  </data>
+  <data name="ConfigTabGeneralName" xml:space="preserve">
+    <value>Generelle indstillinger</value>
+  </data>
+  <data name="OtherUIElementsTabTitle" xml:space="preserve">
+    <value>Andre elementer i brugergrænsefladen</value>
+  </data>
+  <data name="AreYouSureYouWantToResetAllSettingsToDefault" xml:space="preserve">
+    <value>Er du sikker på, at du vil nulstille alle indstillinger til standard?</value>
+  </data>
+  <data name="YesReset" xml:space="preserve">
+    <value>Ja, nulstil</value>
+  </data>
+  <data name="ResetSettingsToDefault" xml:space="preserve">
+    <value>Nulstil ALLE Echoglossian-indstillinger til standard</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Aflyse</value>
+  </data>
+  <data name="TranslateCharacterWindow" xml:space="preserve">
+    <value>Oversæt vinduet "Tegn"</value>
+  </data>
+  <data name="APIEndpoint" xml:space="preserve">
+    <value>API-slutpunkt</value>
+  </data>
+  <data name="SettingsForLmStudioText" xml:space="preserve">
+    <value>Indstillinger for LMStudio:</value>
+  </data>
+  <data name="FetchLiveModels" xml:space="preserve">
+    <value>Hent levende modeller</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="UseAuthentication" xml:space="preserve">
+    <value>Brug godkendelse</value>
+  </data>
+  <data name="DataInsertedUpdatedInStringArrayDatasTable" xml:space="preserve">
+    <value>Data indsat/opdateret i StringArrayDatas-tabellen.</value>
+  </data>
+  <data name="ErrorSavingData" xml:space="preserve">
+    <value>Fejlbesparelse af data: {0}</value>
+  </data>
+  <data name="OpensTheEchoglossianDBEditor" xml:space="preserve">
+    <value>Åbner Echoglossian DB Editor.</value>
+  </data>
+  <data name="CryptoQRCodeInstructionsText" xml:space="preserve">
+    <value>Scan QR-koden for at sende kryptovaluta. Ethvert beløb værdsættes :)</value>
+  </data>
+  <data name="CryptoQrWindowLabel" xml:space="preserve">
+    <value>Krypto tegnebog</value>
+  </data>
+  <data name="SendCryptoButton" xml:space="preserve">
+    <value>Send krypto</value>
+  </data>
+  <data name="crypto" xml:space="preserve" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="UnableToLoadEntityForEditing" xml:space="preserve">
+    <value>Objektet kan ikke indlæses til redigering.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Slette</value>
+  </data>
+  <data name="NoRecordsLoaded" xml:space="preserve">
+    <value>Ingen optegnelser indlæst.</value>
+  </data>
+  <data name="NoRecordsFoundInThisTable" xml:space="preserve">
+    <value>Der blev ikke fundet nogen optegnelser i denne tabel.</value>
+  </data>
+  <data name="NoScalarPropertiesToDisplay" xml:space="preserve">
+    <value>Ingen skalaregenskaber at vise.</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Genindlæse</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>Forrige</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Side</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Næste</value>
+  </data>
+  <data name="_" xml:space="preserve">
+    <value>|</value>
+  </data>
+  <data name="PageSize" xml:space="preserve">
+    <value>Side størrelse:</value>
+  </data>
+  <data name="ExportSelectedCSV" xml:space="preserve">
+    <value>Eksporter valgt CSV</value>
+  </data>
+  <data name="ExportPageCSV" xml:space="preserve">
+    <value>Eksporter CSV-fil for side</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Slet valgte</value>
+  </data>
+  <data name="EchoglossianDBEditor" xml:space="preserve">
+    <value>Echoglossian DB-redaktør</value>
+  </data>
+  <data name="SelectATableToViewItsRecords" xml:space="preserve">
+    <value>Vælg en tabel for at få vist dens poster.</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Bord</value>
+  </data>
+  <data name="RecordSaved" xml:space="preserve">
+    <value>Rekord gemt!</value>
+  </data>
+  <data name="RecordDeleted" xml:space="preserve">
+    <value>Post slettet</value>
+  </data>
+  <data name="DeletedNRecords" xml:space="preserve">
+    <value>Slettede {0}-poster</value>
+  </data>
+  <data name="CopiedNRecordsToClipboard" xml:space="preserve">
+    <value>Kopieret {0} poster til Udklipsholder</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Hjælp</value>
+  </data>
+  <data name="TipDoubleClickARowToEdit" xml:space="preserve">
+    <value>Tip: Dobbeltklik på en række for at redigere.</value>
+  </data>
+  <data name="CSVExportCopiesToClipboard" xml:space="preserve">
+    <value>CSV Eksporter kopier til Udklipsholder</value>
+  </data>
+  <data name="LoadedNRecords" xml:space="preserve">
+    <value>Indlæste {0}-poster</value>
+  </data>
+  <data name="TooltipRegisterLoggingHelpMessage" xml:space="preserve">
+    <value>Temporarily logs hover-tooltip registrations and hover hits. Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingUsage" xml:space="preserve">
+    <value>Usage: /eglotooltipregisterlogging &lt;surface|all&gt; [duration] or /eglotooltipregisterlogging stop</value>
+  </data>
+  <data name="TooltipRegisterLoggingInvalidDurationFormat" xml:space="preserve">
+    <value>Invalid tooltip logging duration. Use values like 90s or 15m, up to {0} minutes.</value>
+  </data>
+  <data name="TooltipRegisterLoggingNoActiveSession" xml:space="preserve">
+    <value>No active tooltip registration logging session to stop.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStopped" xml:space="preserve">
+    <value>Tooltip registration logging stopped.</value>
+  </data>
+  <data name="TooltipRegisterLoggingStartedFormat" xml:space="preserve">
+    <value>Tooltip registration logging started for surface '{0}' for {1}. Check Echoglossian.log for register and hover-hit diagnostics.</value>
+  </data>
+</root>
