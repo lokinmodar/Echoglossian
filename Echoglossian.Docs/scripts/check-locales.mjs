@@ -23,14 +23,14 @@ export function validateLocales(resourceCultures, configuredLocales) {
   const resourceCultureSet = new Set(resourceCultures);
   const configuredLocaleSet = new Set(configuredLocales);
 
-  const missingInConfig = resourceCultures.filter(
+  const unpublishedResourceLocales = resourceCultures.filter(
     (culture) => !configuredLocaleSet.has(culture));
-  const unexpectedInConfig = configuredLocales.filter(
+  const configuredWithoutResourceLocales = configuredLocales.filter(
     (culture) => !resourceCultureSet.has(culture));
 
   return {
-    missingInConfig,
-    unexpectedInConfig,
+    unpublishedResourceLocales,
+    configuredWithoutResourceLocales,
   };
 }
 
@@ -40,20 +40,21 @@ async function main() {
   const configuredLocales = buildConfiguredLocales();
   const result = validateLocales(resourceCultures, configuredLocales);
 
-  if (result.missingInConfig.length > 0 || result.unexpectedInConfig.length > 0) {
-    if (result.missingInConfig.length > 0) {
-      console.error(`Missing locale config entries: ${result.missingInConfig.join(', ')}`);
-    }
+  if (result.unpublishedResourceLocales.length > 0) {
+    console.warn(
+      `Plugin resources include locales not yet published by docs: ${result.unpublishedResourceLocales.join(', ')}`,
+    );
+  }
 
-    if (result.unexpectedInConfig.length > 0) {
-      console.error(`Unexpected locale config entries: ${result.unexpectedInConfig.join(', ')}`);
-    }
-
+  if (result.configuredWithoutResourceLocales.length > 0) {
+    console.error(
+      `Unexpected locale config entries: ${result.configuredWithoutResourceLocales.join(', ')}`,
+    );
     process.exitCode = 1;
     return;
   }
 
-  console.log(`Locale config matches plugin resources: ${configuredLocales.join(', ')}`);
+  console.log(`Locale config is compatible with plugin resources: ${configuredLocales.join(', ')}`);
 }
 
 async function getResourceFileNames(directoryPath) {
@@ -81,6 +82,10 @@ function toCultureSegment(fileName) {
 function normalizeResourceLocaleKey(cultureSegment) {
   if (cultureSegment === 'root' || Object.hasOwn(locales, cultureSegment)) {
     return cultureSegment;
+  }
+
+  if (cultureSegment === 'en' || cultureSegment.startsWith('en-')) {
+    return 'root';
   }
 
   return cultureSegment.split('-')[0];
