@@ -18,6 +18,16 @@ test('collectResourceCultures maps neutral and regional resources', () => {
   assert.deepEqual(cultures, ['pt', 'pt-br', 'root', 'ru']);
 });
 
+test('collectResourceCultures folds English regional resources into the root locale', () => {
+  const cultures = collectResourceCultures([
+    'Resources.resx',
+    'Resources.en-US.resx',
+    'Resources.en-GB.resx',
+  ]);
+
+  assert.deepEqual(cultures, ['root']);
+});
+
 test('buildConfiguredLocales reflects the shared site locale list', () => {
   assert.deepEqual(buildConfiguredLocales(), [
     'da',
@@ -34,9 +44,19 @@ test('buildConfiguredLocales reflects the shared site locale list', () => {
   ]);
 });
 
-test('validateLocales reports missing and unexpected locales separately', () => {
+test('validateLocales reports unpublished plugin locales separately from invalid docs locales', () => {
   const result = validateLocales(['pt-br', 'root', 'ru'], ['root', 'ru', 'vi']);
 
-  assert.deepEqual(result.missingInConfig, ['pt-br']);
-  assert.deepEqual(result.unexpectedInConfig, ['vi']);
+  assert.deepEqual(result.unpublishedResourceLocales, ['pt-br']);
+  assert.deepEqual(result.configuredWithoutResourceLocales, ['vi']);
+});
+
+test('validateLocales allows plugin locales that are not published by docs yet', () => {
+  const result = validateLocales(
+    ['ca', 'de', 'nl', 'root'],
+    ['de', 'root'],
+  );
+
+  assert.deepEqual(result.unpublishedResourceLocales, ['ca', 'nl']);
+  assert.deepEqual(result.configuredWithoutResourceLocales, []);
 });
