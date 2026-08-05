@@ -7,12 +7,16 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0802.2355`
+## Published Release `v4.2601.0802.2355`
 
-This package submits the large native UI translation runtime expansion merged
+This package ships the large native UI translation runtime expansion merged
 through [PR #240](https://github.com/lokinmodar/Echoglossian/pull/240), with a
 focus on broader surface coverage, persistence-backed reuse, and safer native
 and overlay presentation behavior.
+
+Published in `DalamudPluginsD17` via
+[PR #9125](https://github.com/goatcorp/DalamudPluginsD17/pull/9125) on
+2026-08-05.
 
 Highlights:
 
@@ -217,6 +221,10 @@ repository workflow.
 | 2026-06-01 | [PR #8789](https://github.com/goatcorp/DalamudPluginsD17/pull/8789) `v4.2601.0531.0115` | native dialogue/toast reflow stabilization, ToastGui route, and cross-surface isolation fixes |
 | 2026-07-11 | [PR #9006](https://github.com/goatcorp/DalamudPluginsD17/pull/9006) `v4.2601.0710.1250` | LLM structured dialogue/runtime release: custom OpenAI-compatible providers, live model refresh, debugger diagnostics, and prompt/history hardening |
 | 2026-07-12 | [PR #9009](https://github.com/goatcorp/DalamudPluginsD17/pull/9009) `v4.2601.0712.1140` | story-surface retranslation, debugger provenance, and reusable DB inspection tooling |
+| 2026-07-16 | [PR #9026](https://github.com/goatcorp/DalamudPluginsD17/pull/9026) `v4.2601.0715.1114` | RTL overlay presentation plus game-window, reference-text, and tooltip stabilization |
+| 2026-07-17 | [PR #9027](https://github.com/goatcorp/DalamudPluginsD17/pull/9027) `v4.2601.0717.0008` | urgent MiniTalk native-layout stabilization |
+| 2026-07-19 | [PR #9031](https://github.com/goatcorp/DalamudPluginsD17/pull/9031) `v4.2601.0718.2006` | OpenRouter live-model refresh and hosted preview infrastructure follow-up |
+| 2026-08-05 | [PR #9125](https://github.com/goatcorp/DalamudPluginsD17/pull/9125) `v4.2601.0802.2355` | broad native UI runtime expansion across selection dialogs, tooltips, quest surfaces, nameplates, toasts, persistence, and diagnostics |
 
 ## Pre-Official History
 
