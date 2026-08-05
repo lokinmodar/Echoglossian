@@ -972,6 +972,16 @@ internal static unsafe class NativeTextNodeLayoutHelper
       ushort measuredTextExtent,
       int minimumSecondaryPadding)
   {
+    if (minimumSecondaryPadding <= 0 &&
+        secondaryContainerExtent > 0)
+    {
+      return ResolveExpandedContainerExtent(
+          secondaryContainerExtent,
+          currentTextExtent,
+          measuredTextExtent,
+          minimumPadding: 0);
+    }
+
     var baseExtent = Math.Max(
         primaryContainerExtent,
         secondaryContainerExtent);
