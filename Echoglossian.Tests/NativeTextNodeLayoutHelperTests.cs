@@ -347,4 +347,22 @@ public class NativeTextNodeLayoutHelperTests
 
         Assert.Equal((ushort)63, resolvedExtent);
     }
+
+    /// <summary>
+    ///     Ensures detached MiniTalk-style component roots do not become the
+    ///     permanent minimum bubble height when the visible nine-grid background
+    ///     is much smaller and no explicit tooltip padding policy is requested.
+    /// </summary>
+    [Fact]
+    public void ResolveSynchronizedContainerExtent_PrefersVisibleBackgroundBaseline_WhenDetachedPrimaryIsLargerAndNoPaddingIsRequested()
+    {
+        var resolvedExtent = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+            primaryContainerExtent: 192,
+            secondaryContainerExtent: 42,
+            currentTextExtent: 37,
+            measuredTextExtent: 38,
+            minimumSecondaryPadding: 0);
+
+        Assert.Equal((ushort)43, resolvedExtent);
+    }
 }
