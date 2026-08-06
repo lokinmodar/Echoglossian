@@ -454,6 +454,200 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
+    ///     Ensures the managed BattleTalk capture callback returns while database
+    ///     lookup remains suspended and publishes only after lookup completes.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_SuspendedDatabaseLookup_DoesNotBlockCaptureCallback()
+    {
+        using var lookupStarted = new ManualResetEventSlim();
+        using var releaseLookupPrefix = new ManualResetEventSlim();
+        using var captureReturned = new ManualResetEventSlim();
+        var lookupCompletion = new TaskCompletionSource<BattleTalkMessage?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var overlayPublished = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var overlayUpdates = 0;
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(new ControlledTranslator()),
+            () =>
+            {
+                overlayUpdates++;
+                overlayPublished.TrySetResult(true);
+            },
+            findBattleTalkMessageAsync: async (_, cancellationToken) =>
+            {
+                lookupStarted.Set();
+                releaseLookupPrefix.Wait();
+                return await lookupCompletion.Task.WaitAsync(cancellationToken);
+            });
+        var english = new SourceClientLanguage("en", "en");
+        var captureAccepted = false;
+        var captureThread = new Thread(
+            () =>
+            {
+                captureAccepted = handler.TryQueueTranslation(
+                    "Alphinaud",
+                    "Understood.",
+                    english);
+                captureReturned.Set();
+            });
+
+        handler.InvalidateStateForSource(english);
+
+        try
+        {
+            captureThread.Start();
+
+            Assert.True(lookupStarted.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(captureReturned.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(captureAccepted);
+        }
+        finally
+        {
+            releaseLookupPrefix.Set();
+            captureThread.Join(TimeSpan.FromSeconds(1));
+        }
+
+        Assert.False(lookupCompletion.Task.IsCompleted);
+        Assert.True(handler.IsTranslationInFlight);
+        Assert.Equal(0, overlayUpdates);
+        Assert.False(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out _,
+            out _,
+            out _));
+
+        lookupCompletion.TrySetResult(CreateStoredBattleTalkMessage(
+            "Alphinaud",
+            "Understood.",
+            "Entendido."));
+        await overlayPublished.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.False(handler.IsTranslationInFlight);
+        Assert.Equal(1, overlayUpdates);
+        Assert.True(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out var translatedText,
+            out _,
+            out _));
+        Assert.Equal("Entendido.", translatedText);
+    }
+
+    /// <summary>
+    ///     Ensures a suspended BattleTalk database result for line A cannot
+    ///     publish over the newer managed state captured for line B.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_StaleDatabaseResult_CannotReplaceNewerManagedState()
+    {
+        var lookupStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var lookupCompletion = new TaskCompletionSource<BattleTalkMessage?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var overlayUpdates = 0;
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(new ControlledTranslator()),
+            () => overlayUpdates++,
+            findBattleTalkMessageAsync: async (_, cancellationToken) =>
+            {
+                lookupStarted.TrySetResult(true);
+                return await lookupCompletion.Task.WaitAsync(cancellationToken);
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Line A",
+            english,
+            out var lineARequestId,
+            out var lineAOperation));
+        var lineAResolution = handler.ResolveTranslationAsync(
+            "Alphinaud",
+            "Line A",
+            lineARequestId,
+            english,
+            lineAOperation,
+            lineAOperation.CancellationToken);
+        await lookupStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Line B",
+            english,
+            out _,
+            out _));
+
+        lookupCompletion.TrySetResult(CreateStoredBattleTalkMessage(
+            "Alphinaud",
+            "Line A",
+            "Linha A"));
+        await lineAResolution;
+
+        Assert.True(handler.IsTranslationInFlight);
+        Assert.Equal(0, overlayUpdates);
+        Assert.False(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out _,
+            out _,
+            out _));
+    }
+
+    /// <summary>
+    ///     Ensures a BattleTalk speaker-name translation failure does not discard
+    ///     the translated dialogue body.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_SpeakerTranslationFailure_PublishesTranslatedBody()
+    {
+        var configuration = new Config
+        {
+            TranslateBattleTalk = true,
+            BattleTalkTranslationDisplayMode =
+                JournalTranslationDisplayMode.TooltipTranslation,
+            TranslateBattleTalkNpcNames = true,
+            Lang = 81,
+        };
+        BattleTalkMessage? insertedMessage = null;
+        var overlayPublished = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(new BodySuccessSpeakerFailureTranslator()),
+            () => overlayPublished.TrySetResult(true),
+            configuration,
+            insertBattleTalkMessageAsync: (message, _) =>
+            {
+                insertedMessage = message;
+                return Task.FromResult(string.Empty);
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Understood.",
+            english));
+
+        await overlayPublished.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.NotNull(insertedMessage);
+        Assert.Equal("Entendido.", insertedMessage.TranslatedBattleTalkMessage);
+        Assert.Equal(string.Empty, insertedMessage.TranslatedSenderName);
+        Assert.True(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out var translatedName,
+            out var translatedText,
+            out _,
+            out _));
+        Assert.Equal(string.Empty, translatedName);
+        Assert.Equal("Entendido.", translatedText);
+    }
+
+    /// <summary>
     ///     Creates a Talk handler with native-free publication delegates.
     /// </summary>
     /// <param name="translationService">The translation service.</param>
@@ -518,21 +712,65 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
-    ///     Creates a BattleTalk handler for session-key assertions.
+    ///     Creates a BattleTalk handler with native-free publication delegates.
     /// </summary>
     /// <param name="translationService">The translation service.</param>
+    /// <param name="updateOverlay">The overlay publication callback.</param>
+    /// <param name="configuration">The optional handler configuration.</param>
+    /// <param name="insertBattleTalkMessageAsync">The persistence callback.</param>
+    /// <param name="findBattleTalkMessageAsync">The asynchronous lookup callback.</param>
     /// <returns>The configured handler.</returns>
     private static BattleTalkHandler CreateBattleTalkHandler(
-        TranslationService translationService)
+        TranslationService translationService,
+        Action? updateOverlay = null,
+        Config? configuration = null,
+        Func<BattleTalkMessage, CancellationToken, Task<string>>?
+            insertBattleTalkMessageAsync = null,
+        Func<BattleTalkMessage, CancellationToken, Task<BattleTalkMessage?>>?
+            findBattleTalkMessageAsync = null)
     {
         return new BattleTalkHandler(
-            new Config(),
+            configuration ?? new Config
+            {
+                TranslateBattleTalk = true,
+                BattleTalkTranslationDisplayMode =
+                    JournalTranslationDisplayMode.TooltipTranslation,
+                Lang = 81,
+            },
             translationService,
-            static _ => null,
-            static _ => Task.FromResult(string.Empty),
-            static (_, _, _) => { },
+            findBattleTalkMessageAsync ??
+            (static (_, _) => Task.FromResult<BattleTalkMessage?>(null)),
+            insertBattleTalkMessageAsync ??
+            (static (_, _) => Task.FromResult(string.Empty)),
+            (_, _, _) => updateOverlay?.Invoke(),
             static () => { },
             static text => text);
+    }
+
+    /// <summary>
+    ///     Creates one stored BattleTalk translation for async lookup tests.
+    /// </summary>
+    /// <param name="originalName">The original speaker name.</param>
+    /// <param name="originalText">The original dialogue text.</param>
+    /// <param name="translatedText">The translated dialogue text.</param>
+    /// <returns>The stored BattleTalk row.</returns>
+    private static BattleTalkMessage CreateStoredBattleTalkMessage(
+        string originalName,
+        string originalText,
+        string translatedText)
+    {
+        return new BattleTalkMessage(
+            originalName,
+            originalText,
+            "en",
+            "en",
+            string.Empty,
+            translatedText,
+            "pt-BR",
+            (int)PluginEntry.TransEngines.Google,
+            rtlLangTranslationImageData: null,
+            DateTime.UtcNow,
+            DateTime.UtcNow);
     }
 
     /// <summary>
@@ -594,6 +832,33 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         {
             this.requestStarted.TrySetResult(true);
             return this.completion.Task;
+        }
+    }
+
+    /// <summary>
+    ///     Translates dialogue text while failing speaker-name translation.
+    /// </summary>
+    private sealed class BodySuccessSpeakerFailureTranslator : ITranslator
+    {
+        /// <inheritdoc />
+        public string? Translate(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return null;
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return text == "Alphinaud"
+                ? Task.FromException<string?>(
+                    new InvalidOperationException("Speaker translation failed."))
+                : Task.FromResult<string?>("Entendido.");
         }
     }
 }

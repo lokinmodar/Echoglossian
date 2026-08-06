@@ -153,7 +153,7 @@ public partial class Echoglossian
               Handler: new BattleTalkHandler(
                   this.configuration,
                   TranslationService,
-                  this.FindAndReturnBattleTalkMessage,
+                  this.FindAndReturnBattleTalkMessageAsync,
                   (battleTalkMessage, cancellationToken) =>
                       InsertBattleTalkDataAsync(
                           battleTalkMessage,
