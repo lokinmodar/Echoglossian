@@ -706,6 +706,12 @@
   <data name="TooltipAddonOverlayAppearanceDescription" xml:space="preserve">
     <value>These settings apply only when the Tooltip addon uses its anchored Plugin Overlay.</value>
   </data>
+  <data name="ActionItemDetailOverlayAppearanceSectionLabel" xml:space="preserve">
+    <value>Action/item detail overlay appearance</value>
+  </data>
+  <data name="ActionItemDetailOverlayAppearanceDescription" xml:space="preserve">
+    <value>These settings apply to the Plugin Overlays shown above ActionDetail and ItemDetail.</value>
+  </data>
   <data name="TooltipAddonHideNativeTooltipWhenOverlayActiveLabel" xml:space="preserve">
     <value>Hide native Tooltip while overlay is active</value>
   </data>
@@ -732,6 +738,9 @@
   </data>
   <data name="TooltipAddonOverlayMaxWidthMatchNativeLabel" xml:space="preserve">
     <value>Match native tooltip</value>
+  </data>
+  <data name="ActionItemDetailOverlayMaxWidthMatchNativeLabel" xml:space="preserve">
+    <value>Match native detail window</value>
   </data>
   <data name="TooltipAddonOverlayMaxWidthManualCapLabel" xml:space="preserve">
     <value>Manual cap</value>
