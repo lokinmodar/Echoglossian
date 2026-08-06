@@ -41,23 +41,6 @@ public class TranslationWindowConfigTests
     }
 
     /// <summary>
-    /// Ensures the tooltip-only surfaces remain explicitly unavailable to the
-    /// overlay renderer until their later preview phases.
-    /// </summary>
-    /// <param name="surfaceId">The unsupported tooltip surface.</param>
-    [Theory]
-    [InlineData((int)TranslationOverlaySurfaceId.ActionDetail)]
-    [InlineData((int)TranslationOverlaySurfaceId.ItemDetail)]
-    public void ForSurface_TooltipOnlySurface_ThrowsNotSupportedException(
-        int surfaceId)
-    {
-        Assert.Throws<NotSupportedException>(
-            () => TranslationWindowConfig.ForSurface(
-                new Config(),
-                (TranslationOverlaySurfaceId)surfaceId));
-    }
-
-    /// <summary>
     /// Ensures callers get an immediate argument error for a missing config.
     /// </summary>
     [Fact]
@@ -216,6 +199,22 @@ public class TranslationWindowConfigTests
         [
             TranslationOverlaySurfaceId.QuestToast,
             (Func<Config, TranslationWindowConfig>)TranslationWindowConfig.FromConfigForQuestToast,
+        ];
+        yield return
+        [
+            TranslationOverlaySurfaceId.ActionDetail,
+            (Func<Config, TranslationWindowConfig>)(config =>
+                TranslationWindowConfig.FromConfigForActionItemDetail(
+                    config,
+                    TranslationOverlaySurfaceId.ActionDetail)),
+        ];
+        yield return
+        [
+            TranslationOverlaySurfaceId.ItemDetail,
+            (Func<Config, TranslationWindowConfig>)(config =>
+                TranslationWindowConfig.FromConfigForActionItemDetail(
+                    config,
+                    TranslationOverlaySurfaceId.ItemDetail)),
         ];
         yield return
         [

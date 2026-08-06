@@ -82,6 +82,22 @@ public class ConfigDefaultsTests
     }
 
     /// <summary>
+    ///     Ensures ActionDetail and ItemDetail overlays default to the same
+    ///     smaller scale as the Tooltip addon overlay bucket so detail text
+    ///     stays visually aligned with the native surfaces they anchor to.
+    /// </summary>
+    [Fact]
+    public void ActionItemDetailOverlayFontScaleAdjustment_DefaultsToSixtyFivePercent()
+    {
+        var config = new Config();
+        var field = typeof(Config).GetField(
+            nameof(Config.ActionItemDetailOverlayFontScaleAdjustment));
+
+        Assert.NotNull(field);
+        Assert.Equal(0.65f, Assert.IsType<float>(field!.GetValue(config)));
+    }
+
+    /// <summary>
     ///     Ensures hover tooltips can use a wider layout cap than the legacy
     ///     hardcoded width so long RTL paragraphs do not collapse into a tall
     ///     column.

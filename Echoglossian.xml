@@ -2748,6 +2748,30 @@
         <member name="F:Echoglossian.Config.TooltipAddonOverlayManualMaxWidth">
             <summary>Manual maximum width used by the Tooltip addon anchored overlay.</summary>
         </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayTextColor">
+            <summary>Text color used by ActionDetail and ItemDetail overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayBackgroundColor">
+            <summary>Background color used by ActionDetail and ItemDetail overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayBackgroundOpacity">
+            <summary>Background opacity used by ActionDetail and ItemDetail overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayFontScaleAdjustment">
+            <summary>Font scale adjustment used by ActionDetail and ItemDetail overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayLineHeightScale">
+            <summary>Line-height scale used by ActionDetail and ItemDetail overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayPadding">
+            <summary>Padding applied by ActionDetail and ItemDetail overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayMaxWidthMode">
+            <summary>Width mode used by ActionDetail and ItemDetail overlays.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.ActionItemDetailOverlayManualMaxWidth">
+            <summary>Manual maximum width used by ActionDetail and ItemDetail overlays.</summary>
+        </member>
         <member name="F:Echoglossian.Config.HoverTooltipTextColor">
             <summary>Text color used by Echoglossian hover tooltips.</summary>
         </member>
@@ -5719,14 +5743,6 @@
             <param name="surfaceName">The logical surface name.</param>
             <param name="overlay">The overlay instance to draw.</param>
             <param name="config">The overlay configuration.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildTooltipOverlayConfig(Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,System.String)">
-            <summary>
-                Builds the shared overlay configuration used by structured tooltips.
-            </summary>
-            <param name="surfaceId">The stable overlay surface identifier.</param>
-            <param name="defaultTitle">The default overlay title.</param>
-            <returns>The overlay configuration.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.NormalizeHoveredItemId(System.UInt32)">
             <summary>
@@ -33578,6 +33594,36 @@
             <param name="config">The current plugin configuration.</param>
             <returns><c>true</c> when a setting changed.</returns>
         </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TooltipTab.DrawSectionHeader(System.String,System.String)">
+            <summary>
+                Draws one visually separated section heading for the tooltip tab.
+            </summary>
+            <param name="title">The section title.</param>
+            <param name="description">The optional section description.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.Tabs.TooltipTab.DrawSharedOverlayAppearanceControls(System.String,System.Single@,System.String,System.Single@,System.String,System.Single@,System.String,System.Numerics.Vector3@,System.String,System.Numerics.Vector3@,System.String,System.Single@,System.String,System.String,Echoglossian.TooltipAddonOverlayMaxWidthMode@,System.String,System.Single@)">
+            <summary>
+                Draws one shared overlay-appearance control bucket.
+            </summary>
+            <param name="fontScaleLabel">The font-scale slider label.</param>
+            <param name="fontScale">The persisted font-scale value.</param>
+            <param name="lineHeightLabel">The line-height slider label.</param>
+            <param name="lineHeight">The persisted line-height value.</param>
+            <param name="paddingLabel">The padding slider label.</param>
+            <param name="padding">The persisted padding value.</param>
+            <param name="textColorLabel">The text-color label.</param>
+            <param name="textColor">The persisted text color.</param>
+            <param name="backgroundColorLabel">The background-color label.</param>
+            <param name="backgroundColor">The persisted background color.</param>
+            <param name="backgroundOpacityLabel">The opacity slider label.</param>
+            <param name="backgroundOpacity">The persisted background opacity.</param>
+            <param name="maxWidthModeLabel">The width-mode combo label.</param>
+            <param name="matchNativeLabel">The native-width option label.</param>
+            <param name="maxWidthMode">The persisted width mode.</param>
+            <param name="manualMaxWidthLabel">The manual-width slider label.</param>
+            <param name="manualMaxWidth">The persisted manual width.</param>
+            <returns><c>true</c> when one or more controls changed.</returns>
+        </member>
         <member name="T:Echoglossian.PluginUI.Tabs.TranslationDisplayModeUiHelper">
             <summary>
                 Renders the shared translation display-mode dropdown used by DB-first UI
@@ -41022,6 +41068,15 @@
             <param name="config">The active plugin configuration.</param>
             <returns>The Tooltip addon anchored-overlay configuration.</returns>
         </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForActionItemDetail(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId)">
+            <summary>
+            Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance based on the
+            provided <see cref="T:Echoglossian.Config"/> for ActionDetail and ItemDetail overlays.
+            </summary>
+            <param name="config">The active plugin configuration.</param>
+            <param name="surfaceId">The detail overlay surface identifier.</param>
+            <returns>The shared detail-overlay configuration.</returns>
+        </member>
         <member name="M:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig.FromConfigForQuestToastPlacement(Echoglossian.Config,Dalamud.Game.Gui.Toast.QuestToastPosition)">
             <summary>
             Creates a <see cref="T:Echoglossian.UIOverlays.TranslationOverlay.TranslationWindowConfig"/> instance for one
@@ -41050,6 +41105,508 @@
             <param name="serviceCollection">The service collection.</param>
             <param name="tags">The service registration tags to include.</param>
             <returns>The service collection</returns>
+        </member>
+        <member name="T:Injectio.Attributes.DuplicateStrategy">
+            <summary>
+            Service registration duplicate strategies
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.DuplicateStrategy.Skip">
+            <summary>
+            Skips registrations for services that already exists.
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.DuplicateStrategy.Replace">
+            <summary>
+            Replaces existing service registrations.
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.DuplicateStrategy.Append">
+            <summary>
+            Appends a new registration for existing services.
+            </summary>
+        </member>
+        <member name="T:Injectio.Attributes.RegistrationStrategy">
+            <summary>
+            Register service type strategies
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.Self">
+            <summary>
+            Registers each matching concrete type as itself
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.ImplementedInterfaces">
+            <summary>
+            Registers each matching concrete type as all of its implemented interfaces.
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.SelfWithInterfaces">
+            <summary>
+            Registers each matching concrete type as all of its implemented interfaces and itself
+            </summary>
+        </member>
+        <member name="F:Injectio.Attributes.RegistrationStrategy.SelfWithProxyFactory">
+            <summary>
+            Registers each matching concrete type as all of its implemented interfaces and itself.
+            For the interfaces a proxy-factory resolves the service from its type-name, so only one instance is created per lifetime
+            </summary>
+            <remarks>For open-generic registrations, this behaves like <see cref="F:Injectio.Attributes.RegistrationStrategy.SelfWithInterfaces"/></remarks>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.ServiceType">
+            <summary>
+            The <see cref="T:System.Type"/> of the service
+            </summary>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ServiceType"/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.ImplementationType">
+            <summary>
+            The <see cref="T:System.Type"/> that implements the service.  If not set, the class the interface is on will be used.
+            </summary>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ServiceType"/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.ServiceKey">
+            <summary>
+            Gets or sets the key of the service.
+            </summary>
+            <value>The service key.</value>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ServiceKey "/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Factory">
+            <summary>
+            Name of a factory method to create new instances of the service implementation
+            </summary>
+            <remarks>
+            The method signature must be Func{IServiceProvider, object} and must be static
+            </remarks>
+            <seealso cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.ImplementationFactory"/>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Duplicate">
+            <summary>
+            Gets or sets the duplicate.
+            </summary>
+            <value>
+            The duplicate.
+            </value>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Registration">
+            <summary>
+            Gets or sets the registration.
+            </summary>
+            <value>
+            The registration.
+            </value>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterAttribute.Tags">
+            <summary>
+            Gets or sets the comma delimited list of service registration tags.
+            </summary>
+            <value>
+            The comma delimited list of service registration tags.
+            </value>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterScopedAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a scoped service
+            </summary>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterScoped]
+              public class ScopedService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterSingletonAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a singleton service
+            </summary>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterSingleton]
+              public class SingletonService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterTransientAttribute">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a transient service
+            </summary>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterTransient]
+              public class TransientService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterServicesAttribute">
+            <summary>Attribute to indicate the method should be called to register services</summary>
+            <example>use the RegisterServices attribute
+              <code>
+              public class RegistrationModule
+              {
+                  [RegisterServices]
+                  public static void Register(IServiceCollection services)
+                  {
+                      services.TryAddTransient&lt;IModuleService, ModuleService&gt;();
+                  }
+              }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterDecoratorAttribute">
+            <summary>
+            Attribute to indicate the target class should be registered as a decorator for an existing service.
+            The decorator wraps the previously registered service implementation and inherits its <see cref="P:Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Lifetime"/>.
+            </summary>
+            <example>Decorate <c>IService</c> with a logging wrapper
+              <code>
+              [RegisterDecorator(ServiceType = typeof(IService))]
+              public class LoggingDecorator : IService
+              {
+                  public LoggingDecorator(IService inner) { }
+              }
+              </code>
+            </example>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.ServiceType">
+            <summary>
+            The <see cref="T:System.Type"/> of the service to decorate.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.ImplementationType">
+            <summary>
+            The <see cref="T:System.Type"/> that implements the decorator. If not set, the class the attribute is on will be used.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.ServiceKey">
+            <summary>
+            Gets or sets the key of the keyed service to decorate.
+            Leave unset (and <see cref="P:Injectio.Attributes.RegisterDecoratorAttribute.AnyKey"/> false) to decorate the non-keyed registration.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.AnyKey">
+            <summary>
+            When <c>true</c>, the decorator is applied to every keyed registration of <see cref="P:Injectio.Attributes.RegisterDecoratorAttribute.ServiceType"/>,
+            regardless of its key. Equivalent to <c>KeyedService.AnyKey</c>.
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.Factory">
+            <summary>
+            Name of a static factory method to construct the decorator.
+            </summary>
+            <remarks>
+            The factory signature must be <c>(IServiceProvider, TService) -&gt; TService</c> for non-keyed services
+            or <c>(IServiceProvider, object?, TService) -&gt; TService</c> for keyed services.
+            </remarks>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.Order">
+            <summary>
+            Gets or sets the order in which the decorator is applied. Lower values are applied first (innermost).
+            </summary>
+        </member>
+        <member name="P:Injectio.Attributes.RegisterDecoratorAttribute.Tags">
+            <summary>
+            Gets or sets the comma delimited list of registration tags.
+            </summary>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterScopedAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a scoped service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterScoped&lt;IService&gt;]
+              public class ScopedService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterScopedAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a scoped service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <typeparam name="TImplementation">The type of the implementation to use.</typeparam>
+            <example>Register the ScopedService class as an implementation for IService
+              <code>
+              [RegisterScoped&lt;IService, ScopedService&gt;]
+              public class ScopedService: IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterSingletonAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a singleton service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterSingleton&lt;IService&gt;]
+              public class SingletonService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterSingletonAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a singleton service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <typeparam name="TImplementation">The type of the implementation to use.</typeparam>
+            <example>Register the SingletonService class as an implementation for IService
+              <code>
+              [RegisterSingleton&lt;IService, SingletonService&gt;]
+              public class SingletonService: IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterTransientAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a transient service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <example>Register the class as an implementation for IService
+              <code>
+              [RegisterTransient&lt;IService&gt;]
+              public class TransientService : IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterTransientAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be register for dependency injection as a transient service
+            </summary>
+            <typeparam name="TService">The type of the service to add.</typeparam>
+            <typeparam name="TImplementation">The type of the implementation to use.</typeparam>
+            <example>Register the TransientService class as an implementation for IService
+              <code>
+              [RegisterTransient&lt;IService, TransientService&gt;]
+              public class TransientService: IService { }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterDecoratorAttribute`1">
+            <summary>
+            Attribute to indicate the target class should be registered as a decorator for <typeparamref name="TService"/>.
+            </summary>
+            <typeparam name="TService">The type of the service to decorate.</typeparam>
+            <example>
+              <code>
+              [RegisterDecorator&lt;IService&gt;]
+              public class LoggingDecorator : IService
+              {
+                  public LoggingDecorator(IService inner) { }
+              }
+              </code>
+            </example>
+        </member>
+        <member name="T:Injectio.Attributes.RegisterDecoratorAttribute`2">
+            <summary>
+            Attribute to indicate the target class should be registered as a decorator for <typeparamref name="TService"/>
+            using <typeparamref name="TImplementation"/> as the decorator implementation.
+            </summary>
+            <typeparam name="TService">The type of the service to decorate.</typeparam>
+            <typeparam name="TImplementation">The type of the decorator implementation.</typeparam>
+        </member>
+        <member name="T:Injectio.Extensions.DecorationExtensions">
+             <summary>
+             Provides extension methods for decorating registered services in an <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
+             </summary>
+             <remarks>
+             <para>
+             The <b>Decorator pattern</b> wraps an existing service with additional behavior without modifying the
+             original implementation. Each decorator implements the same interface as the service it wraps, creating
+             a chain of responsibility:
+             </para>
+             <para>
+             These methods work by replacing the <see cref="T:Microsoft.Extensions.DependencyInjection.ServiceDescriptor"/>
+             in-place within the service collection. The original factory, instance, or implementation type is captured
+             so the inner service can still be resolved. The replacement descriptor preserves the original lifetime.
+             Calling a decoration method multiple times stacks decorators, with the last call becoming the outermost layer.
+             </para>
+             <para><b>Usage example — decorating with a factory:</b></para>
+             <code>
+             // Register the original service
+             services.AddScoped&lt;INotificationService, EmailNotificationService&gt;();
+            
+             // Decorate with logging
+             services.Decorate&lt;INotificationService&gt;(
+                 (sp, inner) =&gt; new LoggingNotificationService(inner, sp.GetRequiredService&lt;ILogger&gt;()));
+            
+             // Decorate with retry (stacks on top of logging)
+             services.Decorate&lt;INotificationService&gt;(
+                 (sp, inner) =&gt; new RetryNotificationService(inner));
+            
+             // Resolution chain: Retry → Logging → Email
+             </code>
+             <para><b>Usage example — decorating open generics:</b></para>
+             <code>
+             // Register closed-generic implementations
+             services.AddScoped&lt;IRepository&lt;Order&gt;, OrderRepository&gt;();
+             services.AddScoped&lt;IRepository&lt;Customer&gt;, CustomerRepository&gt;();
+            
+             // Decorate all IRepository&lt;T&gt; with caching
+             services.DecorateOpenGeneric(
+                 typeof(IRepository&lt;&gt;), typeof(CachingRepository&lt;&gt;));
+             </code>
+             </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.Decorate(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Func{System.IServiceProvider,System.Object,System.Object})">
+            <summary>
+            Decorates all non-keyed registrations matching <paramref name="serviceType"/> by wrapping each resolved instance
+            with <paramref name="decoratorFactory"/>.
+            </summary>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceType">The service type to decorate.</param>
+            <param name="decoratorFactory">A factory that receives the service provider and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method replaces matching <see cref="T:Microsoft.Extensions.DependencyInjection.ServiceDescriptor"/> entries in-place,
+            preserving each registration lifetime. Keyed registrations are skipped.
+            </para>
+            <para>
+            Multiple calls stack decorators, with the most recent decoration becoming the outermost layer.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.Decorate``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Func{System.IServiceProvider,``0,``0})">
+            <summary>
+            Decorates all registrations of <typeparamref name="TService"/> by wrapping each resolved instance with <paramref name="decoratorFactory"/>.
+            Keyed service registrations are skipped.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="decoratorFactory">A factory that receives the service provider and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            Decoration replaces each existing <see cref="T:Microsoft.Extensions.DependencyInjection.ServiceDescriptor"/> for
+            <typeparamref name="TService"/> in-place. The original descriptor's factory, instance, or implementation type is
+            captured and used to resolve the inner service, which is then passed to <paramref name="decoratorFactory"/>.
+            The replacement descriptor preserves the original registration's lifetime.
+            </para>
+            <para>
+            Multiple calls stack: each call wraps whatever factory is currently registered, enabling layered decoration.
+            Only non-keyed registrations are affected; use <c>DecorateKeyed</c> for keyed services.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.Decorate``2(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Decorates all registrations of <typeparamref name="TService"/> by wrapping each resolved instance
+            with an automatically constructed instance of <typeparamref name="TDecorator"/>.
+            Keyed service registrations are skipped.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <typeparam name="TDecorator">The decorator type. Its constructor must accept a <typeparamref name="TService"/> parameter for the inner service; additional parameters are resolved from the service provider.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This overload uses <see cref="M:Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(System.IServiceProvider,System.Type,System.Object[])"/>
+            to construct the decorator, passing the inner service instance as an explicit argument. Any remaining
+            constructor parameters are resolved from the <see cref="T:System.IServiceProvider"/>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateKeyed(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Object,System.Func{System.IServiceProvider,System.Object,System.Object,System.Object})">
+            <summary>
+            Decorates keyed registrations matching <paramref name="serviceType"/> and <paramref name="serviceKey"/>
+            by wrapping each resolved instance with <paramref name="decoratorFactory"/>.
+            </summary>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceType">The service type to decorate.</param>
+            <param name="serviceKey">The key to match, or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> for all keys.</param>
+            <param name="decoratorFactory">A factory that receives the service provider, the key, and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method only processes keyed registrations and preserves both the original key and lifetime for each replacement descriptor.
+            </para>
+            <para>
+            Non-keyed registrations are skipped. Multiple calls stack decorators for matching keyed registrations.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateKeyed``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object,System.Func{System.IServiceProvider,System.Object,``0,``0})">
+            <summary>
+            Decorates all keyed registrations of <typeparamref name="TService"/> matching <paramref name="serviceKey"/>
+            by wrapping each resolved instance with <paramref name="decoratorFactory"/>.
+            Pass <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> to match all keys.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceKey">The key to match, or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> for all keys.</param>
+            <param name="decoratorFactory">A factory that receives the service provider, the key, and the original instance, and returns the decorated instance.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method iterates through all service descriptors for <typeparamref name="TService"/> and replaces each
+            keyed registration whose key matches <paramref name="serviceKey"/>. The original keyed factory, instance,
+            or implementation type is captured and used to resolve the inner service, which is then passed to
+            <paramref name="decoratorFactory"/> along with the service provider and key. The replacement descriptor
+            preserves the original registration's lifetime and key.
+            </para>
+            <para>
+            Non-keyed registrations are skipped; use <c>Decorate</c> for those. Multiple calls stack, enabling
+            layered decoration of keyed services.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateKeyed``2(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object)">
+            <summary>
+            Decorates all keyed registrations of <typeparamref name="TService"/> matching <paramref name="serviceKey"/>
+            by wrapping each resolved instance with an automatically constructed instance of <typeparamref name="TDecorator"/>.
+            Pass <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> to match all keys.
+            </summary>
+            <typeparam name="TService">The service type to decorate.</typeparam>
+            <typeparam name="TDecorator">The decorator type. Its constructor must accept a <typeparamref name="TService"/> parameter for the inner service; additional parameters are resolved from the service provider.</typeparam>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="serviceKey">The key to match, or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> for all keys.</param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This overload uses <see cref="M:Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(System.IServiceProvider,System.Type,System.Object[])"/>
+            to construct the decorator, passing the inner service instance as an explicit argument. Any remaining
+            constructor parameters are resolved from the <see cref="T:System.IServiceProvider"/>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Injectio.Extensions.DecorationExtensions.DecorateOpenGeneric(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Type,System.Object)">
+            <summary>
+            Decorates all closed-generic registrations whose generic type definition matches <paramref name="openServiceType"/>
+            by wrapping each resolved instance with an instance of <paramref name="openDecoratorType"/>.
+            </summary>
+            <param name="services">The service collection containing the registrations to decorate.</param>
+            <param name="openServiceType">The open generic service type (e.g., <c>typeof(IRepository&lt;&gt;)</c>).</param>
+            <param name="openDecoratorType">The open generic decorator type that wraps the original service.</param>
+            <param name="serviceKey">
+            The key of the keyed registrations to decorate. Pass <see langword="null"/> to decorate non-keyed registrations,
+            or <see cref="P:Microsoft.Extensions.DependencyInjection.KeyedService.AnyKey"/> to decorate all keyed registrations.
+            Keyed registration matching is only available on .NET 8 and later.
+            </param>
+            <returns>The same <paramref name="services"/> instance for chaining.</returns>
+            <remarks>
+            <para>
+            This method scans all service descriptors for closed-generic types whose generic type definition matches
+            <paramref name="openServiceType"/>. For each match, it closes <paramref name="openDecoratorType"/> over the
+            same type arguments and replaces the descriptor with a factory that resolves the original service and passes
+            it to <see cref="M:Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(System.IServiceProvider,System.Type,System.Object[])"/>.
+            The replacement descriptor preserves the original registration's lifetime.
+            </para>
+            <para>
+            Open-generic descriptors (those registered with an open <c>typeof(T&lt;&gt;)</c> service type) are skipped
+            because the DI container resolves them lazily and replacing the implementation type would cause recursive
+            resolution. When <paramref name="serviceKey"/> is <see langword="null"/>, keyed registrations are skipped.
+            When <paramref name="serviceKey"/> is non-null on .NET 8 and later, non-keyed registrations are skipped and
+            only keyed registrations with the matching key are decorated.
+            </para>
+            </remarks>
         </member>
         <member name="T:System.Text.RegularExpressions.Generated.TimerTextPattern_0">
             <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the TimerTextPattern method.</summary>

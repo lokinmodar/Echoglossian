@@ -144,15 +144,15 @@ public unsafe partial class Echoglossian
         this.DrawStructuredTooltipOverlay(
             ActionDetailSurfaceName,
             this.actionDetailOverlay,
-            this.BuildTooltipOverlayConfig(
-                TranslationOverlaySurfaceId.ActionDetail,
-                Resources.OverlayWindowTitleActionTooltipTranslation));
+            TranslationWindowConfig.ForSurface(
+                this.configuration,
+                TranslationOverlaySurfaceId.ActionDetail));
         this.DrawStructuredTooltipOverlay(
             ItemDetailSurfaceName,
             this.itemDetailOverlay,
-            this.BuildTooltipOverlayConfig(
-                TranslationOverlaySurfaceId.ItemDetail,
-                Resources.OverlayWindowTitleItemTooltipTranslation));
+            TranslationWindowConfig.ForSurface(
+                this.configuration,
+                TranslationOverlaySurfaceId.ItemDetail));
     }
 
     /// <summary>
@@ -3552,36 +3552,6 @@ public unsafe partial class Echoglossian
             reason: "overlay-render",
             overlayText: currentText);
         this.DrawTranslationWindow(overlay, config);
-    }
-
-    /// <summary>
-    ///     Builds the shared overlay configuration used by structured tooltips.
-    /// </summary>
-    /// <param name="surfaceId">The stable overlay surface identifier.</param>
-    /// <param name="defaultTitle">The default overlay title.</param>
-    /// <returns>The overlay configuration.</returns>
-    private TranslationWindowConfig BuildTooltipOverlayConfig(
-        TranslationOverlaySurfaceId surfaceId,
-        string defaultTitle)
-    {
-        return new TranslationWindowConfig(
-            SurfaceId: surfaceId,
-            DefaultTitle: defaultTitle,
-            FontScale: 1.0f,
-            WidthMultiplier: 1.0f,
-            HeightMultiplier: 1.0f,
-            TextColor: new Vector4(1f, 1f, 1f, 1f),
-            PosCorrection: Vector2.Zero,
-            ForceShowTitle: false,
-            BackgroundOpacity: 0.95f,
-            NoBackground: false,
-            UseFixedWindowSize: false,
-            CenterOnAddon: false,
-            AutoSizeToTextWithMaxWidth: true,
-            ExpandWidthToFitText: true,
-            MaxAutoExpandedWidthMultiplier: 1.35f,
-            MinWidthViewportFraction: 0.18f,
-            MaxWidthViewportFraction: 0.36f);
     }
 
     /// <summary>
