@@ -7,6 +7,25 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0806.0051`
+
+This package submits the current `v4-series` head after the official
+publication of `v4.2601.0802.2355` on August 5, 2026 and focuses on
+MiniTalk native-layout stability, ActionDetail and ItemDetail overlay control
+activation, and safer localized plugin-label sync.
+
+Highlights:
+
+- preserved the visible `_MiniTalk` native bubble baseline in `Native` and
+  `Swap` mode when detached-container synchronization encounters recycled
+  container heights larger than the visible balloon
+- made `ActionDetail` and `ItemDetail` overlays honor dedicated persisted
+  width, line-height, padding, and color controls, and separated those
+  settings visually in the tooltip configuration tab
+- restored friendly localized plugin labels during the latest Crowdin resource
+  sync while keeping the new action/item detail overlay strings required by the
+  expanded tooltip configuration surface
+
 ## Published Release `v4.2601.0802.2355`
 
 This package ships the large native UI translation runtime expansion merged
