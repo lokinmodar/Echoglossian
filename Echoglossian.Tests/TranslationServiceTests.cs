@@ -702,7 +702,7 @@ public class TranslationServiceTests
     /// </summary>
     /// <returns>A task representing the test.</returns>
     [Fact]
-    public async Task TranslateAsync_WithDialogueContext_UsesContextAwareTranslator()
+    public async Task TranslateAsync_WithFirstTurnDialogueContext_UsesContextAwareTranslator()
     {
         var translator = new ContextAwareRecordingTranslator
         {
@@ -716,12 +716,7 @@ public class TranslationServiceTests
             "Talk",
             "Krile|engine:8|target:pt-BR",
             "Krile",
-            [
-                new DialogueTranslationTurn(
-                    "Krile",
-                    "Pray return.",
-                    new DateTime(2026, 05, 12, 15, 20, 0, DateTimeKind.Utc)),
-            ]);
+            []);
 
         var result = await service.TranslateAsync(
             "We must press on.",
@@ -862,23 +857,35 @@ public class TranslationServiceTests
     }
 
     /// <summary>
-    ///     Ensures empty runtime-only dialogue context does not switch the
-    ///     translation service into the context-aware path.
+    ///     Ensures anonymous first-turn dialogue context still routes through
+    ///     the dialogue-aware translator contract.
     /// </summary>
     [Fact]
-    public void WillUseDialogueContext_RequiresPriorTurns()
+    public async Task TranslateAsync_WithAnonymousFirstTurnDialogueContext_UsesContextAwareTranslator()
     {
-        var translator = new ContextAwareRecordingTranslator();
+        var translator = new ContextAwareRecordingTranslator
+        {
+            AsyncResult = "translated-with-context",
+        };
         var service = new TranslationService(
             text => text,
             translator);
         var dialogueContext = new DialogueTranslationContext(
             "Talk",
             "Krile|engine:8|target:pt-BR",
-            "Krile",
+            string.Empty,
             []);
 
-        Assert.False(service.WillUseDialogueContext(dialogueContext));
+        var result = await service.TranslateAsync(
+            "We must press on.",
+            "English",
+            "pt-BR",
+            dialogueContext);
+
+        Assert.Equal("translated-with-context", result);
+        Assert.Equal(1, translator.ContextAwareAsyncCalls);
+        Assert.Equal(0, translator.AsyncCalls);
+        Assert.True(service.WillUseDialogueContext(dialogueContext));
     }
 
     /// <summary>

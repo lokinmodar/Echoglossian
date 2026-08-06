@@ -14,17 +14,17 @@ namespace Echoglossian.Translators.Helpers;
 public static class DialogueContextPromptHelper
 {
     /// <summary>
-    ///     Returns whether the provided dialogue context has prior turns that
-    ///     can materially influence a translation request.
+    ///     Returns whether the provided captured dialogue context can
+    ///     materially influence a translation request.
     /// </summary>
     /// <param name="dialogueContext">The dialogue context to inspect.</param>
     /// <returns>
-    ///     <see langword="true" /> when prior turns are available;
+    ///     <see langword="true" /> when captured dialogue context is available;
     ///     otherwise <see langword="false" />.
     /// </returns>
     public static bool HasUsableDialogueContext(DialogueTranslationContext dialogueContext)
     {
-        return dialogueContext.PriorTurns.Count > 0;
+        return true;
     }
 
     /// <summary>
@@ -47,6 +47,7 @@ public static class DialogueContextPromptHelper
             Scope = "dialogue",
             dialogueContext.SessionNamespace,
             dialogueContext.SessionKey,
+            CurrentSpeaker = dialogueContext.SpeakerName,
             Text = text,
             SourceLanguage = sourceLanguage,
             TargetLanguage = targetLanguage,
@@ -59,12 +60,13 @@ public static class DialogueContextPromptHelper
     }
 
     /// <summary>
-    ///     Appends bounded prior dialogue turns to an already-rendered prompt.
+    ///     Appends captured dialogue metadata and bounded prior dialogue turns
+    ///     to an already-rendered prompt.
     /// </summary>
     /// <param name="prompt">The already-rendered prompt for the current text.</param>
     /// <param name="dialogueContext">The dialogue context to append.</param>
     /// <param name="sanitizeText">A text sanitizer used on prior turns.</param>
-    /// <returns>The prompt, optionally enriched with prior-turn context.</returns>
+    /// <returns>The prompt, optionally enriched with dialogue context.</returns>
     public static string AppendDialogueContext(
         string prompt,
         DialogueTranslationContext dialogueContext,

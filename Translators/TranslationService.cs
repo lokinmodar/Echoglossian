@@ -910,7 +910,7 @@ public class TranslationService
   /// <param name="dialogueContext">The optional dialogue context.</param>
   /// <returns>
   ///     <see langword="true" /> when the active translator supports dialogue
-  ///     context and at least one prior turn is available; otherwise,
+  ///     context; otherwise,
   ///     <see langword="false" />.
   /// </returns>
   internal bool WillUseDialogueContext(
@@ -932,7 +932,7 @@ public class TranslationService
   /// </param>
   /// <returns>
   ///     <see langword="true" /> when the captured translator supports
-  ///     dialogue context and at least one prior turn is available; otherwise,
+  ///     dialogue context; otherwise,
   ///     <see langword="false" />.
   /// </returns>
   internal bool WillUseDialogueContext(
@@ -940,7 +940,6 @@ public class TranslationService
       TranslatorResolution translatorResolution)
   {
     return dialogueContext.HasValue &&
-           dialogueContext.Value.PriorTurns.Count > 0 &&
            translatorResolution.Translator is IDialogueContextAwareTranslator;
   }
 

@@ -19,24 +19,41 @@ public class DialogueContextPromptHelperTests
         new(2026, 5, 13, 12, 0, 0, DateTimeKind.Utc);
 
     /// <summary>
-    ///     Ensures usable context is detected only when prior turns exist.
+    ///     Ensures a first dialogue turn contributes speaker context to prompts
+    ///     and cache identity without requiring prior history.
     /// </summary>
     [Fact]
-    public void HasUsableDialogueContext_ShouldReflectPriorTurns()
+    public void FirstTurnContext_ShouldIncludeSpeakerInPromptAndCacheKey()
     {
-        DialogueTranslationContext emptyContext = new(
+        DialogueTranslationContext alphinaudContext = new(
             "Talk",
             "speaker",
-            "Krile",
+            "Alphinaud",
             []);
-        DialogueTranslationContext populatedContext = new(
+        DialogueTranslationContext alisaieContext = new(
             "Talk",
             "speaker",
-            "Krile",
-            [CreateTurn("Krile", "Stay alert.")]);
+            "Alisaie",
+            []);
 
-        DialogueContextPromptHelper.HasUsableDialogueContext(emptyContext).Should().BeFalse();
-        DialogueContextPromptHelper.HasUsableDialogueContext(populatedContext).Should().BeTrue();
+        string prompt = DialogueContextPromptHelper.AppendDialogueContext(
+            "Translate this line.",
+            alphinaudContext,
+            static text => text);
+        string alphinaudKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            alphinaudContext);
+        string alisaieKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            alisaieContext);
+
+        DialogueContextPromptHelper.HasUsableDialogueContext(alphinaudContext).Should().BeTrue();
+        prompt.Should().Contain("Current speaker: Alphinaud");
+        alphinaudKey.Should().NotBe(alisaieKey);
     }
 
     /// <summary>
