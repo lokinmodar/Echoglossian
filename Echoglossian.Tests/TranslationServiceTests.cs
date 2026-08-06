@@ -502,6 +502,34 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures cancellation stops waiting for an in-flight translator result.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Fact]
+    public async Task TranslateAsync_CancellationToken_CancelsBeforeProviderResult()
+    {
+        var translator = new PendingAsyncTranslator();
+        var service = new TranslationService(
+            text => text,
+            translator);
+        using var cancellationTokenSource = new CancellationTokenSource();
+
+        var translationTask = service.TranslateAsync(
+            "hello",
+            "en",
+            "pt",
+            cancellationTokenSource.Token);
+        cancellationTokenSource.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            async () => await translationTask);
+
+        translator.Complete("provider-result");
+
+        Assert.True(translationTask.IsCanceled);
+    }
+
+    /// <summary>
     ///     Ensures the service skips exact requests already known to fail for
     ///     the same source and target language pair plus engine.
     /// </summary>
@@ -1058,6 +1086,36 @@ public class TranslationServiceTests
             this.LastAsyncText = text;
             this.asyncSourceLanguages.Add(sourceLanguage);
             return Task.FromResult(this.AsyncResult);
+        }
+    }
+
+    /// <summary>
+    ///     Fake translator that leaves asynchronous requests pending until the
+    ///     test explicitly completes them.
+    /// </summary>
+    private sealed class PendingAsyncTranslator : ITranslator
+    {
+        private readonly TaskCompletionSource<string?> completionSource = new();
+
+        /// <summary>
+        ///     Completes the pending provider request.
+        /// </summary>
+        /// <param name="result">The provider result.</param>
+        public void Complete(string? result)
+        {
+            this.completionSource.SetResult(result);
+        }
+
+        /// <inheritdoc/>
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            throw new InvalidOperationException("Synchronous translation must not be used.");
+        }
+
+        /// <inheritdoc/>
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+        {
+            return this.completionSource.Task;
         }
     }
 
