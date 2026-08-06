@@ -551,23 +551,42 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             return request.TextureMaxWidthOverride.Value;
         }
 
-        if (config.SurfaceId != TranslationOverlaySurfaceId.TooltipAddon)
+        if (config.SurfaceId == TranslationOverlaySurfaceId.TooltipAddon)
+        {
+            var padding =
+                Math.Max(0f, this.configuration.TooltipAddonOverlayPadding) * 2f;
+            var nativeWidth = Math.Max(64f, request.AddonSize.X - padding);
+            if (this.configuration.TooltipAddonOverlayMaxWidthMode ==
+                TooltipAddonOverlayMaxWidthMode.ManualCap)
+            {
+                var manualWidth = Math.Max(
+                    64f,
+                    this.configuration.TooltipAddonOverlayManualMaxWidth - padding);
+                return Math.Min(nativeWidth, manualWidth);
+            }
+
+            return nativeWidth;
+        }
+
+        if (config.SurfaceId is not TranslationOverlaySurfaceId.ActionDetail
+            and not TranslationOverlaySurfaceId.ItemDetail)
         {
             return null;
         }
 
-        var padding = Math.Max(0f, this.configuration.TooltipAddonOverlayPadding) * 2f;
-        var nativeWidth = Math.Max(64f, request.AddonSize.X - padding);
-        if (this.configuration.TooltipAddonOverlayMaxWidthMode ==
+        var detailPadding =
+            Math.Max(0f, this.configuration.ActionItemDetailOverlayPadding) * 2f;
+        var detailNativeWidth = Math.Max(64f, request.AddonSize.X - detailPadding);
+        if (this.configuration.ActionItemDetailOverlayMaxWidthMode ==
             TooltipAddonOverlayMaxWidthMode.ManualCap)
         {
             var manualWidth = Math.Max(
                 64f,
-                this.configuration.TooltipAddonOverlayManualMaxWidth - padding);
-            return Math.Min(nativeWidth, manualWidth);
+                this.configuration.ActionItemDetailOverlayManualMaxWidth - detailPadding);
+            return Math.Min(detailNativeWidth, manualWidth);
         }
 
-        return nativeWidth;
+        return detailNativeWidth;
     }
 
     /// <summary>
@@ -586,13 +605,22 @@ internal sealed class TranslationOverlayRenderer : IDisposable
             return request.TextureLineHeightScaleOverride.Value;
         }
 
-        if (config.SurfaceId != TranslationOverlaySurfaceId.TooltipAddon)
+        if (config.SurfaceId == TranslationOverlaySurfaceId.TooltipAddon)
+        {
+            return Math.Clamp(
+                this.configuration.TooltipAddonOverlayLineHeightScale,
+                0.8f,
+                1.2f);
+        }
+
+        if (config.SurfaceId is not TranslationOverlaySurfaceId.ActionDetail
+            and not TranslationOverlaySurfaceId.ItemDetail)
         {
             return null;
         }
 
         return Math.Clamp(
-            this.configuration.TooltipAddonOverlayLineHeightScale,
+            this.configuration.ActionItemDetailOverlayLineHeightScale,
             0.8f,
             1.2f);
     }

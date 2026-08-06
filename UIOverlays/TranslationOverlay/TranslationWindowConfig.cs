@@ -125,8 +125,7 @@ internal record TranslationWindowConfig(
       TranslationOverlaySurfaceId.ChatBubble => FromConfigForChatBubble(config),
       TranslationOverlaySurfaceId.TooltipAddon => FromConfigForTooltipAddon(config),
       TranslationOverlaySurfaceId.ActionDetail or TranslationOverlaySurfaceId.ItemDetail =>
-          throw new NotSupportedException(
-              $"The {surfaceId} surface is rendered through the tooltip path."),
+          FromConfigForActionItemDetail(config, surfaceId),
       _ => throw new ArgumentOutOfRangeException(nameof(surfaceId), surfaceId, null),
     };
   }
@@ -540,6 +539,55 @@ internal record TranslationWindowConfig(
             TooltipAddonOverlayMaxWidthMode.ManualCap
                 ? Math.Clamp(
                     config.TooltipAddonOverlayManualMaxWidth / 1920f,
+                    0.10f,
+                    0.90f)
+                : 0f);
+  }
+
+  /// <summary>
+  /// Creates a <see cref="TranslationWindowConfig"/> instance based on the
+  /// provided <see cref="Config"/> for ActionDetail and ItemDetail overlays.
+  /// </summary>
+  /// <param name="config">The active plugin configuration.</param>
+  /// <param name="surfaceId">The detail overlay surface identifier.</param>
+  /// <returns>The shared detail-overlay configuration.</returns>
+  public static TranslationWindowConfig FromConfigForActionItemDetail(
+      Config config,
+      TranslationOverlaySurfaceId surfaceId)
+  {
+    var defaultTitle = surfaceId switch
+    {
+      TranslationOverlaySurfaceId.ActionDetail =>
+          Resources.OverlayWindowTitleActionTooltipTranslation,
+      TranslationOverlaySurfaceId.ItemDetail =>
+          Resources.OverlayWindowTitleItemTooltipTranslation,
+      _ => throw new ArgumentOutOfRangeException(nameof(surfaceId), surfaceId, null),
+    };
+
+    return new TranslationWindowConfig(
+        SurfaceId: surfaceId,
+        DefaultTitle: defaultTitle,
+        FontScale: config.ActionItemDetailOverlayFontScaleAdjustment,
+        WidthMultiplier: 1.0f,
+        HeightMultiplier: 1.0f,
+        TextColor: new Vector4(
+            config.ActionItemDetailOverlayTextColor.X,
+            config.ActionItemDetailOverlayTextColor.Y,
+            config.ActionItemDetailOverlayTextColor.Z,
+            1.0f),
+        PosCorrection: Vector2.Zero,
+        ForceShowTitle: false,
+        BackgroundOpacity: config.ActionItemDetailOverlayBackgroundOpacity,
+        AutoSizeToTextWithMaxWidth: true,
+        ExpandWidthToFitText:
+            config.ActionItemDetailOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.MatchNative,
+        MaxAutoExpandedWidthMultiplier: 1.35f,
+        MaxWidthViewportFraction:
+            config.ActionItemDetailOverlayMaxWidthMode ==
+            TooltipAddonOverlayMaxWidthMode.ManualCap
+                ? Math.Clamp(
+                    config.ActionItemDetailOverlayManualMaxWidth / 1920f,
                     0.10f,
                     0.90f)
                 : 0f);

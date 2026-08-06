@@ -54,6 +54,36 @@ public sealed class TooltipAddonConfigContractTests
     }
 
     /// <summary>
+    ///     Ensures ActionDetail and ItemDetail overlays keep their own shared
+    ///     persisted appearance settings instead of reusing the Tooltip addon
+    ///     overlay bucket.
+    /// </summary>
+    [Fact]
+    public void Config_DefinesDedicatedActionItemDetailOverlaySettings()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "Config.cs"));
+
+        Assert.Contains(
+            "ActionItemDetailOverlayTextColor",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ActionItemDetailOverlayFontScaleAdjustment",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ActionItemDetailOverlayLineHeightScale",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ActionItemDetailOverlayMaxWidthMode",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures the tooltip settings UI exposes the dedicated Tooltip addon
     ///     controls separately from ActionDetail and ItemDetail.
     /// </summary>
@@ -70,6 +100,35 @@ public sealed class TooltipAddonConfigContractTests
         Assert.Contains("config.TranslateTooltipAddon", source, StringComparison.Ordinal);
         Assert.Contains("config.TooltipAddonTranslationDisplayMode", source, StringComparison.Ordinal);
         Assert.Contains("Resources.TranslateTooltipAddonLabel", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the tooltip settings UI exposes a dedicated ActionDetail /
+    ///     ItemDetail overlay appearance bucket instead of relying on the
+    ///     hover-tooltip controls.
+    /// </summary>
+    [Fact]
+    public void TooltipTab_RendersDedicatedActionItemDetailOverlayControls()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "PluginUI",
+            "Tabs",
+            "TooltipTab.cs"));
+
+        Assert.Contains(
+            "Resources.ActionItemDetailOverlayAppearanceSectionLabel",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "config.ActionItemDetailOverlayFontScaleAdjustment",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "config.ActionItemDetailOverlayMaxWidthMode",
+            source,
+            StringComparison.Ordinal);
     }
 
     /// <summary>

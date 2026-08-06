@@ -1286,6 +1286,34 @@ public class Config : IPluginConfiguration
   /// <summary>Manual maximum width used by the Tooltip addon anchored overlay.</summary>
   [DefaultValue(720f)] public float TooltipAddonOverlayManualMaxWidth = 720f;
 
+  /// <summary>Text color used by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(typeof(Vector3), "1, 1, 1")]
+  public Vector3 ActionItemDetailOverlayTextColor = new(1f, 1f, 1f);
+
+  /// <summary>Background color used by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(typeof(Vector3), "0.08, 0.08, 0.08")]
+  public Vector3 ActionItemDetailOverlayBackgroundColor = new(0.08f, 0.08f, 0.08f);
+
+  /// <summary>Background opacity used by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(0.95f)] public float ActionItemDetailOverlayBackgroundOpacity = 0.95f;
+
+  /// <summary>Font scale adjustment used by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(0.65f)] public float ActionItemDetailOverlayFontScaleAdjustment = 0.65f;
+
+  /// <summary>Line-height scale used by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(0.9f)] public float ActionItemDetailOverlayLineHeightScale = 0.9f;
+
+  /// <summary>Padding applied by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(8f)] public float ActionItemDetailOverlayPadding = 8f;
+
+  /// <summary>Width mode used by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(TooltipAddonOverlayMaxWidthMode.MatchNative)]
+  public TooltipAddonOverlayMaxWidthMode ActionItemDetailOverlayMaxWidthMode =
+      TooltipAddonOverlayMaxWidthMode.MatchNative;
+
+  /// <summary>Manual maximum width used by ActionDetail and ItemDetail overlays.</summary>
+  [DefaultValue(720f)] public float ActionItemDetailOverlayManualMaxWidth = 720f;
+
   /// <summary>Text color used by Echoglossian hover tooltips.</summary>
   [DefaultValue(typeof(Vector3), "1, 1, 1")]
   public Vector3 HoverTooltipTextColor = new(1f, 1f, 1f);

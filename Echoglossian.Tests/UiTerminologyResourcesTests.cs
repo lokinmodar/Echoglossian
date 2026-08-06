@@ -77,6 +77,21 @@ public class UiTerminologyResourcesTests
     }
 
     /// <summary>
+    ///     Ensures ActionDetail and ItemDetail overlay settings are labeled as
+    ///     detail overlays so they are not confused with hover tooltips or the
+    ///     Tooltip addon.
+    /// </summary>
+    [Fact]
+    public void ActionItemDetailOverlayAppearanceSectionLabel_UsesDetailOverlayTerminology()
+    {
+        using var cultureScope = new ResourceCultureScope(
+            CultureInfo.InvariantCulture);
+        Assert.Equal(
+            "Action/item detail overlay appearance",
+            Resources.ActionItemDetailOverlayAppearanceSectionLabel);
+    }
+
+    /// <summary>
     ///     Ensures the tab title reflects that this area now combines detail
     ///     windows with hover-tooltip controls.
     /// </summary>

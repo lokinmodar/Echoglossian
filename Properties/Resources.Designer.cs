@@ -3941,6 +3941,10 @@ namespace Echoglossian.Properties
 
         public static string TooltipAddonOverlayAppearanceDescription => ResourceManager.GetString("TooltipAddonOverlayAppearanceDescription", resourceCulture);
 
+        public static string ActionItemDetailOverlayAppearanceSectionLabel => ResourceManager.GetString("ActionItemDetailOverlayAppearanceSectionLabel", resourceCulture);
+
+        public static string ActionItemDetailOverlayAppearanceDescription => ResourceManager.GetString("ActionItemDetailOverlayAppearanceDescription", resourceCulture);
+
         public static string TooltipAddonHideNativeTooltipWhenOverlayActiveLabel => ResourceManager.GetString("TooltipAddonHideNativeTooltipWhenOverlayActiveLabel", resourceCulture);
 
         public static string TooltipAddonOverlayFontScaleAdjustmentLabel => ResourceManager.GetString("TooltipAddonOverlayFontScaleAdjustmentLabel", resourceCulture);
@@ -3958,6 +3962,8 @@ namespace Echoglossian.Properties
         public static string TooltipAddonOverlayMaxWidthModeLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthModeLabel", resourceCulture);
 
         public static string TooltipAddonOverlayMaxWidthMatchNativeLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthMatchNativeLabel", resourceCulture);
+
+        public static string ActionItemDetailOverlayMaxWidthMatchNativeLabel => ResourceManager.GetString("ActionItemDetailOverlayMaxWidthMatchNativeLabel", resourceCulture);
 
         public static string TooltipAddonOverlayMaxWidthManualCapLabel => ResourceManager.GetString("TooltipAddonOverlayMaxWidthManualCapLabel", resourceCulture);
 

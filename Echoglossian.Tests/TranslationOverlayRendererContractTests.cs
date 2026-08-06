@@ -40,6 +40,38 @@ public sealed class TranslationOverlayRendererContractTests
     }
 
     /// <summary>
+    ///     Ensures ActionDetail and ItemDetail overlays use their dedicated
+    ///     persisted override bucket for texture width and line-height instead
+    ///     of falling through to the hover-tooltip or Tooltip addon paths.
+    /// </summary>
+    [Fact]
+    public void StructuredDetailOverlays_UseDedicatedRendererOverrideBucket()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "UIOverlays",
+            "TranslationOverlay",
+            "TranslationOverlayRenderer.cs"));
+
+        Assert.Contains(
+            "TranslationOverlaySurfaceId.ActionDetail",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "TranslationOverlaySurfaceId.ItemDetail",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ActionItemDetailOverlayPadding",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ActionItemDetailOverlayLineHeightScale",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Gets the repository root discovered from the test output directory.
     /// </summary>
     private string RepositoryRoot => FindRepositoryRoot();
