@@ -522,7 +522,7 @@ public class TranslationServiceTests
         cancellationTokenSource.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            async () => await translationTask);
+            () => translationTask);
 
         translator.Complete("provider-result");
 
