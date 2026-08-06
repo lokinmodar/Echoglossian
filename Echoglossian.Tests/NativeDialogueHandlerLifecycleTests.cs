@@ -598,6 +598,166 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
+    ///     Ensures a BattleTalk callback completing after source invalidation
+    ///     cannot republish stale overlay output.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_StaleAsyncCallback_CannotRepublish()
+    {
+        var translator = new ControlledTranslator();
+        var overlayUpdates = 0;
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(translator),
+            () => overlayUpdates++);
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Understood.",
+            english,
+            out var requestId,
+            out var sourceOperation));
+        var resolution = handler.ResolveTranslationAsync(
+            "Alphinaud",
+            "Understood.",
+            requestId,
+            english,
+            sourceOperation,
+            sourceOperation.CancellationToken);
+        await translator.WaitForRequestAsync();
+
+        handler.InvalidateStateForSource(
+            new SourceClientLanguage("de", "de"));
+        translator.Complete("Entendido.");
+        await resolution;
+
+        Assert.Equal(0, overlayUpdates);
+    }
+
+    /// <summary>
+    ///     Ensures a BattleTalk completion captured under one target and
+    ///     policy does not persist or publish after the same source rebuilds
+    ///     under another full operation scope.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task BattleTalkHandler_TargetAndPolicyChange_RejectsInFlightCompletion()
+    {
+        var translator = new ControlledTranslator();
+        var configuration = new Config
+        {
+            TranslateBattleTalk = true,
+            BattleTalkTranslationDisplayMode =
+                JournalTranslationDisplayMode.TooltipTranslation,
+            Lang = 81,
+            ChosenTransEngine = 0,
+            TranslateAlreadyTranslatedTexts = false,
+        };
+        BattleTalkMessage? persistedMessage = null;
+        var overlayUpdates = 0;
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(translator),
+            () => overlayUpdates++,
+            configuration,
+            insertBattleTalkMessageAsync: (message, _) =>
+            {
+                persistedMessage = message;
+                return Task.FromResult(string.Empty);
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Understood.",
+            english,
+            out var requestId,
+            out var sourceOperation));
+        var resolution = handler.ResolveTranslationAsync(
+            "Alphinaud",
+            "Understood.",
+            requestId,
+            english,
+            sourceOperation,
+            sourceOperation.CancellationToken);
+        await translator.WaitForRequestAsync();
+
+        configuration.Lang = 82;
+        configuration.ChosenTransEngine = 8;
+        configuration.TranslateAlreadyTranslatedTexts = true;
+        handler.InvalidateStateForSource(english);
+        translator.Complete("Entendido.");
+        await resolution;
+
+        Assert.Null(persistedMessage);
+        Assert.Equal(0, overlayUpdates);
+        Assert.False(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out _,
+            out _,
+            out _));
+    }
+
+    /// <summary>
+    ///     Ensures source retirement cancels an in-progress BattleTalk write
+    ///     so a result cannot commit after its captured scope has changed.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_RetiredScope_CancelsPendingPersistence()
+    {
+        var translator = new ControlledTranslator();
+        var persistenceStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancellationObserved = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(translator),
+            insertBattleTalkMessageAsync: async (_, cancellationToken) =>
+            {
+                persistenceStarted.TrySetResult(true);
+                try
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                    when (cancellationToken.IsCancellationRequested)
+                {
+                    cancellationObserved.TrySetResult(true);
+                    throw;
+                }
+
+                return string.Empty;
+            });
+        var english = new SourceClientLanguage("en", "en");
+        var german = new SourceClientLanguage("de", "de");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Understood.",
+            english,
+            out var requestId,
+            out var sourceOperation));
+        var resolution = handler.ResolveTranslationAsync(
+            "Alphinaud",
+            "Understood.",
+            requestId,
+            english,
+            sourceOperation,
+            sourceOperation.CancellationToken);
+        await translator.WaitForRequestAsync();
+        translator.Complete("Entendido.");
+        await persistenceStarted.Task;
+
+        handler.InvalidateStateForSource(german);
+        await resolution;
+
+        Assert.True(await cancellationObserved.Task);
+    }
+
+    /// <summary>
     ///     Ensures a BattleTalk speaker-name translation failure does not discard
     ///     the translated dialogue body.
     /// </summary>
