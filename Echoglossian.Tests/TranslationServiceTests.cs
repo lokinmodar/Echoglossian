@@ -506,7 +506,7 @@ public class TranslationServiceTests
     /// </summary>
     /// <returns>A task representing the test.</returns>
     [Fact]
-    public async Task TranslateAsync_CancellationToken_CancelsBeforeProviderResult()
+    public Task TranslateAsync_CancellationToken_CancelsBeforeProviderResult()
     {
         var translator = new PendingAsyncTranslator();
         var service = new TranslationService(
@@ -521,8 +521,21 @@ public class TranslationServiceTests
             cancellationTokenSource.Token);
         cancellationTokenSource.Cancel();
 
+        return this.AssertCanceledTranslationAsync(translationTask, translator);
+    }
+
+    /// <summary>
+    ///     Verifies that cancellation completes before a pending provider result.
+    /// </summary>
+    /// <param name="translationTask">The in-flight translation task.</param>
+    /// <param name="translator">The pending translator that supplies the later result.</param>
+    /// <returns>A task representing the assertion.</returns>
+    private async Task AssertCanceledTranslationAsync(
+        Task<string> translationTask,
+        PendingAsyncTranslator translator)
+    {
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => translationTask);
+            () => translationTask).ConfigureAwait(false);
 
         translator.Complete("provider-result");
 
