@@ -171,6 +171,71 @@ public partial class Echoglossian
   }
 
   /// <summary>
+  ///     Asynchronously finds and returns a TalkMessage from the database.
+  /// </summary>
+  /// <param name="talkMessage">The TalkMessage to find in the database.</param>
+  /// <param name="cancellationToken">The token that cancels the database lookup.</param>
+  /// <returns>A matching <see cref="TalkMessage" />, or <see langword="null" />.</returns>
+  /// <exception cref="OperationCanceledException">
+  ///     The database lookup is cancelled.
+  /// </exception>
+  public async Task<TalkMessage?> FindAndReturnTalkMessageAsync(
+      TalkMessage talkMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              talkMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
+      var existingTalkMessages = await context.TalkMessage.AsNoTracking().Where(t =>
+              t.SenderName == talkMessage.SenderName &&
+              t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
+              t.TranslationLang == talkMessage.TranslationLang)
+          .ToListAsync(cancellationToken)
+          .ConfigureAwait(false);
+      var candidates = existingTalkMessages.Where(t =>
+          scope.Matches(
+              t.OriginalTalkMessageLang,
+              t.TranslationLang,
+              t.TranslationEngine));
+
+      var localFoundTalkMessage = OrderTalkMessageLookupQuery(
+              candidates.AsQueryable())
+          .FirstOrDefault();
+      if (localFoundTalkMessage == null ||
+          localFoundTalkMessage.OriginalTalkMessage !=
+              talkMessage.OriginalTalkMessage ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundTalkMessage.OriginalTalkMessage,
+              localFoundTalkMessage.TranslatedTalkMessage,
+              localFoundTalkMessage.OriginalTalkMessageLang,
+              localFoundTalkMessage.TranslationLang))
+      {
+        return null;
+      }
+
+      return localFoundTalkMessage;
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindAndReturnTalkMessageAsync exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
   /// Finds and returns a ToastMessage from the database.
   /// </summary>
   /// <param name="toastMessage">Formatted ToastMessage to be found in the database</param>
@@ -446,6 +511,79 @@ public partial class Echoglossian
     catch (Exception e)
     {
       PluginRuntimeLog.Debug($"FindAndReturnBattleTalkMessage exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Asynchronously finds and returns a BattleTalkMessage from the
+  ///     database.
+  /// </summary>
+  /// <param name="battleTalkMessage">The BattleTalkMessage to find in the database.</param>
+  /// <param name="cancellationToken">The token that cancels the database lookup.</param>
+  /// <returns>
+  ///     A matching <see cref="BattleTalkMessage" />, or <see langword="null" />.
+  /// </returns>
+  /// <exception cref="OperationCanceledException">
+  ///     The database lookup is cancelled.
+  /// </exception>
+  public async Task<BattleTalkMessage?> FindAndReturnBattleTalkMessageAsync(
+      BattleTalkMessage battleTalkMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              battleTalkMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
+      var existingBattleTalkMessages = await context.BattleTalkMessage.AsNoTracking().Where(t =>
+              t.SenderName == battleTalkMessage.SenderName &&
+              t.OriginalBattleTalkMessage ==
+              battleTalkMessage.OriginalBattleTalkMessage &&
+              t.TranslationLang == battleTalkMessage.TranslationLang &&
+              t.TranslatedBattleTalkMessage != null &&
+              t.TranslatedBattleTalkMessage != string.Empty)
+          .ToListAsync(cancellationToken)
+          .ConfigureAwait(false);
+      var candidates = existingBattleTalkMessages.Where(t =>
+          scope.Matches(
+              t.OriginalBattleTalkMessageLang,
+              t.TranslationLang,
+              t.TranslationEngine));
+
+      var localFoundBattleTalkMessage =
+          OrderBattleTalkMessageLookupQuery(candidates.AsQueryable())
+              .FirstOrDefault();
+      if (localFoundBattleTalkMessage == null ||
+          localFoundBattleTalkMessage.OriginalBattleTalkMessage !=
+              battleTalkMessage.OriginalBattleTalkMessage ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundBattleTalkMessage.OriginalBattleTalkMessage,
+              localFoundBattleTalkMessage.TranslatedBattleTalkMessage,
+              localFoundBattleTalkMessage.OriginalBattleTalkMessageLang,
+              localFoundBattleTalkMessage.TranslationLang))
+      {
+        return null;
+      }
+
+      FoundBattleTalkMessage = localFoundBattleTalkMessage;
+      return localFoundBattleTalkMessage;
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug(
+          $"FindAndReturnBattleTalkMessageAsync exception {e}");
       return null;
     }
   }
