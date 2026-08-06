@@ -143,10 +143,10 @@
     <value>Whats, Whens and Hows</value>
   </data>
   <data name="ConfigTab1Name" xml:space="preserve">
-    <value>Dialogues settings</value>
+    <value>Talk settings</value>
   </data>
   <data name="ConfigTab2Name" xml:space="preserve">
-    <value>Battle Dialogues settings</value>
+    <value>Battle Talk settings</value>
   </data>
   <data name="ConfigTab3Name" xml:space="preserve">
     <value>Toast settings</value>
@@ -155,7 +155,7 @@
     <value>Journal</value>
   </data>
   <data name="ConfigTab5Name" xml:space="preserve">
-    <value>Cutscene Subtitles settings</value>
+    <value>TalkSubtitle settings</value>
   </data>
   <data name="ConfigTab6Name" xml:space="preserve">
     <value>Other settings</value>
@@ -268,7 +268,7 @@
     <value>Plugin Overlay height multiplier</value>
   </data>
   <data name="OverlayName" xml:space="preserve">
-    <value>Battle Dialogues (Enenies dialogue lines) translation</value>
+    <value>Battle talk (Enenies dialogue lines) translation</value>
     <comment>Translation overlay window name</comment>
   </data>
   <data name="OverlayPositionAdjustmentLabel" xml:space="preserve">
@@ -347,7 +347,7 @@
     <value>Translate in-game Area name Toast Messages</value>
   </data>
   <data name="TransLateBattletalkToggle" xml:space="preserve">
-    <value>Translate battle Dialogues</value>
+    <value>Translate battle talk</value>
   </data>
   <data name="TranslateClassChangeToastToggleText" xml:space="preserve">
     <value>Translate in-game Class/Job change Toast Messages</value>
@@ -455,7 +455,7 @@
     <value>Automatically copy the last translation to the Plugin Clipboard</value>
   </data>
   <data name="ConfigTab9CheckboxClipboardTooltipText" xml:space="preserve">
-    <value>This setting copies the last translation and source text to the clipboard (Works with Dialogues and Battle Dialogues)</value>
+    <value>This setting copies the last translation and source text to the clipboard (Works with Talk and BattleTalk)</value>
   </data>
   <data name="TranslateJournalToggle" xml:space="preserve">
     <value>Translate quest name, description and objectives (WIP)</value>
@@ -479,7 +479,7 @@
     <value>Dialogue LLM override</value>
   </data>
   <data name="DialogueLlmOverrideDescription" xml:space="preserve">
-    <value>Route Dialogues, Battle Dialogues, Cutscene Subtitles, and NPCs Dialogues Bubbles through a dedicated LLM without changing the primary engine used elsewhere.</value>
+    <value>Route Talk, BattleTalk, TalkSubtitle, and MiniTalk through a dedicated LLM without changing the primary engine used elsewhere.</value>
   </data>
   <data name="UseDialogueLlmOverrideLabel" xml:space="preserve">
     <value>Use a dedicated LLM for dialogue-family surfaces</value>
@@ -596,16 +596,16 @@
     <value>Reset configuration to defaults</value>
   </data>
   <data name="TalkTabTitle" xml:space="preserve">
-    <value>Dialogues</value>
+    <value>Talk</value>
   </data>
   <data name="BattleTalkTabTitle" xml:space="preserve">
-    <value>Battle Dialogues</value>
+    <value>BattleTalk</value>
   </data>
   <data name="ToastTabTitle" xml:space="preserve">
     <value>Toast</value>
   </data>
   <data name="SubtitleTabTitle" xml:space="preserve">
-    <value>Cutscenes Subtitles</value>
+    <value>TalkSubtitle</value>
   </data>
   <data name="TranslateToastToggle" xml:space="preserve">
     <value>Translate Toast Messages</value>
@@ -706,6 +706,12 @@
   <data name="TooltipAddonOverlayAppearanceDescription" xml:space="preserve">
     <value>These settings apply only when the Tooltip addon uses its anchored Plugin Overlay.</value>
   </data>
+  <data name="ActionItemDetailOverlayAppearanceSectionLabel" xml:space="preserve">
+    <value>Action/item detail overlay appearance</value>
+  </data>
+  <data name="ActionItemDetailOverlayAppearanceDescription" xml:space="preserve">
+    <value>These settings apply to the Plugin Overlays shown above ActionDetail and ItemDetail.</value>
+  </data>
   <data name="TooltipAddonHideNativeTooltipWhenOverlayActiveLabel" xml:space="preserve">
     <value>Hide native Tooltip while overlay is active</value>
   </data>
@@ -732,6 +738,9 @@
   </data>
   <data name="TooltipAddonOverlayMaxWidthMatchNativeLabel" xml:space="preserve">
     <value>Match native tooltip</value>
+  </data>
+  <data name="ActionItemDetailOverlayMaxWidthMatchNativeLabel" xml:space="preserve">
+    <value>Match native detail window</value>
   </data>
   <data name="TooltipAddonOverlayMaxWidthManualCapLabel" xml:space="preserve">
     <value>Manual cap</value>
@@ -980,7 +989,7 @@
     <value>Translate Text Gimmick Hint</value>
   </data>
   <data name="OverlayTabMiniTalkText" xml:space="preserve">
-    <value>NPCs Dialogues Bubbles</value>
+    <value>MiniTalk</value>
   </data>
   <data name="OverlayTabCutSceneSelectStringText" xml:space="preserve">
     <value>CutSceneSelectString</value>
@@ -1001,7 +1010,7 @@
     <value>Class / Job</value>
   </data>
   <data name="ToastOverlayTabTextGimmickHintText" xml:space="preserve">
-    <value>Text Gimmick Hint (Red-background Battle messages)</value>
+    <value>Text Gimmick Hint</value>
   </data>
   <data name="ToastOverlayTabQuestText" xml:space="preserve">
     <value>Quest</value>
@@ -1034,7 +1043,7 @@
     <value>Class / Job Change Toast</value>
   </data>
   <data name="ToastOverlayTextGimmickHintSectionTitle" xml:space="preserve">
-    <value>Text Gimmick Hint (Red-background Battle messages)</value>
+    <value>Text Gimmick Hint</value>
   </data>
   <data name="ToastOverlayQuestSectionTitle" xml:space="preserve">
     <value>Quest Toast</value>
@@ -1046,7 +1055,7 @@
     <value>Use a Plugin Overlay for this toast type</value>
   </data>
   <data name="TranslateMiniTalkLabel" xml:space="preserve">
-    <value>Translate NPCs Dialogues Bubbles</value>
+    <value>Translate MiniTalk</value>
   </data>
   <data name="TranslateNamePlatesLabel" xml:space="preserve">
     <value>Translate eligible world-object nameplates</value>
@@ -1154,7 +1163,7 @@
     <value>Applies to texture-backed complex-script text across hover tooltips and overlays.</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Translate Game Main Menu</value>
+      <value>Translate Game Main Menu</value>
   </data>
   <data name="TranslateActionMenuWindow" xml:space="preserve">
     <value>Translate ActionMenu Window</value>
@@ -1172,16 +1181,16 @@
     <value>Translate Context Menu</value>
   </data>
   <data name="OverlayWindowTitleTalkTranslation" xml:space="preserve">
-    <value>Dialogues translation</value>
+    <value>Talk translation</value>
   </data>
   <data name="OverlayWindowTitleBattleTalkTranslation" xml:space="preserve">
-    <value>Battle Dialogues translation</value>
+    <value>BattleTalk translation</value>
   </data>
   <data name="OverlayWindowTitleTalkSubtitleTranslation" xml:space="preserve">
-    <value>Cutscene Subtitles translation</value>
+    <value>Talk Subtitle translation</value>
   </data>
   <data name="OverlayWindowTitleMiniTalkTranslation" xml:space="preserve">
-    <value>NPCs Dialogues Bubbles translation</value>
+    <value>MiniTalk translation</value>
   </data>
   <data name="OverlayWindowTitleCutSceneSelectStringTranslation" xml:space="preserve">
     <value>CutSceneSelectString translation</value>
@@ -1601,13 +1610,13 @@
     <value>Last retranslation</value>
   </data>
   <data name="TranslatorDebuggerVisibleStorySurfaceNameTalk" xml:space="preserve">
-    <value>Dialogues</value>
+    <value>Talk</value>
   </data>
   <data name="TranslatorDebuggerVisibleStorySurfaceNameBattleTalk" xml:space="preserve">
-    <value>Battle Dialogues</value>
+    <value>BattleTalk</value>
   </data>
   <data name="TranslatorDebuggerVisibleStorySurfaceNameTalkSubtitle" xml:space="preserve">
-    <value>Cutscene Subtitles</value>
+    <value>TalkSubtitle</value>
   </data>
   <data name="TranslatorDebuggerVisibleStorySurfaceNameCutSceneSelectString" xml:space="preserve">
     <value>CutSceneSelectString</value>
