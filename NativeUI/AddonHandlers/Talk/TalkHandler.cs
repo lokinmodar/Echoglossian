@@ -1568,20 +1568,14 @@ public sealed class TalkHandler :
 
     this.clearOverlay();
     var accepted = this.ownedOperations.Run(
-        async ownerToken =>
-        {
-          using var operationTokenSource =
-              CancellationTokenSource.CreateLinkedTokenSource(
-                  ownerToken,
-                  sourceOperation.CancellationToken);
-          await this.ResolveTranslationAsync(
-              originalName,
-              originalText,
-              requestId,
-              sourceLanguage,
-              sourceOperation,
-              operationTokenSource.Token).ConfigureAwait(false);
-        });
+        operationToken => this.ResolveTranslationAsync(
+            originalName,
+            originalText,
+            requestId,
+            sourceLanguage,
+            sourceOperation,
+            operationToken),
+        sourceOperation.CancellationToken);
     if (!accepted)
     {
       lock (this.stateGate)

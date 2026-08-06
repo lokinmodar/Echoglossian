@@ -31,16 +31,21 @@ public sealed class OwnedAsyncOperationSet : IDisposable
     ///     Starts an operation owned by this set.
     /// </summary>
     /// <param name="operation">The operation to start with the shutdown-linked token.</param>
+    /// <param name="externalCancellationToken">
+    ///     An optional token that cancels the operation independently of shutdown.
+    /// </param>
     /// <returns>
     ///     <see langword="true" /> if the operation was accepted; otherwise,
     ///     <see langword="false" />.
     /// </returns>
-    public bool Run(Func<CancellationToken, Task> operation)
+    public bool Run(
+        Func<CancellationToken, Task> operation,
+        CancellationToken externalCancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        CancellationTokenSource? operationTokenSource = null;
-        Task? operationTask = null;
+        CancellationTokenSource operationTokenSource;
+        Task operationTask;
         lock (this.syncRoot)
         {
             if (this.disposed)
@@ -49,21 +54,14 @@ public sealed class OwnedAsyncOperationSet : IDisposable
             }
 
             operationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                this.shutdownTokenSource.Token);
-            try
-            {
-                operationTask = operation(operationTokenSource.Token);
-            }
-            catch (Exception exception)
-            {
-                operationTask = Task.FromException(exception);
-            }
-
-            if (operationTask is null)
-            {
-                operationTask = Task.FromException(
-                    new InvalidOperationException("Owned operation returned a null task."));
-            }
+                this.shutdownTokenSource.Token,
+                externalCancellationToken);
+            var operationToken = operationTokenSource.Token;
+            operationTask = Task.Run(
+                () => operation(operationToken) ?? Task.FromException(
+                    new InvalidOperationException(
+                        "Owned operation returned a null task.")),
+                operationToken);
 
             this.activeOperations.Add(operationTask);
         }

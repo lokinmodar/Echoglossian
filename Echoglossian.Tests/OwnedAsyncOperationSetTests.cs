@@ -33,12 +33,54 @@ public class OwnedAsyncOperationSetTests
     }
 
     /// <summary>
+    ///     Ensures synchronous work before an operation's first await cannot
+    ///     block the thread that submits the operation.
+    /// </summary>
+    [Fact]
+    public void Run_SynchronousOperationPrefix_DoesNotBlockCaller()
+    {
+        using var operationStarted = new ManualResetEventSlim();
+        using var releaseOperation = new ManualResetEventSlim();
+        using var runReturned = new ManualResetEventSlim();
+        using var operations = new OwnedAsyncOperationSet();
+        var accepted = false;
+        var callerThread = new Thread(
+            () =>
+            {
+                accepted = operations.Run(
+                    _ =>
+                    {
+                        operationStarted.Set();
+                        releaseOperation.Wait();
+                        return Task.CompletedTask;
+                    });
+                runReturned.Set();
+            });
+
+        try
+        {
+            callerThread.Start();
+
+            Assert.True(operationStarted.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(runReturned.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(accepted);
+        }
+        finally
+        {
+            releaseOperation.Set();
+            callerThread.Join(TimeSpan.FromSeconds(1));
+        }
+    }
+
+    /// <summary>
     ///     Ensures disposal cancels the token supplied to active operations.
     /// </summary>
     /// <returns>A task that completes when cancellation is observed.</returns>
     [Fact]
     public async Task Dispose_CancelsActiveOperationToken()
     {
+        var operationStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
         var cancellationObserved = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
         using var operations = new OwnedAsyncOperationSet();
@@ -49,10 +91,44 @@ public class OwnedAsyncOperationSetTests
                 {
                     using var registration = cancellationToken.Register(
                         () => cancellationObserved.TrySetResult(true));
+                    operationStarted.TrySetResult(true);
                     await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                 }));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
 
         operations.Dispose();
+
+        await cancellationObserved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    /// <summary>
+    ///     Ensures cancellation supplied by an operation's source owner reaches
+    ///     the token passed to the queued operation.
+    /// </summary>
+    /// <returns>A task that completes when external cancellation is observed.</returns>
+    [Fact]
+    public async Task Run_ExternalCancellation_CancelsOperationToken()
+    {
+        var operationStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancellationObserved = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var externalTokenSource = new CancellationTokenSource();
+        using var operations = new OwnedAsyncOperationSet();
+
+        Assert.True(
+            operations.Run(
+                async cancellationToken =>
+                {
+                    using var registration = cancellationToken.Register(
+                        () => cancellationObserved.TrySetResult(true));
+                    operationStarted.TrySetResult(true);
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                },
+                externalTokenSource.Token));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        externalTokenSource.Cancel();
 
         await cancellationObserved.Task.WaitAsync(TimeSpan.FromSeconds(1));
     }
@@ -68,6 +144,8 @@ public class OwnedAsyncOperationSetTests
         var observedExceptions = new List<Exception>();
         var exceptionObserved = new TaskCompletionSource<Exception>(
             TaskCreationOptions.RunContinuationsAsynchronously);
+        var registrationReady = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
         using var operations = new OwnedAsyncOperationSet(
             exception =>
             {
@@ -81,8 +159,10 @@ public class OwnedAsyncOperationSetTests
                 {
                     cancellationToken.Register(
                         static () => throw new InvalidOperationException("callback boom"));
+                    registrationReady.TrySetResult(true);
                     return Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                 }));
+        await registrationReady.Task.WaitAsync(TimeSpan.FromSeconds(1));
 
         var disposeException = Record.Exception(operations.Dispose);
 

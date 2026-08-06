@@ -295,14 +295,30 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
+    ///     Ensures unloading a Talk handler before any source capture safely
+    ///     disposes its owned operations.
+    /// </summary>
+    [Fact]
+    public void TalkHandler_FreshUnload_DoesNotThrow()
+    {
+        var handler = CreateTalkHandler(
+            CreateTranslationService(new ControlledTranslator()));
+
+        var unloadException = Record.Exception(handler.OnPluginUnload);
+
+        Assert.Null(unloadException);
+    }
+
+    /// <summary>
     ///     Ensures the managed Talk capture callback returns while database
     ///     lookup remains suspended and publishes only after lookup completes.
     /// </summary>
     [Fact]
     public async Task TalkHandler_SuspendedDatabaseLookup_DoesNotBlockCaptureCallback()
     {
-        var lookupStarted = new TaskCompletionSource<bool>(
-            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var lookupStarted = new ManualResetEventSlim();
+        using var releaseLookupPrefix = new ManualResetEventSlim();
+        using var captureReturned = new ManualResetEventSlim();
         var lookupCompletion = new TaskCompletionSource<TalkMessage?>(
             TaskCreationOptions.RunContinuationsAsynchronously);
         var overlayPublished = new TaskCompletionSource<bool>(
@@ -317,18 +333,37 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             },
             findTalkMessageAsync: async (_, cancellationToken) =>
             {
-                lookupStarted.TrySetResult(true);
+                lookupStarted.Set();
+                releaseLookupPrefix.Wait();
                 return await lookupCompletion.Task.WaitAsync(cancellationToken);
             });
         var english = new SourceClientLanguage("en", "en");
+        var captureAccepted = false;
+        var captureThread = new Thread(
+            () =>
+            {
+                captureAccepted = handler.TryQueueTranslation(
+                    "Alphinaud",
+                    "Understood.",
+                    english);
+                captureReturned.Set();
+            });
 
         handler.InvalidateStateForSource(english);
 
-        Assert.True(handler.TryQueueTranslation(
-            "Alphinaud",
-            "Understood.",
-            english));
-        await lookupStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        try
+        {
+            captureThread.Start();
+
+            Assert.True(lookupStarted.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(captureReturned.Wait(TimeSpan.FromSeconds(1)));
+            Assert.True(captureAccepted);
+        }
+        finally
+        {
+            releaseLookupPrefix.Set();
+            captureThread.Join(TimeSpan.FromSeconds(1));
+        }
 
         Assert.False(lookupCompletion.Task.IsCompleted);
         Assert.True(handler.IsTranslationInFlight);
