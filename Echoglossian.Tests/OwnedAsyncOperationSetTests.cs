@@ -58,6 +58,47 @@ public class OwnedAsyncOperationSetTests
     }
 
     /// <summary>
+    ///     Ensures a failing cancellation callback does not escape disposal
+    ///     and is reported through the injected error observer.
+    /// </summary>
+    /// <returns>A task that completes when the callback failure is observed.</returns>
+    [Fact]
+    public async Task Dispose_CancellationCallbackFails_ReportsErrorWithoutThrowing()
+    {
+        var observedExceptions = new List<Exception>();
+        var exceptionObserved = new TaskCompletionSource<Exception>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var operations = new OwnedAsyncOperationSet(
+            exception =>
+            {
+                observedExceptions.Add(exception);
+                exceptionObserved.TrySetResult(exception);
+            });
+
+        Assert.True(
+            operations.Run(
+                cancellationToken =>
+                {
+                    cancellationToken.Register(
+                        static () => throw new InvalidOperationException("callback boom"));
+                    return Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }));
+
+        var disposeException = Record.Exception(operations.Dispose);
+
+        Assert.Null(disposeException);
+
+        var observedException = await exceptionObserved.Task.WaitAsync(
+            TimeSpan.FromSeconds(1));
+
+        var cancellationException = Assert.IsType<AggregateException>(observedException);
+        var callbackException = Assert.IsType<InvalidOperationException>(
+            Assert.Single(cancellationException.Flatten().InnerExceptions));
+        Assert.Equal("callback boom", callbackException.Message);
+        Assert.Single(observedExceptions);
+    }
+
+    /// <summary>
     ///     Ensures a faulted operation is reported once rather than escaping as
     ///     an unobserved task exception.
     /// </summary>

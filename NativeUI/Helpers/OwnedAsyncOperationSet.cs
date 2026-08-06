@@ -75,6 +75,7 @@ public sealed class OwnedAsyncOperationSet : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        Exception? cancellationException = null;
         lock (this.syncRoot)
         {
             if (this.disposed)
@@ -83,7 +84,23 @@ public sealed class OwnedAsyncOperationSet : IDisposable
             }
 
             this.disposed = true;
-            this.shutdownTokenSource.Cancel();
+            try
+            {
+                this.shutdownTokenSource.Cancel();
+            }
+            catch (Exception exception)
+            {
+                cancellationException = exception;
+            }
+            finally
+            {
+                this.shutdownTokenSource.Dispose();
+            }
+        }
+
+        if (cancellationException is not null)
+        {
+            this.ReportUnexpectedException(cancellationException);
         }
     }
 
@@ -107,7 +124,7 @@ public sealed class OwnedAsyncOperationSet : IDisposable
         }
         catch (Exception exception)
         {
-            this.errorObserver?.Invoke(exception);
+            this.ReportUnexpectedException(exception);
         }
         finally
         {
@@ -117,6 +134,22 @@ public sealed class OwnedAsyncOperationSet : IDisposable
             }
 
             operationTokenSource.Dispose();
+        }
+    }
+
+    /// <summary>
+    ///     Reports one unexpected exception without allowing observer failures
+    ///     to escape the owning runtime.
+    /// </summary>
+    /// <param name="exception">The exception to report.</param>
+    private void ReportUnexpectedException(Exception exception)
+    {
+        try
+        {
+            this.errorObserver?.Invoke(exception);
+        }
+        catch (Exception)
+        {
         }
     }
 }
