@@ -7,12 +7,15 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0806.0051`
+## Published Release `v4.2601.0806.0051`
 
-This package submits the current `v4-series` head after the official
-publication of `v4.2601.0802.2355` on August 5, 2026 and focuses on
+This package was published to the official Dalamud feed and focuses on
 MiniTalk native-layout stability, ActionDetail and ItemDetail overlay control
 activation, and safer localized plugin-label sync.
+
+Published in `DalamudPluginsD17` via
+[PR #9151](https://github.com/goatcorp/DalamudPluginsD17/pull/9151) on
+2026-08-06.
 
 Highlights:
 
@@ -244,6 +247,7 @@ repository workflow.
 | 2026-07-17 | [PR #9027](https://github.com/goatcorp/DalamudPluginsD17/pull/9027) `v4.2601.0717.0008` | urgent MiniTalk native-layout stabilization |
 | 2026-07-19 | [PR #9031](https://github.com/goatcorp/DalamudPluginsD17/pull/9031) `v4.2601.0718.2006` | OpenRouter live-model refresh and hosted preview infrastructure follow-up |
 | 2026-08-05 | [PR #9125](https://github.com/goatcorp/DalamudPluginsD17/pull/9125) `v4.2601.0802.2355` | broad native UI runtime expansion across selection dialogs, tooltips, quest surfaces, nameplates, toasts, persistence, and diagnostics |
+| 2026-08-06 | [PR #9151](https://github.com/goatcorp/DalamudPluginsD17/pull/9151) `v4.2601.0806.0051` | MiniTalk native bubble stabilization follow-up, ActionDetail and ItemDetail overlay control activation, and localized plugin-label sync |
 
 ## Pre-Official History
 
