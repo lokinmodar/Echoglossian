@@ -131,7 +131,7 @@ public partial class Echoglossian
               Handler: new TalkHandler(
                   this.configuration,
                   TranslationService,
-                  this.FindAndReturnTalkMessage,
+                  this.FindAndReturnTalkMessageAsync,
                   (talkMessage, cancellationToken) =>
                       InsertTalkData(talkMessage, cancellationToken),
                   (translatedName, translatedText, originalName) =>

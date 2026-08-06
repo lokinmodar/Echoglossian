@@ -107,7 +107,8 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             "Understood.",
             requestId,
             english,
-            sourceOperation);
+            sourceOperation,
+            sourceOperation.CancellationToken);
         await translator.WaitForRequestAsync();
         translator.Complete("Entendido.");
         await resolution;
@@ -158,7 +159,8 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             "Understood.",
             requestId,
             english,
-            sourceOperation);
+            sourceOperation,
+            sourceOperation.CancellationToken);
         await translator.WaitForRequestAsync();
 
         handler.InvalidateStateForSource(
@@ -214,7 +216,8 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             "Understood.",
             requestId,
             english,
-            sourceOperation);
+            sourceOperation,
+            sourceOperation.CancellationToken);
         await translator.WaitForRequestAsync();
 
         configuration.Lang = 82;
@@ -279,7 +282,8 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             "Understood.",
             requestId,
             english,
-            sourceOperation);
+            sourceOperation,
+            sourceOperation.CancellationToken);
         await translator.WaitForRequestAsync();
         translator.Complete("Entendido.");
         await persistenceStarted.Task;
@@ -288,6 +292,130 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         await resolution;
 
         Assert.True(await cancellationObserved.Task);
+    }
+
+    /// <summary>
+    ///     Ensures the managed Talk capture callback returns while database
+    ///     lookup remains suspended and publishes only after lookup completes.
+    /// </summary>
+    [Fact]
+    public async Task TalkHandler_SuspendedDatabaseLookup_DoesNotBlockCaptureCallback()
+    {
+        var lookupStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var lookupCompletion = new TaskCompletionSource<TalkMessage?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var overlayPublished = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var overlayUpdates = 0;
+        using var handler = CreateTalkHandler(
+            CreateTranslationService(new ControlledTranslator()),
+            () =>
+            {
+                overlayUpdates++;
+                overlayPublished.TrySetResult(true);
+            },
+            findTalkMessageAsync: async (_, cancellationToken) =>
+            {
+                lookupStarted.TrySetResult(true);
+                return await lookupCompletion.Task.WaitAsync(cancellationToken);
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Understood.",
+            english));
+        await lookupStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.False(lookupCompletion.Task.IsCompleted);
+        Assert.True(handler.IsTranslationInFlight);
+        Assert.Equal(0, overlayUpdates);
+        Assert.False(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out _,
+            out _,
+            out _));
+
+        lookupCompletion.TrySetResult(CreateStoredTalkMessage(
+            "Alphinaud",
+            "Understood.",
+            "Entendido."));
+        await overlayPublished.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.False(handler.IsTranslationInFlight);
+        Assert.Equal(1, overlayUpdates);
+        Assert.True(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out var translatedText,
+            out _,
+            out _));
+        Assert.Equal("Entendido.", translatedText);
+    }
+
+    /// <summary>
+    ///     Ensures a suspended database result for line A cannot publish over
+    ///     the newer managed state captured for line B.
+    /// </summary>
+    [Fact]
+    public async Task TalkHandler_StaleDatabaseResult_CannotReplaceNewerManagedState()
+    {
+        var lookupStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var lookupCompletion = new TaskCompletionSource<TalkMessage?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var overlayUpdates = 0;
+        using var handler = CreateTalkHandler(
+            CreateTranslationService(new ControlledTranslator()),
+            () => overlayUpdates++,
+            findTalkMessageAsync: async (_, cancellationToken) =>
+            {
+                lookupStarted.TrySetResult(true);
+                return await lookupCompletion.Task.WaitAsync(cancellationToken);
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Line A",
+            english,
+            out var lineARequestId,
+            out var lineAOperation));
+        var lineAResolution = handler.ResolveTranslationAsync(
+            "Alphinaud",
+            "Line A",
+            lineARequestId,
+            english,
+            lineAOperation,
+            lineAOperation.CancellationToken);
+        await lookupStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.True(handler.TryQueueTranslation(
+            "Alphinaud",
+            "Line B",
+            english,
+            out _,
+            out _));
+
+        lookupCompletion.TrySetResult(CreateStoredTalkMessage(
+            "Alphinaud",
+            "Line A",
+            "Linha A"));
+        await lineAResolution;
+
+        Assert.True(handler.IsTranslationInFlight);
+        Assert.Equal(0, overlayUpdates);
+        Assert.False(handler.TryGetCurrentResolvedTranslation(
+            english,
+            out _,
+            out _,
+            out _,
+            out _));
     }
 
     /// <summary>
@@ -304,27 +432,10 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         Config? configuration = null,
         Func<TalkMessage, Task<string>>? insertTalkMessageAsync = null,
         Func<TalkMessage, CancellationToken, Task<string>>?
-            insertTalkMessageWithCancellationAsync = null)
+            insertTalkMessageWithCancellationAsync = null,
+        Func<TalkMessage, CancellationToken, Task<TalkMessage?>>?
+            findTalkMessageAsync = null)
     {
-        if (insertTalkMessageWithCancellationAsync != null)
-        {
-            return new TalkHandler(
-                configuration ?? new Config
-                {
-                    TranslateTalk = true,
-                    TalkTranslationDisplayMode =
-                        JournalTranslationDisplayMode.TooltipTranslation,
-                    Lang = 81,
-                },
-                translationService,
-                static _ => null,
-                insertTalkMessageWithCancellationAsync,
-                (_, _, _) => updateOverlay?.Invoke(),
-                clearOverlay ?? (static () => { }),
-                static text => text,
-                restoreNativeMutation: static () => { });
-        }
-
         return new TalkHandler(
             configuration ?? new Config
             {
@@ -334,12 +445,41 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
                 Lang = 81,
             },
             translationService,
-            static _ => null,
-            insertTalkMessageAsync ?? (static _ => Task.FromResult(string.Empty)),
+            findTalkMessageAsync ??
+            (static (_, _) => Task.FromResult<TalkMessage?>(null)),
+            insertTalkMessageWithCancellationAsync ??
+            ((message, _) => insertTalkMessageAsync?.Invoke(message) ??
+                             Task.FromResult(string.Empty)),
             (_, _, _) => updateOverlay?.Invoke(),
             clearOverlay ?? (static () => { }),
             static text => text,
             restoreNativeMutation: static () => { });
+    }
+
+    /// <summary>
+    ///     Creates one stored Talk translation for async lookup tests.
+    /// </summary>
+    /// <param name="originalName">The original speaker name.</param>
+    /// <param name="originalText">The original dialogue text.</param>
+    /// <param name="translatedText">The translated dialogue text.</param>
+    /// <returns>The stored Talk row.</returns>
+    private static TalkMessage CreateStoredTalkMessage(
+        string originalName,
+        string originalText,
+        string translatedText)
+    {
+        return new TalkMessage(
+            originalName,
+            originalText,
+            "en",
+            "en",
+            string.Empty,
+            translatedText,
+            "pt-BR",
+            (int)PluginEntry.TransEngines.Google,
+            rtlLangTranslationImageData: null,
+            DateTime.UtcNow,
+            DateTime.UtcNow);
     }
 
     /// <summary>
