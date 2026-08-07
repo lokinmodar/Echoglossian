@@ -7,11 +7,23 @@ $ErrorActionPreference = "Stop"
 
 $projectPath = Join-Path $PSScriptRoot "translation-surface-docs\TranslationSurfaceDocs.csproj"
 $args = @("run", "--project", $projectPath, "--")
+$repoRoot = Split-Path -Parent $PSScriptRoot
 
 if ($ValidateOnly)
 {
     $args += "--validate-only"
 }
 
-& dotnet @args
-exit $LASTEXITCODE
+$exitCode = 0
+Push-Location $repoRoot
+try
+{
+    & dotnet @args
+    $exitCode = $LASTEXITCODE
+}
+finally
+{
+    Pop-Location
+}
+
+exit $exitCode
