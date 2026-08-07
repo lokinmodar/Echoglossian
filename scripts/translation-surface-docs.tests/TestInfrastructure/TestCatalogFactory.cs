@@ -10,4 +10,37 @@ namespace TranslationSurfaceDocs.Tests.TestInfrastructure;
 /// </summary>
 internal static class TestCatalogFactory
 {
+    /// <summary>
+    /// Creates a minimal valid catalog with one surface for validation tests.
+    /// </summary>
+    /// <param name="dbRead">The runtime database read mode.</param>
+    /// <param name="dbWrite">The runtime database write mode.</param>
+    /// <param name="docs">The documentation paths for the surface.</param>
+    /// <param name="requiredCodeAnchors">The required repository code anchors.</param>
+    /// <returns>A deterministic catalog fixture.</returns>
+    public static TranslationSurfaceCatalog CreateSingleSurfaceCatalog(
+        string dbRead = "sync",
+        string dbWrite = "async",
+        IReadOnlyList<string>? docs = null,
+        IReadOnlyList<string>? requiredCodeAnchors = null)
+    {
+        return new TranslationSurfaceCatalog(
+            [new TranslationSurfaceModeFamily("mode", "Mode", ["Native UI Translation"])],
+            [new TranslationSurfaceSection("section", "Section")],
+            [],
+            [new TranslationSurfaceEntry(
+                "surface",
+                "section",
+                "Surface",
+                "TranslateSurface",
+                "mode",
+                "Enabled",
+                new Dictionary<string, string> { ["en"] = "Surface note." },
+                new TranslationSurfaceRuntime("Model", "Cache", "Owner", dbRead, dbWrite),
+                docs ?? ["docs/translation-surface-catalog.json"],
+                requiredCodeAnchors ?? ["PluginRuntimeLog"])])
+        {
+            GeneratedAtPolicy = "No timestamps.",
+        };
+    }
 }
