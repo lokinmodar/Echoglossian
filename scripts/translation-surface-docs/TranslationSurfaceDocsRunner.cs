@@ -11,10 +11,10 @@ namespace TranslationSurfaceDocs;
 internal static class TranslationSurfaceDocsRunner
 {
     /// <summary>
-    /// Loads the catalog and generates documentation when rendering is available.
+    /// Loads the catalog and renders documentation when rendering is available.
     /// </summary>
     /// <param name="options">The generation inputs.</param>
-    /// <returns>The generated documents.</returns>
+    /// <returns>The generated documents without writing them to disk.</returns>
     public static IReadOnlyList<GeneratedDocument> Generate(GenerationOptions options)
     {
         TranslationSurfaceCatalog catalog = TranslationSurfaceCatalogLoader.Load(
@@ -40,7 +40,6 @@ internal static class TranslationSurfaceDocsRunner
             RuntimeMapRenderer.RenderJson(catalog),
             .. catalog.Locales.Select(locale => SupportMatrixRenderer.Render(catalog, locale.Id)),
         ];
-        GeneratedDocumentWriter.WriteAll(options.RepoRoot, documents);
 
         return documents;
     }

@@ -16,6 +16,9 @@ namespace TranslationSurfaceDocs;
 /// <param name="ModesHeader">The mode table header.</param>
 /// <param name="NotesHeader">The notes table header.</param>
 /// <param name="ReleaseStatusHeader">The release-status table header.</param>
+/// <param name="ModeFamilyNames">The localized mode-family labels keyed by family identifier.</param>
+/// <param name="ModeLabels">The localized mode labels keyed by canonical mode string.</param>
+/// <param name="ReleaseStatuses">The localized release statuses keyed by canonical status string.</param>
 /// <param name="SectionHeadings">The localized headings keyed by catalog section identifier.</param>
 internal sealed record SupportMatrixLocaleResourceSet(
     string Title,
@@ -26,4 +29,7 @@ internal sealed record SupportMatrixLocaleResourceSet(
     string ModesHeader,
     string NotesHeader,
     string ReleaseStatusHeader,
+    IReadOnlyDictionary<string, string> ModeFamilyNames,
+    IReadOnlyDictionary<string, string> ModeLabels,
+    IReadOnlyDictionary<string, string> ReleaseStatuses,
     IReadOnlyDictionary<string, string> SectionHeadings);

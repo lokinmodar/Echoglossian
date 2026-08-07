@@ -9,69 +9,69 @@
 
 | Modusfamilie | Modi |
 | --- | --- |
-| Native-tooltip family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
-| Overlay family | Native UI Translation; Overlay Translation Only; Native UI Translation With Original Overlay |
-| Native / distance-aware hybrid family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
-| Quest / native-window family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
+| Native-Tooltip-Familie | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Overlay-Familie | `Native UI Translation`; `Overlay Translation Only`; `Native UI Translation With Original Overlay` |
+| Native-/Distance-Aware-Hybridfamilie | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Quest-/Native-Window-Familie | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
 
 ## Dialog- und Overlay-Oberflächen
 
 | Oberfläche | Konfigurations-Toggle | Modi | Hinweise | Status der aktuellen Release |
 | --- | --- | --- | --- | --- |
-| Talk | `TranslateTalk` | Overlay family | Supports translated NPC names through TranslateTalkNpcNames. | Enabled |
-| BattleTalk | `TranslateBattleTalk` | Overlay family | Supports translated NPC names through TranslateBattleTalkNpcNames. | Enabled |
-| TalkSubtitle | `TranslateTalkSubtitle` | Overlay family | Uses titleless overlay presentation when overlay mode is active. | Enabled |
-| MiniTalk | `TranslateMiniTalk` | Overlay family | Small native surface; verbose text still requires careful native reflow. | Enabled |
-| CutSceneSelectString | `TranslateCutSceneSelectString` | Overlay family | Question becomes the title and options become the body in overlay mode. | Enabled |
-| Yes/No dialog | `TranslateYesNoScreen` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation. | Enabled |
-| SelectOk dialog | `TranslateSelectOk` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation. | Enabled |
-| SelectString dialog | `TranslateSelectString` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation; prefers SelectString and falls back to SelectionDialogText. | Enabled |
-| SelectIconString dialog | `TranslateSelectIconString` | Native-tooltip family | Keeps its own toggle and display mode and uses body-only structured tooltip presentation. | Enabled |
+| Talk | `TranslateTalk` | Overlay-Familie | Unterstützt übersetzte NPC-Namen über `TranslateTalkNpcNames` | Aktiviert |
+| BattleTalk | `TranslateBattleTalk` | Overlay-Familie | Unterstützt übersetzte NPC-Namen über `TranslateBattleTalkNpcNames` | Aktiviert |
+| TalkSubtitle | `TranslateTalkSubtitle` | Overlay-Familie | Uses titleless overlay presentation when overlay mode is active. | Aktiviert |
+| MiniTalk | `TranslateMiniTalk` | Overlay-Familie | Kleine native Oberfläche; ausführlichere Texte benötigen weiterhin sorgfältiges natives Reflow | Aktiviert |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Overlay-Familie | Die Frage wird im Overlay-Modus zum Titel und die Optionen zum Haupttext | Aktiviert |
+| Yes/No dialog | `TranslateYesNoScreen` | Native-Tooltip-Familie | Im Konfigurationsmodell und in der Tab-Implementierung vorhanden, aber derzeit nicht im aktiven Overlay-Tab-Flow sichtbar | Aktiviert |
+| SelectOk dialog | `TranslateSelectOk` | Native-Tooltip-Familie | Im Konfigurationsmodell und in der Tab-Implementierung vorhanden, aber derzeit nicht im aktiven Overlay-Tab-Flow sichtbar | Aktiviert |
+| SelectString dialog | `TranslateSelectString` | Native-Tooltip-Familie | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation; prefers SelectString and falls back to SelectionDialogText. | Aktiviert |
+| SelectIconString dialog | `TranslateSelectIconString` | Native-Tooltip-Familie | Keeps its own toggle and display mode and uses body-only structured tooltip presentation. | Aktiviert |
 
 ## Quest- und Journal-Oberflächen
 
 | Oberfläche | Konfigurations-Toggle | Modi | Hinweise | Status der aktuellen Release |
 | --- | --- | --- | --- | --- |
-| Journal | `TranslateJournal` | Quest / native-window family | Quest list surface. | Enabled |
-| JournalDetail | `TranslateJournalDetail` | Quest / native-window family | Dense body layout; native mode requires explicit block reflow. | Enabled |
-| ToDoList | `TranslateToDoList` | Quest / native-window family | Quest tracker / objective list. | Enabled |
-| ToDo | `TranslateToDo` | Quest / native-window family | Instanced/FATE objective tracker. | Enabled |
-| ScenarioTree | `TranslateScenarioTree` | Quest / native-window family | Main scenario tracker. | Enabled |
-| JournalAccept | `TranslateJournalAccept` | Quest / native-window family | Uses QuestPlate when a safe quest id is available and QuestPopupText fallback for live popup capture. | Enabled |
-| JournalResult | `TranslateJournalResult` | Quest / native-window family | Prefers QuestPlate canonical lookup and falls back to QuestPopupText while missing rows are translated live. | Enabled |
-| RecommendList | `TranslateRecommendList` | Quest / native-window family | Recommendation list. | Enabled |
-| AreaMap | `TranslateAreaMap` | Quest / native-window family | Quest text inside map-related quest UI; AreaMap and _NaviMap are string-array-backed. | Enabled |
+| Journal | `TranslateJournal` | Quest-/Native-Window-Familie | Questlisten-Oberfläche | Aktiviert |
+| JournalDetail | `TranslateJournalDetail` | Quest-/Native-Window-Familie | Dichtes Body-Layout; der native Modus erfordert explizites Block-Reflow | Aktiviert |
+| ToDoList | `TranslateToDoList` | Quest-/Native-Window-Familie | Quest-Tracker / Zielliste | Aktiviert |
+| ToDo | `TranslateToDo` | Quest-/Native-Window-Familie | Instanced/FATE objective tracker. | Aktiviert |
+| ScenarioTree | `TranslateScenarioTree` | Quest-/Native-Window-Familie | Hauptszenario-Tracker | Aktiviert |
+| JournalAccept | `TranslateJournalAccept` | Quest-/Native-Window-Familie | Uses QuestPlate when a safe quest id is available and QuestPopupText fallback for live popup capture. | Aktiviert |
+| JournalResult | `TranslateJournalResult` | Quest-/Native-Window-Familie | Prefers QuestPlate canonical lookup and falls back to QuestPopupText while missing rows are translated live. | Aktiviert |
+| RecommendList | `TranslateRecommendList` | Quest-/Native-Window-Familie | Empfehlungsliste | Aktiviert |
+| AreaMap | `TranslateAreaMap` | Quest-/Native-Window-Familie | Quest text inside map-related quest UI; AreaMap and _NaviMap are string-array-backed. | Aktiviert |
 
 ## Toast-Oberflächen
 
 | Oberfläche | Konfigurations-Toggle | Modi | Hinweise | Status der aktuellen Release |
 | --- | --- | --- | --- | --- |
-| WideText / Screen Info toast | `TranslateWideTextToast` | Overlay family | Large center-screen information toast. | Enabled |
-| Error toast | `TranslateErrorToast` | Overlay family | Error / failure notifications. | Enabled |
-| Area toast | `TranslateAreaToast` | Overlay family | Area and location notifications. | Enabled |
-| Class / Job change toast | `TranslateClassChangeToast` | Overlay family | Class/job change announcement. | Enabled |
-| Text gimmick hint | `TranslateTextGimmickHint` | Overlay family | Gimmick/tutorial hint surface. | Enabled |
-| Quest toast | `TranslateQuestToast` | Overlay family | Quest-related toast notification. | Enabled |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Overlay-Familie | Große Informations-Toast in der Bildschirmmitte | Aktiviert |
+| Error toast | `TranslateErrorToast` | Overlay-Familie | Fehler- und Störungsmeldungen | Aktiviert |
+| Area toast | `TranslateAreaToast` | Overlay-Familie | Gebiets- und Ortsbenachrichtigungen | Aktiviert |
+| Class / Job change toast | `TranslateClassChangeToast` | Overlay-Familie | Ankündigung eines Klassen-/Jobwechsels | Aktiviert |
+| Text gimmick hint | `TranslateTextGimmickHint` | Overlay-Familie | Gimmick-/Tutorial-Hinweis | Aktiviert |
+| Quest toast | `TranslateQuestToast` | Overlay-Familie | Quest-bezogene Toast-Benachrichtigung | Aktiviert |
 
 ## Spiel-Fenster-Oberflächen
 
 | Oberfläche | Konfigurations-Toggle | Modi | Hinweise | Status der aktuellen Release |
 | --- | --- | --- | --- | --- |
-| Character window | `TranslateCharacterWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
-| Main Command | `TranslateMainCommandWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
-| Action Menu | `TranslateActionMenuWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
-| HUD windows | `TranslateHudWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
-| Operation Guide | `TranslateOperationGuideWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
-| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest / native-window family | DB-first game-window runtime. | Enabled |
-| Context Menu | `TranslateContextMenu` | Native-tooltip family | Dedicated DB-first row-chain runtime with row-local hover targets. | Enabled |
-| Tooltip addon | `TranslateTooltipAddon` | Native-tooltip family | Dedicated DB-first Tooltip addon runtime; tooltip translation and swap use an anchored overlay on the live game tooltip. | Enabled |
-| Action / item detail tooltips | `TranslateTooltips` | Quest / native-window family | DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes. | Enabled |
+| Character window | `TranslateCharacterWindow` | Quest-/Native-Window-Familie | DB-first-Game-Window-Runtime | Aktiviert |
+| Main Command | `TranslateMainCommandWindow` | Quest-/Native-Window-Familie | DB-first-Game-Window-Runtime | Aktiviert |
+| Action Menu | `TranslateActionMenuWindow` | Quest-/Native-Window-Familie | DB-first-Game-Window-Runtime | Aktiviert |
+| HUD windows | `TranslateHudWindow` | Quest-/Native-Window-Familie | DB-first-Game-Window-Runtime | Aktiviert |
+| Operation Guide | `TranslateOperationGuideWindow` | Quest-/Native-Window-Familie | DB-first-Game-Window-Runtime | Aktiviert |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest-/Native-Window-Familie | DB-first-Game-Window-Runtime | Aktiviert |
+| Context Menu | `TranslateContextMenu` | Native-Tooltip-Familie | Dedicated DB-first row-chain runtime with row-local hover targets. | Aktiviert |
+| Tooltip addon | `TranslateTooltipAddon` | Native-Tooltip-Familie | Dedicated DB-first Tooltip addon runtime; tooltip translation and swap use an anchored overlay on the live game tooltip. | Aktiviert |
+| Action / item detail tooltips | `TranslateTooltips` | Quest-/Native-Window-Familie | Strukturierte Tooltip-Übersetzung wird beim Start zwangsweise deaktiviert, solange `ActionDetail` / `ItemDetail` instabil bleiben | Aktiviert |
 
 ## Welt- und NamePlate-Oberflächen
 
 | Oberfläche | Konfigurations-Toggle | Modi | Hinweise | Status der aktuellen Release |
 | --- | --- | --- | --- | --- |
-| NamePlates | `TranslateNamePlates` | Native / distance-aware hybrid family | Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend. | Enabled |
+| NamePlates | `TranslateNamePlates` | Native-/Distance-Aware-Hybridfamilie | Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend. | Aktiviert |
 
 ## Versteckte oder vorübergehend eingeschränkte Oberflächen
 

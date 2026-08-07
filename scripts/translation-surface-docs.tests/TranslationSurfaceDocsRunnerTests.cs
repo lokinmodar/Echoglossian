@@ -34,21 +34,31 @@ public sealed class TranslationSurfaceDocsRunnerTests
     }
 
     /// <summary>
-    /// Ensures full generation returns both the runtime map and localized support matrices.
+    /// Ensures full generation matches every checked-in generated artifact
+    /// without mutating the source checkout.
     /// </summary>
     [Fact]
-    public void Generate_WhenValidateOnlyIsFalse_ReturnsRuntimeMapAndMatrices()
+    public void Generate_WhenValidateOnlyIsFalse_ReturnsCheckedInArtifacts()
     {
         string repoRoot = TestRepositoryPaths.ResolveRepoRoot();
         var options = new GenerationOptions(
             RepoRoot: repoRoot,
             CatalogPath: Path.Combine(repoRoot, "docs", "translation-surface-catalog.json"),
             ValidateOnly: false);
+        TranslationSurfaceCatalog catalog = TranslationSurfaceCatalogLoader.Load(
+            repoRoot,
+            options.CatalogPath);
 
         IReadOnlyList<GeneratedDocument> generated = TranslationSurfaceDocsRunner.Generate(options);
 
-        generated.Should().Contain(document => document.RelativePath == "docs/translation-surface-runtime-map.md");
-        generated.Should().Contain(document => document.RelativePath == "docs/translation-surface-support-matrix.pt-BR.md");
+        generated.Should().HaveCount(catalog.Locales.Count + 2);
+        foreach (GeneratedDocument document in generated)
+        {
+            string checkedInPath = Path.Combine(repoRoot, document.RelativePath);
+            File.Exists(checkedInPath).Should().BeTrue(
+                $"generated document '{document.RelativePath}' must already be tracked");
+            File.ReadAllText(checkedInPath).Should().Be(document.Content);
+        }
     }
 
     /// <summary>

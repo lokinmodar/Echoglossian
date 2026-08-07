@@ -21,10 +21,17 @@ internal static class SupportMatrixRenderer
     public static GeneratedDocument Render(TranslationSurfaceCatalog catalog, string locale)
     {
         TranslationSurfaceLocale target = catalog.Locales.SingleOrDefault(item => item.Id == locale)
-            ?? new TranslationSurfaceLocale(locale, locale == "en" ? "docs/translation-surface-support-matrix.md" : string.Empty);
+            ?? new TranslationSurfaceLocale(
+                locale,
+                locale == "en" ? "docs/translation-surface-support-matrix.md" : string.Empty);
         SupportMatrixLocaleResourceSet labels = SupportMatrixLocaleResources.ForLocale(locale);
         IReadOnlyDictionary<string, string> modeFamilyNames = catalog.ModeFamilies
-            .ToDictionary(family => family.Id, family => family.DisplayName, StringComparer.Ordinal);
+            .ToDictionary(
+                family => family.Id,
+                family => labels.ModeFamilyNames.GetValueOrDefault(
+                    family.Id,
+                    family.DisplayName),
+                StringComparer.Ordinal);
         StringBuilder builder = new();
         builder.AppendLine("<!--");
         builder.AppendLine("  Copyright (c) lokinmodar. All rights reserved.");
@@ -39,7 +46,8 @@ internal static class SupportMatrixRenderer
         builder.AppendLine("| --- | --- |");
         foreach (TranslationSurfaceModeFamily family in catalog.ModeFamilies)
         {
-            builder.AppendLine($"| {family.DisplayName} | {string.Join("; ", family.Modes)} |");
+            builder.AppendLine(
+                $"| {modeFamilyNames[family.Id]} | {FormatModes(labels, family.Modes)} |");
         }
 
         foreach (TranslationSurfaceSection section in catalog.Sections)
@@ -51,21 +59,37 @@ internal static class SupportMatrixRenderer
             builder.AppendLine("| --- | --- | --- | --- | --- |");
             foreach (TranslationSurfaceEntry surface in catalog.Surfaces.Where(item => item.Section == section.Id))
             {
-                builder.AppendLine($"| {surface.DisplayName} | `{surface.ConfigToggle}` | {modeFamilyNames[surface.ModeFamilyId]} | {ResolveNote(catalog, target, surface, locale)} | {surface.ReleaseStatus} |");
+                builder.AppendLine(
+                    $"| {surface.DisplayName} | `{surface.ConfigToggle}` | {modeFamilyNames[surface.ModeFamilyId]} | {ResolveNote(surface, target, locale)} | {ResolveReleaseStatus(labels, surface.ReleaseStatus)} |");
             }
         }
 
         return new GeneratedDocument(target.Path, builder.ToString());
     }
 
-    private static string ResolveNote(TranslationSurfaceCatalog catalog, TranslationSurfaceLocale target, TranslationSurfaceEntry surface, string locale)
+    private static string FormatModes(
+        SupportMatrixLocaleResourceSet labels,
+        IReadOnlyList<string> modes) =>
+        string.Join(
+            "; ",
+            modes.Select(mode => $"`{labels.ModeLabels.GetValueOrDefault(mode, mode)}`"));
+
+    private static string ResolveReleaseStatus(
+        SupportMatrixLocaleResourceSet labels,
+        string releaseStatus) =>
+        labels.ReleaseStatuses.GetValueOrDefault(releaseStatus, releaseStatus);
+
+    private static string ResolveNote(
+        TranslationSurfaceEntry surface,
+        TranslationSurfaceLocale target,
+        string locale)
     {
         if (surface.Notes.TryGetValue(locale, out string? localizedNote))
         {
             return localizedNote;
         }
 
-        if ((locale == "en" || catalog.Locales.Any(item => item.Id == target.Id)) &&
+        if ((locale == "en" || target.AllowEnglishNoteFallback) &&
             surface.Notes.TryGetValue("en", out string? englishNote))
         {
             return englishNote;

@@ -66,59 +66,73 @@
   "locales": [
     {
       "id": "en",
-      "path": "docs/translation-surface-support-matrix.md"
+      "path": "docs/translation-surface-support-matrix.md",
+      "allowEnglishNoteFallback": false
     },
     {
       "id": "pt-BR",
-      "path": "docs/translation-surface-support-matrix.pt-BR.md"
+      "path": "docs/translation-surface-support-matrix.pt-BR.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "pt",
-      "path": "docs/translation-surface-support-matrix.pt.md"
+      "path": "docs/translation-surface-support-matrix.pt.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "de",
-      "path": "docs/translation-surface-support-matrix.de.md"
+      "path": "docs/translation-surface-support-matrix.de.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "da",
-      "path": "docs/translation-surface-support-matrix.da.md"
+      "path": "docs/translation-surface-support-matrix.da.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "el",
-      "path": "docs/translation-surface-support-matrix.el.md"
+      "path": "docs/translation-surface-support-matrix.el.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "es",
-      "path": "docs/translation-surface-support-matrix.es.md"
+      "path": "docs/translation-surface-support-matrix.es.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "eu",
-      "path": "docs/translation-surface-support-matrix.eu.md"
+      "path": "docs/translation-surface-support-matrix.eu.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "fr",
-      "path": "docs/translation-surface-support-matrix.fr.md"
+      "path": "docs/translation-surface-support-matrix.fr.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "it",
-      "path": "docs/translation-surface-support-matrix.it.md"
+      "path": "docs/translation-surface-support-matrix.it.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "ru",
-      "path": "docs/translation-surface-support-matrix.ru.md"
+      "path": "docs/translation-surface-support-matrix.ru.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "vi",
-      "path": "docs/translation-surface-support-matrix.vi.md"
+      "path": "docs/translation-surface-support-matrix.vi.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "zh-CN",
-      "path": "docs/translation-surface-support-matrix.zh-CN.md"
+      "path": "docs/translation-surface-support-matrix.zh-CN.md",
+      "allowEnglishNoteFallback": true
     },
     {
       "id": "zh-TW",
-      "path": "docs/translation-surface-support-matrix.zh-TW.md"
+      "path": "docs/translation-surface-support-matrix.zh-TW.md",
+      "allowEnglishNoteFallback": true
     }
   ],
   "surfaces": [
@@ -130,7 +144,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Supports translated NPC names through TranslateTalkNpcNames."
+        "en": "Supports translated NPC names through TranslateTalkNpcNames.",
+        "pt-BR": "Suporta nomes de NPC traduzidos por \u0060TranslateTalkNpcNames\u0060",
+        "pt": "Suporta nomes de NPC traduzidos atrav\u00E9s de \u0060TranslateTalkNpcNames\u0060",
+        "de": "Unterst\u00FCtzt \u00FCbersetzte NPC-Namen \u00FCber \u0060TranslateTalkNpcNames\u0060",
+        "da": "Underst\u00F8tter oversatte NPC-navne via \u0060TranslateTalkNpcNames\u0060",
+        "el": "\u03A5\u03C0\u03BF\u03C3\u03C4\u03B7\u03C1\u03AF\u03B6\u03B5\u03B9 \u03BC\u03B5\u03C4\u03B1\u03C6\u03C1\u03B1\u03C3\u03BC\u03AD\u03BD\u03B1 \u03BF\u03BD\u03CC\u03BC\u03B1\u03C4\u03B1 NPC \u03BC\u03AD\u03C3\u03C9 \u0060TranslateTalkNpcNames\u0060",
+        "es": "Soporta nombres de NPC traducidos mediante \u0060TranslateTalkNpcNames\u0060",
+        "eu": "NPC izen itzuliak onartzen ditu \u0060TranslateTalkNpcNames\u0060 bidez",
+        "fr": "Prend en charge les noms de PNJ traduits via \u0060TranslateTalkNpcNames\u0060",
+        "it": "Supporta nomi NPC tradotti tramite \u0060TranslateTalkNpcNames\u0060",
+        "ru": "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u043F\u0435\u0440\u0435\u0432\u043E\u0434 \u0438\u043C\u0451\u043D NPC \u0447\u0435\u0440\u0435\u0437 \u0060TranslateTalkNpcNames\u0060",
+        "vi": "H\u1ED7 tr\u1EE3 d\u1ECBch t\u00EAn NPC qua \u0060TranslateTalkNpcNames\u0060",
+        "zh-CN": "\u901A\u8FC7 \u0060TranslateTalkNpcNames\u0060 \u652F\u6301\u7FFB\u8BD1 NPC \u540D\u79F0",
+        "zh-TW": "\u900F\u904E \u0060TranslateTalkNpcNames\u0060 \u652F\u63F4\u7FFB\u8B6F NPC \u540D\u7A31"
       },
       "runtime": {
         "translationModel": "Live addon capture and asynchronous translation published through the dialogue overlay.",
@@ -154,7 +181,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Supports translated NPC names through TranslateBattleTalkNpcNames."
+        "en": "Supports translated NPC names through TranslateBattleTalkNpcNames.",
+        "pt-BR": "Suporta nomes de NPC traduzidos por \u0060TranslateBattleTalkNpcNames\u0060",
+        "pt": "Suporta nomes de NPC traduzidos atrav\u00E9s de \u0060TranslateBattleTalkNpcNames\u0060",
+        "de": "Unterst\u00FCtzt \u00FCbersetzte NPC-Namen \u00FCber \u0060TranslateBattleTalkNpcNames\u0060",
+        "da": "Underst\u00F8tter oversatte NPC-navne via \u0060TranslateBattleTalkNpcNames\u0060",
+        "el": "\u03A5\u03C0\u03BF\u03C3\u03C4\u03B7\u03C1\u03AF\u03B6\u03B5\u03B9 \u03BC\u03B5\u03C4\u03B1\u03C6\u03C1\u03B1\u03C3\u03BC\u03AD\u03BD\u03B1 \u03BF\u03BD\u03CC\u03BC\u03B1\u03C4\u03B1 NPC \u03BC\u03AD\u03C3\u03C9 \u0060TranslateBattleTalkNpcNames\u0060",
+        "es": "Soporta nombres de NPC traducidos mediante \u0060TranslateBattleTalkNpcNames\u0060",
+        "eu": "NPC izen itzuliak onartzen ditu \u0060TranslateBattleTalkNpcNames\u0060 bidez",
+        "fr": "Prend en charge les noms de PNJ traduits via \u0060TranslateBattleTalkNpcNames\u0060",
+        "it": "Supporta nomi NPC tradotti tramite \u0060TranslateBattleTalkNpcNames\u0060",
+        "ru": "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u043F\u0435\u0440\u0435\u0432\u043E\u0434 \u0438\u043C\u0451\u043D NPC \u0447\u0435\u0440\u0435\u0437 \u0060TranslateBattleTalkNpcNames\u0060",
+        "vi": "H\u1ED7 tr\u1EE3 d\u1ECBch t\u00EAn NPC qua \u0060TranslateBattleTalkNpcNames\u0060",
+        "zh-CN": "\u901A\u8FC7 \u0060TranslateBattleTalkNpcNames\u0060 \u652F\u6301\u7FFB\u8BD1 NPC \u540D\u79F0",
+        "zh-TW": "\u900F\u904E \u0060TranslateBattleTalkNpcNames\u0060 \u652F\u63F4\u7FFB\u8B6F NPC \u540D\u7A31"
       },
       "runtime": {
         "translationModel": "Live addon capture and asynchronous translation published through the dialogue overlay.",
@@ -166,7 +206,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "FindAndReturnBattleTalkMessage"
+      ]
     },
     {
       "id": "TalkSubtitle",
@@ -188,7 +230,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "TalkSubtitleHandler"
+      ]
     },
     {
       "id": "MiniTalk",
@@ -198,7 +242,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Small native surface; verbose text still requires careful native reflow."
+        "en": "Small native surface; verbose text still requires careful native reflow.",
+        "pt-BR": "Superf\u00EDcie nativa pequena; textos mais verbosos ainda exigem native reflow cuidadoso",
+        "pt": "Pequena superf\u00EDcie nativa; textos mais verbosos ainda exigem native reflow cuidadoso",
+        "de": "Kleine native Oberfl\u00E4che; ausf\u00FChrlichere Texte ben\u00F6tigen weiterhin sorgf\u00E4ltiges natives Reflow",
+        "da": "Lille native flade; ordrige tekster kr\u00E6ver stadig omhyggelig native reflow",
+        "el": "\u039C\u03B9\u03BA\u03C1\u03AE native \u03B5\u03C0\u03B9\u03C6\u03AC\u03BD\u03B5\u03B9\u03B1\u00B7 \u03C4\u03B1 \u03C0\u03B9\u03BF \u03B5\u03BA\u03C4\u03B5\u03BD\u03AE \u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03B1 \u03C7\u03C1\u03B5\u03B9\u03AC\u03B6\u03BF\u03BD\u03C4\u03B1\u03B9 \u03B1\u03BA\u03CC\u03BC\u03B7 \u03C0\u03C1\u03BF\u03C3\u03B5\u03BA\u03C4\u03B9\u03BA\u03CC native reflow",
+        "es": "Superficie nativa peque\u00F1a; el texto m\u00E1s verboso todav\u00EDa requiere native reflow cuidadoso",
+        "eu": "Native gainazal txikia; testu luzeagoek native reflow zaindua behar dute oraindik",
+        "fr": "Petite surface native ; les textes plus verbeux n\u00E9cessitent encore un reflow natif soign\u00E9",
+        "it": "Piccola superficie nativa; testi pi\u00F9 verbosi richiedono ancora un native reflow accurato",
+        "ru": "\u041D\u0435\u0431\u043E\u043B\u044C\u0448\u0430\u044F native-\u043F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u044C; \u0431\u043E\u043B\u0435\u0435 \u043C\u043D\u043E\u0433\u043E\u0441\u043B\u043E\u0432\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u0432\u0441\u0451 \u0435\u0449\u0451 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u0430\u043A\u043A\u0443\u0440\u0430\u0442\u043D\u043E\u0433\u043E native reflow",
+        "vi": "B\u1EC1 m\u1EB7t native nh\u1ECF; v\u0103n b\u1EA3n d\u00E0i h\u01A1n v\u1EABn c\u1EA7n native reflow c\u1EA9n th\u1EADn",
+        "zh-CN": "\u539F\u751F\u5C0F\u578B\u754C\u9762\uFF1B\u66F4\u957F\u7684\u7FFB\u8BD1\u6587\u672C\u4ECD\u9700\u8981\u8C28\u614E\u7684 native reflow",
+        "zh-TW": "\u5C0F\u578B\u539F\u751F\u4ECB\u9762\uFF1B\u8F03\u9577\u7684\u7FFB\u8B6F\u6587\u5B57\u4ECD\u9700\u8981\u8B39\u614E\u7684 native reflow"
       },
       "runtime": {
         "translationModel": "Live capture, cache or database lookup, asynchronous translation, then overlay or native publication.",
@@ -210,7 +267,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "MiniTalkHandler"
+      ]
     },
     {
       "id": "CutSceneSelectString",
@@ -220,7 +279,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Question becomes the title and options become the body in overlay mode."
+        "en": "Question becomes the title and options become the body in overlay mode.",
+        "pt-BR": "A pergunta vira o t\u00EDtulo e as op\u00E7\u00F5es viram o corpo no modo overlay",
+        "pt": "A pergunta torna-se o t\u00EDtulo e as op\u00E7\u00F5es tornam-se o corpo no modo overlay",
+        "de": "Die Frage wird im Overlay-Modus zum Titel und die Optionen zum Haupttext",
+        "da": "Sp\u00F8rgsm\u00E5let bliver titel, og valgmulighederne bliver br\u00F8dteksten i overlay-tilstand",
+        "el": "\u0397 \u03B5\u03C1\u03CE\u03C4\u03B7\u03C3\u03B7 \u03B3\u03AF\u03BD\u03B5\u03C4\u03B1\u03B9 \u03C4\u03AF\u03C4\u03BB\u03BF\u03C2 \u03BA\u03B1\u03B9 \u03BF\u03B9 \u03B5\u03C0\u03B9\u03BB\u03BF\u03B3\u03AD\u03C2 \u03B3\u03AF\u03BD\u03BF\u03BD\u03C4\u03B1\u03B9 \u03C4\u03BF \u03C3\u03CE\u03BC\u03B1 \u03C3\u03C4\u03BF overlay mode",
+        "es": "La pregunta se convierte en el t\u00EDtulo y las opciones en el cuerpo en modo overlay",
+        "eu": "Galdera izenburu bihurtzen da eta aukerak gorputz testu overlay moduan",
+        "fr": "La question devient le titre et les options deviennent le corps en mode overlay",
+        "it": "La domanda diventa il titolo e le opzioni diventano il corpo in modalit\u00E0 overlay",
+        "ru": "\u0412 overlay-\u0440\u0435\u0436\u0438\u043C\u0435 \u0432\u043E\u043F\u0440\u043E\u0441 \u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0441\u044F \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u043E\u043C, \u0430 \u0432\u0430\u0440\u0438\u0430\u043D\u0442\u044B \u043E\u0442\u0432\u0435\u0442\u0430 \u0441\u0442\u0430\u043D\u043E\u0432\u044F\u0442\u0441\u044F \u043E\u0441\u043D\u043E\u0432\u043D\u044B\u043C \u0442\u0435\u043A\u0441\u0442\u043E\u043C",
+        "vi": "C\u00E2u h\u1ECFi tr\u1EDF th\u00E0nh ti\u00EAu \u0111\u1EC1 v\u00E0 c\u00E1c l\u1EF1a ch\u1ECDn tr\u1EDF th\u00E0nh ph\u1EA7n th\u00E2n \u1EDF ch\u1EBF \u0111\u1ED9 overlay",
+        "zh-CN": "\u5728 overlay \u6A21\u5F0F\u4E0B\uFF0C\u95EE\u9898\u6587\u672C\u4F5C\u4E3A\u6807\u9898\uFF0C\u9009\u9879\u4F5C\u4E3A\u6B63\u6587",
+        "zh-TW": "\u5728 overlay \u6A21\u5F0F\u4E0B\uFF0C\u554F\u984C\u6587\u5B57\u6210\u70BA\u6A19\u984C\uFF0C\u9078\u9805\u6210\u70BA\u4E3B\u9AD4\u5167\u5BB9"
       },
       "runtime": {
         "translationModel": "Live selection capture and asynchronous overlay publication.",
@@ -232,7 +304,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "CutSceneSelectStringHandler"
+      ]
     },
     {
       "id": "YesNo",
@@ -242,7 +316,20 @@
       "modeFamilyId": "nativeTooltip",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation."
+        "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation.",
+        "pt-BR": "Usa tooltips estruturadas do plugin no lugar do overlay e suporta aplica\u00E7\u00E3o nativa, tooltip-only e swap",
+        "pt": "Presente no modelo de configura\u00E7\u00E3o e na implementa\u00E7\u00E3o da tab, mas n\u00E3o est\u00E1 atualmente exposto no fluxo ativo da tab Overlay",
+        "de": "Im Konfigurationsmodell und in der Tab-Implementierung vorhanden, aber derzeit nicht im aktiven Overlay-Tab-Flow sichtbar",
+        "da": "Findes i konfigurationsmodellen og tab-implementeringen, men er ikke eksponeret i det aktive Overlay-tab-flow",
+        "el": "\u03A5\u03C0\u03AC\u03C1\u03C7\u03B5\u03B9 \u03C3\u03C4\u03BF \u03BC\u03BF\u03BD\u03C4\u03AD\u03BB\u03BF \u03C1\u03C5\u03B8\u03BC\u03AF\u03C3\u03B5\u03C9\u03BD \u03BA\u03B1\u03B9 \u03C3\u03C4\u03B7\u03BD \u03C5\u03BB\u03BF\u03C0\u03BF\u03AF\u03B7\u03C3\u03B7 tab, \u03B1\u03BB\u03BB\u03AC \u03B4\u03B5\u03BD \u03B5\u03BA\u03C4\u03AF\u03B8\u03B5\u03C4\u03B1\u03B9 \u03C3\u03AE\u03BC\u03B5\u03C1\u03B1 \u03C3\u03C4\u03BF \u03B5\u03BD\u03B5\u03C1\u03B3\u03CC overlay-tab flow",
+        "es": "Presente en el modelo de configuraci\u00F3n y en la implementaci\u00F3n de la pesta\u00F1a, pero no expuesto actualmente en el flujo activo de la pesta\u00F1a Overlay",
+        "eu": "Konfigurazio ereduan eta tab inplementazioan dago, baina gaur egun ez dago ikusgai overlay tab aktiboaren fluxuan",
+        "fr": "Pr\u00E9sent dans le mod\u00E8le de configuration et l\u2019impl\u00E9mentation de l\u2019onglet, mais non expos\u00E9 actuellement dans le flux actif de l\u2019onglet Overlay",
+        "it": "Presente nel modello di configurazione e nell\u2019implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay",
+        "ru": "\u041F\u0440\u0438\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u0432 \u043C\u043E\u0434\u0435\u043B\u0438 \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0438 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u0432\u043A\u043B\u0430\u0434\u043A\u0438, \u043D\u043E \u0441\u0435\u0439\u0447\u0430\u0441 \u043D\u0435 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044F \u0432 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u043C \u043F\u043E\u0442\u043E\u043A\u0435 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 Overlay",
+        "vi": "C\u00F3 trong m\u00F4 h\u00ECnh c\u1EA5u h\u00ECnh v\u00E0 ph\u1EA7n c\u00E0i \u0111\u1EB7t tab, nh\u01B0ng hi\u1EC7n ch\u01B0a \u0111\u01B0\u1EE3c hi\u1EC3n th\u1ECB trong lu\u1ED3ng tab Overlay \u0111ang ho\u1EA1t \u0111\u1ED9ng",
+        "zh-CN": "\u5DF2\u5B58\u5728\u4E8E\u914D\u7F6E\u6A21\u578B\u548C\u6807\u7B7E\u9875\u5B9E\u73B0\u4E2D\uFF0C\u4F46\u5F53\u524D\u672A\u5728\u6D3B\u52A8\u7684 Overlay \u6807\u7B7E\u6D41\u4E2D\u66B4\u9732",
+        "zh-TW": "\u5DF2\u5B58\u5728\u65BC\u8A2D\u5B9A\u6A21\u578B\u8207\u5206\u9801\u5BE6\u4F5C\u4E2D\uFF0C\u4F46\u76EE\u524D\u672A\u5728\u555F\u7528\u4E2D\u7684 Overlay \u5206\u9801\u6D41\u7A0B\u4E2D\u986F\u793A"
       },
       "runtime": {
         "translationModel": "Structured dialog capture with tooltip or native presentation.",
@@ -255,7 +342,7 @@
         "docs/selection-dialog-and-tooltip-runtime-flow.md"
       ],
       "requiredCodeAnchors": [
-        "SelectionDialogText"
+        "SelectYesNoHandler"
       ]
     },
     {
@@ -266,7 +353,20 @@
       "modeFamilyId": "nativeTooltip",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation."
+        "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation.",
+        "pt-BR": "Usa tooltips estruturadas do plugin no lugar do overlay e suporta aplica\u00E7\u00E3o nativa, tooltip-only e swap",
+        "pt": "Presente no modelo de configura\u00E7\u00E3o e na implementa\u00E7\u00E3o da tab, mas n\u00E3o est\u00E1 atualmente exposto no fluxo ativo da tab Overlay",
+        "de": "Im Konfigurationsmodell und in der Tab-Implementierung vorhanden, aber derzeit nicht im aktiven Overlay-Tab-Flow sichtbar",
+        "da": "Findes i konfigurationsmodellen og tab-implementeringen, men er ikke eksponeret i det aktive Overlay-tab-flow",
+        "el": "\u03A5\u03C0\u03AC\u03C1\u03C7\u03B5\u03B9 \u03C3\u03C4\u03BF \u03BC\u03BF\u03BD\u03C4\u03AD\u03BB\u03BF \u03C1\u03C5\u03B8\u03BC\u03AF\u03C3\u03B5\u03C9\u03BD \u03BA\u03B1\u03B9 \u03C3\u03C4\u03B7\u03BD \u03C5\u03BB\u03BF\u03C0\u03BF\u03AF\u03B7\u03C3\u03B7 tab, \u03B1\u03BB\u03BB\u03AC \u03B4\u03B5\u03BD \u03B5\u03BA\u03C4\u03AF\u03B8\u03B5\u03C4\u03B1\u03B9 \u03C3\u03AE\u03BC\u03B5\u03C1\u03B1 \u03C3\u03C4\u03BF \u03B5\u03BD\u03B5\u03C1\u03B3\u03CC overlay-tab flow",
+        "es": "Presente en el modelo de configuraci\u00F3n y en la implementaci\u00F3n de la pesta\u00F1a, pero no expuesto actualmente en el flujo activo de la pesta\u00F1a Overlay",
+        "eu": "Konfigurazio ereduan eta tab inplementazioan dago, baina gaur egun ez dago ikusgai overlay tab aktiboaren fluxuan",
+        "fr": "Pr\u00E9sent dans le mod\u00E8le de configuration et l\u2019impl\u00E9mentation de l\u2019onglet, mais non expos\u00E9 actuellement dans le flux actif de l\u2019onglet Overlay",
+        "it": "Presente nel modello di configurazione e nell\u2019implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay",
+        "ru": "\u041F\u0440\u0438\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u0432 \u043C\u043E\u0434\u0435\u043B\u0438 \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0438 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u0432\u043A\u043B\u0430\u0434\u043A\u0438, \u043D\u043E \u0441\u0435\u0439\u0447\u0430\u0441 \u043D\u0435 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044F \u0432 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u043C \u043F\u043E\u0442\u043E\u043A\u0435 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 Overlay",
+        "vi": "C\u00F3 trong m\u00F4 h\u00ECnh c\u1EA5u h\u00ECnh v\u00E0 ph\u1EA7n c\u00E0i \u0111\u1EB7t tab, nh\u01B0ng hi\u1EC7n ch\u01B0a \u0111\u01B0\u1EE3c hi\u1EC3n th\u1ECB trong lu\u1ED3ng tab Overlay \u0111ang ho\u1EA1t \u0111\u1ED9ng",
+        "zh-CN": "\u5DF2\u5B58\u5728\u4E8E\u914D\u7F6E\u6A21\u578B\u548C\u6807\u7B7E\u9875\u5B9E\u73B0\u4E2D\uFF0C\u4F46\u5F53\u524D\u672A\u5728\u6D3B\u52A8\u7684 Overlay \u6807\u7B7E\u6D41\u4E2D\u66B4\u9732",
+        "zh-TW": "\u5DF2\u5B58\u5728\u65BC\u8A2D\u5B9A\u6A21\u578B\u8207\u5206\u9801\u5BE6\u4F5C\u4E2D\uFF0C\u4F46\u76EE\u524D\u672A\u5728\u555F\u7528\u4E2D\u7684 Overlay \u5206\u9801\u6D41\u7A0B\u4E2D\u986F\u793A"
       },
       "runtime": {
         "translationModel": "Structured dialog capture with tooltip or native presentation.",
@@ -278,7 +378,9 @@
       "docs": [
         "docs/selection-dialog-and-tooltip-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "SelectOkHandler"
+      ]
     },
     {
       "id": "SelectString",
@@ -300,7 +402,9 @@
       "docs": [
         "docs/selection-dialog-and-tooltip-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "SelectStringHandler"
+      ]
     },
     {
       "id": "SelectIconString",
@@ -310,7 +414,8 @@
       "modeFamilyId": "nativeTooltip",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Keeps its own toggle and display mode and uses body-only structured tooltip presentation."
+        "en": "Keeps its own toggle and display mode and uses body-only structured tooltip presentation.",
+        "pt-BR": "Tem toggle e display mode pr\u00F3prios; usa tooltip estruturada body-only"
       },
       "runtime": {
         "translationModel": "Structured dialog capture with body-only tooltip or native presentation.",
@@ -322,7 +427,9 @@
       "docs": [
         "docs/selection-dialog-and-tooltip-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "SelectIconStringHandler"
+      ]
     },
     {
       "id": "Journal",
@@ -332,7 +439,20 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Quest list surface."
+        "en": "Quest list surface.",
+        "pt-BR": "Superf\u00EDcie de lista de quests",
+        "pt": "Superf\u00EDcie de lista de quests",
+        "de": "Questlisten-Oberfl\u00E4che",
+        "da": "Questliste",
+        "el": "\u0395\u03C0\u03B9\u03C6\u03AC\u03BD\u03B5\u03B9\u03B1 \u03BB\u03AF\u03C3\u03C4\u03B1\u03C2 quest",
+        "es": "Superficie de lista de quests",
+        "eu": "Quest zerrendaren gainazala",
+        "fr": "Surface de liste de qu\u00EAtes",
+        "it": "Superficie lista quest",
+        "ru": "\u041F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u044C \u0441\u043F\u0438\u0441\u043A\u0430 quest",
+        "vi": "B\u1EC1 m\u1EB7t danh s\u00E1ch quest",
+        "zh-CN": "\u4EFB\u52A1\u5217\u8868\u754C\u9762",
+        "zh-TW": "\u4EFB\u52D9\u5217\u8868\u4ECB\u9762"
       },
       "runtime": {
         "translationModel": "Canonical quest lookup with native-window publication.",
@@ -356,7 +476,20 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Dense body layout; native mode requires explicit block reflow."
+        "en": "Dense body layout; native mode requires explicit block reflow.",
+        "pt-BR": "Layout de corpo denso; o modo nativo exige block reflow expl\u00EDcito",
+        "pt": "Layout de corpo denso; o modo nativo exige block reflow expl\u00EDcito",
+        "de": "Dichtes Body-Layout; der native Modus erfordert explizites Block-Reflow",
+        "da": "T\u00E6t indholdslayout; native tilstand kr\u00E6ver eksplicit block reflow",
+        "el": "\u03A0\u03C5\u03BA\u03BD\u03AE \u03B4\u03B9\u03AC\u03C4\u03B1\u03BE\u03B7 \u03C3\u03CE\u03BC\u03B1\u03C4\u03BF\u03C2\u00B7 \u03B7 native \u03BB\u03B5\u03B9\u03C4\u03BF\u03C5\u03C1\u03B3\u03AF\u03B1 \u03B1\u03C0\u03B1\u03B9\u03C4\u03B5\u03AF \u03C1\u03B7\u03C4\u03CC block reflow",
+        "es": "Dise\u00F1o de cuerpo denso; el modo nativo requiere block reflow expl\u00EDcito",
+        "eu": "Gorputz diseinu trinkoa; native moduak block reflow esplizitua behar du",
+        "fr": "Mise en page de corps dense ; le mode natif n\u00E9cessite un block reflow explicite",
+        "it": "Layout del corpo denso; la modalit\u00E0 nativa richiede block reflow esplicito",
+        "ru": "\u041F\u043B\u043E\u0442\u043D\u0430\u044F \u043A\u043E\u043C\u043F\u043E\u043D\u043E\u0432\u043A\u0430 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0433\u043E \u0431\u043B\u043E\u043A\u0430; native-\u0440\u0435\u0436\u0438\u043C \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u044F\u0432\u043D\u043E\u0433\u043E block reflow",
+        "vi": "B\u1ED1 c\u1EE5c ph\u1EA7n th\u00E2n d\u00E0y \u0111\u1EB7c; ch\u1EBF \u0111\u1ED9 native c\u1EA7n block reflow r\u00F5 r\u00E0ng",
+        "zh-CN": "\u6B63\u6587\u5E03\u5C40\u5BC6\u96C6\uFF1B\u539F\u751F\u6A21\u5F0F\u9700\u8981\u663E\u5F0F block reflow",
+        "zh-TW": "\u4E3B\u9AD4\u7248\u9762\u5BC6\u96C6\uFF1B\u539F\u751F\u6A21\u5F0F\u9700\u8981\u660E\u78BA\u7684 block reflow"
       },
       "runtime": {
         "translationModel": "Canonical quest lookup with native-window publication and block reflow.",
@@ -368,7 +501,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "JournalDetailHandler"
+      ]
     },
     {
       "id": "ToDoList",
@@ -378,7 +513,20 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Quest tracker / objective list."
+        "en": "Quest tracker / objective list.",
+        "pt-BR": "Rastreador de quest / lista de objetivos",
+        "pt": "Quest tracker / lista de objetivos",
+        "de": "Quest-Tracker / Zielliste",
+        "da": "Quest-tracker / m\u00E5lliste",
+        "el": "Quest tracker / \u03BB\u03AF\u03C3\u03C4\u03B1 \u03C3\u03C4\u03CC\u03C7\u03C9\u03BD",
+        "es": "Seguimiento de quest / lista de objetivos",
+        "eu": "Quest jarraipena / helburuen zerrenda",
+        "fr": "Suivi de qu\u00EAte / liste d\u2019objectifs",
+        "it": "Tracker quest / lista obiettivi",
+        "ru": "\u0422\u0440\u0435\u043A\u0435\u0440 quest / \u0441\u043F\u0438\u0441\u043E\u043A \u0446\u0435\u043B\u0435\u0439",
+        "vi": "Tr\u00ECnh theo d\u00F5i quest / danh s\u00E1ch m\u1EE5c ti\u00EAu",
+        "zh-CN": "\u4EFB\u52A1\u8FFD\u8E2A / \u76EE\u6807\u5217\u8868",
+        "zh-TW": "\u4EFB\u52D9\u8FFD\u8E64 / \u76EE\u6A19\u6E05\u55AE"
       },
       "runtime": {
         "translationModel": "Canonical quest lookup with native-window publication.",
@@ -390,7 +538,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "ToDoListHandler"
+      ]
     },
     {
       "id": "ToDo",
@@ -400,7 +550,8 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Instanced/FATE objective tracker."
+        "en": "Instanced/FATE objective tracker.",
+        "pt-BR": "Rastreador de objetivos de inst\u00E2ncia/FATE"
       },
       "runtime": {
         "translationModel": "Live objective capture with native-window publication.",
@@ -412,7 +563,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "ToDoHandler"
+      ]
     },
     {
       "id": "ScenarioTree",
@@ -422,7 +575,20 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Main scenario tracker."
+        "en": "Main scenario tracker.",
+        "pt-BR": "Rastreador do cen\u00E1rio principal",
+        "pt": "Tracker do cen\u00E1rio principal",
+        "de": "Hauptszenario-Tracker",
+        "da": "Hovedscenarie-tracker",
+        "el": "Tracker \u03BA\u03CD\u03C1\u03B9\u03BF\u03C5 \u03C3\u03B5\u03BD\u03B1\u03C1\u03AF\u03BF\u03C5",
+        "es": "Seguimiento del escenario principal",
+        "eu": "Eszenatoki nagusiaren jarraipena",
+        "fr": "Suivi du sc\u00E9nario principal",
+        "it": "Tracker dello scenario principale",
+        "ru": "\u0422\u0440\u0435\u043A\u0435\u0440 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0433\u043E \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u044F",
+        "vi": "Tr\u00ECnh theo d\u00F5i k\u1ECBch b\u1EA3n ch\u00EDnh",
+        "zh-CN": "\u4E3B\u7EBF\u5267\u60C5\u8FFD\u8E2A",
+        "zh-TW": "\u4E3B\u7DDA\u5287\u60C5\u8FFD\u8E64"
       },
       "runtime": {
         "translationModel": "Canonical quest lookup with native-window publication.",
@@ -434,7 +600,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "ScenarioTreeHandler"
+      ]
     },
     {
       "id": "JournalAccept",
@@ -456,7 +624,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "JournalAcceptHandler"
+      ]
     },
     {
       "id": "JournalResult",
@@ -478,7 +648,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "JournalResultHandler"
+      ]
     },
     {
       "id": "RecommendList",
@@ -488,7 +660,20 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Recommendation list."
+        "en": "Recommendation list.",
+        "pt-BR": "Lista de recomenda\u00E7\u00F5es",
+        "pt": "Lista de recomenda\u00E7\u00F5es",
+        "de": "Empfehlungsliste",
+        "da": "Anbefalingsliste",
+        "el": "\u039B\u03AF\u03C3\u03C4\u03B1 \u03C0\u03C1\u03BF\u03C4\u03AC\u03C3\u03B5\u03C9\u03BD",
+        "es": "Lista de recomendaciones",
+        "eu": "Gomendioen zerrenda",
+        "fr": "Liste de recommandations",
+        "it": "Lista raccomandazioni",
+        "ru": "\u0421\u043F\u0438\u0441\u043E\u043A \u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0430\u0446\u0438\u0439",
+        "vi": "Danh s\u00E1ch g\u1EE3i \u00FD",
+        "zh-CN": "\u63A8\u8350\u5217\u8868",
+        "zh-TW": "\u63A8\u85A6\u6E05\u55AE"
       },
       "runtime": {
         "translationModel": "Canonical quest lookup with native-window publication.",
@@ -500,7 +685,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "RecommendListHandler"
+      ]
     },
     {
       "id": "AreaMap",
@@ -522,7 +709,9 @@
       "docs": [
         "docs/quest-addon-translation-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "MapSurfaceStringArrayHandler"
+      ]
     },
     {
       "id": "WideTextToast",
@@ -532,7 +721,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Large center-screen information toast."
+        "en": "Large center-screen information toast.",
+        "pt-BR": "Toast informativo grande no centro da tela",
+        "pt": "Grande toast informativo no centro do ecr\u00E3",
+        "de": "Gro\u00DFe Informations-Toast in der Bildschirmmitte",
+        "da": "Stor informations-toast midt p\u00E5 sk\u00E6rmen",
+        "el": "\u039C\u03B5\u03B3\u03AC\u03BB\u03BF informational toast \u03C3\u03C4\u03BF \u03BA\u03AD\u03BD\u03C4\u03C1\u03BF \u03C4\u03B7\u03C2 \u03BF\u03B8\u03CC\u03BD\u03B7\u03C2",
+        "es": "Toast informativo grande en el centro de la pantalla",
+        "eu": "Pantailaren erdiko informazio-toast handia",
+        "fr": "Grand toast d\u2019information au centre de l\u2019\u00E9cran",
+        "it": "Grande toast informativo al centro dello schermo",
+        "ru": "\u0411\u043E\u043B\u044C\u0448\u043E\u0435 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u043E\u043D\u043D\u043E\u0435 \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435 \u0432 \u0446\u0435\u043D\u0442\u0440\u0435 \u044D\u043A\u0440\u0430\u043D\u0430",
+        "vi": "Toast th\u00F4ng tin l\u1EDBn \u1EDF gi\u1EEFa m\u00E0n h\u00ECnh",
+        "zh-CN": "\u5C4F\u5E55\u4E2D\u592E\u7684\u5927\u578B\u4FE1\u606F\u63D0\u793A",
+        "zh-TW": "\u87A2\u5E55\u4E2D\u592E\u7684\u5927\u578B\u8CC7\u8A0A\u63D0\u793A"
       },
       "runtime": {
         "translationModel": "Toast capture and asynchronous overlay publication.",
@@ -545,7 +747,7 @@
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
       "requiredCodeAnchors": [
-        "FindAndReturnToastMessage"
+        "WideTextToastHandler"
       ]
     },
     {
@@ -556,7 +758,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Error / failure notifications."
+        "en": "Error / failure notifications.",
+        "pt-BR": "Notifica\u00E7\u00F5es de erro ou falha",
+        "pt": "Notifica\u00E7\u00F5es de erro ou falha",
+        "de": "Fehler- und St\u00F6rungsmeldungen",
+        "da": "Fejl- og advarselsnotifikationer",
+        "el": "\u0395\u03B9\u03B4\u03BF\u03C0\u03BF\u03B9\u03AE\u03C3\u03B5\u03B9\u03C2 \u03C3\u03C6\u03AC\u03BB\u03BC\u03B1\u03C4\u03BF\u03C2 / \u03B1\u03C0\u03BF\u03C4\u03C5\u03C7\u03AF\u03B1\u03C2",
+        "es": "Notificaciones de error o fallo",
+        "eu": "Errore edo hutsegite jakinarazpenak",
+        "fr": "Notifications d\u2019erreur ou d\u2019\u00E9chec",
+        "it": "Notifiche di errore o fallimento",
+        "ru": "\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F \u043E\u0431 \u043E\u0448\u0438\u0431\u043A\u0430\u0445 \u0438 \u0441\u0431\u043E\u044F\u0445",
+        "vi": "Th\u00F4ng b\u00E1o l\u1ED7i / th\u1EA5t b\u1EA1i",
+        "zh-CN": "\u9519\u8BEF / \u5931\u8D25\u901A\u77E5",
+        "zh-TW": "\u932F\u8AA4 / \u5931\u6557\u901A\u77E5"
       },
       "runtime": {
         "translationModel": "Toast capture and asynchronous overlay publication.",
@@ -568,7 +783,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "ErrorToastHandler"
+      ]
     },
     {
       "id": "AreaToast",
@@ -578,7 +795,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Area and location notifications."
+        "en": "Area and location notifications.",
+        "pt-BR": "Notifica\u00E7\u00F5es de \u00E1rea e localiza\u00E7\u00E3o",
+        "pt": "Notifica\u00E7\u00F5es de \u00E1rea e localiza\u00E7\u00E3o",
+        "de": "Gebiets- und Ortsbenachrichtigungen",
+        "da": "Omr\u00E5de- og lokationsnotifikationer",
+        "el": "\u0395\u03B9\u03B4\u03BF\u03C0\u03BF\u03B9\u03AE\u03C3\u03B5\u03B9\u03C2 \u03C0\u03B5\u03C1\u03B9\u03BF\u03C7\u03AE\u03C2 \u03BA\u03B1\u03B9 \u03C4\u03BF\u03C0\u03BF\u03B8\u03B5\u03C3\u03AF\u03B1\u03C2",
+        "es": "Notificaciones de \u00E1rea y ubicaci\u00F3n",
+        "eu": "Eremu eta kokapen jakinarazpenak",
+        "fr": "Notifications de zone et de localisation",
+        "it": "Notifiche di area e posizione",
+        "ru": "\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F \u043E\u0431 \u043E\u0431\u043B\u0430\u0441\u0442\u0438 \u0438 \u043C\u0435\u0441\u0442\u043E\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0438",
+        "vi": "Th\u00F4ng b\u00E1o khu v\u1EF1c v\u00E0 v\u1ECB tr\u00ED",
+        "zh-CN": "\u533A\u57DF\u548C\u5730\u70B9\u901A\u77E5",
+        "zh-TW": "\u5340\u57DF\u8207\u5730\u9EDE\u901A\u77E5"
       },
       "runtime": {
         "translationModel": "Toast capture and asynchronous overlay publication.",
@@ -590,7 +820,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "AreaToastHandler"
+      ]
     },
     {
       "id": "ClassChangeToast",
@@ -600,7 +832,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Class/job change announcement."
+        "en": "Class/job change announcement.",
+        "pt-BR": "An\u00FAncio de troca de class/job",
+        "pt": "An\u00FAncio de mudan\u00E7a de class/job",
+        "de": "Ank\u00FCndigung eines Klassen-/Jobwechsels",
+        "da": "Meddelelse om class/job-skift",
+        "el": "\u0391\u03BD\u03B1\u03BA\u03BF\u03AF\u03BD\u03C9\u03C3\u03B7 \u03B1\u03BB\u03BB\u03B1\u03B3\u03AE\u03C2 class/job",
+        "es": "Aviso de cambio de class/job",
+        "eu": "Class/job aldaketaren iragarkia",
+        "fr": "Annonce de changement de class/job",
+        "it": "Annuncio di cambio class/job",
+        "ru": "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 \u043E \u0441\u043C\u0435\u043D\u0435 class/job",
+        "vi": "Th\u00F4ng b\u00E1o \u0111\u1ED5i class/job",
+        "zh-CN": "\u804C\u4E1A / Job \u53D8\u66F4\u63D0\u793A",
+        "zh-TW": "Class / Job \u8B8A\u66F4\u63D0\u793A"
       },
       "runtime": {
         "translationModel": "Toast capture and asynchronous overlay publication.",
@@ -612,7 +857,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "ClassChangeToastHandler"
+      ]
     },
     {
       "id": "TextGimmickHint",
@@ -622,7 +869,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Gimmick/tutorial hint surface."
+        "en": "Gimmick/tutorial hint surface.",
+        "pt-BR": "Superf\u00EDcie de dica de gimmick/tutorial",
+        "pt": "Superf\u00EDcie de pista de gimmick/tutorial",
+        "de": "Gimmick-/Tutorial-Hinweis",
+        "da": "Gimmick-/tutorial-hint",
+        "el": "\u0395\u03C0\u03B9\u03C6\u03AC\u03BD\u03B5\u03B9\u03B1 hint \u03B3\u03B9\u03B1 gimmick/tutorial",
+        "es": "Superficie de pista de gimmick/tutorial",
+        "eu": "Gimmick/tutorial pistaren gainazala",
+        "fr": "Surface d\u2019indice de gimmick/tutorial",
+        "it": "Superficie hint per gimmick/tutorial",
+        "ru": "\u041F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043E\u043A gimmick/tutorial",
+        "vi": "B\u1EC1 m\u1EB7t g\u1EE3i \u00FD gimmick/tutorial",
+        "zh-CN": "gimmick / \u6559\u7A0B\u63D0\u793A\u754C\u9762",
+        "zh-TW": "gimmick / \u6559\u5B78\u63D0\u793A\u4ECB\u9762"
       },
       "runtime": {
         "translationModel": "Addon capture and asynchronous overlay publication.",
@@ -634,7 +894,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "TextGimmickHintHandler"
+      ]
     },
     {
       "id": "QuestToast",
@@ -644,7 +906,20 @@
       "modeFamilyId": "overlay",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Quest-related toast notification."
+        "en": "Quest-related toast notification.",
+        "pt-BR": "Toast de notifica\u00E7\u00E3o relacionado a quest",
+        "pt": "Notifica\u00E7\u00E3o toast relacionada com quest",
+        "de": "Quest-bezogene Toast-Benachrichtigung",
+        "da": "Quest-relateret toast-notifikation",
+        "el": "Toast \u03B5\u03B9\u03B4\u03BF\u03C0\u03BF\u03AF\u03B7\u03C3\u03B7 \u03C3\u03C7\u03B5\u03C4\u03B9\u03BA\u03AE \u03BC\u03B5 quest",
+        "es": "Notificaci\u00F3n toast relacionada con quest",
+        "eu": "Quest-ekin lotutako toast jakinarazpena",
+        "fr": "Notification toast li\u00E9e \u00E0 une qu\u00EAte",
+        "it": "Notifica toast relativa alle quest",
+        "ru": "Toast-\u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435, \u0441\u0432\u044F\u0437\u0430\u043D\u043D\u043E\u0435 \u0441 quest",
+        "vi": "Toast li\u00EAn quan \u0111\u1EBFn quest",
+        "zh-CN": "\u4E0E\u4EFB\u52A1\u76F8\u5173\u7684 toast \u901A\u77E5",
+        "zh-TW": "\u8207\u4EFB\u52D9\u76F8\u95DC\u7684 toast \u901A\u77E5"
       },
       "runtime": {
         "translationModel": "Toast capture and asynchronous overlay publication.",
@@ -656,7 +931,9 @@
       "docs": [
         "docs/dialogue-and-toast-runtime-flows.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "QuestToastRuntime"
+      ]
     },
     {
       "id": "CharacterWindow",
@@ -666,7 +943,19 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "DB-first game-window runtime."
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime \u03C0\u03B1\u03C1\u03B1\u03B8\u03CD\u03C1\u03C9\u03BD \u03C0\u03B1\u03B9\u03C7\u03BD\u03B9\u03B4\u03B9\u03BF\u03CD",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fen\u00EAtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime \u0438\u0433\u0440\u043E\u0432\u044B\u0445 \u043E\u043A\u043E\u043D",
+        "vi": "Runtime c\u1EEDa s\u1ED5 game DB-first",
+        "zh-CN": "DB-first \u6E38\u620F\u7A97\u53E3\u8FD0\u884C\u65F6",
+        "zh-TW": "DB-first \u904A\u6232\u8996\u7A97\u57F7\u884C\u968E\u6BB5"
       },
       "runtime": {
         "translationModel": "DB-first game-window lookup with native publication.",
@@ -678,7 +967,9 @@
       "docs": [
         "docs/action-domain-runtime-flow-index.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "CharacterWindowHandler"
+      ]
     },
     {
       "id": "MainCommand",
@@ -688,7 +979,19 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "DB-first game-window runtime."
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime \u03C0\u03B1\u03C1\u03B1\u03B8\u03CD\u03C1\u03C9\u03BD \u03C0\u03B1\u03B9\u03C7\u03BD\u03B9\u03B4\u03B9\u03BF\u03CD",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fen\u00EAtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime \u0438\u0433\u0440\u043E\u0432\u044B\u0445 \u043E\u043A\u043E\u043D",
+        "vi": "Runtime c\u1EEDa s\u1ED5 game DB-first",
+        "zh-CN": "DB-first \u6E38\u620F\u7A97\u53E3\u8FD0\u884C\u65F6",
+        "zh-TW": "DB-first \u904A\u6232\u8996\u7A97\u57F7\u884C\u968E\u6BB5"
       },
       "runtime": {
         "translationModel": "DB-first game-window lookup with native publication.",
@@ -712,7 +1015,19 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "DB-first game-window runtime."
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime \u03C0\u03B1\u03C1\u03B1\u03B8\u03CD\u03C1\u03C9\u03BD \u03C0\u03B1\u03B9\u03C7\u03BD\u03B9\u03B4\u03B9\u03BF\u03CD",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fen\u00EAtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime \u0438\u0433\u0440\u043E\u0432\u044B\u0445 \u043E\u043A\u043E\u043D",
+        "vi": "Runtime c\u1EEDa s\u1ED5 game DB-first",
+        "zh-CN": "DB-first \u6E38\u620F\u7A97\u53E3\u8FD0\u884C\u65F6",
+        "zh-TW": "DB-first \u904A\u6232\u8996\u7A97\u57F7\u884C\u968E\u6BB5"
       },
       "runtime": {
         "translationModel": "DB-first game-window lookup with native publication.",
@@ -736,7 +1051,19 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "DB-first game-window runtime."
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime \u03C0\u03B1\u03C1\u03B1\u03B8\u03CD\u03C1\u03C9\u03BD \u03C0\u03B1\u03B9\u03C7\u03BD\u03B9\u03B4\u03B9\u03BF\u03CD",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fen\u00EAtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime \u0438\u0433\u0440\u043E\u0432\u044B\u0445 \u043E\u043A\u043E\u043D",
+        "vi": "Runtime c\u1EEDa s\u1ED5 game DB-first",
+        "zh-CN": "DB-first \u6E38\u620F\u7A97\u53E3\u8FD0\u884C\u65F6",
+        "zh-TW": "DB-first \u904A\u6232\u8996\u7A97\u57F7\u884C\u968E\u6BB5"
       },
       "runtime": {
         "translationModel": "DB-first game-window lookup with native publication.",
@@ -748,7 +1075,9 @@
       "docs": [
         "docs/action-domain-runtime-flow-index.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "HudWindowHandler"
+      ]
     },
     {
       "id": "OperationGuide",
@@ -758,7 +1087,19 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "DB-first game-window runtime."
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime \u03C0\u03B1\u03C1\u03B1\u03B8\u03CD\u03C1\u03C9\u03BD \u03C0\u03B1\u03B9\u03C7\u03BD\u03B9\u03B4\u03B9\u03BF\u03CD",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fen\u00EAtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime \u0438\u0433\u0440\u043E\u0432\u044B\u0445 \u043E\u043A\u043E\u043D",
+        "vi": "Runtime c\u1EEDa s\u1ED5 game DB-first",
+        "zh-CN": "DB-first \u6E38\u620F\u7A97\u53E3\u8FD0\u884C\u65F6",
+        "zh-TW": "DB-first \u904A\u6232\u8996\u7A97\u57F7\u884C\u968E\u6BB5"
       },
       "runtime": {
         "translationModel": "DB-first game-window lookup with native publication.",
@@ -770,7 +1111,9 @@
       "docs": [
         "docs/action-domain-runtime-flow-index.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "OperationGuideHandler"
+      ]
     },
     {
       "id": "AddonContextMenuTitle",
@@ -780,7 +1123,19 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "DB-first game-window runtime."
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime \u03C0\u03B1\u03C1\u03B1\u03B8\u03CD\u03C1\u03C9\u03BD \u03C0\u03B1\u03B9\u03C7\u03BD\u03B9\u03B4\u03B9\u03BF\u03CD",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fen\u00EAtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime \u0438\u0433\u0440\u043E\u0432\u044B\u0445 \u043E\u043A\u043E\u043D",
+        "vi": "Runtime c\u1EEDa s\u1ED5 game DB-first",
+        "zh-CN": "DB-first \u6E38\u620F\u7A97\u53E3\u8FD0\u884C\u65F6",
+        "zh-TW": "DB-first \u904A\u6232\u8996\u7A97\u57F7\u884C\u968E\u6BB5"
       },
       "runtime": {
         "translationModel": "DB-first game-window lookup with native publication.",
@@ -792,7 +1147,9 @@
       "docs": [
         "docs/action-domain-runtime-flow-index.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "AddonContextMenuTitleHandler"
+      ]
     },
     {
       "id": "ContextMenu",
@@ -802,7 +1159,8 @@
       "modeFamilyId": "nativeTooltip",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "Dedicated DB-first row-chain runtime with row-local hover targets."
+        "en": "Dedicated DB-first row-chain runtime with row-local hover targets.",
+        "pt-BR": "Runtime DB-first dedicado de cadeia de linhas com alvos de hover por linha"
       },
       "runtime": {
         "translationModel": "DB-first row-chain lookup with tooltip or native publication.",
@@ -814,7 +1172,9 @@
       "docs": [
         "docs/selection-dialog-and-tooltip-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "ContextMenuHandler"
+      ]
     },
     {
       "id": "TooltipAddon",
@@ -836,7 +1196,9 @@
       "docs": [
         "docs/selection-dialog-and-tooltip-runtime-flow.md"
       ],
-      "requiredCodeAnchors": []
+      "requiredCodeAnchors": [
+        "TooltipHandler"
+      ]
     },
     {
       "id": "ActionItemTooltips",
@@ -846,7 +1208,20 @@
       "modeFamilyId": "questNativeWindow",
       "releaseStatus": "Enabled",
       "notes": {
-        "en": "DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes."
+        "en": "DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes.",
+        "pt-BR": "Runtime DB-first de tooltip estruturada; o padr\u00E3o \u00E9 modo Plugin Tooltip, enquanto grava\u00E7\u00E3o nativa \u00E9 opt-in e limitada a nodes seguros com texto puro",
+        "pt": "A tradu\u00E7\u00E3o estruturada de tooltips \u00E9 desativada \u00E0 for\u00E7a no arranque enquanto \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 permanecerem inst\u00E1veis",
+        "de": "Strukturierte Tooltip-\u00DCbersetzung wird beim Start zwangsweise deaktiviert, solange \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 instabil bleiben",
+        "da": "Struktureret tooltip-overs\u00E6ttelse deaktiveres tvunget ved opstart, mens \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 stadig er ustabile",
+        "el": "\u0397 \u03B4\u03BF\u03BC\u03B7\u03BC\u03AD\u03BD\u03B7 \u03BC\u03B5\u03C4\u03AC\u03C6\u03C1\u03B1\u03C3\u03B7 tooltip \u03B1\u03C0\u03B5\u03BD\u03B5\u03C1\u03B3\u03BF\u03C0\u03BF\u03B9\u03B5\u03AF\u03C4\u03B1\u03B9 \u03C5\u03C0\u03BF\u03C7\u03C1\u03B5\u03C9\u03C4\u03B9\u03BA\u03AC \u03C3\u03C4\u03B7\u03BD \u03B5\u03BA\u03BA\u03AF\u03BD\u03B7\u03C3\u03B7 \u03CC\u03C3\u03BF \u03C4\u03B1 \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 \u03C0\u03B1\u03C1\u03B1\u03BC\u03AD\u03BD\u03BF\u03C5\u03BD \u03B1\u03C3\u03C4\u03B1\u03B8\u03AE",
+        "es": "La traducci\u00F3n estructurada de tooltips se desactiva a la fuerza al iniciar mientras \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 sigan inestables",
+        "eu": "Egituratutako tooltip itzulpena indarrez desgaitzen da abioan, \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 oraindik ezegonkorrak direlako",
+        "fr": "La traduction structur\u00E9e des tooltips est d\u00E9sactiv\u00E9e de force au d\u00E9marrage tant que \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 restent instables",
+        "it": "La traduzione strutturata dei tooltip viene disattivata forzatamente all\u2019avvio finch\u00E9 \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 restano instabili",
+        "ru": "\u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u043F\u0435\u0440\u0435\u0432\u043E\u0434 tooltip \u043F\u0440\u0438\u043D\u0443\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u043E\u0442\u043A\u043B\u044E\u0447\u0430\u0435\u0442\u0441\u044F \u043F\u0440\u0438 \u0437\u0430\u043F\u0443\u0441\u043A\u0435, \u043F\u043E\u043A\u0430 \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 \u043E\u0441\u0442\u0430\u044E\u0442\u0441\u044F \u043D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u044B\u043C\u0438",
+        "vi": "D\u1ECBch tooltip c\u00F3 c\u1EA5u tr\u00FAc b\u1ECB t\u1EAFt c\u01B0\u1EE1ng b\u1EE9c khi kh\u1EDFi \u0111\u1ED9ng trong khi \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 v\u1EABn ch\u01B0a \u1ED5n \u0111\u1ECBnh",
+        "zh-CN": "\u7ED3\u6784\u5316 tooltip \u7FFB\u8BD1\u4F1A\u5728\u542F\u52A8\u65F6\u88AB\u5F3A\u5236\u7981\u7528\uFF0C\u76F4\u5230 \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 \u7A33\u5B9A\u4E3A\u6B62",
+        "zh-TW": "\u7D50\u69CB\u5316 tooltip \u7FFB\u8B6F\u6703\u5728\u555F\u52D5\u6642\u88AB\u5F37\u5236\u505C\u7528\uFF0C\u76F4\u5230 \u0060ActionDetail\u0060 / \u0060ItemDetail\u0060 \u7A69\u5B9A\u70BA\u6B62"
       },
       "runtime": {
         "translationModel": "Sheet and DB-first structured tooltip lookup with plugin tooltip or guarded native publication.",

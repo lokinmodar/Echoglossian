@@ -41,7 +41,9 @@ public sealed class SupportMatrixRendererTests
         markdown.Should().Contain("# Matriz de suporte das superfícies de tradução");
         markdown.Should().Contain("Toggle de configuração");
         markdown.Should().Contain("| Família de modos | Modos |");
+        markdown.Should().Contain("| Família native-tooltip |");
         markdown.Should().Contain("Nota localizada.");
+        markdown.Should().Contain("Ativado");
     }
 
     /// <summary>
@@ -56,6 +58,27 @@ public sealed class SupportMatrixRendererTests
 
         action.Should().Throw<InvalidOperationException>()
             .WithMessage("*does not provide a 'pt-BR' note*");
+    }
+
+    /// <summary>
+    /// Ensures localized rendering only falls back to English notes when the
+    /// catalog explicitly permits it for that locale.
+    /// </summary>
+    [Fact]
+    public void RenderLocalizedMatrix_WhenCatalogExplicitlyPermitsEnglishFallback_UsesEnglishNote()
+    {
+        TranslationSurfaceCatalog catalog = TestCatalogFactory.CreateSingleSurfaceCatalog(
+            locales:
+            [
+                new TranslationSurfaceLocale(
+                    "pt-BR",
+                    "docs/translation-surface-support-matrix.pt-BR.md",
+                    AllowEnglishNoteFallback: true),
+            ]);
+
+        string markdown = SupportMatrixRenderer.Render(catalog, "pt-BR").Content;
+
+        markdown.Should().Contain("Surface note.");
     }
 
     private static TranslationSurfaceCatalog CreateCatalogWithLocalizedNote(string locale, string note)

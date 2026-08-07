@@ -19,7 +19,9 @@ internal static class GeneratedDocumentWriter
     {
         foreach (GeneratedDocument document in documents)
         {
-            string outputPath = Path.Combine(repoRoot, document.RelativePath);
+            string outputPath = RepositoryPathResolver.ResolveRepositoryPathOrThrow(
+                repoRoot,
+                document.RelativePath);
             string? outputDirectory = Path.GetDirectoryName(outputPath);
             if (outputDirectory is not null)
             {

@@ -9,10 +9,10 @@
 
 | Mode Family | Modes |
 | --- | --- |
-| Native-tooltip family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
-| Overlay family | Native UI Translation; Overlay Translation Only; Native UI Translation With Original Overlay |
-| Native / distance-aware hybrid family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
-| Quest / native-window family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
+| Native-tooltip family | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Overlay family | `Native UI Translation`; `Overlay Translation Only`; `Native UI Translation With Original Overlay` |
+| Native / distance-aware hybrid family | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Quest / native-window family | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
 
 ## Dialog and Overlay Surfaces
 

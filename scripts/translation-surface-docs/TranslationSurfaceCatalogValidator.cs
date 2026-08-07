@@ -13,6 +13,7 @@ namespace TranslationSurfaceDocs;
 internal static class TranslationSurfaceCatalogValidator
 {
     private static readonly string[] ValidDatabaseModes = ["none", "sync", "async"];
+    private static readonly TimeSpan RepositorySearchTimeout = TimeSpan.FromSeconds(10);
 
     /// <summary>
     /// Validates a catalog against a local repository checkout.
@@ -34,6 +35,7 @@ internal static class TranslationSurfaceCatalogValidator
         HashSet<string> modeFamilyIds = catalog.ModeFamilies
             .Select(modeFamily => modeFamily.Id)
             .ToHashSet(StringComparer.Ordinal);
+        ValidateLocales(catalog.Locales, repoRoot, issues);
         HashSet<string> seenSurfaceIds = new(StringComparer.Ordinal);
 
         foreach (TranslationSurfaceEntry surface in catalog.Surfaces)
@@ -47,6 +49,70 @@ internal static class TranslationSurfaceCatalogValidator
         }
 
         return issues;
+    }
+
+    private static void ValidateLocales(
+        IReadOnlyList<TranslationSurfaceLocale> locales,
+        string repoRoot,
+        ICollection<ValidationIssue> issues)
+    {
+        HashSet<string> seenLocaleIds = new(StringComparer.Ordinal);
+        HashSet<string> seenLocalePaths = new(StringComparer.Ordinal);
+        foreach (TranslationSurfaceLocale locale in locales)
+        {
+            if (string.IsNullOrWhiteSpace(locale.Id))
+            {
+                issues.Add(new ValidationIssue(
+                    "missing-locale-id",
+                    "A generated support-matrix locale is missing its id.",
+                    null));
+                continue;
+            }
+
+            if (!seenLocaleIds.Add(locale.Id))
+            {
+                issues.Add(new ValidationIssue(
+                    "duplicate-locale-id",
+                    $"Locale '{locale.Id}' is declared more than once.",
+                    locale.Id));
+            }
+
+            if (!SupportMatrixLocaleResources.IsSupportedLocale(locale.Id))
+            {
+                issues.Add(new ValidationIssue(
+                    "missing-locale-resources",
+                    $"Locale '{locale.Id}' does not have support-matrix label resources.",
+                    locale.Id));
+            }
+
+            if (string.IsNullOrWhiteSpace(locale.Path))
+            {
+                issues.Add(new ValidationIssue(
+                    "missing-locale-output-path",
+                    $"Locale '{locale.Id}' is missing its output path.",
+                    locale.Id));
+                continue;
+            }
+
+            if (!seenLocalePaths.Add(locale.Path))
+            {
+                issues.Add(new ValidationIssue(
+                    "duplicate-locale-output-path",
+                    $"Locale output path '{locale.Path}' is declared more than once.",
+                    locale.Id));
+            }
+
+            if (!RepositoryPathResolver.TryResolveRepositoryPath(
+                    repoRoot,
+                    locale.Path,
+                    out _))
+            {
+                issues.Add(new ValidationIssue(
+                    "invalid-locale-output-path",
+                    $"Locale '{locale.Id}' references output path outside the repository: '{locale.Path}'.",
+                    locale.Id));
+            }
+        }
     }
 
     private static void ValidateSurfaceIdentity(
@@ -156,7 +222,7 @@ internal static class TranslationSurfaceCatalogValidator
     {
         foreach (string documentPath in surface.Docs)
         {
-            if (!TryResolveRepositoryDocumentPath(
+            if (!RepositoryPathResolver.TryResolveRepositoryPath(
                     repoRoot,
                     documentPath,
                     out string resolvedDocumentPath))
@@ -178,79 +244,64 @@ internal static class TranslationSurfaceCatalogValidator
         }
     }
 
-    private static bool TryResolveRepositoryDocumentPath(
-        string repoRoot,
-        string documentPath,
-        out string resolvedDocumentPath)
-    {
-        resolvedDocumentPath = string.Empty;
-        if (Path.IsPathRooted(documentPath))
-        {
-            return false;
-        }
-
-        try
-        {
-            string normalizedRepoRoot = Path.GetFullPath(repoRoot);
-            string candidatePath = Path.GetFullPath(
-                Path.Combine(normalizedRepoRoot, documentPath));
-            string relativePath = Path.GetRelativePath(
-                normalizedRepoRoot,
-                candidatePath);
-            if (relativePath.Equals("..", StringComparison.Ordinal) ||
-                relativePath.StartsWith(
-                    $"..{Path.DirectorySeparatorChar}",
-                    StringComparison.Ordinal) ||
-                relativePath.StartsWith(
-                    $"..{Path.AltDirectorySeparatorChar}",
-                    StringComparison.Ordinal) ||
-                Path.IsPathRooted(relativePath))
-            {
-                return false;
-            }
-
-            resolvedDocumentPath = candidatePath;
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-        catch (NotSupportedException)
-        {
-            return false;
-        }
-    }
-
     private static void ValidateCodeAnchors(
         TranslationSurfaceEntry surface,
         string repoRoot,
         ICollection<ValidationIssue> issues)
     {
+        if (surface.RequiredCodeAnchors.Count == 0)
+        {
+            issues.Add(new ValidationIssue(
+                "missing-required-code-anchor-declaration",
+                $"Surface '{surface.Id}' must declare at least one required code anchor.",
+                surface.Id));
+            return;
+        }
+
         foreach (string anchor in surface.RequiredCodeAnchors)
         {
-            if (!RepositoryContainsAnchor(repoRoot, anchor))
+            RepositorySearchOutcome outcome = TryRepositoryContainsAnchor(
+                repoRoot,
+                anchor,
+                out string errorMessage);
+            switch (outcome)
             {
-                issues.Add(new ValidationIssue(
-                    "missing-required-code-anchor",
-                    $"Surface '{surface.Id}' requires missing code anchor " +
-                    $"'{anchor}'.",
-                    surface.Id));
+                case RepositorySearchOutcome.MatchFound:
+                    break;
+                case RepositorySearchOutcome.NoMatchFound:
+                    issues.Add(new ValidationIssue(
+                        "missing-required-code-anchor",
+                        $"Surface '{surface.Id}' requires missing code anchor " +
+                        $"'{anchor}'.",
+                        surface.Id));
+                    break;
+                case RepositorySearchOutcome.ExecutionError:
+                    issues.Add(new ValidationIssue(
+                        "code-anchor-validation-error",
+                        $"Surface '{surface.Id}' failed repository anchor validation for '{anchor}': {errorMessage}",
+                        surface.Id));
+                    break;
             }
         }
     }
 
-    private static bool RepositoryContainsAnchor(string repoRoot, string anchor)
+    private static RepositorySearchOutcome TryRepositoryContainsAnchor(
+        string repoRoot,
+        string anchor,
+        out string errorMessage)
     {
-        using Process process = new();
-        process.StartInfo = new ProcessStartInfo
+        errorMessage = string.Empty;
+        using Process process = new()
         {
-            FileName = "rg.exe",
-            WorkingDirectory = repoRoot,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "rg.exe",
+                WorkingDirectory = repoRoot,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            },
         };
         process.StartInfo.ArgumentList.Add("--fixed-strings");
         process.StartInfo.ArgumentList.Add("--quiet");
@@ -269,9 +320,51 @@ internal static class TranslationSurfaceCatalogValidator
         process.StartInfo.ArgumentList.Add("--");
         process.StartInfo.ArgumentList.Add(anchor);
         process.StartInfo.ArgumentList.Add(repoRoot);
-        process.Start();
-        process.WaitForExit();
+        try
+        {
+            process.Start();
+            if (!process.WaitForExit((int)RepositorySearchTimeout.TotalMilliseconds))
+            {
+                process.Kill(entireProcessTree: true);
+                errorMessage =
+                    $"rg timed out after {RepositorySearchTimeout.TotalSeconds:0} seconds.";
+                return RepositorySearchOutcome.ExecutionError;
+            }
 
-        return process.ExitCode == 0;
+            string standardError = process.StandardError.ReadToEnd().Trim();
+            return process.ExitCode switch
+            {
+                0 => RepositorySearchOutcome.MatchFound,
+                1 => RepositorySearchOutcome.NoMatchFound,
+                _ => FailRepositorySearch(
+                    standardError,
+                    process.ExitCode,
+                    out errorMessage),
+            };
+        }
+        catch (Exception ex) when (
+            ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            errorMessage = ex.Message;
+            return RepositorySearchOutcome.ExecutionError;
+        }
+    }
+
+    private static RepositorySearchOutcome FailRepositorySearch(
+        string standardError,
+        int exitCode,
+        out string errorMessage)
+    {
+        errorMessage = string.IsNullOrWhiteSpace(standardError)
+            ? $"rg exited with code {exitCode}."
+            : standardError;
+        return RepositorySearchOutcome.ExecutionError;
+    }
+
+    private enum RepositorySearchOutcome
+    {
+        MatchFound,
+        NoMatchFound,
+        ExecutionError,
     }
 }

@@ -19,6 +19,7 @@ internal static class TestCatalogFactory
     /// <param name="dbOwner">The persistence owner.</param>
     /// <param name="dbRead">The runtime database read mode.</param>
     /// <param name="dbWrite">The runtime database write mode.</param>
+    /// <param name="locales">The declared generated locale outputs.</param>
     /// <param name="docs">The documentation paths for the surface.</param>
     /// <param name="requiredCodeAnchors">The required repository code anchors.</param>
     /// <returns>A deterministic catalog fixture.</returns>
@@ -29,19 +30,23 @@ internal static class TestCatalogFactory
         string dbOwner = "Owner",
         string dbRead = "sync",
         string dbWrite = "async",
+        IReadOnlyList<TranslationSurfaceLocale>? locales = null,
         IReadOnlyList<string>? docs = null,
         IReadOnlyList<string>? requiredCodeAnchors = null)
     {
         return new TranslationSurfaceCatalog(
-            [new TranslationSurfaceModeFamily("mode", "Mode", ["Native UI Translation"])],
+            [new TranslationSurfaceModeFamily(
+                "nativeTooltip",
+                "Native-tooltip family",
+                ["Native UI Translation"])],
             [new TranslationSurfaceSection("section", "Section")],
-            [],
+            locales ?? [],
             [new TranslationSurfaceEntry(
                 surfaceId,
                 "section",
                 surfaceId,
                 "TranslateSurface",
-                "mode",
+                "nativeTooltip",
                 "Enabled",
                 new Dictionary<string, string> { ["en"] = "Surface note." },
                 new TranslationSurfaceRuntime(translationModel, cache, dbOwner, dbRead, dbWrite),

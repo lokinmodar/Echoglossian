@@ -1,69 +1,1266 @@
 {
   "generatedAtPolicy": "No timestamps; preserve catalog ordering for deterministic output.",
   "modeFamilies": [
-    { "id": "nativeTooltip", "displayName": "Native-tooltip family", "modes": ["Native UI Translation", "Tooltip Translation Only", "Native UI Translation With Original Tooltips"] },
-    { "id": "overlay", "displayName": "Overlay family", "modes": ["Native UI Translation", "Overlay Translation Only", "Native UI Translation With Original Overlay"] },
-    { "id": "nativeDistanceAwareHybrid", "displayName": "Native / distance-aware hybrid family", "modes": ["Native UI Translation", "Tooltip Translation Only", "Native UI Translation With Original Tooltips"] },
-    { "id": "questNativeWindow", "displayName": "Quest / native-window family", "modes": ["Native UI Translation", "Tooltip Translation Only", "Native UI Translation With Original Tooltips"] }
+    {
+      "id": "nativeTooltip",
+      "displayName": "Native-tooltip family",
+      "modes": [
+        "Native UI Translation",
+        "Tooltip Translation Only",
+        "Native UI Translation With Original Tooltips"
+      ]
+    },
+    {
+      "id": "overlay",
+      "displayName": "Overlay family",
+      "modes": [
+        "Native UI Translation",
+        "Overlay Translation Only",
+        "Native UI Translation With Original Overlay"
+      ]
+    },
+    {
+      "id": "nativeDistanceAwareHybrid",
+      "displayName": "Native / distance-aware hybrid family",
+      "modes": [
+        "Native UI Translation",
+        "Tooltip Translation Only",
+        "Native UI Translation With Original Tooltips"
+      ]
+    },
+    {
+      "id": "questNativeWindow",
+      "displayName": "Quest / native-window family",
+      "modes": [
+        "Native UI Translation",
+        "Tooltip Translation Only",
+        "Native UI Translation With Original Tooltips"
+      ]
+    }
   ],
   "sections": [
-    { "id": "dialogAndOverlay", "displayName": "Dialog and Overlay Surfaces" },
-    { "id": "questAndJournal", "displayName": "Quest and Journal Surfaces" },
-    { "id": "toast", "displayName": "Toast Surfaces" },
-    { "id": "gameWindow", "displayName": "Game Window Surfaces" },
-    { "id": "worldSpaceAndNamePlate", "displayName": "World-space and NamePlate Surfaces" },
-    { "id": "hiddenOrRestricted", "displayName": "Hidden or Temporarily Restricted Surfaces" }
+    {
+      "id": "dialogAndOverlay",
+      "displayName": "Dialog and Overlay Surfaces"
+    },
+    {
+      "id": "questAndJournal",
+      "displayName": "Quest and Journal Surfaces"
+    },
+    {
+      "id": "toast",
+      "displayName": "Toast Surfaces"
+    },
+    {
+      "id": "gameWindow",
+      "displayName": "Game Window Surfaces"
+    },
+    {
+      "id": "worldSpaceAndNamePlate",
+      "displayName": "World-space and NamePlate Surfaces"
+    },
+    {
+      "id": "hiddenOrRestricted",
+      "displayName": "Hidden or Temporarily Restricted Surfaces"
+    }
   ],
   "locales": [
-    { "id": "en", "path": "docs/translation-surface-support-matrix.md" },
-    { "id": "pt-BR", "path": "docs/translation-surface-support-matrix.pt-BR.md" },
-    { "id": "pt", "path": "docs/translation-surface-support-matrix.pt.md" },
-    { "id": "de", "path": "docs/translation-surface-support-matrix.de.md" },
-    { "id": "da", "path": "docs/translation-surface-support-matrix.da.md" },
-    { "id": "el", "path": "docs/translation-surface-support-matrix.el.md" },
-    { "id": "es", "path": "docs/translation-surface-support-matrix.es.md" },
-    { "id": "eu", "path": "docs/translation-surface-support-matrix.eu.md" },
-    { "id": "fr", "path": "docs/translation-surface-support-matrix.fr.md" },
-    { "id": "it", "path": "docs/translation-surface-support-matrix.it.md" },
-    { "id": "ru", "path": "docs/translation-surface-support-matrix.ru.md" },
-    { "id": "vi", "path": "docs/translation-surface-support-matrix.vi.md" },
-    { "id": "zh-CN", "path": "docs/translation-surface-support-matrix.zh-CN.md" },
-    { "id": "zh-TW", "path": "docs/translation-surface-support-matrix.zh-TW.md" }
+    {
+      "id": "en",
+      "path": "docs/translation-surface-support-matrix.md",
+      "allowEnglishNoteFallback": false
+    },
+    {
+      "id": "pt-BR",
+      "path": "docs/translation-surface-support-matrix.pt-BR.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "pt",
+      "path": "docs/translation-surface-support-matrix.pt.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "de",
+      "path": "docs/translation-surface-support-matrix.de.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "da",
+      "path": "docs/translation-surface-support-matrix.da.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "el",
+      "path": "docs/translation-surface-support-matrix.el.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "es",
+      "path": "docs/translation-surface-support-matrix.es.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "eu",
+      "path": "docs/translation-surface-support-matrix.eu.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "fr",
+      "path": "docs/translation-surface-support-matrix.fr.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "it",
+      "path": "docs/translation-surface-support-matrix.it.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "ru",
+      "path": "docs/translation-surface-support-matrix.ru.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "vi",
+      "path": "docs/translation-surface-support-matrix.vi.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "zh-CN",
+      "path": "docs/translation-surface-support-matrix.zh-CN.md",
+      "allowEnglishNoteFallback": true
+    },
+    {
+      "id": "zh-TW",
+      "path": "docs/translation-surface-support-matrix.zh-TW.md",
+      "allowEnglishNoteFallback": true
+    }
   ],
   "surfaces": [
-    { "id": "Talk", "section": "dialogAndOverlay", "displayName": "Talk", "configToggle": "TranslateTalk", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Supports translated NPC names through TranslateTalkNpcNames." }, "runtime": { "translationModel": "Live addon capture and asynchronous translation published through the dialogue overlay.", "cache": "Shared dialogue translation reuse.", "dbOwner": "TalkMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": ["FindAndReturnTalkMessage"] },
-    { "id": "BattleTalk", "section": "dialogAndOverlay", "displayName": "BattleTalk", "configToggle": "TranslateBattleTalk", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Supports translated NPC names through TranslateBattleTalkNpcNames." }, "runtime": { "translationModel": "Live addon capture and asynchronous translation published through the dialogue overlay.", "cache": "Shared dialogue translation reuse.", "dbOwner": "BattleTalkMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "TalkSubtitle", "section": "dialogAndOverlay", "displayName": "TalkSubtitle", "configToggle": "TranslateTalkSubtitle", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Uses titleless overlay presentation when overlay mode is active." }, "runtime": { "translationModel": "Live subtitle capture and asynchronous overlay publication.", "cache": "Shared dialogue translation reuse.", "dbOwner": "TalkSubtitleMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "MiniTalk", "section": "dialogAndOverlay", "displayName": "MiniTalk", "configToggle": "TranslateMiniTalk", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Small native surface; verbose text still requires careful native reflow." }, "runtime": { "translationModel": "Live capture, cache or database lookup, asynchronous translation, then overlay or native publication.", "cache": "Dedicated MiniTalk cache and shared source-publication lifecycle reuse.", "dbOwner": "MiniTalkMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "CutSceneSelectString", "section": "dialogAndOverlay", "displayName": "CutSceneSelectString", "configToggle": "TranslateCutSceneSelectString", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Question becomes the title and options become the body in overlay mode." }, "runtime": { "translationModel": "Live selection capture and asynchronous overlay publication.", "cache": "Selection text reuse by source content.", "dbOwner": "CutSceneSelectStringMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "YesNo", "section": "dialogAndOverlay", "displayName": "Yes/No dialog", "configToggle": "TranslateYesNoScreen", "modeFamilyId": "nativeTooltip", "releaseStatus": "Enabled", "notes": { "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation." }, "runtime": { "translationModel": "Structured dialog capture with tooltip or native presentation.", "cache": "Structured dialog source reuse.", "dbOwner": "SelectionDialogText", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/selection-dialog-and-tooltip-runtime-flow.md"], "requiredCodeAnchors": ["SelectionDialogText"] },
-    { "id": "SelectOk", "section": "dialogAndOverlay", "displayName": "SelectOk dialog", "configToggle": "TranslateSelectOk", "modeFamilyId": "nativeTooltip", "releaseStatus": "Enabled", "notes": { "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation." }, "runtime": { "translationModel": "Structured dialog capture with tooltip or native presentation.", "cache": "Structured dialog source reuse.", "dbOwner": "SelectionDialogText", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/selection-dialog-and-tooltip-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "SelectString", "section": "dialogAndOverlay", "displayName": "SelectString dialog", "configToggle": "TranslateSelectString", "modeFamilyId": "nativeTooltip", "releaseStatus": "Enabled", "notes": { "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation; prefers SelectString and falls back to SelectionDialogText." }, "runtime": { "translationModel": "Structured dialog capture with tooltip or native presentation.", "cache": "Structured dialog source reuse.", "dbOwner": "SelectString; SelectionDialogText fallback", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/selection-dialog-and-tooltip-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "SelectIconString", "section": "dialogAndOverlay", "displayName": "SelectIconString dialog", "configToggle": "TranslateSelectIconString", "modeFamilyId": "nativeTooltip", "releaseStatus": "Enabled", "notes": { "en": "Keeps its own toggle and display mode and uses body-only structured tooltip presentation." }, "runtime": { "translationModel": "Structured dialog capture with body-only tooltip or native presentation.", "cache": "Structured dialog source reuse.", "dbOwner": "SelectionDialogText", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/selection-dialog-and-tooltip-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "Journal", "section": "questAndJournal", "displayName": "Journal", "configToggle": "TranslateJournal", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Quest list surface." }, "runtime": { "translationModel": "Canonical quest lookup with native-window publication.", "cache": "Quest canonical-row reuse.", "dbOwner": "QuestPlate", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": ["JournalHandler"] },
-    { "id": "JournalDetail", "section": "questAndJournal", "displayName": "JournalDetail", "configToggle": "TranslateJournalDetail", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Dense body layout; native mode requires explicit block reflow." }, "runtime": { "translationModel": "Canonical quest lookup with native-window publication and block reflow.", "cache": "Quest canonical-row reuse.", "dbOwner": "QuestPlate", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "ToDoList", "section": "questAndJournal", "displayName": "ToDoList", "configToggle": "TranslateToDoList", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Quest tracker / objective list." }, "runtime": { "translationModel": "Canonical quest lookup with native-window publication.", "cache": "Quest canonical-row reuse.", "dbOwner": "QuestPlate", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "ToDo", "section": "questAndJournal", "displayName": "ToDo", "configToggle": "TranslateToDo", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Instanced/FATE objective tracker." }, "runtime": { "translationModel": "Live objective capture with native-window publication.", "cache": "Objective source reuse.", "dbOwner": "ToDoText", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "ScenarioTree", "section": "questAndJournal", "displayName": "ScenarioTree", "configToggle": "TranslateScenarioTree", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Main scenario tracker." }, "runtime": { "translationModel": "Canonical quest lookup with native-window publication.", "cache": "Quest canonical-row reuse.", "dbOwner": "QuestPlate", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "JournalAccept", "section": "questAndJournal", "displayName": "JournalAccept", "configToggle": "TranslateJournalAccept", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Uses QuestPlate when a safe quest id is available and QuestPopupText fallback for live popup capture." }, "runtime": { "translationModel": "Canonical quest lookup or live popup capture with native-window publication.", "cache": "Quest and popup source reuse.", "dbOwner": "QuestPlate; QuestPopupText fallback", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "JournalResult", "section": "questAndJournal", "displayName": "JournalResult", "configToggle": "TranslateJournalResult", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Prefers QuestPlate canonical lookup and falls back to QuestPopupText while missing rows are translated live." }, "runtime": { "translationModel": "Canonical quest lookup with live popup fallback and native-window publication.", "cache": "Quest and popup source reuse.", "dbOwner": "QuestPlate; QuestPopupText fallback", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "RecommendList", "section": "questAndJournal", "displayName": "RecommendList", "configToggle": "TranslateRecommendList", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Recommendation list." }, "runtime": { "translationModel": "Canonical quest lookup with native-window publication.", "cache": "Quest canonical-row reuse.", "dbOwner": "QuestPlate", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "AreaMap", "section": "questAndJournal", "displayName": "AreaMap", "configToggle": "TranslateAreaMap", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "Quest text inside map-related quest UI; AreaMap and _NaviMap are string-array-backed." }, "runtime": { "translationModel": "String-array capture and native-window publication.", "cache": "String-array source reuse.", "dbOwner": "StringArrayData", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/quest-addon-translation-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "WideTextToast", "section": "toast", "displayName": "WideText / Screen Info toast", "configToggle": "TranslateWideTextToast", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Large center-screen information toast." }, "runtime": { "translationModel": "Toast capture and asynchronous overlay publication.", "cache": "Toast source reuse.", "dbOwner": "ToastMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": ["FindAndReturnToastMessage"] },
-    { "id": "ErrorToast", "section": "toast", "displayName": "Error toast", "configToggle": "TranslateErrorToast", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Error / failure notifications." }, "runtime": { "translationModel": "Toast capture and asynchronous overlay publication.", "cache": "Toast source reuse.", "dbOwner": "ToastMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "AreaToast", "section": "toast", "displayName": "Area toast", "configToggle": "TranslateAreaToast", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Area and location notifications." }, "runtime": { "translationModel": "Toast capture and asynchronous overlay publication.", "cache": "Toast source reuse.", "dbOwner": "ToastMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "ClassChangeToast", "section": "toast", "displayName": "Class / Job change toast", "configToggle": "TranslateClassChangeToast", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Class/job change announcement." }, "runtime": { "translationModel": "Toast capture and asynchronous overlay publication.", "cache": "Toast source reuse.", "dbOwner": "ToastMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "TextGimmickHint", "section": "toast", "displayName": "Text gimmick hint", "configToggle": "TranslateTextGimmickHint", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Gimmick/tutorial hint surface." }, "runtime": { "translationModel": "Addon capture and asynchronous overlay publication.", "cache": "Toast source reuse.", "dbOwner": "TextGimmickHintMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "QuestToast", "section": "toast", "displayName": "Quest toast", "configToggle": "TranslateQuestToast", "modeFamilyId": "overlay", "releaseStatus": "Enabled", "notes": { "en": "Quest-related toast notification." }, "runtime": { "translationModel": "Toast capture and asynchronous overlay publication.", "cache": "Toast source reuse.", "dbOwner": "ToastMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/dialogue-and-toast-runtime-flows.md"], "requiredCodeAnchors": [] },
-    { "id": "CharacterWindow", "section": "gameWindow", "displayName": "Character window", "configToggle": "TranslateCharacterWindow", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "DB-first game-window runtime." }, "runtime": { "translationModel": "DB-first game-window lookup with native publication.", "cache": "Game-window row reuse.", "dbOwner": "GameWindow", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/action-domain-runtime-flow-index.md"], "requiredCodeAnchors": [] },
-    { "id": "MainCommand", "section": "gameWindow", "displayName": "Main Command", "configToggle": "TranslateMainCommandWindow", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "DB-first game-window runtime." }, "runtime": { "translationModel": "DB-first game-window lookup with native publication.", "cache": "Game-window row reuse.", "dbOwner": "GameWindow", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/maincommand-addon-gamewindow-flow.md"], "requiredCodeAnchors": ["MainCommandHandler"] },
-    { "id": "ActionMenu", "section": "gameWindow", "displayName": "Action Menu", "configToggle": "TranslateActionMenuWindow", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "DB-first game-window runtime." }, "runtime": { "translationModel": "DB-first game-window lookup with native publication.", "cache": "Game-window row reuse.", "dbOwner": "GameWindow", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/actionmenu-runtime-flow.md"], "requiredCodeAnchors": ["ActionMenuWindowHandler"] },
-    { "id": "HudWindow", "section": "gameWindow", "displayName": "HUD windows", "configToggle": "TranslateHudWindow", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "DB-first game-window runtime." }, "runtime": { "translationModel": "DB-first game-window lookup with native publication.", "cache": "Game-window row reuse.", "dbOwner": "GameWindow", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/action-domain-runtime-flow-index.md"], "requiredCodeAnchors": [] },
-    { "id": "OperationGuide", "section": "gameWindow", "displayName": "Operation Guide", "configToggle": "TranslateOperationGuideWindow", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "DB-first game-window runtime." }, "runtime": { "translationModel": "DB-first game-window lookup with native publication.", "cache": "Game-window row reuse.", "dbOwner": "GameWindow", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/action-domain-runtime-flow-index.md"], "requiredCodeAnchors": [] },
-    { "id": "AddonContextMenuTitle", "section": "gameWindow", "displayName": "Addon Context Menu Title", "configToggle": "TranslateAddonContextMenuTitle", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "DB-first game-window runtime." }, "runtime": { "translationModel": "DB-first game-window lookup with native publication.", "cache": "Game-window row reuse.", "dbOwner": "GameWindow", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/action-domain-runtime-flow-index.md"], "requiredCodeAnchors": [] },
-    { "id": "ContextMenu", "section": "gameWindow", "displayName": "Context Menu", "configToggle": "TranslateContextMenu", "modeFamilyId": "nativeTooltip", "releaseStatus": "Enabled", "notes": { "en": "Dedicated DB-first row-chain runtime with row-local hover targets." }, "runtime": { "translationModel": "DB-first row-chain lookup with tooltip or native publication.", "cache": "Context-menu row reuse.", "dbOwner": "ContextMenuText", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/selection-dialog-and-tooltip-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "TooltipAddon", "section": "gameWindow", "displayName": "Tooltip addon", "configToggle": "TranslateTooltipAddon", "modeFamilyId": "nativeTooltip", "releaseStatus": "Enabled", "notes": { "en": "Dedicated DB-first Tooltip addon runtime; tooltip translation and swap use an anchored overlay on the live game tooltip." }, "runtime": { "translationModel": "DB-first Tooltip addon lookup with anchored overlay or native publication.", "cache": "Tooltip source reuse.", "dbOwner": "TooltipText", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/selection-dialog-and-tooltip-runtime-flow.md"], "requiredCodeAnchors": [] },
-    { "id": "ActionItemTooltips", "section": "gameWindow", "displayName": "Action / item detail tooltips", "configToggle": "TranslateTooltips", "modeFamilyId": "questNativeWindow", "releaseStatus": "Enabled", "notes": { "en": "DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes." }, "runtime": { "translationModel": "Sheet and DB-first structured tooltip lookup with plugin tooltip or guarded native publication.", "cache": "Reference-text and tooltip reuse.", "dbOwner": "ActionTooltip, ItemTooltip, Trait", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/action-detail-sheet-flow.md"], "requiredCodeAnchors": ["ActionItemDetailUiRuntime"] },
-    { "id": "NamePlates", "section": "worldSpaceAndNamePlate", "displayName": "NamePlates", "configToggle": "TranslateNamePlates", "modeFamilyId": "nativeDistanceAwareHybrid", "releaseStatus": "Enabled", "notes": { "en": "Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend." }, "runtime": { "translationModel": "Native presentation for standard languages and distance-aware overlay fallback for overlay-only languages.", "cache": "Nameplate source reuse.", "dbOwner": "NamePlateMessage", "dbRead": "sync", "dbWrite": "async" }, "docs": ["docs/translation-surface-support-matrix.md"], "requiredCodeAnchors": ["NamePlatePrefetchRuntime"] }
+    {
+      "id": "Talk",
+      "section": "dialogAndOverlay",
+      "displayName": "Talk",
+      "configToggle": "TranslateTalk",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Supports translated NPC names through TranslateTalkNpcNames.",
+        "pt-BR": "Suporta nomes de NPC traduzidos por `TranslateTalkNpcNames`",
+        "pt": "Suporta nomes de NPC traduzidos através de `TranslateTalkNpcNames`",
+        "de": "Unterstützt übersetzte NPC-Namen über `TranslateTalkNpcNames`",
+        "da": "Understøtter oversatte NPC-navne via `TranslateTalkNpcNames`",
+        "el": "Υποστηρίζει μεταφρασμένα ονόματα NPC μέσω `TranslateTalkNpcNames`",
+        "es": "Soporta nombres de NPC traducidos mediante `TranslateTalkNpcNames`",
+        "eu": "NPC izen itzuliak onartzen ditu `TranslateTalkNpcNames` bidez",
+        "fr": "Prend en charge les noms de PNJ traduits via `TranslateTalkNpcNames`",
+        "it": "Supporta nomi NPC tradotti tramite `TranslateTalkNpcNames`",
+        "ru": "Поддерживает перевод имён NPC через `TranslateTalkNpcNames`",
+        "vi": "Hỗ trợ dịch tên NPC qua `TranslateTalkNpcNames`",
+        "zh-CN": "通过 `TranslateTalkNpcNames` 支持翻译 NPC 名称",
+        "zh-TW": "透過 `TranslateTalkNpcNames` 支援翻譯 NPC 名稱"
+      },
+      "runtime": {
+        "translationModel": "Live addon capture and asynchronous translation published through the dialogue overlay.",
+        "cache": "Shared dialogue translation reuse.",
+        "dbOwner": "TalkMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "FindAndReturnTalkMessage"
+      ]
+    },
+    {
+      "id": "BattleTalk",
+      "section": "dialogAndOverlay",
+      "displayName": "BattleTalk",
+      "configToggle": "TranslateBattleTalk",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Supports translated NPC names through TranslateBattleTalkNpcNames.",
+        "pt-BR": "Suporta nomes de NPC traduzidos por `TranslateBattleTalkNpcNames`",
+        "pt": "Suporta nomes de NPC traduzidos através de `TranslateBattleTalkNpcNames`",
+        "de": "Unterstützt übersetzte NPC-Namen über `TranslateBattleTalkNpcNames`",
+        "da": "Understøtter oversatte NPC-navne via `TranslateBattleTalkNpcNames`",
+        "el": "Υποστηρίζει μεταφρασμένα ονόματα NPC μέσω `TranslateBattleTalkNpcNames`",
+        "es": "Soporta nombres de NPC traducidos mediante `TranslateBattleTalkNpcNames`",
+        "eu": "NPC izen itzuliak onartzen ditu `TranslateBattleTalkNpcNames` bidez",
+        "fr": "Prend en charge les noms de PNJ traduits via `TranslateBattleTalkNpcNames`",
+        "it": "Supporta nomi NPC tradotti tramite `TranslateBattleTalkNpcNames`",
+        "ru": "Поддерживает перевод имён NPC через `TranslateBattleTalkNpcNames`",
+        "vi": "Hỗ trợ dịch tên NPC qua `TranslateBattleTalkNpcNames`",
+        "zh-CN": "通过 `TranslateBattleTalkNpcNames` 支持翻译 NPC 名称",
+        "zh-TW": "透過 `TranslateBattleTalkNpcNames` 支援翻譯 NPC 名稱"
+      },
+      "runtime": {
+        "translationModel": "Live addon capture and asynchronous translation published through the dialogue overlay.",
+        "cache": "Shared dialogue translation reuse.",
+        "dbOwner": "BattleTalkMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "FindAndReturnBattleTalkMessage"
+      ]
+    },
+    {
+      "id": "TalkSubtitle",
+      "section": "dialogAndOverlay",
+      "displayName": "TalkSubtitle",
+      "configToggle": "TranslateTalkSubtitle",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Uses titleless overlay presentation when overlay mode is active."
+      },
+      "runtime": {
+        "translationModel": "Live subtitle capture and asynchronous overlay publication.",
+        "cache": "Shared dialogue translation reuse.",
+        "dbOwner": "TalkSubtitleMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "TalkSubtitleHandler"
+      ]
+    },
+    {
+      "id": "MiniTalk",
+      "section": "dialogAndOverlay",
+      "displayName": "MiniTalk",
+      "configToggle": "TranslateMiniTalk",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Small native surface; verbose text still requires careful native reflow.",
+        "pt-BR": "Superfície nativa pequena; textos mais verbosos ainda exigem native reflow cuidadoso",
+        "pt": "Pequena superfície nativa; textos mais verbosos ainda exigem native reflow cuidadoso",
+        "de": "Kleine native Oberfläche; ausführlichere Texte benötigen weiterhin sorgfältiges natives Reflow",
+        "da": "Lille native flade; ordrige tekster kræver stadig omhyggelig native reflow",
+        "el": "Μικρή native επιφάνεια· τα πιο εκτενή κείμενα χρειάζονται ακόμη προσεκτικό native reflow",
+        "es": "Superficie nativa pequeña; el texto más verboso todavía requiere native reflow cuidadoso",
+        "eu": "Native gainazal txikia; testu luzeagoek native reflow zaindua behar dute oraindik",
+        "fr": "Petite surface native ; les textes plus verbeux nécessitent encore un reflow natif soigné",
+        "it": "Piccola superficie nativa; testi più verbosi richiedono ancora un native reflow accurato",
+        "ru": "Небольшая native-поверхность; более многословный текст всё ещё требует аккуратного native reflow",
+        "vi": "Bề mặt native nhỏ; văn bản dài hơn vẫn cần native reflow cẩn thận",
+        "zh-CN": "原生小型界面；更长的翻译文本仍需要谨慎的 native reflow",
+        "zh-TW": "小型原生介面；較長的翻譯文字仍需要謹慎的 native reflow"
+      },
+      "runtime": {
+        "translationModel": "Live capture, cache or database lookup, asynchronous translation, then overlay or native publication.",
+        "cache": "Dedicated MiniTalk cache and shared source-publication lifecycle reuse.",
+        "dbOwner": "MiniTalkMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "MiniTalkHandler"
+      ]
+    },
+    {
+      "id": "CutSceneSelectString",
+      "section": "dialogAndOverlay",
+      "displayName": "CutSceneSelectString",
+      "configToggle": "TranslateCutSceneSelectString",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Question becomes the title and options become the body in overlay mode.",
+        "pt-BR": "A pergunta vira o título e as opções viram o corpo no modo overlay",
+        "pt": "A pergunta torna-se o título e as opções tornam-se o corpo no modo overlay",
+        "de": "Die Frage wird im Overlay-Modus zum Titel und die Optionen zum Haupttext",
+        "da": "Spørgsmålet bliver titel, og valgmulighederne bliver brødteksten i overlay-tilstand",
+        "el": "Η ερώτηση γίνεται τίτλος και οι επιλογές γίνονται το σώμα στο overlay mode",
+        "es": "La pregunta se convierte en el título y las opciones en el cuerpo en modo overlay",
+        "eu": "Galdera izenburu bihurtzen da eta aukerak gorputz testu overlay moduan",
+        "fr": "La question devient le titre et les options deviennent le corps en mode overlay",
+        "it": "La domanda diventa il titolo e le opzioni diventano il corpo in modalità overlay",
+        "ru": "В overlay-режиме вопрос становится заголовком, а варианты ответа становятся основным текстом",
+        "vi": "Câu hỏi trở thành tiêu đề và các lựa chọn trở thành phần thân ở chế độ overlay",
+        "zh-CN": "在 overlay 模式下，问题文本作为标题，选项作为正文",
+        "zh-TW": "在 overlay 模式下，問題文字成為標題，選項成為主體內容"
+      },
+      "runtime": {
+        "translationModel": "Live selection capture and asynchronous overlay publication.",
+        "cache": "Selection text reuse by source content.",
+        "dbOwner": "CutSceneSelectStringMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "CutSceneSelectStringHandler"
+      ]
+    },
+    {
+      "id": "YesNo",
+      "section": "dialogAndOverlay",
+      "displayName": "Yes/No dialog",
+      "configToggle": "TranslateYesNoScreen",
+      "modeFamilyId": "nativeTooltip",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation.",
+        "pt-BR": "Usa tooltips estruturadas do plugin no lugar do overlay e suporta aplicação nativa, tooltip-only e swap",
+        "pt": "Presente no modelo de configuração e na implementação da tab, mas não está atualmente exposto no fluxo ativo da tab Overlay",
+        "de": "Im Konfigurationsmodell und in der Tab-Implementierung vorhanden, aber derzeit nicht im aktiven Overlay-Tab-Flow sichtbar",
+        "da": "Findes i konfigurationsmodellen og tab-implementeringen, men er ikke eksponeret i det aktive Overlay-tab-flow",
+        "el": "Υπάρχει στο μοντέλο ρυθμίσεων και στην υλοποίηση tab, αλλά δεν εκτίθεται σήμερα στο ενεργό overlay-tab flow",
+        "es": "Presente en el modelo de configuración y en la implementación de la pestaña, pero no expuesto actualmente en el flujo activo de la pestaña Overlay",
+        "eu": "Konfigurazio ereduan eta tab inplementazioan dago, baina gaur egun ez dago ikusgai overlay tab aktiboaren fluxuan",
+        "fr": "Présent dans le modèle de configuration et l’implémentation de l’onglet, mais non exposé actuellement dans le flux actif de l’onglet Overlay",
+        "it": "Presente nel modello di configurazione e nell’implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay",
+        "ru": "Присутствует в модели конфигурации и реализации вкладки, но сейчас не отображается в активном потоке вкладки Overlay",
+        "vi": "Có trong mô hình cấu hình và phần cài đặt tab, nhưng hiện chưa được hiển thị trong luồng tab Overlay đang hoạt động",
+        "zh-CN": "已存在于配置模型和标签页实现中，但当前未在活动的 Overlay 标签流中暴露",
+        "zh-TW": "已存在於設定模型與分頁實作中，但目前未在啟用中的 Overlay 分頁流程中顯示"
+      },
+      "runtime": {
+        "translationModel": "Structured dialog capture with tooltip or native presentation.",
+        "cache": "Structured dialog source reuse.",
+        "dbOwner": "SelectionDialogText",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/selection-dialog-and-tooltip-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "SelectYesNoHandler"
+      ]
+    },
+    {
+      "id": "SelectOk",
+      "section": "dialogAndOverlay",
+      "displayName": "SelectOk dialog",
+      "configToggle": "TranslateSelectOk",
+      "modeFamilyId": "nativeTooltip",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation.",
+        "pt-BR": "Usa tooltips estruturadas do plugin no lugar do overlay e suporta aplicação nativa, tooltip-only e swap",
+        "pt": "Presente no modelo de configuração e na implementação da tab, mas não está atualmente exposto no fluxo ativo da tab Overlay",
+        "de": "Im Konfigurationsmodell und in der Tab-Implementierung vorhanden, aber derzeit nicht im aktiven Overlay-Tab-Flow sichtbar",
+        "da": "Findes i konfigurationsmodellen og tab-implementeringen, men er ikke eksponeret i det aktive Overlay-tab-flow",
+        "el": "Υπάρχει στο μοντέλο ρυθμίσεων και στην υλοποίηση tab, αλλά δεν εκτίθεται σήμερα στο ενεργό overlay-tab flow",
+        "es": "Presente en el modelo de configuración y en la implementación de la pestaña, pero no expuesto actualmente en el flujo activo de la pestaña Overlay",
+        "eu": "Konfigurazio ereduan eta tab inplementazioan dago, baina gaur egun ez dago ikusgai overlay tab aktiboaren fluxuan",
+        "fr": "Présent dans le modèle de configuration et l’implémentation de l’onglet, mais non exposé actuellement dans le flux actif de l’onglet Overlay",
+        "it": "Presente nel modello di configurazione e nell’implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay",
+        "ru": "Присутствует в модели конфигурации и реализации вкладки, но сейчас не отображается в активном потоке вкладки Overlay",
+        "vi": "Có trong mô hình cấu hình và phần cài đặt tab, nhưng hiện chưa được hiển thị trong luồng tab Overlay đang hoạt động",
+        "zh-CN": "已存在于配置模型和标签页实现中，但当前未在活动的 Overlay 标签流中暴露",
+        "zh-TW": "已存在於設定模型與分頁實作中，但目前未在啟用中的 Overlay 分頁流程中顯示"
+      },
+      "runtime": {
+        "translationModel": "Structured dialog capture with tooltip or native presentation.",
+        "cache": "Structured dialog source reuse.",
+        "dbOwner": "SelectionDialogText",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/selection-dialog-and-tooltip-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "SelectOkHandler"
+      ]
+    },
+    {
+      "id": "SelectString",
+      "section": "dialogAndOverlay",
+      "displayName": "SelectString dialog",
+      "configToggle": "TranslateSelectString",
+      "modeFamilyId": "nativeTooltip",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation; prefers SelectString and falls back to SelectionDialogText."
+      },
+      "runtime": {
+        "translationModel": "Structured dialog capture with tooltip or native presentation.",
+        "cache": "Structured dialog source reuse.",
+        "dbOwner": "SelectString; SelectionDialogText fallback",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/selection-dialog-and-tooltip-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "SelectStringHandler"
+      ]
+    },
+    {
+      "id": "SelectIconString",
+      "section": "dialogAndOverlay",
+      "displayName": "SelectIconString dialog",
+      "configToggle": "TranslateSelectIconString",
+      "modeFamilyId": "nativeTooltip",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Keeps its own toggle and display mode and uses body-only structured tooltip presentation.",
+        "pt-BR": "Tem toggle e display mode próprios; usa tooltip estruturada body-only"
+      },
+      "runtime": {
+        "translationModel": "Structured dialog capture with body-only tooltip or native presentation.",
+        "cache": "Structured dialog source reuse.",
+        "dbOwner": "SelectionDialogText",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/selection-dialog-and-tooltip-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "SelectIconStringHandler"
+      ]
+    },
+    {
+      "id": "Journal",
+      "section": "questAndJournal",
+      "displayName": "Journal",
+      "configToggle": "TranslateJournal",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Quest list surface.",
+        "pt-BR": "Superfície de lista de quests",
+        "pt": "Superfície de lista de quests",
+        "de": "Questlisten-Oberfläche",
+        "da": "Questliste",
+        "el": "Επιφάνεια λίστας quest",
+        "es": "Superficie de lista de quests",
+        "eu": "Quest zerrendaren gainazala",
+        "fr": "Surface de liste de quêtes",
+        "it": "Superficie lista quest",
+        "ru": "Поверхность списка quest",
+        "vi": "Bề mặt danh sách quest",
+        "zh-CN": "任务列表界面",
+        "zh-TW": "任務列表介面"
+      },
+      "runtime": {
+        "translationModel": "Canonical quest lookup with native-window publication.",
+        "cache": "Quest canonical-row reuse.",
+        "dbOwner": "QuestPlate",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "JournalHandler"
+      ]
+    },
+    {
+      "id": "JournalDetail",
+      "section": "questAndJournal",
+      "displayName": "JournalDetail",
+      "configToggle": "TranslateJournalDetail",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Dense body layout; native mode requires explicit block reflow.",
+        "pt-BR": "Layout de corpo denso; o modo nativo exige block reflow explícito",
+        "pt": "Layout de corpo denso; o modo nativo exige block reflow explícito",
+        "de": "Dichtes Body-Layout; der native Modus erfordert explizites Block-Reflow",
+        "da": "Tæt indholdslayout; native tilstand kræver eksplicit block reflow",
+        "el": "Πυκνή διάταξη σώματος· η native λειτουργία απαιτεί ρητό block reflow",
+        "es": "Diseño de cuerpo denso; el modo nativo requiere block reflow explícito",
+        "eu": "Gorputz diseinu trinkoa; native moduak block reflow esplizitua behar du",
+        "fr": "Mise en page de corps dense ; le mode natif nécessite un block reflow explicite",
+        "it": "Layout del corpo denso; la modalità nativa richiede block reflow esplicito",
+        "ru": "Плотная компоновка основного блока; native-режим требует явного block reflow",
+        "vi": "Bố cục phần thân dày đặc; chế độ native cần block reflow rõ ràng",
+        "zh-CN": "正文布局密集；原生模式需要显式 block reflow",
+        "zh-TW": "主體版面密集；原生模式需要明確的 block reflow"
+      },
+      "runtime": {
+        "translationModel": "Canonical quest lookup with native-window publication and block reflow.",
+        "cache": "Quest canonical-row reuse.",
+        "dbOwner": "QuestPlate",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "JournalDetailHandler"
+      ]
+    },
+    {
+      "id": "ToDoList",
+      "section": "questAndJournal",
+      "displayName": "ToDoList",
+      "configToggle": "TranslateToDoList",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Quest tracker / objective list.",
+        "pt-BR": "Rastreador de quest / lista de objetivos",
+        "pt": "Quest tracker / lista de objetivos",
+        "de": "Quest-Tracker / Zielliste",
+        "da": "Quest-tracker / målliste",
+        "el": "Quest tracker / λίστα στόχων",
+        "es": "Seguimiento de quest / lista de objetivos",
+        "eu": "Quest jarraipena / helburuen zerrenda",
+        "fr": "Suivi de quête / liste d’objectifs",
+        "it": "Tracker quest / lista obiettivi",
+        "ru": "Трекер quest / список целей",
+        "vi": "Trình theo dõi quest / danh sách mục tiêu",
+        "zh-CN": "任务追踪 / 目标列表",
+        "zh-TW": "任務追蹤 / 目標清單"
+      },
+      "runtime": {
+        "translationModel": "Canonical quest lookup with native-window publication.",
+        "cache": "Quest canonical-row reuse.",
+        "dbOwner": "QuestPlate",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "ToDoListHandler"
+      ]
+    },
+    {
+      "id": "ToDo",
+      "section": "questAndJournal",
+      "displayName": "ToDo",
+      "configToggle": "TranslateToDo",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Instanced/FATE objective tracker.",
+        "pt-BR": "Rastreador de objetivos de instância/FATE"
+      },
+      "runtime": {
+        "translationModel": "Live objective capture with native-window publication.",
+        "cache": "Objective source reuse.",
+        "dbOwner": "ToDoText",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "ToDoHandler"
+      ]
+    },
+    {
+      "id": "ScenarioTree",
+      "section": "questAndJournal",
+      "displayName": "ScenarioTree",
+      "configToggle": "TranslateScenarioTree",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Main scenario tracker.",
+        "pt-BR": "Rastreador do cenário principal",
+        "pt": "Tracker do cenário principal",
+        "de": "Hauptszenario-Tracker",
+        "da": "Hovedscenarie-tracker",
+        "el": "Tracker κύριου σεναρίου",
+        "es": "Seguimiento del escenario principal",
+        "eu": "Eszenatoki nagusiaren jarraipena",
+        "fr": "Suivi du scénario principal",
+        "it": "Tracker dello scenario principale",
+        "ru": "Трекер основного сценария",
+        "vi": "Trình theo dõi kịch bản chính",
+        "zh-CN": "主线剧情追踪",
+        "zh-TW": "主線劇情追蹤"
+      },
+      "runtime": {
+        "translationModel": "Canonical quest lookup with native-window publication.",
+        "cache": "Quest canonical-row reuse.",
+        "dbOwner": "QuestPlate",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "ScenarioTreeHandler"
+      ]
+    },
+    {
+      "id": "JournalAccept",
+      "section": "questAndJournal",
+      "displayName": "JournalAccept",
+      "configToggle": "TranslateJournalAccept",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Uses QuestPlate when a safe quest id is available and QuestPopupText fallback for live popup capture."
+      },
+      "runtime": {
+        "translationModel": "Canonical quest lookup or live popup capture with native-window publication.",
+        "cache": "Quest and popup source reuse.",
+        "dbOwner": "QuestPlate; QuestPopupText fallback",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "JournalAcceptHandler"
+      ]
+    },
+    {
+      "id": "JournalResult",
+      "section": "questAndJournal",
+      "displayName": "JournalResult",
+      "configToggle": "TranslateJournalResult",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Prefers QuestPlate canonical lookup and falls back to QuestPopupText while missing rows are translated live."
+      },
+      "runtime": {
+        "translationModel": "Canonical quest lookup with live popup fallback and native-window publication.",
+        "cache": "Quest and popup source reuse.",
+        "dbOwner": "QuestPlate; QuestPopupText fallback",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "JournalResultHandler"
+      ]
+    },
+    {
+      "id": "RecommendList",
+      "section": "questAndJournal",
+      "displayName": "RecommendList",
+      "configToggle": "TranslateRecommendList",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Recommendation list.",
+        "pt-BR": "Lista de recomendações",
+        "pt": "Lista de recomendações",
+        "de": "Empfehlungsliste",
+        "da": "Anbefalingsliste",
+        "el": "Λίστα προτάσεων",
+        "es": "Lista de recomendaciones",
+        "eu": "Gomendioen zerrenda",
+        "fr": "Liste de recommandations",
+        "it": "Lista raccomandazioni",
+        "ru": "Список рекомендаций",
+        "vi": "Danh sách gợi ý",
+        "zh-CN": "推荐列表",
+        "zh-TW": "推薦清單"
+      },
+      "runtime": {
+        "translationModel": "Canonical quest lookup with native-window publication.",
+        "cache": "Quest canonical-row reuse.",
+        "dbOwner": "QuestPlate",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "RecommendListHandler"
+      ]
+    },
+    {
+      "id": "AreaMap",
+      "section": "questAndJournal",
+      "displayName": "AreaMap",
+      "configToggle": "TranslateAreaMap",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Quest text inside map-related quest UI; AreaMap and _NaviMap are string-array-backed."
+      },
+      "runtime": {
+        "translationModel": "String-array capture and native-window publication.",
+        "cache": "String-array source reuse.",
+        "dbOwner": "StringArrayData",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/quest-addon-translation-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "MapSurfaceStringArrayHandler"
+      ]
+    },
+    {
+      "id": "WideTextToast",
+      "section": "toast",
+      "displayName": "WideText / Screen Info toast",
+      "configToggle": "TranslateWideTextToast",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Large center-screen information toast.",
+        "pt-BR": "Toast informativo grande no centro da tela",
+        "pt": "Grande toast informativo no centro do ecrã",
+        "de": "Große Informations-Toast in der Bildschirmmitte",
+        "da": "Stor informations-toast midt på skærmen",
+        "el": "Μεγάλο informational toast στο κέντρο της οθόνης",
+        "es": "Toast informativo grande en el centro de la pantalla",
+        "eu": "Pantailaren erdiko informazio-toast handia",
+        "fr": "Grand toast d’information au centre de l’écran",
+        "it": "Grande toast informativo al centro dello schermo",
+        "ru": "Большое информационное уведомление в центре экрана",
+        "vi": "Toast thông tin lớn ở giữa màn hình",
+        "zh-CN": "屏幕中央的大型信息提示",
+        "zh-TW": "螢幕中央的大型資訊提示"
+      },
+      "runtime": {
+        "translationModel": "Toast capture and asynchronous overlay publication.",
+        "cache": "Toast source reuse.",
+        "dbOwner": "ToastMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "WideTextToastHandler"
+      ]
+    },
+    {
+      "id": "ErrorToast",
+      "section": "toast",
+      "displayName": "Error toast",
+      "configToggle": "TranslateErrorToast",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Error / failure notifications.",
+        "pt-BR": "Notificações de erro ou falha",
+        "pt": "Notificações de erro ou falha",
+        "de": "Fehler- und Störungsmeldungen",
+        "da": "Fejl- og advarselsnotifikationer",
+        "el": "Ειδοποιήσεις σφάλματος / αποτυχίας",
+        "es": "Notificaciones de error o fallo",
+        "eu": "Errore edo hutsegite jakinarazpenak",
+        "fr": "Notifications d’erreur ou d’échec",
+        "it": "Notifiche di errore o fallimento",
+        "ru": "Уведомления об ошибках и сбоях",
+        "vi": "Thông báo lỗi / thất bại",
+        "zh-CN": "错误 / 失败通知",
+        "zh-TW": "錯誤 / 失敗通知"
+      },
+      "runtime": {
+        "translationModel": "Toast capture and asynchronous overlay publication.",
+        "cache": "Toast source reuse.",
+        "dbOwner": "ToastMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "ErrorToastHandler"
+      ]
+    },
+    {
+      "id": "AreaToast",
+      "section": "toast",
+      "displayName": "Area toast",
+      "configToggle": "TranslateAreaToast",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Area and location notifications.",
+        "pt-BR": "Notificações de área e localização",
+        "pt": "Notificações de área e localização",
+        "de": "Gebiets- und Ortsbenachrichtigungen",
+        "da": "Område- og lokationsnotifikationer",
+        "el": "Ειδοποιήσεις περιοχής και τοποθεσίας",
+        "es": "Notificaciones de área y ubicación",
+        "eu": "Eremu eta kokapen jakinarazpenak",
+        "fr": "Notifications de zone et de localisation",
+        "it": "Notifiche di area e posizione",
+        "ru": "Уведомления об области и местоположении",
+        "vi": "Thông báo khu vực và vị trí",
+        "zh-CN": "区域和地点通知",
+        "zh-TW": "區域與地點通知"
+      },
+      "runtime": {
+        "translationModel": "Toast capture and asynchronous overlay publication.",
+        "cache": "Toast source reuse.",
+        "dbOwner": "ToastMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "AreaToastHandler"
+      ]
+    },
+    {
+      "id": "ClassChangeToast",
+      "section": "toast",
+      "displayName": "Class / Job change toast",
+      "configToggle": "TranslateClassChangeToast",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Class/job change announcement.",
+        "pt-BR": "Anúncio de troca de class/job",
+        "pt": "Anúncio de mudança de class/job",
+        "de": "Ankündigung eines Klassen-/Jobwechsels",
+        "da": "Meddelelse om class/job-skift",
+        "el": "Ανακοίνωση αλλαγής class/job",
+        "es": "Aviso de cambio de class/job",
+        "eu": "Class/job aldaketaren iragarkia",
+        "fr": "Annonce de changement de class/job",
+        "it": "Annuncio di cambio class/job",
+        "ru": "Сообщение о смене class/job",
+        "vi": "Thông báo đổi class/job",
+        "zh-CN": "职业 / Job 变更提示",
+        "zh-TW": "Class / Job 變更提示"
+      },
+      "runtime": {
+        "translationModel": "Toast capture and asynchronous overlay publication.",
+        "cache": "Toast source reuse.",
+        "dbOwner": "ToastMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "ClassChangeToastHandler"
+      ]
+    },
+    {
+      "id": "TextGimmickHint",
+      "section": "toast",
+      "displayName": "Text gimmick hint",
+      "configToggle": "TranslateTextGimmickHint",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Gimmick/tutorial hint surface.",
+        "pt-BR": "Superfície de dica de gimmick/tutorial",
+        "pt": "Superfície de pista de gimmick/tutorial",
+        "de": "Gimmick-/Tutorial-Hinweis",
+        "da": "Gimmick-/tutorial-hint",
+        "el": "Επιφάνεια hint για gimmick/tutorial",
+        "es": "Superficie de pista de gimmick/tutorial",
+        "eu": "Gimmick/tutorial pistaren gainazala",
+        "fr": "Surface d’indice de gimmick/tutorial",
+        "it": "Superficie hint per gimmick/tutorial",
+        "ru": "Поверхность подсказок gimmick/tutorial",
+        "vi": "Bề mặt gợi ý gimmick/tutorial",
+        "zh-CN": "gimmick / 教程提示界面",
+        "zh-TW": "gimmick / 教學提示介面"
+      },
+      "runtime": {
+        "translationModel": "Addon capture and asynchronous overlay publication.",
+        "cache": "Toast source reuse.",
+        "dbOwner": "TextGimmickHintMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "TextGimmickHintHandler"
+      ]
+    },
+    {
+      "id": "QuestToast",
+      "section": "toast",
+      "displayName": "Quest toast",
+      "configToggle": "TranslateQuestToast",
+      "modeFamilyId": "overlay",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Quest-related toast notification.",
+        "pt-BR": "Toast de notificação relacionado a quest",
+        "pt": "Notificação toast relacionada com quest",
+        "de": "Quest-bezogene Toast-Benachrichtigung",
+        "da": "Quest-relateret toast-notifikation",
+        "el": "Toast ειδοποίηση σχετική με quest",
+        "es": "Notificación toast relacionada con quest",
+        "eu": "Quest-ekin lotutako toast jakinarazpena",
+        "fr": "Notification toast liée à une quête",
+        "it": "Notifica toast relativa alle quest",
+        "ru": "Toast-уведомление, связанное с quest",
+        "vi": "Toast liên quan đến quest",
+        "zh-CN": "与任务相关的 toast 通知",
+        "zh-TW": "與任務相關的 toast 通知"
+      },
+      "runtime": {
+        "translationModel": "Toast capture and asynchronous overlay publication.",
+        "cache": "Toast source reuse.",
+        "dbOwner": "ToastMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/dialogue-and-toast-runtime-flows.md"
+      ],
+      "requiredCodeAnchors": [
+        "QuestToastRuntime"
+      ]
+    },
+    {
+      "id": "CharacterWindow",
+      "section": "gameWindow",
+      "displayName": "Character window",
+      "configToggle": "TranslateCharacterWindow",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime παραθύρων παιχνιδιού",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fenêtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime игровых окон",
+        "vi": "Runtime cửa sổ game DB-first",
+        "zh-CN": "DB-first 游戏窗口运行时",
+        "zh-TW": "DB-first 遊戲視窗執行階段"
+      },
+      "runtime": {
+        "translationModel": "DB-first game-window lookup with native publication.",
+        "cache": "Game-window row reuse.",
+        "dbOwner": "GameWindow",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/action-domain-runtime-flow-index.md"
+      ],
+      "requiredCodeAnchors": [
+        "CharacterWindowHandler"
+      ]
+    },
+    {
+      "id": "MainCommand",
+      "section": "gameWindow",
+      "displayName": "Main Command",
+      "configToggle": "TranslateMainCommandWindow",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime παραθύρων παιχνιδιού",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fenêtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime игровых окон",
+        "vi": "Runtime cửa sổ game DB-first",
+        "zh-CN": "DB-first 游戏窗口运行时",
+        "zh-TW": "DB-first 遊戲視窗執行階段"
+      },
+      "runtime": {
+        "translationModel": "DB-first game-window lookup with native publication.",
+        "cache": "Game-window row reuse.",
+        "dbOwner": "GameWindow",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/maincommand-addon-gamewindow-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "MainCommandHandler"
+      ]
+    },
+    {
+      "id": "ActionMenu",
+      "section": "gameWindow",
+      "displayName": "Action Menu",
+      "configToggle": "TranslateActionMenuWindow",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime παραθύρων παιχνιδιού",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fenêtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime игровых окон",
+        "vi": "Runtime cửa sổ game DB-first",
+        "zh-CN": "DB-first 游戏窗口运行时",
+        "zh-TW": "DB-first 遊戲視窗執行階段"
+      },
+      "runtime": {
+        "translationModel": "DB-first game-window lookup with native publication.",
+        "cache": "Game-window row reuse.",
+        "dbOwner": "GameWindow",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/actionmenu-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "ActionMenuWindowHandler"
+      ]
+    },
+    {
+      "id": "HudWindow",
+      "section": "gameWindow",
+      "displayName": "HUD windows",
+      "configToggle": "TranslateHudWindow",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime παραθύρων παιχνιδιού",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fenêtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime игровых окон",
+        "vi": "Runtime cửa sổ game DB-first",
+        "zh-CN": "DB-first 游戏窗口运行时",
+        "zh-TW": "DB-first 遊戲視窗執行階段"
+      },
+      "runtime": {
+        "translationModel": "DB-first game-window lookup with native publication.",
+        "cache": "Game-window row reuse.",
+        "dbOwner": "GameWindow",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/action-domain-runtime-flow-index.md"
+      ],
+      "requiredCodeAnchors": [
+        "HudWindowHandler"
+      ]
+    },
+    {
+      "id": "OperationGuide",
+      "section": "gameWindow",
+      "displayName": "Operation Guide",
+      "configToggle": "TranslateOperationGuideWindow",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime παραθύρων παιχνιδιού",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fenêtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime игровых окон",
+        "vi": "Runtime cửa sổ game DB-first",
+        "zh-CN": "DB-first 游戏窗口运行时",
+        "zh-TW": "DB-first 遊戲視窗執行階段"
+      },
+      "runtime": {
+        "translationModel": "DB-first game-window lookup with native publication.",
+        "cache": "Game-window row reuse.",
+        "dbOwner": "GameWindow",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/action-domain-runtime-flow-index.md"
+      ],
+      "requiredCodeAnchors": [
+        "OperationGuideHandler"
+      ]
+    },
+    {
+      "id": "AddonContextMenuTitle",
+      "section": "gameWindow",
+      "displayName": "Addon Context Menu Title",
+      "configToggle": "TranslateAddonContextMenuTitle",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "DB-first game-window runtime.",
+        "pt-BR": "Runtime DB-first de janelas do jogo",
+        "pt": "Runtime DB-first de janelas do jogo",
+        "de": "DB-first-Game-Window-Runtime",
+        "da": "DB-first game-window-runtime",
+        "el": "DB-first runtime παραθύρων παιχνιδιού",
+        "es": "Runtime DB-first de ventanas del juego",
+        "fr": "Runtime DB-first des fenêtres du jeu",
+        "it": "Runtime DB-first delle finestre di gioco",
+        "ru": "DB-first runtime игровых окон",
+        "vi": "Runtime cửa sổ game DB-first",
+        "zh-CN": "DB-first 游戏窗口运行时",
+        "zh-TW": "DB-first 遊戲視窗執行階段"
+      },
+      "runtime": {
+        "translationModel": "DB-first game-window lookup with native publication.",
+        "cache": "Game-window row reuse.",
+        "dbOwner": "GameWindow",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/action-domain-runtime-flow-index.md"
+      ],
+      "requiredCodeAnchors": [
+        "AddonContextMenuTitleHandler"
+      ]
+    },
+    {
+      "id": "ContextMenu",
+      "section": "gameWindow",
+      "displayName": "Context Menu",
+      "configToggle": "TranslateContextMenu",
+      "modeFamilyId": "nativeTooltip",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Dedicated DB-first row-chain runtime with row-local hover targets.",
+        "pt-BR": "Runtime DB-first dedicado de cadeia de linhas com alvos de hover por linha"
+      },
+      "runtime": {
+        "translationModel": "DB-first row-chain lookup with tooltip or native publication.",
+        "cache": "Context-menu row reuse.",
+        "dbOwner": "ContextMenuText",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/selection-dialog-and-tooltip-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "ContextMenuHandler"
+      ]
+    },
+    {
+      "id": "TooltipAddon",
+      "section": "gameWindow",
+      "displayName": "Tooltip addon",
+      "configToggle": "TranslateTooltipAddon",
+      "modeFamilyId": "nativeTooltip",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Dedicated DB-first Tooltip addon runtime; tooltip translation and swap use an anchored overlay on the live game tooltip."
+      },
+      "runtime": {
+        "translationModel": "DB-first Tooltip addon lookup with anchored overlay or native publication.",
+        "cache": "Tooltip source reuse.",
+        "dbOwner": "TooltipText",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/selection-dialog-and-tooltip-runtime-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "TooltipHandler"
+      ]
+    },
+    {
+      "id": "ActionItemTooltips",
+      "section": "gameWindow",
+      "displayName": "Action / item detail tooltips",
+      "configToggle": "TranslateTooltips",
+      "modeFamilyId": "questNativeWindow",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes.",
+        "pt-BR": "Runtime DB-first de tooltip estruturada; o padrão é modo Plugin Tooltip, enquanto gravação nativa é opt-in e limitada a nodes seguros com texto puro",
+        "pt": "A tradução estruturada de tooltips é desativada à força no arranque enquanto `ActionDetail` / `ItemDetail` permanecerem instáveis",
+        "de": "Strukturierte Tooltip-Übersetzung wird beim Start zwangsweise deaktiviert, solange `ActionDetail` / `ItemDetail` instabil bleiben",
+        "da": "Struktureret tooltip-oversættelse deaktiveres tvunget ved opstart, mens `ActionDetail` / `ItemDetail` stadig er ustabile",
+        "el": "Η δομημένη μετάφραση tooltip απενεργοποιείται υποχρεωτικά στην εκκίνηση όσο τα `ActionDetail` / `ItemDetail` παραμένουν ασταθή",
+        "es": "La traducción estructurada de tooltips se desactiva a la fuerza al iniciar mientras `ActionDetail` / `ItemDetail` sigan inestables",
+        "eu": "Egituratutako tooltip itzulpena indarrez desgaitzen da abioan, `ActionDetail` / `ItemDetail` oraindik ezegonkorrak direlako",
+        "fr": "La traduction structurée des tooltips est désactivée de force au démarrage tant que `ActionDetail` / `ItemDetail` restent instables",
+        "it": "La traduzione strutturata dei tooltip viene disattivata forzatamente all’avvio finché `ActionDetail` / `ItemDetail` restano instabili",
+        "ru": "Структурированный перевод tooltip принудительно отключается при запуске, пока `ActionDetail` / `ItemDetail` остаются нестабильными",
+        "vi": "Dịch tooltip có cấu trúc bị tắt cưỡng bức khi khởi động trong khi `ActionDetail` / `ItemDetail` vẫn chưa ổn định",
+        "zh-CN": "结构化 tooltip 翻译会在启动时被强制禁用，直到 `ActionDetail` / `ItemDetail` 稳定为止",
+        "zh-TW": "結構化 tooltip 翻譯會在啟動時被強制停用，直到 `ActionDetail` / `ItemDetail` 穩定為止"
+      },
+      "runtime": {
+        "translationModel": "Sheet and DB-first structured tooltip lookup with plugin tooltip or guarded native publication.",
+        "cache": "Reference-text and tooltip reuse.",
+        "dbOwner": "ActionTooltip, ItemTooltip, Trait",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/action-detail-sheet-flow.md"
+      ],
+      "requiredCodeAnchors": [
+        "ActionItemDetailUiRuntime"
+      ]
+    },
+    {
+      "id": "NamePlates",
+      "section": "worldSpaceAndNamePlate",
+      "displayName": "NamePlates",
+      "configToggle": "TranslateNamePlates",
+      "modeFamilyId": "nativeDistanceAwareHybrid",
+      "releaseStatus": "Enabled",
+      "notes": {
+        "en": "Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend."
+      },
+      "runtime": {
+        "translationModel": "Native presentation for standard languages and distance-aware overlay fallback for overlay-only languages.",
+        "cache": "Nameplate source reuse.",
+        "dbOwner": "NamePlateMessage",
+        "dbRead": "sync",
+        "dbWrite": "async"
+      },
+      "docs": [
+        "docs/translation-surface-support-matrix.md"
+      ],
+      "requiredCodeAnchors": [
+        "NamePlatePrefetchRuntime"
+      ]
+    }
   ]
 }

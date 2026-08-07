@@ -47,7 +47,9 @@ internal sealed record TranslationSurfaceSection(
 /// </summary>
 internal sealed record TranslationSurfaceLocale(
     [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("path")] string Path);
+    [property: JsonPropertyName("path")] string Path,
+    [property: JsonPropertyName("allowEnglishNoteFallback")]
+    bool AllowEnglishNoteFallback = false);
 
 /// <summary>
 /// Represents one documented translation surface.

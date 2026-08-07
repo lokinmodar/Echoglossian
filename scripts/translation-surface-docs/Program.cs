@@ -13,6 +13,11 @@ var options = new GenerationOptions(
     ValidateOnly: validateOnly);
 
 IReadOnlyList<GeneratedDocument> generated = TranslationSurfaceDocsRunner.Generate(options);
+if (!validateOnly)
+{
+    GeneratedDocumentWriter.WriteAll(repoRoot, generated);
+}
+
 Console.WriteLine($"Loaded catalog. Generated {generated.Count} document(s).");
 
 static string ResolveRepositoryRoot()
