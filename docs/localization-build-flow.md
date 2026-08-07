@@ -70,6 +70,20 @@ be required by CI or by `DalamudPluginsD17`.
 
 ## Practical Workflow
 
+Before a localization documentation update, validate the translation-surface
+catalog without writing generated files:
+
+```powershell
+.\scripts\update-translation-surface-docs.ps1 -ValidateOnly
+```
+
+Refresh the generated support matrices and the runtime map at
+`docs/translation-surface-runtime-map.md` with:
+
+```powershell
+.\scripts\update-translation-surface-docs.ps1
+```
+
 1. Add or update keys in `Properties/Resources.resx`.
 2. Add localized values in the corresponding `Properties/Resources.*.resx`
    files.

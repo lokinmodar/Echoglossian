@@ -5,106 +5,75 @@
 
 # Matrice di supporto delle superfici di traduzione
 
-Questo documento è l’inventario canonico delle superfici di traduzione configurabili dall’utente in Echoglossian.
-
-Va mantenuto aggiornato ogni volta che viene aggiunta o rimossa una nuova superficie, modalità o restrizione di release.
-
-## Flusso di attivazione
-
-```mermaid
-flowchart TD
-    A[Apri la configurazione del plugin] --> B[Scegli la lingua di destinazione]
-    B --> C[Scegli il motore di traduzione]
-    C --> D{Il motore è configurato?}
-    D -- No --> E[La traduzione rimane disattivata]
-    E --> E1[Mostra notifica persistente di Dalamud]
-    E1 --> E2[Apri la configurazione e correggi il motore]
-    D -- Sì --> F{La lingua richiede file di font scaricati?}
-    F -- Sì, file mancanti --> G[La traduzione rimane disattivata]
-    G --> G1[Mostra guida agli asset e percorso di ricontrollo]
-    F -- No o file presenti --> H[Abilita la traduzione globale]
-    H --> I[Scegli quali superfici tradurre]
-    I --> J[Dialoghi e overlay]
-    I --> K[Superfici quest e journal]
-    I --> L[Toast]
-    I --> M[Finestre di gioco]
-    I --> N[Famiglia tooltip opzionale quando verrà riabilitata]
-```
-
 ## Famiglie di modalità di traduzione
 
-| Famiglia di modalità | Modalità | Utilizzata da |
-| --- | --- | --- |
-| Famiglia quest / native-window | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Superfici della famiglia Journal e finestre di gioco DB-first |
-| Famiglia overlay | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, sottotitoli, MiniTalk, CutSceneSelectString e famiglia toast |
+| Famiglia di modalità | Modalità |
+| --- | --- |
+| Famiglia native-tooltip | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Famiglia overlay | `Native UI Translation`; `Overlay Translation Only`; `Native UI Translation With Original Overlay` |
+| Famiglia ibrida native / distance-aware | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Famiglia quest / native-window | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
 
 ## Superfici di dialogo e overlay
 
-| Superficie | Toggle di configurazione | Modalità | Note | Stato della release corrente |
+| Superficie | Interruttore di configurazione | Modalità | Note | Stato della release corrente |
 | --- | --- | --- | --- | --- |
-| Talk | `TranslateTalk` | Famiglia overlay | Supporta nomi NPC tradotti tramite `TranslateTalkNpcNames` | Abilitato |
-| BattleTalk | `TranslateBattleTalk` | Famiglia overlay | Supporta nomi NPC tradotti tramite `TranslateBattleTalkNpcNames` | Abilitato |
-| TalkSubtitle | `TranslateTalkSubtitle` | Famiglia overlay | Presentazione overlay senza barra del titolo quando la modalità overlay è attiva | Abilitato |
-| MiniTalk | `TranslateMiniTalk` | Famiglia overlay | Piccola superficie nativa; testi più verbosi richiedono ancora un native reflow accurato | Abilitato |
-| CutSceneSelectString | `TranslateCutSceneSelectString` | Famiglia overlay | La domanda diventa il titolo e le opzioni diventano il corpo in modalità overlay | Abilitato |
+| Talk | `TranslateTalk` | Famiglia overlay | Supporta nomi NPC tradotti tramite `TranslateTalkNpcNames` | Attivato |
+| BattleTalk | `TranslateBattleTalk` | Famiglia overlay | Supporta nomi NPC tradotti tramite `TranslateBattleTalkNpcNames` | Attivato |
+| TalkSubtitle | `TranslateTalkSubtitle` | Famiglia overlay | Uses titleless overlay presentation when overlay mode is active. | Attivato |
+| MiniTalk | `TranslateMiniTalk` | Famiglia overlay | Piccola superficie nativa; testi più verbosi richiedono ancora un native reflow accurato | Attivato |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Famiglia overlay | La domanda diventa il titolo e le opzioni diventano il corpo in modalità overlay | Attivato |
+| Yes/No dialog | `TranslateYesNoScreen` | Famiglia native-tooltip | Presente nel modello di configurazione e nell’implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay | Attivato |
+| SelectOk dialog | `TranslateSelectOk` | Famiglia native-tooltip | Presente nel modello di configurazione e nell’implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay | Attivato |
+| SelectString dialog | `TranslateSelectString` | Famiglia native-tooltip | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation; prefers SelectString and falls back to SelectionDialogText. | Attivato |
+| SelectIconString dialog | `TranslateSelectIconString` | Famiglia native-tooltip | Keeps its own toggle and display mode and uses body-only structured tooltip presentation. | Attivato |
 
 ## Superfici quest e journal
 
-| Superficie | Toggle di configurazione | Modalità | Note | Stato della release corrente |
+| Superficie | Interruttore di configurazione | Modalità | Note | Stato della release corrente |
 | --- | --- | --- | --- | --- |
-| Journal | `TranslateJournal` | Famiglia quest / native-window | Superficie lista quest | Abilitato |
-| JournalDetail | `TranslateJournalDetail` | Famiglia quest / native-window | Layout del corpo denso; la modalità nativa richiede block reflow esplicito | Abilitato |
-| ToDoList | `TranslateToDoList` | Famiglia quest / native-window | Tracker quest / lista obiettivi | Abilitato |
-| ScenarioTree | `TranslateScenarioTree` | Famiglia quest / native-window | Tracker dello scenario principale | Abilitato |
-| JournalAccept | `TranslateJournalAccept` | Famiglia quest / native-window | Finestra di accettazione quest | Abilitato |
-| JournalResult | `TranslateJournalResult` | Famiglia quest / native-window | Finestra di risultato / completamento quest | Abilitato |
-| RecommendList | `TranslateRecommendList` | Famiglia quest / native-window | Lista raccomandazioni | Abilitato |
-| AreaMap | `TranslateAreaMap` | Famiglia quest / native-window | Testo quest all’interno della UI di quest collegata alla mappa | Abilitato |
+| Journal | `TranslateJournal` | Famiglia quest / native-window | Superficie lista quest | Attivato |
+| JournalDetail | `TranslateJournalDetail` | Famiglia quest / native-window | Layout del corpo denso; la modalità nativa richiede block reflow esplicito | Attivato |
+| ToDoList | `TranslateToDoList` | Famiglia quest / native-window | Tracker quest / lista obiettivi | Attivato |
+| ToDo | `TranslateToDo` | Famiglia quest / native-window | Instanced/FATE objective tracker. | Attivato |
+| ScenarioTree | `TranslateScenarioTree` | Famiglia quest / native-window | Tracker dello scenario principale | Attivato |
+| JournalAccept | `TranslateJournalAccept` | Famiglia quest / native-window | Uses QuestPlate when a safe quest id is available and QuestPopupText fallback for live popup capture. | Attivato |
+| JournalResult | `TranslateJournalResult` | Famiglia quest / native-window | Prefers QuestPlate canonical lookup and falls back to QuestPopupText while missing rows are translated live. | Attivato |
+| RecommendList | `TranslateRecommendList` | Famiglia quest / native-window | Lista raccomandazioni | Attivato |
+| AreaMap | `TranslateAreaMap` | Famiglia quest / native-window | Quest text inside map-related quest UI; AreaMap and _NaviMap are string-array-backed. | Attivato |
 
 ## Superfici toast
 
-| Superficie | Toggle di configurazione | Modalità | Note | Stato della release corrente |
+| Superficie | Interruttore di configurazione | Modalità | Note | Stato della release corrente |
 | --- | --- | --- | --- | --- |
-| WideText / Screen Info toast | `TranslateWideTextToast` | Famiglia overlay | Grande toast informativo al centro dello schermo | Abilitato |
-| Error toast | `TranslateErrorToast` | Famiglia overlay | Notifiche di errore o fallimento | Abilitato |
-| Area toast | `TranslateAreaToast` | Famiglia overlay | Notifiche di area e posizione | Abilitato |
-| Class / Job change toast | `TranslateClassChangeToast` | Famiglia overlay | Annuncio di cambio class/job | Abilitato |
-| Text gimmick hint | `TranslateTextGimmickHint` | Famiglia overlay | Superficie hint per gimmick/tutorial | Abilitato |
-| Quest toast | `TranslateQuestToast` | Famiglia overlay | Notifica toast relativa alle quest | Abilitato |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Famiglia overlay | Grande toast informativo al centro dello schermo | Attivato |
+| Error toast | `TranslateErrorToast` | Famiglia overlay | Notifiche di errore o fallimento | Attivato |
+| Area toast | `TranslateAreaToast` | Famiglia overlay | Notifiche di area e posizione | Attivato |
+| Class / Job change toast | `TranslateClassChangeToast` | Famiglia overlay | Annuncio di cambio class/job | Attivato |
+| Text gimmick hint | `TranslateTextGimmickHint` | Famiglia overlay | Superficie hint per gimmick/tutorial | Attivato |
+| Quest toast | `TranslateQuestToast` | Famiglia overlay | Notifica toast relativa alle quest | Attivato |
 
 ## Superfici delle finestre di gioco
 
-| Superficie | Toggle di configurazione | Modalità | Note | Stato della release corrente |
+| Superficie | Interruttore di configurazione | Modalità | Note | Stato della release corrente |
 | --- | --- | --- | --- | --- |
-| Character window | `TranslateCharacterWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Abilitato |
-| Main Command | `TranslateMainCommandWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Abilitato |
-| Action Menu | `TranslateActionMenuWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Abilitato |
-| HUD windows | `TranslateHudWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Abilitato |
-| Operation Guide | `TranslateOperationGuideWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Abilitato |
-| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Abilitato |
+| Character window | `TranslateCharacterWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Attivato |
+| Main Command | `TranslateMainCommandWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Attivato |
+| Action Menu | `TranslateActionMenuWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Attivato |
+| HUD windows | `TranslateHudWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Attivato |
+| Operation Guide | `TranslateOperationGuideWindow` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Attivato |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Famiglia quest / native-window | Runtime DB-first delle finestre di gioco | Attivato |
+| Context Menu | `TranslateContextMenu` | Famiglia native-tooltip | Dedicated DB-first row-chain runtime with row-local hover targets. | Attivato |
+| Tooltip addon | `TranslateTooltipAddon` | Famiglia native-tooltip | Dedicated DB-first Tooltip addon runtime; tooltip translation and swap use an anchored overlay on the live game tooltip. | Attivato |
+| Action / item detail tooltips | `TranslateTooltips` | Famiglia quest / native-window | La traduzione strutturata dei tooltip viene disattivata forzatamente all’avvio finché `ActionDetail` / `ItemDetail` restano instabili | Attivato |
+
+## Superfici mondo e NamePlate
+
+| Superficie | Interruttore di configurazione | Modalità | Note | Stato della release corrente |
+| --- | --- | --- | --- | --- |
+| NamePlates | `TranslateNamePlates` | Famiglia ibrida native / distance-aware | Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend. | Attivato |
 
 ## Superfici nascoste o temporaneamente limitate
 
-| Superficie | Toggle di configurazione | Modalità | Note | Stato della release corrente |
+| Superficie | Interruttore di configurazione | Modalità | Note | Stato della release corrente |
 | --- | --- | --- | --- | --- |
-| Action / item detail tooltips | `TranslateTooltips` | Famiglia overlay | La traduzione strutturata dei tooltip viene disattivata forzatamente all’avvio finché `ActionDetail` / `ItemDetail` restano instabili | Temporaneamente disabilitato per la release |
-| Yes/No dialog | `TranslateYesNoScreen` | Solo toggle | Presente nel modello di configurazione e nell’implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay | Implementato ma nascosto nell’interfaccia attuale |
-| SelectString dialog | `TranslateSelectString` | Solo toggle | Presente nel modello di configurazione e nell’implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay | Implementato ma nascosto nell’interfaccia attuale |
-| SelectOk dialog | `TranslateSelectOk` | Solo toggle | Presente nel modello di configurazione e nell’implementazione della scheda, ma non esposto attualmente nel flusso attivo della scheda Overlay | Implementato ma nascosto nell’interfaccia attuale |
-
-## Note operative
-
-| Argomento | Comportamento |
-| --- | --- |
-| Attivazione globale | La traduzione non rimane attiva a meno che il motore selezionato non sia valido e configurato per la lingua scelta |
-| File di font scaricati | Alcune lingue richiedono file di font scaricati prima che la traduzione possa essere attivata in sicurezza |
-| Lingue solo overlay | Quando la lingua è overlay-only, le modalità di sostituzione nativa vengono normalizzate verso presentazione overlay/tooltip |
-| Attivazione per superficie | Ogni famiglia richiede comunque il proprio toggle per superficie anche dopo l’attivazione della traduzione globale |
-| Gating di release | Una superficie può esistere nella configurazione o nel codice ma essere comunque nascosta o disattivata intenzionalmente in una determinata release |
-
-## Regole di manutenzione
-
-- Aggiornare questa matrice ogni volta che viene aggiunta una nuova superficie di traduzione.
-- Aggiornare questa matrice ogni volta che una superficie cambia famiglia di modalità.
-- Aggiornare questa matrice ogni volta che una release disattiva o nasconde temporaneamente una funzionalità.
-- È preferibile documentare il comportamento reale in runtime invece di un comportamento solo desiderato ma non ancora effettivo.
