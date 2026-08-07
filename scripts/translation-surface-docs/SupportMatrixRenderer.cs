@@ -35,7 +35,7 @@ internal static class SupportMatrixRenderer
         builder.AppendLine();
         builder.AppendLine($"## {labels.ModeFamiliesHeading}");
         builder.AppendLine();
-        builder.AppendLine($"| {labels.ModesHeader} | Modes |");
+        builder.AppendLine($"| {labels.ModeFamilyHeader} | {labels.ModesHeader} |");
         builder.AppendLine("| --- | --- |");
         foreach (TranslationSurfaceModeFamily family in catalog.ModeFamilies)
         {

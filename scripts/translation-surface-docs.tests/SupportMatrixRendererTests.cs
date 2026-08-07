@@ -40,6 +40,7 @@ public sealed class SupportMatrixRendererTests
 
         markdown.Should().Contain("# Matriz de suporte das superfícies de tradução");
         markdown.Should().Contain("Toggle de configuração");
+        markdown.Should().Contain("| Família de modos | Modos |");
         markdown.Should().Contain("Nota localizada.");
     }
 

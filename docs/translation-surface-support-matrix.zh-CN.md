@@ -7,7 +7,7 @@
 
 ## 翻译模式家族
 
-| 模式 | Modes |
+| 模式家族 | 模式 |
 | --- | --- |
 | Native-tooltip family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
 | Overlay family | Native UI Translation; Overlay Translation Only; Native UI Translation With Original Overlay |

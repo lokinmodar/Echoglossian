@@ -7,7 +7,7 @@
 
 ## Οικογένειες λειτουργιών μετάφρασης
 
-| Λειτουργίες | Modes |
+| Οικογένεια λειτουργιών | Λειτουργίες |
 | --- | --- |
 | Native-tooltip family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
 | Overlay family | Native UI Translation; Overlay Translation Only; Native UI Translation With Original Overlay |

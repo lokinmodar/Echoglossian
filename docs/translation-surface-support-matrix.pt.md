@@ -7,7 +7,7 @@
 
 ## Famílias de modos de tradução
 
-| Modos | Modes |
+| Família de modos | Modos |
 | --- | --- |
 | Native-tooltip family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
 | Overlay family | Native UI Translation; Overlay Translation Only; Native UI Translation With Original Overlay |

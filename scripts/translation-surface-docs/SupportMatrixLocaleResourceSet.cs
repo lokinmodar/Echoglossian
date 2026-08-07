@@ -10,6 +10,7 @@ namespace TranslationSurfaceDocs;
 /// </summary>
 /// <param name="Title">The document title.</param>
 /// <param name="ModeFamiliesHeading">The mode-family section heading.</param>
+/// <param name="ModeFamilyHeader">The mode-family table header.</param>
 /// <param name="SurfaceHeader">The surface table header.</param>
 /// <param name="ConfigToggleHeader">The configuration-toggle table header.</param>
 /// <param name="ModesHeader">The mode table header.</param>
@@ -19,6 +20,7 @@ namespace TranslationSurfaceDocs;
 internal sealed record SupportMatrixLocaleResourceSet(
     string Title,
     string ModeFamiliesHeading,
+    string ModeFamilyHeader,
     string SurfaceHeader,
     string ConfigToggleHeader,
     string ModesHeader,
