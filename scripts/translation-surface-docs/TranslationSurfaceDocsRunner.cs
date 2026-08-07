@@ -29,8 +29,18 @@ internal static class TranslationSurfaceDocsRunner
                 issues.Select(issue => $"[{issue.Code}] {issue.Message}")));
         }
 
-        return options.ValidateOnly
-            ? Array.Empty<GeneratedDocument>()
-            : throw new NotImplementedException("Rendering is added in later tasks.");
+        if (options.ValidateOnly)
+        {
+            return Array.Empty<GeneratedDocument>();
+        }
+
+        GeneratedDocument[] documents =
+        [
+            RuntimeMapRenderer.RenderMarkdown(catalog),
+            RuntimeMapRenderer.RenderJson(catalog),
+        ];
+        GeneratedDocumentWriter.WriteAll(options.RepoRoot, documents);
+
+        return documents;
     }
 }

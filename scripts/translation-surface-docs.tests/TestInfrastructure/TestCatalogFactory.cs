@@ -13,12 +13,20 @@ internal static class TestCatalogFactory
     /// <summary>
     /// Creates a minimal valid catalog with one surface for validation tests.
     /// </summary>
+    /// <param name="surfaceId">The stable identifier for the surface.</param>
+    /// <param name="translationModel">The translation model description.</param>
+    /// <param name="cache">The cache description.</param>
+    /// <param name="dbOwner">The persistence owner.</param>
     /// <param name="dbRead">The runtime database read mode.</param>
     /// <param name="dbWrite">The runtime database write mode.</param>
     /// <param name="docs">The documentation paths for the surface.</param>
     /// <param name="requiredCodeAnchors">The required repository code anchors.</param>
     /// <returns>A deterministic catalog fixture.</returns>
     public static TranslationSurfaceCatalog CreateSingleSurfaceCatalog(
+        string surfaceId = "surface",
+        string translationModel = "Model",
+        string cache = "Cache",
+        string dbOwner = "Owner",
         string dbRead = "sync",
         string dbWrite = "async",
         IReadOnlyList<string>? docs = null,
@@ -29,14 +37,14 @@ internal static class TestCatalogFactory
             [new TranslationSurfaceSection("section", "Section")],
             [],
             [new TranslationSurfaceEntry(
-                "surface",
+                surfaceId,
                 "section",
-                "Surface",
+                surfaceId,
                 "TranslateSurface",
                 "mode",
                 "Enabled",
                 new Dictionary<string, string> { ["en"] = "Surface note." },
-                new TranslationSurfaceRuntime("Model", "Cache", "Owner", dbRead, dbWrite),
+                new TranslationSurfaceRuntime(translationModel, cache, dbOwner, dbRead, dbWrite),
                 docs ?? ["docs/translation-surface-catalog.json"],
                 requiredCodeAnchors ?? ["PluginRuntimeLog"])])
         {
