@@ -252,6 +252,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The minimum vertical padding to preserve inside the secondary
   ///     container when it grows.
   /// </param>
+  /// <param name="preferCompactDetachedBaselineForHeight">
+  ///     Whether detached-container height synchronization should explicitly
+  ///     prefer the more compact of the preserved container baselines instead
+  ///     of preserving the largest detached extent.
+  /// </param>
   public static void ResizeFromSnapshot(
       NativeTextNodeLayoutSnapshot snapshot,
       NativeTextNodeResizeResult resizeResult,
@@ -261,7 +266,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       bool allowWidthGrowth = false,
       bool restoreHorizontalCentering = true,
       int minimumSecondaryHorizontalPadding = 0,
-      int minimumSecondaryVerticalPadding = 0)
+      int minimumSecondaryVerticalPadding = 0,
+      bool preferCompactDetachedBaselineForHeight = false)
   {
     var childWidth = resizeResult.Width;
     var childHeight = resizeResult.Height;
@@ -324,7 +330,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
             snapshot.SecondaryContainerHeight,
             snapshot.TextHeight,
             resizeResult.Height,
-            minimumSecondaryVerticalPadding);
+            minimumSecondaryVerticalPadding,
+            preferCompactDetachedBaseline: preferCompactDetachedBaselineForHeight);
         if (synchronizedHeight > 0)
         {
           primaryContainerNode->SetHeight(synchronizedHeight);
@@ -360,7 +367,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
                 snapshot.SecondaryContainerHeight,
                 snapshot.TextHeight,
                 resizeResult.Height,
-                minimumSecondaryVerticalPadding)
+                minimumSecondaryVerticalPadding,
+                preferCompactDetachedBaseline: preferCompactDetachedBaselineForHeight)
             : ResolveExpandedContainerExtent(
                 snapshot.SecondaryContainerHeight,
                 snapshot.TextHeight,
@@ -610,6 +618,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The minimum vertical padding to preserve inside the secondary
   ///     background when it grows.
   /// </param>
+  /// <param name="preferCompactDetachedBaselineForHeight">
+  ///     Whether detached-container height synchronization should explicitly
+  ///     prefer the more compact of the preserved container baselines instead
+  ///     of preserving the largest detached extent.
+  /// </param>
   /// <param name="measureReplacementWidthBeforeApply">
   ///     Whether the candidate replacement text should be measured before
   ///     native apply so width growth can use its draw width.
@@ -627,6 +640,7 @@ internal static unsafe class NativeTextNodeLayoutHelper
       ushort additionalWrapWidth = 0,
       int minimumSecondaryHorizontalPadding = 0,
       int minimumSecondaryVerticalPadding = 0,
+      bool preferCompactDetachedBaselineForHeight = false,
       bool measureReplacementWidthBeforeApply = false,
       byte[]? replacementPayload = null)
   {
@@ -674,7 +688,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
         allowWidthGrowth: allowWidthGrowth,
         restoreHorizontalCentering: restoreHorizontalCentering,
         minimumSecondaryHorizontalPadding: minimumSecondaryHorizontalPadding,
-        minimumSecondaryVerticalPadding: minimumSecondaryVerticalPadding);
+        minimumSecondaryVerticalPadding: minimumSecondaryVerticalPadding,
+        preferCompactDetachedBaselineForHeight:
+        preferCompactDetachedBaselineForHeight);
     return snapshot;
   }
 
@@ -964,22 +980,40 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The explicit padding that should remain inside the synchronized
   ///     tooltip-style background.
   /// </param>
+  /// <param name="preferCompactDetachedBaseline">
+  ///     Whether the synchronized extent should explicitly prefer the more
+  ///     compact of the preserved detached-container baselines instead of
+  ///     preserving the largest detached extent.
+  /// </param>
   /// <returns>The synchronized extent shared by both containers.</returns>
   public static ushort ResolveSynchronizedContainerExtent(
       ushort primaryContainerExtent,
       ushort secondaryContainerExtent,
       ushort currentTextExtent,
       ushort measuredTextExtent,
-      int minimumSecondaryPadding)
+      int minimumSecondaryPadding,
+      bool preferCompactDetachedBaseline = false)
   {
-    if (minimumSecondaryPadding <= 0 &&
-        secondaryContainerExtent > 0)
+    if (preferCompactDetachedBaseline)
     {
+      var compactBaseline = primaryContainerExtent > 0 &&
+                            secondaryContainerExtent > 0
+          ? Math.Min(
+              primaryContainerExtent,
+              secondaryContainerExtent)
+          : Math.Max(
+              primaryContainerExtent,
+              secondaryContainerExtent);
+      if (compactBaseline <= 0)
+      {
+        return 0;
+      }
+
       return ResolveExpandedContainerExtent(
-          secondaryContainerExtent,
+          compactBaseline,
           currentTextExtent,
           measuredTextExtent,
-          minimumPadding: 0);
+          minimumSecondaryPadding);
     }
 
     var baseExtent = Math.Max(
