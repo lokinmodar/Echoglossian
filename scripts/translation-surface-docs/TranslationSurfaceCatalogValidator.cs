@@ -156,7 +156,18 @@ internal static class TranslationSurfaceCatalogValidator
     {
         foreach (string documentPath in surface.Docs)
         {
-            if (!File.Exists(Path.Combine(repoRoot, documentPath)))
+            if (!TryResolveRepositoryDocumentPath(
+                    repoRoot,
+                    documentPath,
+                    out string resolvedDocumentPath))
+            {
+                issues.Add(new ValidationIssue(
+                    "invalid-doc-reference-path",
+                    $"Surface '{surface.Id}' references document path outside " +
+                    $"the repository: '{documentPath}'.",
+                    surface.Id));
+            }
+            else if (!File.Exists(resolvedDocumentPath))
             {
                 issues.Add(new ValidationIssue(
                     "missing-doc-reference",
@@ -164,6 +175,50 @@ internal static class TranslationSurfaceCatalogValidator
                     $"'{documentPath}'.",
                     surface.Id));
             }
+        }
+    }
+
+    private static bool TryResolveRepositoryDocumentPath(
+        string repoRoot,
+        string documentPath,
+        out string resolvedDocumentPath)
+    {
+        resolvedDocumentPath = string.Empty;
+        if (Path.IsPathRooted(documentPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            string normalizedRepoRoot = Path.GetFullPath(repoRoot);
+            string candidatePath = Path.GetFullPath(
+                Path.Combine(normalizedRepoRoot, documentPath));
+            string relativePath = Path.GetRelativePath(
+                normalizedRepoRoot,
+                candidatePath);
+            if (relativePath.Equals("..", StringComparison.Ordinal) ||
+                relativePath.StartsWith(
+                    $"..{Path.DirectorySeparatorChar}",
+                    StringComparison.Ordinal) ||
+                relativePath.StartsWith(
+                    $"..{Path.AltDirectorySeparatorChar}",
+                    StringComparison.Ordinal) ||
+                Path.IsPathRooted(relativePath))
+            {
+                return false;
+            }
+
+            resolvedDocumentPath = candidatePath;
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
         }
     }
 

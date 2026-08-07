@@ -51,6 +51,42 @@ public sealed class CatalogValidationTests
     }
 
     /// <summary>
+    /// Ensures rooted and parent-traversal documentation paths are rejected.
+    /// </summary>
+    [Fact]
+    public void Validate_WhenDocPathIsRootedOrEscapesRepo_ReturnsInvalidPathIssue()
+    {
+        string repoRoot = TestRepositoryPaths.ResolveRepoRoot();
+        string rootedExternalDocument = Path.GetTempFileName();
+        string parentExternalDocument = Path.Combine(
+            Directory.GetParent(repoRoot)!.FullName,
+            $"translation-surface-catalog-{Guid.NewGuid():N}.md");
+        File.WriteAllText(parentExternalDocument, "external");
+
+        try
+        {
+            TranslationSurfaceCatalog rootedCatalog =
+                TestCatalogFactory.CreateSingleSurfaceCatalog(
+                    docs: [rootedExternalDocument]);
+            TranslationSurfaceCatalog escapingCatalog =
+                TestCatalogFactory.CreateSingleSurfaceCatalog(
+                    docs: [Path.GetRelativePath(repoRoot, parentExternalDocument)]);
+
+            TranslationSurfaceCatalogValidator.Validate(rootedCatalog, repoRoot)
+                .Should()
+                .ContainSingle(issue => issue.Code == "invalid-doc-reference-path");
+            TranslationSurfaceCatalogValidator.Validate(escapingCatalog, repoRoot)
+                .Should()
+                .ContainSingle(issue => issue.Code == "invalid-doc-reference-path");
+        }
+        finally
+        {
+            File.Delete(rootedExternalDocument);
+            File.Delete(parentExternalDocument);
+        }
+    }
+
+    /// <summary>
     /// Ensures missing required repository code anchors are rejected.
     /// </summary>
     [Fact]
