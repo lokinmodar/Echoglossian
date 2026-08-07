@@ -28,6 +28,10 @@ For an up-to-date inventory of what can be translated, which mode family each
 surface uses, and which surfaces are temporarily hidden or disabled in the
 current release, see
 [docs/translation-surface-support-matrix.md](docs/translation-surface-support-matrix.md).
+Maintainers can refresh the generated catalog documentation with
+`.\scripts\update-translation-surface-docs.ps1`; the runtime ownership and
+handler map is documented in
+[docs/translation-surface-runtime-map.md](docs/translation-surface-runtime-map.md).
 
 For current translation-engine architecture and future LLM-specific
 improvements such as surface-group engine routing and optional dialogue

@@ -5,65 +5,46 @@
 
 # Матрица поддержки поверхностей перевода
 
-Этот документ является каноническим перечнем настраиваемых пользователем поверхностей перевода в Echoglossian.
-
-Его следует обновлять всякий раз, когда добавляется или удаляется новая поверхность, режим или ограничение релиза.
-
-## Поток активации
-
-```mermaid
-flowchart TD
-    A[Открыть настройки плагина] --> B[Выбрать целевой язык]
-    B --> C[Выбрать движок перевода]
-    C --> D{Движок настроен?}
-    D -- Нет --> E[Перевод остаётся отключённым]
-    E --> E1[Показать постоянное уведомление Dalamud]
-    E1 --> E2[Открыть настройки и исправить параметры движка]
-    D -- Да --> F{Для языка нужны загруженные файлы шрифтов?}
-    F -- Да, файлов нет --> G[Перевод остаётся отключённым]
-    G --> G1[Показать инструкцию по asset-файлам и путь повторной проверки]
-    F -- Нет или файлы есть --> H[Включить глобальный перевод]
-    H --> I[Выбрать, какие поверхности переводить]
-    I --> J[Диалоги и overlay]
-    I --> K[Поверхности quest и journal]
-    I --> L[Toast-уведомления]
-    I --> M[Окна игры]
-    I --> N[Необязательное семейство tooltip после повторного включения]
-```
-
 ## Семейства режимов перевода
 
-| Семейство режимов | Режимы | Используется для |
-| --- | --- | --- |
-| Семейство quest / native-window | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Поверхности семейства Journal и игровые окна DB-first |
-| Семейство overlay | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, субтитры, MiniTalk, CutSceneSelectString и семейство toast |
+| Семейство режимов | Режимы |
+| --- | --- |
+| Семейство native-tooltip | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Семейство overlay | `Native UI Translation`; `Overlay Translation Only`; `Native UI Translation With Original Overlay` |
+| Гибридное семейство native / distance-aware | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
+| Семейство quest / native-window | `Native UI Translation`; `Tooltip Translation Only`; `Native UI Translation With Original Tooltips` |
 
 ## Диалоговые и overlay-поверхности
 
-| Поверхность | Toggle в конфиге | Режимы | Примечания | Статус текущего релиза |
+| Поверхность | Переключатель конфигурации | Режимы | Заметки | Статус текущего релиза |
 | --- | --- | --- | --- | --- |
 | Talk | `TranslateTalk` | Семейство overlay | Поддерживает перевод имён NPC через `TranslateTalkNpcNames` | Включено |
 | BattleTalk | `TranslateBattleTalk` | Семейство overlay | Поддерживает перевод имён NPC через `TranslateBattleTalkNpcNames` | Включено |
-| TalkSubtitle | `TranslateTalkSubtitle` | Семейство overlay | Overlay-представление без заголовка, когда активен overlay-режим | Включено |
+| TalkSubtitle | `TranslateTalkSubtitle` | Семейство overlay | Uses titleless overlay presentation when overlay mode is active. | Включено |
 | MiniTalk | `TranslateMiniTalk` | Семейство overlay | Небольшая native-поверхность; более многословный текст всё ещё требует аккуратного native reflow | Включено |
 | CutSceneSelectString | `TranslateCutSceneSelectString` | Семейство overlay | В overlay-режиме вопрос становится заголовком, а варианты ответа становятся основным текстом | Включено |
+| Yes/No dialog | `TranslateYesNoScreen` | Семейство native-tooltip | Присутствует в модели конфигурации и реализации вкладки, но сейчас не отображается в активном потоке вкладки Overlay | Включено |
+| SelectOk dialog | `TranslateSelectOk` | Семейство native-tooltip | Присутствует в модели конфигурации и реализации вкладки, но сейчас не отображается в активном потоке вкладки Overlay | Включено |
+| SelectString dialog | `TranslateSelectString` | Семейство native-tooltip | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation; prefers SelectString and falls back to SelectionDialogText. | Включено |
+| SelectIconString dialog | `TranslateSelectIconString` | Семейство native-tooltip | Keeps its own toggle and display mode and uses body-only structured tooltip presentation. | Включено |
 
 ## Поверхности quest и journal
 
-| Поверхность | Toggle в конфиге | Режимы | Примечания | Статус текущего релиза |
+| Поверхность | Переключатель конфигурации | Режимы | Заметки | Статус текущего релиза |
 | --- | --- | --- | --- | --- |
 | Journal | `TranslateJournal` | Семейство quest / native-window | Поверхность списка quest | Включено |
 | JournalDetail | `TranslateJournalDetail` | Семейство quest / native-window | Плотная компоновка основного блока; native-режим требует явного block reflow | Включено |
 | ToDoList | `TranslateToDoList` | Семейство quest / native-window | Трекер quest / список целей | Включено |
+| ToDo | `TranslateToDo` | Семейство quest / native-window | Instanced/FATE objective tracker. | Включено |
 | ScenarioTree | `TranslateScenarioTree` | Семейство quest / native-window | Трекер основного сценария | Включено |
-| JournalAccept | `TranslateJournalAccept` | Семейство quest / native-window | Окно принятия quest | Включено |
-| JournalResult | `TranslateJournalResult` | Семейство quest / native-window | Окно результата / завершения quest | Включено |
+| JournalAccept | `TranslateJournalAccept` | Семейство quest / native-window | Uses QuestPlate when a safe quest id is available and QuestPopupText fallback for live popup capture. | Включено |
+| JournalResult | `TranslateJournalResult` | Семейство quest / native-window | Prefers QuestPlate canonical lookup and falls back to QuestPopupText while missing rows are translated live. | Включено |
 | RecommendList | `TranslateRecommendList` | Семейство quest / native-window | Список рекомендаций | Включено |
-| AreaMap | `TranslateAreaMap` | Семейство quest / native-window | Текст quest внутри UI, связанного с картой | Включено |
+| AreaMap | `TranslateAreaMap` | Семейство quest / native-window | Quest text inside map-related quest UI; AreaMap and _NaviMap are string-array-backed. | Включено |
 
 ## Toast-поверхности
 
-| Поверхность | Toggle в конфиге | Режимы | Примечания | Статус текущего релиза |
+| Поверхность | Переключатель конфигурации | Режимы | Заметки | Статус текущего релиза |
 | --- | --- | --- | --- | --- |
 | WideText / Screen Info toast | `TranslateWideTextToast` | Семейство overlay | Большое информационное уведомление в центре экрана | Включено |
 | Error toast | `TranslateErrorToast` | Семейство overlay | Уведомления об ошибках и сбоях | Включено |
@@ -74,7 +55,7 @@ flowchart TD
 
 ## Поверхности игровых окон
 
-| Поверхность | Toggle в конфиге | Режимы | Примечания | Статус текущего релиза |
+| Поверхность | Переключатель конфигурации | Режимы | Заметки | Статус текущего релиза |
 | --- | --- | --- | --- | --- |
 | Character window | `TranslateCharacterWindow` | Семейство quest / native-window | DB-first runtime игровых окон | Включено |
 | Main Command | `TranslateMainCommandWindow` | Семейство quest / native-window | DB-first runtime игровых окон | Включено |
@@ -82,29 +63,17 @@ flowchart TD
 | HUD windows | `TranslateHudWindow` | Семейство quest / native-window | DB-first runtime игровых окон | Включено |
 | Operation Guide | `TranslateOperationGuideWindow` | Семейство quest / native-window | DB-first runtime игровых окон | Включено |
 | Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Семейство quest / native-window | DB-first runtime игровых окон | Включено |
+| Context Menu | `TranslateContextMenu` | Семейство native-tooltip | Dedicated DB-first row-chain runtime with row-local hover targets. | Включено |
+| Tooltip addon | `TranslateTooltipAddon` | Семейство native-tooltip | Dedicated DB-first Tooltip addon runtime; tooltip translation and swap use an anchored overlay on the live game tooltip. | Включено |
+| Action / item detail tooltips | `TranslateTooltips` | Семейство quest / native-window | Структурированный перевод tooltip принудительно отключается при запуске, пока `ActionDetail` / `ItemDetail` остаются нестабильными | Включено |
+
+## Поверхности мира и NamePlate
+
+| Поверхность | Переключатель конфигурации | Режимы | Заметки | Статус текущего релиза |
+| --- | --- | --- | --- | --- |
+| NamePlates | `TranslateNamePlates` | Гибридное семейство native / distance-aware | Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend. | Включено |
 
 ## Скрытые или временно ограниченные поверхности
 
-| Поверхность | Toggle в конфиге | Режимы | Примечания | Статус текущего релиза |
+| Поверхность | Переключатель конфигурации | Режимы | Заметки | Статус текущего релиза |
 | --- | --- | --- | --- | --- |
-| Action / item detail tooltips | `TranslateTooltips` | Семейство overlay | Структурированный перевод tooltip принудительно отключается при запуске, пока `ActionDetail` / `ItemDetail` остаются нестабильными | Временно отключено в релизе |
-| Yes/No dialog | `TranslateYesNoScreen` | Только toggle | Присутствует в модели конфигурации и реализации вкладки, но сейчас не отображается в активном потоке вкладки Overlay | Реализовано, но скрыто в текущем UI |
-| SelectString dialog | `TranslateSelectString` | Только toggle | Присутствует в модели конфигурации и реализации вкладки, но сейчас не отображается в активном потоке вкладки Overlay | Реализовано, но скрыто в текущем UI |
-| SelectOk dialog | `TranslateSelectOk` | Только toggle | Присутствует в модели конфигурации и реализации вкладки, но сейчас не отображается в активном потоке вкладки Overlay | Реализовано, но скрыто в текущем UI |
-
-## Эксплуатационные заметки
-
-| Тема | Поведение |
-| --- | --- |
-| Глобальная активация | Перевод не остаётся включённым, если выбранный движок не является валидным и не настроен для выбранного языка |
-| Загруженные файлы шрифтов | Для некоторых языков требуются загруженные файлы шрифтов, прежде чем перевод можно будет безопасно включить |
-| Языки только для overlay | Когда язык является overlay-only, режимы native replacement нормализуются в overlay/tooltip-представление |
-| Активация по поверхности | Каждое семейство всё ещё требует собственного toggle для каждой поверхности даже после включения глобального перевода |
-| Ограничения релиза | Поверхность может существовать в конфиге или коде, но при этом быть намеренно скрытой или принудительно отключённой в конкретном релизе |
-
-## Правила сопровождения
-
-- Обновляйте эту матрицу всякий раз, когда добавляется новая поверхность перевода.
-- Обновляйте эту матрицу всякий раз, когда поверхность меняет семейство режимов.
-- Обновляйте эту матрицу всякий раз, когда релиз временно отключает или скрывает функциональность.
-- Следует отдавать приоритет документированию реального runtime-поведения, а не только желаемого будущего поведения.
