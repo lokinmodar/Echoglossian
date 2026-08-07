@@ -47,7 +47,7 @@ public sealed class TranslationSurfaceDocsRunnerTests
             ["CutSceneSelectString"] = "CutSceneSelectStringMessage",
             ["YesNo"] = "SelectionDialogText",
             ["SelectOk"] = "SelectionDialogText",
-            ["SelectString"] = "SelectionDialogText",
+            ["SelectString"] = "SelectString; SelectionDialogText fallback",
             ["SelectIconString"] = "SelectionDialogText",
             ["Journal"] = "QuestPlate",
             ["JournalDetail"] = "QuestPlate",
