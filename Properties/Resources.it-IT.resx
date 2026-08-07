@@ -1163,7 +1163,7 @@
     <value>Applies to texture-backed complex-script text across hover tooltips and overlays.</value>
   </data>
   <data name="TranslateMainCommandWindow" xml:space="preserve">
-    <value>Translate Game Main Menu</value>
+      <value>Translate Game Main Menu</value>
   </data>
   <data name="TranslateActionMenuWindow" xml:space="preserve">
     <value>Translate ActionMenu Window</value>
