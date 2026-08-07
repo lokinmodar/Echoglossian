@@ -7,6 +7,25 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0807.1730`
+
+This package submits the current `v4-series` head after the follow-up
+MiniTalk native-layout regression fix and keeps the release focused on the
+remaining recycled-bubble height edge case.
+
+Submitted for `DalamudPluginsD17` publication on 2026-08-07.
+
+Highlights:
+
+- isolates the compact detached-container baseline preference to `_MiniTalk_`
+  so recycled oversized bubble slots stop stretching later native dialogue
+  balloons in `Native` and `Swap` mode
+- keeps the shared detached-container layout helper default unchanged for the
+  tooltip and toast-style callers that still need the historical larger
+  baseline behavior
+- adds regression coverage for both stale-primary and stale-secondary recycled
+  `_MiniTalk_` detached-container height paths
+
 ## Published Release `v4.2601.0806.0051`
 
 This package was published to the official Dalamud feed and focuses on
