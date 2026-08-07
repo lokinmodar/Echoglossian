@@ -38,6 +38,7 @@ internal static class TranslationSurfaceDocsRunner
         [
             RuntimeMapRenderer.RenderMarkdown(catalog),
             RuntimeMapRenderer.RenderJson(catalog),
+            .. catalog.Locales.Select(locale => SupportMatrixRenderer.Render(catalog, locale.Id)),
         ];
         GeneratedDocumentWriter.WriteAll(options.RepoRoot, documents);
 

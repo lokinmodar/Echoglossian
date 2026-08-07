@@ -5,106 +5,75 @@
 
 # Itzulpen-gainazalen euskarrien matrizea
 
-Dokumentu hau Echoglossianen erabiltzaileak konfigura ditzakeen itzulpen-gainazalen inbentario kanonikoa da.
-
-Eguneratuta mantendu behar da gainazal, modu edo release-murrizketa berri bat gehitzen edo kentzen den bakoitzean.
-
-## Aktibazio-fluxua
-
-```mermaid
-flowchart TD
-    A[Pluginaren konfigurazioa ireki] --> B[Helburuko hizkuntza aukeratu]
-    B --> C[Itzulpen-motorra aukeratu]
-    C --> D{Motorra konfiguratuta al dago?}
-    D -- Ez --> E[Itzulpena desgaituta geratzen da]
-    E --> E1[Dalamud jakinarazpen iraunkorra erakutsi]
-    E1 --> E2[Konfigurazioa ireki eta motorra zuzendu]
-    D -- Bai --> F{Hizkuntzak deskargatutako letra-tipo fitxategiak behar ditu?}
-    F -- Bai, fitxategiak falta dira --> G[Itzulpena desgaituta geratzen da]
-    G --> G1[Asset-en gida eta berriz egiaztatzeko aukera erakutsi]
-    F -- Ez edo fitxategiak badaude --> H[Itzulpen globala aktibatu]
-    H --> I[Zein gainazal itzuli aukeratu]
-    I --> J[Elkarrizketak eta overlay-ak]
-    I --> K[Quest eta journal gainazalak]
-    I --> L[Toasts]
-    I --> M[Jokoaren leihoak]
-    I --> N[Aukerazko tooltip familia berriro gaitzen denean]
-```
-
 ## Itzulpen-moduen familiak
 
-| Modu-familia | Moduak | Zertan erabiltzen da |
-| --- | --- | --- |
-| Quest / native-window familia | `Native UI Translation`, `Tooltip Translation Only`, `Native UI Translation With Original Tooltips` | Journal familiako gainazalak eta DB-first joko-leihoak |
-| Overlay familia | `Native UI Translation`, `Overlay Translation Only`, `Native UI Translation With Original Overlay` | Talk, BattleTalk, azpitituluak, MiniTalk, CutSceneSelectString eta toast familia |
+| Moduak | Modes |
+| --- | --- |
+| Native-tooltip family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
+| Overlay family | Native UI Translation; Overlay Translation Only; Native UI Translation With Original Overlay |
+| Native / distance-aware hybrid family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
+| Quest / native-window family | Native UI Translation; Tooltip Translation Only; Native UI Translation With Original Tooltips |
 
 ## Elkarrizketa eta overlay gainazalak
 
-| Gainazala | Konfigurazio-togglea | Moduak | Oharrak | Uneko release-aren egoera |
+| Gainazala | Konfigurazio-txandakagailua | Moduak | Oharrak | Uneko bertsioaren egoera |
 | --- | --- | --- | --- | --- |
-| Talk | `TranslateTalk` | Overlay familia | NPC izen itzuliak onartzen ditu `TranslateTalkNpcNames` bidez | Gaituta |
-| BattleTalk | `TranslateBattleTalk` | Overlay familia | NPC izen itzuliak onartzen ditu `TranslateBattleTalkNpcNames` bidez | Gaituta |
-| TalkSubtitle | `TranslateTalkSubtitle` | Overlay familia | Izenbururik gabeko overlay aurkezpena overlay modua aktibo dagoenean | Gaituta |
-| MiniTalk | `TranslateMiniTalk` | Overlay familia | Native gainazal txikia; testu luzeagoek native reflow zaindua behar dute oraindik | Gaituta |
-| CutSceneSelectString | `TranslateCutSceneSelectString` | Overlay familia | Galdera izenburu bihurtzen da eta aukerak gorputz testu overlay moduan | Gaituta |
+| Talk | `TranslateTalk` | Overlay family | Supports translated NPC names through TranslateTalkNpcNames. | Enabled |
+| BattleTalk | `TranslateBattleTalk` | Overlay family | Supports translated NPC names through TranslateBattleTalkNpcNames. | Enabled |
+| TalkSubtitle | `TranslateTalkSubtitle` | Overlay family | Uses titleless overlay presentation when overlay mode is active. | Enabled |
+| MiniTalk | `TranslateMiniTalk` | Overlay family | Small native surface; verbose text still requires careful native reflow. | Enabled |
+| CutSceneSelectString | `TranslateCutSceneSelectString` | Overlay family | Question becomes the title and options become the body in overlay mode. | Enabled |
+| Yes/No dialog | `TranslateYesNoScreen` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation. | Enabled |
+| SelectOk dialog | `TranslateSelectOk` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation. | Enabled |
+| SelectString dialog | `TranslateSelectString` | Native-tooltip family | Uses structured plugin tooltips instead of overlay windows and supports native, tooltip-only, and swap presentation; prefers SelectString and falls back to SelectionDialogText. | Enabled |
+| SelectIconString dialog | `TranslateSelectIconString` | Native-tooltip family | Keeps its own toggle and display mode and uses body-only structured tooltip presentation. | Enabled |
 
 ## Quest eta journal gainazalak
 
-| Gainazala | Konfigurazio-togglea | Moduak | Oharrak | Uneko release-aren egoera |
+| Gainazala | Konfigurazio-txandakagailua | Moduak | Oharrak | Uneko bertsioaren egoera |
 | --- | --- | --- | --- | --- |
-| Journal | `TranslateJournal` | Quest / native-window familia | Quest zerrendaren gainazala | Gaituta |
-| JournalDetail | `TranslateJournalDetail` | Quest / native-window familia | Gorputz diseinu trinkoa; native moduak block reflow esplizitua behar du | Gaituta |
-| ToDoList | `TranslateToDoList` | Quest / native-window familia | Quest jarraipena / helburuen zerrenda | Gaituta |
-| ScenarioTree | `TranslateScenarioTree` | Quest / native-window familia | Eszenatoki nagusiaren jarraipena | Gaituta |
-| JournalAccept | `TranslateJournalAccept` | Quest / native-window familia | Quest onartzeko leihoa | Gaituta |
-| JournalResult | `TranslateJournalResult` | Quest / native-window familia | Quest emaitza / amaiera leihoa | Gaituta |
-| RecommendList | `TranslateRecommendList` | Quest / native-window familia | Gomendioen zerrenda | Gaituta |
-| AreaMap | `TranslateAreaMap` | Quest / native-window familia | Maparekin lotutako quest UI barruko quest testua | Gaituta |
+| Journal | `TranslateJournal` | Quest / native-window family | Quest list surface. | Enabled |
+| JournalDetail | `TranslateJournalDetail` | Quest / native-window family | Dense body layout; native mode requires explicit block reflow. | Enabled |
+| ToDoList | `TranslateToDoList` | Quest / native-window family | Quest tracker / objective list. | Enabled |
+| ToDo | `TranslateToDo` | Quest / native-window family | Instanced/FATE objective tracker. | Enabled |
+| ScenarioTree | `TranslateScenarioTree` | Quest / native-window family | Main scenario tracker. | Enabled |
+| JournalAccept | `TranslateJournalAccept` | Quest / native-window family | Uses QuestPlate when a safe quest id is available and QuestPopupText fallback for live popup capture. | Enabled |
+| JournalResult | `TranslateJournalResult` | Quest / native-window family | Prefers QuestPlate canonical lookup and falls back to QuestPopupText while missing rows are translated live. | Enabled |
+| RecommendList | `TranslateRecommendList` | Quest / native-window family | Recommendation list. | Enabled |
+| AreaMap | `TranslateAreaMap` | Quest / native-window family | Quest text inside map-related quest UI; AreaMap and _NaviMap are string-array-backed. | Enabled |
 
 ## Toast gainazalak
 
-| Gainazala | Konfigurazio-togglea | Moduak | Oharrak | Uneko release-aren egoera |
+| Gainazala | Konfigurazio-txandakagailua | Moduak | Oharrak | Uneko bertsioaren egoera |
 | --- | --- | --- | --- | --- |
-| WideText / Screen Info toast | `TranslateWideTextToast` | Overlay familia | Pantailaren erdiko informazio-toast handia | Gaituta |
-| Error toast | `TranslateErrorToast` | Overlay familia | Errore edo hutsegite jakinarazpenak | Gaituta |
-| Area toast | `TranslateAreaToast` | Overlay familia | Eremu eta kokapen jakinarazpenak | Gaituta |
-| Class / Job change toast | `TranslateClassChangeToast` | Overlay familia | Class/job aldaketaren iragarkia | Gaituta |
-| Text gimmick hint | `TranslateTextGimmickHint` | Overlay familia | Gimmick/tutorial pistaren gainazala | Gaituta |
-| Quest toast | `TranslateQuestToast` | Overlay familia | Quest-ekin lotutako toast jakinarazpena | Gaituta |
+| WideText / Screen Info toast | `TranslateWideTextToast` | Overlay family | Large center-screen information toast. | Enabled |
+| Error toast | `TranslateErrorToast` | Overlay family | Error / failure notifications. | Enabled |
+| Area toast | `TranslateAreaToast` | Overlay family | Area and location notifications. | Enabled |
+| Class / Job change toast | `TranslateClassChangeToast` | Overlay family | Class/job change announcement. | Enabled |
+| Text gimmick hint | `TranslateTextGimmickHint` | Overlay family | Gimmick/tutorial hint surface. | Enabled |
+| Quest toast | `TranslateQuestToast` | Overlay family | Quest-related toast notification. | Enabled |
 
 ## Joko-leihoen gainazalak
 
-| Gainazala | Konfigurazio-togglea | Moduak | Oharrak | Uneko release-aren egoera |
+| Gainazala | Konfigurazio-txandakagailua | Moduak | Oharrak | Uneko bertsioaren egoera |
 | --- | --- | --- | --- | --- |
-| Character window | `TranslateCharacterWindow` | Quest / native-window familia | DB-first game-window runtime | Gaituta |
-| Main Command | `TranslateMainCommandWindow` | Quest / native-window familia | DB-first game-window runtime | Gaituta |
-| Action Menu | `TranslateActionMenuWindow` | Quest / native-window familia | DB-first game-window runtime | Gaituta |
-| HUD windows | `TranslateHudWindow` | Quest / native-window familia | DB-first game-window runtime | Gaituta |
-| Operation Guide | `TranslateOperationGuideWindow` | Quest / native-window familia | DB-first game-window runtime | Gaituta |
-| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest / native-window familia | DB-first game-window runtime | Gaituta |
+| Character window | `TranslateCharacterWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
+| Main Command | `TranslateMainCommandWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
+| Action Menu | `TranslateActionMenuWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
+| HUD windows | `TranslateHudWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
+| Operation Guide | `TranslateOperationGuideWindow` | Quest / native-window family | DB-first game-window runtime. | Enabled |
+| Addon Context Menu Title | `TranslateAddonContextMenuTitle` | Quest / native-window family | DB-first game-window runtime. | Enabled |
+| Context Menu | `TranslateContextMenu` | Native-tooltip family | Dedicated DB-first row-chain runtime with row-local hover targets. | Enabled |
+| Tooltip addon | `TranslateTooltipAddon` | Native-tooltip family | Dedicated DB-first Tooltip addon runtime; tooltip translation and swap use an anchored overlay on the live game tooltip. | Enabled |
+| Action / item detail tooltips | `TranslateTooltips` | Quest / native-window family | DB-first structured tooltip runtime; defaults to Plugin Tooltip mode, while native writes are opt-in and guarded to plain-text-safe nodes. | Enabled |
+
+## Mundu eta NamePlate gainazalak
+
+| Gainazala | Konfigurazio-txandakagailua | Moduak | Oharrak | Uneko bertsioaren egoera |
+| --- | --- | --- | --- | --- |
+| NamePlates | `TranslateNamePlates` | Native / distance-aware hybrid family | Standard languages keep the native backend; overlay-only languages keep the native nameplate original and render the translation through the distance-aware overlay backend. | Enabled |
 
 ## Ezkutuko edo aldi baterako mugatutako gainazalak
 
-| Gainazala | Konfigurazio-togglea | Moduak | Oharrak | Uneko release-aren egoera |
+| Gainazala | Konfigurazio-txandakagailua | Moduak | Oharrak | Uneko bertsioaren egoera |
 | --- | --- | --- | --- | --- |
-| Action / item detail tooltips | `TranslateTooltips` | Overlay familia | Egituratutako tooltip itzulpena indarrez desgaitzen da abioan, `ActionDetail` / `ItemDetail` oraindik ezegonkorrak direlako | Aldi baterako desgaitua release honetan |
-| Yes/No dialog | `TranslateYesNoScreen` | Toggle hutsa | Konfigurazio ereduan eta tab inplementazioan dago, baina gaur egun ez dago ikusgai overlay tab aktiboaren fluxuan | Inplementatuta baina ezkutuan uneko UIan |
-| SelectString dialog | `TranslateSelectString` | Toggle hutsa | Konfigurazio ereduan eta tab inplementazioan dago, baina gaur egun ez dago ikusgai overlay tab aktiboaren fluxuan | Inplementatuta baina ezkutuan uneko UIan |
-| SelectOk dialog | `TranslateSelectOk` | Toggle hutsa | Konfigurazio ereduan eta tab inplementazioan dago, baina gaur egun ez dago ikusgai overlay tab aktiboaren fluxuan | Inplementatuta baina ezkutuan uneko UIan |
-
-## Ohar operatiboak
-
-| Gaia | Portaera |
-| --- | --- |
-| Aktibazio globala | Itzulpena ez da aktibo geratzen hautatutako motorra baliozkoa eta hautatutako hizkuntzarako konfiguratuta ez badago |
-| Deskargatutako letra-tipo fitxategiak | Hizkuntza batzuek letra-tipo fitxategi osagarriak behar dituzte itzulpena segurtasunez aktibatu aurretik |
-| Overlay-only hizkuntzak | Hizkuntza overlay-only bada, native replacement moduak overlay/tooltip aurkezpenera normalizatzen dira |
-| Gainazal-mailako aktibazioa | Familia bakoitzak bere toggle propioa behar du gainazal bakoitzeko, nahiz eta itzulpen globala aktibatuta egon |
-| Release gating | Gainazal bat konfigurazioan edo kodean egon daiteke, baina release jakin batean nahita ezkutatuta edo indarrez desgaituta egon |
-
-## Mantentze-arauak
-
-- Eguneratu matrize hau itzulpen-gainazal berri bat gehitzen den bakoitzean.
-- Eguneratu matrize hau gainazal batek modu-familia aldatzen duen bakoitzean.
-- Eguneratu matrize hau release batek funtzio bat aldi baterako desgaitzen edo ezkutatzen duen bakoitzean.
-- Lehenetsi benetako runtime portaera dokumentatzea etorkizunean nahiko litzatekeen portaera ideal baten aurretik.
