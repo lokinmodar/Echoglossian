@@ -34,6 +34,24 @@ public sealed class TranslationSurfaceDocsRunnerTests
     }
 
     /// <summary>
+    /// Ensures full generation returns both the runtime map and localized support matrices.
+    /// </summary>
+    [Fact]
+    public void Generate_WhenValidateOnlyIsFalse_ReturnsRuntimeMapAndMatrices()
+    {
+        string repoRoot = TestRepositoryPaths.ResolveRepoRoot();
+        var options = new GenerationOptions(
+            RepoRoot: repoRoot,
+            CatalogPath: Path.Combine(repoRoot, "docs", "translation-surface-catalog.json"),
+            ValidateOnly: false);
+
+        IReadOnlyList<GeneratedDocument> generated = TranslationSurfaceDocsRunner.Generate(options);
+
+        generated.Should().Contain(document => document.RelativePath == "docs/translation-surface-runtime-map.md");
+        generated.Should().Contain(document => document.RelativePath == "docs/translation-surface-support-matrix.pt-BR.md");
+    }
+
+    /// <summary>
     /// Ensures reviewed persistence entities are retained in the canonical catalog.
     /// </summary>
     [Fact]
