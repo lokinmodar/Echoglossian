@@ -606,6 +606,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           textNode,
           replacementText,
           allowWidthGrowth: true,
+          preferCompactDetachedBaselineForHeight: true,
           additionalWrapWidth: this.ResolveMiniTalkAdditionalWrapWidth(
               addon,
               textNode));
