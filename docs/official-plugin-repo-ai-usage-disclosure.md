@@ -40,6 +40,22 @@ For this repo, the expected workflow is:
 4. keep the disclosure concise but specific enough that a reviewer can tell how
    the work was produced and validated
 
+## Repo Default For Supervised Release Work
+
+For Echoglossian, treat the workflow as `Assist`, not `Auto`, when the human:
+
+- reported or scoped the issue being fixed
+- reviewed or approved the implementation or release plan
+- retained the ability to stop or redirect the work at each step
+- reviewed the resulting diff
+- performed local, in-game, or release-gate validation before submission
+
+That is still human-led work even when the agent executed many intermediate
+steps.
+
+Use `Auto` only when the agent truly operated with minimal human direction and
+minimal human review before the official submission.
+
 ## Important Clarification For Echoglossian
 
 Echoglossian can call machine-translation and LLM providers at runtime as part
@@ -70,6 +86,9 @@ Human verification:
 - ran local build and tests
 - performed in-game verification where applicable
 ```
+
+If the human also controlled issue triage, plan approval, or release approval,
+say so explicitly instead of escalating the disclosure level to `Auto`.
 
 ## Asset Disclosure Reminder
 

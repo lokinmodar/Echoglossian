@@ -38,6 +38,10 @@ has merged.
 4. Commit and push the release preparation on the issue branch.
 5. Open a ready pull request against `v4-series` with a high-level change
    summary, validation results, related issues, and the required AI disclosure.
+   For this repo, do not default to `Auto` when the user reported the issue,
+   reviewed or approved the plan, reviewed the resulting changes, or retained
+   QA control through local and in-game validation. That workflow remains
+   human-led and should normally be disclosed as `Assist`.
 6. Wait for required checks and merge the pull request. GitHub does not permit
    authors to approve their own pull requests; use the repository's permitted
    merge path after checks pass rather than representing self-review as an
@@ -87,6 +91,13 @@ In `C:\Dante\_dalamud\DalamudPluginsD17`:
 The official pull request must include the disclosure defined in
 `docs/official-plugin-repo-ai-usage-disclosure.md`. Runtime-generated text
 textures are not AI-generated repository assets.
+
+When choosing the official disclosure level:
+
+- default to `Assist` when the user is still directing scope, approving
+  implementation or release steps, reviewing diffs, and performing QA
+- do not use `Auto` unless the agent truly acted with minimal human direction
+  and minimal human review before submission
 
 ## 5. Finish Publication
 
