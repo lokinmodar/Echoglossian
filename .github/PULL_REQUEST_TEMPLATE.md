@@ -22,10 +22,10 @@ Select one when applicable:
 - [ ] `Copilot` — AI did most of the writing while the human planned and reviewed
 - [ ] `Auto` — AI acted mostly autonomously with minimal human direction
 
-For Echoglossian release and submission work, do not choose `Auto` when the
-human reported or scoped the issue, approved the plan or release steps,
-reviewed the diff, or performed local or in-game QA before submission. That
-workflow is still `Assist`.
+For Echoglossian release and submission work, this note does not mean every PR
+requires disclosure. When disclosure is required, do not choose `Auto` solely
+because an agent executed many intermediate steps under human direction,
+approval, review, or QA.
 
 If you selected one of the levels above, describe the scope briefly:
 
