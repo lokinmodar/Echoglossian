@@ -8,12 +8,37 @@ Keep Echoglossian's localization build safe for:
 - Plogon / `DalamudPluginsD17`
 - environments without Visual Studio
 
+For the incident that established these rules, see the
+[August 2026 localization post-mortem](localization-crowdin-runtime-postmortem-2026-08.md).
+
 ## Source Of Truth
 
 - `Properties/Resources.resx` defines the strongly typed resource keys.
-- `Properties/Resources.*.resx` store localized values used at runtime.
+- Crowdin is the source of truth for translated values after the one-time
+  repository import.
+- `Properties/Resources.*.resx` are Crowdin outputs that store only translated,
+  approved values used at runtime. They are intentionally partial; missing keys
+  fall back to `Resources.resx`.
 - `MultilingualResources/*.xlf` remain optional localization assets and are not
   required for the plugin build to succeed.
+
+## Crowdin Safety Invariants
+
+- Keep the export mapping at
+  `Properties/Resources.%locale%.resx`. `%locale%` is required to distinguish
+  locales such as `pt-BR` and `pt-PT`; do not replace it with a two-letter
+  language placeholder.
+- Keep `skipUntranslatedStrings`, `exportTranslatedOnly`, and
+  `exportApprovedOnly` enabled in the effective Crowdin project configuration.
+- **One-time translation import after the branch is connected** may be used to
+  bootstrap an integration from known-good repository translations.
+- Keep **Always import new translations from the repository** disabled after
+  bootstrap.
+- Do not use **Sync Translations to Crowdin** during routine synchronization.
+  Use normal source synchronization so generated Crowdin output cannot become
+  translation input in a feedback loop.
+- Recheck these settings after reconnecting the GitHub integration or changing
+  its branch configuration.
 
 ## Locale Naming Rules
 
@@ -32,13 +57,20 @@ Current rule set:
 
 Runtime culture normalization now treats:
 
+- `ca` as `ca-ES`
+- `nl` as `nl-NL`
 - `pt` as `pt-PT`
 - `pt-PT` as `pt-PT`
 - `pt-BR` as its own separate locale
 
 `DefaultPluginCulture` is normalized on startup and when configuration is
-saved, so persisted plugin culture values converge to the locale-specific form
-used by the current runtime.
+saved. The normalized `CultureInfo` must be assigned to `Resources.Culture`
+before the first plugin UI or notification lookup; relying on Dalamud's thread
+UI culture can silently select the English root resource.
+
+When a target locale is added or renamed, update its normalization mapping and
+add a test that loads one translated key from the exact resource set without
+parent fallback.
 
 ## Build-Safe Rule
 
@@ -84,23 +116,39 @@ Refresh the generated support matrices and the runtime map at
 .\scripts\update-translation-surface-docs.ps1
 ```
 
-1. Add or update keys in `Properties/Resources.resx`.
-2. Add localized values in the corresponding `Properties/Resources.*.resx`
-   files.
-3. If you add or rename a runtime locale, also update the docs-site locale map
+1. Add or update English keys in `Properties/Resources.resx` only.
+2. Synchronize the source file to Crowdin. Let translators update localized
+   values there, then export approved translations to the generated branch.
+3. Review the generated PR and reject it if:
+
+   - a localized file becomes a near-complete copy of the English source
+   - localized values become source-equivalent in bulk
+   - multiple locale files become identical
+   - an unexpected locale or two-letter resource filename appears
+   - approved phrase counts or localized entry counts regress unexpectedly
+   - a supposed recovery contains only formatting changes
+4. Spot-check an established translation for every changed locale and confirm
+   that `Resources.resx` was not changed by the translation export.
+5. If you add or rename a runtime locale, also update the docs-site locale map
    and validate it:
 
 ```powershell
 node .\Echoglossian.Docs\scripts\check-locales.mjs
 ```
 
-4. Build normally:
+6. Build and run the main tests:
 
 ```powershell
 dotnet build Echoglossian.sln -c Debug --no-restore
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build
 ```
 
-5. Commit the updated `.resx` files and the generated
+7. Run the Plogon-like verification and confirm that every expected locale has
+   a matching `<locale>/Echoglossian.resources.dll` satellite assembly.
+8. Verify one known translated lookup and one missing-key English fallback. If
+   runtime culture behavior changed, also verify one user-visible label or
+   notification in-game.
+9. Commit the updated `.resx` files and the generated
    `Properties/Resources.Designer.cs`.
 
 ## Local Plogon-Like Verification
