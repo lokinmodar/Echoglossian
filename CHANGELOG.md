@@ -7,13 +7,15 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0807.1730`
+## Published Release `v4.2601.0807.1730`
 
-This package submits the current `v4-series` head after the follow-up
+This package was published to the official Dalamud feed after the follow-up
 MiniTalk native-layout regression fix and keeps the release focused on the
 remaining recycled-bubble height edge case.
 
-Submitted for `DalamudPluginsD17` publication on 2026-08-07.
+Published in `DalamudPluginsD17` via
+[PR #9163](https://github.com/goatcorp/DalamudPluginsD17/pull/9163) on
+2026-08-08.
 
 Highlights:
 

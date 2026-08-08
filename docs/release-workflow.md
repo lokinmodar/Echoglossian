@@ -38,6 +38,9 @@ has merged.
 4. Commit and push the release preparation on the issue branch.
 5. Open a ready pull request against `v4-series` with a high-level change
    summary, validation results, related issues, and the required AI disclosure.
+   This does not mean every release PR requires disclosure. When disclosure is
+   required by policy, do not overstate autonomy solely because an agent
+   executed many intermediate steps under human direction and review.
 6. Wait for required checks and merge the pull request. GitHub does not permit
    authors to approve their own pull requests; use the repository's permitted
    merge path after checks pass rather than representing self-review as an
@@ -87,6 +90,15 @@ In `C:\Dante\_dalamud\DalamudPluginsD17`:
 The official pull request must include the disclosure defined in
 `docs/official-plugin-repo-ai-usage-disclosure.md`. Runtime-generated text
 textures are not AI-generated repository assets.
+
+When choosing the official disclosure level:
+
+- first determine whether disclosure is required at all under the official
+  policy
+- if disclosure is required, choose the lowest accurate level instead of
+  overstating autonomy
+- do not use `Auto` unless the agent truly acted with minimal human direction
+  and minimal human review before submission
 
 ## 5. Finish Publication
 
