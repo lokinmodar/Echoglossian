@@ -188,7 +188,8 @@ public partial class Echoglossian : IDalamudPlugin
         normalizedPluginCulture,
         StringComparison.Ordinal);
     this.configuration.DefaultPluginCulture = normalizedPluginCulture;
-    this.cultureInfo = new CultureInfo(normalizedPluginCulture);
+    this.cultureInfo = PluginCultureLocaleHelper.ApplyPersistedCultureName(
+        normalizedPluginCulture);
     if (persistedConfig == null)
     {
       PluginInterface.SavePluginConfig(this.configuration);
