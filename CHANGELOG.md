@@ -7,12 +7,17 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0809.0046`
+## Published Release `v4.2601.0809.0046`
 
-This package submits the runtime localization correction merged through
+This package was published to the official Dalamud feed with the runtime
+localization correction merged through
 [PR #260](https://github.com/lokinmodar/Echoglossian/pull/260). It keeps the
 locale-specific resource naming introduced for Crowdin while ensuring the
 plugin actually loads the locale selected in its configuration.
+
+Published in `DalamudPluginsD17` via
+[PR #9177](https://github.com/goatcorp/DalamudPluginsD17/pull/9177) on
+2026-08-09.
 
 Highlights:
 
@@ -287,6 +292,8 @@ repository workflow.
 | 2026-07-19 | [PR #9031](https://github.com/goatcorp/DalamudPluginsD17/pull/9031) `v4.2601.0718.2006` | OpenRouter live-model refresh and hosted preview infrastructure follow-up |
 | 2026-08-05 | [PR #9125](https://github.com/goatcorp/DalamudPluginsD17/pull/9125) `v4.2601.0802.2355` | broad native UI runtime expansion across selection dialogs, tooltips, quest surfaces, nameplates, toasts, persistence, and diagnostics |
 | 2026-08-06 | [PR #9151](https://github.com/goatcorp/DalamudPluginsD17/pull/9151) `v4.2601.0806.0051` | MiniTalk native bubble stabilization follow-up, ActionDetail and ItemDetail overlay control activation, and localized plugin-label sync |
+| 2026-08-08 | [PR #9163](https://github.com/goatcorp/DalamudPluginsD17/pull/9163) `v4.2601.0807.1730` | MiniTalk recycled-bubble height stabilization follow-up |
+| 2026-08-09 | [PR #9177](https://github.com/goatcorp/DalamudPluginsD17/pull/9177) `v4.2601.0809.0046` | plugin UI culture application, locale-specific resource loading, and localization guardrails |
 
 ## Pre-Official History
 
