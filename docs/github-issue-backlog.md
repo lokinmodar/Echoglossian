@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-08-08
+Snapshot date: 2026-08-09
 
 This document is the operational snapshot for open issues in
 [`lokinmodar/Echoglossian`](https://github.com/lokinmodar/Echoglossian/issues).
@@ -9,21 +9,22 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 
 ## Published Release Baseline
 
-- Release: [`v4.2601.0807.1730`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0807.1730)
-- Product commit: `9a39a2be87c3a376448f2967ccc5225c63b1e69c`
-- Official submission: [`goatcorp/DalamudPluginsD17#9163`](https://github.com/goatcorp/DalamudPluginsD17/pull/9163)
-- D17 status: approved and merged on 2026-08-08
-- D17 merge commit: `12ca53c2095b4be958d61e065565131723c0e75e`
+- Release: [`v4.2601.0809.0046`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0809.0046)
+- Product commit: `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
+- Official submission: [`goatcorp/DalamudPluginsD17#9177`](https://github.com/goatcorp/DalamudPluginsD17/pull/9177)
+- D17 status: approved and merged on 2026-08-09
+- D17 merge commit: `1a033922f52afd74640c620bcc1145be8e8a7cbe`
 - Open issues after post-publication triage: 20
 - Open issues at the current audit head: 20
 - Focused open issues besides the living tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12): 19
 
 ## Current `v4-series` Delta
 
-- Audit head: `origin/v4-series` at `9a39a2be87c3a376448f2967ccc5225c63b1e69c`
-- Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0807.1730` at `9a39a2be87c3a376448f2967ccc5225c63b1e69c`
+- Audit head: `origin/v4-series` at `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
+- Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0809.0046` at `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
 - The audit head currently matches the latest published runtime baseline; there are no newer `v4-series` commits beyond this published release.
 - Issue [#12](https://github.com/lokinmodar/Echoglossian/issues/12) remains the living known-issues tracker and should stay aligned with this document whenever focused issue state changes materially.
+- Publication of `v4.2601.0809.0046` completed the plugin UI culture-loading correction from [PR #260](https://github.com/lokinmodar/Echoglossian/pull/260), including explicit locale selection and locale-specific resource fallback safeguards.
 - Publication of `v4.2601.0807.1730` completed the recycled `_MiniTalk` follow-up for [#246](https://github.com/lokinmodar/Echoglossian/issues/246).
 - New focused prompt and glossary behavior work is currently tracked in [#252](https://github.com/lokinmodar/Echoglossian/issues/252).
 - New performance and persistence architecture work is now tracked in [#258](https://github.com/lokinmodar/Echoglossian/issues/258).
