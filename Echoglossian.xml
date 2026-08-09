@@ -24086,6 +24086,19 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ResolveBubbleKey(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.IntPtr)">
+            <summary>
+                Resolves one stable MiniTalk bubble key from the owning component slot
+                when available so pooled-slot reuse restores the prior dirty baseline
+                before any new source or text-node address is captured.
+            </summary>
+            <param name="textNode">The visible MiniTalk text node.</param>
+            <param name="fallbackBubbleKey">
+                The fallback key to use when no owning component container can be
+                resolved.
+            </param>
+            <returns>The stable key used for native and overlay state.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryReadCurrentSource(System.IntPtr,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
             <summary>
                 Reads the logical source text from the live MiniTalk addon, mapping the
@@ -29402,7 +29415,7 @@
                 UI to wrap multi-line text and keep nearby background nodes in sync.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.CaptureLayoutSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.CaptureLayoutSnapshot(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean)">
             <summary>
                 Captures the current text-node and container sizing so a later native
                 replacement can grow the layout using inferred padding instead of fixed
@@ -29417,6 +29430,11 @@
             </param>
             <param name="anchoredXNode">
                 An optional sibling node whose X position is anchored to the text width.
+            </param>
+            <param name="preferCompactWrappedHeight">
+                Whether wrapped-node height measurement should prefer the current draw
+                height over a larger live node height when callers know the live
+                extent may still reflect stale plugin-applied growth.
             </param>
             <returns>The captured layout snapshot.</returns>
         </member>
@@ -29435,7 +29453,7 @@
             </param>
             <returns>The preferred wrap width to preserve.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16,System.Boolean,System.Boolean,System.Byte[])">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.UInt16,System.Boolean,System.Boolean,System.Byte[],System.Boolean)">
             <summary>
                 Applies translated text to a node using the existing wrap width and the
                 minimum multiline flags required for the game to recompute size.
@@ -29458,9 +29476,14 @@
                 The optional rich SeString payload to write after layout flags and
                 wrap width are prepared.
             </param>
+            <param name="preferCompactWrappedHeight">
+                Whether wrapped-node height measurement should prefer the current draw
+                height over a larger live node height when callers know the live
+                extent may still reflect stale plugin-applied growth.
+            </param>
             <returns>The measured size after the text replacement.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean,System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean,System.Int32,System.Int32,System.Boolean,System.Boolean)">
             <summary>
                 Resizes the supplied container nodes using the text delta captured in a
                 pre-replacement layout snapshot.
@@ -29498,6 +29521,11 @@
                 prefer the more compact of the preserved container baselines instead
                 of preserving the largest detached extent.
             </param>
+            <param name="preserveHorizontalGeometry">
+                Whether horizontal geometry such as sibling anchor X positions and
+                secondary-container widths must remain fixed to the captured baseline
+                instead of being recomputed from the resized text width.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean,System.Boolean)">
             <summary>
@@ -29527,7 +29555,7 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Byte[])">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String,System.Boolean,System.Boolean,System.UInt16,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Byte[],System.Boolean)">
             <summary>
                 Applies translated text to a node and grows its wrapper chain plus the
                 nearest nine-grid background using inferred padding from the current
@@ -29567,6 +29595,11 @@
             <param name="replacementPayload">
                 The optional rich SeString payload to write while keeping the same
                 replacement-text measurement and layout flow.
+            </param>
+            <param name="preferCompactWrappedHeight">
+                Whether wrapped-node height measurement should prefer the current draw
+                height over a larger live node height when callers know the live
+                extent may still reflect stale plugin-applied growth.
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveReplacementWrapWidth(System.UInt16,System.UInt16,System.Boolean)">
@@ -29619,7 +29652,7 @@
             </param>
             <returns>The width that should remain on the text node.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(System.UInt16,System.UInt16,System.UInt16,System.UInt16,FFXIVClientStructs.FFXIV.Component.GUI.TextFlags,System.Boolean)">
             <summary>
                 Resolves the effective measured text extent by combining the live node
                 size with the text draw size when wrapped text still reports a stale
@@ -29630,6 +29663,11 @@
             <param name="drawWidth">The measured text draw width.</param>
             <param name="drawHeight">The measured text draw height.</param>
             <param name="textFlags">The live text flags.</param>
+            <param name="preferCompactWrappedHeight">
+                Whether wrapped-node height measurement should prefer the current draw
+                height over a larger live node height when callers know the live
+                extent may still reflect stale plugin-applied growth.
+            </param>
             <returns>The effective measured width and height.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.SplitMeasurementLines(System.String)">
@@ -29719,7 +29757,7 @@
                 background.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryMeasureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16@,System.UInt16@)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.TryMeasureTextNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.UInt16@,System.UInt16@,System.Boolean)">
             <summary>
                 Measures the current node size using the live node dimensions first and
                 falling back to text draw size when the node has not been sized yet.
@@ -29727,6 +29765,11 @@
             <param name="textNode">The text node to measure.</param>
             <param name="width">Receives the measured width.</param>
             <param name="height">Receives the measured height.</param>
+            <param name="preferCompactWrappedHeight">
+                Whether wrapped-node height measurement should prefer the current draw
+                height over a larger live node height when callers know the live
+                extent may still reflect stale plugin-applied growth.
+            </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.FindNearestAncestorComponentNode(FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*)">
             <summary>
