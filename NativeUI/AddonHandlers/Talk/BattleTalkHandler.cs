@@ -829,14 +829,19 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
     var liveText = MemoryHelper.ReadSeStringAsString(
         out _,
         (nint)textNode->NodeText.StringPtr.Value);
-    NativeMutationOwnership.TryRestore(
+    NativeMutationOwnership.TryRestoreWithLayoutFallback(
         liveText,
         replacementText,
         originalText,
+        restoreText,
         restoredText => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
             layoutSnapshot,
             restoredText,
-            restoreText));
+            restoreText),
+        () => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+            layoutSnapshot,
+            originalText,
+            restoreText: false));
   }
 
   /// <summary>
@@ -1949,9 +1954,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         backgroundNode,
         timerNode);
     var preferredWrapWidth = NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(
-        textNode,
-        parentNode,
-        backgroundNode);
+        textNode);
     var resizeResult = NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
@@ -1962,7 +1965,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         parentNode,
         backgroundNode,
         timerNode,
-        allowWidthGrowth: false);
+        allowWidthGrowth: false,
+        preserveHorizontalGeometry: true);
 
     lock (this.stateGate)
     {

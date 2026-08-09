@@ -51,6 +51,25 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
+    ///     Ensures wrapped native measurement does not keep a stale translated
+    ///     high-water height when the live node was already left oversized by a
+    ///     previous apply.
+    /// </summary>
+    [Fact]
+    public void ResolveMeasuredTextExtent_IgnoresStaleWrappedLiveHeight_WhenDrawHeightIsShorter()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(
+            liveWidth: 392,
+            liveHeight: 118,
+            drawWidth: 368,
+            drawHeight: 42,
+            textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize);
+
+        Assert.Equal((ushort)392, resolved.Width);
+        Assert.Equal((ushort)42, resolved.Height);
+    }
+
+    /// <summary>
     ///     Ensures pre-apply native width measurement honors explicit tooltip
     ///     line breaks instead of treating the whole payload as one unwrapped
     ///     line.

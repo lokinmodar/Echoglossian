@@ -24086,6 +24086,19 @@
                 <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.ResolveBubbleKey(FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.IntPtr)">
+            <summary>
+                Resolves one stable MiniTalk bubble key from the owning component slot
+                when available so pooled-slot reuse restores the prior dirty baseline
+                before any new source or text-node address is captured.
+            </summary>
+            <param name="textNode">The visible MiniTalk text node.</param>
+            <param name="fallbackBubbleKey">
+                The fallback key to use when no owning component container can be
+                resolved.
+            </param>
+            <returns>The stable key used for native and overlay state.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.SingleText.MiniTalkHandler.TryReadCurrentSource(System.IntPtr,FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode*,System.String@)">
             <summary>
                 Reads the logical source text from the live MiniTalk addon, mapping the
@@ -29460,7 +29473,7 @@
             </param>
             <returns>The measured size after the text replacement.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean,System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.ResizeFromSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,Echoglossian.NativeUI.Helpers.NativeTextNodeResizeResult,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode*,System.Boolean,System.Boolean,System.Int32,System.Int32,System.Boolean,System.Boolean)">
             <summary>
                 Resizes the supplied container nodes using the text delta captured in a
                 pre-replacement layout snapshot.
@@ -29497,6 +29510,11 @@
                 Whether detached-container height synchronization should explicitly
                 prefer the more compact of the preserved container baselines instead
                 of preserving the largest detached extent.
+            </param>
+            <param name="preserveHorizontalGeometry">
+                Whether horizontal geometry such as sibling anchor X positions and
+                secondary-container widths must remain fixed to the captured baseline
+                instead of being recomputed from the resized text width.
             </param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(Echoglossian.NativeUI.Helpers.NativeTextNodeLayoutSnapshot,System.String,System.Boolean,System.Boolean)">

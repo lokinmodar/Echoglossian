@@ -257,6 +257,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     prefer the more compact of the preserved container baselines instead
   ///     of preserving the largest detached extent.
   /// </param>
+  /// <param name="preserveHorizontalGeometry">
+  ///     Whether horizontal geometry such as sibling anchor X positions and
+  ///     secondary-container widths must remain fixed to the captured baseline
+  ///     instead of being recomputed from the resized text width.
+  /// </param>
   public static void ResizeFromSnapshot(
       NativeTextNodeLayoutSnapshot snapshot,
       NativeTextNodeResizeResult resizeResult,
@@ -267,7 +272,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       bool restoreHorizontalCentering = true,
       int minimumSecondaryHorizontalPadding = 0,
       int minimumSecondaryVerticalPadding = 0,
-      bool preferCompactDetachedBaselineForHeight = false)
+      bool preferCompactDetachedBaselineForHeight = false,
+      bool preserveHorizontalGeometry = false)
   {
     var childWidth = resizeResult.Width;
     var childHeight = resizeResult.Height;
@@ -378,7 +384,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       }
     }
 
-    if (anchoredXNode != null)
+    if (!preserveHorizontalGeometry &&
+        anchoredXNode != null)
     {
       anchoredXNode->SetXShort(
           (short)Math.Max(short.MinValue, Math.Min(
@@ -386,7 +393,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
               childWidth + snapshot.AnchoredXOffset)));
     }
 
-    if (secondaryContainerNode != null &&
+    if (!preserveHorizontalGeometry &&
+        secondaryContainerNode != null &&
         anchoredXNode != null &&
         snapshot.AnchoredXWidth > 0)
     {
@@ -821,7 +829,10 @@ internal static unsafe class NativeTextNodeLayoutHelper
     if (prefersDrawSize)
     {
       width = Math.Max(width, drawWidth);
-      height = Math.Max(height, drawHeight);
+      if (drawHeight > 0)
+      {
+        height = drawHeight;
+      }
     }
 
     if (width == 0)
