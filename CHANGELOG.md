@@ -7,6 +7,29 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0809.2000`
+
+This package is prepared for official Dalamud submission from the current
+`v4-series` head after [PR #265](https://github.com/lokinmodar/Echoglossian/pull/265).
+It focuses on the `_BattleTalk` native-layout restore fix, the remaining
+`_MiniTalk` pooled-background baseline cleanup, and the follow-up localization
+string corrections that shipped with that stabilization pass.
+
+Official `DalamudPluginsD17` submission is pending.
+
+Highlights:
+
+- restores clean native `_BattleTalk` and `_MiniTalk` baselines after plugin
+  ownership ends, preventing cumulative stale translated dimensions while
+  preserving game-owned horizontal geometry in `_BattleTalk`
+- scopes compact wrapped-height measurement to the known stale-layout reuse
+  paths in `_BattleTalk` and `_MiniTalk`, keeping the shared tooltip and
+  toast-style helper behavior unchanged for legitimate game-owned padding
+- aligns the plugin UI dialogue-family source strings and unifies the
+  `Translation Display Mode` label across tabs and localized resources
+- includes regression coverage for the helper default height policy plus the
+  explicit compact wrapped-height opt-in used by `_BattleTalk` and `_MiniTalk`
+
 ## Published Release `v4.2601.0809.0046`
 
 This package was published to the official Dalamud feed with the runtime
