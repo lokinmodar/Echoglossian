@@ -21,7 +21,7 @@
     <VersionMinor>$(VersionYear)$(VersionSeries)</VersionMinor>
     <!-- Release pattern: 4.yy01.mmdd.HHmm. Keep year, patch, and revision manual so release numbering only changes when explicitly updated. -->
     <VersionPatch Condition="'$(VersionPatch)' == ''">0809</VersionPatch>
-    <VersionRevision Condition="'$(VersionRevision)' == ''">0046</VersionRevision>
+    <VersionRevision Condition="'$(VersionRevision)' == ''">2000</VersionRevision>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionPatch).$(VersionRevision)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
