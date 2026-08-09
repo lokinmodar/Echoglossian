@@ -7,6 +7,24 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0809.0046`
+
+This package submits the runtime localization correction merged through
+[PR #260](https://github.com/lokinmodar/Echoglossian/pull/260). It keeps the
+locale-specific resource naming introduced for Crowdin while ensuring the
+plugin actually loads the locale selected in its configuration.
+
+Highlights:
+
+- applies the normalized plugin UI culture before the first strongly typed
+  resource lookup, preventing Dalamud's thread culture from silently falling
+  back to English
+- preserves distinct locale-specific resources such as `pt-BR`, `pt-PT`, and
+  `fr-FR`, and adds the missing `ca -> ca-ES` and `nl -> nl-NL` normalization
+  mappings
+- adds exact-resource-set regression coverage and permanent Crowdin review,
+  synchronization, recovery, and rollback guardrails
+
 ## Published Release `v4.2601.0807.1730`
 
 This package was published to the official Dalamud feed after the follow-up
