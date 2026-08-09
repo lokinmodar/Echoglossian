@@ -1952,13 +1952,15 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
         textNode,
         parentNode,
         backgroundNode,
-        timerNode);
+        timerNode,
+        preferCompactWrappedHeight: true);
     var preferredWrapWidth = NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(
         textNode);
     var resizeResult = NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
-        preferredWrapWidth);
+        preferredWrapWidth,
+        preferCompactWrappedHeight: true);
     NativeTextNodeLayoutHelper.ResizeFromSnapshot(
         layoutSnapshot,
         resizeResult,

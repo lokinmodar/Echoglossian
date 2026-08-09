@@ -34,6 +34,25 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
+    ///     Ensures wrapped text measurement preserves the larger live height by
+    ///     default when it may represent intentional game-owned padding rather
+    ///     than a stale plugin-applied extent.
+    /// </summary>
+    [Fact]
+    public void ResolveMeasuredTextExtent_PreservesWrappedLiveHeightByDefault_WhenItExceedsDrawHeight()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(
+            liveWidth: 392,
+            liveHeight: 118,
+            drawWidth: 368,
+            drawHeight: 42,
+            textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize);
+
+        Assert.Equal((ushort)392, resolved.Width);
+        Assert.Equal((ushort)118, resolved.Height);
+    }
+
+    /// <summary>
     ///     Ensures zero-sized nodes still fall back to the text draw size.
     /// </summary>
     [Fact]
@@ -63,7 +82,8 @@ public class NativeTextNodeLayoutHelperTests
             liveHeight: 118,
             drawWidth: 368,
             drawHeight: 42,
-            textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize);
+            textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize,
+            preferCompactWrappedHeight: true);
 
         Assert.Equal((ushort)392, resolved.Width);
         Assert.Equal((ushort)42, resolved.Height);

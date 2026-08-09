@@ -85,6 +85,48 @@ public sealed class BattleTalkNativeLayoutContractTests
     }
 
     /// <summary>
+    ///     Ensures BattleTalk explicitly opts into compact wrapped-height
+    ///     measurement only for its known stale-layout reuse path instead of
+    ///     relying on a global helper override.
+    /// </summary>
+    [Fact]
+    public void BattleTalkHandler_UsesCompactWrappedHeightPolicyForNativeMeasurement()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "Talk",
+            "BattleTalkHandler.cs"));
+
+        Assert.Contains(
+            "preferCompactWrappedHeight: true",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures MiniTalk explicitly opts into compact wrapped-height
+    ///     measurement for pooled-slot reuse without changing the shared helper
+    ///     policy for unrelated native surfaces.
+    /// </summary>
+    [Fact]
+    public void MiniTalkHandler_UsesCompactWrappedHeightPolicyForNativeMeasurement()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "AddonHandlers",
+            "SingleText",
+            "MiniTalkHandler.cs"));
+
+        Assert.Contains(
+            "preferCompactWrappedHeight: true",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Locates the repository root from the test assembly output path.
     /// </summary>
     /// <returns>The repository root directory.</returns>

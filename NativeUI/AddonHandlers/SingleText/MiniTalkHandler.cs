@@ -615,7 +615,8 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           preferCompactDetachedBaselineForHeight: true,
           additionalWrapWidth: this.ResolveMiniTalkAdditionalWrapWidth(
               addon,
-              textNode));
+              textNode),
+          preferCompactWrappedHeight: true);
       if (layoutSnapshot != null)
       {
         lock (this.stateGate)
