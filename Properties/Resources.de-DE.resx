@@ -727,4 +727,13 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Geladene {0} Datensätze</value>
   </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Anzeigemodus der Übersetzung</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Anzeigemodus der Übersetzung</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Anzeigemodus der Übersetzung</value>
+  </data>
 </root>
