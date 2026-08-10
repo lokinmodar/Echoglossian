@@ -48,6 +48,8 @@ public partial class Echoglossian
 
   private int acceptedQuestPrefetchGeneration;
 
+  private long acceptedQuestDialogueMetadataLastObservedAtUtcTicks;
+
   /// <summary>
   ///     Ticks the accepted-quest prefetch runtime so active quests can be
   ///     translated into the canonical quest table before quest addons need to
@@ -312,8 +314,32 @@ public partial class Echoglossian
             workItem.SourceLanguage,
             GetGameVersion() ?? string.Empty,
             AcceptedQuestDialogueMetadataDerivationVersion,
+            this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc(),
             workItem.Generation,
             this.acceptedQuestDialogueMetadataGenerationCancellationSource.Token));
+  }
+
+  /// <summary>
+  ///     Captures a strictly increasing observation time before dialogue
+  ///     metadata work crosses the background handoff.
+  /// </summary>
+  /// <returns>The immutable UTC observation time.</returns>
+  private DateTime CaptureAcceptedQuestDialogueMetadataObservedAtUtc()
+  {
+    var utcNowTicks = DateTime.UtcNow.Ticks;
+    while (true)
+    {
+      var previousTicks = Volatile.Read(
+          ref this.acceptedQuestDialogueMetadataLastObservedAtUtcTicks);
+      var observedAtUtcTicks = Math.Max(utcNowTicks, previousTicks + 1);
+      if (Interlocked.CompareExchange(
+              ref this.acceptedQuestDialogueMetadataLastObservedAtUtcTicks,
+              observedAtUtcTicks,
+              previousTicks) == previousTicks)
+      {
+        return new DateTime(observedAtUtcTicks, DateTimeKind.Utc);
+      }
+    }
   }
 
   /// <summary>
@@ -351,7 +377,7 @@ public partial class Echoglossian
         workItem.SourceLanguage.PersistenceCode,
         workItem.GameVersion,
         workItem.DerivationVersion,
-        DateTime.UtcNow);
+        workItem.ObservedAtUtc);
     if (workItem.Generation !=
         Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
     {
@@ -1521,6 +1547,7 @@ public partial class Echoglossian
       SourceClientLanguage SourceLanguage,
       string GameVersion,
       string DerivationVersion,
+      DateTime ObservedAtUtc,
       int Generation,
       CancellationToken GenerationCancellationToken);
 }

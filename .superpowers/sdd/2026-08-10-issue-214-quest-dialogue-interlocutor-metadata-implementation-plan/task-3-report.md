@@ -177,3 +177,135 @@ dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --n
 
 Aprovado!  – Com falha:     0, Aprovado:  1142, Ignorado:     0, Total:  1142, Duração: 25 s - Echoglossian.Tests.dll (net10.0)
 ```
+
+## Fix Round 5: Capture-Ordered Exact-Key Persistence
+
+Status: `DONE_WITH_CONCERNS`
+
+Round 4 correctly removed the ineffective pre-commit guard, but its ordering
+argument had one gap: `DateTime.UtcNow` was sampled by `BuildEntries` after the
+background handoff. An old-generation operation delayed before derivation could
+therefore receive a later `UpdatedAtUtc` than a new-generation replacement and
+defeat the timestamp-monotonic exact-key upsert.
+
+The accepted-quest callback now captures `ObservedAtUtc` into the immutable
+managed work item before the background handoff. The capture uses a lock-free
+compare/exchange loop to make values strictly increasing even when the system
+clock has insufficient resolution or moves backward. `BuildEntries` consumes
+that captured value instead of sampling the clock in background execution. This
+keeps the callback non-blocking and makes persistence ordering follow capture
+ordering rather than task scheduling/completion ordering.
+
+The public two-parameter `UpsertQuestDialogueMetadataBatchAsync` API and its
+existing replacement behavior remain unchanged. No provider, database, sheet,
+file, model-list, prompt, glossary, configuration, or session operation was
+moved onto the framework/ImGui callback.
+
+### Atomicity Adjudication
+
+The literal generation-to-commit atomicity requested by the reviewer is not
+achievable between the current process-memory generation and provider-owned
+SQLite transaction without changing one of the binding constraints:
+
+- A managed generation read and `CommitAsync` have distinct linearization
+  points. Moving the read adjacent to `CommitAsync` leaves a scheduler-visible
+  interval and is still TOCTOU.
+- Holding a managed lock across `CommitAsync` would require the framework-side
+  generation change to acquire that lock to be atomic. It could then wait on
+  database I/O, violating the non-blocking callback constraint. Letting the
+  callback mutate generation without acquiring the lock restores the race.
+- Cancellation is advisory. Cancellation requested after SQLite has accepted
+  the commit cannot retroactively roll it back, so a cancellation-token test
+  cannot prove generation/commit atomicity.
+- A SQLite-side atomic predicate requires generation/session authority in the
+  same database transaction. That means a persisted session/generation model,
+  schema migration, write ordering for framework-side invalidations, and
+  generation-aware lookup semantics. Those are explicitly beyond Task 3's
+  current persistence and lookup model.
+
+No replacement “guard-to-commit” test was added because production no longer
+has such a guard, and adding a test-only callback before `CommitAsync` would
+again test cancellation before commit begins rather than the provider commit
+race. A transaction wrapper that pauses `CommitAsync` would test the wrapper,
+not establish atomicity in SQLite.
+
+The residual physical-write race is non-load-bearing under current semantics:
+
+- Current lookup requires an exact match on quest id, quest sequence, source
+  language, game version, source row key, source text hash, and derivation
+  version. A stale row with different source identity cannot satisfy the lookup.
+- For the same exact key, derivation is deterministic for the same versioned
+  source row/hash and derivation version. Generation is runtime scheduling
+  state, not persisted data identity.
+- Capture timestamps are now strictly ordered before handoff. Therefore, if a
+  newer exact-key generation persists, the existing SQL timestamp predicate
+  prevents an older captured operation that commits later from replacing it.
+- If no newer exact-key row exists, the raced row remains valid reusable
+  metadata for that exact versioned source identity. Rejecting it after restart
+  would require redefining persistence around session generations.
+
+The literal reviewer finding remains technically true: a stale transaction can
+physically commit after the in-memory check. The patch instead closes the only
+ordering hole found in the exact-key non-observability guarantee without
+claiming false atomicity or expanding the schema/session model.
+
+### TDD Evidence
+
+The runtime contract assertions were added before the production change. The
+first focused run failed because observation time was not captured into the
+work item:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore -p:VSTestMaxCpuCount=1 --filter "FullyQualifiedName~ScheduleAcceptedQuestPrefetch_StartsOwnedDialogueMetadataGeneration"
+
+Com falha Echoglossian.Tests.AcceptedQuestPrefetchRuntimeContractTests.ScheduleAcceptedQuestPrefetch_StartsOwnedDialogueMetadataGeneration [3 ms]
+Mensagem de erro:
+ Assert.Contains() Failure: Sub-string not found
+Not found: "this.CaptureAcceptedQuestDialogueMetadata"...
+
+Com falha! – Com falha:     1, Aprovado:     0, Ignorado:     0, Total:     1, Duração: 13 ms - Echoglossian.Tests.dll (net10.0)
+```
+
+After the production change, the focused covering suites passed:
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --no-restore -p:VSTestMaxCpuCount=1 --filter "FullyQualifiedName~AcceptedQuestPrefetchRuntimeContractTests|FullyQualifiedName~QuestDialogueMetadataPersistenceTests"
+
+Execução de teste para C:\Users\lokin\.codex\worktrees\7417\Echoglossian\Echoglossian.Tests\bin\x64\Debug\net10.0-windows\Echoglossian.Tests.dll (.NETCoreApp,Version=v10.0)
+Versão do VSTest 18.0.2 (x64)
+
+Iniciando execução de teste, espere...
+1 arquivos de teste no total corresponderam ao padrão especificado.
+
+Aprovado!  – Com falha:     0, Aprovado:     6, Ignorado:     0, Total:     6, Duração: 3 s - Echoglossian.Tests.dll (net10.0)
+```
+
+### Additional Validation
+
+```text
+dotnet build Echoglossian.sln -c Debug --no-restore
+
+Compilação com êxito.
+    1 Aviso(s)
+    0 Erro(s)
+```
+
+```text
+dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build --no-restore -p:VSTestMaxCpuCount=1
+
+Aprovado!  – Com falha:     0, Aprovado:  1142, Ignorado:     0, Total:  1142, Duração: 25 s - Echoglossian.Tests.dll (net10.0)
+```
+
+```text
+dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-restore
+
+FALHA da compilação.
+MockFramework does not implement IFramework.CreateDebouncer(TimeSpan, Action).
+MockCharacter does not implement IGameObject.CurrentDistance or NextDistance.
+    3 Erro(s)
+```
+
+The Mock failure is unchanged vendored DalaMock/Dalamud API drift and prevents a
+hosted runtime test. In-game verification remains required to confirm that
+configuration refresh during metadata generation stays responsive and that
+later captures remain the visible exact-key metadata.

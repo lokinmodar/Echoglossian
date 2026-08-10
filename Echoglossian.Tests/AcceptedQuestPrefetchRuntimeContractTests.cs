@@ -77,6 +77,18 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             "workItem.Generation !=\n        Volatile.Read(ref this.acceptedQuestPrefetchGeneration)",
             source,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc(),",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "workItem.ObservedAtUtc);",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "workItem.DerivationVersion,\n        DateTime.UtcNow);",
+            source,
+            StringComparison.Ordinal);
     }
 
     /// <summary>
