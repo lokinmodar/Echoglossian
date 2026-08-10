@@ -340,7 +340,8 @@ internal static partial class QuestDialogueMetadataDerivation
         ReadOnlySeString text,
         ISeStringEvaluator? evaluator)
     {
-        if (evaluator == null)
+        if (evaluator == null ||
+            Echoglossian.FrameworkInterface?.IsInFrameworkUpdateThread != true)
         {
             return text.ExtractText();
         }

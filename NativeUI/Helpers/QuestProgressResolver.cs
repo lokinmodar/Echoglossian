@@ -372,7 +372,8 @@ internal static class QuestProgressResolver
         ISeStringEvaluator? evaluator,
         ClientLanguage clientLanguage)
     {
-        if (evaluator == null)
+        if (evaluator == null ||
+            Echoglossian.FrameworkInterface?.IsInFrameworkUpdateThread != true)
         {
             return text.ExtractText();
         }
