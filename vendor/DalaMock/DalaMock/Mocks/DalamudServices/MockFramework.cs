@@ -80,6 +80,11 @@ public class MockFramework : IDisposable, IFramework, IMockService
         throw new NotImplementedException();
     }
 
+    public IDebouncer CreateDebouncer(TimeSpan delay, System.Action action)
+    {
+        return new MockDebouncer(this, delay, action);
+    }
+
     public Task DelayTicks(long numTicks, CancellationToken cancellationToken = default(CancellationToken))
     {
         return Task.CompletedTask;
@@ -419,6 +424,60 @@ public class MockFramework : IDisposable, IFramework, IMockService
     private delegate bool OnUpdateDetour(IntPtr framework);
 
     private delegate IntPtr OnDestroyDetour(); // OnDestroyDelegate
+
+    private sealed class MockDebouncer : IDebouncer
+    {
+        private readonly MockFramework framework;
+        private readonly TimeSpan delay;
+        private readonly System.Action action;
+        private readonly Timer timer;
+        private bool disposed;
+
+        internal MockDebouncer(MockFramework framework, TimeSpan delay, System.Action action)
+        {
+            this.framework = framework;
+            this.delay = delay;
+            this.action = action;
+            this.timer = new Timer(this.OnTimerElapsed);
+        }
+
+        public bool IsPending { get; private set; }
+
+        public void Debounce()
+        {
+            ObjectDisposedException.ThrowIf(this.disposed, this);
+            this.IsPending = true;
+            this.timer.Change(this.delay, Timeout.InfiniteTimeSpan);
+        }
+
+        public void Cancel()
+        {
+            this.IsPending = false;
+            this.timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        }
+
+        public void Dispose()
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.disposed = true;
+            this.timer.Dispose();
+        }
+
+        private void OnTimerElapsed(object? state)
+        {
+            if (this.disposed || !this.IsPending)
+            {
+                return;
+            }
+
+            this.IsPending = false;
+            _ = this.framework.RunOnTick(this.action);
+        }
+    }
 
     private abstract class RunOnNextTickTaskBase
     {
