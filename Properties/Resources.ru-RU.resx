@@ -736,4 +736,13 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Загружены записи {0}</value>
   </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Режим отображения перевода</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Режим отображения перевода</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Режим отображения перевода</value>
+  </data>
 </root>
