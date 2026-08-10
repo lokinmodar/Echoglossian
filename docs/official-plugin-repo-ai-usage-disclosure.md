@@ -40,6 +40,23 @@ For this repo, the expected workflow is:
 4. keep the disclosure concise but specific enough that a reviewer can tell how
    the work was produced and validated
 
+## Avoid Overstating Autonomy
+
+These notes do not mean every official `DalamudPluginsD17` submission requires
+AI disclosure, and they do not mean every disclosed submission should say
+`Assist`.
+
+The first step is still to determine whether disclosure is required at all
+under the Goatcorp policy.
+
+When disclosure is required, do not escalate the level to `Auto` solely because
+an agent executed many intermediate implementation or release steps.
+
+Human-scoped, human-reviewed, human-approved, and human-QA'd work is not
+autonomous by itself. Use `Auto` only when the agent truly operated with
+minimal human direction and minimal human review before the official
+submission.
+
 ## Important Clarification For Echoglossian
 
 Echoglossian can call machine-translation and LLM providers at runtime as part
@@ -70,6 +87,9 @@ Human verification:
 - ran local build and tests
 - performed in-game verification where applicable
 ```
+
+If the human also controlled issue triage, plan approval, release approval, or
+QA, say so explicitly instead of overstating autonomy.
 
 ## Asset Disclosure Reminder
 

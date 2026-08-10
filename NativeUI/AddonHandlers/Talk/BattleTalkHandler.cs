@@ -843,14 +843,19 @@ public sealed class BattleTalkHandler :
     var liveText = MemoryHelper.ReadSeStringAsString(
         out _,
         (nint)textNode->NodeText.StringPtr.Value);
-    NativeMutationOwnership.TryRestore(
+    NativeMutationOwnership.TryRestoreWithLayoutFallback(
         liveText,
         replacementText,
         originalText,
+        restoreText,
         restoredText => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
             layoutSnapshot,
             restoredText,
-            restoreText));
+            restoreText),
+        () => NativeTextNodeLayoutHelper.RestoreLayoutSnapshot(
+            layoutSnapshot,
+            originalText,
+            restoreText: false));
   }
 
   /// <summary>
@@ -2101,22 +2106,23 @@ public sealed class BattleTalkHandler :
         textNode,
         parentNode,
         backgroundNode,
-        timerNode);
+        timerNode,
+        preferCompactWrappedHeight: true);
     var preferredWrapWidth = NativeTextNodeLayoutHelper.ResolvePreferredWrapWidth(
-        textNode,
-        parentNode,
-        backgroundNode);
+        textNode);
     var resizeResult = NativeTextNodeLayoutHelper.ApplyWrappedTextAndMeasure(
         textNode,
         replacementText,
-        preferredWrapWidth);
+        preferredWrapWidth,
+        preferCompactWrappedHeight: true);
     NativeTextNodeLayoutHelper.ResizeFromSnapshot(
         layoutSnapshot,
         resizeResult,
         parentNode,
         backgroundNode,
         timerNode,
-        allowWidthGrowth: false);
+        allowWidthGrowth: false,
+        preserveHorizontalGeometry: true);
 
     lock (this.stateGate)
     {

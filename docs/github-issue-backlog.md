@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-08-06
+Snapshot date: 2026-08-09
 
 This document is the operational snapshot for open issues in
 [`lokinmodar/Echoglossian`](https://github.com/lokinmodar/Echoglossian/issues).
@@ -9,23 +9,25 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 
 ## Published Release Baseline
 
-- Release: [`v4.2601.0806.0051`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0806.0051)
-- Product commit: `8d776af8223aaff8df1cb250cf983fac70a47536`
-- Official submission: [`goatcorp/DalamudPluginsD17#9151`](https://github.com/goatcorp/DalamudPluginsD17/pull/9151)
-- D17 status: approved and merged on 2026-08-06
-- D17 merge commit: `831baf32566e3cd0650840582a93f593da06f075`
-- Open issues after post-publication triage: 19
-- Open issues at the current audit head: 19
-- Focused open issues besides the living tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12): 18
+- Release: [`v4.2601.0809.0046`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0809.0046)
+- Product commit: `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
+- Official submission: [`goatcorp/DalamudPluginsD17#9177`](https://github.com/goatcorp/DalamudPluginsD17/pull/9177)
+- D17 status: approved and merged on 2026-08-09
+- D17 merge commit: `1a033922f52afd74640c620bcc1145be8e8a7cbe`
+- Open issues after post-publication triage: 20
+- Open issues at the current audit head: 20
+- Focused open issues besides the living tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12): 19
 
 ## Current `v4-series` Delta
 
-- Audit head: `origin/v4-series` at `8d776af8223aaff8df1cb250cf983fac70a47536`
-- Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0806.0051` at `8d776af8223aaff8df1cb250cf983fac70a47536`
+- Audit head: `origin/v4-series` at `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
+- Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0809.0046` at `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
 - The audit head currently matches the latest published runtime baseline; there are no newer `v4-series` commits beyond this published release.
 - Issue [#12](https://github.com/lokinmodar/Echoglossian/issues/12) remains the living known-issues tracker and should stay aligned with this document whenever focused issue state changes materially.
-- Publication of `v4.2601.0806.0051` completed [#246](https://github.com/lokinmodar/Echoglossian/issues/246).
+- Publication of `v4.2601.0809.0046` completed the plugin UI culture-loading correction from [PR #260](https://github.com/lokinmodar/Echoglossian/pull/260), including explicit locale selection and locale-specific resource fallback safeguards.
+- Publication of `v4.2601.0807.1730` completed the recycled `_MiniTalk` follow-up for [#246](https://github.com/lokinmodar/Echoglossian/issues/246).
 - New focused prompt and glossary behavior work is currently tracked in [#252](https://github.com/lokinmodar/Echoglossian/issues/252).
+- New performance and persistence architecture work is now tracked in [#258](https://github.com/lokinmodar/Echoglossian/issues/258).
 - Draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) remains open only as a separate follow-up if the narrower native `JournalDetail` translated-text reflow work is still wanted.
 - The open-issue inventory remains grouped by problem type instead of by workflow state so the remaining work is easier to prioritize by subsystem.
 
@@ -36,7 +38,7 @@ most relevant resolved fronts to reference during follow-up triage.
 
 | Issue | Published resolution |
 | --- | --- |
-| [#246 `_MiniTalk` native bubble dimensions regress in `Native` and `Swap` modes`](https://github.com/lokinmodar/Echoglossian/issues/246) | The `_MiniTalk` native reflow path now preserves the visible bubble baseline in `Native` and `Swap` mode instead of carrying detached container heights forward into later translated balloons. |
+| [#246 `_MiniTalk` native bubble dimensions regress in `Native` and `Swap` modes`](https://github.com/lokinmodar/Echoglossian/issues/246) | The published follow-up release now isolates the compact detached-container baseline preference to `_MiniTalk_`, preventing recycled oversized bubble slots from stretching later translated balloons while keeping the shared tooltip and toast behavior unchanged. |
 | [#15 ActionDetail / ItemDetail tooltip translation](https://github.com/lokinmodar/Echoglossian/issues/15) | The DB-first structured tooltip flow is active in production with cache-gap prefetch, source-id binding, atomic detail updates, and native/overlay ownership safeguards. |
 | [#68 Selection dialogs and other specific surfaces](https://github.com/lokinmodar/Echoglossian/issues/68) | `SelectYesNo`, `SelectOk`, `SelectString`, `SelectIconString`, and `CutSceneSelectString` are shipped; the historical `ChatBubble` entry is covered by the production `_MiniTalk` / `MiniTalk` runtime. |
 | [#103 Interactible WorldObjects](https://github.com/lokinmodar/Echoglossian/issues/103) | Eligible nameplate/world-object presentation now supports native translation plus distance-aware overlay fallback with configurable scaling, fading, and cutoff behavior. |
@@ -111,9 +113,15 @@ most relevant resolved fronts to reference during follow-up triage.
 | [#192 Configuration screenshots](https://github.com/lokinmodar/Echoglossian/issues/192) | Documentation and UI enhancement has not been implemented. |
 | [#239 Generic batched translation fallback hardening](https://github.com/lokinmodar/Echoglossian/issues/239) | The published narrow fix rejects unchanged batch echoes, but structured transport, provider-echo classification, and negative-result cooldown remain open. |
 
+### Performance, Scheduling, And Persistence Architecture
+
+| Issue | Current reason |
+| --- | --- |
+| [#258 Runtime DB access and prefetch architecture](https://github.com/lokinmodar/Echoglossian/issues/258) | New RCA and remediation track for synchronous EF/SQLite work in runtime callbacks, unbounded prefetch, queue pressure, and plugin-correlated frametime pulses. |
+
 ## Complete Open-Issue Inventory
 
-This table is the countable audit of all 19 open issues at the snapshot date, including the living meta-tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12).
+This table is the countable audit of all 20 open issues at the snapshot date, including the living meta-tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12).
 
 | Problem type | Issues | Count |
 | --- | --- | ---: |
@@ -123,7 +131,8 @@ This table is the countable audit of all 19 open issues at the snapshot date, in
 | Overlay and presentation behavior | #167, #175 | 2 |
 | Translation engines, prompts, and provider support | #148, #176, #203, #209, #212, #214, #252 | 7 |
 | Compatibility, diagnostics, and UX polish | #173, #179, #192, #239 | 4 |
-| **Total open at snapshot** |  | **19** |
+| Performance, scheduling, and persistence architecture | #258 | 1 |
+| **Total open at snapshot** |  | **20** |
 
 ## Next Actions
 
@@ -131,6 +140,7 @@ This table is the countable audit of all 19 open issues at the snapshot date, in
 2. Prioritize the new concrete coverage work in [#237](https://github.com/lokinmodar/Echoglossian/issues/237) and [#238](https://github.com/lokinmodar/Echoglossian/issues/238).
 3. Triage the new prompt and glossary report in [#252](https://github.com/lokinmodar/Echoglossian/issues/252) to determine whether the defect is Gemini-specific, glossary-pipeline-specific, or a prompt-routing mismatch against the current LLM flow.
 4. Continue the structural remediation in [#239](https://github.com/lokinmodar/Echoglossian/issues/239) beyond the already published unchanged-batch fallback fix.
-5. Decide whether draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) should be reconciled, retargeted, or closed now that [#181](https://github.com/lokinmodar/Echoglossian/issues/181) itself is resolved.
-6. Monitor reporter retests on [#167](https://github.com/lokinmodar/Echoglossian/issues/167), [#175](https://github.com/lokinmodar/Echoglossian/issues/175), and [#203](https://github.com/lokinmodar/Echoglossian/issues/203) and close only after the exact symptom is validated or replaced by a more focused issue.
-7. Re-run the open-issue audit and refresh [#12](https://github.com/lokinmodar/Echoglossian/issues/12) whenever issue state changes again or when the next runtime or provider-support tranche lands.
+5. Decide whether [#258](https://github.com/lokinmodar/Echoglossian/issues/258) should stay as one bounded performance architecture front or be split further once the first remediation tranche lands.
+6. Decide whether draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) should be reconciled, retargeted, or closed now that [#181](https://github.com/lokinmodar/Echoglossian/issues/181) itself is resolved.
+7. Monitor reporter retests on [#167](https://github.com/lokinmodar/Echoglossian/issues/167), [#175](https://github.com/lokinmodar/Echoglossian/issues/175), and [#203](https://github.com/lokinmodar/Echoglossian/issues/203) and close only after the exact symptom is validated or replaced by a more focused issue.
+8. Re-run the open-issue audit and refresh [#12](https://github.com/lokinmodar/Echoglossian/issues/12) whenever issue state changes again or when the next runtime or provider-support tranche lands.
