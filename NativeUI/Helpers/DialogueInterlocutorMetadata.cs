@@ -52,6 +52,25 @@ public sealed record LiveDialogueActorSnapshot(
     string? BodyTypeHint);
 
 /// <summary>
+///     Carries resolved interlocutor hints for one current dialogue request.
+/// </summary>
+/// <param name="SpeakerRoleHint">The resolved speaker role hint.</param>
+/// <param name="SpeakerGenderHint">The resolved speaker gender hint.</param>
+/// <param name="AddresseeHint">The resolved addressee name hint.</param>
+/// <param name="AddresseeRoleHint">The resolved addressee role hint.</param>
+/// <param name="AddresseeGenderHint">The resolved addressee gender hint.</param>
+/// <param name="MetadataProvenance">The source that resolved the metadata.</param>
+/// <param name="MetadataConfidenceTier">The confidence tier of the resolved metadata.</param>
+public readonly record struct DialogueInterlocutorHints(
+    string? SpeakerRoleHint,
+    string? SpeakerGenderHint,
+    string? AddresseeHint,
+    string? AddresseeRoleHint,
+    string? AddresseeGenderHint,
+    string? MetadataProvenance,
+    string? MetadataConfidenceTier);
+
+/// <summary>
 ///     Represents the resolved persisted and live dialogue interlocutor hints.
 /// </summary>
 public sealed class DialogueInterlocutorMetadata

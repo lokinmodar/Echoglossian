@@ -42,21 +42,29 @@ public static class DialogueContextPromptHelper
         string targetLanguage,
         DialogueTranslationContext dialogueContext)
     {
-        return JsonConvert.SerializeObject(new
+        var cacheKeyValues = new Dictionary<string, object?>
         {
-            Scope = "dialogue",
-            dialogueContext.SessionNamespace,
-            dialogueContext.SessionKey,
-            CurrentSpeaker = dialogueContext.SpeakerName,
-            Text = text,
-            SourceLanguage = sourceLanguage,
-            TargetLanguage = targetLanguage,
-            PriorTurns = dialogueContext.PriorTurns.Select(turn => new
+            ["Scope"] = "dialogue",
+            ["SessionNamespace"] = dialogueContext.SessionNamespace,
+            ["SessionKey"] = dialogueContext.SessionKey,
+            ["CurrentSpeaker"] = dialogueContext.SpeakerName,
+            ["Text"] = text,
+            ["SourceLanguage"] = sourceLanguage,
+            ["TargetLanguage"] = targetLanguage,
+            ["PriorTurns"] = dialogueContext.PriorTurns.Select(turn => new
             {
                 turn.SpeakerName,
                 turn.SourceText,
             }),
-        });
+        };
+        AddNonEmptyCacheValue(cacheKeyValues, "SpeakerRoleHint", dialogueContext.SpeakerRoleHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "SpeakerGenderHint", dialogueContext.SpeakerGenderHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "AddresseeHint", dialogueContext.AddresseeHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "AddresseeRoleHint", dialogueContext.AddresseeRoleHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "AddresseeGenderHint", dialogueContext.AddresseeGenderHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "MetadataProvenance", dialogueContext.MetadataProvenance);
+        AddNonEmptyCacheValue(cacheKeyValues, "MetadataConfidenceTier", dialogueContext.MetadataConfidenceTier);
+        return JsonConvert.SerializeObject(cacheKeyValues);
     }
 
     /// <summary>
@@ -77,13 +85,39 @@ public static class DialogueContextPromptHelper
             return prompt;
         }
 
-        string priorTurns = string.Join(
-            Environment.NewLine,
-            dialogueContext.PriorTurns.Select(
-                (turn, index) =>
-                    $"[{index + 1}] {turn.SpeakerName}: {sanitizeText(turn.SourceText)}"));
+        var contextLines = new List<string>();
+        AddNonEmptyPromptLine(contextLines, "Current speaker", dialogueContext.SpeakerName);
+        AddNonEmptyPromptLine(contextLines, "Speaker role", dialogueContext.SpeakerRoleHint);
+        AddNonEmptyPromptLine(contextLines, "Speaker gender", dialogueContext.SpeakerGenderHint);
+        AddNonEmptyPromptLine(contextLines, "Addressee", dialogueContext.AddresseeHint);
+        AddNonEmptyPromptLine(contextLines, "Addressee role", dialogueContext.AddresseeRoleHint);
+        AddNonEmptyPromptLine(contextLines, "Addressee gender", dialogueContext.AddresseeGenderHint);
+        contextLines.AddRange(dialogueContext.PriorTurns.Select(
+            (turn, index) => $"[{index + 1}] {turn.SpeakerName}: {sanitizeText(turn.SourceText)}"));
 
         return
-            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}Current speaker: {dialogueContext.SpeakerName}{Environment.NewLine}{priorTurns}";
+            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}{string.Join(Environment.NewLine, contextLines)}";
+    }
+
+    private static void AddNonEmptyCacheValue(
+        IDictionary<string, object?> values,
+        string key,
+        string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            values[key] = value;
+        }
+    }
+
+    private static void AddNonEmptyPromptLine(
+        ICollection<string> lines,
+        string label,
+        string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            lines.Add($"{label}: {value}");
+        }
     }
 }

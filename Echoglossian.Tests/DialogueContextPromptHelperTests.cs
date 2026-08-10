@@ -83,6 +83,53 @@ public class DialogueContextPromptHelperTests
     }
 
     /// <summary>
+    ///     Ensures resolved interlocutor hints contribute ordered prompt metadata
+    ///     and distinct cache identity without changing prior-turn history.
+    /// </summary>
+    [Fact]
+    public void ContextWithInterlocutorHints_ShouldProjectPromptAndCacheIdentity()
+    {
+        DialogueTranslationContext hintedContext = new(
+            "Talk",
+            "quest-1",
+            "Krile",
+            [CreateTurn("Thancred", "We move now.")],
+            SpeakerRoleHint: "npc",
+            SpeakerGenderHint: "female",
+            AddresseeHint: "Alphinaud",
+            AddresseeRoleHint: "npc",
+            AddresseeGenderHint: "male",
+            MetadataProvenance: "quest-sheet",
+            MetadataConfidenceTier: "exact");
+        DialogueTranslationContext emptyHintContext = new(
+            "Talk",
+            "quest-1",
+            "Krile",
+            [CreateTurn("Thancred", "We move now.")]);
+
+        string prompt = DialogueContextPromptHelper.AppendDialogueContext(
+            "Translate this line.",
+            hintedContext,
+            static text => text);
+        string hintedKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            hintedContext);
+        string emptyHintKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            emptyHintContext);
+
+        prompt.Should().Contain(
+            $"Current speaker: Krile{Environment.NewLine}Speaker role: npc{Environment.NewLine}Speaker gender: female{Environment.NewLine}Addressee: Alphinaud{Environment.NewLine}Addressee role: npc{Environment.NewLine}Addressee gender: male{Environment.NewLine}[1] Thancred: We move now.");
+        hintedKey.Should().NotBe(emptyHintKey);
+        emptyHintKey.Should().NotContain("SpeakerGenderHint");
+        emptyHintKey.Should().NotContain("AddresseeHint");
+    }
+
+    /// <summary>
     ///     Ensures the cache key is namespaced by session and serialized with
     ///     content instead of delimiter-sensitive concatenation.
     /// </summary>

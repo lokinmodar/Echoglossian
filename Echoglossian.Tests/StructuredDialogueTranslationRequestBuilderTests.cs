@@ -104,4 +104,54 @@ public class StructuredDialogueTranslationRequestBuilderTests
     request.Glossary.Should().BeEmpty();
     request.Metadata.SpeakerOriginal.Should().BeEmpty();
   }
+
+  /// <summary>
+  ///     Ensures resolved current-request interlocutor hints project into the
+  ///     structured metadata contract while empty hints remain absent.
+  /// </summary>
+  [Fact]
+  public void Build_WithInterlocutorHints_ShouldProjectStructuredMetadata()
+  {
+    DialogueTranslationContext hintedContext = new(
+        "Talk",
+        "krile-session",
+        "Krile",
+        [],
+        SpeakerRoleHint: "npc",
+        SpeakerGenderHint: "female",
+        AddresseeHint: "Alphinaud",
+        AddresseeRoleHint: "npc",
+        AddresseeGenderHint: "male",
+        MetadataProvenance: "quest-sheet",
+        MetadataConfidenceTier: "exact");
+    DialogueTranslationContext emptyHintContext = new(
+        "Talk",
+        "krile-session",
+        "Krile",
+        []);
+
+    StructuredDialogueTranslationRequest hintedRequest =
+        StructuredDialogueTranslationRequestBuilder.Build(
+            "We must press on.",
+            "ja-JP",
+            "en-US",
+            TranslationSurfaceGroup.Dialogue,
+            hintedContext);
+    StructuredDialogueTranslationRequest emptyHintRequest =
+        StructuredDialogueTranslationRequestBuilder.Build(
+            "We must press on.",
+            "ja-JP",
+            "en-US",
+            TranslationSurfaceGroup.Dialogue,
+            emptyHintContext);
+
+    hintedRequest.Metadata.SpeakerGenderHint.Should().Be("female");
+    hintedRequest.Metadata.AddresseeOriginal.Should().Be("Alphinaud");
+    hintedRequest.Metadata.AddresseeRoleHint.Should().Be("npc");
+    hintedRequest.Metadata.AddresseeGenderHint.Should().Be("male");
+    hintedRequest.Metadata.MetadataProvenance.Should().Be("quest-sheet");
+    hintedRequest.Metadata.MetadataConfidenceTier.Should().Be("exact");
+    emptyHintRequest.Metadata.SpeakerGenderHint.Should().BeNull();
+    emptyHintRequest.Metadata.AddresseeOriginal.Should().BeNull();
+  }
 }
