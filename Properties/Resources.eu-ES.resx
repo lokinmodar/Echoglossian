@@ -730,4 +730,13 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>{0} erregistroak kargatuta</value>
   </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Itzulpena bistaratzeko modua</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Itzulpena bistaratzeko modua</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Itzulpena bistaratzeko modua</value>
+  </data>
 </root>
