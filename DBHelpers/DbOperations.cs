@@ -228,31 +228,6 @@ public partial class Echoglossian
       IReadOnlyList<QuestDialogueMetadata> rows,
       CancellationToken cancellationToken)
   {
-    await this.UpsertQuestDialogueMetadataBatchAsync(
-            rows,
-            static () => true,
-            cancellationToken)
-        .ConfigureAwait(false);
-  }
-
-  /// <summary>
-  ///     Replaces persisted metadata rows with the supplied exact logical rows
-  ///     when the caller still permits the transaction to commit.
-  /// </summary>
-  /// <param name="rows">The metadata rows to persist.</param>
-  /// <param name="commitGuard">The callback that permits committing the transaction.</param>
-  /// <param name="cancellationToken">The token that cancels the database operation.</param>
-  /// <returns>A task representing the guarded database operation.</returns>
-  /// <exception cref="OperationCanceledException">
-  ///     The database operation is cancelled.
-  /// </exception>
-  internal async Task UpsertQuestDialogueMetadataBatchAsync(
-      IReadOnlyList<QuestDialogueMetadata> rows,
-      Func<bool> commitGuard,
-      CancellationToken cancellationToken)
-  {
-    ArgumentNullException.ThrowIfNull(commitGuard);
-
     if (rows.Count == 0)
     {
       return;
@@ -305,17 +280,13 @@ public partial class Echoglossian
               Provenance = excluded.Provenance,
               ConfidenceTier = excluded.ConfidenceTier,
               CreatedAtUtc = excluded.CreatedAtUtc,
-              UpdatedAtUtc = excluded.UpdatedAtUtc;
+              UpdatedAtUtc = excluded.UpdatedAtUtc
+          WHERE excluded.UpdatedAtUtc >= questdialoguemetadata.UpdatedAtUtc;
           """,
           cancellationToken).ConfigureAwait(false);
     }
 
     cancellationToken.ThrowIfCancellationRequested();
-    if (!commitGuard())
-    {
-      return;
-    }
-
     await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
   }
 

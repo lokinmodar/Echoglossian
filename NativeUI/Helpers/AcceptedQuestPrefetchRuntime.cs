@@ -362,8 +362,6 @@ public partial class Echoglossian
 
     await this.UpsertQuestDialogueMetadataBatchAsync(
             metadataEntries,
-            () => workItem.Generation ==
-                Volatile.Read(ref this.acceptedQuestPrefetchGeneration),
             cancellationToken)
         .ConfigureAwait(false);
   }

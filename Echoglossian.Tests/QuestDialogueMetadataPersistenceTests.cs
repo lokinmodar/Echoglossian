@@ -164,11 +164,11 @@ public class QuestDialogueMetadataPersistenceTests
     }
 
     /// <summary>
-    /// Ensures cancellation delivered at the commit boundary rolls back a
-    /// guarded metadata transaction without exposing its rows.
+    /// Ensures an older metadata batch that completes after a newer batch
+    /// cannot replace the current exact-key result.
     /// </summary>
     [Fact]
-    public async Task UpsertQuestDialogueMetadataBatchAsync_CancelledAtCommitBoundary_RollsBackRows()
+    public async Task UpsertQuestDialogueMetadataBatchAsync_OlderBatchCompletesLast_PreservesNewerRow()
     {
         var configDir = CreateTempConfigDirectory();
         var previousConfigDirectory = PluginEntry.ConfigDirectory;
@@ -183,21 +183,26 @@ public class QuestDialogueMetadataPersistenceTests
                 await context.Database.MigrateAsync();
             }
 
-            using var cancellationSource = new CancellationTokenSource();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                () => plugin.UpsertQuestDialogueMetadataBatchAsync(
-                    [CreateRow()],
-                    () =>
-                    {
-                        cancellationSource.Cancel();
-                        return true;
-                    },
-                    cancellationSource.Token));
+            var olderObservedAtUtc = DateTime.UnixEpoch.AddMinutes(1);
+            var newerObservedAtUtc = DateTime.UnixEpoch.AddMinutes(2);
+            await plugin.UpsertQuestDialogueMetadataBatchAsync(
+                [CreateRow(
+                    speakerHint: "Current speaker",
+                    observedAtUtc: newerObservedAtUtc)],
+                CancellationToken.None);
+            await plugin.UpsertQuestDialogueMetadataBatchAsync(
+                [CreateRow(
+                    speakerHint: "Stale speaker",
+                    observedAtUtc: olderObservedAtUtc)],
+                CancellationToken.None);
 
-            await using var verification = new EchoglossianDbContext(configDir);
-            Assert.Empty(await verification.QuestDialogueMetadata
-                .AsNoTracking()
-                .ToListAsync());
+            var persisted = await plugin.FindQuestDialogueMetadataAsync(
+                CreateLookup(),
+                CancellationToken.None);
+
+            Assert.NotNull(persisted);
+            Assert.Equal("Current speaker", persisted.SpeakerHint);
+            Assert.Equal(newerObservedAtUtc, persisted.UpdatedAtUtc);
         }
         finally
         {
@@ -216,8 +221,10 @@ public class QuestDialogueMetadataPersistenceTests
         string sourceRowKey = "TEXT_QUEST_001_SEQ_001",
         string sourceTextHash = "hash-001",
         string derivationVersion = "v1",
-        string speakerHint = "Speaker v1")
+        string speakerHint = "Speaker v1",
+        DateTime? observedAtUtc = null)
     {
+        var rowObservedAtUtc = observedAtUtc ?? DateTime.UnixEpoch;
         return new QuestDialogueMetadata
         {
             QuestId = 100,
@@ -236,8 +243,8 @@ public class QuestDialogueMetadataPersistenceTests
             Provenance = "quest-text",
             ConfidenceTier = 2,
             DerivationVersion = derivationVersion,
-            CreatedAtUtc = DateTime.UnixEpoch,
-            UpdatedAtUtc = DateTime.UnixEpoch,
+            CreatedAtUtc = rowObservedAtUtc,
+            UpdatedAtUtc = rowObservedAtUtc,
         };
     }
 

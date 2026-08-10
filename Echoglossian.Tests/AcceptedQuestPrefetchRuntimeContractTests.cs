@@ -115,42 +115,6 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             StringComparison.Ordinal);
     }
 
-    /// <summary>
-    /// Ensures a stale accepted-quest generation cannot commit dialogue
-    /// metadata after its transaction has begun.
-    /// </summary>
-    [Fact]
-    public void UpsertQuestDialogueMetadataBatchAsync_RevalidatesGenerationAtTransactionCommit()
-    {
-        var root = FindRepositoryRoot();
-        var runtimeSource = File.ReadAllText(Path.Combine(
-            root.FullName,
-            "NativeUI",
-            "Helpers",
-            "AcceptedQuestPrefetchRuntime.cs"));
-        var persistenceSource = File.ReadAllText(Path.Combine(
-            root.FullName,
-            "DBHelpers",
-            "DbOperations.cs"));
-
-        Assert.Contains(
-            "() => workItem.Generation ==\n                Volatile.Read(ref this.acceptedQuestPrefetchGeneration)",
-            runtimeSource,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Func<bool> commitGuard",
-            persistenceSource,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "BeginTransactionAsync(cancellationToken)",
-            persistenceSource,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "if (!commitGuard())\n    {\n      return;\n    }\n\n    await transaction.CommitAsync(cancellationToken)",
-            persistenceSource,
-            StringComparison.Ordinal);
-    }
-
     private static DirectoryInfo FindRepositoryRoot()
     {
         var current = new DirectoryInfo(Directory.GetCurrentDirectory());
