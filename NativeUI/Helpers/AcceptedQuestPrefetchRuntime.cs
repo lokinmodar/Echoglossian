@@ -13,6 +13,8 @@ public partial class Echoglossian
 {
   private const int AcceptedQuestPrefetchQuestsPerTick = 2;
 
+  private const string AcceptedQuestDialogueMetadataDerivationVersion = "v1";
+
   private const bool AcceptedQuestPrefetchEmitDalamudLog = true;
 
   private const bool AcceptedQuestPrefetchEmitCanonicalDiagnostic = false;
@@ -26,6 +28,9 @@ public partial class Echoglossian
       acceptedQuestPrefetchRequestedQuestQueue = new();
 
   private readonly AsyncSerialActionPump acceptedQuestPrefetchActionPump =
+      new();
+
+  private readonly OwnedAsyncOperationSet acceptedQuestDialogueMetadataOperations =
       new();
 
   private string acceptedQuestPrefetchSignature = string.Empty;
@@ -293,6 +298,60 @@ public partial class Echoglossian
 
     this.acceptedQuestPrefetchActionPump.Enqueue(
         () => this.ProcessAcceptedQuestPrefetchWorkItem(workItem));
+    this.ScheduleAcceptedQuestDialogueMetadataGeneration(
+        new AcceptedQuestDialogueMetadataWorkItem(
+            workItem.QuestProgressSnapshot,
+            workItem.SourceLanguage,
+            GetGameVersion() ?? string.Empty,
+            AcceptedQuestDialogueMetadataDerivationVersion,
+            workItem.Generation));
+  }
+
+  /// <summary>
+  ///     Starts owned background generation of persistent dialogue metadata for
+  ///     one accepted-quest snapshot.
+  /// </summary>
+  /// <param name="workItem">The immutable metadata generation work item.</param>
+  private void ScheduleAcceptedQuestDialogueMetadataGeneration(
+      AcceptedQuestDialogueMetadataWorkItem workItem)
+  {
+    this.acceptedQuestDialogueMetadataOperations.Run(
+        cancellationToken =>
+            this.ProcessAcceptedQuestDialogueMetadataWorkItemAsync(
+                workItem,
+                cancellationToken));
+  }
+
+  /// <summary>
+  ///     Derives and persists dialogue metadata without blocking the framework
+  ///     tick that captured the accepted quest.
+  /// </summary>
+  /// <param name="workItem">The immutable metadata generation work item.</param>
+  /// <param name="cancellationToken">The token that cancels the owned operation.</param>
+  /// <returns>A task representing the metadata generation operation.</returns>
+  private async Task ProcessAcceptedQuestDialogueMetadataWorkItemAsync(
+      AcceptedQuestDialogueMetadataWorkItem workItem,
+      CancellationToken cancellationToken)
+  {
+    var dialogueEntries = QuestDialogueMetadataDerivation.ReadDialogueEntries(
+        workItem.QuestProgressSnapshot);
+    var metadataEntries = QuestDialogueMetadataDerivation.BuildEntries(
+        workItem.QuestProgressSnapshot,
+        dialogueEntries,
+        workItem.SourceLanguage.PersistenceCode,
+        workItem.GameVersion,
+        workItem.DerivationVersion,
+        DateTime.UtcNow);
+    if (workItem.Generation !=
+        Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
+    {
+      return;
+    }
+
+    await this.UpsertQuestDialogueMetadataBatchAsync(
+            metadataEntries,
+            cancellationToken)
+        .ConfigureAwait(false);
   }
 
   /// <summary>
@@ -1443,6 +1502,13 @@ public partial class Echoglossian
       QuestCanonicalData QuestCanonicalData,
       SourceClientLanguage SourceLanguage,
       TranslationReuseScope Scope,
+      int Generation);
+
+  private readonly record struct AcceptedQuestDialogueMetadataWorkItem(
+      QuestProgressSnapshot QuestProgressSnapshot,
+      SourceClientLanguage SourceLanguage,
+      string GameVersion,
+      string DerivationVersion,
       int Generation);
 }
 

@@ -38,6 +38,47 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Ensures accepted-quest capture starts dialogue metadata generation in a
+    /// separately owned operation instead of performing sheet or database work
+    /// on the framework tick.
+    /// </summary>
+    [Fact]
+    public void ScheduleAcceptedQuestPrefetch_StartsOwnedDialogueMetadataGeneration()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs"));
+
+        Assert.Contains(
+            "private readonly OwnedAsyncOperationSet acceptedQuestDialogueMetadataOperations",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.acceptedQuestDialogueMetadataOperations.Run(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "QuestDialogueMetadataDerivation.ReadDialogueEntries(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "QuestDialogueMetadataDerivation.BuildEntries(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.UpsertQuestDialogueMetadataBatchAsync(",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "workItem.Generation !=\n        Volatile.Read(ref this.acceptedQuestPrefetchGeneration)",
+            source,
+            StringComparison.Ordinal);
+    }
+
     private static DirectoryInfo FindRepositoryRoot()
     {
         var current = new DirectoryInfo(Directory.GetCurrentDirectory());

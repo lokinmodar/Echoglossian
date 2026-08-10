@@ -585,6 +585,7 @@ public partial class Echoglossian : IDalamudPlugin
     QuestTodoProgressResolver.Clear();
     this.ClearAcceptedQuestPrefetchState();
     this.acceptedQuestPrefetchActionPump.Dispose();
+    this.acceptedQuestDialogueMetadataOperations.Dispose();
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
     this.ClearNamePlatePrefetchState();
