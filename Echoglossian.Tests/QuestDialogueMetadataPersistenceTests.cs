@@ -19,6 +19,53 @@ namespace Echoglossian.Tests;
 public class QuestDialogueMetadataPersistenceTests
 {
     /// <summary>
+    ///     Ensures concurrent upserts for one exact row coalesce without a
+    ///     unique-index failure or duplicate persisted rows.
+    /// </summary>
+    [Fact]
+    public async Task UpsertQuestDialogueMetadataBatchAsync_ConcurrentSameKey_CoalescesIntoOneRow()
+    {
+        var configDir = CreateTempConfigDirectory();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
+            typeof(PluginEntry));
+
+        try
+        {
+            await using (var context = new EchoglossianDbContext(configDir))
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            await Task.WhenAll(
+                Enumerable.Range(0, 16)
+                    .Select(index => Task.Run(() =>
+                        plugin.UpsertQuestDialogueMetadataBatchAsync(
+                            [CreateRow(speakerHint: $"Speaker {index}")],
+                            CancellationToken.None))));
+
+            await using var verification = new EchoglossianDbContext(configDir);
+            var persisted = await verification.QuestDialogueMetadata
+                .AsNoTracking()
+                .Where(row => row.QuestId == 100 &&
+                              row.QuestSequence == 1 &&
+                              row.SourceLanguageCode == "en" &&
+                              row.GameVersion == "2026.08.10.0000" &&
+                              row.SourceRowKey == "TEXT_QUEST_001_SEQ_001" &&
+                              row.SourceTextHash == "hash-001" &&
+                              row.DerivationVersion == "v1")
+                .ToListAsync();
+            Assert.Single(persisted);
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Ensures exact-row lookup rejects every logical-key mismatch and an
     ///     upsert replaces its existing logical row rather than duplicating it.
     /// </summary>

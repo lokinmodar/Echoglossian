@@ -246,26 +246,41 @@ public partial class Echoglossian
         })
         .Select(group => group.Last())
         .ToList();
-    using var context = new EchoglossianDbContext(ConfigDirectory);
-
     foreach (var row in rowsByLogicalKey)
     {
-      var existingRows = await context.QuestDialogueMetadata
-          .Where(existing => existing.QuestId == row.QuestId &&
-                             existing.QuestSequence == row.QuestSequence &&
-                             existing.SourceLanguageCode == row.SourceLanguageCode &&
-                             existing.GameVersion == row.GameVersion &&
-                             existing.SourceRowKey == row.SourceRowKey &&
-                             existing.SourceTextHash == row.SourceTextHash &&
-                             existing.DerivationVersion == row.DerivationVersion)
-          .ToListAsync(cancellationToken)
-          .ConfigureAwait(false);
-      context.QuestDialogueMetadata.RemoveRange(existingRows);
-      row.Id = 0;
-      context.QuestDialogueMetadata.Add(row);
+      using var context = new EchoglossianDbContext(ConfigDirectory);
+      await context.Database.ExecuteSqlInterpolatedAsync(
+          $"""
+          INSERT INTO questdialoguemetadata (
+              QuestId, QuestSequence, SourceLanguageCode, GameVersion,
+              QuestSheetId, QuestTextSheetName, SourceRowKey, SourceTextHash,
+              SourceTextPreview, SpeakerHint, AddresseeHint, SpeakerRoleHint,
+              AddresseeRoleHint, Provenance, ConfidenceTier, DerivationVersion,
+              CreatedAtUtc, UpdatedAtUtc)
+          VALUES (
+              {row.QuestId}, {row.QuestSequence}, {row.SourceLanguageCode}, {row.GameVersion},
+              {row.QuestSheetId}, {row.QuestTextSheetName}, {row.SourceRowKey}, {row.SourceTextHash},
+              {row.SourceTextPreview}, {row.SpeakerHint}, {row.AddresseeHint}, {row.SpeakerRoleHint},
+              {row.AddresseeRoleHint}, {row.Provenance}, {row.ConfidenceTier}, {row.DerivationVersion},
+              {row.CreatedAtUtc}, {row.UpdatedAtUtc})
+          ON CONFLICT (
+              QuestId, QuestSequence, SourceLanguageCode, GameVersion,
+              SourceRowKey, SourceTextHash, DerivationVersion)
+          DO UPDATE SET
+              QuestSheetId = excluded.QuestSheetId,
+              QuestTextSheetName = excluded.QuestTextSheetName,
+              SourceTextPreview = excluded.SourceTextPreview,
+              SpeakerHint = excluded.SpeakerHint,
+              AddresseeHint = excluded.AddresseeHint,
+              SpeakerRoleHint = excluded.SpeakerRoleHint,
+              AddresseeRoleHint = excluded.AddresseeRoleHint,
+              Provenance = excluded.Provenance,
+              ConfidenceTier = excluded.ConfidenceTier,
+              CreatedAtUtc = excluded.CreatedAtUtc,
+              UpdatedAtUtc = excluded.UpdatedAtUtc;
+          """,
+          cancellationToken).ConfigureAwait(false);
     }
-
-    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>
