@@ -137,7 +137,11 @@ public sealed class DialogueInterlocutorMetadataResolver
         var resolvedMetadata = SelectUniqueMetadata(candidates, request.VisibleSpeakerName);
         if (resolvedMetadata == null)
         {
-            return null;
+            return BuildVisibleSpeakerLiveActorFallback(
+                request.VisibleSpeakerName,
+                liveActors,
+                localPlayerName,
+                playerSexHint);
         }
 
         var speakerActor = FindUniqueLiveActor(liveActors, resolvedMetadata.SpeakerHint);
@@ -363,6 +367,57 @@ public sealed class DialogueInterlocutorMetadataResolver
             .Where(actor => string.Equals(actor.Name, name, StringComparison.Ordinal))
             .ToList();
         return matches.Count == 1 ? matches[0] : null;
+    }
+
+    /// <summary>
+    ///     Builds a live-actor-only fallback when the visible speaker uniquely
+    ///     matches a loaded actor but exact persisted quest metadata is not yet
+    ///     available.
+    /// </summary>
+    /// <param name="visibleSpeakerName">The current visible speaker name.</param>
+    /// <param name="liveActors">The copied live actor snapshot.</param>
+    /// <param name="localPlayerName">The copied local player name.</param>
+    /// <param name="playerSexHint">The copied local player sex hint.</param>
+    /// <returns>The live-only fallback metadata; otherwise, <see langword="null" />.</returns>
+    private static DialogueInterlocutorMetadata? BuildVisibleSpeakerLiveActorFallback(
+        string? visibleSpeakerName,
+        IReadOnlyList<LiveDialogueActorSnapshot> liveActors,
+        string localPlayerName,
+        string? playerSexHint)
+    {
+        if (string.IsNullOrWhiteSpace(visibleSpeakerName))
+        {
+            return null;
+        }
+
+        var speakerActor = FindUniqueLiveActor(liveActors, visibleSpeakerName);
+        if (speakerActor == null)
+        {
+            return null;
+        }
+
+        var speakerIsPlayer = string.Equals(
+            speakerActor.Name,
+            localPlayerName,
+            StringComparison.Ordinal);
+        return new DialogueInterlocutorMetadata
+        {
+            ResolutionTier = DialogueInterlocutorResolutionTier.LiveActorVisibleSpeakerFallback,
+            Provenance = "LiveActorFallback",
+            ConfidenceTier = 0,
+            SpeakerHint = speakerActor.Name,
+            AddresseeHint = string.Empty,
+            SpeakerRoleHint = speakerIsPlayer ? "player" : "npc",
+            AddresseeRoleHint = string.Empty,
+            SpeakerGenderHint = speakerActor.GenderHint ?? (speakerIsPlayer ? playerSexHint : null),
+            SpeakerRaceHint = speakerActor.RaceHint,
+            SpeakerBodyTypeHint = speakerActor.BodyTypeHint,
+            AddresseeGenderHint = null,
+            AddresseeRaceHint = null,
+            AddresseeBodyTypeHint = null,
+            SpeakerActor = speakerActor,
+            AddresseeActor = null,
+        };
     }
 
     private static string? NormalizeSexHint(string? sex)

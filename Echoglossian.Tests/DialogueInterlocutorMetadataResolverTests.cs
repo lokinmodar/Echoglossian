@@ -221,6 +221,33 @@ public class DialogueInterlocutorMetadataResolverTests
     }
 
     /// <summary>
+    ///     Ensures a unique visible speaker can still contribute live actor hints
+    ///     when persisted quest metadata is not available yet.
+    /// </summary>
+    [Fact]
+    public async Task ResolveAsync_VisibleSpeakerMatchWithoutPersistedMetadata_ReturnsLiveActorFallback()
+    {
+        var resolver = this.CreateResolver(
+            returnPersistedMetadata: false,
+            liveActors:
+            [
+                new("Oriel", 1045123, "female", "elezen", "wildwood"),
+            ]);
+
+        var result = await resolver.ResolveAsync(this.CreateRequest());
+
+        Assert.NotNull(result);
+        Assert.Equal("LiveActorVisibleSpeakerFallback", result.ResolutionTier.ToString());
+        Assert.Equal("LiveActorFallback", result.Provenance);
+        Assert.Equal(0, result.ConfidenceTier);
+        Assert.Equal("Oriel", result.SpeakerHint);
+        Assert.Equal("female", result.SpeakerGenderHint);
+        Assert.Equal("elezen", result.SpeakerRaceHint);
+        Assert.Equal("wildwood", result.SpeakerBodyTypeHint);
+        Assert.Equal((uint)1045123, result.SpeakerActor!.DataId);
+    }
+
+    /// <summary>
     ///     Creates a resolver backed by deterministic managed quest, metadata,
     ///     actor, and player-state snapshots.
     /// </summary>
@@ -235,6 +262,7 @@ public class DialogueInterlocutorMetadataResolverTests
     private DialogueInterlocutorMetadataResolver CreateResolver(
         QuestDialogueMetadata? metadata = null,
         IReadOnlyList<LiveDialogueActorSnapshot>? liveActors = null,
+        bool returnPersistedMetadata = true,
         string? playerSex = null,
         Action? nativeCaptureObserved = null,
         Action? questTraversalObserved = null,
@@ -254,7 +282,7 @@ public class DialogueInterlocutorMetadataResolverTests
         [
             new("LucKbb111_03263_NPC_000_000", "Welcome, adventurer.", 0, 0),
         ];
-        var expectedMetadata = metadata ?? this.CreateMetadata();
+        var expectedMetadata = returnPersistedMetadata ? metadata ?? this.CreateMetadata() : null;
 
         return new DialogueInterlocutorMetadataResolver(
             tryCollectAcceptedQuestIds: () =>

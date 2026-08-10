@@ -19,6 +19,12 @@ public enum DialogueInterlocutorResolutionTier
     ///     Indicates that persisted quest-sheet metadata was enriched by a live actor.
     /// </summary>
     QuestSheetPlusLiveFusion,
+
+    /// <summary>
+    ///     Indicates that no exact persisted metadata existed, so a unique visible
+    ///     speaker match against live actors supplied the available hints.
+    /// </summary>
+    LiveActorVisibleSpeakerFallback,
 }
 
 /// <summary>
