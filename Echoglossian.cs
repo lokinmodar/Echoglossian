@@ -471,6 +471,8 @@ public partial class Echoglossian : IDalamudPlugin
 
   [PluginService] public static IObjectTable ObjectTableInterface { get; set; } = null!;
 
+  [PluginService] public static IPlayerState PlayerStateInterface { get; set; } = null!;
+
   [PluginService]
   public static IChatGui ChatGuiInterface { get; set; } = null!;
 
