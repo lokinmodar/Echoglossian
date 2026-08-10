@@ -139,4 +139,13 @@
   <data name="crypto" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\images\metamask.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Mode de visualització de la traducció</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Mode de visualització de la traducció</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Mode de visualització de la traducció</value>
+  </data>
 </root>
