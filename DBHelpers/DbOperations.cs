@@ -11,6 +11,18 @@ using Dalamud.Game.Gui.NamePlate;
 namespace Echoglossian;
 
 /// <summary>
+///     Identifies one exact versioned quest dialogue metadata row.
+/// </summary>
+public readonly record struct QuestDialogueMetadataLookup(
+    uint QuestId,
+    ushort QuestSequence,
+    string SourceLanguageCode,
+    string GameVersion,
+    string SourceRowKey,
+    string SourceTextHash,
+    string DerivationVersion);
+
+/// <summary>
 ///  Defines operations for managing and retrieving translation data
 /// </summary>
 public partial class Echoglossian
@@ -168,6 +180,92 @@ public partial class Echoglossian
     {
       return null;
     }
+  }
+
+  /// <summary>
+  ///     Finds metadata that exactly matches one quest dialogue source row and
+  ///     derivation version.
+  /// </summary>
+  /// <param name="lookup">The exact source row lookup values.</param>
+  /// <param name="cancellationToken">The token that cancels the database lookup.</param>
+  /// <returns>A matching metadata row; otherwise, <see langword="null" />.</returns>
+  /// <exception cref="OperationCanceledException">
+  ///     The database lookup is cancelled.
+  /// </exception>
+  public async Task<QuestDialogueMetadata?> FindQuestDialogueMetadataAsync(
+      QuestDialogueMetadataLookup lookup,
+      CancellationToken cancellationToken)
+  {
+    if (string.IsNullOrWhiteSpace(lookup.SourceRowKey))
+    {
+      return null;
+    }
+
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    var matches = await context.QuestDialogueMetadata
+        .AsNoTracking()
+        .Where(row => row.QuestId == lookup.QuestId &&
+                      row.QuestSequence == lookup.QuestSequence &&
+                      row.SourceLanguageCode == lookup.SourceLanguageCode &&
+                      row.GameVersion == lookup.GameVersion &&
+                      row.SourceRowKey == lookup.SourceRowKey &&
+                      row.SourceTextHash == lookup.SourceTextHash &&
+                      row.DerivationVersion == lookup.DerivationVersion)
+        .ToListAsync(cancellationToken)
+        .ConfigureAwait(false);
+    return matches.SingleOrDefault();
+  }
+
+  /// <summary>
+  ///     Replaces persisted metadata rows with the supplied exact logical rows.
+  /// </summary>
+  /// <param name="rows">The metadata rows to persist.</param>
+  /// <param name="cancellationToken">The token that cancels the database operation.</param>
+  /// <exception cref="OperationCanceledException">
+  ///     The database operation is cancelled.
+  /// </exception>
+  public async Task UpsertQuestDialogueMetadataBatchAsync(
+      IReadOnlyList<QuestDialogueMetadata> rows,
+      CancellationToken cancellationToken)
+  {
+    if (rows.Count == 0)
+    {
+      return;
+    }
+
+    var rowsByLogicalKey = rows
+        .GroupBy(row => new
+        {
+          row.QuestId,
+          row.QuestSequence,
+          row.SourceLanguageCode,
+          row.GameVersion,
+          row.SourceRowKey,
+          row.SourceTextHash,
+          row.DerivationVersion,
+        })
+        .Select(group => group.Last())
+        .ToList();
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    foreach (var row in rowsByLogicalKey)
+    {
+      var existingRows = await context.QuestDialogueMetadata
+          .Where(existing => existing.QuestId == row.QuestId &&
+                             existing.QuestSequence == row.QuestSequence &&
+                             existing.SourceLanguageCode == row.SourceLanguageCode &&
+                             existing.GameVersion == row.GameVersion &&
+                             existing.SourceRowKey == row.SourceRowKey &&
+                             existing.SourceTextHash == row.SourceTextHash &&
+                             existing.DerivationVersion == row.DerivationVersion)
+          .ToListAsync(cancellationToken)
+          .ConfigureAwait(false);
+      context.QuestDialogueMetadata.RemoveRange(existingRows);
+      row.Id = 0;
+      context.QuestDialogueMetadata.Add(row);
+    }
+
+    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>

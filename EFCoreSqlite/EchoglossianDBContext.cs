@@ -88,6 +88,11 @@ public class EchoglossianDbContext : DbContext
   /// </summary>
   public DbSet<QuestPopupText> QuestPopupTexts { get; set; }
 
+  /// <summary>
+  ///     Gets or sets derived metadata for exact quest dialogue source rows.
+  /// </summary>
+  public DbSet<QuestDialogueMetadata> QuestDialogueMetadata { get; set; }
+
   public DbSet<NpcNames> NpcName { get; set; }
 
   public DbSet<LocationName> LocationNames { get; set; }
@@ -386,6 +391,20 @@ public class EchoglossianDbContext : DbContext
           q.TranslationEngine
         })
         .HasDatabaseName("IX_questpopuptexts_lookup");
+    modelBuilder.Entity<QuestDialogueMetadata>().ToTable("questdialoguemetadata");
+    modelBuilder.Entity<QuestDialogueMetadata>()
+        .HasIndex(q => new
+        {
+          q.QuestId,
+          q.QuestSequence,
+          q.SourceLanguageCode,
+          q.GameVersion,
+          q.SourceRowKey,
+          q.SourceTextHash,
+          q.DerivationVersion,
+        })
+        .IsUnique()
+        .HasDatabaseName("IX_questdialoguemetadata_lookup");
     modelBuilder.Entity<NpcNames>().ToTable("npcnames");
     modelBuilder.Entity<LocationName>().ToTable("locationnames");
     modelBuilder.Entity<TranslationFailure>().ToTable("translationfailures");
