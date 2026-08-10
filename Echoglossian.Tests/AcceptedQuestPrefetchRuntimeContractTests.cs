@@ -79,6 +79,42 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Ensures clearing accepted-quest state cancels metadata work captured by
+    /// the prior generation before it can reach the database upsert boundary.
+    /// </summary>
+    [Fact]
+    public void ClearAcceptedQuestPrefetchState_CancelsPriorGenerationMetadataWrites()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs"));
+
+        Assert.Contains(
+            "private CancellationTokenSource acceptedQuestDialogueMetadataGenerationCancellationSource",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Interlocked.Exchange(\n        ref this.acceptedQuestDialogueMetadataGenerationCancellationSource,\n        new CancellationTokenSource())",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "previousGenerationCancellationSource.Cancel();",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "workItem.GenerationCancellationToken);",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "cancellationToken.ThrowIfCancellationRequested();\n\n    await this.UpsertQuestDialogueMetadataBatchAsync(",
+            source,
+            StringComparison.Ordinal);
+    }
+
     private static DirectoryInfo FindRepositoryRoot()
     {
         var current = new DirectoryInfo(Directory.GetCurrentDirectory());

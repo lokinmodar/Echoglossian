@@ -33,6 +33,9 @@ public partial class Echoglossian
   private readonly OwnedAsyncOperationSet acceptedQuestDialogueMetadataOperations =
       new();
 
+  private CancellationTokenSource acceptedQuestDialogueMetadataGenerationCancellationSource =
+      new();
+
   private string acceptedQuestPrefetchSignature = string.Empty;
 
   private DateTime acceptedQuestPrefetchLastTickUtc = DateTime.MinValue;
@@ -186,6 +189,11 @@ public partial class Echoglossian
   /// </summary>
   private void ClearAcceptedQuestPrefetchState()
   {
+    var previousGenerationCancellationSource = Interlocked.Exchange(
+        ref this.acceptedQuestDialogueMetadataGenerationCancellationSource,
+        new CancellationTokenSource());
+    previousGenerationCancellationSource.Cancel();
+    previousGenerationCancellationSource.Dispose();
     Interlocked.Increment(ref this.acceptedQuestPrefetchGeneration);
     this.acceptedQuestPrefetchQueue.Clear();
     this.acceptedQuestPrefetchRequestedQuestQueue.Clear();
@@ -304,7 +312,8 @@ public partial class Echoglossian
             workItem.SourceLanguage,
             GetGameVersion() ?? string.Empty,
             AcceptedQuestDialogueMetadataDerivationVersion,
-            workItem.Generation));
+            workItem.Generation,
+            this.acceptedQuestDialogueMetadataGenerationCancellationSource.Token));
   }
 
   /// <summary>
@@ -319,7 +328,8 @@ public partial class Echoglossian
         cancellationToken =>
             this.ProcessAcceptedQuestDialogueMetadataWorkItemAsync(
                 workItem,
-                cancellationToken));
+                cancellationToken),
+        workItem.GenerationCancellationToken);
   }
 
   /// <summary>
@@ -347,6 +357,8 @@ public partial class Echoglossian
     {
       return;
     }
+
+    cancellationToken.ThrowIfCancellationRequested();
 
     await this.UpsertQuestDialogueMetadataBatchAsync(
             metadataEntries,
@@ -1509,7 +1521,8 @@ public partial class Echoglossian
       SourceClientLanguage SourceLanguage,
       string GameVersion,
       string DerivationVersion,
-      int Generation);
+      int Generation,
+      CancellationToken GenerationCancellationToken);
 }
 
 
