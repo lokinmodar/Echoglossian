@@ -40,7 +40,7 @@ public readonly record struct StructuredDialogueTranslationMetadata(
     [property: JsonPropertyName("metadata_provenance")]
     string? MetadataProvenance,
     [property: JsonPropertyName("metadata_confidence_tier")]
-    string? MetadataConfidenceTier,
+    int? MetadataConfidenceTier,
     [property: JsonPropertyName("pronoun_hint")]
     string? PronounHint,
     [property: JsonPropertyName("subject_hint")]

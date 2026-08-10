@@ -68,7 +68,7 @@ public readonly record struct DialogueInterlocutorHints(
     string? AddresseeRoleHint,
     string? AddresseeGenderHint,
     string? MetadataProvenance,
-    string? MetadataConfidenceTier);
+    int? MetadataConfidenceTier);
 
 /// <summary>
 ///     Represents the resolved persisted and live dialogue interlocutor hints.
@@ -79,6 +79,16 @@ public sealed class DialogueInterlocutorMetadata
     ///     Gets the evidence tier used for this result.
     /// </summary>
     public required DialogueInterlocutorResolutionTier ResolutionTier { get; init; }
+
+    /// <summary>
+    ///     Gets the persisted metadata provenance.
+    /// </summary>
+    public required string Provenance { get; init; }
+
+    /// <summary>
+    ///     Gets the persisted numeric confidence tier.
+    /// </summary>
+    public required int ConfidenceTier { get; init; }
 
     /// <summary>
     ///     Gets the persisted speaker hint.

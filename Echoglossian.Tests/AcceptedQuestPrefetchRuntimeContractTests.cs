@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.IO;
+using System.Reflection;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -14,6 +15,51 @@ namespace Echoglossian.Tests;
 /// </summary>
 public sealed class AcceptedQuestPrefetchRuntimeContractTests
 {
+    /// <summary>
+    /// Ensures dialogue metadata generation follows dialogue settings while
+    /// canonical quest prefetch remains gated by quest-window settings.
+    /// </summary>
+    /// <param name="translate">Whether global translation is enabled.</param>
+    /// <param name="translateTalk">Whether Talk translation is enabled.</param>
+    /// <param name="translateBattleTalk">Whether BattleTalk translation is enabled.</param>
+    /// <param name="translateJournal">Whether Journal translation is enabled.</param>
+    /// <param name="expectedMetadata">Whether metadata generation should run.</param>
+    /// <param name="expectedCanonical">Whether canonical prefetch should run.</param>
+    [Theory]
+    [InlineData(true, true, false, false, true, false)]
+    [InlineData(true, false, true, false, true, false)]
+    [InlineData(true, false, false, true, false, true)]
+    [InlineData(true, false, false, false, false, false)]
+    [InlineData(false, true, true, true, false, false)]
+    public void AcceptedQuestScheduling_UsesIndependentConfigurationPolicies(
+        bool translate,
+        bool translateTalk,
+        bool translateBattleTalk,
+        bool translateJournal,
+        bool expectedMetadata,
+        bool expectedCanonical)
+    {
+        var configuration = new Config
+        {
+            Translate = translate,
+            TranslateTalk = translateTalk,
+            TranslateBattleTalk = translateBattleTalk,
+            TranslateJournal = translateJournal,
+        };
+        const BindingFlags Flags = BindingFlags.Static | BindingFlags.NonPublic;
+        var metadataPolicy = typeof(Echoglossian).GetMethod(
+            "IsAcceptedQuestDialogueMetadataGenerationEnabled",
+            Flags);
+        var canonicalPolicy = typeof(Echoglossian).GetMethod(
+            "IsAcceptedQuestCanonicalPrefetchEnabled",
+            Flags);
+
+        Assert.NotNull(metadataPolicy);
+        Assert.NotNull(canonicalPolicy);
+        Assert.Equal(expectedMetadata, metadataPolicy.Invoke(null, [configuration]));
+        Assert.Equal(expectedCanonical, canonicalPolicy.Invoke(null, [configuration]));
+    }
+
     /// <summary>
     /// Ensures the plugin tick schedules accepted-quest prefetch work instead
     /// of invoking the heavy prefetch routine inline.

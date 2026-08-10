@@ -20,6 +20,7 @@ public sealed class DialogueInterlocutorMetadataResolver
     private readonly Func<string> localPlayerName;
     private readonly Func<string?> playerSexHint;
     private readonly Func<QuestProgressSnapshot, IReadOnlyList<QuestDialogueSheetEntry>> readDialogueEntries;
+    private readonly Func<Action, CancellationToken, Task> runOnFrameworkThreadAsync;
     private readonly Func<IReadOnlyList<uint>> tryCollectAcceptedQuestIds;
     private readonly Func<uint, QuestProgressSnapshot?> tryResolveQuestProgress;
 
@@ -35,7 +36,8 @@ public sealed class DialogueInterlocutorMetadataResolver
             plugin.FindQuestDialogueMetadataAsync,
             CaptureLiveActors,
             CaptureLocalPlayerName,
-            CapturePlayerSexHint)
+            CapturePlayerSexHint,
+            RunOnFrameworkThreadAsync)
     {
     }
 
@@ -49,6 +51,7 @@ public sealed class DialogueInterlocutorMetadataResolver
     /// <param name="captureLiveActors">The managed live actor snapshot collector.</param>
     /// <param name="localPlayerName">The managed local player name reader.</param>
     /// <param name="playerSexHint">The managed local player sex hint reader.</param>
+    /// <param name="runOnFrameworkThreadAsync">The native capture scheduler.</param>
     internal DialogueInterlocutorMetadataResolver(
         Func<IReadOnlyList<uint>> tryCollectAcceptedQuestIds,
         Func<uint, QuestProgressSnapshot?> tryResolveQuestProgress,
@@ -56,7 +59,8 @@ public sealed class DialogueInterlocutorMetadataResolver
         Func<QuestDialogueMetadataLookup, CancellationToken, Task<QuestDialogueMetadata?>> findMetadataAsync,
         Func<IReadOnlyList<LiveDialogueActorSnapshot>> captureLiveActors,
         Func<string> localPlayerName,
-        Func<string?> playerSexHint)
+        Func<string?> playerSexHint,
+        Func<Action, CancellationToken, Task>? runOnFrameworkThreadAsync = null)
     {
         this.tryCollectAcceptedQuestIds = tryCollectAcceptedQuestIds;
         this.tryResolveQuestProgress = tryResolveQuestProgress;
@@ -65,6 +69,7 @@ public sealed class DialogueInterlocutorMetadataResolver
         this.captureLiveActors = captureLiveActors;
         this.localPlayerName = localPlayerName;
         this.playerSexHint = playerSexHint;
+        this.runOnFrameworkThreadAsync = runOnFrameworkThreadAsync ?? RunInlineAsync;
     }
 
     /// <summary>
@@ -85,29 +90,20 @@ public sealed class DialogueInterlocutorMetadataResolver
             return null;
         }
 
-        // Capture all plugin-service values before database work crosses an await boundary.
-        var liveActors = this.captureLiveActors();
-        var localPlayerName = this.localPlayerName();
-        var playerSexHint = this.playerSexHint();
-        var acceptedQuestIds = this.tryCollectAcceptedQuestIds();
-        List<(QuestProgressSnapshot Snapshot, QuestDialogueSheetEntry Entry)> matchingRows = [];
-        foreach (var acceptedQuestId in acceptedQuestIds)
+        ResolverCaptureSnapshot? captureSnapshot = null;
+        await this.runOnFrameworkThreadAsync(
+            () => captureSnapshot = this.CaptureSnapshot(request),
+            cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (captureSnapshot == null)
         {
-            var questProgress = this.tryResolveQuestProgress(acceptedQuestId);
-            if (!questProgress.HasValue)
-            {
-                continue;
-            }
-
-            foreach (var entry in this.readDialogueEntries(questProgress.Value))
-            {
-                if (entry.QuestSequence == questProgress.Value.QuestSequence &&
-                    string.Equals(entry.Text, request.SourceText, StringComparison.Ordinal))
-                {
-                    matchingRows.Add((questProgress.Value, entry));
-                }
-            }
+            return null;
         }
+
+        var liveActors = captureSnapshot.LiveActors;
+        var localPlayerName = captureSnapshot.LocalPlayerName;
+        var playerSexHint = captureSnapshot.PlayerSexHint;
+        var matchingRows = captureSnapshot.MatchingRows;
 
         List<QuestDialogueMetadata> candidates = [];
         foreach (var (snapshot, entry) in matchingRows)
@@ -150,6 +146,8 @@ public sealed class DialogueInterlocutorMetadataResolver
             ResolutionTier = usesLiveActor
                 ? DialogueInterlocutorResolutionTier.QuestSheetPlusLiveFusion
                 : DialogueInterlocutorResolutionTier.QuestSheetDerivedExact,
+            Provenance = resolvedMetadata.Provenance,
+            ConfidenceTier = resolvedMetadata.ConfidenceTier,
             SpeakerHint = resolvedMetadata.SpeakerHint,
             AddresseeHint = resolvedMetadata.AddresseeHint,
             SpeakerRoleHint = resolvedMetadata.SpeakerRoleHint,
@@ -163,6 +161,76 @@ public sealed class DialogueInterlocutorMetadataResolver
             SpeakerActor = speakerActor,
             AddresseeActor = addresseeActor,
         };
+    }
+
+    /// <summary>
+    ///     Captures all native and game-owned resolver inputs into immutable
+    ///     managed values before database work begins.
+    /// </summary>
+    /// <param name="request">The visible dialogue source values.</param>
+    /// <returns>The immutable resolver capture.</returns>
+    private ResolverCaptureSnapshot CaptureSnapshot(DialogueInterlocutorMetadataRequest request)
+    {
+        var liveActors = this.captureLiveActors().ToArray();
+        var localPlayerName = this.localPlayerName();
+        var playerSexHint = this.playerSexHint();
+        var acceptedQuestIds = this.tryCollectAcceptedQuestIds();
+        List<(QuestProgressSnapshot Snapshot, QuestDialogueSheetEntry Entry)> matchingRows = [];
+        foreach (var acceptedQuestId in acceptedQuestIds)
+        {
+            var questProgress = this.tryResolveQuestProgress(acceptedQuestId);
+            if (!questProgress.HasValue)
+            {
+                continue;
+            }
+
+            foreach (var entry in this.readDialogueEntries(questProgress.Value))
+            {
+                if (entry.QuestSequence == questProgress.Value.QuestSequence &&
+                    string.Equals(entry.Text, request.SourceText, StringComparison.Ordinal))
+                {
+                    matchingRows.Add((questProgress.Value, entry));
+                }
+            }
+        }
+
+        return new ResolverCaptureSnapshot(
+            liveActors,
+            localPlayerName,
+            playerSexHint,
+            matchingRows.ToArray());
+    }
+
+    /// <summary>
+    ///     Marshals one native capture action onto the Dalamud framework thread.
+    /// </summary>
+    /// <param name="capture">The native capture action.</param>
+    /// <param name="cancellationToken">The token that cancels the resolver operation.</param>
+    /// <returns>A task representing the framework-thread capture.</returns>
+    private static async Task RunOnFrameworkThreadAsync(
+        Action capture,
+        CancellationToken cancellationToken)
+    {
+        await Echoglossian.FrameworkInterface.RunOnFrameworkThread(
+            () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                capture();
+            }).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    /// <summary>
+    ///     Runs managed capture delegates inline for native-free unit tests.
+    /// </summary>
+    /// <param name="capture">The managed capture action.</param>
+    /// <param name="cancellationToken">The token that cancels the resolver operation.</param>
+    /// <returns>A completed task after capture.</returns>
+    private static Task RunInlineAsync(Action capture, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        capture();
+        return Task.CompletedTask;
     }
 
     private static IReadOnlyList<uint> CollectAcceptedQuestIds()
@@ -260,4 +328,17 @@ public sealed class DialogueInterlocutorMetadataResolver
             _ => null,
         };
     }
+
+    /// <summary>
+    ///     Carries immutable managed resolver state across the database await boundary.
+    /// </summary>
+    /// <param name="LiveActors">The copied live actor snapshots.</param>
+    /// <param name="LocalPlayerName">The copied local player name.</param>
+    /// <param name="PlayerSexHint">The copied local player sex hint.</param>
+    /// <param name="MatchingRows">The copied accepted-quest dialogue matches.</param>
+    private sealed record ResolverCaptureSnapshot(
+        IReadOnlyList<LiveDialogueActorSnapshot> LiveActors,
+        string LocalPlayerName,
+        string? PlayerSexHint,
+        IReadOnlyList<(QuestProgressSnapshot Snapshot, QuestDialogueSheetEntry Entry)> MatchingRows);
 }

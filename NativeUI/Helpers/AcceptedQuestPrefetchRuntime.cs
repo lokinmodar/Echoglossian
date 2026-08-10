@@ -57,7 +57,7 @@ public partial class Echoglossian
   /// </summary>
   private void TickAcceptedQuestPrefetch()
   {
-    if (!this.ShouldPrefetchAcceptedQuests() ||
+    if (!this.ShouldProcessAcceptedQuests() ||
         DateTime.UtcNow - this.acceptedQuestPrefetchLastTickUtc <
         AcceptedQuestPrefetchTickInterval)
     {
@@ -213,7 +213,9 @@ public partial class Echoglossian
   /// <param name="questCount">The number of accepted quests being prefetched.</param>
   private void NotifyAcceptedQuestPrefetchStarted(int questCount)
   {
-    if (questCount <= 0 || !this.configuration.ShowQuestProgressNotifications)
+    if (questCount <= 0 ||
+        !this.configuration.ShowQuestProgressNotifications ||
+        !IsAcceptedQuestCanonicalPrefetchEnabled(this.configuration))
     {
       return;
     }
@@ -271,18 +273,42 @@ public partial class Echoglossian
   ///     runtime state.
   /// </summary>
   /// <returns>True when the background prefetch should run.</returns>
-  private bool ShouldPrefetchAcceptedQuests()
+  private bool ShouldProcessAcceptedQuests()
   {
-    return this.configuration.Translate &&
-           FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() &&
-           (this.configuration.TranslateJournal ||
-            this.configuration.TranslateJournalDetail ||
-            this.configuration.TranslateJournalAccept ||
-            this.configuration.TranslateJournalResult ||
-            this.configuration.TranslateToDoList ||
-            this.configuration.TranslateScenarioTree ||
-            this.configuration.TranslateRecommendList ||
-            this.configuration.TranslateAreaMap);
+    return FrameworkAccessGuard.IsClientReadyForPlayerScopedFrameworkAccess() &&
+           (IsAcceptedQuestCanonicalPrefetchEnabled(this.configuration) ||
+            IsAcceptedQuestDialogueMetadataGenerationEnabled(this.configuration));
+  }
+
+  /// <summary>
+  ///     Gets whether canonical accepted-quest prefetch is enabled by the
+  ///     current translation configuration.
+  /// </summary>
+  /// <param name="configuration">The active plugin configuration.</param>
+  /// <returns><see langword="true" /> when canonical prefetch is enabled.</returns>
+  private static bool IsAcceptedQuestCanonicalPrefetchEnabled(Config configuration)
+  {
+    return configuration.Translate &&
+           (configuration.TranslateJournal ||
+            configuration.TranslateJournalDetail ||
+            configuration.TranslateJournalAccept ||
+            configuration.TranslateJournalResult ||
+            configuration.TranslateToDoList ||
+            configuration.TranslateScenarioTree ||
+            configuration.TranslateRecommendList ||
+            configuration.TranslateAreaMap);
+  }
+
+  /// <summary>
+  ///     Gets whether accepted-quest dialogue metadata generation is enabled
+  ///     by a dialogue translation surface.
+  /// </summary>
+  /// <param name="configuration">The active plugin configuration.</param>
+  /// <returns><see langword="true" /> when metadata generation is enabled.</returns>
+  private static bool IsAcceptedQuestDialogueMetadataGenerationEnabled(Config configuration)
+  {
+    return configuration.Translate &&
+           (configuration.TranslateTalk || configuration.TranslateBattleTalk);
   }
 
   /// <summary>
@@ -306,17 +332,24 @@ public partial class Echoglossian
       return;
     }
 
-    this.acceptedQuestPrefetchActionPump.Enqueue(
-        () => this.ProcessAcceptedQuestPrefetchWorkItem(workItem));
-    this.ScheduleAcceptedQuestDialogueMetadataGeneration(
-        new AcceptedQuestDialogueMetadataWorkItem(
-            workItem.QuestProgressSnapshot,
-            workItem.SourceLanguage,
-            GetGameVersion() ?? string.Empty,
-            AcceptedQuestDialogueMetadataDerivationVersion,
-            this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc(),
-            workItem.Generation,
-            this.acceptedQuestDialogueMetadataGenerationCancellationSource.Token));
+    if (IsAcceptedQuestCanonicalPrefetchEnabled(this.configuration))
+    {
+      this.acceptedQuestPrefetchActionPump.Enqueue(
+          () => this.ProcessAcceptedQuestPrefetchWorkItem(workItem));
+    }
+
+    if (IsAcceptedQuestDialogueMetadataGenerationEnabled(this.configuration))
+    {
+      this.ScheduleAcceptedQuestDialogueMetadataGeneration(
+          new AcceptedQuestDialogueMetadataWorkItem(
+              workItem.QuestProgressSnapshot,
+              workItem.SourceLanguage,
+              GetGameVersion() ?? string.Empty,
+              AcceptedQuestDialogueMetadataDerivationVersion,
+              this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc(),
+              workItem.Generation,
+              this.acceptedQuestDialogueMetadataGenerationCancellationSource.Token));
+    }
   }
 
   /// <summary>

@@ -1062,7 +1062,7 @@ public sealed class BattleTalkHandler :
       }
       else
       {
-        var interlocutorHints = await this.resolveInterlocutorHintsAsync(
+        var interlocutorHints = await this.ResolveInterlocutorHintsOrDefaultAsync(
             originalName,
             originalText,
             sourceLanguage,
@@ -1265,6 +1265,38 @@ public sealed class BattleTalkHandler :
 
       PluginRuntimeLog.Error(
           $"[{BattleTalkAddonName}] Error resolving BattleTalk translation: {ex}");
+    }
+  }
+
+  /// <summary>
+  ///     Resolves optional BattleTalk metadata without allowing auxiliary
+  ///     failures to abort the dialogue translation.
+  /// </summary>
+  /// <param name="originalName">The original visible speaker name.</param>
+  /// <param name="originalText">The original visible dialogue text.</param>
+  /// <param name="sourceLanguage">The captured source language.</param>
+  /// <param name="cancellationToken">The token that cancels the current source operation.</param>
+  /// <returns>The resolved hints, or an empty hint set after an auxiliary failure.</returns>
+  private async Task<DialogueInterlocutorHints> ResolveInterlocutorHintsOrDefaultAsync(
+      string originalName,
+      string originalText,
+      SourceClientLanguage sourceLanguage,
+      CancellationToken cancellationToken)
+  {
+    try
+    {
+      return await this.resolveInterlocutorHintsAsync(
+          originalName,
+          originalText,
+          sourceLanguage,
+          cancellationToken).ConfigureAwait(false);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      PluginRuntimeLog.Debug(
+          BattleTalkAddonName,
+          $"Interlocutor metadata resolution failed; continuing without hints. {exception.GetType().Name}: {exception.Message}");
+      return default;
     }
   }
 

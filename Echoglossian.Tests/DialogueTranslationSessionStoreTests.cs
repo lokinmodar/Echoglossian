@@ -197,7 +197,7 @@ public class DialogueTranslationSessionStoreTests
         "npc",
         "male",
         "quest-sheet",
-        "exact");
+        2);
 
     var hintedContext = DialogueTranslationSessionStore.BuildContext(
         "Talk",

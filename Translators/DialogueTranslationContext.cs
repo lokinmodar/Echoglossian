@@ -31,4 +31,4 @@ public readonly record struct DialogueTranslationContext(
     string? AddresseeRoleHint = null,
     string? AddresseeGenderHint = null,
     string? MetadataProvenance = null,
-    string? MetadataConfidenceTier = null);
+    int? MetadataConfidenceTier = null);

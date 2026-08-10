@@ -63,7 +63,11 @@ public static class DialogueContextPromptHelper
         AddNonEmptyCacheValue(cacheKeyValues, "AddresseeRoleHint", dialogueContext.AddresseeRoleHint);
         AddNonEmptyCacheValue(cacheKeyValues, "AddresseeGenderHint", dialogueContext.AddresseeGenderHint);
         AddNonEmptyCacheValue(cacheKeyValues, "MetadataProvenance", dialogueContext.MetadataProvenance);
-        AddNonEmptyCacheValue(cacheKeyValues, "MetadataConfidenceTier", dialogueContext.MetadataConfidenceTier);
+        if (dialogueContext.MetadataConfidenceTier.HasValue)
+        {
+            cacheKeyValues["MetadataConfidenceTier"] = dialogueContext.MetadataConfidenceTier.Value;
+        }
+
         return JsonConvert.SerializeObject(cacheKeyValues);
     }
 

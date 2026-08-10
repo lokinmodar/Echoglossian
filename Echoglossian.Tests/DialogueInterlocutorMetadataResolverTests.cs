@@ -30,6 +30,96 @@ public class DialogueInterlocutorMetadataResolverTests
         Assert.Equal("Oriel", result.SpeakerHint);
         Assert.Equal("Radovan", result.AddresseeHint);
         Assert.Null(result.AddresseeGenderHint);
+        var provenanceProperty = typeof(DialogueInterlocutorMetadata).GetProperty("Provenance");
+        var confidenceProperty = typeof(DialogueInterlocutorMetadata).GetProperty("ConfidenceTier");
+        Assert.NotNull(provenanceProperty);
+        Assert.NotNull(confidenceProperty);
+        Assert.Equal("QuestSheetDerived", provenanceProperty.GetValue(result));
+        Assert.Equal(2, confidenceProperty.GetValue(result));
+    }
+
+    /// <summary>
+    ///     Ensures production resolver capture is marshaled through the Dalamud
+    ///     framework before database work crosses an await boundary.
+    /// </summary>
+    [Fact]
+    public void Resolver_ProductionCapture_UsesFrameworkThreadMarshal()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "Helpers",
+            "DialogueInterlocutorMetadataResolver.cs"));
+
+        Assert.Contains("FrameworkInterface.RunOnFrameworkThread(", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures all game-owned resolver reads execute inside the capture
+    ///     scheduler and database lookup begins only after capture completes.
+    /// </summary>
+    [Fact]
+    public async Task ResolveAsync_CaptureScheduler_ContainsGameOwnedReadsBeforeDatabaseLookup()
+    {
+        var insideCapture = false;
+        var captureSchedulerCalls = 0;
+        var captureReadCalls = 0;
+        var databaseLookupCalls = 0;
+        var resolver = this.CreateResolver(
+            captureObserved: () =>
+            {
+                Assert.True(insideCapture);
+                captureReadCalls++;
+            },
+            lookupObserved: () =>
+            {
+                Assert.False(insideCapture);
+                databaseLookupCalls++;
+            },
+            runOnFrameworkThreadAsync: (capture, cancellationToken) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                captureSchedulerCalls++;
+                insideCapture = true;
+                try
+                {
+                    capture();
+                }
+                finally
+                {
+                    insideCapture = false;
+                }
+
+                return Task.CompletedTask;
+            });
+
+        var result = await resolver.ResolveAsync(this.CreateRequest());
+
+        Assert.NotNull(result);
+        Assert.Equal(1, captureSchedulerCalls);
+        Assert.Equal(6, captureReadCalls);
+        Assert.Equal(1, databaseLookupCalls);
+    }
+
+    /// <summary>
+    ///     Ensures production wiring preserves persisted provenance and numeric
+    ///     confidence instead of substituting the resolver evidence tier.
+    /// </summary>
+    [Fact]
+    public void AddonHandlerWiring_PreservesPersistedMetadataIdentity()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "Helpers",
+            "AddonHandlerWiring.cs"));
+
+        Assert.Contains("metadata.Provenance", source, StringComparison.Ordinal);
+        Assert.Contains("metadata.ConfidenceTier", source, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "metadata.ResolutionTier.ToString(),\n            metadata.ResolutionTier.ToString()",
+            source,
+            StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -105,11 +195,17 @@ public class DialogueInterlocutorMetadataResolverTests
     /// <param name="metadata">The persisted metadata returned by the exact lookup.</param>
     /// <param name="liveActors">The managed live actor snapshots.</param>
     /// <param name="playerSex">The managed player sex hint.</param>
+    /// <param name="captureObserved">The callback invoked for each game-owned read.</param>
+    /// <param name="lookupObserved">The callback invoked at the database lookup boundary.</param>
+    /// <param name="runOnFrameworkThreadAsync">The capture scheduler override.</param>
     /// <returns>A configured resolver.</returns>
     private DialogueInterlocutorMetadataResolver CreateResolver(
         QuestDialogueMetadata? metadata = null,
         IReadOnlyList<LiveDialogueActorSnapshot>? liveActors = null,
-        string? playerSex = null)
+        string? playerSex = null,
+        Action? captureObserved = null,
+        Action? lookupObserved = null,
+        Func<Action, CancellationToken, Task>? runOnFrameworkThreadAsync = null)
     {
         var snapshot = new QuestProgressSnapshot(
             QuestId: 68799,
@@ -127,20 +223,46 @@ public class DialogueInterlocutorMetadataResolverTests
         var expectedMetadata = metadata ?? this.CreateMetadata();
 
         return new DialogueInterlocutorMetadataResolver(
-            tryCollectAcceptedQuestIds: () => [68799],
-            tryResolveQuestProgress: questId => questId == 68799 ? snapshot : null,
-            readDialogueEntries: _ => rows,
+            tryCollectAcceptedQuestIds: () =>
+            {
+                captureObserved?.Invoke();
+                return [68799];
+            },
+            tryResolveQuestProgress: questId =>
+            {
+                captureObserved?.Invoke();
+                return questId == 68799 ? snapshot : null;
+            },
+            readDialogueEntries: _ =>
+            {
+                captureObserved?.Invoke();
+                return rows;
+            },
             findMetadataAsync: (lookup, _) =>
             {
+                lookupObserved?.Invoke();
                 Assert.Equal("LucKbb111_03263_NPC_000_000", lookup.SourceRowKey);
                 Assert.Equal(
                     QuestContentHash.ComputeLine(lookup.SourceRowKey, "Welcome, adventurer."),
                     lookup.SourceTextHash);
                 return Task.FromResult<QuestDialogueMetadata?>(expectedMetadata);
             },
-            captureLiveActors: () => liveActors ?? [],
-            localPlayerName: () => "Player Name",
-            playerSexHint: () => playerSex);
+            captureLiveActors: () =>
+            {
+                captureObserved?.Invoke();
+                return liveActors ?? [];
+            },
+            localPlayerName: () =>
+            {
+                captureObserved?.Invoke();
+                return "Player Name";
+            },
+            playerSexHint: () =>
+            {
+                captureObserved?.Invoke();
+                return playerSex;
+            },
+            runOnFrameworkThreadAsync: runOnFrameworkThreadAsync);
     }
 
     /// <summary>
@@ -185,5 +307,25 @@ public class DialogueInterlocutorMetadataResolverTests
             Provenance = "QuestSheetDerived",
             ConfidenceTier = 2,
         };
+    }
+
+    /// <summary>
+    ///     Locates the repository root for production wiring contract checks.
+    /// </summary>
+    /// <returns>The repository root directory.</returns>
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Echoglossian.sln")))
+            {
+                return current;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Unable to locate repository root.");
     }
 }

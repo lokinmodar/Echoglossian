@@ -29,6 +29,7 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     /// </summary>
     public NativeDialogueHandlerLifecycleTests()
     {
+        DialogueTranslationSessionStore.Clear();
         this.originalLanguageInt = PluginEntry.LanguageInt;
         this.originalLanguages = PluginEntry.LangDict;
         PluginEntry.LanguageInt = 81;
@@ -52,6 +53,7 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        DialogueTranslationSessionStore.Clear();
         PluginEntry.LanguageInt = this.originalLanguageInt;
         PluginEntry.LangDict = this.originalLanguages;
     }
@@ -478,6 +480,31 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
+    ///     Ensures auxiliary Talk metadata failures fall back to an empty hint
+    ///     set without aborting the normal dialogue translation.
+    /// </summary>
+    [Fact]
+    public async Task TalkHandler_InterlocutorResolverFailure_ContinuesWithoutHints()
+    {
+        var translator = new ContextAwareRecordingTranslator();
+        using var handler = CreateTalkHandler(
+            CreateTranslationService(translator),
+            resolveInterlocutorHintsAsync: static (_, _, _, _) =>
+                Task.FromException<DialogueInterlocutorHints>(
+                    new InvalidOperationException("Metadata lookup failed.")));
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation("Krile", "Stay close.", english));
+
+        var context = await translator.WaitForDialogueContextAsync()
+            .WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Null(context.AddresseeHint);
+        Assert.Null(context.MetadataProvenance);
+    }
+
+    /// <summary>
     ///     Ensures a retired Talk source generation cancels the pending
     ///     interlocutor-hint resolution before it can call the translator.
     /// </summary>
@@ -714,6 +741,31 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         Assert.Empty(context.PriorTurns);
         Assert.Equal("Alphinaud", context.AddresseeHint);
         Assert.Equal("male", context.AddresseeGenderHint);
+    }
+
+    /// <summary>
+    ///     Ensures auxiliary BattleTalk metadata failures fall back to an empty
+    ///     hint set without aborting the normal dialogue translation.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_InterlocutorResolverFailure_ContinuesWithoutHints()
+    {
+        var translator = new ContextAwareRecordingTranslator();
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(translator),
+            resolveInterlocutorHintsAsync: static (_, _, _, _) =>
+                Task.FromException<DialogueInterlocutorHints>(
+                    new InvalidOperationException("Metadata lookup failed.")));
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation("Krile", "Stay close.", english));
+
+        var context = await translator.WaitForDialogueContextAsync()
+            .WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Null(context.AddresseeHint);
+        Assert.Null(context.MetadataProvenance);
     }
 
     /// <summary>
@@ -1119,7 +1171,7 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             "npc",
             "male",
             "QuestSheetDerived",
-            "2");
+            2);
     }
 
     /// <summary>

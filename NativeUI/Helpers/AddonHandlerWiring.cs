@@ -649,8 +649,8 @@ public partial class Echoglossian
             metadata.AddresseeHint,
             metadata.AddresseeRoleHint,
             metadata.AddresseeGenderHint,
-            metadata.ResolutionTier.ToString(),
-            metadata.ResolutionTier.ToString());
+            metadata.Provenance,
+            metadata.ConfidenceTier);
   }
 
   /// <summary>

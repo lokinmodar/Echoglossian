@@ -100,7 +100,7 @@ public class DialogueContextPromptHelperTests
             AddresseeRoleHint: "npc",
             AddresseeGenderHint: "male",
             MetadataProvenance: "quest-sheet",
-            MetadataConfidenceTier: "exact");
+            MetadataConfidenceTier: 2);
         DialogueTranslationContext emptyHintContext = new(
             "Talk",
             "quest-1",
@@ -125,6 +125,7 @@ public class DialogueContextPromptHelperTests
         prompt.Should().Contain(
             $"Current speaker: Krile{Environment.NewLine}Speaker role: npc{Environment.NewLine}Speaker gender: female{Environment.NewLine}Addressee: Alphinaud{Environment.NewLine}Addressee role: npc{Environment.NewLine}Addressee gender: male{Environment.NewLine}[1] Thancred: We move now.");
         hintedKey.Should().NotBe(emptyHintKey);
+        hintedKey.Should().Contain("\"MetadataConfidenceTier\":2");
         emptyHintKey.Should().NotContain("SpeakerGenderHint");
         emptyHintKey.Should().NotContain("AddresseeHint");
     }
