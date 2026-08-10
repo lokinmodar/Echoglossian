@@ -724,4 +724,13 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Φορτωμένες εγγραφές {0}</value>
   </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Λειτουργία εμφάνισης μετάφρασης</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Λειτουργία εμφάνισης μετάφρασης</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Λειτουργία εμφάνισης μετάφρασης</value>
+  </data>
 </root>
