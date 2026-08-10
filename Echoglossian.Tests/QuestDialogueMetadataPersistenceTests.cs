@@ -212,6 +212,97 @@ public class QuestDialogueMetadataPersistenceTests
     }
 
     /// <summary>
+    /// Ensures duplicate logical keys in one batch select the row with the
+    /// newest update timestamp rather than the last input row.
+    /// </summary>
+    [Fact]
+    public async Task UpsertQuestDialogueMetadataBatchAsync_InBatchDuplicateKey_PreservesNewestRow()
+    {
+        var configDir = CreateTempConfigDirectory();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(typeof(PluginEntry));
+
+        try
+        {
+            await using (var context = new EchoglossianDbContext(configDir))
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            var olderObservedAtUtc = DateTime.UnixEpoch.AddMinutes(1);
+            var newerObservedAtUtc = DateTime.UnixEpoch.AddMinutes(2);
+            await plugin.UpsertQuestDialogueMetadataBatchAsync(
+                [
+                    CreateRow(speakerHint: "Newest speaker", observedAtUtc: newerObservedAtUtc),
+                    CreateRow(speakerHint: "Older trailing speaker", observedAtUtc: olderObservedAtUtc),
+                ],
+                CancellationToken.None);
+
+            var persisted = await plugin.FindQuestDialogueMetadataAsync(
+                CreateLookup(),
+                CancellationToken.None);
+
+            Assert.NotNull(persisted);
+            Assert.Equal("Newest speaker", persisted.SpeakerHint);
+            Assert.Equal(newerObservedAtUtc, persisted.UpdatedAtUtc);
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    /// Ensures a conflict update retains the earliest creation timestamp while
+    /// accepting the newer exact-key row contents.
+    /// </summary>
+    [Fact]
+    public async Task UpsertQuestDialogueMetadataBatchAsync_ConflictUpdate_PreservesEarliestCreatedAtUtc()
+    {
+        var configDir = CreateTempConfigDirectory();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(typeof(PluginEntry));
+
+        try
+        {
+            await using (var context = new EchoglossianDbContext(configDir))
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            var createdAtUtc = DateTime.UnixEpoch.AddMinutes(1);
+            await plugin.UpsertQuestDialogueMetadataBatchAsync(
+                [CreateRow(
+                    speakerHint: "Initial speaker",
+                    observedAtUtc: DateTime.UnixEpoch.AddMinutes(2),
+                    createdAtUtc: createdAtUtc)],
+                CancellationToken.None);
+            await plugin.UpsertQuestDialogueMetadataBatchAsync(
+                [CreateRow(
+                    speakerHint: "Updated speaker",
+                    observedAtUtc: DateTime.UnixEpoch.AddMinutes(3),
+                    createdAtUtc: DateTime.UnixEpoch.AddMinutes(2))],
+                CancellationToken.None);
+
+            var persisted = await plugin.FindQuestDialogueMetadataAsync(
+                CreateLookup(),
+                CancellationToken.None);
+
+            Assert.NotNull(persisted);
+            Assert.Equal("Updated speaker", persisted.SpeakerHint);
+            Assert.Equal(createdAtUtc, persisted.CreatedAtUtc);
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Creates one metadata row with the canonical exact-match values.
     /// </summary>
     private static QuestDialogueMetadata CreateRow(
@@ -222,7 +313,8 @@ public class QuestDialogueMetadataPersistenceTests
         string sourceTextHash = "hash-001",
         string derivationVersion = "v1",
         string speakerHint = "Speaker v1",
-        DateTime? observedAtUtc = null)
+        DateTime? observedAtUtc = null,
+        DateTime? createdAtUtc = null)
     {
         var rowObservedAtUtc = observedAtUtc ?? DateTime.UnixEpoch;
         return new QuestDialogueMetadata
@@ -243,7 +335,7 @@ public class QuestDialogueMetadataPersistenceTests
             Provenance = "quest-text",
             ConfidenceTier = 2,
             DerivationVersion = derivationVersion,
-            CreatedAtUtc = rowObservedAtUtc,
+            CreatedAtUtc = createdAtUtc ?? rowObservedAtUtc,
             UpdatedAtUtc = rowObservedAtUtc,
         };
     }

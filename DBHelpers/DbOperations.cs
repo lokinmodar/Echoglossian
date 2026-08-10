@@ -244,7 +244,7 @@ public partial class Echoglossian
           row.SourceTextHash,
           row.DerivationVersion,
         })
-        .Select(group => group.Last())
+        .Select(group => group.MaxBy(row => row.UpdatedAtUtc)!)
         .ToList();
     using var context = new EchoglossianDbContext(ConfigDirectory);
     await using var transaction = await context.Database
@@ -279,7 +279,6 @@ public partial class Echoglossian
               AddresseeRoleHint = excluded.AddresseeRoleHint,
               Provenance = excluded.Provenance,
               ConfidenceTier = excluded.ConfidenceTier,
-              CreatedAtUtc = excluded.CreatedAtUtc,
               UpdatedAtUtc = excluded.UpdatedAtUtc
           WHERE excluded.UpdatedAtUtc >= questdialoguemetadata.UpdatedAtUtc;
           """,

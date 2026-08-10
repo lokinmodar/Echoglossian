@@ -507,8 +507,21 @@ public class MockFramework : IDisposable, IFramework, IMockService
 
                 this.timer.Dispose();
                 this.timer = null;
-                _ = this.framework.RunOnTick(this.action);
+                _ = this.framework.RunOnTick(() => this.RunActionIfCurrent(callbackGeneration));
             }
+        }
+
+        private void RunActionIfCurrent(long callbackGeneration)
+        {
+            lock (this.sync)
+            {
+                if (this.disposed || callbackGeneration != this.generation)
+                {
+                    return;
+                }
+            }
+
+            this.action();
         }
     }
 
