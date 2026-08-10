@@ -27,6 +27,21 @@ internal static partial class QuestDialogueMetadataDerivation
     public static IReadOnlyList<QuestDialogueSheetEntry> ReadDialogueEntries(
         QuestProgressSnapshot questProgressSnapshot)
     {
+        return ReadDialogueEntries(questProgressSnapshot, CancellationToken.None);
+    }
+
+    /// <summary>
+    ///     Reads populated dialogue and speaker-name rows while observing
+    ///     cancellation during sheet traversal.
+    /// </summary>
+    /// <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+    /// <param name="cancellationToken">The token that cancels sheet traversal.</param>
+    /// <returns>The ordered dialogue and speaker-name sheet entries.</returns>
+    internal static IReadOnlyList<QuestDialogueSheetEntry> ReadDialogueEntries(
+        QuestProgressSnapshot questProgressSnapshot,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(questProgressSnapshot.QuestSheetName))
         {
             return [];
@@ -45,6 +60,7 @@ internal static partial class QuestDialogueMetadataDerivation
         var rowCount = Convert.ToInt32(questTextSheet.Count, CultureInfo.InvariantCulture);
         for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var row = questTextSheet.GetRow((uint)rowIndex);
             var rowKey = EvaluateQuestText(row.ReadStringColumn(0), evaluator);
             var text = EvaluateQuestText(row.ReadStringColumn(1), evaluator);
@@ -56,7 +72,10 @@ internal static partial class QuestDialogueMetadataDerivation
             rawEntries.Add(new QuestDialogueSheetEntry(rowKey, text, rowIndex, 0));
         }
 
-        return ReadDialogueEntries(questProgressSnapshot, rawEntries);
+        return ReadDialogueEntries(
+            questProgressSnapshot,
+            rawEntries,
+            cancellationToken);
     }
 
     /// <summary>
@@ -70,12 +89,33 @@ internal static partial class QuestDialogueMetadataDerivation
         QuestProgressSnapshot questProgressSnapshot,
         IReadOnlyList<QuestDialogueSheetEntry> rawEntries)
     {
+        return ReadDialogueEntries(
+            questProgressSnapshot,
+            rawEntries,
+            CancellationToken.None);
+    }
+
+    /// <summary>
+    ///     Filters evaluated raw quest rows while observing cancellation during
+    ///     source-ordered traversal.
+    /// </summary>
+    /// <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+    /// <param name="rawEntries">The source-ordered evaluated raw sheet rows.</param>
+    /// <param name="cancellationToken">The token that cancels row traversal.</param>
+    /// <returns>The ordered dialogue and speaker-name sheet entries.</returns>
+    internal static IReadOnlyList<QuestDialogueSheetEntry> ReadDialogueEntries(
+        QuestProgressSnapshot questProgressSnapshot,
+        IReadOnlyList<QuestDialogueSheetEntry> rawEntries,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(rawEntries);
+        cancellationToken.ThrowIfCancellationRequested();
 
         List<QuestDialogueSheetEntry> dialogueEntries = [];
         ushort questSequence = 0;
         foreach (var entry in rawEntries.OrderBy(entry => entry.SourceOrder))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (TryGetSequence(entry.RowKey, out var sequence))
             {
                 questSequence = sequence;
@@ -111,21 +151,60 @@ internal static partial class QuestDialogueMetadataDerivation
         string derivationVersion,
         DateTime observedAtUtc)
     {
-        var turns = ReadNamedTurns(dialogueEntries);
+        return BuildEntries(
+            questProgressSnapshot,
+            dialogueEntries,
+            sourceLanguageCode,
+            gameVersion,
+            derivationVersion,
+            observedAtUtc,
+            CancellationToken.None);
+    }
+
+    /// <summary>
+    ///     Builds persistent metadata rows while observing cancellation during
+    ///     dialogue pairing and candidate scans.
+    /// </summary>
+    /// <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+    /// <param name="dialogueEntries">The source-ordered quest sheet entries.</param>
+    /// <param name="sourceLanguageCode">The source language code.</param>
+    /// <param name="gameVersion">The game version that supplied the rows.</param>
+    /// <param name="derivationVersion">The derivation algorithm version.</param>
+    /// <param name="observedAtUtc">The UTC timestamp for the derived rows.</param>
+    /// <param name="cancellationToken">The token that cancels metadata derivation.</param>
+    /// <returns>The derived metadata rows for paired dialogue text entries.</returns>
+    internal static IReadOnlyList<QuestDialogueMetadata> BuildEntries(
+        QuestProgressSnapshot questProgressSnapshot,
+        IReadOnlyList<QuestDialogueSheetEntry> dialogueEntries,
+        string sourceLanguageCode,
+        string gameVersion,
+        string derivationVersion,
+        DateTime observedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var turns = ReadNamedTurns(dialogueEntries, cancellationToken);
         var questSheetId = GetQuestSheetId(questProgressSnapshot.QuestSheetName);
         List<QuestDialogueMetadata> results = [];
 
         foreach (var turn in turns)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var nextSpeaker = turns.FirstOrDefault(candidate =>
-                candidate.QuestSequence == turn.QuestSequence &&
-                candidate.SourceOrder > turn.SourceOrder &&
-                !string.Equals(candidate.SpeakerHint, turn.SpeakerHint, StringComparison.Ordinal));
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return candidate.QuestSequence == turn.QuestSequence &&
+                       candidate.SourceOrder > turn.SourceOrder &&
+                       !string.Equals(candidate.SpeakerHint, turn.SpeakerHint, StringComparison.Ordinal);
+            });
             var previousSpeaker = nextSpeaker == default
                 ? turns.LastOrDefault(candidate =>
-                    candidate.QuestSequence == turn.QuestSequence &&
-                    candidate.SourceOrder < turn.SourceOrder &&
-                    !string.Equals(candidate.SpeakerHint, turn.SpeakerHint, StringComparison.Ordinal))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return candidate.QuestSequence == turn.QuestSequence &&
+                           candidate.SourceOrder < turn.SourceOrder &&
+                           !string.Equals(candidate.SpeakerHint, turn.SpeakerHint, StringComparison.Ordinal);
+                })
                 : default;
             var addresseeHint = nextSpeaker != default
                 ? nextSpeaker.SpeakerHint
@@ -158,12 +237,20 @@ internal static partial class QuestDialogueMetadataDerivation
     }
 
     private static List<QuestDialogueNamedTurn> ReadNamedTurns(
-        IReadOnlyList<QuestDialogueSheetEntry> dialogueEntries)
+        IReadOnlyList<QuestDialogueSheetEntry> dialogueEntries,
+        CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var namesBySequenceAndSuffix = new Dictionary<(ushort Sequence, string Suffix), string>();
         var textEntries = new List<(QuestDialogueSheetEntry Entry, ushort Sequence)>();
-        foreach (var entry in dialogueEntries.OrderBy(entry => entry.SourceOrder))
+        var orderedEntries = dialogueEntries.OrderBy(entry =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            return entry.SourceOrder;
+        });
+        foreach (var entry in orderedEntries)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             if (TryGetSequence(entry.RowKey, out var sequence))
             {
                 continue;
@@ -189,6 +276,7 @@ internal static partial class QuestDialogueMetadataDerivation
         List<QuestDialogueNamedTurn> turns = [];
         foreach (var (entry, sequence) in textEntries)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!TryGetDialogueSuffix(entry.RowKey, out var suffix) ||
                 !namesBySequenceAndSuffix.TryGetValue((sequence, suffix), out var speakerHint))
             {

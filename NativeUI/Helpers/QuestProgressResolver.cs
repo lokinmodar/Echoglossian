@@ -203,6 +203,32 @@ internal static class QuestProgressResolver
             return false;
         }
 
+        var runtimeQuestId = (ushort)(questId & 0xFFFF);
+        return TryResolveQuestProgress(
+            new QuestProgressCapture(
+                questId,
+                QuestManager.GetQuestSequence(runtimeQuestId),
+                Echoglossian.ClientStateInterface.ClientLanguage),
+            CancellationToken.None,
+            out snapshot);
+    }
+
+    /// <summary>
+    ///     Resolves a managed quest progression snapshot from native values
+    ///     captured before the worker handoff.
+    /// </summary>
+    /// <param name="capture">The captured quest identity, sequence, and client language.</param>
+    /// <param name="cancellationToken">The token that cancels sheet traversal.</param>
+    /// <param name="snapshot">The resolved managed progression snapshot, if any.</param>
+    /// <returns><see langword="true" /> when progression data could be resolved.</returns>
+    internal static bool TryResolveQuestProgress(
+        QuestProgressCapture capture,
+        CancellationToken cancellationToken,
+        out QuestProgressSnapshot snapshot)
+    {
+        snapshot = default;
+        cancellationToken.ThrowIfCancellationRequested();
+
         var dataManager = Echoglossian.DManager;
         if (dataManager == null)
         {
@@ -210,20 +236,19 @@ internal static class QuestProgressResolver
         }
 
         var questSheet =
-            dataManager.GetExcelSheet<Quest>(Echoglossian.ClientStateInterface.ClientLanguage);
+            dataManager.GetExcelSheet<Quest>(capture.ClientLanguage);
         if (questSheet == null ||
             !TryResolveQuestRow(
                 questSheet,
-                questId,
+                capture.QuestId,
                 out var resolvedQuestRowId,
                 out var questRow))
         {
             return false;
         }
 
-        var runtimeQuestId = (ushort)(resolvedQuestRowId & 0xFFFF);
-        var questSequence = QuestManager.GetQuestSequence(runtimeQuestId);
-        var cacheKey = $"{resolvedQuestRowId}:{questSequence}";
+        cancellationToken.ThrowIfCancellationRequested();
+        var cacheKey = $"{resolvedQuestRowId}:{capture.QuestSequence}";
         if (QuestProgressCache.TryGetValue(cacheKey, out snapshot))
         {
             return true;
@@ -243,17 +268,21 @@ internal static class QuestProgressResolver
         }
 
         var questName = QuestLuminaResolver.GetQuestNameText(questRow);
-        var (questSteps, questSeqs, questSystemTexts) = ReadQuestTextRows(questTextSheet);
+        var (questSteps, questSeqs, questSystemTexts) = ReadQuestTextRows(
+            questTextSheet,
+            capture.ClientLanguage,
+            cancellationToken);
         if (questSteps.Count == 0 && questSeqs.Count == 0)
         {
             return false;
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         var contentHash = QuestContentHash.Compute(questSeqs, questSteps, questSystemTexts);
 
         snapshot = new QuestProgressSnapshot(
             resolvedQuestRowId,
-            questSequence,
+            capture.QuestSequence,
             questName,
             questSheetName,
             questSteps,
@@ -294,7 +323,9 @@ internal static class QuestProgressResolver
     }
 
     private static (List<QuestProgressEntry> Steps, List<QuestProgressEntry> Seqs, List<QuestProgressEntry> SystemTexts) ReadQuestTextRows(
-        ExcelSheet<RawRow> questTextSheet)
+        ExcelSheet<RawRow> questTextSheet,
+        ClientLanguage clientLanguage,
+        CancellationToken cancellationToken)
     {
         var steps = new List<QuestProgressEntry>();
         var seqs = new List<QuestProgressEntry>();
@@ -304,12 +335,13 @@ internal static class QuestProgressResolver
         var rowCount = Convert.ToInt32(questTextSheet.Count, CultureInfo.InvariantCulture);
         for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var row = questTextSheet.GetRow((uint)rowIndex);
 
             ReadOnlySeString rawKey = row.ReadStringColumn(0);
             ReadOnlySeString rawValue = row.ReadStringColumn(1);
-            var keyText = EvaluateQuestText(rawKey, evaluator);
-            var valueText = EvaluateQuestText(rawValue, evaluator);
+            var keyText = EvaluateQuestText(rawKey, evaluator, clientLanguage);
+            var valueText = EvaluateQuestText(rawValue, evaluator, clientLanguage);
 
             if (keyText.Length == 0 || valueText.Length == 0)
             {
@@ -337,7 +369,8 @@ internal static class QuestProgressResolver
 
     private static string EvaluateQuestText(
         ReadOnlySeString text,
-        ISeStringEvaluator? evaluator)
+        ISeStringEvaluator? evaluator,
+        ClientLanguage clientLanguage)
     {
         if (evaluator == null)
         {
@@ -348,7 +381,7 @@ internal static class QuestProgressResolver
         {
             return evaluator.Evaluate(
                     text,
-                    language: Echoglossian.ClientStateInterface.ClientLanguage)
+                    language: clientLanguage)
                 .ExtractText();
         }
         catch (Exception)
@@ -369,6 +402,17 @@ internal static class QuestProgressResolver
         return $"quest/{dir}/{questId}";
     }
 }
+
+/// <summary>
+///     Carries lightweight native quest values across a worker handoff.
+/// </summary>
+/// <param name="QuestId">The accepted quest identifier.</param>
+/// <param name="QuestSequence">The accepted quest sequence captured from the quest manager.</param>
+/// <param name="ClientLanguage">The client language captured with the quest state.</param>
+internal readonly record struct QuestProgressCapture(
+    uint QuestId,
+    byte QuestSequence,
+    ClientLanguage ClientLanguage);
 
 /// <summary>
 ///     Represents a quest progression snapshot derived from Lumina and the

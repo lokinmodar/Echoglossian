@@ -55,6 +55,31 @@ public class DialogueInterlocutorMetadataResolverTests
     }
 
     /// <summary>
+    /// Ensures accepted quest sequences are copied during native capture and
+    /// supplied to managed quest resolution outside the framework scheduler.
+    /// </summary>
+    [Fact]
+    public void Resolver_QuestProgressBoundary_UsesCapturedSequenceForManagedResolution()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "Helpers",
+            "DialogueInterlocutorMetadataResolver.cs"));
+
+        Assert.Contains("new QuestProgressCapture(", source, StringComparison.Ordinal);
+        Assert.Contains("this.captureQuestSequence(", source, StringComparison.Ordinal);
+        Assert.Contains(
+            "this.tryResolveQuestProgress(\n                acceptedQuest.QuestId,\n                acceptedQuest.QuestSequence,\n                cancellationToken)",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.readDialogueEntries(questProgress.Value, cancellationToken)",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures native resolver values are captured on the framework thread,
     ///     while quest progress and sheet traversal execute after that boundary.
     /// </summary>
@@ -103,7 +128,7 @@ public class DialogueInterlocutorMetadataResolverTests
 
         Assert.NotNull(result);
         Assert.Equal(1, captureSchedulerCalls);
-        Assert.Equal(4, nativeCaptureReadCalls);
+        Assert.Equal(5, nativeCaptureReadCalls);
         Assert.Equal(2, questTraversalCalls);
         Assert.Equal(1, databaseLookupCalls);
     }
@@ -237,14 +262,23 @@ public class DialogueInterlocutorMetadataResolverTests
                 nativeCaptureObserved?.Invoke();
                 return [68799];
             },
-            tryResolveQuestProgress: questId =>
+            captureQuestSequence: questId =>
+            {
+                nativeCaptureObserved?.Invoke();
+                Assert.Equal((uint)68799, questId);
+                return 0;
+            },
+            tryResolveQuestProgress: (questId, questSequence, cancellationToken) =>
             {
                 questTraversalObserved?.Invoke();
+                Assert.Equal((byte)0, questSequence);
+                Assert.False(cancellationToken.IsCancellationRequested);
                 return questId == 68799 ? snapshot : null;
             },
-            readDialogueEntries: _ =>
+            readDialogueEntries: (_, cancellationToken) =>
             {
                 questTraversalObserved?.Invoke();
+                Assert.False(cancellationToken.IsCancellationRequested);
                 return rows;
             },
             findMetadataAsync: (lookup, _) =>

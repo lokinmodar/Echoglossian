@@ -85,6 +85,59 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     }
 
     /// <summary>
+    /// Ensures framework-thread work-item capture copies only the live quest id
+    /// and sequence instead of materializing Lumina quest snapshots inline.
+    /// </summary>
+    [Fact]
+    public void TryCaptureAcceptedQuestPrefetchWorkItem_CapturesSequenceWithoutLuminaTraversal()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs"));
+        var methodBody = ExtractMethodBody(
+            source,
+            "private bool TryCaptureAcceptedQuestPrefetchWorkItem(");
+
+        Assert.Contains("QuestManager.GetQuestSequence(", methodBody, StringComparison.Ordinal);
+        Assert.Contains("new QuestProgressCapture(", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "QuestProgressResolver.TryResolveQuestProgress(",
+            methodBody,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures generation invalidation that occurs during managed sheet
+    /// resolution prevents either downstream prefetch path from starting.
+    /// </summary>
+    [Fact]
+    public void ProcessAcceptedQuestPrefetchWorkItem_RechecksGenerationAfterSheetResolution()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs"));
+        var methodBody = ExtractMethodBody(
+            source,
+            "private void ProcessAcceptedQuestPrefetchWorkItem(");
+        var resolutionIndex = methodBody.IndexOf(
+            "QuestProgressResolver.TryResolveQuestProgress(",
+            StringComparison.Ordinal);
+        var generationCheckIndex = methodBody.IndexOf(
+            "workItem.Generation !=\n        Volatile.Read(ref this.acceptedQuestPrefetchGeneration)",
+            resolutionIndex + 1,
+            StringComparison.Ordinal);
+
+        Assert.True(resolutionIndex >= 0, "Could not find managed quest resolution.");
+        Assert.True(
+            generationCheckIndex > resolutionIndex,
+            "Generation must be rechecked after managed quest resolution.");
+    }
+
+    /// <summary>
     /// Ensures accepted-quest capture starts dialogue metadata generation in a
     /// separately owned operation instead of performing sheet or database work
     /// on the framework tick.
@@ -124,11 +177,11 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc(),",
+            "this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc()",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "workItem.ObservedAtUtc);",
+            "workItem.ObservedAtUtc,\n        cancellationToken);",
             source,
             StringComparison.Ordinal);
         Assert.DoesNotContain(
@@ -187,5 +240,14 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
         }
 
         throw new DirectoryNotFoundException("Unable to locate repository root.");
+    }
+
+    private static string ExtractMethodBody(string source, string signature)
+    {
+        var start = source.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Could not find method signature '{signature}'.");
+        var end = source.IndexOf("\n  /// <summary>", start + signature.Length, StringComparison.Ordinal);
+        Assert.True(end > start, $"Could not find the end of method '{signature}'.");
+        return source[start..end];
     }
 }

@@ -1080,6 +1080,7 @@ public class TranslationService
       CancellationToken cancellationToken,
       TranslatorResolution? translatorResolution = null)
   {
+    cancellationToken.ThrowIfCancellationRequested();
     var resolvedOriginContext = ResolveOriginContext(
         originContext,
         callerMemberName,
@@ -1149,6 +1150,7 @@ public class TranslationService
     var useDialogueContext = this.WillUseDialogueContext(
         dialogueContext,
         resolvedTranslatorResolution);
+    cancellationToken.ThrowIfCancellationRequested();
     var stopwatch = Stopwatch.StartNew();
     var finalDialogueText = useDialogueContext &&
                             resolvedTranslatorResolution.Translator is IDialogueContextAwareTranslator contextAwareTranslator

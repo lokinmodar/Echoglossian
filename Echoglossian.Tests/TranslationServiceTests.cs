@@ -525,6 +525,31 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    /// Ensures an already-cancelled request never starts provider translation
+    /// work.
+    /// </summary>
+    [Fact]
+    public async Task TranslateAsync_PreCancelledToken_DoesNotInvokeProvider()
+    {
+        var translator = new RecordingTranslator
+        {
+            AsyncResult = "provider-result",
+        };
+        var service = new TranslationService(text => text, translator);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            service.TranslateAsync(
+                "hello",
+                "en",
+                "pt",
+                cancellationTokenSource.Token));
+
+        Assert.Equal(0, translator.AsyncCalls);
+    }
+
+    /// <summary>
     ///     Verifies that cancellation completes before a pending provider result.
     /// </summary>
     /// <param name="translationTask">The in-flight translation task.</param>

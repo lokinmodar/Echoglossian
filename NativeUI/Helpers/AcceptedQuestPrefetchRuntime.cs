@@ -312,8 +312,8 @@ public partial class Echoglossian
   }
 
   /// <summary>
-  ///     Captures one accepted-quest snapshot on the plugin tick and queues the
-  ///     heavy canonical prefetch work onto a serialized background worker.
+  ///     Captures lightweight accepted-quest state on the plugin tick and queues
+  ///     sheet-backed work onto a serialized background worker.
   /// </summary>
   /// <param name="questId">The accepted quest identifier.</param>
   /// <param name="requestSources">
@@ -332,24 +332,8 @@ public partial class Echoglossian
       return;
     }
 
-    if (IsAcceptedQuestCanonicalPrefetchEnabled(this.configuration))
-    {
-      this.acceptedQuestPrefetchActionPump.Enqueue(
-          () => this.ProcessAcceptedQuestPrefetchWorkItem(workItem));
-    }
-
-    if (IsAcceptedQuestDialogueMetadataGenerationEnabled(this.configuration))
-    {
-      this.ScheduleAcceptedQuestDialogueMetadataGeneration(
-          new AcceptedQuestDialogueMetadataWorkItem(
-              workItem.QuestProgressSnapshot,
-              workItem.SourceLanguage,
-              GetGameVersion() ?? string.Empty,
-              AcceptedQuestDialogueMetadataDerivationVersion,
-              this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc(),
-              workItem.Generation,
-              this.acceptedQuestDialogueMetadataGenerationCancellationSource.Token));
-    }
+    this.acceptedQuestPrefetchActionPump.Enqueue(
+        () => this.ProcessAcceptedQuestPrefetchWorkItem(workItem));
   }
 
   /// <summary>
@@ -403,14 +387,16 @@ public partial class Echoglossian
       CancellationToken cancellationToken)
   {
     var dialogueEntries = QuestDialogueMetadataDerivation.ReadDialogueEntries(
-        workItem.QuestProgressSnapshot);
+        workItem.QuestProgressSnapshot,
+        cancellationToken);
     var metadataEntries = QuestDialogueMetadataDerivation.BuildEntries(
         workItem.QuestProgressSnapshot,
         dialogueEntries,
         workItem.SourceLanguage.PersistenceCode,
         workItem.GameVersion,
         workItem.DerivationVersion,
-        workItem.ObservedAtUtc);
+        workItem.ObservedAtUtc,
+        cancellationToken);
     if (workItem.Generation !=
         Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
     {
@@ -427,7 +413,7 @@ public partial class Echoglossian
 
   /// <summary>
   ///     Captures one immutable accepted-quest prefetch work item from the
-  ///     current live quest state.
+  ///     current live quest state without traversing Lumina sheets.
   /// </summary>
   /// <param name="questId">The accepted quest identifier.</param>
   /// <param name="requestSources">
@@ -435,7 +421,7 @@ public partial class Echoglossian
   ///     prefetch cycle.
   /// </param>
   /// <param name="workItem">
-  ///     The captured background work item when snapshot capture succeeds.
+  ///     The captured background work item when native state capture succeeds.
   /// </param>
   /// <returns><see langword="true" /> when a complete work item was captured.</returns>
   private bool TryCaptureAcceptedQuestPrefetchWorkItem(
@@ -452,18 +438,6 @@ public partial class Echoglossian
         detail:
         $"source={requestSourceLabel}; Accepted-quest prefetch tick queued this quest for background processing.");
 
-    if (!QuestProgressResolver.TryResolveQuestProgress(
-            questId.ToString(CultureInfo.InvariantCulture),
-            out var questProgressSnapshot))
-    {
-      this.LogAcceptedQuestPrefetchEvent(
-          "resolve-failed",
-          questId,
-          detail: "QuestProgressResolver could not resolve live progress for this accepted quest.");
-      workItem = default;
-      return false;
-    }
-
     if (!TryCapturePrefetchOperationScope(
             ResolveCurrentPrefetchSourceLanguage,
             this.configuration,
@@ -474,14 +448,25 @@ public partial class Echoglossian
       return false;
     }
 
+    var runtimeQuestId = (ushort)(questId & 0xFFFF);
+    var questProgressCapture = new QuestProgressCapture(
+        questId,
+        QuestManager.GetQuestSequence(runtimeQuestId),
+        ClientStateInterface.ClientLanguage);
+    var generateDialogueMetadata =
+        IsAcceptedQuestDialogueMetadataGenerationEnabled(this.configuration);
     workItem = new AcceptedQuestPrefetchWorkItem(
-        questProgressSnapshot,
-        QuestCanonicalData.Create(
-            questProgressSnapshot,
-            GetGameVersion()),
+        questProgressCapture,
         sourceLanguage,
         scope,
-        Volatile.Read(ref this.acceptedQuestPrefetchGeneration));
+        GetGameVersion() ?? string.Empty,
+        IsAcceptedQuestCanonicalPrefetchEnabled(this.configuration),
+        generateDialogueMetadata,
+        generateDialogueMetadata
+            ? this.CaptureAcceptedQuestDialogueMetadataObservedAtUtc()
+            : default,
+        Volatile.Read(ref this.acceptedQuestPrefetchGeneration),
+        this.acceptedQuestDialogueMetadataGenerationCancellationSource.Token);
     return true;
   }
 
@@ -499,8 +484,46 @@ public partial class Echoglossian
       return;
     }
 
-    var questProgressSnapshot = workItem.QuestProgressSnapshot;
-    var questCanonicalData = workItem.QuestCanonicalData;
+    if (!QuestProgressResolver.TryResolveQuestProgress(
+            workItem.QuestProgressCapture,
+            workItem.GenerationCancellationToken,
+            out var questProgressSnapshot))
+    {
+      this.LogAcceptedQuestPrefetchEvent(
+          "resolve-failed",
+          workItem.QuestProgressCapture.QuestId,
+          detail: "QuestProgressResolver could not resolve live progress for this accepted quest.");
+      return;
+    }
+
+    if (workItem.Generation !=
+        Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
+    {
+      return;
+    }
+
+    workItem.GenerationCancellationToken.ThrowIfCancellationRequested();
+    if (workItem.GenerateDialogueMetadata)
+    {
+      this.ScheduleAcceptedQuestDialogueMetadataGeneration(
+          new AcceptedQuestDialogueMetadataWorkItem(
+              questProgressSnapshot,
+              workItem.SourceLanguage,
+              workItem.GameVersion,
+              AcceptedQuestDialogueMetadataDerivationVersion,
+              workItem.ObservedAtUtc,
+              workItem.Generation,
+              workItem.GenerationCancellationToken));
+    }
+
+    if (!workItem.RunCanonicalPrefetch)
+    {
+      return;
+    }
+
+    var questCanonicalData = QuestCanonicalData.Create(
+        questProgressSnapshot,
+        workItem.GameVersion);
     var currentQuestSequenceText = questCanonicalData.CurrentSequenceText;
     var translationService = TranslationService;
     var nameDispatchResult = RunAcceptedQuestPrefetchOperationEntry(
@@ -1569,11 +1592,15 @@ public partial class Echoglossian
   }
 
   private readonly record struct AcceptedQuestPrefetchWorkItem(
-      QuestProgressSnapshot QuestProgressSnapshot,
-      QuestCanonicalData QuestCanonicalData,
+      QuestProgressCapture QuestProgressCapture,
       SourceClientLanguage SourceLanguage,
       TranslationReuseScope Scope,
-      int Generation);
+      string GameVersion,
+      bool RunCanonicalPrefetch,
+      bool GenerateDialogueMetadata,
+      DateTime ObservedAtUtc,
+      int Generation,
+      CancellationToken GenerationCancellationToken);
 
   private readonly record struct AcceptedQuestDialogueMetadataWorkItem(
       QuestProgressSnapshot QuestProgressSnapshot,

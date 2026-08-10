@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Reflection;
+
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -113,6 +115,76 @@ public class QuestDialogueMetadataDerivationTests
             QuestContentHash.ComputeLine("key", "text"),
             QuestContentHash.ComputeLine("key", "text"));
         Assert.Matches("^[0-9a-f]{16}$", first.SourceTextHash);
+    }
+
+    /// <summary>
+    /// Ensures cancellation is observed while filtering source-ordered quest
+    /// dialogue rows.
+    /// </summary>
+    [Fact]
+    public void ReadDialogueEntries_CancelledTraversal_ThrowsOperationCanceledException()
+    {
+        var method = typeof(QuestDialogueMetadataDerivation).GetMethod(
+            "ReadDialogueEntries",
+            BindingFlags.Static | BindingFlags.NonPublic,
+            binder: null,
+            types:
+            [
+                typeof(QuestProgressSnapshot),
+                typeof(IReadOnlyList<QuestDialogueSheetEntry>),
+                typeof(CancellationToken),
+            ],
+            modifiers: null);
+        Assert.NotNull(method);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        var exception = Assert.Throws<TargetInvocationException>(() => method.Invoke(
+            null,
+            [this.CreateSnapshot(), Array.Empty<QuestDialogueSheetEntry>(), cancellationTokenSource.Token]));
+
+        Assert.IsType<OperationCanceledException>(exception.InnerException);
+    }
+
+    /// <summary>
+    /// Ensures cancellation is observed before metadata pairing traverses the
+    /// source-ordered dialogue rows.
+    /// </summary>
+    [Fact]
+    public void BuildEntries_CancelledTraversal_ThrowsOperationCanceledException()
+    {
+        var method = typeof(QuestDialogueMetadataDerivation).GetMethod(
+            "BuildEntries",
+            BindingFlags.Static | BindingFlags.NonPublic,
+            binder: null,
+            types:
+            [
+                typeof(QuestProgressSnapshot),
+                typeof(IReadOnlyList<QuestDialogueSheetEntry>),
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(DateTime),
+                typeof(CancellationToken),
+            ],
+            modifiers: null);
+        Assert.NotNull(method);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        var exception = Assert.Throws<TargetInvocationException>(() => method.Invoke(
+            null,
+            [
+                this.CreateSnapshot(),
+                Array.Empty<QuestDialogueSheetEntry>(),
+                "en",
+                "2026.08.10.0000",
+                "v1",
+                DateTime.UnixEpoch,
+                cancellationTokenSource.Token,
+            ]));
+
+        Assert.IsType<OperationCanceledException>(exception.InnerException);
     }
 
     /// <summary>
