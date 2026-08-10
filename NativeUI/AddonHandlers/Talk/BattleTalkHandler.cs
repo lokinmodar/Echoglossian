@@ -35,6 +35,8 @@ public sealed class BattleTalkHandler :
       findBattleTalkMessageAsync;
   private readonly Func<BattleTalkMessage, CancellationToken, Task<string>> insertBattleTalkMessageAsync;
   private readonly Func<string, string> normalizeReplacementText;
+  private readonly Func<string, string, SourceClientLanguage, CancellationToken,
+      Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync;
   private readonly OwnedAsyncOperationSet ownedOperations = new(
       exception => PluginRuntimeLog.Error(
           $"[{BattleTalkAddonName}] Unexpected BattleTalk background operation error: {exception}"));
@@ -88,6 +90,9 @@ public sealed class BattleTalkHandler :
   /// <param name="normalizeReplacementText">
   ///     Delegate used to normalize translated text before native replacement.
   /// </param>
+  /// <param name="resolveInterlocutorHintsAsync">
+  ///     Delegate used to resolve current-line interlocutor hints after a database miss.
+  /// </param>
   public BattleTalkHandler(
       Config config,
       TranslationService translationService,
@@ -96,7 +101,9 @@ public sealed class BattleTalkHandler :
       Func<BattleTalkMessage, Task<string>> insertBattleTalkMessageAsync,
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
-      Func<string, string> normalizeReplacementText)
+      Func<string, string> normalizeReplacementText,
+      Func<string, string, SourceClientLanguage, CancellationToken,
+          Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync)
     : this(
         config,
         translationService,
@@ -104,7 +111,8 @@ public sealed class BattleTalkHandler :
         (message, _) => insertBattleTalkMessageAsync(message),
         updateOverlay,
         clearOverlay,
-        normalizeReplacementText)
+        normalizeReplacementText,
+        resolveInterlocutorHintsAsync)
   {
   }
 
@@ -119,6 +127,9 @@ public sealed class BattleTalkHandler :
   /// <param name="updateOverlay">The overlay publication callback.</param>
   /// <param name="clearOverlay">The overlay clear callback.</param>
   /// <param name="normalizeReplacementText">The native replacement normalizer.</param>
+  /// <param name="resolveInterlocutorHintsAsync">
+  ///     The asynchronous current-line interlocutor hint resolver.
+  /// </param>
   internal BattleTalkHandler(
       Config config,
       TranslationService translationService,
@@ -127,7 +138,9 @@ public sealed class BattleTalkHandler :
       Func<BattleTalkMessage, CancellationToken, Task<string>> insertBattleTalkMessageAsync,
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
-      Func<string, string> normalizeReplacementText)
+      Func<string, string> normalizeReplacementText,
+      Func<string, string, SourceClientLanguage, CancellationToken,
+          Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync)
   {
     this.config = config;
     this.translationService = translationService;
@@ -136,6 +149,7 @@ public sealed class BattleTalkHandler :
     this.updateOverlay = updateOverlay;
     this.clearOverlay = clearOverlay;
     this.normalizeReplacementText = normalizeReplacementText;
+    this.resolveInterlocutorHintsAsync = resolveInterlocutorHintsAsync;
 
     this.RegisterHandler(AddonEvent.PreShow, this.OnCaptureHint);
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnCaptureHint);
@@ -1048,6 +1062,17 @@ public sealed class BattleTalkHandler :
       }
       else
       {
+        var interlocutorHints = await this.resolveInterlocutorHintsAsync(
+            originalName,
+            originalText,
+            sourceLanguage,
+            operationToken).ConfigureAwait(false);
+        if (!this.sourceLifecycle.IsCurrent(sourceOperation) ||
+            !this.IsCurrentRequest(requestId, sourceLanguage))
+        {
+          return;
+        }
+
         var dialogueContext = DialogueTranslationSessionStore.BuildContext(
             BattleTalkAddonName,
             this.BuildDialogueSessionKey(
@@ -1057,7 +1082,8 @@ public sealed class BattleTalkHandler :
             originalName,
             originalText,
             DialogueSessionHistoryLimit,
-            DialogueSessionTtl);
+            DialogueSessionTtl,
+            interlocutorHints: interlocutorHints);
         var usesRuntimeOnlyDialogueContext =
             this.translationService.WillUseDialogueContext(
                 dialogueContext,

@@ -454,6 +454,100 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
     }
 
     /// <summary>
+    ///     Ensures the first fresh Talk line forwards resolved interlocutor
+    ///     hints to a context-aware translator without requiring prior turns.
+    /// </summary>
+    [Fact]
+    public async Task TalkHandler_FirstFreshLine_PassesInterlocutorHintsToContextAwareTranslator()
+    {
+        var translator = new ContextAwareRecordingTranslator();
+        using var handler = CreateTalkHandler(
+            CreateTranslationService(translator),
+            resolveInterlocutorHintsAsync: static (_, _, _, _) =>
+                Task.FromResult(CreateInterlocutorHints()));
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation("Krile", "Stay close.", english));
+
+        var context = await translator.WaitForDialogueContextAsync();
+
+        Assert.Empty(context.PriorTurns);
+        Assert.Equal("Alphinaud", context.AddresseeHint);
+        Assert.Equal("male", context.AddresseeGenderHint);
+    }
+
+    /// <summary>
+    ///     Ensures a retired Talk source generation cancels the pending
+    ///     interlocutor-hint resolution before it can call the translator.
+    /// </summary>
+    [Fact]
+    public async Task TalkHandler_RetiredScope_CancelsPendingInterlocutorHintResolution()
+    {
+        var resolutionStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancellationObserved = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = CreateTalkHandler(
+            CreateTranslationService(new ControlledTranslator()),
+            resolveInterlocutorHintsAsync: async (_, _, _, cancellationToken) =>
+            {
+                resolutionStarted.TrySetResult(true);
+                try
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                    when (cancellationToken.IsCancellationRequested)
+                {
+                    cancellationObserved.TrySetResult(true);
+                    throw;
+                }
+
+                return CreateInterlocutorHints();
+            });
+        var english = new SourceClientLanguage("en", "en");
+        var german = new SourceClientLanguage("de", "de");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation("Krile", "Stay close.", english));
+        await resolutionStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        handler.InvalidateStateForSource(german);
+
+        Assert.True(await cancellationObserved.Task.WaitAsync(TimeSpan.FromSeconds(1)));
+    }
+
+    /// <summary>
+    ///     Ensures a reusable Talk database row bypasses interlocutor-hint
+    ///     resolution entirely.
+    /// </summary>
+    [Fact]
+    public async Task TalkHandler_ReusedDatabaseTranslation_DoesNotResolveInterlocutorHints()
+    {
+        var resolverCalls = 0;
+        var overlayPublished = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = CreateTalkHandler(
+            CreateTranslationService(new ControlledTranslator()),
+            () => overlayPublished.TrySetResult(true),
+            findTalkMessageAsync: static (_, _) => Task.FromResult<TalkMessage?>(
+                CreateStoredTalkMessage("Krile", "Stay close.", "Fique perto.")),
+            resolveInterlocutorHintsAsync: (_, _, _, _) =>
+            {
+                resolverCalls++;
+                return Task.FromResult(CreateInterlocutorHints());
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation("Krile", "Stay close.", english));
+        await overlayPublished.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Equal(0, resolverCalls);
+    }
+
+    /// <summary>
     ///     Ensures the managed BattleTalk capture callback returns while database
     ///     lookup remains suspended and publishes only after lookup completes.
     /// </summary>
@@ -595,6 +689,63 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             out _,
             out _,
             out _));
+    }
+
+    /// <summary>
+    ///     Ensures the first fresh BattleTalk line forwards resolved
+    ///     interlocutor hints to a context-aware translator without requiring
+    ///     prior turns.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_FirstFreshLine_PassesInterlocutorHintsToContextAwareTranslator()
+    {
+        var translator = new ContextAwareRecordingTranslator();
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(translator),
+            resolveInterlocutorHintsAsync: static (_, _, _, _) =>
+                Task.FromResult(CreateInterlocutorHints()));
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation("Krile", "Stay close.", english));
+
+        var context = await translator.WaitForDialogueContextAsync();
+
+        Assert.Empty(context.PriorTurns);
+        Assert.Equal("Alphinaud", context.AddresseeHint);
+        Assert.Equal("male", context.AddresseeGenderHint);
+    }
+
+    /// <summary>
+    ///     Ensures a reusable BattleTalk database row bypasses
+    ///     interlocutor-hint resolution entirely.
+    /// </summary>
+    [Fact]
+    public async Task BattleTalkHandler_ReusedDatabaseTranslation_DoesNotResolveInterlocutorHints()
+    {
+        var resolverCalls = 0;
+        var overlayPublished = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = CreateBattleTalkHandler(
+            CreateTranslationService(new ControlledTranslator()),
+            () => overlayPublished.TrySetResult(true),
+            findBattleTalkMessageAsync: static (_, _) =>
+                Task.FromResult<BattleTalkMessage?>(CreateStoredBattleTalkMessage(
+                    "Krile",
+                    "Stay close.",
+                    "Fique perto.")),
+            resolveInterlocutorHintsAsync: (_, _, _, _) =>
+            {
+                resolverCalls++;
+                return Task.FromResult(CreateInterlocutorHints());
+            });
+        var english = new SourceClientLanguage("en", "en");
+
+        handler.InvalidateStateForSource(english);
+        Assert.True(handler.TryQueueTranslation("Krile", "Stay close.", english));
+        await overlayPublished.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Equal(0, resolverCalls);
     }
 
     /// <summary>
@@ -823,7 +974,9 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         Func<TalkMessage, CancellationToken, Task<string>>?
             insertTalkMessageWithCancellationAsync = null,
         Func<TalkMessage, CancellationToken, Task<TalkMessage?>>?
-            findTalkMessageAsync = null)
+            findTalkMessageAsync = null,
+        Func<string, string, SourceClientLanguage, CancellationToken,
+            Task<DialogueInterlocutorHints>>? resolveInterlocutorHintsAsync = null)
     {
         return new TalkHandler(
             configuration ?? new Config
@@ -842,6 +995,8 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             (_, _, _) => updateOverlay?.Invoke(),
             clearOverlay ?? (static () => { }),
             static text => text,
+            resolveInterlocutorHintsAsync ??
+            (static (_, _, _, _) => Task.FromResult(default(DialogueInterlocutorHints))),
             restoreNativeMutation: static () => { });
     }
 
@@ -887,7 +1042,9 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         Func<BattleTalkMessage, CancellationToken, Task<string>>?
             insertBattleTalkMessageAsync = null,
         Func<BattleTalkMessage, CancellationToken, Task<BattleTalkMessage?>>?
-            findBattleTalkMessageAsync = null)
+            findBattleTalkMessageAsync = null,
+        Func<string, string, SourceClientLanguage, CancellationToken,
+            Task<DialogueInterlocutorHints>>? resolveInterlocutorHintsAsync = null)
     {
         return new BattleTalkHandler(
             configuration ?? new Config
@@ -904,7 +1061,9 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             (static (_, _) => Task.FromResult(string.Empty)),
             (_, _, _) => updateOverlay?.Invoke(),
             static () => { },
-            static text => text);
+            static text => text,
+            resolveInterlocutorHintsAsync ??
+            (static (_, _, _, _) => Task.FromResult(default(DialogueInterlocutorHints))));
     }
 
     /// <summary>
@@ -945,6 +1104,22 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
             static text => text,
             translator,
             translationEngine: (int)PluginEntry.TransEngines.Google);
+    }
+
+    /// <summary>
+    ///     Creates the fixed fresh-line hints used by handler context tests.
+    /// </summary>
+    /// <returns>The resolved interlocutor hints.</returns>
+    private static DialogueInterlocutorHints CreateInterlocutorHints()
+    {
+        return new DialogueInterlocutorHints(
+            "npc",
+            "female",
+            "Alphinaud",
+            "npc",
+            "male",
+            "QuestSheetDerived",
+            "2");
     }
 
     /// <summary>
@@ -992,6 +1167,56 @@ public sealed class NativeDialogueHandlerLifecycleTests : IDisposable
         {
             this.requestStarted.TrySetResult(true);
             return this.completion.Task;
+        }
+    }
+
+    /// <summary>
+    ///     Records the dialogue context passed to the context-aware translation
+    ///     contract for a fresh line.
+    /// </summary>
+    private sealed class ContextAwareRecordingTranslator :
+        ITranslator,
+        IDialogueContextAwareTranslator
+    {
+        private readonly TaskCompletionSource<DialogueTranslationContext> context = new(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <inheritdoc />
+        public string? Translate(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return null;
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return Task.FromResult<string?>(null);
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage,
+            DialogueTranslationContext dialogueContext)
+        {
+            this.context.TrySetResult(dialogueContext);
+            return Task.FromResult<string?>("Fique perto.");
+        }
+
+        /// <summary>
+        ///     Waits for the first context-aware dialogue translation request.
+        /// </summary>
+        /// <returns>The captured dialogue context.</returns>
+        public Task<DialogueTranslationContext> WaitForDialogueContextAsync()
+        {
+            return this.context.Task;
         }
     }
 

@@ -32,6 +32,8 @@ public sealed class TalkHandler :
       findTalkMessageAsync;
   private readonly Func<TalkMessage, CancellationToken, Task<string>> insertTalkMessageAsync;
   private readonly Func<string, string> normalizeReplacementText;
+  private readonly Func<string, string, SourceClientLanguage, CancellationToken,
+      Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync;
   private readonly OwnedAsyncOperationSet ownedOperations = new(
       exception => PluginRuntimeLog.Error(
           $"[{TalkAddonName}] Unexpected Talk background operation error: {exception}"));
@@ -77,6 +79,9 @@ public sealed class TalkHandler :
   /// <param name="normalizeReplacementText">
   ///     Delegate used to normalize translated text before native replacement.
   /// </param>
+  /// <param name="resolveInterlocutorHintsAsync">
+  ///     Delegate used to resolve current-line interlocutor hints after a database miss.
+  /// </param>
   /// <param name="restoreNativeMutation">
   ///     Optional native-free override for restoring tracked Talk mutation.
   /// </param>
@@ -89,6 +94,8 @@ public sealed class TalkHandler :
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
       Func<string, string> normalizeReplacementText,
+      Func<string, string, SourceClientLanguage, CancellationToken,
+          Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync,
       Action? restoreNativeMutation = null)
     : this(
         config,
@@ -98,6 +105,7 @@ public sealed class TalkHandler :
         updateOverlay,
         clearOverlay,
         normalizeReplacementText,
+        resolveInterlocutorHintsAsync,
         restoreNativeMutation)
   {
   }
@@ -113,6 +121,9 @@ public sealed class TalkHandler :
   /// <param name="updateOverlay">The overlay publication callback.</param>
   /// <param name="clearOverlay">The overlay clear callback.</param>
   /// <param name="normalizeReplacementText">The native replacement normalizer.</param>
+  /// <param name="resolveInterlocutorHintsAsync">
+  ///     The asynchronous current-line interlocutor hint resolver.
+  /// </param>
   /// <param name="restoreNativeMutation">The optional native restoration override.</param>
   internal TalkHandler(
       Config config,
@@ -123,6 +134,8 @@ public sealed class TalkHandler :
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
       Func<string, string> normalizeReplacementText,
+      Func<string, string, SourceClientLanguage, CancellationToken,
+          Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync,
       Action? restoreNativeMutation = null)
   {
     this.config = config;
@@ -132,6 +145,7 @@ public sealed class TalkHandler :
     this.updateOverlay = updateOverlay;
     this.clearOverlay = clearOverlay;
     this.normalizeReplacementText = normalizeReplacementText;
+    this.resolveInterlocutorHintsAsync = resolveInterlocutorHintsAsync;
     this.restoreNativeMutation =
         restoreNativeMutation ?? this.RestoreTrackedNativeMutation;
 
@@ -1166,6 +1180,17 @@ public sealed class TalkHandler :
       }
       else
       {
+        var interlocutorHints = await this.resolveInterlocutorHintsAsync(
+            originalName,
+            originalText,
+            sourceLanguage,
+            operationToken).ConfigureAwait(false);
+        if (!this.sourceLifecycle.IsCurrent(sourceOperation) ||
+            !this.IsCurrentRequest(requestId, sourceLanguage))
+        {
+          return;
+        }
+
         var dialogueContext = DialogueTranslationSessionStore.BuildContext(
             TalkAddonName,
             this.BuildDialogueSessionKey(
@@ -1175,7 +1200,8 @@ public sealed class TalkHandler :
             originalName,
             originalText,
             DialogueSessionHistoryLimit,
-            DialogueSessionTtl);
+            DialogueSessionTtl,
+            interlocutorHints: interlocutorHints);
         var usesRuntimeOnlyDialogueContext =
             this.translationService.WillUseDialogueContext(
                 dialogueContext,
