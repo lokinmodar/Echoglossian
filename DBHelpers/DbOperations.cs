@@ -246,7 +246,7 @@ public partial class Echoglossian
   /// <exception cref="OperationCanceledException">
   ///     The database operation is cancelled.
   /// </exception>
-  private async Task UpsertQuestDialogueMetadataBatchAsync(
+  internal async Task UpsertQuestDialogueMetadataBatchAsync(
       IReadOnlyList<QuestDialogueMetadata> rows,
       Func<bool> commitGuard,
       CancellationToken cancellationToken)

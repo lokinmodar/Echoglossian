@@ -164,6 +164,49 @@ public class QuestDialogueMetadataPersistenceTests
     }
 
     /// <summary>
+    /// Ensures cancellation delivered at the commit boundary rolls back a
+    /// guarded metadata transaction without exposing its rows.
+    /// </summary>
+    [Fact]
+    public async Task UpsertQuestDialogueMetadataBatchAsync_CancelledAtCommitBoundary_RollsBackRows()
+    {
+        var configDir = CreateTempConfigDirectory();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        var plugin = (PluginEntry)RuntimeHelpers.GetUninitializedObject(
+            typeof(PluginEntry));
+
+        try
+        {
+            await using (var context = new EchoglossianDbContext(configDir))
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            using var cancellationSource = new CancellationTokenSource();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => plugin.UpsertQuestDialogueMetadataBatchAsync(
+                    [CreateRow()],
+                    () =>
+                    {
+                        cancellationSource.Cancel();
+                        return true;
+                    },
+                    cancellationSource.Token));
+
+            await using var verification = new EchoglossianDbContext(configDir);
+            Assert.Empty(await verification.QuestDialogueMetadata
+                .AsNoTracking()
+                .ToListAsync());
+        }
+        finally
+        {
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
     ///     Creates one metadata row with the canonical exact-match values.
     /// </summary>
     private static QuestDialogueMetadata CreateRow(
