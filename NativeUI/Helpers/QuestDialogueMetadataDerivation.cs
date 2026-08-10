@@ -40,7 +40,7 @@ internal static partial class QuestDialogueMetadataDerivation
             return [];
         }
 
-        var entries = new List<QuestDialogueSheetEntry>();
+        var rawEntries = new List<QuestDialogueSheetEntry>();
         var evaluator = Echoglossian.SeStringEvaluator;
         var rowCount = Convert.ToInt32(questTextSheet.Count, CultureInfo.InvariantCulture);
         for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
@@ -48,15 +48,49 @@ internal static partial class QuestDialogueMetadataDerivation
             var row = questTextSheet.GetRow((uint)rowIndex);
             var rowKey = EvaluateQuestText(row.ReadStringColumn(0), evaluator);
             var text = EvaluateQuestText(row.ReadStringColumn(1), evaluator);
-            if (rowKey.Length == 0 || text.Length == 0 || IsNonDialogueRow(rowKey))
+            if (rowKey.Length == 0 || text.Length == 0)
             {
                 continue;
             }
 
-            entries.Add(new QuestDialogueSheetEntry(rowKey, text, rowIndex));
+            rawEntries.Add(new QuestDialogueSheetEntry(rowKey, text, rowIndex, 0));
         }
 
-        return entries;
+        return ReadDialogueEntries(questProgressSnapshot, rawEntries);
+    }
+
+    /// <summary>
+    ///     Filters evaluated raw quest rows while carrying each latest SEQ
+    ///     boundary onto retained dialogue and speaker-name rows.
+    /// </summary>
+    /// <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+    /// <param name="rawEntries">The source-ordered evaluated raw sheet rows.</param>
+    /// <returns>The ordered dialogue and speaker-name sheet entries.</returns>
+    internal static IReadOnlyList<QuestDialogueSheetEntry> ReadDialogueEntries(
+        QuestProgressSnapshot questProgressSnapshot,
+        IReadOnlyList<QuestDialogueSheetEntry> rawEntries)
+    {
+        ArgumentNullException.ThrowIfNull(rawEntries);
+
+        List<QuestDialogueSheetEntry> dialogueEntries = [];
+        ushort questSequence = 0;
+        foreach (var entry in rawEntries.OrderBy(entry => entry.SourceOrder))
+        {
+            if (TryGetSequence(entry.RowKey, out var sequence))
+            {
+                questSequence = sequence;
+                continue;
+            }
+
+            if (entry.RowKey.Length == 0 || entry.Text.Length == 0 || IsNonDialogueRow(entry.RowKey))
+            {
+                continue;
+            }
+
+            dialogueEntries.Add(entry with { QuestSequence = questSequence });
+        }
+
+        return dialogueEntries;
     }
 
     /// <summary>
@@ -128,13 +162,10 @@ internal static partial class QuestDialogueMetadataDerivation
     {
         var namesBySequenceAndSuffix = new Dictionary<(ushort Sequence, string Suffix), string>();
         var textEntries = new List<(QuestDialogueSheetEntry Entry, ushort Sequence)>();
-        ushort questSequence = 0;
-
         foreach (var entry in dialogueEntries.OrderBy(entry => entry.SourceOrder))
         {
             if (TryGetSequence(entry.RowKey, out var sequence))
             {
-                questSequence = sequence;
                 continue;
             }
 
@@ -145,13 +176,13 @@ internal static partial class QuestDialogueMetadataDerivation
 
             if (IsNameRow(entry.RowKey))
             {
-                namesBySequenceAndSuffix[(questSequence, suffix)] = entry.Text;
+                namesBySequenceAndSuffix[(entry.QuestSequence, suffix)] = entry.Text;
                 continue;
             }
 
             if (!IsNonDialogueRow(entry.RowKey))
             {
-                textEntries.Add((entry, questSequence));
+                textEntries.Add((entry, entry.QuestSequence));
             }
         }
 
@@ -259,7 +290,9 @@ internal static partial class QuestDialogueMetadataDerivation
 /// <param name="RowKey">The evaluated source row key.</param>
 /// <param name="Text">The evaluated source text.</param>
 /// <param name="SourceOrder">The zero-based source row order.</param>
+/// <param name="QuestSequence">The latest preceding SEQ boundary value.</param>
 internal readonly record struct QuestDialogueSheetEntry(
     string RowKey,
     string Text,
-    int SourceOrder);
+    int SourceOrder,
+    ushort QuestSequence);

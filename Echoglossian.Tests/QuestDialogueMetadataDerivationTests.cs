@@ -13,32 +13,61 @@ namespace Echoglossian.Tests;
 public class QuestDialogueMetadataDerivationTests
 {
     /// <summary>
+    ///     Ensures the reader carries SEQ boundary state into retained rows so
+    ///     the builder preserves multi-sequence metadata without SEQ rows.
+    /// </summary>
+    [Fact]
+    public void ReadDialogueEntries_MultiSequenceRows_PreservesSequenceForBuildEntries()
+    {
+        var snapshot = this.CreateSnapshot();
+        QuestDialogueSheetEntry[] rawRows =
+        [
+            new("LucKbb111_03263_SEQ_00", "Phase zero", 0, 0),
+            new("LucKbb111_03263_NPC_NAME_000_000", "Oriel", 1, 0),
+            new("LucKbb111_03263_NPC_000_000", "Welcome, adventurer.", 2, 0),
+            new("LucKbb111_03263_SEQ_01", "Phase one", 3, 0),
+            new("LucKbb111_03263_NPC_NAME_001_000", "Radovan", 4, 0),
+            new("LucKbb111_03263_NPC_001_000", "Stay alert.", 5, 0),
+        ];
+
+        var dialogueEntries = QuestDialogueMetadataDerivation.ReadDialogueEntries(
+            snapshot,
+            rawRows);
+        var metadata = QuestDialogueMetadataDerivation.BuildEntries(
+            snapshot,
+            dialogueEntries,
+            sourceLanguageCode: "en",
+            gameVersion: "2026.08.10.0000",
+            derivationVersion: "v1",
+            DateTime.UnixEpoch);
+
+        Assert.DoesNotContain(
+            dialogueEntries,
+            entry => entry.RowKey.Contains("_SEQ_", StringComparison.Ordinal));
+        Assert.Equal((ushort)0, dialogueEntries[0].QuestSequence);
+        Assert.Equal((ushort)1, dialogueEntries[^1].QuestSequence);
+        Assert.Equal([0, 1], metadata.Select(entry => (int)entry.QuestSequence));
+    }
+
+    /// <summary>
     ///     Ensures paired NAME rows identify speakers, SEQ rows delimit turns,
     ///     and neighboring named turns produce deterministic addressee hints.
     /// </summary>
     [Fact]
     public void BuildEntries_PairedDialogueRows_DerivesDeterministicMetadata()
     {
-        var snapshot = new QuestProgressSnapshot(
-            QuestId: 68799,
-            QuestSequence: 0,
-            QuestName: "For Better or Worse",
-            QuestSheetName: "quest/032/LucKbb111_03263",
-            QuestSteps: [],
-            QuestSeqTexts: [],
-            QuestSystemTexts: [],
-            ContentHash: "quest-content-hash");
+        var snapshot = this.CreateSnapshot();
         var observedAtUtc = DateTime.UnixEpoch;
         QuestDialogueSheetEntry[] rows =
         [
-            new("LucKbb111_03263_SEQ_00", "Phase zero", 0),
-            new("LucKbb111_03263_NPC_NAME_000_000", "Oriel", 1),
-            new("LucKbb111_03263_NPC_000_000", "Welcome, adventurer.", 2),
-            new("LucKbb111_03263_NPC_NAME_000_001", "Radovan", 3),
-            new("LucKbb111_03263_NPC_000_001", "We should leave.", 4),
-            new("LucKbb111_03263_SEQ_01", "Phase one", 5),
-            new("LucKbb111_03263_NPC_NAME_001_000", "Oriel", 6),
-            new("LucKbb111_03263_NPC_001_000", "Stay alert.", 7),
+            new("LucKbb111_03263_SEQ_00", "Phase zero", 0, 0),
+            new("LucKbb111_03263_NPC_NAME_000_000", "Oriel", 1, 0),
+            new("LucKbb111_03263_NPC_000_000", "Welcome, adventurer.", 2, 0),
+            new("LucKbb111_03263_NPC_NAME_000_001", "Radovan", 3, 0),
+            new("LucKbb111_03263_NPC_000_001", "We should leave.", 4, 0),
+            new("LucKbb111_03263_SEQ_01", "Phase one", 5, 1),
+            new("LucKbb111_03263_NPC_NAME_001_000", "Oriel", 6, 1),
+            new("LucKbb111_03263_NPC_001_000", "Stay alert.", 7, 1),
         ];
 
         var metadata = QuestDialogueMetadataDerivation.BuildEntries(
@@ -84,5 +113,22 @@ public class QuestDialogueMetadataDerivationTests
             QuestContentHash.ComputeLine("key", "text"),
             QuestContentHash.ComputeLine("key", "text"));
         Assert.Matches("^[0-9a-f]{16}$", first.SourceTextHash);
+    }
+
+    /// <summary>
+    ///     Creates the shared quest snapshot fixture.
+    /// </summary>
+    /// <returns>The fixed quest progress snapshot.</returns>
+    private QuestProgressSnapshot CreateSnapshot()
+    {
+        return new QuestProgressSnapshot(
+            QuestId: 68799,
+            QuestSequence: 0,
+            QuestName: "For Better or Worse",
+            QuestSheetName: "quest/032/LucKbb111_03263",
+            QuestSteps: [],
+            QuestSeqTexts: [],
+            QuestSystemTexts: [],
+            ContentHash: "quest-content-hash");
     }
 }
