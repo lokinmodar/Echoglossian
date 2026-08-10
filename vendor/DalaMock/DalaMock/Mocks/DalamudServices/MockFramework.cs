@@ -430,7 +430,9 @@ public class MockFramework : IDisposable, IFramework, IMockService
         private readonly MockFramework framework;
         private readonly TimeSpan delay;
         private readonly System.Action action;
-        private readonly Timer timer;
+        private readonly object sync = new();
+        private Timer? timer;
+        private long generation;
         private bool disposed;
 
         internal MockDebouncer(MockFramework framework, TimeSpan delay, System.Action action)
@@ -438,44 +440,75 @@ public class MockFramework : IDisposable, IFramework, IMockService
             this.framework = framework;
             this.delay = delay;
             this.action = action;
-            this.timer = new Timer(this.OnTimerElapsed);
         }
 
-        public bool IsPending { get; private set; }
+        public bool IsPending
+        {
+            get
+            {
+                lock (this.sync)
+                {
+                    return this.timer is not null;
+                }
+            }
+        }
 
         public void Debounce()
         {
-            ObjectDisposedException.ThrowIf(this.disposed, this);
-            this.IsPending = true;
-            this.timer.Change(this.delay, Timeout.InfiniteTimeSpan);
+            lock (this.sync)
+            {
+                ObjectDisposedException.ThrowIf(this.disposed, this);
+                this.generation++;
+                this.timer?.Dispose();
+                this.timer = new Timer(
+                    state => this.OnTimerElapsed((long)state!),
+                    this.generation,
+                    this.delay,
+                    Timeout.InfiniteTimeSpan);
+            }
         }
 
         public void Cancel()
         {
-            this.IsPending = false;
-            this.timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            lock (this.sync)
+            {
+                this.generation++;
+                this.timer?.Dispose();
+                this.timer = null;
+            }
         }
 
         public void Dispose()
         {
-            if (this.disposed)
+            lock (this.sync)
             {
-                return;
-            }
+                if (this.disposed)
+                {
+                    return;
+                }
 
-            this.disposed = true;
-            this.timer.Dispose();
+                this.disposed = true;
+                this.generation++;
+                this.timer?.Dispose();
+                this.timer = null;
+            }
         }
 
-        private void OnTimerElapsed(object? state)
+        private void OnTimerElapsed(long callbackGeneration)
         {
-            if (this.disposed || !this.IsPending)
+            lock (this.sync)
             {
-                return;
-            }
+                if (this.disposed ||
+                    this.timer is null ||
+                    callbackGeneration != this.generation)
+                {
+                    return;
+                }
 
-            this.IsPending = false;
-            _ = this.framework.RunOnTick(this.action);
+                this.timer.Dispose();
+                this.timer = null;
+                _ = this.framework.RunOnTick(this.action);
+            }
         }
     }
 
