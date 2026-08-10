@@ -228,6 +228,31 @@ public partial class Echoglossian
       IReadOnlyList<QuestDialogueMetadata> rows,
       CancellationToken cancellationToken)
   {
+    await this.UpsertQuestDialogueMetadataBatchAsync(
+            rows,
+            static () => true,
+            cancellationToken)
+        .ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Replaces persisted metadata rows with the supplied exact logical rows
+  ///     when the caller still permits the transaction to commit.
+  /// </summary>
+  /// <param name="rows">The metadata rows to persist.</param>
+  /// <param name="commitGuard">The callback that permits committing the transaction.</param>
+  /// <param name="cancellationToken">The token that cancels the database operation.</param>
+  /// <returns>A task representing the guarded database operation.</returns>
+  /// <exception cref="OperationCanceledException">
+  ///     The database operation is cancelled.
+  /// </exception>
+  private async Task UpsertQuestDialogueMetadataBatchAsync(
+      IReadOnlyList<QuestDialogueMetadata> rows,
+      Func<bool> commitGuard,
+      CancellationToken cancellationToken)
+  {
+    ArgumentNullException.ThrowIfNull(commitGuard);
+
     if (rows.Count == 0)
     {
       return;
@@ -246,9 +271,12 @@ public partial class Echoglossian
         })
         .Select(group => group.Last())
         .ToList();
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    await using var transaction = await context.Database
+        .BeginTransactionAsync(cancellationToken)
+        .ConfigureAwait(false);
     foreach (var row in rowsByLogicalKey)
     {
-      using var context = new EchoglossianDbContext(ConfigDirectory);
       await context.Database.ExecuteSqlInterpolatedAsync(
           $"""
           INSERT INTO questdialoguemetadata (
@@ -281,6 +309,14 @@ public partial class Echoglossian
           """,
           cancellationToken).ConfigureAwait(false);
     }
+
+    cancellationToken.ThrowIfCancellationRequested();
+    if (!commitGuard())
+    {
+      return;
+    }
+
+    await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>
