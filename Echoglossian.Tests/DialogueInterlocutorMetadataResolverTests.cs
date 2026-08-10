@@ -40,10 +40,10 @@ public class DialogueInterlocutorMetadataResolverTests
     public async Task ResolveAsync_PersistedAddresseeWithMatchingLoadedActor_ReturnsQuestSheetPlusLiveFusion()
     {
         var resolver = this.CreateResolver(
-            liveActors: new Dictionary<string, LiveDialogueActorSnapshot>(StringComparer.Ordinal)
-            {
-                ["Radovan"] = new("Radovan", 1045123, "male", "hyur", "midlander"),
-            });
+            liveActors:
+            [
+                new("Radovan", 1045123, "male", "hyur", "midlander"),
+            ]);
 
         var result = await resolver.ResolveAsync(this.CreateRequest());
 
@@ -53,6 +53,28 @@ public class DialogueInterlocutorMetadataResolverTests
         Assert.Equal("hyur", result.AddresseeRaceHint);
         Assert.Equal("midlander", result.AddresseeBodyTypeHint);
         Assert.Equal((uint)1045123, result.AddresseeActor!.DataId);
+    }
+
+    /// <summary>
+    ///     Ensures an ambiguous loaded actor name cannot upgrade persisted quest
+    ///     metadata to live fusion.
+    /// </summary>
+    [Fact]
+    public async Task ResolveAsync_DuplicateNamedLiveActors_LeavesResultQuestSheetDerivedExact()
+    {
+        LiveDialogueActorSnapshot[] liveActors =
+        [
+            new("Radovan", 1045123, "male", "hyur", "midlander"),
+            new("Radovan", 1045124, "female", "elezen", "wildwood"),
+        ];
+        var resolver = this.CreateResolver(liveActors: liveActors);
+
+        var result = await resolver.ResolveAsync(this.CreateRequest());
+
+        Assert.NotNull(result);
+        Assert.Equal(DialogueInterlocutorResolutionTier.QuestSheetDerivedExact, result.ResolutionTier);
+        Assert.Null(result.AddresseeActor);
+        Assert.Null(result.AddresseeGenderHint);
     }
 
     /// <summary>
@@ -86,7 +108,7 @@ public class DialogueInterlocutorMetadataResolverTests
     /// <returns>A configured resolver.</returns>
     private DialogueInterlocutorMetadataResolver CreateResolver(
         QuestDialogueMetadata? metadata = null,
-        IReadOnlyDictionary<string, LiveDialogueActorSnapshot>? liveActors = null,
+        IReadOnlyList<LiveDialogueActorSnapshot>? liveActors = null,
         string? playerSex = null)
     {
         var snapshot = new QuestProgressSnapshot(
@@ -116,7 +138,7 @@ public class DialogueInterlocutorMetadataResolverTests
                     lookup.SourceTextHash);
                 return Task.FromResult<QuestDialogueMetadata?>(expectedMetadata);
             },
-            captureLiveActors: () => liveActors ?? new Dictionary<string, LiveDialogueActorSnapshot>(),
+            captureLiveActors: () => liveActors ?? [],
             localPlayerName: () => "Player Name",
             playerSexHint: () => playerSex);
     }

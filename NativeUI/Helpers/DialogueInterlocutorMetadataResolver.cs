@@ -15,7 +15,7 @@ namespace Echoglossian;
 /// </summary>
 public sealed class DialogueInterlocutorMetadataResolver
 {
-    private readonly Func<IReadOnlyDictionary<string, LiveDialogueActorSnapshot>> captureLiveActors;
+    private readonly Func<IReadOnlyList<LiveDialogueActorSnapshot>> captureLiveActors;
     private readonly Func<QuestDialogueMetadataLookup, CancellationToken, Task<QuestDialogueMetadata?>> findMetadataAsync;
     private readonly Func<string> localPlayerName;
     private readonly Func<string?> playerSexHint;
@@ -54,7 +54,7 @@ public sealed class DialogueInterlocutorMetadataResolver
         Func<uint, QuestProgressSnapshot?> tryResolveQuestProgress,
         Func<QuestProgressSnapshot, IReadOnlyList<QuestDialogueSheetEntry>> readDialogueEntries,
         Func<QuestDialogueMetadataLookup, CancellationToken, Task<QuestDialogueMetadata?>> findMetadataAsync,
-        Func<IReadOnlyDictionary<string, LiveDialogueActorSnapshot>> captureLiveActors,
+        Func<IReadOnlyList<LiveDialogueActorSnapshot>> captureLiveActors,
         Func<string> localPlayerName,
         Func<string?> playerSexHint)
     {
@@ -134,8 +134,8 @@ public sealed class DialogueInterlocutorMetadataResolver
             return null;
         }
 
-        liveActors.TryGetValue(resolvedMetadata.SpeakerHint, out var speakerActor);
-        liveActors.TryGetValue(resolvedMetadata.AddresseeHint, out var addresseeActor);
+        var speakerActor = FindUniqueLiveActor(liveActors, resolvedMetadata.SpeakerHint);
+        var addresseeActor = FindUniqueLiveActor(liveActors, resolvedMetadata.AddresseeHint);
         var addresseeIsPlayer = string.Equals(
             resolvedMetadata.AddresseeHint,
             localPlayerName,
@@ -187,9 +187,9 @@ public sealed class DialogueInterlocutorMetadataResolver
         return NormalizeSexHint(Echoglossian.PlayerStateInterface?.Sex.ToString());
     }
 
-    private static IReadOnlyDictionary<string, LiveDialogueActorSnapshot> CaptureLiveActors()
+    private static IReadOnlyList<LiveDialogueActorSnapshot> CaptureLiveActors()
     {
-        Dictionary<string, LiveDialogueActorSnapshot> actors = new(StringComparer.Ordinal);
+        List<LiveDialogueActorSnapshot> actors = [];
         if (Echoglossian.ObjectTableInterface == null)
         {
             return actors;
@@ -204,7 +204,7 @@ public sealed class DialogueInterlocutorMetadataResolver
             }
 
             var customize = character.CustomizeData;
-            actors.TryAdd(gameObject.Name.TextValue, new LiveDialogueActorSnapshot(
+            actors.Add(new LiveDialogueActorSnapshot(
                 gameObject.Name.TextValue,
                 gameObject.BaseId,
                 NormalizeSexHint(customize.Sex.ToString()),
@@ -239,6 +239,16 @@ public sealed class DialogueInterlocutorMetadataResolver
                 StringComparison.Ordinal))
             .ToList();
         return speakerMatches.Count == 1 ? speakerMatches[0] : null;
+    }
+
+    private static LiveDialogueActorSnapshot? FindUniqueLiveActor(
+        IReadOnlyList<LiveDialogueActorSnapshot> liveActors,
+        string name)
+    {
+        var matches = liveActors
+            .Where(actor => string.Equals(actor.Name, name, StringComparison.Ordinal))
+            .ToList();
+        return matches.Count == 1 ? matches[0] : null;
     }
 
     private static string? NormalizeSexHint(string? sex)
