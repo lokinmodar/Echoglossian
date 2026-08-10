@@ -55,21 +55,27 @@ public class DialogueInterlocutorMetadataResolverTests
     }
 
     /// <summary>
-    ///     Ensures all game-owned resolver reads execute inside the capture
-    ///     scheduler and database lookup begins only after capture completes.
+    ///     Ensures native resolver values are captured on the framework thread,
+    ///     while quest progress and sheet traversal execute after that boundary.
     /// </summary>
     [Fact]
-    public async Task ResolveAsync_CaptureScheduler_ContainsGameOwnedReadsBeforeDatabaseLookup()
+    public async Task ResolveAsync_CaptureScheduler_OnlyContainsNativeCaptureBeforeQuestTraversal()
     {
         var insideCapture = false;
         var captureSchedulerCalls = 0;
-        var captureReadCalls = 0;
+        var nativeCaptureReadCalls = 0;
+        var questTraversalCalls = 0;
         var databaseLookupCalls = 0;
         var resolver = this.CreateResolver(
-            captureObserved: () =>
+            nativeCaptureObserved: () =>
             {
                 Assert.True(insideCapture);
-                captureReadCalls++;
+                nativeCaptureReadCalls++;
+            },
+            questTraversalObserved: () =>
+            {
+                Assert.False(insideCapture);
+                questTraversalCalls++;
             },
             lookupObserved: () =>
             {
@@ -97,7 +103,8 @@ public class DialogueInterlocutorMetadataResolverTests
 
         Assert.NotNull(result);
         Assert.Equal(1, captureSchedulerCalls);
-        Assert.Equal(6, captureReadCalls);
+        Assert.Equal(4, nativeCaptureReadCalls);
+        Assert.Equal(2, questTraversalCalls);
         Assert.Equal(1, databaseLookupCalls);
     }
 
@@ -195,7 +202,8 @@ public class DialogueInterlocutorMetadataResolverTests
     /// <param name="metadata">The persisted metadata returned by the exact lookup.</param>
     /// <param name="liveActors">The managed live actor snapshots.</param>
     /// <param name="playerSex">The managed player sex hint.</param>
-    /// <param name="captureObserved">The callback invoked for each game-owned read.</param>
+    /// <param name="nativeCaptureObserved">The callback invoked for each native capture read.</param>
+    /// <param name="questTraversalObserved">The callback invoked for each quest traversal read.</param>
     /// <param name="lookupObserved">The callback invoked at the database lookup boundary.</param>
     /// <param name="runOnFrameworkThreadAsync">The capture scheduler override.</param>
     /// <returns>A configured resolver.</returns>
@@ -203,7 +211,8 @@ public class DialogueInterlocutorMetadataResolverTests
         QuestDialogueMetadata? metadata = null,
         IReadOnlyList<LiveDialogueActorSnapshot>? liveActors = null,
         string? playerSex = null,
-        Action? captureObserved = null,
+        Action? nativeCaptureObserved = null,
+        Action? questTraversalObserved = null,
         Action? lookupObserved = null,
         Func<Action, CancellationToken, Task>? runOnFrameworkThreadAsync = null)
     {
@@ -225,17 +234,17 @@ public class DialogueInterlocutorMetadataResolverTests
         return new DialogueInterlocutorMetadataResolver(
             tryCollectAcceptedQuestIds: () =>
             {
-                captureObserved?.Invoke();
+                nativeCaptureObserved?.Invoke();
                 return [68799];
             },
             tryResolveQuestProgress: questId =>
             {
-                captureObserved?.Invoke();
+                questTraversalObserved?.Invoke();
                 return questId == 68799 ? snapshot : null;
             },
             readDialogueEntries: _ =>
             {
-                captureObserved?.Invoke();
+                questTraversalObserved?.Invoke();
                 return rows;
             },
             findMetadataAsync: (lookup, _) =>
@@ -249,17 +258,17 @@ public class DialogueInterlocutorMetadataResolverTests
             },
             captureLiveActors: () =>
             {
-                captureObserved?.Invoke();
+                nativeCaptureObserved?.Invoke();
                 return liveActors ?? [];
             },
             localPlayerName: () =>
             {
-                captureObserved?.Invoke();
+                nativeCaptureObserved?.Invoke();
                 return "Player Name";
             },
             playerSexHint: () =>
             {
-                captureObserved?.Invoke();
+                nativeCaptureObserved?.Invoke();
                 return playerSex;
             },
             runOnFrameworkThreadAsync: runOnFrameworkThreadAsync);
