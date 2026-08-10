@@ -711,4 +711,13 @@
   <data name="LoadedNRecords" xml:space="preserve">
     <value>Indlæste {0}-poster</value>
   </data>
+  <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
+    <value>Visningstilstand for oversættelse</value>
+  </data>
+  <data name="QuestDisplayModeLabel" xml:space="preserve">
+    <value>Visningstilstand for oversættelse</value>
+  </data>
+  <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
+    <value>Visningstilstand for oversættelse</value>
+  </data>
 </root>
