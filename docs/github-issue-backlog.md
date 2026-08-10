@@ -1,6 +1,6 @@
 # GitHub Issue Backlog
 
-Snapshot date: 2026-08-09
+Snapshot date: 2026-08-10
 
 This document is the operational snapshot for open issues in
 [`lokinmodar/Echoglossian`](https://github.com/lokinmodar/Echoglossian/issues).
@@ -9,21 +9,22 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 
 ## Published Release Baseline
 
-- Release: [`v4.2601.0809.0046`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0809.0046)
-- Product commit: `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
-- Official submission: [`goatcorp/DalamudPluginsD17#9177`](https://github.com/goatcorp/DalamudPluginsD17/pull/9177)
-- D17 status: approved and merged on 2026-08-09
-- D17 merge commit: `1a033922f52afd74640c620bcc1145be8e8a7cbe`
+- Release: [`v4.2601.0809.2000`](https://github.com/lokinmodar/Echoglossian/releases/tag/v4.2601.0809.2000)
+- Product commit: `d1ac912d0f065e7d0294ab0fa9d80bd40296d06b`
+- Official submission: [`goatcorp/DalamudPluginsD17#9183`](https://github.com/goatcorp/DalamudPluginsD17/pull/9183)
+- D17 status: approved and merged on 2026-08-10
+- D17 merge commit: `f0ab3fa980bf7480b0b15bb37beef350b71ed546`
 - Open issues after post-publication triage: 20
 - Open issues at the current audit head: 20
 - Focused open issues besides the living tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12): 19
 
 ## Current `v4-series` Delta
 
-- Audit head: `origin/v4-series` at `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
-- Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0809.0046` at `07edc833c03ec6019f63b02ca07fc4671dfd6f1a`
+- Audit head: `origin/v4-series` at `d1ac912d0f065e7d0294ab0fa9d80bd40296d06b`
+- Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0809.2000` at `d1ac912d0f065e7d0294ab0fa9d80bd40296d06b`
 - The audit head currently matches the latest published runtime baseline; there are no newer `v4-series` commits beyond this published release.
 - Issue [#12](https://github.com/lokinmodar/Echoglossian/issues/12) remains the living known-issues tracker and should stay aligned with this document whenever focused issue state changes materially.
+- Publication of `v4.2601.0809.2000` completed the `_BattleTalk` and `_MiniTalk` stale native-layout stabilization from [#264](https://github.com/lokinmodar/Echoglossian/issues/264), including BattleTalk horizontal-geometry preservation plus the dialogue-family and `Translation Display Mode` label corrections that shipped with that pass.
 - Publication of `v4.2601.0809.0046` completed the plugin UI culture-loading correction from [PR #260](https://github.com/lokinmodar/Echoglossian/pull/260), including explicit locale selection and locale-specific resource fallback safeguards.
 - Publication of `v4.2601.0807.1730` completed the recycled `_MiniTalk` follow-up for [#246](https://github.com/lokinmodar/Echoglossian/issues/246).
 - New focused prompt and glossary behavior work is currently tracked in [#252](https://github.com/lokinmodar/Echoglossian/issues/252).
@@ -38,6 +39,7 @@ most relevant resolved fronts to reference during follow-up triage.
 
 | Issue | Published resolution |
 | --- | --- |
+| [#264 `_BattleTalk` height accumulates, width drifts, and `_MiniTalk` background baseline leaks`](https://github.com/lokinmodar/Echoglossian/issues/264) | The published release now restores clean native `_BattleTalk` and `_MiniTalk` baselines after translated reuse, allows `_BattleTalk` vertical growth only when translated height exceeds the clean baseline, and preserves the game's horizontal geometry ownership in `_BattleTalk`. |
 | [#246 `_MiniTalk` native bubble dimensions regress in `Native` and `Swap` modes`](https://github.com/lokinmodar/Echoglossian/issues/246) | The published follow-up release now isolates the compact detached-container baseline preference to `_MiniTalk_`, preventing recycled oversized bubble slots from stretching later translated balloons while keeping the shared tooltip and toast behavior unchanged. |
 | [#15 ActionDetail / ItemDetail tooltip translation](https://github.com/lokinmodar/Echoglossian/issues/15) | The DB-first structured tooltip flow is active in production with cache-gap prefetch, source-id binding, atomic detail updates, and native/overlay ownership safeguards. |
 | [#68 Selection dialogs and other specific surfaces](https://github.com/lokinmodar/Echoglossian/issues/68) | `SelectYesNo`, `SelectOk`, `SelectString`, `SelectIconString`, and `CutSceneSelectString` are shipped; the historical `ChatBubble` entry is covered by the production `_MiniTalk` / `MiniTalk` runtime. |

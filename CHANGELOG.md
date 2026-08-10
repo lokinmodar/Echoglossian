@@ -7,15 +7,17 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0809.2000`
+## Published Release `v4.2601.0809.2000`
 
-This package is prepared for official Dalamud submission from the current
-`v4-series` head after [PR #265](https://github.com/lokinmodar/Echoglossian/pull/265).
-It focuses on the `_BattleTalk` native-layout restore fix, the remaining
-`_MiniTalk` pooled-background baseline cleanup, and the follow-up localization
-string corrections that shipped with that stabilization pass.
+This package was published to the official Dalamud feed after
+[PR #265](https://github.com/lokinmodar/Echoglossian/pull/265). It focuses on
+the `_BattleTalk` native-layout restore fix, the remaining `_MiniTalk`
+pooled-background baseline cleanup, and the follow-up localization string
+corrections that shipped with that stabilization pass.
 
-Official `DalamudPluginsD17` submission is pending.
+Published in `DalamudPluginsD17` via
+[PR #9183](https://github.com/goatcorp/DalamudPluginsD17/pull/9183) on
+2026-08-10.
 
 Highlights:
 
@@ -317,6 +319,7 @@ repository workflow.
 | 2026-08-06 | [PR #9151](https://github.com/goatcorp/DalamudPluginsD17/pull/9151) `v4.2601.0806.0051` | MiniTalk native bubble stabilization follow-up, ActionDetail and ItemDetail overlay control activation, and localized plugin-label sync |
 | 2026-08-08 | [PR #9163](https://github.com/goatcorp/DalamudPluginsD17/pull/9163) `v4.2601.0807.1730` | MiniTalk recycled-bubble height stabilization follow-up |
 | 2026-08-09 | [PR #9177](https://github.com/goatcorp/DalamudPluginsD17/pull/9177) `v4.2601.0809.0046` | plugin UI culture application, locale-specific resource loading, and localization guardrails |
+| 2026-08-10 | [PR #9183](https://github.com/goatcorp/DalamudPluginsD17/pull/9183) `v4.2601.0809.2000` | BattleTalk and MiniTalk stale native-layout stabilization plus dialogue-family label corrections |
 
 ## Pre-Official History
 
