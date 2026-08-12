@@ -109,22 +109,9 @@ public static class DeepSeekModelManager
                         "DeepSeek"));
             }
 
-            lock (SyncLock)
-            {
-                if (models.Count > 0)
-                {
-                    CurrentModelList = models;
-                }
-            }
-
             if (models.Count > 0)
             {
-                LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
-                    Echoglossian.TransEngines.DeepSeek,
-                    "DeepSeek",
-                    baseUrl,
-                    models.Select(static model => model.Id).ToArray(),
-                    DateTime.UtcNow);
+                ApplyRefreshSuccess(baseUrl, models, DateTime.UtcNow);
                 return;
             }
 
@@ -144,5 +131,30 @@ public static class DeepSeekModelManager
     internal static string BuildModelsEndpoint(string baseUrl)
     {
         return $"{baseUrl.Trim().TrimEnd('/')}/models";
+    }
+
+    /// <summary>
+    ///     Applies a successful DeepSeek model discovery result and promotes
+    ///     any known capability overlays without risking the discovered list.
+    /// </summary>
+    /// <param name="baseUrl">The configured DeepSeek base URL.</param>
+    /// <param name="models">The discovered supported model list.</param>
+    /// <param name="observedAtUtc">The UTC discovery observation time.</param>
+    internal static void ApplyRefreshSuccess(
+        string baseUrl,
+        IReadOnlyList<LlmTextModel> models,
+        DateTime observedAtUtc)
+    {
+        lock (SyncLock)
+        {
+            CurrentModelList = models.ToList();
+        }
+
+        LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+            Echoglossian.TransEngines.DeepSeek,
+            "DeepSeek",
+            baseUrl,
+            models.Select(static model => model.Id).ToArray(),
+            observedAtUtc);
     }
 }

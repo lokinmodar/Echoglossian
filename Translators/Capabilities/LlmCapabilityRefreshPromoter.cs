@@ -31,55 +31,55 @@ public static class LlmCapabilityRefreshPromoter
         IReadOnlyList<string> modelIds,
         DateTime observedAtUtc)
     {
-        if (string.IsNullOrWhiteSpace(Echoglossian.ConfigDirectory))
-        {
-            return;
-        }
-
-        var promotedRules = new List<LlmModelCapabilityRule>();
-        foreach (var modelId in modelIds.Where(static model => !string.IsNullOrWhiteSpace(model)).Distinct(StringComparer.Ordinal))
-        {
-            var scope = LlmCapabilityPolicyService.CreateScope(
-                engine,
-                providerScope,
-                endpointScope,
-                modelId);
-            var staticSnapshot = LlmCapabilityResolver.Resolve(
-                scope,
-                Array.Empty<LlmCapabilityRuleDefinition>());
-
-            foreach (var parameterName in Enum.GetValues<LlmCapabilityParameterName>())
-            {
-                var decision = staticSnapshot.GetDecision(parameterName);
-                if (decision.SupportState == LlmCapabilitySupportState.Unknown)
-                {
-                    continue;
-                }
-
-                var rule = LlmModelCapabilityRule.CreateExactModel(
-                    scope.Engine.ToString(),
-                    scope.ProviderScope,
-                    scope.EndpointScope,
-                    scope.ModelId,
-                    parameterName,
-                    decision.SupportState,
-                    decision.MinValue,
-                    decision.MaxValue,
-                    decision.OmitWhenDefaultOnly,
-                    "LiveRefresh",
-                    decision.Reason);
-                rule.ObservedAtUtc = observedAtUtc;
-                promotedRules.Add(rule);
-            }
-        }
-
-        if (promotedRules.Count == 0)
-        {
-            return;
-        }
-
         try
         {
+            if (string.IsNullOrWhiteSpace(Echoglossian.ConfigDirectory))
+            {
+                return;
+            }
+
+            var promotedRules = new List<LlmModelCapabilityRule>();
+            foreach (var modelId in modelIds.Where(static model => !string.IsNullOrWhiteSpace(model)).Distinct(StringComparer.Ordinal))
+            {
+                var scope = LlmCapabilityPolicyService.CreateScope(
+                    engine,
+                    providerScope,
+                    endpointScope,
+                    modelId);
+                var staticSnapshot = LlmCapabilityResolver.Resolve(
+                    scope,
+                    Array.Empty<LlmCapabilityRuleDefinition>());
+
+                foreach (var parameterName in Enum.GetValues<LlmCapabilityParameterName>())
+                {
+                    var decision = staticSnapshot.GetDecision(parameterName);
+                    if (decision.SupportState == LlmCapabilitySupportState.Unknown)
+                    {
+                        continue;
+                    }
+
+                    var rule = LlmModelCapabilityRule.CreateExactModel(
+                        scope.Engine.ToString(),
+                        scope.ProviderScope,
+                        scope.EndpointScope,
+                        scope.ModelId,
+                        parameterName,
+                        decision.SupportState,
+                        decision.MinValue,
+                        decision.MaxValue,
+                        decision.OmitWhenDefaultOnly,
+                        "LiveRefresh",
+                        decision.Reason);
+                    rule.ObservedAtUtc = observedAtUtc;
+                    promotedRules.Add(rule);
+                }
+            }
+
+            if (promotedRules.Count == 0)
+            {
+                return;
+            }
+
             LlmCapabilityPersistenceHelper.UpsertRules(
                 Echoglossian.ConfigDirectory,
                 promotedRules);
@@ -91,7 +91,7 @@ public static class LlmCapabilityRefreshPromoter
         catch (Exception ex)
         {
             PluginRuntimeLog.Warning(
-                $"[LlmCapabilityRefreshPromoter] Failed to persist refreshed capability overlays: {ex.GetType().Name}");
+                $"[LlmCapabilityRefreshPromoter] Failed to promote refreshed capability overlays: {ex.GetType().Name}");
         }
     }
 }
