@@ -15,8 +15,10 @@ namespace Echoglossian.Cache;
 public static class LlmCapabilityCacheManager
 {
     private static readonly object SyncLock = new();
-    private static IReadOnlyList<LlmCapabilityRuleDefinition> cachedRules = [];
-    private static IReadOnlyList<LlmModelCapabilityObservation> cachedObservations = [];
+    private static IReadOnlyList<LlmCapabilityRuleDefinition> cachedRules =
+        Array.AsReadOnly(Array.Empty<LlmCapabilityRuleDefinition>());
+    private static IReadOnlyList<LlmModelCapabilityObservation> cachedObservations =
+        Array.AsReadOnly(Array.Empty<LlmModelCapabilityObservation>());
 
     /// <summary>
     ///     Hydrates the runtime cache from persisted capability tables.
@@ -40,16 +42,18 @@ public static class LlmCapabilityCacheManager
 
             lock (SyncLock)
             {
-                cachedRules = rules;
-                cachedObservations = observations;
+                cachedRules = Array.AsReadOnly(rules.ToArray());
+                cachedObservations = Array.AsReadOnly(observations.ToArray());
             }
         }
         catch (Exception ex)
         {
             lock (SyncLock)
             {
-                cachedRules = [];
-                cachedObservations = [];
+                cachedRules = Array.AsReadOnly(
+                    Array.Empty<LlmCapabilityRuleDefinition>());
+                cachedObservations = Array.AsReadOnly(
+                    Array.Empty<LlmModelCapabilityObservation>());
             }
 
             PluginRuntimeLog.Error(
@@ -77,8 +81,10 @@ public static class LlmCapabilityCacheManager
     {
         lock (SyncLock)
         {
-            cachedRules = [];
-            cachedObservations = [];
+            cachedRules = Array.AsReadOnly(
+                Array.Empty<LlmCapabilityRuleDefinition>());
+            cachedObservations = Array.AsReadOnly(
+                Array.Empty<LlmModelCapabilityObservation>());
         }
     }
 }

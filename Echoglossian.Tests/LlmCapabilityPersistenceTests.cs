@@ -65,6 +65,9 @@ public class LlmCapabilityPersistenceTests
             LlmCapabilityCacheManager.GetRuleDefinitions()
                 .Should()
                 .ContainSingle(rule => rule.MatchValue == "gpt-5.6-terra");
+            LlmCapabilityCacheManager.GetRuleDefinitions()
+                .Should()
+                .NotBeOfType<List<LlmCapabilityRuleDefinition>>();
 
             using (var context = new EchoglossianDbContext(configDir))
             {
