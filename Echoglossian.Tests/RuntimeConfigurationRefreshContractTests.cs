@@ -104,6 +104,30 @@ public sealed class RuntimeConfigurationRefreshContractTests
     }
 
     /// <summary>
+    ///     Ensures a translation runtime reset clears capability snapshots so a
+    ///     later configuration scope cannot reuse stale policy state.
+    /// </summary>
+    [Fact]
+    public void Translation_refresh_clears_llm_capability_runtime_cache()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "RuntimeConfigurationRefresh.cs"));
+
+        var resetMethod = source.IndexOf(
+            "private void ResetRuntimeTranslationPresentationState()",
+            StringComparison.Ordinal);
+        var capabilityCacheClear = source.IndexOf(
+            "LlmCapabilityCacheManager.Clear();",
+            StringComparison.Ordinal);
+
+        Assert.True(resetMethod >= 0);
+        Assert.True(capabilityCacheClear > resetMethod);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the current test directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

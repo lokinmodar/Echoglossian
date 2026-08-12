@@ -75,6 +75,41 @@ public static class LlmCapabilityCacheManager
     }
 
     /// <summary>
+    ///     Publishes one persisted rule to the DB-free runtime cache.
+    /// </summary>
+    /// <param name="rule">The persisted rule definition to publish.</param>
+    internal static void PublishRule(LlmCapabilityRuleDefinition rule)
+    {
+        lock (SyncLock)
+        {
+            var updatedRules = cachedRules
+                .Where(existing => !HasSameLookupIdentity(existing, rule))
+                .Append(rule)
+                .ToArray();
+            cachedRules = Array.AsReadOnly(updatedRules);
+        }
+    }
+
+    /// <summary>
+    ///     Publishes one persisted provider-feedback observation to the bounded
+    ///     runtime audit snapshot.
+    /// </summary>
+    /// <param name="observation">The observation to publish.</param>
+    internal static void PublishObservation(
+        LlmModelCapabilityObservation observation)
+    {
+        lock (SyncLock)
+        {
+            var updatedObservations = cachedObservations
+                .Prepend(observation)
+                .OrderByDescending(static row => row.ObservedAtUtc)
+                .Take(128)
+                .ToArray();
+            cachedObservations = Array.AsReadOnly(updatedObservations);
+        }
+    }
+
+    /// <summary>
     ///     Clears the runtime capability snapshots.
     /// </summary>
     public static void Clear()
@@ -86,5 +121,24 @@ public static class LlmCapabilityCacheManager
             cachedObservations = Array.AsReadOnly(
                 Array.Empty<LlmModelCapabilityObservation>());
         }
+    }
+
+    /// <summary>
+    ///     Determines whether two rules address the same persisted lookup
+    ///     identity.
+    /// </summary>
+    /// <param name="left">The first rule to compare.</param>
+    /// <param name="right">The second rule to compare.</param>
+    /// <returns><see langword="true" /> if both rules share one lookup identity; otherwise, <see langword="false" />.</returns>
+    private static bool HasSameLookupIdentity(
+        LlmCapabilityRuleDefinition left,
+        LlmCapabilityRuleDefinition right)
+    {
+        return string.Equals(left.Engine, right.Engine, StringComparison.Ordinal) &&
+            string.Equals(left.ProviderScope, right.ProviderScope, StringComparison.Ordinal) &&
+            string.Equals(left.EndpointScope, right.EndpointScope, StringComparison.Ordinal) &&
+            left.MatchType == right.MatchType &&
+            string.Equals(left.MatchValue, right.MatchValue, StringComparison.Ordinal) &&
+            left.ParameterName == right.ParameterName;
     }
 }

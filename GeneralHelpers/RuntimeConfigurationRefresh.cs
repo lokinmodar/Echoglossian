@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.NativeUI.AddonHandlers.Common;
+using Echoglossian.Cache;
 
 using Newtonsoft.Json;
 
@@ -380,6 +381,7 @@ public partial class Echoglossian
   /// </summary>
   private void ResetRuntimeTranslationPresentationState()
   {
+    LlmCapabilityCacheManager.Clear();
     this.hoverTooltipManager.Clear();
     this.rtlTexturePresentationService.Clear();
     this.ClearOverlay(this.talkOverlay, clearText: true);
