@@ -57,7 +57,8 @@ public static class LlmCapabilityPersistenceHelper
     }
 
     /// <summary>
-    ///     Records one provider-feedback observation for later audit.
+    ///     Records or refreshes one provider-feedback observation for later
+    ///     audit.
     /// </summary>
     /// <param name="configDir">The plugin configuration directory.</param>
     /// <param name="observation">The observation to persist.</param>
@@ -70,6 +71,22 @@ public static class LlmCapabilityPersistenceHelper
         observation.ObservedAtUtc = observation.ObservedAtUtc == default
             ? DateTime.UtcNow
             : observation.ObservedAtUtc;
+        var existing = context.LlmModelCapabilityObservations.FirstOrDefault(row =>
+            row.Engine == observation.Engine &&
+            row.ProviderScope == observation.ProviderScope &&
+            row.EndpointScope == observation.EndpointScope &&
+            row.ModelId == observation.ModelId &&
+            row.ParameterName == observation.ParameterName &&
+            row.StatusCode == observation.StatusCode &&
+            row.MessageExcerpt == observation.MessageExcerpt);
+        if (existing is not null)
+        {
+            existing.ProviderErrorCode = observation.ProviderErrorCode;
+            existing.ObservedAtUtc = observation.ObservedAtUtc;
+            context.SaveChanges();
+            return;
+        }
+
         context.LlmModelCapabilityObservations.Add(observation);
         context.SaveChanges();
     }

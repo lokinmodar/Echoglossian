@@ -10,6 +10,7 @@ using Echoglossian.Translators.Capabilities;
 using FluentAssertions;
 
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 using Xunit;
 
@@ -98,6 +99,67 @@ public sealed class LlmCapabilityPolicyServiceTests
                     rule.MatchValue == "gpt-5.6-terra");
             context.LlmModelCapabilityRules.Should().NotContain(
                 rule => rule.MatchType == LlmCapabilityRuleMatchType.FamilyPrefix.ToString());
+        });
+    }
+
+    /// <summary>
+    ///     Ensures learning does not persist an observation or rule when the
+    ///     provider did not identify the active model.
+    /// </summary>
+    [Fact]
+    public void LearnFromProviderFailure_WithBlankModelId_DoesNotPersistCapabilityFeedback()
+    {
+        this.WithTemporaryConfigurationDirectory(configDir =>
+        {
+            var result = LlmCapabilityPolicyService.LearnFromProviderFailure(
+                new LlmCapabilityScope(
+                    Echoglossian.TransEngines.ChatGPT,
+                    "OpenAI",
+                    "https://api.openai.com/v1",
+                    " "),
+                LlmCapabilityParameterName.Temperature,
+                400,
+                "{ \"error\": { \"message\": \"Unsupported parameter: temperature.\" } }");
+
+            result.ObservationRecorded.Should().BeFalse();
+            result.RulePromoted.Should().BeFalse();
+            LlmCapabilityCacheManager.GetRuleDefinitions().Should().BeEmpty();
+
+            using var context = new EchoglossianDbContext(configDir);
+            context.Database.Migrate();
+            context.LlmModelCapabilityObservations.Should().BeEmpty();
+            context.LlmModelCapabilityRules.Should().BeEmpty();
+        });
+    }
+
+    /// <summary>
+    ///     Ensures recurring ambiguous provider failures do not grow the
+    ///     persisted observation table.
+    /// </summary>
+    [Fact]
+    public void LearnFromProviderFailure_WithRepeatedAmbiguous400_DeduplicatesObservation()
+    {
+        this.WithTemporaryConfigurationDirectory(configDir =>
+        {
+            var scope = new LlmCapabilityScope(
+                Echoglossian.TransEngines.ChatGPT,
+                "OpenAI",
+                "https://api.openai.com/v1",
+                "gpt-5.6-terra");
+
+            LlmCapabilityPolicyService.LearnFromProviderFailure(
+                scope,
+                LlmCapabilityParameterName.Temperature,
+                400,
+                "{ \"error\": { \"message\": \"Request could not be processed.\" } }");
+            LlmCapabilityPolicyService.LearnFromProviderFailure(
+                scope,
+                LlmCapabilityParameterName.Temperature,
+                400,
+                "{ \"error\": { \"message\": \"Request could not be processed.\" } }");
+
+            using var context = new EchoglossianDbContext(configDir);
+            context.LlmModelCapabilityObservations.Should().ContainSingle();
         });
     }
 

@@ -101,6 +101,7 @@ public static class LlmCapabilityCacheManager
         lock (SyncLock)
         {
             var updatedObservations = cachedObservations
+                .Where(existing => !HasSameObservationIdentity(existing, observation))
                 .Prepend(observation)
                 .OrderByDescending(static row => row.ObservedAtUtc)
                 .Take(128)
@@ -140,5 +141,25 @@ public static class LlmCapabilityCacheManager
             left.MatchType == right.MatchType &&
             string.Equals(left.MatchValue, right.MatchValue, StringComparison.Ordinal) &&
             left.ParameterName == right.ParameterName;
+    }
+
+    /// <summary>
+    ///     Determines whether two observations represent the same bounded
+    ///     provider-feedback event identity.
+    /// </summary>
+    /// <param name="left">The first observation to compare.</param>
+    /// <param name="right">The second observation to compare.</param>
+    /// <returns><see langword="true" /> if both observations share one identity; otherwise, <see langword="false" />.</returns>
+    private static bool HasSameObservationIdentity(
+        LlmModelCapabilityObservation left,
+        LlmModelCapabilityObservation right)
+    {
+        return string.Equals(left.Engine, right.Engine, StringComparison.Ordinal) &&
+            string.Equals(left.ProviderScope, right.ProviderScope, StringComparison.Ordinal) &&
+            string.Equals(left.EndpointScope, right.EndpointScope, StringComparison.Ordinal) &&
+            string.Equals(left.ModelId, right.ModelId, StringComparison.Ordinal) &&
+            string.Equals(left.ParameterName, right.ParameterName, StringComparison.Ordinal) &&
+            left.StatusCode == right.StatusCode &&
+            string.Equals(left.MessageExcerpt, right.MessageExcerpt, StringComparison.Ordinal);
     }
 }

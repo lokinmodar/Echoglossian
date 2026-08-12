@@ -99,6 +99,14 @@ public static class LlmCapabilityPolicyService
         string? responseText)
     {
         var normalizedScope = NormalizeScope(scope);
+        if (string.IsNullOrWhiteSpace(normalizedScope.ModelId))
+        {
+            return new LlmCapabilityLearningResult(
+                false,
+                false,
+                "unclassified");
+        }
+
         var classification = LlmCapabilityErrorClassifier.TryClassify(
             normalizedScope,
             parameterName,
