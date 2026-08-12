@@ -88,9 +88,17 @@ public sealed class LlmCapabilitySnapshot
       return false;
     }
 
-    return rule.MatchType == LlmCapabilityRuleMatchType.ExactModel
-        ? string.Equals(rule.MatchValue, scope.ModelId, StringComparison.Ordinal)
-        : scope.ModelId.StartsWith(rule.MatchValue, StringComparison.Ordinal);
+    return rule.MatchType switch
+    {
+      LlmCapabilityRuleMatchType.ExactModel => string.Equals(
+          rule.MatchValue,
+          scope.ModelId,
+          StringComparison.Ordinal),
+      LlmCapabilityRuleMatchType.FamilyPrefix => !string.IsNullOrEmpty(
+              rule.MatchValue) &&
+          scope.ModelId.StartsWith(rule.MatchValue, StringComparison.Ordinal),
+      _ => false,
+    };
   }
 
   private static LlmCapabilityParameterDecision ResolveParameter(
@@ -125,11 +133,30 @@ public sealed class LlmCapabilitySnapshot
         .OrderBy(rule => GetConservativeSupportRank(rule.SupportState))
         .First();
 
+    var minValue = GetNarrowestMinimum(rulesToResolve);
+    var maxValue = GetNarrowestMaximum(rulesToResolve);
+    var omitWhenDefaultOnly = rulesToResolve
+        .Any(rule => rule.OmitWhenDefaultOnly);
+
+    if (minValue.HasValue && maxValue.HasValue &&
+        minValue.Value > maxValue.Value)
+    {
+      return new LlmCapabilityParameterDecision(
+          conservativeRule.SupportState == LlmCapabilitySupportState.Supported
+              ? LlmCapabilitySupportState.Unknown
+              : conservativeRule.SupportState,
+          null,
+          null,
+          omitWhenDefaultOnly,
+          "ConservativeResolver",
+          "Matching capability rules do not share a valid value range.");
+    }
+
     return new LlmCapabilityParameterDecision(
         conservativeRule.SupportState,
-        GetNarrowestMinimum(rulesToResolve),
-        GetNarrowestMaximum(rulesToResolve),
-        rulesToResolve.Any(rule => rule.OmitWhenDefaultOnly),
+        minValue,
+        maxValue,
+        omitWhenDefaultOnly,
         conservativeRule.Source,
         conservativeRule.Reason);
   }
@@ -142,7 +169,12 @@ public sealed class LlmCapabilitySnapshot
 
   private static int GetSpecificity(LlmCapabilityRuleDefinition rule)
   {
-    return rule.MatchType == LlmCapabilityRuleMatchType.ExactModel ? 2 : 1;
+    return rule.MatchType switch
+    {
+      LlmCapabilityRuleMatchType.ExactModel => int.MaxValue,
+      LlmCapabilityRuleMatchType.FamilyPrefix => rule.MatchValue.Length,
+      _ => 0,
+    };
   }
 
   private static int GetConservativeSupportRank(

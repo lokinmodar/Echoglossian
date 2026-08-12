@@ -112,6 +112,126 @@ public class LlmCapabilityResolverTests
   }
 
   /// <summary>
+  ///     Ensures a narrower matching family-prefix rule takes precedence over
+  ///     a broader family rule.
+  /// </summary>
+  [Fact]
+  public void Resolve_WithNestedFamilyPrefixes_PrefersLongerPrefix()
+  {
+    var scope = new LlmCapabilityScope(
+        Echoglossian.TransEngines.ChatGPT,
+        "OpenAI",
+        "https://api.openai.com/v1",
+        "gpt-4.1-mini");
+    var broaderRule = LlmCapabilityRuleDefinition.FamilyPrefix(
+        "ChatGPT",
+        "OpenAI",
+        "https://api.openai.com/v1",
+        "gpt-",
+        LlmCapabilityParameterName.Temperature,
+        LlmCapabilitySupportState.Unsupported,
+        source: "LiveRefresh",
+        reason: "broader family does not support temperature");
+    var narrowerRule = LlmCapabilityRuleDefinition.FamilyPrefix(
+        "ChatGPT",
+        "OpenAI",
+        "https://api.openai.com/v1",
+        "gpt-4.1-",
+        LlmCapabilityParameterName.Temperature,
+        LlmCapabilitySupportState.Supported,
+        source: "LiveRefresh",
+        reason: "narrower family supports temperature");
+
+    var snapshot = LlmCapabilityResolver.Resolve(
+        scope,
+        [broaderRule, narrowerRule]);
+
+    snapshot.GetDecision(LlmCapabilityParameterName.Temperature)
+        .SupportState
+        .Should()
+        .Be(LlmCapabilitySupportState.Supported);
+  }
+
+  /// <summary>
+  ///     Ensures conflicting supported ranges with no common value resolve to
+  ///     an unknown decision instead of an invalid supported range.
+  /// </summary>
+  [Fact]
+  public void Resolve_WithDisjointSupportedRanges_ReturnsUnknownDecision()
+  {
+    var scope = new LlmCapabilityScope(
+        Echoglossian.TransEngines.ChatGPT,
+        "OpenAI",
+        "https://api.openai.com/v1",
+        "gpt-4.1-mini");
+    var lowerRangeRule = LlmCapabilityRuleDefinition.ExactModel(
+        "ChatGPT",
+        "OpenAI",
+        "https://api.openai.com/v1",
+        "gpt-4.1-mini",
+        LlmCapabilityParameterName.Temperature,
+        LlmCapabilitySupportState.Supported,
+        minValue: 0f,
+        maxValue: 0.2f,
+        source: "LiveRefresh",
+        reason: "first observed range");
+    var upperRangeRule = LlmCapabilityRuleDefinition.ExactModel(
+        "ChatGPT",
+        "OpenAI",
+        "https://api.openai.com/v1",
+        "gpt-4.1-mini",
+        LlmCapabilityParameterName.Temperature,
+        LlmCapabilitySupportState.Supported,
+        minValue: 0.8f,
+        maxValue: 1f,
+        source: "Observed400",
+        reason: "second observed range");
+
+    var decision = LlmCapabilityResolver.Resolve(
+            scope,
+            [lowerRangeRule, upperRangeRule])
+        .GetDecision(LlmCapabilityParameterName.Temperature);
+
+    decision.SupportState.Should().Be(LlmCapabilitySupportState.Unknown);
+    decision.MinValue.Should().BeNull();
+    decision.MaxValue.Should().BeNull();
+  }
+
+  /// <summary>
+  ///     Ensures an unsupported model-match type cannot be interpreted as a
+  ///     family-prefix rule.
+  /// </summary>
+  [Fact]
+  public void Resolve_WithUnsupportedMatchType_ReturnsUnknown()
+  {
+    var scope = new LlmCapabilityScope(
+        Echoglossian.TransEngines.ChatGPT,
+        "OpenAI",
+        "https://api.openai.com/v1",
+        "gpt-4.1-mini");
+    var invalidRule = new LlmCapabilityRuleDefinition(
+        "ChatGPT",
+        "OpenAI",
+        "https://api.openai.com/v1",
+        (LlmCapabilityRuleMatchType)99,
+        "gpt-",
+        LlmCapabilityParameterName.Temperature,
+        LlmCapabilitySupportState.Supported,
+        null,
+        null,
+        false,
+        "LiveRefresh",
+        "invalid match type");
+
+    var snapshot = LlmCapabilityResolver.Resolve(scope, [invalidRule]);
+
+    snapshot.GetDecision(LlmCapabilityParameterName.Temperature)
+        .SupportState
+        .Should()
+        .Be(LlmCapabilitySupportState.Unknown);
+  }
+
+  /// <summary>
   ///     Ensures unmatched provider capabilities remain unknown.
   /// </summary>
   [Fact]
