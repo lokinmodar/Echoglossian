@@ -30,5 +30,18 @@ public static class LlmCapabilityStaticCatalog
           omitWhenDefaultOnly: true,
           reason: "OpenAI chat-completions reasoning models accept only the implicit default temperature.");
     }
+
+    if (engine == Echoglossian.TransEngines.Gemini)
+    {
+      yield return LlmCapabilityRuleDefinition.FamilyPrefix(
+          "Gemini",
+          "Gemini",
+          "https://generativelanguage.googleapis.com",
+          "gemini-3",
+          LlmCapabilityParameterName.Temperature,
+          LlmCapabilitySupportState.Unsupported,
+          omitWhenDefaultOnly: true,
+          reason: "Gemini 3 generation requests omit unsupported sampling parameters.");
+    }
   }
 }

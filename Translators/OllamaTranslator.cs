@@ -5,6 +5,7 @@
 
 using System.Net.Http.Json;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -16,6 +17,7 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
     private readonly string model;
     private readonly IPluginLog pluginLog;
     private readonly string promptTemplate;
+    private readonly LlmCapabilityScope capabilityScope;
     private readonly float temperature;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
 
@@ -25,6 +27,11 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
         this.endpoint =
             config.OllamaUrl?.TrimEnd('/') ?? "http://localhost:11434";
         this.model = config.OllamaModel ?? "llama3";
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.Ollama,
+            "Ollama",
+            this.endpoint,
+            this.model);
         this.promptTemplate = string.IsNullOrWhiteSpace(config.OllamaPrompt)
             ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Ollama)
             : config.OllamaPrompt;
@@ -138,18 +145,22 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
             targetLanguage,
             dialogueContext);
 
-        var request = new
+        var request = new Dictionary<string, object>
         {
-            this.model,
-            prompt,
-            this.temperature,
-            stream = false,
+            ["model"] = this.model,
+            ["prompt"] = prompt,
+            ["stream"] = false,
         };
+        var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+            request,
+            this.capabilityScope,
+            this.temperature);
 
         try
         {
             var response =
                 await this.httpClient.PostAsJsonAsync("/api/generate", request);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -231,22 +242,25 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
                 "Structured dialogue request JSON:\n" +
                 StructuredDialogueOpenAiToolHelper.SerializeRequestPayload(
                     structuredRequest);
-            var request = new
+            var options = new Dictionary<string, object>();
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                options,
+                this.capabilityScope,
+                this.temperature);
+            var request = new Dictionary<string, object>
             {
-                this.model,
-                prompt = structuredPrompt,
-                stream = false,
-                format = JObject.Parse(
+                ["model"] = this.model,
+                ["prompt"] = structuredPrompt,
+                ["stream"] = false,
+                ["format"] = JObject.Parse(
                     StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
-                options = new
-                {
-                    temperature = this.temperature,
-                },
+                ["options"] = options,
             };
 
             var response =
                 await this.httpClient.PostAsJsonAsync("/api/generate", request)
                     .ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -325,5 +339,31 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed Ollama request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 }

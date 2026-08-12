@@ -241,7 +241,7 @@ public class LlmCapabilityResolverTests
         Echoglossian.TransEngines.Gemini,
         "Gemini",
         "https://generativelanguage.googleapis.com",
-        "gemini-3-pro");
+        "gemini-4-pro");
 
     var snapshot = LlmCapabilityResolver.Resolve(
         scope,

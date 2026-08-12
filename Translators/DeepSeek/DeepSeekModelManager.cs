@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.OpenAI;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators.DeepSeek;
 
@@ -113,8 +114,18 @@ public static class DeepSeekModelManager
                 if (models.Count > 0)
                 {
                     CurrentModelList = models;
-                    return;
                 }
+            }
+
+            if (models.Count > 0)
+            {
+                LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+                    Echoglossian.TransEngines.DeepSeek,
+                    "DeepSeek",
+                    baseUrl,
+                    models.Select(static model => model.Id).ToArray(),
+                    DateTime.UtcNow);
+                return;
             }
 
             ResetToDefault();

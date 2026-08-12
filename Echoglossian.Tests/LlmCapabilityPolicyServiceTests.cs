@@ -256,6 +256,28 @@ public sealed class LlmCapabilityPolicyServiceTests
     }
 
     /// <summary>
+    ///     Ensures Gemini 3 discoveries inherit the committed family policy
+    ///     into an exact-model overlay.
+    /// </summary>
+    [Fact]
+    public void PromoteDiscoveredModels_WithGemini3Model_CreatesExactRuleFromFamilyDefault()
+    {
+        this.WithTemporaryConfigurationDirectory(_ =>
+        {
+            LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+                Echoglossian.TransEngines.Gemini,
+                "Gemini",
+                "https://generativelanguage.googleapis.com",
+                ["gemini-3-pro"],
+                new DateTime(2026, 8, 12, 12, 0, 0, DateTimeKind.Utc));
+
+            LlmCapabilityCacheManager.GetRuleDefinitions()
+                .Should()
+                .Contain(rule => rule.MatchValue == "gemini-3-pro");
+        });
+    }
+
+    /// <summary>
     ///     Runs an action with an isolated persisted capability database.
     /// </summary>
     /// <param name="action">The action that exercises the policy service.</param>
