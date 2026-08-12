@@ -3573,6 +3573,39 @@ namespace Echoglossian.Properties
                 return ResourceManager.GetString("Temperature", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///     Looks up a localized string similar to Temperature is unavailable because the selected model requires the provider default-only setting..
+        /// </summary>
+        public static string TemperatureControlDefaultOnlyTooltip
+        {
+            get
+            {
+                return ResourceManager.GetString("TemperatureControlDefaultOnlyTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string similar to Temperature support for the selected model is unknown, so the setting is disabled and omitted from requests..
+        /// </summary>
+        public static string TemperatureControlUnknownTooltip
+        {
+            get
+            {
+                return ResourceManager.GetString("TemperatureControlUnknownTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string similar to Temperature is unavailable for the selected model..
+        /// </summary>
+        public static string TemperatureControlUnsupportedTooltip
+        {
+            get
+            {
+                return ResourceManager.GetString("TemperatureControlUnsupportedTooltip", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Tip: Double-click a row to edit..

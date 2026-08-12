@@ -649,6 +649,15 @@
   <data name="Temperature" xml:space="preserve">
     <value>Temperature</value>
   </data>
+  <data name="TemperatureControlDefaultOnlyTooltip" xml:space="preserve">
+    <value>A temperatura não está disponível porque o modelo selecionado exige a configuração padrão do provedor.</value>
+  </data>
+  <data name="TemperatureControlUnknownTooltip" xml:space="preserve">
+    <value>O suporte à temperatura do modelo selecionado é desconhecido, portanto a configuração está desativada e será omitida das solicitações.</value>
+  </data>
+  <data name="TemperatureControlUnsupportedTooltip" xml:space="preserve">
+    <value>A temperatura não está disponível para o modelo selecionado.</value>
+  </data>
   <data name="NoSettingsForEngine" xml:space="preserve">
     <value>No settings required for this engine</value>
   </data>
