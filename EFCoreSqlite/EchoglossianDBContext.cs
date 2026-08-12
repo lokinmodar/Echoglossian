@@ -178,6 +178,16 @@ public class EchoglossianDbContext : DbContext
   public DbSet<TranslationFailure> TranslationFailures { get; set; }
 
   /// <summary>
+  ///     Gets or sets persisted LLM capability overlay rules.
+  /// </summary>
+  public DbSet<LlmModelCapabilityRule> LlmModelCapabilityRules { get; set; }
+
+  /// <summary>
+  ///     Gets or sets provider-feedback observations for LLM capabilities.
+  /// </summary>
+  public DbSet<LlmModelCapabilityObservation> LlmModelCapabilityObservations { get; set; }
+
+  /// <summary>
   ///     Gets or sets the translated string array records.   Configures the database context options.
   /// </summary>
   /// <param name="optionsBuilder"></param>
@@ -419,6 +429,21 @@ public class EchoglossianDbContext : DbContext
         })
         .IsUnique()
         .HasDatabaseName("IX_translationfailures_lookup");
+    modelBuilder.Entity<LlmModelCapabilityRule>().ToTable("llmmodelcapabilityrules");
+    modelBuilder.Entity<LlmModelCapabilityRule>()
+        .HasIndex(row => new
+        {
+          row.Engine,
+          row.ProviderScope,
+          row.EndpointScope,
+          row.MatchType,
+          row.MatchValue,
+          row.ParameterName,
+        })
+        .IsUnique()
+        .HasDatabaseName("IX_llmmodelcapabilityrules_lookup");
+    modelBuilder.Entity<LlmModelCapabilityObservation>()
+        .ToTable("llmmodelcapabilityobservations");
     modelBuilder.Entity<StringArrayDatas>()
         .HasIndex(s => new
         {

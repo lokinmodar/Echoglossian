@@ -403,6 +403,7 @@ public partial class Echoglossian : IDalamudPlugin
     NamePlateCacheManager.Preload(ConfigDirectory);
     StringArrayDataCacheManager.Preload(ConfigDirectory);
     TranslationFailureCacheManager.Preload(ConfigDirectory);
+    LlmCapabilityCacheManager.Initialize(ConfigDirectory);
     ActionTooltipCacheManager.Preload(ConfigDirectory);
     TraitCacheManager.Preload(ConfigDirectory);
     ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
@@ -576,6 +577,7 @@ public partial class Echoglossian : IDalamudPlugin
       GameWindowCacheManager.Clear();
       NamePlateCacheManager.Clear();
       TranslationFailureCacheManager.Clear();
+      LlmCapabilityCacheManager.Clear();
       ActionTooltipCacheManager.Clear();
       TraitCacheManager.Clear();
       ReferenceTextCacheRegistry.ClearAll();

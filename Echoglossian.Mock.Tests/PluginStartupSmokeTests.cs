@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginRuntime.Startup;
+using Echoglossian.Cache;
 
 using DalaMock.Core.Plugin;
 using FluentAssertions;
@@ -104,6 +105,16 @@ public class PluginStartupSmokeTests
         snapshot.HasStage(PluginStartupStage.AddonHandlersRegistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.OverlaysRegistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.StartupComplete).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task StartPluginAsync_initializes_the_llm_capability_cache()
+    {
+        LlmCapabilityCacheManager.Clear();
+
+        using var started = await new TestBoot().StartPluginAsync();
+
+        LlmCapabilityCacheManager.GetRuleDefinitions().Should().NotBeNull();
     }
 
     [Fact]
