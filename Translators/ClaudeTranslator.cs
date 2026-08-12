@@ -200,7 +200,10 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 },
             },
         };
-        var temperatureWasSent = this.TryAddTemperature(requestData);
+        var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+            requestData,
+            this.capabilityScope,
+            this.temperature);
 
         try
         {
@@ -338,7 +341,10 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                     name = StructuredDialogueAnthropicToolHelper.ToolName,
                 },
             };
-            var temperatureWasSent = this.TryAddTemperature(requestData);
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                requestData,
+                this.capabilityScope,
+                this.temperature);
 
             string jsonContent = JsonConvert.SerializeObject(requestData);
             using StringContent httpContent = new(
@@ -427,21 +433,12 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             FixText);
     }
 
-    private bool TryAddTemperature(Dictionary<string, object> request)
-    {
-        if (!LlmCapabilityPolicyService.TryResolveTemperature(
-                this.capabilityScope,
-                this.temperature,
-                out var sanitizedTemperature,
-                out _))
-        {
-            return false;
-        }
-
-        request.Add("temperature", sanitizedTemperature);
-        return true;
-    }
-
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed Anthropic request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
     private async Task LearnTemperatureFailureAsync(
         HttpResponseMessage response,
         bool temperatureWasSent)

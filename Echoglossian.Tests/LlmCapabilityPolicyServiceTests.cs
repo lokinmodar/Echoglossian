@@ -5,12 +5,19 @@
 
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
+using Echoglossian.Translators;
 using Echoglossian.Translators.Capabilities;
+
+using Echoglossian.Tests.TestDoubles;
 
 using FluentAssertions;
 
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+
+using Newtonsoft.Json;
+
+using OpenAI.Chat;
 
 using Xunit;
 
@@ -23,24 +30,63 @@ namespace Echoglossian.Tests;
 public sealed class LlmCapabilityPolicyServiceTests
 {
     /// <summary>
-    ///     Ensures every OpenAI-compatible and Anthropic translator routes
-    ///     outbound temperature through the shared capability policy.
+    ///     Ensures unknown capability scopes omit temperature from both plain
+    ///     and structured OpenAI-compatible request payloads.
     /// </summary>
-    /// <param name="translatorPath">The translator source path relative to the repository root.</param>
-    [Theory]
-    [InlineData("Translators/ChatGPTTranslator.cs")]
-    [InlineData("Translators/ClaudeTranslator.cs")]
-    [InlineData("Translators/DeepSeekTranslator.cs")]
-    [InlineData("Translators/LmStudioTranslator.cs")]
-    [InlineData("Translators/OpenRouterTranslator.cs")]
-    public void OpenAiFamilyAndClaudeTranslators_ResolveTemperatureThroughSharedCapabilityPolicy(
-        string translatorPath)
+    [Fact]
+    public void TryAddTemperature_WhenCapabilityIsUnknown_OmitsPlainAndStructuredPayloadFields()
     {
-        var repositoryRoot = Path.GetFullPath(
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-        var source = File.ReadAllText(Path.Combine(repositoryRoot, translatorPath));
+        var scope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.OpenRouter,
+            "OpenRouter",
+            "https://openrouter.ai/api/v1",
+            "unknown-model");
+        var plainPayload = new Dictionary<string, object>
+        {
+            ["model"] = "unknown-model",
+            ["messages"] = Array.Empty<object>(),
+        };
+        var structuredPayload = new Dictionary<string, object>
+        {
+            ["model"] = "unknown-model",
+            ["messages"] = Array.Empty<object>(),
+            ["tools"] = Array.Empty<object>(),
+        };
 
-        source.Should().Contain("LlmCapabilityPolicyService.TryResolveTemperature(");
+        LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+            plainPayload,
+            scope,
+            0.7f).Should().BeFalse();
+        LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+            structuredPayload,
+            scope,
+            0.7f).Should().BeFalse();
+
+        JsonConvert.SerializeObject(plainPayload).Should().NotContain("temperature");
+        JsonConvert.SerializeObject(structuredPayload).Should().NotContain("temperature");
+    }
+
+    /// <summary>
+    ///     Ensures the official OpenAI default-only model leaves the SDK
+    ///     completion option unset.
+    /// </summary>
+    [Fact]
+    public void ChatGptTranslator_WhenTemperatureIsDefaultOnly_LeavesCompletionOptionUnset()
+    {
+        var translator = new ChatGPTTranslator(
+            new NoOpPluginLog(),
+            new Config
+            {
+                ChatGptApiKey = "test-key",
+                ChatGPTBaseUrl = "https://api.openai.com/v1",
+                OpenAILlmModel = "gpt-5.6-terra",
+                ChatGptTemperature = 0.7f,
+            });
+        var options = new ChatCompletionOptions();
+
+        translator.ApplyTemperaturePolicy(options);
+
+        options.Temperature.Should().BeNull();
     }
 
     /// <summary>

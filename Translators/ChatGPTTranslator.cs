@@ -255,15 +255,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         try
         {
             var chatCompletionOptions = new ChatCompletionOptions();
-            temperatureWasSent = LlmCapabilityPolicyService.TryResolveTemperature(
-                this.capabilityScope,
-                this.temperature,
-                out var sanitizedTemperature,
-                out _);
-            if (temperatureWasSent)
-            {
-                chatCompletionOptions.Temperature = sanitizedTemperature;
-            }
+            temperatureWasSent = this.ApplyTemperaturePolicy(chatCompletionOptions);
 
             var messages = new List<ChatMessage>
             {
@@ -367,15 +359,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 ToolChoice = ChatToolChoice.CreateFunctionChoice(
                     StructuredDialogueOpenAiToolHelper.ToolFunctionName),
             };
-            temperatureWasSent = LlmCapabilityPolicyService.TryResolveTemperature(
-                this.capabilityScope,
-                this.temperature,
-                out var sanitizedTemperature,
-                out _);
-            if (temperatureWasSent)
-            {
-                chatCompletionOptions.Temperature = sanitizedTemperature;
-            }
+            temperatureWasSent = this.ApplyTemperaturePolicy(chatCompletionOptions);
             chatCompletionOptions.Tools.Add(structuredTool);
 
             var messages = new List<ChatMessage>
@@ -480,6 +464,34 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         return builder.ToString().Trim();
     }
 
+    /// <summary>
+    ///     Applies the shared temperature decision to an OpenAI SDK request.
+    /// </summary>
+    /// <param name="options">The completion options to sanitize.</param>
+    /// <returns>
+    ///     <see langword="true" /> when temperature was added; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    internal bool ApplyTemperaturePolicy(ChatCompletionOptions options)
+    {
+        if (!LlmCapabilityPolicyService.TryResolveTemperature(
+                this.capabilityScope,
+                this.temperature,
+                out var sanitizedTemperature,
+                out _))
+        {
+            return false;
+        }
+
+        options.Temperature = sanitizedTemperature;
+        return true;
+    }
+
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from an
+    ///     OpenAI SDK request failure.
+    /// </summary>
+    /// <param name="exception">The provider exception associated with the request.</param>
     private void LearnTemperatureFailure(Exception exception)
     {
         int? statusCode = exception is ClientResultException clientResultException
@@ -488,11 +500,14 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             httpRequestException.StatusCode.HasValue
                 ? (int)httpRequestException.StatusCode.Value
                 : null;
+        var responseText = exception is ClientResultException responseException
+            ? responseException.GetRawResponse()?.Content?.ToString()
+            : null;
         var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
             this.capabilityScope,
             LlmCapabilityParameterName.Temperature,
             statusCode,
-            exception.Message);
+            responseText ?? exception.Message);
         PluginRuntimeLog.Debug(
             this.pluginLog,
             $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");

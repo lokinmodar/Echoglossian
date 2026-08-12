@@ -173,7 +173,10 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 new { role = "user", content = fullPrompt },
             },
         };
-        var temperatureWasSent = this.TryAddTemperature(request);
+        var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+            request,
+            this.capabilityScope,
+            this.temperature);
 
         try
         {
@@ -291,7 +294,10 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
-            var temperatureWasSent = this.TryAddTemperature(request);
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                request,
+                this.capabilityScope,
+                this.temperature);
 
             var response = await this.httpClient.PostAsJsonAsync(
                 "chat/completions",
@@ -377,21 +383,12 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             FixText);
     }
 
-    private bool TryAddTemperature(Dictionary<string, object> request)
-    {
-        if (!LlmCapabilityPolicyService.TryResolveTemperature(
-                this.capabilityScope,
-                this.temperature,
-                out var sanitizedTemperature,
-                out _))
-        {
-            return false;
-        }
-
-        request.Add("temperature", sanitizedTemperature);
-        return true;
-    }
-
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed LM Studio request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
     private async Task LearnTemperatureFailureAsync(
         HttpResponseMessage response,
         bool temperatureWasSent)

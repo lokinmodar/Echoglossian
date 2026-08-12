@@ -207,7 +207,10 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
-            var temperatureWasSent = this.TryAddTemperature(requestData);
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                requestData,
+                this.capabilityScope,
+                this.temperature);
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
             var httpContent = new StringContent(
@@ -349,7 +352,10 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
-            var temperatureWasSent = this.TryAddTemperature(requestData);
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                requestData,
+                this.capabilityScope,
+                this.temperature);
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
             var httpContent = new StringContent(
@@ -442,21 +448,12 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             FixText);
     }
 
-    private bool TryAddTemperature(Dictionary<string, object> request)
-    {
-        if (!LlmCapabilityPolicyService.TryResolveTemperature(
-                this.capabilityScope,
-                this.temperature,
-                out var sanitizedTemperature,
-                out _))
-        {
-            return false;
-        }
-
-        request.Add("temperature", sanitizedTemperature);
-        return true;
-    }
-
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed DeepSeek request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
     private async Task LearnTemperatureFailureAsync(
         HttpResponseMessage response,
         bool temperatureWasSent)
