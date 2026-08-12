@@ -126,4 +126,25 @@ public class ConfigDefaultsTests
         Assert.NotNull(field);
         Assert.Equal(0.9f, Assert.IsType<float>(field!.GetValue(config)));
     }
+
+    /// <summary>
+    ///     Ensures every LLM engine keeps the shared fallback temperature used
+    ///     by the capability-gated configuration controls.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(Config.ChatGptTemperature))]
+    [InlineData(nameof(Config.ClaudeTemperature))]
+    [InlineData(nameof(Config.DeepSeekTemperature))]
+    [InlineData(nameof(Config.GeminiTemperature))]
+    [InlineData(nameof(Config.LmStudioTemperature))]
+    [InlineData(nameof(Config.OllamaTemperature))]
+    [InlineData(nameof(Config.OpenRouterTemperature))]
+    public void LlmTemperatureDefaults_DefaultToPointOne(string propertyName)
+    {
+        var config = new Config();
+        var field = typeof(Config).GetField(propertyName);
+
+        Assert.NotNull(field);
+        Assert.Equal(0.1f, Assert.IsType<float>(field!.GetValue(config)));
+    }
 }
