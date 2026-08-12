@@ -5,12 +5,14 @@
 
 using System.Net.Http.Json;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
 
 public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
 {
+    private readonly LlmCapabilityScope capabilityScope;
     private const string DefaultModel = "mistral";
     private const string DefaultOpenRouterUrl = "https://openrouter.ai/api/v1/";
     private readonly string apiKey;
@@ -34,6 +36,11 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
         this.openRouterUrl = string.IsNullOrWhiteSpace(config.OpenRouterBaseUrl)
             ? DefaultOpenRouterUrl
             : config.OpenRouterBaseUrl!;
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.OpenRouter,
+            "OpenRouter",
+            this.openRouterUrl,
+            this.model);
         this.promptTemplate = string.IsNullOrWhiteSpace(config.OpenRouterPrompt)
             ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.OpenRouter)
             : config.OpenRouterPrompt;
@@ -176,21 +183,22 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
             targetLanguage,
             dialogueContext);
 
-        var request = new
+        var request = new Dictionary<string, object>
         {
-            this.model,
-            messages = new[]
+            ["model"] = this.model,
+            ["messages"] = new[]
             {
                 new { role = "user", content = prompt },
             },
-            this.temperature,
         };
+        var temperatureWasSent = this.TryAddTemperature(request);
 
         try
         {
             var response = await this.httpClient.PostAsJsonAsync(
                 "chat/completions",
                 request).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var jsonResponse =
@@ -271,15 +279,14 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                         sourceLanguage,
                         targetLanguage),
                     structuredRequest);
-            var request = new
+            var request = new Dictionary<string, object>
             {
-                this.model,
-                messages = new[]
+                ["model"] = this.model,
+                ["messages"] = new[]
                 {
                     new { role = "user", content = structuredPrompt },
                 },
-                this.temperature,
-                tools = new[]
+                ["tools"] = new[]
                 {
                     new
                     {
@@ -293,7 +300,7 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                         },
                     },
                 },
-                tool_choice = new
+                ["tool_choice"] = new
                 {
                     type = "function",
                     function = new
@@ -302,10 +309,12 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
+            var temperatureWasSent = this.TryAddTemperature(request);
 
             var response = await this.httpClient.PostAsJsonAsync(
                 "chat/completions",
                 request).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseJson =
@@ -327,9 +336,7 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                     usedGlossary,
                     structuredValidation.FailureReason ??
                     "unknown-structured-dialogue-failure");
-                PluginRuntimeLog.Debug(
-                    this.pluginLog,
-                    $"OpenRouter structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                PluginRuntimeLog.Debug(this.pluginLog, $"OpenRouter structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
                 return null;
             }
 
@@ -361,9 +368,7 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
-            PluginRuntimeLog.Debug(
-                this.pluginLog,
-                $"OpenRouter structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"OpenRouter structured dialogue path failed and will fall back to plain-text: {ex.Message}");
             return null;
         }
     }
@@ -389,6 +394,41 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    private bool TryAddTemperature(Dictionary<string, object> request)
+    {
+        if (!LlmCapabilityPolicyService.TryResolveTemperature(
+                this.capabilityScope,
+                this.temperature,
+                out var sanitizedTemperature,
+                out _))
+        {
+            return false;
+        }
+
+        request.Add("temperature", sanitizedTemperature);
+        return true;
+    }
+
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 
     private class OpenRouterResponse

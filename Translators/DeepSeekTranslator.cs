@@ -5,11 +5,13 @@
 
 using Echoglossian.Translators.Helpers;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators;
 
 public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
 {
+    private readonly LlmCapabilityScope capabilityScope;
     private readonly string apiKey;
     private readonly string baseUrl;
     private readonly HttpClient? httpClient;
@@ -29,6 +31,11 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
         this.baseUrl = config.DeepSeekBaseUrl ?? "https://api.deepseek.com/v1";
         this.apiKey = config.DeepSeekTranslatorApiKey ?? string.Empty;
         this.model = config.DeepSeekModel ?? "deepseek-chat";
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.DeepSeek,
+            "DeepSeek",
+            this.baseUrl,
+            this.model);
         this.temperature = config.DeepSeekTemperature;
         this.promptTemplate = string.IsNullOrWhiteSpace(config.DeepSeekPrompt)
             ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.DeepSeek)
@@ -188,10 +195,10 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
 
         try
         {
-            var requestData = new
+            var requestData = new Dictionary<string, object>
             {
-                this.model,
-                messages = new[]
+                ["model"] = this.model,
+                ["messages"] = new[]
                 {
                     new
                     {
@@ -199,8 +206,8 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         content = prompt,
                     },
                 },
-                this.temperature,
             };
+            var temperatureWasSent = this.TryAddTemperature(requestData);
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
             var httpContent = new StringContent(
@@ -211,6 +218,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             var response = await this.httpClient.PostAsync(
                 "chat/completions",
                 httpContent);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseString = await response.Content.ReadAsStringAsync();
@@ -306,10 +314,10 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         sourceLanguage,
                         targetLanguage),
                     structuredRequest);
-            var requestData = new
+            var requestData = new Dictionary<string, object>
             {
-                this.model,
-                messages = new[]
+                ["model"] = this.model,
+                ["messages"] = new[]
                 {
                     new
                     {
@@ -317,8 +325,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         content = structuredPrompt,
                     },
                 },
-                this.temperature,
-                tools = new[]
+                ["tools"] = new[]
                 {
                     new
                     {
@@ -333,7 +340,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         },
                     },
                 },
-                tool_choice = new
+                ["tool_choice"] = new
                 {
                     type = "function",
                     function = new
@@ -342,6 +349,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
+            var temperatureWasSent = this.TryAddTemperature(requestData);
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
             var httpContent = new StringContent(
@@ -352,6 +360,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             var response = await this.httpClient!.PostAsync(
                 "chat/completions",
                 httpContent).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseString =
@@ -373,9 +382,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     usedGlossary,
                     structuredValidation.FailureReason ??
                     "unknown-structured-dialogue-failure");
-                PluginRuntimeLog.Debug(
-                    this.pluginLog,
-                    $"DeepSeek structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                PluginRuntimeLog.Debug(this.pluginLog, $"DeepSeek structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
                 return null;
             }
 
@@ -407,9 +414,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
-            PluginRuntimeLog.Debug(
-                this.pluginLog,
-                $"DeepSeek structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"DeepSeek structured dialogue path failed and will fall back to plain-text: {ex.Message}");
             return null;
         }
     }
@@ -435,5 +440,40 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    private bool TryAddTemperature(Dictionary<string, object> request)
+    {
+        if (!LlmCapabilityPolicyService.TryResolveTemperature(
+                this.capabilityScope,
+                this.temperature,
+                out var sanitizedTemperature,
+                out _))
+        {
+            return false;
+        }
+
+        request.Add("temperature", sanitizedTemperature);
+        return true;
+    }
+
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 }

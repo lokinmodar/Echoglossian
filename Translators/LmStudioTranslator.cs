@@ -5,6 +5,7 @@
 
 using System.Net.Http.Json;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -14,6 +15,7 @@ namespace Echoglossian.Translators;
 /// </summary>
 public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
 {
+    private readonly LlmCapabilityScope capabilityScope;
     private readonly HttpClient httpClient;
     private readonly string model;
     private readonly IPluginLog pluginLog;
@@ -37,6 +39,11 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
 
         var baseUrl = config.LmStudioBaseUrl?.TrimEnd('/') ??
                       "http://localhost:1234/v1";
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.LmStudio,
+            "LmStudio",
+            baseUrl,
+            this.model);
         this.httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
 
         if (config.UseLmStudioAuth &&
@@ -158,21 +165,22 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             targetLanguage,
             dialogueContext);
 
-        var request = new
+        var request = new Dictionary<string, object>
         {
-            this.model,
-            this.temperature,
-            messages = new[]
+            ["model"] = this.model,
+            ["messages"] = new[]
             {
                 new { role = "user", content = fullPrompt },
             },
         };
+        var temperatureWasSent = this.TryAddTemperature(request);
 
         try
         {
             var response = await this.httpClient.PostAsJsonAsync(
                 "chat/completions",
                 request);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var json =
@@ -253,15 +261,14 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                         sourceLanguage,
                         targetLanguage),
                     structuredRequest);
-            var request = new
+            var request = new Dictionary<string, object>
             {
-                this.model,
-                this.temperature,
-                messages = new[]
+                ["model"] = this.model,
+                ["messages"] = new[]
                 {
                     new { role = "user", content = structuredPrompt },
                 },
-                tools = new[]
+                ["tools"] = new[]
                 {
                     new
                     {
@@ -275,7 +282,7 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                         },
                     },
                 },
-                tool_choice = new
+                ["tool_choice"] = new
                 {
                     type = "function",
                     function = new
@@ -284,10 +291,12 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
+            var temperatureWasSent = this.TryAddTemperature(request);
 
             var response = await this.httpClient.PostAsJsonAsync(
                 "chat/completions",
                 request).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseJson =
@@ -309,9 +318,7 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                     usedGlossary,
                     structuredValidation.FailureReason ??
                     "unknown-structured-dialogue-failure");
-                PluginRuntimeLog.Debug(
-                    this.pluginLog,
-                    $"LmStudio structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                PluginRuntimeLog.Debug(this.pluginLog, $"LmStudio structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
                 return null;
             }
 
@@ -343,9 +350,7 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
-            PluginRuntimeLog.Debug(
-                this.pluginLog,
-                $"LmStudio structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            PluginRuntimeLog.Debug(this.pluginLog, $"LmStudio structured dialogue path failed and will fall back to plain-text: {ex.Message}");
             return null;
         }
     }
@@ -370,6 +375,41 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    private bool TryAddTemperature(Dictionary<string, object> request)
+    {
+        if (!LlmCapabilityPolicyService.TryResolveTemperature(
+                this.capabilityScope,
+                this.temperature,
+                out var sanitizedTemperature,
+                out _))
+        {
+            return false;
+        }
+
+        request.Add("temperature", sanitizedTemperature);
+        return true;
+    }
+
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 
     private sealed class LmStudioResponse

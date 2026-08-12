@@ -23,6 +23,27 @@ namespace Echoglossian.Tests;
 public sealed class LlmCapabilityPolicyServiceTests
 {
     /// <summary>
+    ///     Ensures every OpenAI-compatible and Anthropic translator routes
+    ///     outbound temperature through the shared capability policy.
+    /// </summary>
+    /// <param name="translatorPath">The translator source path relative to the repository root.</param>
+    [Theory]
+    [InlineData("Translators/ChatGPTTranslator.cs")]
+    [InlineData("Translators/ClaudeTranslator.cs")]
+    [InlineData("Translators/DeepSeekTranslator.cs")]
+    [InlineData("Translators/LmStudioTranslator.cs")]
+    [InlineData("Translators/OpenRouterTranslator.cs")]
+    public void OpenAiFamilyAndClaudeTranslators_ResolveTemperatureThroughSharedCapabilityPolicy(
+        string translatorPath)
+    {
+        var repositoryRoot = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var source = File.ReadAllText(Path.Combine(repositoryRoot, translatorPath));
+
+        source.Should().Contain("LlmCapabilityPolicyService.TryResolveTemperature(");
+    }
+
+    /// <summary>
     ///     Ensures scope creation normalizes provider, endpoint, and model
     ///     identity before resolution.
     /// </summary>
