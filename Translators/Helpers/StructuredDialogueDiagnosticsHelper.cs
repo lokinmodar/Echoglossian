@@ -61,7 +61,7 @@ public static partial class StructuredDialogueDiagnosticsHelper
 
         if (!string.IsNullOrWhiteSpace(endpointScope))
         {
-            parts.Add($"endpointScope={endpointScope}");
+            parts.Add($"endpointScope={SanitizeEndpointScope(endpointScope)}");
         }
 
         if (!string.IsNullOrWhiteSpace(route))
@@ -129,6 +129,9 @@ public static partial class StructuredDialogueDiagnosticsHelper
             .Replace('\r', ' ')
             .Replace('\n', ' ')
             .Replace('\t', ' ');
+        sanitized = BearerCredentialPattern().Replace(
+            sanitized,
+            "[redacted]");
         sanitized = SecretAssignmentPattern().Replace(
             sanitized,
             "$1=[redacted]");
@@ -147,8 +150,35 @@ public static partial class StructuredDialogueDiagnosticsHelper
         return sanitized;
     }
 
+    private static string SanitizeEndpointScope(string? endpointScope)
+    {
+        if (string.IsNullOrWhiteSpace(endpointScope))
+        {
+            return "unknown";
+        }
+
+        var singleLineEndpoint = endpointScope.Split(['\r', '\n', '\t'])[0].Trim();
+        if (!Uri.TryCreate(singleLineEndpoint, UriKind.Absolute, out var endpointUri) ||
+            (endpointUri.Scheme != Uri.UriSchemeHttp && endpointUri.Scheme != Uri.UriSchemeHttps))
+        {
+            return "unknown";
+        }
+
+        var sanitizedUri = new UriBuilder(endpointUri)
+        {
+            UserName = string.Empty,
+            Password = string.Empty,
+            Query = string.Empty,
+            Fragment = string.Empty,
+        };
+        return sanitizedUri.Uri.GetLeftPart(UriPartial.Path);
+    }
+
     [GeneratedRegex(@"\b(api[_-]?key|token|authorization)\s*[=:]\s*[^,\s;]+", RegexOptions.IgnoreCase)]
     private static partial Regex SecretAssignmentPattern();
+
+    [GeneratedRegex(@"\bBearer\s+[A-Za-z0-9._~+/=-]+", RegexOptions.IgnoreCase)]
+    private static partial Regex BearerCredentialPattern();
 
     [GeneratedRegex(@"\b(?:sk|rk)-[A-Za-z0-9_-]+\b", RegexOptions.IgnoreCase)]
     private static partial Regex BearerTokenPattern();
@@ -194,7 +224,7 @@ public static partial class StructuredDialogueDiagnosticsHelper
         {
             "structured-start",
             $"provider={scope.ProviderScope}",
-            $"endpointScope={scope.EndpointScope}",
+            $"endpointScope={SanitizeEndpointScope(scope.EndpointScope)}",
             $"route={NormalizeToken(route)}",
             $"model={scope.ModelId}",
             $"capability={FormatCapability(capability)}",
@@ -244,7 +274,7 @@ public static partial class StructuredDialogueDiagnosticsHelper
         {
             "structured-success",
             $"provider={scope.ProviderScope}",
-            $"endpointScope={scope.EndpointScope}",
+            $"endpointScope={SanitizeEndpointScope(scope.EndpointScope)}",
             $"route={NormalizeToken(route)}",
             $"model={scope.ModelId}",
             $"capability={FormatCapability(capability)}",

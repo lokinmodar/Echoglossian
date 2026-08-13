@@ -64,21 +64,32 @@ internal static class StructuredDialogueCapabilityDecisionLogFormatter
             _ => parameterName.ToString().ToLowerInvariant(),
         };
 
-        var supportToken = decision.SupportState switch
+        if (!Enum.IsDefined(emissionMode))
         {
-            LlmCapabilitySupportState.Unsupported => "unsupported",
-            LlmCapabilitySupportState.Supported => "configured",
-            _ => "unknown",
-        };
+            throw new ArgumentOutOfRangeException(
+                nameof(emissionMode),
+                emissionMode,
+                "Unsupported capability emission mode.");
+        }
 
         var emissionToken = emissionMode switch
         {
-            StructuredDialogueCapabilityEmissionMode.SentConfigured => "sent(configured)",
-            StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly => "omitted(default-only)",
-            StructuredDialogueCapabilityEmissionMode.OmittedUnsupported => "omitted(unsupported)",
-            StructuredDialogueCapabilityEmissionMode.ExplicitDisable when parameterName == LlmCapabilityParameterName.ReasoningEffort
+            StructuredDialogueCapabilityEmissionMode.SentConfigured when decision.SupportState == LlmCapabilitySupportState.Supported
+                => "sent(configured)",
+            StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly when
+                decision.SupportState == LlmCapabilitySupportState.Supported && decision.OmitWhenDefaultOnly
+                => "omitted(default-only)",
+            StructuredDialogueCapabilityEmissionMode.OmittedUnsupported when decision.SupportState == LlmCapabilitySupportState.Unsupported
+                => "omitted(unsupported)",
+            StructuredDialogueCapabilityEmissionMode.OmittedUnknown when decision.SupportState == LlmCapabilitySupportState.Unknown
+                => "omitted(unknown)",
+            StructuredDialogueCapabilityEmissionMode.ExplicitDisable when
+                parameterName == LlmCapabilityParameterName.ReasoningEffort &&
+                decision.SupportState == LlmCapabilitySupportState.Unsupported
                 => "explicit-none(unsupported)",
-            _ => $"omitted({supportToken})",
+            _ => throw new InvalidOperationException(
+                $"Emission mode '{emissionMode}' is incompatible with " +
+                $"parameter '{parameterName}' and support state '{decision.SupportState}'."),
         };
 
         return $"{parameterToken}={emissionToken}";

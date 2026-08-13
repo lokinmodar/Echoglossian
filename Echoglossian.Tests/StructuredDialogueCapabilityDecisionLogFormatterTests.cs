@@ -38,4 +38,50 @@ public class StructuredDialogueCapabilityDecisionLogFormatterTests
 
         token.Should().Be("reasoning_effort=explicit-none(unsupported)");
     }
+
+    /// <summary>
+    ///     Ensures incompatible support and emission combinations do not
+    ///     silently produce an incorrect capability decision token.
+    /// </summary>
+    [Fact]
+    public void Format_WhenEmissionModeIsIncompatibleWithSupportState_ShouldThrow()
+    {
+        var decision = new LlmCapabilityParameterDecision(
+            LlmCapabilitySupportState.Supported,
+            null,
+            null,
+            false,
+            "StaticDefault",
+            "Supported");
+
+        var action = () => StructuredDialogueCapabilityDecisionLogFormatter.Format(
+            LlmCapabilityParameterName.Temperature,
+            decision,
+            StructuredDialogueCapabilityEmissionMode.ExplicitDisable);
+
+        action.Should().Throw<InvalidOperationException>();
+    }
+
+    /// <summary>
+    ///     Ensures unrecognized emission modes are rejected instead of being
+    ///     rendered as a misleading omission token.
+    /// </summary>
+    [Fact]
+    public void Format_WhenEmissionModeIsUnknown_ShouldThrow()
+    {
+        var decision = new LlmCapabilityParameterDecision(
+            LlmCapabilitySupportState.Unknown,
+            null,
+            null,
+            false,
+            "StaticDefault",
+            "Unknown");
+
+        var action = () => StructuredDialogueCapabilityDecisionLogFormatter.Format(
+            LlmCapabilityParameterName.Temperature,
+            decision,
+            (StructuredDialogueCapabilityEmissionMode)99);
+
+        action.Should().Throw<ArgumentOutOfRangeException>();
+    }
 }

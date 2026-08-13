@@ -7,6 +7,7 @@ using Dalamud.Plugin.Services;
 
 using Serilog;
 using Serilog.Events;
+using System.Globalization;
 
 namespace Echoglossian.Tests.TestDoubles;
 
@@ -66,13 +67,13 @@ internal sealed class CapturingPluginLog : IPluginLog
     /// <inheritdoc/>
     public void Debug(string messageTemplate, params object[] values)
     {
-        this.debugMessages.Add(messageTemplate);
+        this.debugMessages.Add(this.Render(messageTemplate, values));
     }
 
     /// <inheritdoc/>
     public void Debug(Exception? exception, string messageTemplate, params object[] values)
     {
-        this.debugMessages.Add(messageTemplate);
+        this.debugMessages.Add(this.Render(messageTemplate, values));
     }
 
     /// <inheritdoc/>
@@ -83,4 +84,30 @@ internal sealed class CapturingPluginLog : IPluginLog
 
     /// <inheritdoc/>
     public void Write(LogEventLevel level, Exception? exception, string messageTemplate, params object[] values) { }
+
+    private string Render(string messageTemplate, object[] values)
+    {
+        if (values.Length == 0)
+        {
+            return messageTemplate;
+        }
+
+        if (this.Logger.BindMessageTemplate(
+                messageTemplate,
+                values,
+                out var parsedTemplate,
+                out var properties))
+        {
+            var propertyMap = properties.ToDictionary(
+                property => property.Name,
+                property => property.Value,
+                StringComparer.Ordinal);
+            return parsedTemplate.Render(propertyMap);
+        }
+
+        var renderedValues = string.Join(
+            ", ",
+            values.Select(value => Convert.ToString(value, CultureInfo.InvariantCulture) ?? "<null>"));
+        return $"{messageTemplate} | values: {renderedValues}";
+    }
 }

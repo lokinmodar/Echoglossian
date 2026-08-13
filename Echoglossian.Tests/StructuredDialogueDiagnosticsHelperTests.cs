@@ -6,6 +6,7 @@
 using Echoglossian.Translators;
 using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
+using Echoglossian.Tests.TestDoubles;
 using FluentAssertions;
 using Xunit;
 
@@ -82,6 +83,97 @@ public class StructuredDialogueDiagnosticsHelperTests
         message.Should().Contain("rawPayloadLength=218");
         message.Should().Contain("translatedLength=84");
         message.Should().NotContain("sk-secret");
+    }
+
+    /// <summary>
+    ///     Ensures both header-style and JSON-style bearer credentials are
+    ///     redacted before a structured response preview is logged.
+    /// </summary>
+    [Fact]
+    public void FormatStructuredSuccessMessage_ShouldRedactBearerCredentials()
+    {
+        var scope = new LlmCapabilityScope(
+            Echoglossian.TransEngines.ChatGPT,
+            "OpenAI",
+            "https://api.openai.com/v1",
+            "gpt-5.6-terra");
+
+        string message = StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+            scope,
+            "chat/completions",
+            StructuredDialogueProviderCapability.JsonSchema,
+            false,
+            64,
+            8,
+            "Authorization: Bearer abc123; {\"authorization\":\"Bearer xyz456\"}",
+            "Traducao");
+
+        message.Should().Contain("[redacted]");
+        message.Should().NotContain("abc123");
+        message.Should().NotContain("xyz456");
+    }
+
+    /// <summary>
+    ///     Ensures endpoint diagnostics retain a readable endpoint while
+    ///     removing user information, query secrets, fragments, and newlines.
+    /// </summary>
+    [Fact]
+    public void FormatStructuredStartMessage_ShouldSanitizeEndpointScope()
+    {
+        var scope = new LlmCapabilityScope(
+            Echoglossian.TransEngines.ChatGPT,
+            "OpenAI",
+            "https://user:password@api.openai.com/v1?api_key=secret#fragment\r\nforged=true",
+            "gpt-5.6-terra");
+
+        string startMessage = StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+            scope,
+            "chat/completions",
+            StructuredDialogueProviderCapability.JsonSchema,
+            "Talk",
+            0,
+            0,
+            false,
+            false,
+            24,
+            null,
+            "Prompt",
+            "Source",
+            []);
+        string fallbackMessage = StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+            "OpenAI",
+            "gpt-5.6-terra",
+            StructuredDialogueProviderCapability.JsonSchema,
+            "request",
+            "bad-request",
+            endpointScope: scope.EndpointScope);
+
+        startMessage.Should().Contain("endpointScope=https://api.openai.com/v1");
+        fallbackMessage.Should().Contain("endpointScope=https://api.openai.com/v1");
+        startMessage.Should().NotContain("user");
+        startMessage.Should().NotContain("password");
+        startMessage.Should().NotContain("secret");
+        startMessage.Should().NotContain("forged");
+        fallbackMessage.Should().NotContain("\r");
+        fallbackMessage.Should().NotContain("\n");
+    }
+
+    /// <summary>
+    ///     Ensures captured debug logs render their structured values for
+    ///     complete assertions in later provider tests.
+    /// </summary>
+    [Fact]
+    public void CapturingPluginLog_Debug_ShouldRenderMessageValues()
+    {
+        var pluginLog = new CapturingPluginLog();
+
+        pluginLog.Debug(
+            "route={Route}, status={Status}",
+            "chat/completions",
+            200);
+
+        pluginLog.DebugMessages.Should().ContainSingle()
+            .Which.Should().Be("route=\"chat/completions\", status=200");
     }
 
     /// <summary>
