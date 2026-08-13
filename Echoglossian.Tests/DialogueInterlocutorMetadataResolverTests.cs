@@ -128,7 +128,7 @@ public class DialogueInterlocutorMetadataResolverTests
 
         Assert.NotNull(result);
         Assert.Equal(1, captureSchedulerCalls);
-        Assert.Equal(5, nativeCaptureReadCalls);
+        Assert.Equal(6, nativeCaptureReadCalls);
         Assert.Equal(2, questTraversalCalls);
         Assert.Equal(1, databaseLookupCalls);
     }
@@ -248,6 +248,52 @@ public class DialogueInterlocutorMetadataResolverTests
     }
 
     /// <summary>
+    ///     Ensures a matching current target takes precedence over ambiguous
+    ///     object-table actors when persisted speaker metadata is available.
+    /// </summary>
+    [Fact]
+    public async Task ResolveAsync_PersistedSpeakerWithMatchingTarget_ReturnsTargetSpeakerHints()
+    {
+        var resolver = this.CreateResolver(
+            liveActors:
+            [
+                new("Oriel", 1045123, "male", "hyur", "midlander"),
+                new("Oriel", 1045124, "male", "hyur", "midlander"),
+            ],
+            targetActor: new("Oriel", 1045125, "female", "elezen", "wildwood"));
+
+        var result = await resolver.ResolveAsync(this.CreateRequest());
+
+        Assert.NotNull(result);
+        Assert.Equal(DialogueInterlocutorResolutionTier.QuestSheetPlusLiveFusion, result.ResolutionTier);
+        Assert.Equal("female", result.SpeakerGenderHint);
+        Assert.Equal("elezen", result.SpeakerRaceHint);
+        Assert.Equal("wildwood", result.SpeakerBodyTypeHint);
+        Assert.Equal((uint)1045125, result.SpeakerActor!.DataId);
+    }
+
+    /// <summary>
+    ///     Ensures a matching current target supplies visible-speaker fallback
+    ///     metadata when persisted dialogue metadata is unavailable.
+    /// </summary>
+    [Fact]
+    public async Task ResolveAsync_VisibleSpeakerWithMatchingTarget_ReturnsTargetSpeakerFallback()
+    {
+        var resolver = this.CreateResolver(
+            returnPersistedMetadata: false,
+            targetActor: new("Oriel", 1045125, "female", "elezen", "wildwood"));
+
+        var result = await resolver.ResolveAsync(this.CreateRequest());
+
+        Assert.NotNull(result);
+        Assert.Equal(DialogueInterlocutorResolutionTier.LiveActorVisibleSpeakerFallback, result.ResolutionTier);
+        Assert.Equal("female", result.SpeakerGenderHint);
+        Assert.Equal("elezen", result.SpeakerRaceHint);
+        Assert.Equal("wildwood", result.SpeakerBodyTypeHint);
+        Assert.Equal((uint)1045125, result.SpeakerActor!.DataId);
+    }
+
+    /// <summary>
     ///     Ensures native actor customize-sex values retain their semantic
     ///     gender when the visible-speaker fallback captures live actors.
     /// </summary>
@@ -279,6 +325,7 @@ public class DialogueInterlocutorMetadataResolverTests
     private DialogueInterlocutorMetadataResolver CreateResolver(
         QuestDialogueMetadata? metadata = null,
         IReadOnlyList<LiveDialogueActorSnapshot>? liveActors = null,
+        LiveDialogueActorSnapshot? targetActor = null,
         bool returnPersistedMetadata = true,
         string? playerSex = null,
         Action? nativeCaptureObserved = null,
@@ -339,6 +386,11 @@ public class DialogueInterlocutorMetadataResolverTests
             {
                 nativeCaptureObserved?.Invoke();
                 return liveActors ?? [];
+            },
+            captureTargetActor: () =>
+            {
+                nativeCaptureObserved?.Invoke();
+                return targetActor;
             },
             localPlayerName: () =>
             {

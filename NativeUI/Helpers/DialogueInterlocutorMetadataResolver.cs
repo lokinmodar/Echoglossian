@@ -18,6 +18,7 @@ namespace Echoglossian;
 public sealed class DialogueInterlocutorMetadataResolver
 {
     private readonly Func<IReadOnlyList<LiveDialogueActorSnapshot>> captureLiveActors;
+    private readonly Func<LiveDialogueActorSnapshot?> captureTargetActor;
     private readonly Func<uint, byte> captureQuestSequence;
     private readonly Func<QuestDialogueMetadataLookup, CancellationToken, Task<QuestDialogueMetadata?>> findMetadataAsync;
     private readonly Func<string> localPlayerName;
@@ -39,6 +40,7 @@ public sealed class DialogueInterlocutorMetadataResolver
             QuestDialogueMetadataDerivation.ReadDialogueEntries,
             plugin.FindQuestDialogueMetadataAsync,
             CaptureLiveActors,
+            CaptureTargetActor,
             CaptureLocalPlayerName,
             CapturePlayerSexHint,
             RunOnFrameworkThreadAsync)
@@ -54,6 +56,7 @@ public sealed class DialogueInterlocutorMetadataResolver
     /// <param name="readDialogueEntries">The quest dialogue row reader.</param>
     /// <param name="findMetadataAsync">The exact persisted metadata lookup.</param>
     /// <param name="captureLiveActors">The managed live actor snapshot collector.</param>
+    /// <param name="captureTargetActor">The managed current target actor snapshot collector.</param>
     /// <param name="localPlayerName">The managed local player name reader.</param>
     /// <param name="playerSexHint">The managed local player sex hint reader.</param>
     /// <param name="runOnFrameworkThreadAsync">The native capture scheduler.</param>
@@ -64,6 +67,7 @@ public sealed class DialogueInterlocutorMetadataResolver
         Func<QuestProgressSnapshot, CancellationToken, IReadOnlyList<QuestDialogueSheetEntry>> readDialogueEntries,
         Func<QuestDialogueMetadataLookup, CancellationToken, Task<QuestDialogueMetadata?>> findMetadataAsync,
         Func<IReadOnlyList<LiveDialogueActorSnapshot>> captureLiveActors,
+        Func<LiveDialogueActorSnapshot?> captureTargetActor,
         Func<string> localPlayerName,
         Func<string?> playerSexHint,
         Func<Action, CancellationToken, Task>? runOnFrameworkThreadAsync = null)
@@ -74,6 +78,7 @@ public sealed class DialogueInterlocutorMetadataResolver
         this.readDialogueEntries = readDialogueEntries;
         this.findMetadataAsync = findMetadataAsync;
         this.captureLiveActors = captureLiveActors;
+        this.captureTargetActor = captureTargetActor;
         this.localPlayerName = localPlayerName;
         this.playerSexHint = playerSexHint;
         this.runOnFrameworkThreadAsync = runOnFrameworkThreadAsync ?? RunInlineAsync;
@@ -108,6 +113,7 @@ public sealed class DialogueInterlocutorMetadataResolver
         }
 
         var liveActors = captureSnapshot.LiveActors;
+        var targetActor = captureSnapshot.TargetActor;
         var localPlayerName = captureSnapshot.LocalPlayerName;
         var playerSexHint = captureSnapshot.PlayerSexHint;
         var matchingRows = this.FindMatchingRows(
@@ -140,11 +146,15 @@ public sealed class DialogueInterlocutorMetadataResolver
             return BuildVisibleSpeakerLiveActorFallback(
                 request.VisibleSpeakerName,
                 liveActors,
+                targetActor,
                 localPlayerName,
                 playerSexHint);
         }
 
-        var speakerActor = FindUniqueLiveActor(liveActors, resolvedMetadata.SpeakerHint);
+        var speakerActor = FindMatchingTargetSpeaker(
+            targetActor,
+            request.VisibleSpeakerName,
+            resolvedMetadata.SpeakerHint) ?? FindUniqueLiveActor(liveActors, resolvedMetadata.SpeakerHint);
         var addresseeActor = FindUniqueLiveActor(liveActors, resolvedMetadata.AddresseeHint);
         var addresseeIsPlayer = string.Equals(
             resolvedMetadata.AddresseeHint,
@@ -185,6 +195,7 @@ public sealed class DialogueInterlocutorMetadataResolver
     private ResolverCaptureSnapshot CaptureSnapshot()
     {
         var liveActors = this.captureLiveActors().ToArray();
+        var targetActor = this.captureTargetActor();
         var localPlayerName = this.localPlayerName();
         var playerSexHint = this.playerSexHint();
         var acceptedQuests = this.tryCollectAcceptedQuestIds()
@@ -194,6 +205,7 @@ public sealed class DialogueInterlocutorMetadataResolver
             .ToArray();
         return new ResolverCaptureSnapshot(
             liveActors,
+            targetActor,
             localPlayerName,
             playerSexHint,
             acceptedQuests);
@@ -321,16 +333,38 @@ public sealed class DialogueInterlocutorMetadataResolver
                 continue;
             }
 
-            var customize = character.CustomizeData;
-            actors.Add(new LiveDialogueActorSnapshot(
-                gameObject.Name.TextValue,
-                gameObject.BaseId,
-                NormalizeSexHint(customize.Sex.ToString()),
-                customize.Race.ToString().ToLowerInvariant(),
-                customize.BodyType.ToString().ToLowerInvariant()));
+            actors.Add(CaptureActorSnapshot(character));
         }
 
         return actors;
+    }
+
+    /// <summary>
+    ///     Captures the current target as immutable managed actor values.
+    /// </summary>
+    /// <returns>The captured target actor; otherwise, <see langword="null" />.</returns>
+    private static LiveDialogueActorSnapshot? CaptureTargetActor()
+    {
+        return Echoglossian.TargetManagerInterface?.Target is ICharacter target &&
+               !string.IsNullOrWhiteSpace(target.Name.TextValue)
+            ? CaptureActorSnapshot(target)
+            : null;
+    }
+
+    /// <summary>
+    ///     Copies one live character into immutable managed dialogue metadata values.
+    /// </summary>
+    /// <param name="character">The framework-thread character to copy.</param>
+    /// <returns>The immutable managed actor snapshot.</returns>
+    private static LiveDialogueActorSnapshot CaptureActorSnapshot(ICharacter character)
+    {
+        var customize = character.CustomizeData;
+        return new LiveDialogueActorSnapshot(
+            character.Name.TextValue,
+            character.BaseId,
+            NormalizeSexHint(customize.Sex.ToString()),
+            customize.Race.ToString().ToLowerInvariant(),
+            customize.BodyType.ToString().ToLowerInvariant());
     }
 
     private static QuestDialogueMetadata? SelectUniqueMetadata(
@@ -370,6 +404,26 @@ public sealed class DialogueInterlocutorMetadataResolver
     }
 
     /// <summary>
+    ///     Returns the current target only when it is confirmed as the visible
+    ///     and resolved dialogue speaker.
+    /// </summary>
+    /// <param name="targetActor">The captured current target actor.</param>
+    /// <param name="visibleSpeakerName">The speaker name displayed by the addon.</param>
+    /// <param name="resolvedSpeakerName">The speaker name resolved from metadata.</param>
+    /// <returns>The target speaker; otherwise, <see langword="null" />.</returns>
+    private static LiveDialogueActorSnapshot? FindMatchingTargetSpeaker(
+        LiveDialogueActorSnapshot? targetActor,
+        string? visibleSpeakerName,
+        string resolvedSpeakerName)
+    {
+        return targetActor != null &&
+               string.Equals(targetActor.Name, visibleSpeakerName, StringComparison.Ordinal) &&
+               string.Equals(targetActor.Name, resolvedSpeakerName, StringComparison.Ordinal)
+            ? targetActor
+            : null;
+    }
+
+    /// <summary>
     ///     Builds a live-actor-only fallback when the visible speaker uniquely
     ///     matches a loaded actor but exact persisted quest metadata is not yet
     ///     available.
@@ -382,6 +436,7 @@ public sealed class DialogueInterlocutorMetadataResolver
     private static DialogueInterlocutorMetadata? BuildVisibleSpeakerLiveActorFallback(
         string? visibleSpeakerName,
         IReadOnlyList<LiveDialogueActorSnapshot> liveActors,
+        LiveDialogueActorSnapshot? targetActor,
         string localPlayerName,
         string? playerSexHint)
     {
@@ -390,7 +445,10 @@ public sealed class DialogueInterlocutorMetadataResolver
             return null;
         }
 
-        var speakerActor = FindUniqueLiveActor(liveActors, visibleSpeakerName);
+        var speakerActor = FindMatchingTargetSpeaker(
+            targetActor,
+            visibleSpeakerName,
+            visibleSpeakerName) ?? FindUniqueLiveActor(liveActors, visibleSpeakerName);
         if (speakerActor == null)
         {
             return null;
@@ -436,11 +494,13 @@ public sealed class DialogueInterlocutorMetadataResolver
     ///     Carries immutable managed resolver state across the database await boundary.
     /// </summary>
     /// <param name="LiveActors">The copied live actor snapshots.</param>
+    /// <param name="TargetActor">The copied current target actor snapshot.</param>
     /// <param name="LocalPlayerName">The copied local player name.</param>
     /// <param name="PlayerSexHint">The copied local player sex hint.</param>
     /// <param name="AcceptedQuests">The copied accepted quest identifiers and sequences.</param>
     private sealed record ResolverCaptureSnapshot(
         IReadOnlyList<LiveDialogueActorSnapshot> LiveActors,
+        LiveDialogueActorSnapshot? TargetActor,
         string LocalPlayerName,
         string? PlayerSexHint,
         IReadOnlyList<AcceptedQuestCapture> AcceptedQuests);
