@@ -413,7 +413,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
                     StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
-                        "Claude",
+                        this.capabilityScope.ProviderScope,
                         this.model,
                         StructuredDialogueProviderCapability.JsonSchema,
                         "validation",
@@ -457,7 +457,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             PluginRuntimeLog.Debug(
                 this.pluginLog,
                 StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
-                    "Claude",
+                    this.capabilityScope.ProviderScope,
                     this.model,
                     StructuredDialogueProviderCapability.JsonSchema,
                     "validation",
@@ -478,7 +478,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             PluginRuntimeLog.Debug(
                 this.pluginLog,
                 StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
-                    "Claude",
+                    this.capabilityScope.ProviderScope,
                     this.model,
                     StructuredDialogueProviderCapability.JsonSchema,
                     "exception",

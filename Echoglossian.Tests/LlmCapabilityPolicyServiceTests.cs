@@ -340,6 +340,7 @@ public sealed class LlmCapabilityPolicyServiceTests
             message => message.Contains("structured-start", StringComparison.Ordinal) &&
                 message.Contains("provider=Gemini", StringComparison.Ordinal) &&
                 message.Contains("route=models-test-model-generatecontent", StringComparison.Ordinal) &&
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal) &&
                 message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-success", StringComparison.Ordinal) &&
@@ -389,11 +390,51 @@ public sealed class LlmCapabilityPolicyServiceTests
             message => message.Contains("structured-start", StringComparison.Ordinal) &&
                 message.Contains("provider=Anthropic", StringComparison.Ordinal) &&
                 message.Contains("route=v1-messages", StringComparison.Ordinal) &&
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal) &&
                 message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-success", StringComparison.Ordinal) &&
                 message.Contains("provider=Anthropic", StringComparison.Ordinal) &&
                 message.Contains("route=v1-messages", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures Claude fallback diagnostics retain the scope-derived
+    ///     Anthropic provider identity and active capability decisions.
+    /// </summary>
+    [Fact]
+    public async Task ClaudeTranslator_WhenStructuredResponseIsRejected_LogsScopeProviderAndDecision()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var translator = new ClaudeTranslator(
+            pluginLog,
+            new Config
+            {
+                ClaudeApiKey = "test-key",
+                ClaudeBaseUrl = "https://claude.example",
+                ClaudeModel = "test-model",
+            });
+        this.ReplaceHttpClient(
+            translator,
+            new HttpClient(new StructuredDialogueResponseHandler(
+                """
+                {"content":[]}
+                """))
+            {
+                BaseAddress = new Uri("https://claude.example/"),
+            });
+
+        await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
+
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured dialogue fallback", StringComparison.Ordinal) &&
+                message.Contains("provider=Anthropic", StringComparison.Ordinal) &&
+                message.Contains("route=v1-messages", StringComparison.Ordinal) &&
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -437,6 +478,7 @@ public sealed class LlmCapabilityPolicyServiceTests
             message => message.Contains("structured-start", StringComparison.Ordinal) &&
                 message.Contains("provider=Ollama", StringComparison.Ordinal) &&
                 message.Contains("route=api-generate", StringComparison.Ordinal) &&
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal) &&
                 message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-success", StringComparison.Ordinal) &&
@@ -482,6 +524,7 @@ public sealed class LlmCapabilityPolicyServiceTests
             message => message.Contains("structured-start", StringComparison.Ordinal) &&
                 message.Contains("provider=LmStudio", StringComparison.Ordinal) &&
                 message.Contains("route=chat-completions", StringComparison.Ordinal) &&
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal) &&
                 message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-success", StringComparison.Ordinal) &&
