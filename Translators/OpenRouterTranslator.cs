@@ -333,7 +333,7 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                                 ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
                                 : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
             ];
-            var requestJsonLength = JsonConvert.SerializeObject(request).Length;
+            var requestJson = JsonConvert.SerializeObject(request);
 
             PluginRuntimeLog.Debug(
                 this.pluginLog,
@@ -347,14 +347,14 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                     !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
                     !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
                     structuredPrompt.Length,
-                    requestJsonLength,
+                    requestJson.Length,
                     structuredPrompt,
                     normalizedText,
                     capabilityDecisionTokens));
 
-            var response = await this.httpClient.PostAsJsonAsync(
+            var response = await this.httpClient.PostAsync(
                 "chat/completions",
-                request).ConfigureAwait(false);
+                new StringContent(requestJson, Encoding.UTF8, "application/json")).ConfigureAwait(false);
             await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
@@ -423,6 +423,18 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "OpenRouter",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "chat/completions",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary));
             return null;
         }
         catch (Exception ex)

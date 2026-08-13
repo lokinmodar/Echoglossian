@@ -135,9 +135,10 @@ public sealed class LlmCapabilityPolicyServiceTests
                 OpenRouterBaseUrl = "https://openrouter.example/v1",
                 OpenRouterModel = "test-model",
             });
+        var responseHandler = new StructuredDialogueResponseHandler();
         this.ReplaceHttpClient(
             translator,
-            new HttpClient(new StructuredDialogueResponseHandler())
+            new HttpClient(responseHandler)
             {
                 BaseAddress = new Uri("https://openrouter.example/v1/"),
             });
@@ -154,16 +155,62 @@ public sealed class LlmCapabilityPolicyServiceTests
                 SpeakerGenderHint: "female"));
 
         translated.Should().Be("Fique perto.");
+        responseHandler.RequestMethod.Should().Be(HttpMethod.Post);
+        responseHandler.RequestUri.Should().Be("https://openrouter.example/v1/chat/completions");
+        responseHandler.RequestBody.Should().Contain("\"model\":\"test-model\"");
+        responseHandler.RequestBody.Should().Contain("\"tool_choice\"");
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-start", StringComparison.Ordinal) &&
                 message.Contains("route=chat-completions", StringComparison.Ordinal) &&
                 message.Contains("endpointScope=https://openrouter.example/v1", StringComparison.Ordinal) &&
                 message.Contains("glossaryApplied=false", StringComparison.Ordinal) &&
-                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal));
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal) &&
+                message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-success", StringComparison.Ordinal) &&
                 message.Contains("route=chat-completions", StringComparison.Ordinal) &&
                 message.Contains("translatedLength=12", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures a rejected structured OpenAI-compatible response retains
+    ///     enough request-shape detail to diagnose the plain-text fallback.
+    /// </summary>
+    [Fact]
+    public async Task OpenRouterTranslator_WhenStructuredResponseIsRejected_LogsFallbackRequestShape()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var translator = new OpenRouterTranslator(
+            pluginLog,
+            new Config
+            {
+                OpenRouterApiKey = "test-key",
+                OpenRouterBaseUrl = "https://openrouter.example/v1",
+                OpenRouterModel = "test-model",
+            });
+        this.ReplaceHttpClient(
+            translator,
+            new HttpClient(new StructuredDialogueResponseHandler(
+                """
+                {"choices":[{"message":{"content":"{}"}}]}
+                """))
+            {
+                BaseAddress = new Uri("https://openrouter.example/v1/"),
+            });
+
+        await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
+
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured dialogue fallback", StringComparison.Ordinal) &&
+                message.Contains("stage=validation", StringComparison.Ordinal) &&
+                message.Contains("endpointScope=https://openrouter.example/v1", StringComparison.Ordinal) &&
+                message.Contains("route=chat-completions", StringComparison.Ordinal) &&
+                message.Contains("glossaryApplied=false", StringComparison.Ordinal) &&
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -469,18 +516,37 @@ public sealed class LlmCapabilityPolicyServiceTests
 
     private sealed class StructuredDialogueResponseHandler : HttpMessageHandler
     {
+        private const string DefaultResponseBody = """
+            {"choices":[{"message":{"content":"{\"text_translated\":\"Fique perto.\"}"}}]}
+            """;
+
+        private readonly string responseBody;
+
+        public StructuredDialogueResponseHandler(string? responseBody = null)
+        {
+            this.responseBody = responseBody ?? DefaultResponseBody;
+        }
+
+        public string RequestBody { get; private set; } = string.Empty;
+
+        public string? RequestUri { get; private set; }
+
+        public HttpMethod? RequestMethod { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            const string ResponseBody = """
-                {"choices":[{"message":{"content":"{\"text_translated\":\"Fique perto.\"}"}}]}
-                """;
+            this.RequestMethod = request.Method;
+            this.RequestUri = request.RequestUri?.ToString();
+            this.RequestBody = request.Content?.ReadAsStringAsync(cancellationToken)
+                .GetAwaiter()
+                .GetResult() ?? string.Empty;
 
             return Task.FromResult(
                 new HttpResponseMessage(System.Net.HttpStatusCode.OK)
                 {
-                    Content = new StringContent(ResponseBody),
+                    Content = new StringContent(this.responseBody),
                 });
         }
     }
