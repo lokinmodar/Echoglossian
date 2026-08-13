@@ -246,6 +246,7 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -298,10 +299,48 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 request,
                 this.capabilityScope,
                 this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
+            var jsonContent = JsonConvert.SerializeObject(request);
+            using var httpContent = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
 
-            var response = await this.httpClient.PostAsJsonAsync(
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "chat/completions",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
+
+            var response = await this.httpClient.PostAsync(
                 "chat/completions",
-                request).ConfigureAwait(false);
+                httpContent).ConfigureAwait(false);
             await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
@@ -324,7 +363,19 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                     usedGlossary,
                     structuredValidation.FailureReason ??
                     "unknown-structured-dialogue-failure");
-                PluginRuntimeLog.Debug(this.pluginLog, $"LmStudio structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "LmStudio",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "chat/completions",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary));
                 return null;
             }
 
@@ -339,6 +390,17 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "chat/completions",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload.Length,
+                        translatedText.Length,
+                        rawStructuredPayload,
+                        translatedText));
                 return translatedText;
             }
 
@@ -347,6 +409,18 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "LmStudio",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "chat/completions",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary));
             return null;
         }
         catch (Exception ex)
@@ -356,7 +430,23 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
-            PluginRuntimeLog.Debug(this.pluginLog, $"LmStudio structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "LmStudio",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "chat/completions",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }

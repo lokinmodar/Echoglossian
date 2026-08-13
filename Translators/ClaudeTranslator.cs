@@ -293,6 +293,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 sourceLanguage,
                 targetLanguage);
         bool usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             string normalizedText = FixText(text);
@@ -345,12 +346,45 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 requestData,
                 this.capabilityScope,
                 this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
 
             string jsonContent = JsonConvert.SerializeObject(requestData);
             using StringContent httpContent = new(
                 jsonContent,
                 Encoding.UTF8,
                 "application/json");
+
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "v1/messages",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
 
             using HttpResponseMessage response = await this.httpClient!.PostAsync(
                 "v1/messages",
@@ -376,7 +410,19 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                     usedGlossary,
                     structuredValidation.FailureReason ??
                     "unknown-structured-dialogue-failure");
-                PluginRuntimeLog.Debug(this.pluginLog, $"Claude structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "Claude",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "v1/messages",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary));
                 return null;
             }
 
@@ -389,6 +435,17 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                     true,
                     usedGlossary);
                 this.translationCache.Remember(cacheKey, translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "v1/messages",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload?.Length ?? 0,
+                        translatedText.Length,
+                        rawStructuredPayload ?? string.Empty,
+                        translatedText));
                 return translatedText;
             }
 
@@ -397,6 +454,18 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Claude",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "v1/messages",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary));
             return null;
         }
         catch (Exception ex)
@@ -406,7 +475,23 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
-            PluginRuntimeLog.Debug(this.pluginLog, $"Claude structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Claude",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "v1/messages",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }

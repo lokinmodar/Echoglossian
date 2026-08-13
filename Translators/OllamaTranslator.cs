@@ -220,6 +220,7 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -247,6 +248,22 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
                 options,
                 this.capabilityScope,
                 this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
             var request = new Dictionary<string, object>
             {
                 ["model"] = this.model,
@@ -256,9 +273,31 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
                     StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
                 ["options"] = options,
             };
+            var jsonContent = JsonConvert.SerializeObject(request);
+            using var httpContent = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
+
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "/api/generate",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
 
             var response =
-                await this.httpClient.PostAsJsonAsync("/api/generate", request)
+                await this.httpClient.PostAsync("/api/generate", httpContent)
                     .ConfigureAwait(false);
             await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
@@ -281,7 +320,17 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
                     "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"Ollama structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "Ollama",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "/api/generate",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary));
                 return null;
             }
 
@@ -294,6 +343,17 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
                     true,
                     usedGlossary);
                 this.translationCache.Remember(cacheKey, translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "/api/generate",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload?.Length ?? 0,
+                        translatedText.Length,
+                        rawStructuredPayload ?? string.Empty,
+                        translatedText));
                 return translatedText;
             }
 
@@ -302,6 +362,18 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Ollama",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "/api/generate",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary));
             return null;
         }
         catch (Exception ex)
@@ -313,7 +385,21 @@ public class OllamaTranslator : ITranslator, IDialogueContextAwareTranslator
                 ex.Message);
             PluginRuntimeLog.Debug(
                 this.pluginLog,
-                $"Ollama structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Ollama",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "/api/generate",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }

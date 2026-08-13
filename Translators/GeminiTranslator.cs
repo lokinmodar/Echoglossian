@@ -334,6 +334,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -373,6 +374,22 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 generationConfig,
                 this.capabilityScope,
                 this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
             var requestData = new Dictionary<string, object>
             {
                 ["contents"] = new[]
@@ -398,6 +415,23 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 "application/json");
             var baseUrl =
                 $"https://generativelanguage.googleapis.com/v1beta/models/{this.model}:generateContent?key={this.apiKey}";
+
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    $"models/{this.model}:generateContent",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
 
             var response =
                 await this.httpClient!.PostAsync(baseUrl, httpContent)
@@ -426,7 +460,17 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                     "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"Gemini structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "Gemini",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: $"models/{this.model}:generateContent",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary));
                 return null;
             }
 
@@ -441,6 +485,17 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        $"models/{this.model}:generateContent",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload?.Length ?? 0,
+                        translatedText.Length,
+                        rawStructuredPayload ?? string.Empty,
+                        translatedText));
                 return translatedText;
             }
 
@@ -449,6 +504,18 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Gemini",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: $"models/{this.model}:generateContent",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary));
             return null;
         }
         catch (Exception ex)
@@ -460,7 +527,21 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 ex.Message);
             PluginRuntimeLog.Debug(
                 this.pluginLog,
-                $"Gemini structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Gemini",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    $"models/{this.model}:generateContent",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }

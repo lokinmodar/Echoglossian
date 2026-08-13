@@ -305,6 +305,191 @@ public sealed class LlmCapabilityPolicyServiceTests
     }
 
     /// <summary>
+    ///     Ensures Gemini records the actual generative-language route around
+    ///     structured dialogue dispatch and validation.
+    /// </summary>
+    [Fact]
+    public async Task GeminiTranslator_StructuredDialogue_LogsRequestShapeAndSuccess()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var responseHandler = new StructuredDialogueResponseHandler(
+            """
+            {"candidates":[{"content":{"parts":[{"text":"{\"text_translated\":\"Fique perto.\"}"}]}}]}
+            """,
+            () => pluginLog.DebugMessages.Any(
+                message => message.Contains("structured-start", StringComparison.Ordinal)));
+        var translator = new GeminiTranslator(
+            pluginLog,
+            new Config
+            {
+                GeminiTranslatorApiKey = new string('k', 25),
+                GeminiModel = "test-model",
+            });
+        this.ReplaceHttpClient(translator, new HttpClient(responseHandler));
+
+        var translated = await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
+
+        translated.Should().Be("Fique perto.");
+        responseHandler.RequestUri.Should().Contain("v1beta/models/test-model:generateContent");
+        responseHandler.StructuredStartWasLoggedAtDispatch.Should().BeTrue();
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-start", StringComparison.Ordinal) &&
+                message.Contains("provider=Gemini", StringComparison.Ordinal) &&
+                message.Contains("route=models-test-model-generatecontent", StringComparison.Ordinal) &&
+                message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-success", StringComparison.Ordinal) &&
+                message.Contains("provider=Gemini", StringComparison.Ordinal) &&
+                message.Contains("route=models-test-model-generatecontent", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures Claude records its Messages API request shape around
+    ///     structured tool output validation.
+    /// </summary>
+    [Fact]
+    public async Task ClaudeTranslator_StructuredDialogue_LogsRequestShapeAndSuccess()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var responseHandler = new StructuredDialogueResponseHandler(
+            """
+            {"content":[{"type":"tool_use","name":"submit_dialogue_translation","input":{"text_translated":"Fique perto."}}]}
+            """,
+            () => pluginLog.DebugMessages.Any(
+                message => message.Contains("structured-start", StringComparison.Ordinal)));
+        var translator = new ClaudeTranslator(
+            pluginLog,
+            new Config
+            {
+                ClaudeApiKey = "test-key",
+                ClaudeBaseUrl = "https://claude.example",
+                ClaudeModel = "test-model",
+            });
+        this.ReplaceHttpClient(
+            translator,
+            new HttpClient(responseHandler)
+            {
+                BaseAddress = new Uri("https://claude.example/"),
+            });
+
+        var translated = await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
+
+        translated.Should().Be("Fique perto.");
+        responseHandler.RequestUri.Should().Be("https://claude.example/v1/messages");
+        responseHandler.StructuredStartWasLoggedAtDispatch.Should().BeTrue();
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-start", StringComparison.Ordinal) &&
+                message.Contains("provider=Anthropic", StringComparison.Ordinal) &&
+                message.Contains("route=v1-messages", StringComparison.Ordinal) &&
+                message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-success", StringComparison.Ordinal) &&
+                message.Contains("provider=Anthropic", StringComparison.Ordinal) &&
+                message.Contains("route=v1-messages", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures Ollama records the generate endpoint used by its structured
+    ///     JSON-schema request.
+    /// </summary>
+    [Fact]
+    public async Task OllamaTranslator_StructuredDialogue_LogsRequestShapeAndSuccess()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var responseHandler = new StructuredDialogueResponseHandler(
+            """
+            {"response":"{\"text_translated\":\"Fique perto.\"}"}
+            """,
+            () => pluginLog.DebugMessages.Any(
+                message => message.Contains("structured-start", StringComparison.Ordinal)));
+        var translator = new OllamaTranslator(
+            pluginLog,
+            new Config
+            {
+                OllamaUrl = "http://ollama.example",
+                OllamaModel = "test-model",
+            });
+        this.ReplaceHttpClient(
+            translator,
+            new HttpClient(responseHandler)
+            {
+                BaseAddress = new Uri("http://ollama.example/"),
+            });
+
+        var translated = await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
+
+        translated.Should().Be("Fique perto.");
+        responseHandler.RequestUri.Should().Be("http://ollama.example/api/generate");
+        responseHandler.StructuredStartWasLoggedAtDispatch.Should().BeTrue();
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-start", StringComparison.Ordinal) &&
+                message.Contains("provider=Ollama", StringComparison.Ordinal) &&
+                message.Contains("route=api-generate", StringComparison.Ordinal) &&
+                message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-success", StringComparison.Ordinal) &&
+                message.Contains("provider=Ollama", StringComparison.Ordinal) &&
+                message.Contains("route=api-generate", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures LM Studio records its OpenAI-compatible chat-completions
+    ///     route around structured dialogue dispatch and validation.
+    /// </summary>
+    [Fact]
+    public async Task LmStudioTranslator_StructuredDialogue_LogsRequestShapeAndSuccess()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var responseHandler = new StructuredDialogueResponseHandler(
+            isStructuredStartLogged: () => pluginLog.DebugMessages.Any(
+                message => message.Contains("structured-start", StringComparison.Ordinal)));
+        var translator = new LmStudioTranslator(
+            pluginLog,
+            new Config
+            {
+                LmStudioBaseUrl = "http://lmstudio.example/v1",
+                LmStudioModel = "test-model",
+            });
+        this.ReplaceHttpClient(
+            translator,
+            new HttpClient(responseHandler)
+            {
+                BaseAddress = new Uri("http://lmstudio.example/v1/"),
+            });
+
+        var translated = await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
+
+        translated.Should().Be("Fique perto.");
+        responseHandler.RequestUri.Should().Be("http://lmstudio.example/v1/chat/completions");
+        responseHandler.StructuredStartWasLoggedAtDispatch.Should().BeTrue();
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-start", StringComparison.Ordinal) &&
+                message.Contains("provider=LmStudio", StringComparison.Ordinal) &&
+                message.Contains("route=chat-completions", StringComparison.Ordinal) &&
+                message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-success", StringComparison.Ordinal) &&
+                message.Contains("provider=LmStudio", StringComparison.Ordinal) &&
+                message.Contains("route=chat-completions", StringComparison.Ordinal));
+    }
+
+    /// <summary>
     ///     Ensures structured ChatGPT requests retain a configured reasoning
     ///     effort only when the effective capability policy supports it.
     /// </summary>
@@ -608,6 +793,14 @@ public sealed class LlmCapabilityPolicyServiceTests
     private void ReplaceHttpClient(DeepSeekTranslator translator, HttpClient httpClient)
     {
         typeof(DeepSeekTranslator)
+            .GetField("httpClient", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(translator, httpClient);
+    }
+
+    private void ReplaceHttpClient<TTranslator>(TTranslator translator, HttpClient httpClient)
+        where TTranslator : class
+    {
+        typeof(TTranslator)
             .GetField("httpClient", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
             .SetValue(translator, httpClient);
     }
