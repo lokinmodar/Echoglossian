@@ -354,11 +354,16 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                     StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
                 true);
 
+            // The OpenAI SDK marks reasoning effort experimental, but the
+            // structured tool path must explicitly request no reasoning.
+#pragma warning disable OPENAI001
             var chatCompletionOptions = new ChatCompletionOptions
             {
                 ToolChoice = ChatToolChoice.CreateFunctionChoice(
                     StructuredDialogueOpenAiToolHelper.ToolFunctionName),
+                ReasoningEffortLevel = ChatReasoningEffortLevel.None,
             };
+#pragma warning restore OPENAI001
             temperatureWasSent = this.ApplyTemperaturePolicy(chatCompletionOptions);
             chatCompletionOptions.Tools.Add(structuredTool);
 
@@ -414,6 +419,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         }
         catch (Exception ex)
         {
+            this.LearnReasoningEffortFailure(ex);
             if (temperatureWasSent)
             {
                 this.LearnTemperatureFailure(ex);
@@ -513,6 +519,31 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 
+    /// <summary>
+    ///     Records exact-model reasoning-effort feedback from a structured
+    ///     OpenAI SDK request failure.
+    /// </summary>
+    /// <param name="exception">The provider exception associated with the request.</param>
+    private void LearnReasoningEffortFailure(Exception exception)
+    {
+        int? statusCode = exception is ClientResultException clientResultException
+            ? clientResultException.Status
+            : exception is HttpRequestException httpRequestException &&
+            httpRequestException.StatusCode.HasValue
+                ? (int)httpRequestException.StatusCode.Value
+                : null;
+        var responseText = exception is ClientResultException responseException
+            ? responseException.GetRawResponse()?.Content?.ToString()
+            : null;
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.ReasoningEffort,
+            statusCode,
+            responseText ?? exception.Message);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
+    }
     private string BuildPrompt(
         string text,
         string sourceLanguage,

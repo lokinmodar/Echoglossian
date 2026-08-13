@@ -90,6 +90,54 @@ public sealed class LlmCapabilityPolicyServiceTests
     }
 
     /// <summary>
+    ///     Ensures structured ChatGPT tool requests explicitly disable
+    ///     reasoning effort and learn an exact-model capability rejection.
+    /// </summary>
+    [Fact]
+    public void ChatGptTranslator_StructuredToolRequest_DisablesAndLearnsReasoningEffort()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "Translators",
+            "ChatGPTTranslator.cs"));
+
+        source.Should().Contain("ReasoningEffortLevel = ChatReasoningEffortLevel.None");
+        source.Should().Contain("this.LearnReasoningEffortFailure(ex);");
+        source.Should().Contain("LlmCapabilityParameterName.ReasoningEffort");
+    }
+
+    /// <summary>
+    ///     Ensures a reasoning-effort rejection is promoted only for the exact
+    ///     model that returned the structured tool-calling error.
+    /// </summary>
+    [Fact]
+    public void LearnFromProviderFailure_WithReasoningEffort400_RecordsExactModelFeedback()
+    {
+        this.WithTemporaryConfigurationDirectory(_ =>
+        {
+            var scope = new LlmCapabilityScope(
+                Echoglossian.TransEngines.ChatGPT,
+                "OpenAI",
+                "https://api.openai.com/v1",
+                "gpt-5.6-terra");
+
+            var result = LlmCapabilityPolicyService.LearnFromProviderFailure(
+                scope,
+                LlmCapabilityParameterName.ReasoningEffort,
+                400,
+                "Function tools with reasoning_effort are not supported for gpt-5.6-terra in v1/chat/completions");
+
+            result.ObservationRecorded.Should().BeTrue();
+            result.RulePromoted.Should().BeFalse();
+
+            using var context = new EchoglossianDbContext(_);
+            context.LlmModelCapabilityObservations.Should().ContainSingle(
+                observation => observation.ModelId == "gpt-5.6-terra" &&
+                    observation.ParameterName == LlmCapabilityParameterName.ReasoningEffort.ToString());
+        });
+    }
+
+    /// <summary>
     ///     Ensures scope creation normalizes provider, endpoint, and model
     ///     identity before resolution.
     /// </summary>
@@ -300,5 +348,25 @@ public sealed class LlmCapabilityPolicyServiceTests
             SqliteConnection.ClearAllPools();
             Directory.Delete(configDir, recursive: true);
         }
+    }
+
+    /// <summary>
+    ///     Locates the repository root for production wiring contract checks.
+    /// </summary>
+    /// <returns>The repository root directory.</returns>
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Echoglossian.sln")))
+            {
+                return current;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Unable to locate repository root.");
     }
 }

@@ -248,6 +248,23 @@ public class DialogueInterlocutorMetadataResolverTests
     }
 
     /// <summary>
+    ///     Ensures native actor customize-sex values retain their semantic
+    ///     gender when the visible-speaker fallback captures live actors.
+    /// </summary>
+    [Fact]
+    public void CaptureLiveActors_NumericCustomizeSex_NormalizesToGenderHints()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI",
+            "Helpers",
+            "DialogueInterlocutorMetadataResolver.cs"));
+
+        Assert.Contains("\"0\" => \"male\"", source, StringComparison.Ordinal);
+        Assert.Contains("\"1\" => \"female\"", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Creates a resolver backed by deterministic managed quest, metadata,
     ///     actor, and player-state snapshots.
     /// </summary>

@@ -425,7 +425,9 @@ public sealed class DialogueInterlocutorMetadataResolver
         return sex?.ToLowerInvariant() switch
         {
             "male" => "male",
+            "0" => "male",
             "female" => "female",
+            "1" => "female",
             _ => null,
         };
     }
