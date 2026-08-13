@@ -328,6 +328,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
         var temperatureWasSent = false;
+        var reasoningEffortWasSent = false;
         try
         {
             var normalizedText = FixText(text);
@@ -354,17 +355,14 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                     StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
                 true);
 
-            // The OpenAI SDK marks reasoning effort experimental, but the
-            // structured tool path must explicitly request no reasoning.
-#pragma warning disable OPENAI001
             var chatCompletionOptions = new ChatCompletionOptions
             {
                 ToolChoice = ChatToolChoice.CreateFunctionChoice(
                     StructuredDialogueOpenAiToolHelper.ToolFunctionName),
-                ReasoningEffortLevel = ChatReasoningEffortLevel.None,
             };
-#pragma warning restore OPENAI001
             temperatureWasSent = this.ApplyTemperaturePolicy(chatCompletionOptions);
+            reasoningEffortWasSent = this.ApplyStructuredReasoningEffortPolicy(
+                chatCompletionOptions);
             chatCompletionOptions.Tools.Add(structuredTool);
 
             var messages = new List<ChatMessage>
@@ -419,7 +417,11 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         }
         catch (Exception ex)
         {
-            this.LearnReasoningEffortFailure(ex);
+            if (reasoningEffortWasSent)
+            {
+                this.LearnReasoningEffortFailure(ex);
+            }
+
             if (temperatureWasSent)
             {
                 this.LearnTemperatureFailure(ex);
@@ -493,6 +495,36 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         return true;
     }
 
+    /// <summary>
+    ///     Applies the effective structured reasoning-effort capability policy
+    ///     to an OpenAI SDK completion request.
+    /// </summary>
+    /// <param name="options">The completion options to sanitize.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a configured reasoning-effort value
+    ///     remains eligible for provider transmission; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    internal bool ApplyStructuredReasoningEffortPolicy(
+        ChatCompletionOptions options)
+    {
+        var decision = LlmCapabilityPolicyService.GetSnapshot(
+                this.capabilityScope)
+            .GetDecision(LlmCapabilityParameterName.ReasoningEffort);
+
+        if (decision.SupportState == LlmCapabilitySupportState.Supported &&
+            !decision.OmitWhenDefaultOnly)
+        {
+#pragma warning disable OPENAI001
+            return options.ReasoningEffortLevel is not null;
+#pragma warning restore OPENAI001
+        }
+
+#pragma warning disable OPENAI001
+        options.ReasoningEffortLevel = null;
+#pragma warning restore OPENAI001
+        return false;
+    }
     /// <summary>
     ///     Records a sanitized exact-model temperature observation from an
     ///     OpenAI SDK request failure.

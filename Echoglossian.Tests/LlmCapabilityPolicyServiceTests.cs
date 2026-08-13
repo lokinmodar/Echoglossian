@@ -90,20 +90,77 @@ public sealed class LlmCapabilityPolicyServiceTests
     }
 
     /// <summary>
-    ///     Ensures structured ChatGPT tool requests explicitly disable
-    ///     reasoning effort and learn an exact-model capability rejection.
+    ///     Ensures structured ChatGPT requests omit reasoning effort when the
+    ///     effective capability policy marks it unsupported.
     /// </summary>
     [Fact]
-    public void ChatGptTranslator_StructuredToolRequest_DisablesAndLearnsReasoningEffort()
+    public void ChatGptTranslator_WhenReasoningEffortIsUnsupported_OmitsStructuredOption()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot().FullName,
-            "Translators",
-            "ChatGPTTranslator.cs"));
+        var translator = new ChatGPTTranslator(
+            new NoOpPluginLog(),
+            new Config
+            {
+                ChatGptApiKey = "test-key",
+                ChatGPTBaseUrl = "https://api.openai.com/v1",
+                OpenAILlmModel = "gpt-5.6-terra",
+            });
+        var options = new ChatCompletionOptions();
 
-        source.Should().Contain("ReasoningEffortLevel = ChatReasoningEffortLevel.None");
-        source.Should().Contain("this.LearnReasoningEffortFailure(ex);");
-        source.Should().Contain("LlmCapabilityParameterName.ReasoningEffort");
+#pragma warning disable OPENAI001
+        options.ReasoningEffortLevel = ChatReasoningEffortLevel.Low;
+#pragma warning restore OPENAI001
+
+        var applied = translator.ApplyStructuredReasoningEffortPolicy(options);
+
+        applied.Should().BeFalse();
+#pragma warning disable OPENAI001
+        options.ReasoningEffortLevel.Should().BeNull();
+#pragma warning restore OPENAI001
+    }
+
+    /// <summary>
+    ///     Ensures structured ChatGPT requests retain a configured reasoning
+    ///     effort only when the effective capability policy supports it.
+    /// </summary>
+    [Fact]
+    public void ChatGptTranslator_WhenReasoningEffortIsSupported_RetainsStructuredOption()
+    {
+        LlmCapabilityCacheManager.Clear();
+        try
+        {
+            LlmCapabilityCacheManager.PublishRule(
+                LlmCapabilityRuleDefinition.ExactModel(
+                    Echoglossian.TransEngines.ChatGPT.ToString(),
+                    "OpenAI",
+                    "https://api.openai.com/v1",
+                    "test-model",
+                    LlmCapabilityParameterName.ReasoningEffort,
+                    LlmCapabilitySupportState.Supported));
+            var translator = new ChatGPTTranslator(
+                new NoOpPluginLog(),
+                new Config
+                {
+                    ChatGptApiKey = "test-key",
+                    ChatGPTBaseUrl = "https://api.openai.com/v1",
+                    OpenAILlmModel = "test-model",
+                });
+            var options = new ChatCompletionOptions();
+
+#pragma warning disable OPENAI001
+            options.ReasoningEffortLevel = ChatReasoningEffortLevel.Low;
+#pragma warning restore OPENAI001
+
+            var applied = translator.ApplyStructuredReasoningEffortPolicy(options);
+
+            applied.Should().BeTrue();
+#pragma warning disable OPENAI001
+            options.ReasoningEffortLevel.Should().Be(ChatReasoningEffortLevel.Low);
+#pragma warning restore OPENAI001
+        }
+        finally
+        {
+            LlmCapabilityCacheManager.Clear();
+        }
     }
 
     /// <summary>
