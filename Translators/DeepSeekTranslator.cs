@@ -298,6 +298,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -356,12 +357,45 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 requestData,
                 this.capabilityScope,
                 this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
             var httpContent = new StringContent(
                 jsonContent,
                 Encoding.UTF8,
                 "application/json");
+
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "chat/completions",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
 
             var response = await this.httpClient!.PostAsync(
                 "chat/completions",
@@ -388,7 +422,19 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     usedGlossary,
                     structuredValidation.FailureReason ??
                     "unknown-structured-dialogue-failure");
-                PluginRuntimeLog.Debug(this.pluginLog, $"DeepSeek structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "DeepSeek",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "chat/completions",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary));
                 return null;
             }
 
@@ -403,6 +449,17 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "chat/completions",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload.Length,
+                        translatedText.Length,
+                        rawStructuredPayload,
+                        translatedText));
                 return translatedText;
             }
 
@@ -420,7 +477,23 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
-            PluginRuntimeLog.Debug(this.pluginLog, $"DeepSeek structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "DeepSeek",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "chat/completions",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }

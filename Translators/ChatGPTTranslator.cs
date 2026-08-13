@@ -329,6 +329,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         var usedGlossary = glossaryEntries.Count > 0;
         var temperatureWasSent = false;
         var reasoningEffortWasSent = false;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -365,10 +366,59 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 chatCompletionOptions);
             chatCompletionOptions.Tools.Add(structuredTool);
 
+            var capabilitySnapshot = LlmCapabilityPolicyService.GetSnapshot(
+                this.capabilityScope);
+            var temperatureDecision = capabilitySnapshot.GetDecision(
+                LlmCapabilityParameterName.Temperature);
+            var reasoningDecision = capabilitySnapshot.GetDecision(
+                LlmCapabilityParameterName.ReasoningEffort);
+#pragma warning disable OPENAI001
+            var reasoningEffortExplicitlyDisabled = reasoningEffortWasSent &&
+                chatCompletionOptions.ReasoningEffortLevel == ChatReasoningEffortLevel.None;
+#pragma warning restore OPENAI001
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.ReasoningEffort,
+                    reasoningDecision,
+                    reasoningEffortExplicitlyDisabled
+                        ? StructuredDialogueCapabilityEmissionMode.ExplicitDisable
+                        : reasoningEffortWasSent
+                            ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                            : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
+
             var messages = new List<ChatMessage>
             {
                 ChatMessage.CreateUserMessage(structuredPrompt),
             };
+
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "chat/completions",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    null,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
 
             ChatCompletion completion =
                 await this.chatClient!.CompleteChatAsync(
@@ -390,7 +440,19 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                     usedGlossary,
                     structuredValidation.FailureReason ??
                     "unknown-structured-dialogue-failure");
-                PluginRuntimeLog.Debug(this.pluginLog, $"ChatGPT structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "ChatGPT",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "chat/completions",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary));
                 return null;
             }
 
@@ -405,6 +467,17 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "chat/completions",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload.Length,
+                        translatedText.Length,
+                        rawStructuredPayload,
+                        translatedText));
                 return translatedText;
             }
 
@@ -432,7 +505,23 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
-            PluginRuntimeLog.Debug(this.pluginLog, $"ChatGPT structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "ChatGPT",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "chat/completions",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }
@@ -502,8 +591,8 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
     /// <param name="options">The completion options to sanitize.</param>
     /// <returns>
     ///     <see langword="true" /> when a configured reasoning-effort value
-    ///     remains eligible for provider transmission; otherwise,
-    ///     <see langword="false" />.
+    ///     or an explicit provider disable remains eligible for transmission;
+    ///     otherwise, <see langword="false" />.
     /// </returns>
     internal bool ApplyStructuredReasoningEffortPolicy(
         ChatCompletionOptions options)
@@ -520,11 +609,20 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
 #pragma warning restore OPENAI001
         }
 
+        if (decision.SupportState == LlmCapabilitySupportState.Unsupported)
+        {
+#pragma warning disable OPENAI001
+            options.ReasoningEffortLevel = ChatReasoningEffortLevel.None;
+#pragma warning restore OPENAI001
+            return true;
+        }
+
 #pragma warning disable OPENAI001
         options.ReasoningEffortLevel = null;
 #pragma warning restore OPENAI001
         return false;
     }
+
     /// <summary>
     ///     Records a sanitized exact-model temperature observation from an
     ///     OpenAI SDK request failure.
@@ -576,6 +674,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             this.pluginLog,
             $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
+
     private string BuildPrompt(
         string text,
         string sourceLanguage,

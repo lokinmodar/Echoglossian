@@ -90,11 +90,11 @@ public sealed class LlmCapabilityPolicyServiceTests
     }
 
     /// <summary>
-    ///     Ensures structured ChatGPT requests omit reasoning effort when the
-    ///     effective capability policy marks it unsupported.
+    ///     Ensures structured ChatGPT requests explicitly disable reasoning
+    ///     effort when the effective capability policy marks it unsupported.
     /// </summary>
     [Fact]
-    public void ChatGptTranslator_WhenReasoningEffortIsUnsupported_OmitsStructuredOption()
+    public void ChatGptTranslator_WhenReasoningEffortIsUnsupported_SendsExplicitStructuredDisable()
     {
         var translator = new ChatGPTTranslator(
             new NoOpPluginLog(),
@@ -112,10 +112,58 @@ public sealed class LlmCapabilityPolicyServiceTests
 
         var applied = translator.ApplyStructuredReasoningEffortPolicy(options);
 
-        applied.Should().BeFalse();
+        applied.Should().BeTrue();
 #pragma warning disable OPENAI001
-        options.ReasoningEffortLevel.Should().BeNull();
+        options.ReasoningEffortLevel.Should().Be(ChatReasoningEffortLevel.None);
 #pragma warning restore OPENAI001
+    }
+
+    /// <summary>
+    ///     Ensures OpenAI-compatible structured dialogue requests describe the
+    ///     actual request shape before dispatch and the validated result after
+    ///     completion.
+    /// </summary>
+    [Fact]
+    public async Task OpenRouterTranslator_StructuredDialogue_LogsRequestShapeAndSuccess()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var translator = new OpenRouterTranslator(
+            pluginLog,
+            new Config
+            {
+                OpenRouterApiKey = "test-key",
+                OpenRouterBaseUrl = "https://openrouter.example/v1",
+                OpenRouterModel = "test-model",
+            });
+        this.ReplaceHttpClient(
+            translator,
+            new HttpClient(new StructuredDialogueResponseHandler())
+            {
+                BaseAddress = new Uri("https://openrouter.example/v1/"),
+            });
+
+        var translated = await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext(
+                "Talk",
+                "quest-1",
+                "Krile",
+                [],
+                SpeakerGenderHint: "female"));
+
+        translated.Should().Be("Fique perto.");
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-start", StringComparison.Ordinal) &&
+                message.Contains("route=chat-completions", StringComparison.Ordinal) &&
+                message.Contains("endpointScope=https://openrouter.example/v1", StringComparison.Ordinal) &&
+                message.Contains("glossaryApplied=false", StringComparison.Ordinal) &&
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal));
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-success", StringComparison.Ordinal) &&
+                message.Contains("route=chat-completions", StringComparison.Ordinal) &&
+                message.Contains("translatedLength=12", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -168,7 +216,7 @@ public sealed class LlmCapabilityPolicyServiceTests
     ///     model that returned the structured tool-calling error.
     /// </summary>
     [Fact]
-    public void LearnFromProviderFailure_WithReasoningEffort400_RecordsExactModelFeedback()
+    public void LearnFromProviderFailure_WithReasoningEffort400_PromotesExactModelFeedback()
     {
         this.WithTemporaryConfigurationDirectory(_ =>
         {
@@ -185,12 +233,17 @@ public sealed class LlmCapabilityPolicyServiceTests
                 "Function tools with reasoning_effort are not supported for gpt-5.6-terra in v1/chat/completions");
 
             result.ObservationRecorded.Should().BeTrue();
-            result.RulePromoted.Should().BeFalse();
+            result.RulePromoted.Should().BeTrue();
 
             using var context = new EchoglossianDbContext(_);
             context.LlmModelCapabilityObservations.Should().ContainSingle(
                 observation => observation.ModelId == "gpt-5.6-terra" &&
                     observation.ParameterName == LlmCapabilityParameterName.ReasoningEffort.ToString());
+            context.LlmModelCapabilityRules.Should().ContainSingle(
+                rule => rule.MatchType == LlmCapabilityRuleMatchType.ExactModel.ToString() &&
+                    rule.MatchValue == "gpt-5.6-terra" &&
+                    rule.ParameterName == LlmCapabilityParameterName.ReasoningEffort.ToString() &&
+                    rule.SupportState == LlmCapabilitySupportState.Unsupported.ToString());
         });
     }
 
@@ -404,6 +457,31 @@ public sealed class LlmCapabilityPolicyServiceTests
             Echoglossian.ConfigDirectory = originalConfigDirectory;
             SqliteConnection.ClearAllPools();
             Directory.Delete(configDir, recursive: true);
+        }
+    }
+
+    private void ReplaceHttpClient(OpenRouterTranslator translator, HttpClient httpClient)
+    {
+        typeof(OpenRouterTranslator)
+            .GetField("httpClient", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(translator, httpClient);
+    }
+
+    private sealed class StructuredDialogueResponseHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            const string ResponseBody = """
+                {"choices":[{"message":{"content":"{\"text_translated\":\"Fique perto.\"}"}}]}
+                """;
+
+            return Task.FromResult(
+                new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = new StringContent(ResponseBody),
+                });
         }
     }
 
