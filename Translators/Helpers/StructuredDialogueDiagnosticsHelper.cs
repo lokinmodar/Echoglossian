@@ -114,7 +114,7 @@ public static partial class StructuredDialogueDiagnosticsHelper
             return "provider-exception";
         }
 
-        return NormalizeToken(failureReason);
+        return NormalizeToken(SanitizeExcerpt(failureReason));
     }
 
     private static string NormalizeToken(string? value)
@@ -187,7 +187,7 @@ public static partial class StructuredDialogueDiagnosticsHelper
         return sanitizedUri.Uri.GetLeftPart(UriPartial.Path);
     }
 
-    [GeneratedRegex(@"\b(?<key>api[_-]?key|token|authorization|password|secret|key)\s*[=:]\s*(?:""[^""]*""|'[^']*'|[^,\s;}\]]+)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\b(?<key>api[_-]?key|token|authorization|password|secret|key)\b""?\s*[=:]\s*(?:""[^""]*""|'[^']*'|[^,\s;}\]]+)", RegexOptions.IgnoreCase)]
     private static partial Regex SecretAssignmentPattern();
 
     [GeneratedRegex(@"\bBearer\s+[A-Za-z0-9._~+/=-]+", RegexOptions.IgnoreCase)]
