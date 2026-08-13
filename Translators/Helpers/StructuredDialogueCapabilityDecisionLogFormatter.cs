@@ -76,8 +76,7 @@ internal static class StructuredDialogueCapabilityDecisionLogFormatter
         {
             StructuredDialogueCapabilityEmissionMode.SentConfigured when decision.SupportState == LlmCapabilitySupportState.Supported
                 => "sent(configured)",
-            StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly when
-                decision.SupportState == LlmCapabilitySupportState.Supported && decision.OmitWhenDefaultOnly
+            StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly when decision.OmitWhenDefaultOnly
                 => "omitted(default-only)",
             StructuredDialogueCapabilityEmissionMode.OmittedUnsupported when decision.SupportState == LlmCapabilitySupportState.Unsupported
                 => "omitted(unsupported)",

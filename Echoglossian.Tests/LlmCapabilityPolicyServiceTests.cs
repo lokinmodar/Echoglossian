@@ -7,6 +7,7 @@ using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.Translators;
 using Echoglossian.Translators.Capabilities;
+using Echoglossian.Translators.Helpers;
 
 using Echoglossian.Tests.TestDoubles;
 
@@ -135,7 +136,9 @@ public sealed class LlmCapabilityPolicyServiceTests
                 OpenRouterBaseUrl = "https://openrouter.example/v1",
                 OpenRouterModel = "test-model",
             });
-        var responseHandler = new StructuredDialogueResponseHandler();
+        var responseHandler = new StructuredDialogueResponseHandler(
+            isStructuredStartLogged: () => pluginLog.DebugMessages.Any(
+                message => message.Contains("structured-start", StringComparison.Ordinal)));
         this.ReplaceHttpClient(
             translator,
             new HttpClient(responseHandler)
@@ -159,6 +162,7 @@ public sealed class LlmCapabilityPolicyServiceTests
         responseHandler.RequestUri.Should().Be("https://openrouter.example/v1/chat/completions");
         responseHandler.RequestBody.Should().Contain("\"model\":\"test-model\"");
         responseHandler.RequestBody.Should().Contain("\"tool_choice\"");
+        responseHandler.StructuredStartWasLoggedAtDispatch.Should().BeTrue();
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-start", StringComparison.Ordinal) &&
                 message.Contains("route=chat-completions", StringComparison.Ordinal) &&
@@ -211,6 +215,93 @@ public sealed class LlmCapabilityPolicyServiceTests
                 message.Contains("route=chat-completions", StringComparison.Ordinal) &&
                 message.Contains("glossaryApplied=false", StringComparison.Ordinal) &&
                 message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Ensures the default OpenAI structured path records its explicit
+    ///     gpt-5.6 parameter decisions without changing provider policy.
+    /// </summary>
+    [Fact]
+    public void ChatGptTranslator_StructuredDefaultRules_UseExplicitCapabilityDecisionTokens()
+    {
+        var translator = new ChatGPTTranslator(
+            new NoOpPluginLog(),
+            new Config
+            {
+                ChatGptApiKey = "test-key",
+                ChatGPTBaseUrl = "https://api.openai.com/v1",
+                OpenAILlmModel = "gpt-5.6-terra",
+                ChatGptTemperature = 0.7f,
+            });
+        var options = new ChatCompletionOptions();
+
+        translator.ApplyTemperaturePolicy(options).Should().BeFalse();
+        translator.ApplyStructuredReasoningEffortPolicy(options).Should().BeTrue();
+        var snapshot = LlmCapabilityPolicyService.GetSnapshot(
+            LlmCapabilityPolicyService.CreateScope(
+                Echoglossian.TransEngines.ChatGPT,
+                "OpenAI",
+                "https://api.openai.com/v1",
+                "gpt-5.6-terra"));
+
+        StructuredDialogueCapabilityDecisionLogFormatter.Format(
+            LlmCapabilityParameterName.Temperature,
+            snapshot.GetDecision(LlmCapabilityParameterName.Temperature),
+            StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly)
+            .Should().Be("temperature=omitted(default-only)");
+        StructuredDialogueCapabilityDecisionLogFormatter.Format(
+            LlmCapabilityParameterName.ReasoningEffort,
+            snapshot.GetDecision(LlmCapabilityParameterName.ReasoningEffort),
+            StructuredDialogueCapabilityEmissionMode.ExplicitDisable)
+            .Should().Be("reasoning_effort=explicit-none(unsupported)");
+    }
+
+    /// <summary>
+    ///     Ensures the DeepSeek structured HTTP path emits the same start and
+    ///     success shape as the other OpenAI-compatible translators.
+    /// </summary>
+    [Fact]
+    public async Task DeepSeekTranslator_StructuredDialogue_LogsRequestShapeAndSuccess()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var responseHandler = new StructuredDialogueResponseHandler(
+            isStructuredStartLogged: () => pluginLog.DebugMessages.Any(
+                message => message.Contains("structured-start", StringComparison.Ordinal)));
+        var translator = new DeepSeekTranslator(
+            pluginLog,
+            new Config
+            {
+                DeepSeekTranslatorApiKey = new string('k', 25),
+                DeepSeekBaseUrl = "https://deepseek.example/v1",
+                DeepSeekModel = "test-model",
+            });
+        this.ReplaceHttpClient(
+            translator,
+            new HttpClient(responseHandler)
+            {
+                BaseAddress = new Uri("https://deepseek.example/v1/"),
+            });
+
+        var translated = await translator.TranslateAsync(
+            "Stay close.",
+            "English",
+            "Portuguese",
+            new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
+
+        translated.Should().Be("Fique perto.");
+        responseHandler.RequestMethod.Should().Be(HttpMethod.Post);
+        responseHandler.RequestUri.Should().Be("https://deepseek.example/v1/chat/completions");
+        responseHandler.RequestBody.Should().Contain("\"tool_choice\"");
+        responseHandler.StructuredStartWasLoggedAtDispatch.Should().BeTrue();
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-start", StringComparison.Ordinal) &&
+                message.Contains("provider=DeepSeek", StringComparison.Ordinal) &&
+                message.Contains("route=chat-completions", StringComparison.Ordinal) &&
+                message.Contains("requestJsonLength=", StringComparison.Ordinal));
+        pluginLog.DebugMessages.Should().ContainSingle(
+            message => message.Contains("structured-success", StringComparison.Ordinal) &&
+                message.Contains("provider=DeepSeek", StringComparison.Ordinal) &&
+                message.Contains("translatedLength=12", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -514,17 +605,28 @@ public sealed class LlmCapabilityPolicyServiceTests
             .SetValue(translator, httpClient);
     }
 
+    private void ReplaceHttpClient(DeepSeekTranslator translator, HttpClient httpClient)
+    {
+        typeof(DeepSeekTranslator)
+            .GetField("httpClient", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(translator, httpClient);
+    }
+
     private sealed class StructuredDialogueResponseHandler : HttpMessageHandler
     {
         private const string DefaultResponseBody = """
             {"choices":[{"message":{"content":"{\"text_translated\":\"Fique perto.\"}"}}]}
             """;
 
+        private readonly Func<bool>? isStructuredStartLogged;
         private readonly string responseBody;
 
-        public StructuredDialogueResponseHandler(string? responseBody = null)
+        public StructuredDialogueResponseHandler(
+            string? responseBody = null,
+            Func<bool>? isStructuredStartLogged = null)
         {
             this.responseBody = responseBody ?? DefaultResponseBody;
+            this.isStructuredStartLogged = isStructuredStartLogged;
         }
 
         public string RequestBody { get; private set; } = string.Empty;
@@ -532,6 +634,8 @@ public sealed class LlmCapabilityPolicyServiceTests
         public string? RequestUri { get; private set; }
 
         public HttpMethod? RequestMethod { get; private set; }
+
+        public bool StructuredStartWasLoggedAtDispatch { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -542,6 +646,7 @@ public sealed class LlmCapabilityPolicyServiceTests
             this.RequestBody = request.Content?.ReadAsStringAsync(cancellationToken)
                 .GetAwaiter()
                 .GetResult() ?? string.Empty;
+            this.StructuredStartWasLoggedAtDispatch = this.isStructuredStartLogged?.Invoke() ?? false;
 
             return Task.FromResult(
                 new HttpResponseMessage(System.Net.HttpStatusCode.OK)
