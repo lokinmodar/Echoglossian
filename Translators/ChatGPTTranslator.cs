@@ -395,7 +395,13 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                         ? StructuredDialogueCapabilityEmissionMode.ExplicitDisable
                         : reasoningEffortWasSent
                             ? StructuredDialogueCapabilityEmissionMode.SentConfigured
-                            : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+                            : reasoningDecision.OmitWhenDefaultOnly
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                                : reasoningDecision.SupportState == LlmCapabilitySupportState.Supported
+                                    ? StructuredDialogueCapabilityEmissionMode.OmittedSupported
+                                    : reasoningDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                        ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                        : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
             ];
 
             var messages = new List<ChatMessage>
@@ -443,7 +449,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
                     StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
-                        "ChatGPT",
+                        this.capabilityScope.ProviderScope,
                         this.model,
                         StructuredDialogueProviderCapability.JsonSchema,
                         "validation",
@@ -452,7 +458,8 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                         endpointScope: this.capabilityScope.EndpointScope,
                         route: "chat/completions",
                         capabilityDecisionTokens: capabilityDecisionTokens,
-                        glossaryApplied: usedGlossary));
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -489,7 +496,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             PluginRuntimeLog.Debug(
                 this.pluginLog,
                 StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
-                    "ChatGPT",
+                    this.capabilityScope.ProviderScope,
                     this.model,
                     StructuredDialogueProviderCapability.JsonSchema,
                     "validation",
@@ -497,7 +504,8 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                     endpointScope: this.capabilityScope.EndpointScope,
                     route: "chat/completions",
                     capabilityDecisionTokens: capabilityDecisionTokens,
-                    glossaryApplied: usedGlossary));
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)
@@ -517,19 +525,25 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 ex.Message);
+            int? statusCode = ex is ClientResultException clientResultException
+                ? clientResultException.Status
+                : ex is HttpRequestException httpRequestException &&
+                httpRequestException.StatusCode.HasValue
+                    ? (int)httpRequestException.StatusCode.Value
+                    : null;
+            var responseExcerpt = ex is ClientResultException responseException
+                ? responseException.GetRawResponse()?.Content?.ToString()
+                : ex.Message;
             PluginRuntimeLog.Debug(
                 this.pluginLog,
                 StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
-                    "ChatGPT",
+                    this.capabilityScope.ProviderScope,
                     this.model,
                     StructuredDialogueProviderCapability.JsonSchema,
                     "exception",
                     ex.Message,
-                    ex is HttpRequestException httpRequestException &&
-                    httpRequestException.StatusCode.HasValue
-                        ? (int)httpRequestException.StatusCode.Value
-                        : null,
-                    ex.Message,
+                    statusCode,
+                    responseExcerpt,
                     this.capabilityScope.EndpointScope,
                     "chat/completions",
                     capabilityDecisionTokens,

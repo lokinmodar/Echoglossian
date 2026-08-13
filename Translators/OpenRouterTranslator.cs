@@ -389,7 +389,8 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                         endpointScope: this.capabilityScope.EndpointScope,
                         route: "chat/completions",
                         capabilityDecisionTokens: capabilityDecisionTokens,
-                        glossaryApplied: usedGlossary));
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -434,7 +435,8 @@ public class OpenRouterTranslator : ITranslator, IDialogueContextAwareTranslator
                     endpointScope: this.capabilityScope.EndpointScope,
                     route: "chat/completions",
                     capabilityDecisionTokens: capabilityDecisionTokens,
-                    glossaryApplied: usedGlossary));
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)

@@ -44,7 +44,7 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             "LmStudio",
             baseUrl,
             this.model);
-        this.httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        this.httpClient = new HttpClient { BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/") };
 
         if (config.UseLmStudioAuth &&
             !string.IsNullOrWhiteSpace(config.LmStudioApiKey))
@@ -375,7 +375,8 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                         endpointScope: this.capabilityScope.EndpointScope,
                         route: "chat/completions",
                         capabilityDecisionTokens: capabilityDecisionTokens,
-                        glossaryApplied: usedGlossary));
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -420,7 +421,8 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                     endpointScope: this.capabilityScope.EndpointScope,
                     route: "chat/completions",
                     capabilityDecisionTokens: capabilityDecisionTokens,
-                    glossaryApplied: usedGlossary));
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)

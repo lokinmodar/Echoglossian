@@ -195,8 +195,30 @@ public class StructuredDialogueDiagnosticsHelperTests
         message.Should().Contain("model=gemini-2.5-flash");
         message.Should().Contain("capability=json-schema");
         message.Should().Contain("stage=exception");
-        message.Should().Contain("reason=bad-request");
+        message.Should().Contain("reason=provider-exception");
         message.Should().Contain("status=400");
+    }
+
+    /// <summary>
+    ///     Ensures fallback reasons use the same bounded credential redaction
+    ///     as provider excerpts before they reach the diagnostic log.
+    /// </summary>
+    [Fact]
+    public void FormatStructuredFallbackMessage_ShouldRedactFailureReasonAndUseRequiredMarker()
+    {
+        string message = StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+            "Gemini",
+            "gemini-2.5-flash",
+            StructuredDialogueProviderCapability.JsonSchema,
+            "exception",
+            "Provider rejected password=correct-horse and {\"apiKey\":\"sk-secret-123\"} at ?key=gemini-secret",
+            400);
+
+        message.Should().Contain("structured-fallback");
+        message.Should().Contain("reason=provider-exception");
+        message.Should().NotContain("correct-horse");
+        message.Should().NotContain("sk-secret-123");
+        message.Should().NotContain("gemini-secret");
     }
 
     /// <summary>

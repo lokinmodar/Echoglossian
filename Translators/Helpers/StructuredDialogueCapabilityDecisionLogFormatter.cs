@@ -34,6 +34,12 @@ internal enum StructuredDialogueCapabilityEmissionMode
     OmittedUnknown,
 
     /// <summary>
+    ///     The parameter is supported but no configured value was available
+    ///     to send for this request.
+    /// </summary>
+    OmittedSupported,
+
+    /// <summary>
     ///     The parameter was sent with its explicit disable value.
     /// </summary>
     ExplicitDisable,
@@ -82,6 +88,8 @@ internal static class StructuredDialogueCapabilityDecisionLogFormatter
                 => "omitted(unsupported)",
             StructuredDialogueCapabilityEmissionMode.OmittedUnknown when decision.SupportState == LlmCapabilitySupportState.Unknown
                 => "omitted(unknown)",
+            StructuredDialogueCapabilityEmissionMode.OmittedSupported when decision.SupportState == LlmCapabilitySupportState.Supported
+                => "omitted(unconfigured)",
             StructuredDialogueCapabilityEmissionMode.ExplicitDisable when
                 parameterName == LlmCapabilityParameterName.ReasoningEffort &&
                 decision.SupportState == LlmCapabilitySupportState.Unsupported

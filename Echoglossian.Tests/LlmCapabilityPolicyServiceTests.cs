@@ -209,12 +209,13 @@ public sealed class LlmCapabilityPolicyServiceTests
             new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
 
         pluginLog.DebugMessages.Should().ContainSingle(
-            message => message.Contains("structured dialogue fallback", StringComparison.Ordinal) &&
+            message => message.Contains("structured-fallback", StringComparison.Ordinal) &&
                 message.Contains("stage=validation", StringComparison.Ordinal) &&
                 message.Contains("endpointScope=https://openrouter.example/v1", StringComparison.Ordinal) &&
                 message.Contains("route=chat-completions", StringComparison.Ordinal) &&
                 message.Contains("glossaryApplied=false", StringComparison.Ordinal) &&
-                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal));
+                message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal) &&
+                message.Contains("excerpt={}", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -339,13 +340,13 @@ public sealed class LlmCapabilityPolicyServiceTests
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-start", StringComparison.Ordinal) &&
                 message.Contains("provider=Gemini", StringComparison.Ordinal) &&
-                message.Contains("route=models-test-model-generatecontent", StringComparison.Ordinal) &&
+                message.Contains("route=v1beta-models-test-model-generatecontent", StringComparison.Ordinal) &&
                 message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal) &&
                 message.Contains($"requestJsonLength={responseHandler.RequestBody.Length}", StringComparison.Ordinal));
         pluginLog.DebugMessages.Should().ContainSingle(
             message => message.Contains("structured-success", StringComparison.Ordinal) &&
                 message.Contains("provider=Gemini", StringComparison.Ordinal) &&
-                message.Contains("route=models-test-model-generatecontent", StringComparison.Ordinal));
+                message.Contains("route=v1beta-models-test-model-generatecontent", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -431,7 +432,7 @@ public sealed class LlmCapabilityPolicyServiceTests
             new DialogueTranslationContext("Talk", "quest-1", "Krile", []));
 
         pluginLog.DebugMessages.Should().ContainSingle(
-            message => message.Contains("structured dialogue fallback", StringComparison.Ordinal) &&
+            message => message.Contains("structured-fallback", StringComparison.Ordinal) &&
                 message.Contains("provider=Anthropic", StringComparison.Ordinal) &&
                 message.Contains("route=v1-messages", StringComparison.Ordinal) &&
                 message.Contains("capabilityDecisions=temperature=omitted(unknown)", StringComparison.Ordinal));
@@ -575,6 +576,33 @@ public sealed class LlmCapabilityPolicyServiceTests
         {
             LlmCapabilityCacheManager.Clear();
         }
+    }
+
+    /// <summary>
+    ///     Ensures production DeepSeek and LM Studio base addresses preserve
+    ///     their configured API-version segment for relative request routes.
+    /// </summary>
+    [Fact]
+    public void OpenAiCompatibleTranslators_WhenBaseUrlLacksTrailingSlash_PreserveVersionSegment()
+    {
+        var deepSeekTranslator = new DeepSeekTranslator(
+            new NoOpPluginLog(),
+            new Config
+            {
+                DeepSeekTranslatorApiKey = new string('k', 25),
+                DeepSeekBaseUrl = "https://deepseek.example/v1",
+            });
+        var lmStudioTranslator = new LmStudioTranslator(
+            new NoOpPluginLog(),
+            new Config
+            {
+                LmStudioBaseUrl = "http://lmstudio.example/v1",
+            });
+
+        this.GetHttpClient(deepSeekTranslator).BaseAddress.Should().Be(
+            new Uri("https://deepseek.example/v1/"));
+        this.GetHttpClient(lmStudioTranslator).BaseAddress.Should().Be(
+            new Uri("http://lmstudio.example/v1/"));
     }
 
     /// <summary>
@@ -838,6 +866,14 @@ public sealed class LlmCapabilityPolicyServiceTests
         typeof(DeepSeekTranslator)
             .GetField("httpClient", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
             .SetValue(translator, httpClient);
+    }
+
+    private HttpClient GetHttpClient<TTranslator>(TTranslator translator)
+        where TTranslator : class
+    {
+        return (HttpClient)typeof(TTranslator)
+            .GetField("httpClient", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(translator)!;
     }
 
     private void ReplaceHttpClient<TTranslator>(TTranslator translator, HttpClient httpClient)

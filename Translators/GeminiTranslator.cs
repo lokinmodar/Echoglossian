@@ -334,6 +334,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        var route = $"v1beta/models/{this.model}:generateContent";
         IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
@@ -414,13 +415,13 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 Encoding.UTF8,
                 "application/json");
             var baseUrl =
-                $"https://generativelanguage.googleapis.com/v1beta/models/{this.model}:generateContent?key={this.apiKey}";
+                $"https://generativelanguage.googleapis.com/{route}?key={this.apiKey}";
 
             PluginRuntimeLog.Debug(
                 this.pluginLog,
                 StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
                     this.capabilityScope,
-                    $"models/{this.model}:generateContent",
+                    route,
                     StructuredDialogueProviderCapability.JsonSchema,
                     dialogueContext.SessionNamespace,
                     dialogueContext.PriorTurns.Count,
@@ -468,9 +469,10 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                         structuredValidation.FailureReason ??
                         "unknown-structured-dialogue-failure",
                         endpointScope: this.capabilityScope.EndpointScope,
-                        route: $"models/{this.model}:generateContent",
+                        route: route,
                         capabilityDecisionTokens: capabilityDecisionTokens,
-                        glossaryApplied: usedGlossary));
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -489,7 +491,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                     this.pluginLog,
                     StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
                         this.capabilityScope,
-                        $"models/{this.model}:generateContent",
+                        route,
                         StructuredDialogueProviderCapability.JsonSchema,
                         usedGlossary,
                         rawStructuredPayload?.Length ?? 0,
@@ -513,9 +515,10 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                     "validation",
                     "non-persistable-structured-result",
                     endpointScope: this.capabilityScope.EndpointScope,
-                    route: $"models/{this.model}:generateContent",
+                    route: route,
                     capabilityDecisionTokens: capabilityDecisionTokens,
-                    glossaryApplied: usedGlossary));
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)
@@ -539,7 +542,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                         : null,
                     ex.Message,
                     this.capabilityScope.EndpointScope,
-                    $"models/{this.model}:generateContent",
+                    route,
                     capabilityDecisionTokens,
                     usedGlossary));
             return null;

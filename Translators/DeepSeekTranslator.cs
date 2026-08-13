@@ -60,7 +60,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
 
                 this.httpClient = new HttpClient
                 {
-                    BaseAddress = new Uri(this.baseUrl),
+                    BaseAddress = new Uri(this.baseUrl.TrimEnd('/') + "/"),
                 };
                 this.httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", this.apiKey);
@@ -434,7 +434,8 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         endpointScope: this.capabilityScope.EndpointScope,
                         route: "chat/completions",
                         capabilityDecisionTokens: capabilityDecisionTokens,
-                        glossaryApplied: usedGlossary));
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -479,7 +480,8 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     endpointScope: this.capabilityScope.EndpointScope,
                     route: "chat/completions",
                     capabilityDecisionTokens: capabilityDecisionTokens,
-                    glossaryApplied: usedGlossary));
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)

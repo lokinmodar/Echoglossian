@@ -422,7 +422,8 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                         endpointScope: this.capabilityScope.EndpointScope,
                         route: "v1/messages",
                         capabilityDecisionTokens: capabilityDecisionTokens,
-                        glossaryApplied: usedGlossary));
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -465,7 +466,8 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                     endpointScope: this.capabilityScope.EndpointScope,
                     route: "v1/messages",
                     capabilityDecisionTokens: capabilityDecisionTokens,
-                    glossaryApplied: usedGlossary));
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)

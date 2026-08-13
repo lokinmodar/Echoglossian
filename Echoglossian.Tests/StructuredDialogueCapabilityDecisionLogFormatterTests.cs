@@ -40,6 +40,27 @@ public class StructuredDialogueCapabilityDecisionLogFormatterTests
     }
 
     /// <summary>
+    ///     Ensures a supported reasoning-effort option without a configured
+    ///     value is logged as an accurate omission instead of an unknown rule.
+    /// </summary>
+    [Fact]
+    public void Format_WhenSupportedReasoningEffortIsUnset_ShouldEmitSupportedOmissionToken()
+    {
+        string token = StructuredDialogueCapabilityDecisionLogFormatter.Format(
+            LlmCapabilityParameterName.ReasoningEffort,
+            new LlmCapabilityParameterDecision(
+                LlmCapabilitySupportState.Supported,
+                null,
+                null,
+                false,
+                "StaticDefault",
+                "Supported"),
+            StructuredDialogueCapabilityEmissionMode.OmittedSupported);
+
+        token.Should().Be("reasoning_effort=omitted(unconfigured)");
+    }
+
+    /// <summary>
     ///     Ensures incompatible support and emission combinations do not
     ///     silently produce an incorrect capability decision token.
     /// </summary>

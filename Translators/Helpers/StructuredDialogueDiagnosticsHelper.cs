@@ -47,11 +47,11 @@ public static partial class StructuredDialogueDiagnosticsHelper
     {
         var parts = new List<string>
         {
-            "structured dialogue fallback",
+            "structured-fallback",
             $"provider={providerName}",
             $"capability={FormatCapability(capability)}",
             $"stage={NormalizeToken(stage)}",
-            $"reason={NormalizeToken(failureReason)}",
+            $"reason={FormatFailureReason(stage, failureReason)}",
         };
 
         if (!string.IsNullOrWhiteSpace(modelName))
@@ -102,6 +102,19 @@ public static partial class StructuredDialogueDiagnosticsHelper
             StructuredDialogueProviderCapability.PlainTextGlossary => "plain-text-glossary",
             _ => "disabled",
         };
+    }
+
+    private static string FormatFailureReason(string stage, string? failureReason)
+    {
+        if (string.Equals(
+                NormalizeToken(stage),
+                "exception",
+                StringComparison.Ordinal))
+        {
+            return "provider-exception";
+        }
+
+        return NormalizeToken(failureReason);
     }
 
     private static string NormalizeToken(string? value)
@@ -174,7 +187,7 @@ public static partial class StructuredDialogueDiagnosticsHelper
         return sanitizedUri.Uri.GetLeftPart(UriPartial.Path);
     }
 
-    [GeneratedRegex(@"\b(api[_-]?key|token|authorization)\s*[=:]\s*[^,\s;]+", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\b(?<key>api[_-]?key|token|authorization|password|secret|key)\s*[=:]\s*(?:""[^""]*""|'[^']*'|[^,\s;}\]]+)", RegexOptions.IgnoreCase)]
     private static partial Regex SecretAssignmentPattern();
 
     [GeneratedRegex(@"\bBearer\s+[A-Za-z0-9._~+/=-]+", RegexOptions.IgnoreCase)]
