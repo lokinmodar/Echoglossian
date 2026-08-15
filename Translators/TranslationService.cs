@@ -124,9 +124,10 @@ public class TranslationService
       Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation = null,
       Action<int, TranslationFailureClassification>? reportTranslationFailure = null,
       Func<TranslationSurfaceGroup, TranslatorResolution>? translatorResolver = null,
-      Func<string, SourceClientLanguage?>? sourceLanguageResolver = null)
+      Func<string, SourceClientLanguage?>? sourceLanguageResolver = null,
+      Action<string>? debugLog = null)
   {
-    this.debugLog = null;
+    this.debugLog = debugLog;
     this.sanitizeText = sanitizeText;
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
@@ -1151,7 +1152,12 @@ public class TranslationService
     var useDialogueContext = this.WillUseDialogueContext(
         dialogueContext,
         resolvedTranslatorResolution);
-
+    this.LogDialogueContextSummary(
+        useDialogueContext,
+        dialogueContext,
+        resolvedTranslatorResolution.TranslationEngineId,
+        surfaceGroup,
+        resolvedOriginContext);
     var glossaryProtection = this.ProtectDialogueGlossaryTerms(
         parsedText,
         resolvedSourceLanguage.ProviderCode,

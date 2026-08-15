@@ -955,6 +955,68 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures dialogue-aware requests emit a non-sensitive context summary
+    ///     that exposes presence/absence of hints without logging names.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TranslateAsync_DialogueContextRequest_LogsNonSensitiveContextSummary()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var translator = new ContextAwareRecordingTranslator
+        {
+            AsyncResult = "dialogue-result",
+        };
+        var service = new TranslationService(
+            static text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.Gemini,
+            debugLog: message => pluginLog.Debug(message));
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "quest-1",
+            "Minfilia",
+            [
+                new DialogueTranslationTurn(
+                    "Thancred",
+                    "We move now.",
+                    DateTime.UtcNow),
+            ],
+            SpeakerRoleHint: "npc",
+            SpeakerGenderHint: "female",
+            AddresseeHint: "Alphinaud",
+            AddresseeRoleHint: "npc",
+            AddresseeGenderHint: "male",
+            MetadataProvenance: "QuestSheetDerivedExact",
+            MetadataConfidenceTier: 2);
+
+        _ = await service.TranslateAsync(
+            "Current line",
+            new SourceClientLanguage("en", "en"),
+            "it",
+            dialogueContext,
+            TranslationSurfaceGroup.Dialogue,
+            originContext: "Talk/Text");
+
+        string message = Assert.Single(
+            pluginLog.DebugMessages,
+            line => line.StartsWith(
+                "[Talk/Text] TranslationService: dialogue context summary",
+                StringComparison.Ordinal));
+        Assert.Contains("dialogueContext=supplied", message, StringComparison.Ordinal);
+        Assert.Contains("metadata=populated", message, StringComparison.Ordinal);
+        Assert.Contains("speaker=true", message, StringComparison.Ordinal);
+        Assert.Contains("speakerGender=true", message, StringComparison.Ordinal);
+        Assert.Contains("addressee=true", message, StringComparison.Ordinal);
+        Assert.Contains("addresseeGender=true", message, StringComparison.Ordinal);
+        Assert.Contains("metadataProvenance=QuestSheetDerivedExact", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Minfilia", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Thancred", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Alphinaud", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("We move now.", message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     ///     Ensures a known failed request keeps the sanitized original text
     ///     instead of collapsing to an empty string.
     /// </summary>
