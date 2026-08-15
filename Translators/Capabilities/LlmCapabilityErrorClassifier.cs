@@ -46,6 +46,7 @@ public static partial class LlmCapabilityErrorClassifier
         var explicitlyUnsupported = !string.IsNullOrEmpty(parameterToken) &&
             ContainsParameter(message, parameterToken) &&
             (message.Contains("unsupported", StringComparison.OrdinalIgnoreCase) ||
+             message.Contains("not supported", StringComparison.OrdinalIgnoreCase) ||
              message.Contains("does not support", StringComparison.OrdinalIgnoreCase) ||
              providerErrorCode.Contains("unsupported", StringComparison.OrdinalIgnoreCase));
 

@@ -29,6 +29,15 @@ public static class LlmCapabilityStaticCatalog
           LlmCapabilitySupportState.Unsupported,
           omitWhenDefaultOnly: true,
           reason: "OpenAI chat-completions reasoning models accept only the implicit default temperature.");
+
+      yield return LlmCapabilityRuleDefinition.FamilyPrefix(
+          "ChatGPT",
+          "OpenAI",
+          "https://api.openai.com/v1",
+          "gpt-5.6-",
+          LlmCapabilityParameterName.ReasoningEffort,
+          LlmCapabilitySupportState.Unsupported,
+          reason: "OpenAI chat-completions tool calls require reasoning_effort=none for gpt-5.6 models.");
     }
 
     if (engine == Echoglossian.TransEngines.Gemini)
