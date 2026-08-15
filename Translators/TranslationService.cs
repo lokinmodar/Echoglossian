@@ -5,6 +5,7 @@
 
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
+using Echoglossian.Translators.Helpers;
 using Echoglossian.Translators.OpenAI;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -1150,27 +1151,38 @@ public class TranslationService
     var useDialogueContext = this.WillUseDialogueContext(
         dialogueContext,
         resolvedTranslatorResolution);
+
+    var glossaryProtection = this.ProtectDialogueGlossaryTerms(
+        parsedText,
+        resolvedSourceLanguage.ProviderCode,
+        targetLanguage,
+        useDialogueContext);
+    var providerInputText = glossaryProtection.Occurrences.Count > 0
+        ? glossaryProtection.ProtectedText
+        : parsedText;
     cancellationToken.ThrowIfCancellationRequested();
     var stopwatch = Stopwatch.StartNew();
     var finalDialogueText = useDialogueContext &&
                             resolvedTranslatorResolution.Translator is IDialogueContextAwareTranslator contextAwareTranslator
         ? await contextAwareTranslator.TranslateAsync(
-            parsedText,
+            providerInputText,
             resolvedSourceLanguage.ProviderCode,
             targetLanguage,
             dialogueContext!.Value).WaitAsync(cancellationToken).ConfigureAwait(false)
         : await resolvedTranslatorResolution.Translator.TranslateAsync(
-            parsedText,
+            providerInputText,
             resolvedSourceLanguage.ProviderCode,
             targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
-    var acceptanceResult = this.AcceptTranslatedResultOrFallback(
+    var acceptanceResult = this.AcceptDialogueGlossaryResultOrFallback(
         finalDialogueText,
+        glossaryProtection,
         parsedText,
         sanitizedText,
         normalizedSourceLanguage,
         normalizedTargetLanguage,
         resolvedOriginContext,
-        resolvedTranslatorResolution.TranslationEngineId);
+        resolvedTranslatorResolution.TranslationEngineId,
+        surfaceGroup);
     stopwatch.Stop();
     this.RecordTranslationMetric(
         acceptanceResult,
@@ -1411,6 +1423,108 @@ public class TranslationService
   }
 
   /// <summary>
+  ///     Accepts one dialogue translation result after restoring any protected
+  ///     glossary markers; otherwise records a transient glossary failure and
+  ///     falls back to the sanitized source text.
+  /// </summary>
+  /// <param name="translatedText">The translated text candidate.</param>
+  /// <param name="glossaryProtection">The protected glossary request state.</param>
+  /// <param name="parsedText">The parsed source text sent to the translator.</param>
+  /// <param name="sanitizedText">The sanitized source text shown on fallback.</param>
+  /// <param name="normalizedSourceLanguage">The normalized source language code.</param>
+  /// <param name="normalizedTargetLanguage">The normalized target language code.</param>
+  /// <param name="resolvedOriginContext">The resolved origin context for diagnostics.</param>
+  /// <param name="translationEngineId">The effective translation engine identifier.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The accepted translation result or the sanitized fallback.</returns>
+  private TranslationAcceptanceResult AcceptDialogueGlossaryResultOrFallback(
+      string? translatedText,
+      DialogueGlossaryTermProtector.ProtectionResult glossaryProtection,
+      string parsedText,
+      string sanitizedText,
+      string normalizedSourceLanguage,
+      string normalizedTargetLanguage,
+      string? resolvedOriginContext,
+      int translationEngineId,
+      TranslationSurfaceGroup surfaceGroup)
+  {
+    if (glossaryProtection.Occurrences.Count == 0 ||
+        string.IsNullOrWhiteSpace(translatedText))
+    {
+      return this.AcceptTranslatedResultOrFallback(
+          translatedText,
+          parsedText,
+          sanitizedText,
+          normalizedSourceLanguage,
+          normalizedTargetLanguage,
+          resolvedOriginContext,
+          translationEngineId);
+    }
+
+    var restoreResult = DialogueGlossaryTermProtector.TryRestore(
+        translatedText,
+        glossaryProtection);
+    if (restoreResult.Succeeded)
+    {
+      return this.AcceptTranslatedResultOrFallback(
+          restoreResult.RestoredText,
+          parsedText,
+          sanitizedText,
+          normalizedSourceLanguage,
+          normalizedTargetLanguage,
+          resolvedOriginContext,
+          translationEngineId);
+    }
+
+    this.debugLog?.Invoke(
+        $"[{GetSurfaceScope(surfaceGroup, resolvedOriginContext)}] TranslationService: dialogue glossary restore failed - reason={restoreResult.FailureReason}");
+    if (!string.IsNullOrWhiteSpace(restoreResult.FailureReason))
+    {
+      this.RecordTransientFailedTranslation(
+          parsedText,
+          normalizedSourceLanguage,
+          normalizedTargetLanguage,
+          restoreResult.FailureReason,
+          translationEngineId);
+    }
+
+    return new TranslationAcceptanceResult(
+        sanitizedText,
+        false,
+        restoreResult.FailureReason);
+  }
+
+  /// <summary>
+  ///     Writes a non-sensitive dialogue-context summary when the current
+  ///     request will actually use the captured dialogue contract.
+  /// </summary>
+  /// <param name="useDialogueContext">Whether the translator will consume the dialogue context.</param>
+  /// <param name="dialogueContext">The optional captured dialogue context.</param>
+  /// <param name="translationEngineId">The effective translation engine id.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">The resolved origin context.</param>
+  private void LogDialogueContextSummary(
+      bool useDialogueContext,
+      DialogueTranslationContext? dialogueContext,
+      int translationEngineId,
+      TranslationSurfaceGroup surfaceGroup,
+      string? originContext)
+  {
+    if (this.debugLog == null ||
+        !useDialogueContext ||
+        !dialogueContext.HasValue)
+    {
+      return;
+    }
+
+    var surfaceScope = GetSurfaceScope(surfaceGroup, originContext);
+    var summary = DialogueContextPromptHelper.SummarizeDialogueContextForDiagnostics(
+        dialogueContext.Value);
+    this.debugLog(
+        $"[{surfaceScope}] TranslationService: dialogue context summary - engineId={translationEngineId}, {summary}");
+  }
+
+  /// <summary>
   ///     Resolves the square-bracketed diagnostic scope for one translation
   ///     request.
   /// </summary>
@@ -1424,6 +1538,38 @@ public class TranslationService
     return string.IsNullOrWhiteSpace(originContext)
         ? surfaceGroup.ToString()
         : originContext;
+  }
+
+  /// <summary>
+  ///     Protects exact glossary terms for dialogue-family LLM requests while
+  ///     leaving non-dialogue and glossary-free requests untouched.
+  /// </summary>
+  /// <param name="parsedText">The parsed visible source text.</param>
+  /// <param name="sourceLanguage">The provider source language code.</param>
+  /// <param name="targetLanguage">The requested target language code.</param>
+  /// <param name="useDialogueContext">Whether the active request uses dialogue context.</param>
+  /// <returns>The protected glossary state for the request.</returns>
+  private DialogueGlossaryTermProtector.ProtectionResult ProtectDialogueGlossaryTerms(
+      string parsedText,
+      string sourceLanguage,
+      string targetLanguage,
+      bool useDialogueContext)
+  {
+    if (!useDialogueContext)
+    {
+      return new DialogueGlossaryTermProtector.ProtectionResult(
+          parsedText,
+          parsedText,
+          string.Empty,
+          []);
+    }
+
+    var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+        sourceLanguage,
+        targetLanguage);
+    return DialogueGlossaryTermProtector.Protect(
+        parsedText,
+        glossaryEntries);
   }
 
   /// <summary>
