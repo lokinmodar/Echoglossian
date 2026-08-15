@@ -67,12 +67,10 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     [Fact]
     public void TickAcceptedQuestPrefetch_QueuesBackgroundWorkInsteadOfCallingPrefetchInline()
     {
-        var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root.FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "AcceptedQuestPrefetchRuntime.cs"));
+            "AcceptedQuestPrefetchRuntime.cs");
 
         Assert.Contains(
             "this.ScheduleAcceptedQuestPrefetch(",
@@ -91,11 +89,10 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     [Fact]
     public void TryCaptureAcceptedQuestPrefetchWorkItem_CapturesSequenceWithoutLuminaTraversal()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot().FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "AcceptedQuestPrefetchRuntime.cs"));
+            "AcceptedQuestPrefetchRuntime.cs");
         var methodBody = ExtractMethodBody(
             source,
             "private bool TryCaptureAcceptedQuestPrefetchWorkItem(");
@@ -115,11 +112,10 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     [Fact]
     public void ProcessAcceptedQuestPrefetchWorkItem_RechecksGenerationAfterSheetResolution()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot().FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "AcceptedQuestPrefetchRuntime.cs"));
+            "AcceptedQuestPrefetchRuntime.cs");
         var methodBody = ExtractMethodBody(
             source,
             "private void ProcessAcceptedQuestPrefetchWorkItem(");
@@ -145,12 +141,10 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     [Fact]
     public void ScheduleAcceptedQuestPrefetch_StartsOwnedDialogueMetadataGeneration()
     {
-        var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root.FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "AcceptedQuestPrefetchRuntime.cs"));
+            "AcceptedQuestPrefetchRuntime.cs");
 
         Assert.Contains(
             "private readonly OwnedAsyncOperationSet acceptedQuestDialogueMetadataOperations",
@@ -197,12 +191,10 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     [Fact]
     public void ClearAcceptedQuestPrefetchState_CancelsPriorGenerationMetadataWrites()
     {
-        var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root.FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "AcceptedQuestPrefetchRuntime.cs"));
+            "AcceptedQuestPrefetchRuntime.cs");
 
         Assert.Contains(
             "private CancellationTokenSource acceptedQuestDialogueMetadataGenerationCancellationSource",
@@ -240,6 +232,36 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
         }
 
         throw new DirectoryNotFoundException("Unable to locate repository root.");
+    }
+
+    /// <summary>
+    /// Reads contract source text with normalized line endings so multi-line
+    /// assertions remain checkout-format agnostic.
+    /// </summary>
+    /// <param name="relativePathSegments">The repository-relative path segments.</param>
+    /// <returns>The normalized source text.</returns>
+    private static string ReadContractSource(params string[] relativePathSegments)
+    {
+        var path = FindRepositoryRoot().FullName;
+        foreach (var relativePathSegment in relativePathSegments)
+        {
+            path = Path.Combine(path, relativePathSegment);
+        }
+
+        return NormalizeLineEndings(File.ReadAllText(path));
+    }
+
+    /// <summary>
+    /// Normalizes mixed checkout line endings to line-feed-only text for
+    /// substring contract assertions.
+    /// </summary>
+    /// <param name="source">The source text to normalize.</param>
+    /// <returns>The normalized source text.</returns>
+    private static string NormalizeLineEndings(string source)
+    {
+        return source
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace("\r", "\n", StringComparison.Ordinal);
     }
 
     private static string ExtractMethodBody(string source, string signature)

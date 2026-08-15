@@ -45,11 +45,10 @@ public class DialogueInterlocutorMetadataResolverTests
     [Fact]
     public void Resolver_ProductionCapture_UsesFrameworkThreadMarshal()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot().FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "DialogueInterlocutorMetadataResolver.cs"));
+            "DialogueInterlocutorMetadataResolver.cs");
 
         Assert.Contains("FrameworkInterface.RunOnFrameworkThread(", source, StringComparison.Ordinal);
     }
@@ -61,11 +60,10 @@ public class DialogueInterlocutorMetadataResolverTests
     [Fact]
     public void Resolver_QuestProgressBoundary_UsesCapturedSequenceForManagedResolution()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot().FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "DialogueInterlocutorMetadataResolver.cs"));
+            "DialogueInterlocutorMetadataResolver.cs");
 
         Assert.Contains("new QuestProgressCapture(", source, StringComparison.Ordinal);
         Assert.Contains("this.captureQuestSequence(", source, StringComparison.Ordinal);
@@ -140,11 +138,10 @@ public class DialogueInterlocutorMetadataResolverTests
     [Fact]
     public void AddonHandlerWiring_PreservesPersistedMetadataIdentity()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot().FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "AddonHandlerWiring.cs"));
+            "AddonHandlerWiring.cs");
 
         Assert.Contains("metadata.Provenance", source, StringComparison.Ordinal);
         Assert.Contains("metadata.ConfidenceTier", source, StringComparison.Ordinal);
@@ -300,11 +297,10 @@ public class DialogueInterlocutorMetadataResolverTests
     [Fact]
     public void CaptureLiveActors_NumericCustomizeSex_NormalizesToGenderHints()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot().FullName,
+        var source = ReadContractSource(
             "NativeUI",
             "Helpers",
-            "DialogueInterlocutorMetadataResolver.cs"));
+            "DialogueInterlocutorMetadataResolver.cs");
 
         Assert.Contains("\"0\" => \"male\"", source, StringComparison.Ordinal);
         Assert.Contains("\"1\" => \"female\"", source, StringComparison.Ordinal);
@@ -467,5 +463,35 @@ public class DialogueInterlocutorMetadataResolverTests
         }
 
         throw new DirectoryNotFoundException("Unable to locate repository root.");
+    }
+
+    /// <summary>
+    ///     Reads contract source text with normalized line endings so
+    ///     multi-line assertions are checkout-format agnostic.
+    /// </summary>
+    /// <param name="relativePathSegments">The repository-relative path segments.</param>
+    /// <returns>The normalized source text.</returns>
+    private static string ReadContractSource(params string[] relativePathSegments)
+    {
+        var path = FindRepositoryRoot().FullName;
+        foreach (var relativePathSegment in relativePathSegments)
+        {
+            path = Path.Combine(path, relativePathSegment);
+        }
+
+        return NormalizeLineEndings(File.ReadAllText(path));
+    }
+
+    /// <summary>
+    ///     Normalizes mixed checkout line endings to line-feed-only text for
+    ///     substring contract assertions.
+    /// </summary>
+    /// <param name="source">The source text to normalize.</param>
+    /// <returns>The normalized source text.</returns>
+    private static string NormalizeLineEndings(string source)
+    {
+        return source
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace("\r", "\n", StringComparison.Ordinal);
     }
 }
