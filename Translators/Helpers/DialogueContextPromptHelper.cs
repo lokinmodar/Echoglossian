@@ -28,6 +28,64 @@ public static class DialogueContextPromptHelper
     }
 
     /// <summary>
+    ///     Returns whether the captured context contains any actual speaker,
+    ///     hint, or history metadata beyond a bare dialogue session identity.
+    /// </summary>
+    /// <param name="dialogueContext">The dialogue context to inspect.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the context carries speaker, hint, or
+    ///     history metadata; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool HasMaterialDialogueMetadata(DialogueTranslationContext dialogueContext)
+    {
+        return !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName) ||
+               dialogueContext.PriorTurns.Count > 0 ||
+               !string.IsNullOrWhiteSpace(dialogueContext.SpeakerRoleHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.SpeakerGenderHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.AddresseeRoleHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.AddresseeGenderHint);
+    }
+
+    /// <summary>
+    ///     Builds a non-sensitive one-line diagnostic summary for the captured
+    ///     dialogue context without logging speaker names, addressee names, or
+    ///     prior dialogue text.
+    /// </summary>
+    /// <param name="dialogueContext">The dialogue context to summarize.</param>
+    /// <returns>The diagnostic summary line content.</returns>
+    public static string SummarizeDialogueContextForDiagnostics(DialogueTranslationContext dialogueContext)
+    {
+        var summaryValues = new List<string>
+        {
+            "dialogueContext=supplied",
+            $"metadata={(HasMaterialDialogueMetadata(dialogueContext) ? "populated" : "session-only")}",
+            $"sessionNamespace={dialogueContext.SessionNamespace}",
+            $"priorTurns={dialogueContext.PriorTurns.Count}",
+            $"speaker={FormatPresence(dialogueContext.SpeakerName)}",
+            $"speakerRole={FormatPresence(dialogueContext.SpeakerRoleHint)}",
+            $"speakerGender={FormatPresence(dialogueContext.SpeakerGenderHint)}",
+            $"addressee={FormatPresence(dialogueContext.AddresseeHint)}",
+            $"addresseeRole={FormatPresence(dialogueContext.AddresseeRoleHint)}",
+            $"addresseeGender={FormatPresence(dialogueContext.AddresseeGenderHint)}",
+        };
+
+        if (!string.IsNullOrWhiteSpace(dialogueContext.MetadataProvenance))
+        {
+            summaryValues.Add(
+                $"metadataProvenance={dialogueContext.MetadataProvenance}");
+        }
+
+        if (dialogueContext.MetadataConfidenceTier.HasValue)
+        {
+            summaryValues.Add(
+                $"metadataConfidenceTier={dialogueContext.MetadataConfidenceTier.Value}");
+        }
+
+        return string.Join(", ", summaryValues);
+    }
+
+    /// <summary>
     ///     Builds a distinct cache key for a dialogue translation that depends
     ///     on prior runtime-only context.
     /// </summary>
@@ -123,5 +181,10 @@ public static class DialogueContextPromptHelper
         {
             lines.Add($"{label}: {value}");
         }
+    }
+
+    private static string FormatPresence(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "false" : "true";
     }
 }

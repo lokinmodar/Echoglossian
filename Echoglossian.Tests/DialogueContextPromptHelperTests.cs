@@ -131,6 +131,44 @@ public class DialogueContextPromptHelperTests
     }
 
     /// <summary>
+    ///     Ensures diagnostics can report dialogue-context richness without
+    ///     leaking speaker names, addressee names, or prior dialogue text.
+    /// </summary>
+    [Fact]
+    public void SummarizeDialogueContextForDiagnostics_ShouldReportPresenceWithoutLeakingNames()
+    {
+        DialogueTranslationContext context = new(
+            "Talk",
+            "quest-1",
+            "Krile",
+            [CreateTurn("Thancred", "We move now.")],
+            SpeakerRoleHint: "npc",
+            SpeakerGenderHint: "female",
+            AddresseeHint: "Alphinaud",
+            AddresseeRoleHint: "npc",
+            AddresseeGenderHint: "male",
+            MetadataProvenance: "QuestSheetDerivedExact",
+            MetadataConfidenceTier: 2);
+
+        string summary = DialogueContextPromptHelper.SummarizeDialogueContextForDiagnostics(
+            context);
+
+        summary.Should().Contain("metadata=populated");
+        summary.Should().Contain("sessionNamespace=Talk");
+        summary.Should().Contain("priorTurns=1");
+        summary.Should().Contain("speaker=true");
+        summary.Should().Contain("speakerGender=true");
+        summary.Should().Contain("addressee=true");
+        summary.Should().Contain("addresseeGender=true");
+        summary.Should().Contain("metadataProvenance=QuestSheetDerivedExact");
+        summary.Should().Contain("metadataConfidenceTier=2");
+        summary.Should().NotContain("Krile");
+        summary.Should().NotContain("Thancred");
+        summary.Should().NotContain("Alphinaud");
+        summary.Should().NotContain("We move now.");
+    }
+
+    /// <summary>
     ///     Ensures the cache key is namespaced by session and serialized with
     ///     content instead of delimiter-sensitive concatenation.
     /// </summary>
