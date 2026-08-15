@@ -29,7 +29,7 @@ public static class YandexCloudEngineUI
             300,
             out isApiKeyInvalid);
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.YandexCloud,
             PromptTemplateManager.DefaultPrompt,
@@ -38,7 +38,6 @@ public static class YandexCloudEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

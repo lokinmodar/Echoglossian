@@ -137,7 +137,7 @@ public static class LmStudioEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.LmStudio,
             PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.LmStudio),
@@ -146,7 +146,6 @@ public static class LmStudioEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

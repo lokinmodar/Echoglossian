@@ -128,6 +128,72 @@ public sealed class RuntimeConfigurationRefreshContractTests
     }
 
     /// <summary>
+    ///     Ensures every persisted LLM prompt contributes to the translation
+    ///     runtime signature so prompt-only saves request a rebuild on the next
+    ///     framework tick.
+    /// </summary>
+    [Fact]
+    public void Translation_runtime_signature_includes_all_persisted_llm_prompts()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "RuntimeConfigurationRefresh.cs"));
+
+        Assert.Contains("this.configuration.ChatGptPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.ClaudePrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.DeepSeekPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.GeminiPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.OpenRouterPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.AmazonPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.MicrosoftTranslatorPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.YandexCloudPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.OllamaPrompt,", source, StringComparison.Ordinal);
+        Assert.Contains("this.configuration.LmStudioPrompt,", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures a completed save only marks runtime configuration dirty and
+    ///     defers translator rebuilds until the next framework tick applies the
+    ///     translation signature gate.
+    /// </summary>
+    [Fact]
+    public void Configuration_save_marks_runtime_dirty_before_next_tick_translation_rebuild()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "RuntimeConfigurationRefresh.cs"));
+
+        var onSaved = source.IndexOf(
+            "private void OnConfigurationSaved(Config config)",
+            StringComparison.Ordinal);
+        var dirtyAssignment = source.IndexOf(
+            "this.runtimeConfigurationDirty = true;",
+            onSaved,
+            StringComparison.Ordinal);
+        var applyPending = source.IndexOf(
+            "private void ApplyPendingRuntimeConfigurationChanges()",
+            StringComparison.Ordinal);
+        var translationChanged = source.IndexOf(
+            "if (translationChanged)",
+            applyPending,
+            StringComparison.Ordinal);
+        var rebuildCall = source.IndexOf(
+            "this.RebuildTranslationServiceSafely();",
+            translationChanged,
+            StringComparison.Ordinal);
+
+        Assert.True(onSaved >= 0);
+        Assert.True(dirtyAssignment > onSaved);
+        Assert.True(applyPending > dirtyAssignment);
+        Assert.True(translationChanged > applyPending);
+        Assert.True(rebuildCall > translationChanged);
+    }
+
+    /// <summary>
     ///     Finds the repository root from the current test directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

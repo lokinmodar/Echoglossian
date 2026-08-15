@@ -102,7 +102,7 @@ public static class ChatGPTEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.ChatGPT,
             PromptTemplateManager.DefaultPrompt,
@@ -111,7 +111,6 @@ public static class ChatGPTEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

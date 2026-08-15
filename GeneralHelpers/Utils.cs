@@ -522,9 +522,18 @@ public partial class Echoglossian
       return;
     }
 
+    var snapshot = config.CreatePersistenceSnapshot();
+    var instance = activeInstance;
+    if (instance != null)
+    {
+      instance.QueueConfigurationSave(snapshot);
+      instance.OnConfigurationSaved(config);
+      return;
+    }
+
     try
     {
-      PluginInterface.SavePluginConfig(config);
+      PluginInterface.SavePluginConfig(snapshot);
     }
     catch (Exception ex)
     {
@@ -534,6 +543,76 @@ public partial class Echoglossian
     }
 
     activeInstance?.OnConfigurationSaved(config);
+  }
+
+  /// <summary>
+  ///     Queues one immutable configuration snapshot for background
+  ///     persistence.
+  /// </summary>
+  /// <param name="snapshot">The immutable snapshot to persist.</param>
+  private void QueueConfigurationSave(Config snapshot)
+  {
+    this.configurationSaveCoordinator.QueueSave(snapshot);
+  }
+
+  /// <summary>
+  ///     Persists one immutable configuration snapshot on the coordinator's
+  ///     worker thread.
+  /// </summary>
+  /// <param name="snapshot">The immutable snapshot to persist.</param>
+  /// <param name="cancellationToken">The cancellation token for the save.</param>
+  /// <returns>A task that completes when persistence finishes.</returns>
+  private Task PersistPluginConfigurationSnapshotAsync(
+      Config snapshot,
+      CancellationToken cancellationToken)
+  {
+    cancellationToken.ThrowIfCancellationRequested();
+    PluginInterface.SavePluginConfig(snapshot);
+    return Task.CompletedTask;
+  }
+
+  /// <summary>
+  ///     Reports one unexpected configuration persistence failure.
+  /// </summary>
+  /// <param name="exception">The failure to report.</param>
+  private void ObserveConfigurationSaveFailure(Exception exception)
+  {
+    PluginRuntimeLog.Error(
+        "Config",
+        $"Failed to save plugin configuration: {exception}");
+  }
+
+  /// <summary>
+  ///     Stops accepting new configuration saves and lets the final background
+  ///     flush continue during plugin teardown without blocking the UI thread.
+  /// </summary>
+  private void BeginConfigurationSaveShutdown()
+  {
+    if (this.configurationSaveShutdownTask != null)
+    {
+      return;
+    }
+
+    this.configurationSaveShutdownTask =
+        this.configurationSaveCoordinator.CompleteAsync();
+    _ = this.configurationSaveShutdownTask.ContinueWith(
+        static (task, state) =>
+        {
+          if (state is not Echoglossian instance ||
+              task.Exception is not { } aggregateException)
+          {
+            return;
+          }
+
+          foreach (var exception in aggregateException.Flatten().InnerExceptions)
+          {
+            instance.ObserveConfigurationSaveFailure(exception);
+          }
+        },
+        this,
+        CancellationToken.None,
+        TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+        TaskScheduler.Default);
   }
 
   /// <summary>

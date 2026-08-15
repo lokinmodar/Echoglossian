@@ -132,7 +132,7 @@ public static class OpenRouterEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.OpenRouter,
             PromptTemplateManager.DefaultPrompt,
@@ -141,7 +141,6 @@ public static class OpenRouterEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

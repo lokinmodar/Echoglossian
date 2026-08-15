@@ -135,7 +135,7 @@ public static class DeepSeekEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.DeepSeek,
             PromptTemplateManager.DefaultPrompt,
@@ -144,7 +144,6 @@ public static class DeepSeekEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

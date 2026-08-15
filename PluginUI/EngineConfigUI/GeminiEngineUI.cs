@@ -122,7 +122,7 @@ public static class GeminiEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Gemini,
             PromptTemplateManager.DefaultPrompt,
@@ -131,7 +131,6 @@ public static class GeminiEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

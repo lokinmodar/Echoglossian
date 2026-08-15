@@ -119,7 +119,7 @@ public static class OllamaEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Ollama,
             PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Ollama),
@@ -128,7 +128,6 @@ public static class OllamaEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

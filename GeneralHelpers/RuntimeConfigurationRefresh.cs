@@ -239,8 +239,9 @@ public partial class Echoglossian
       return;
     }
 
-    StructuredDialogueGlossaryStore.Refresh(
-        this.configuration.DialogueGlossaryFilePath);
+    _ = StructuredDialogueGlossaryStore.RefreshAsync(
+        this.configuration.DialogueGlossaryFilePath,
+        CancellationToken.None);
   }
 
   /// <summary>

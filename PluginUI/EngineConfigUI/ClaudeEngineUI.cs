@@ -155,7 +155,7 @@ public static class ClaudeEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Claude,
             PromptTemplateManager.DefaultPrompt,
@@ -164,7 +164,6 @@ public static class ClaudeEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;
