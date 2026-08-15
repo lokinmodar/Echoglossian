@@ -28,14 +28,24 @@ internal static unsafe class NativeTextNodeLayoutHelper
   /// <param name="anchoredXNode">
   ///     An optional sibling node whose X position is anchored to the text width.
   /// </param>
+  /// <param name="preferCompactWrappedHeight">
+  ///     Whether wrapped-node height measurement should prefer the current draw
+  ///     height over a larger live node height when callers know the live
+  ///     extent may still reflect stale plugin-applied growth.
+  /// </param>
   /// <returns>The captured layout snapshot.</returns>
   public static NativeTextNodeLayoutSnapshot CaptureLayoutSnapshot(
       AtkTextNode* textNode,
       AtkResNode* primaryContainerNode = null,
       AtkResNode* secondaryContainerNode = null,
-      AtkResNode* anchoredXNode = null)
+      AtkResNode* anchoredXNode = null,
+      bool preferCompactWrappedHeight = false)
   {
-    TryMeasureTextNode(textNode, out var textWidth, out var textHeight);
+    TryMeasureTextNode(
+        textNode,
+        out var textWidth,
+        out var textHeight,
+        preferCompactWrappedHeight);
     var textNodeWidth = textNode != null ? textNode->GetWidth() : (ushort)0;
     var textNodeHeight = textNode != null ? textNode->GetHeight() : (ushort)0;
     var textNodeTextFlags = textNode != null ? textNode->TextFlags : default;
@@ -152,6 +162,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The optional rich SeString payload to write after layout flags and
   ///     wrap width are prepared.
   /// </param>
+  /// <param name="preferCompactWrappedHeight">
+  ///     Whether wrapped-node height measurement should prefer the current draw
+  ///     height over a larger live node height when callers know the live
+  ///     extent may still reflect stale plugin-applied growth.
+  /// </param>
   /// <returns>The measured size after the text replacement.</returns>
   public static NativeTextNodeResizeResult ApplyWrappedTextAndMeasure(
       AtkTextNode* textNode,
@@ -159,7 +174,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       ushort preferredWrapWidth,
       bool allowWidthGrowth = false,
       bool measureReplacementWidthBeforeApply = false,
-      byte[]? replacementPayload = null)
+      byte[]? replacementPayload = null,
+      bool preferCompactWrappedHeight = false)
   {
     if (textNode == null)
     {
@@ -208,7 +224,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
       }
     }
 
-    TryMeasureTextNode(textNode, out var width, out var height);
+    TryMeasureTextNode(
+        textNode,
+        out var width,
+        out var height,
+        preferCompactWrappedHeight);
     if (resolvedWrapWidth > 0)
     {
       width = ResolveReplacementContainerWidth(
@@ -252,6 +272,16 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The minimum vertical padding to preserve inside the secondary
   ///     container when it grows.
   /// </param>
+  /// <param name="preferCompactDetachedBaselineForHeight">
+  ///     Whether detached-container height synchronization should explicitly
+  ///     prefer the more compact of the preserved container baselines instead
+  ///     of preserving the largest detached extent.
+  /// </param>
+  /// <param name="preserveHorizontalGeometry">
+  ///     Whether horizontal geometry such as sibling anchor X positions and
+  ///     secondary-container widths must remain fixed to the captured baseline
+  ///     instead of being recomputed from the resized text width.
+  /// </param>
   public static void ResizeFromSnapshot(
       NativeTextNodeLayoutSnapshot snapshot,
       NativeTextNodeResizeResult resizeResult,
@@ -261,7 +291,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
       bool allowWidthGrowth = false,
       bool restoreHorizontalCentering = true,
       int minimumSecondaryHorizontalPadding = 0,
-      int minimumSecondaryVerticalPadding = 0)
+      int minimumSecondaryVerticalPadding = 0,
+      bool preferCompactDetachedBaselineForHeight = false,
+      bool preserveHorizontalGeometry = false)
   {
     var childWidth = resizeResult.Width;
     var childHeight = resizeResult.Height;
@@ -324,7 +356,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
             snapshot.SecondaryContainerHeight,
             snapshot.TextHeight,
             resizeResult.Height,
-            minimumSecondaryVerticalPadding);
+            minimumSecondaryVerticalPadding,
+            preferCompactDetachedBaseline: preferCompactDetachedBaselineForHeight);
         if (synchronizedHeight > 0)
         {
           primaryContainerNode->SetHeight(synchronizedHeight);
@@ -360,7 +393,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
                 snapshot.SecondaryContainerHeight,
                 snapshot.TextHeight,
                 resizeResult.Height,
-                minimumSecondaryVerticalPadding)
+                minimumSecondaryVerticalPadding,
+                preferCompactDetachedBaseline: preferCompactDetachedBaselineForHeight)
             : ResolveExpandedContainerExtent(
                 snapshot.SecondaryContainerHeight,
                 snapshot.TextHeight,
@@ -370,7 +404,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
       }
     }
 
-    if (anchoredXNode != null)
+    if (!preserveHorizontalGeometry &&
+        anchoredXNode != null)
     {
       anchoredXNode->SetXShort(
           (short)Math.Max(short.MinValue, Math.Min(
@@ -378,7 +413,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
               childWidth + snapshot.AnchoredXOffset)));
     }
 
-    if (secondaryContainerNode != null &&
+    if (!preserveHorizontalGeometry &&
+        secondaryContainerNode != null &&
         anchoredXNode != null &&
         snapshot.AnchoredXWidth > 0)
     {
@@ -610,6 +646,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The minimum vertical padding to preserve inside the secondary
   ///     background when it grows.
   /// </param>
+  /// <param name="preferCompactDetachedBaselineForHeight">
+  ///     Whether detached-container height synchronization should explicitly
+  ///     prefer the more compact of the preserved container baselines instead
+  ///     of preserving the largest detached extent.
+  /// </param>
   /// <param name="measureReplacementWidthBeforeApply">
   ///     Whether the candidate replacement text should be measured before
   ///     native apply so width growth can use its draw width.
@@ -617,6 +658,11 @@ internal static unsafe class NativeTextNodeLayoutHelper
   /// <param name="replacementPayload">
   ///     The optional rich SeString payload to write while keeping the same
   ///     replacement-text measurement and layout flow.
+  /// </param>
+  /// <param name="preferCompactWrappedHeight">
+  ///     Whether wrapped-node height measurement should prefer the current draw
+  ///     height over a larger live node height when callers know the live
+  ///     extent may still reflect stale plugin-applied growth.
   /// </param>
   public static NativeTextNodeLayoutSnapshot? ApplyTextReplacementWithInferredReflow(
       AtkUnitBase* addon,
@@ -627,8 +673,10 @@ internal static unsafe class NativeTextNodeLayoutHelper
       ushort additionalWrapWidth = 0,
       int minimumSecondaryHorizontalPadding = 0,
       int minimumSecondaryVerticalPadding = 0,
+      bool preferCompactDetachedBaselineForHeight = false,
       bool measureReplacementWidthBeforeApply = false,
-      byte[]? replacementPayload = null)
+      byte[]? replacementPayload = null,
+      bool preferCompactWrappedHeight = false)
   {
     if (textNode == null)
     {
@@ -647,7 +695,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
     var snapshot = CaptureLayoutSnapshot(
         textNode,
         containerNode,
-        backgroundResNode);
+        backgroundResNode,
+        preferCompactWrappedHeight: preferCompactWrappedHeight);
     var preferredWrapWidth = ResolvePreferredWrapWidth(
         textNode,
         containerNode,
@@ -665,7 +714,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
         preferredWrapWidth,
         allowWidthGrowth,
         measureReplacementWidthBeforeApply,
-        replacementPayload);
+        replacementPayload,
+        preferCompactWrappedHeight);
     ResizeFromSnapshot(
         snapshot,
         resizeResult,
@@ -674,7 +724,9 @@ internal static unsafe class NativeTextNodeLayoutHelper
         allowWidthGrowth: allowWidthGrowth,
         restoreHorizontalCentering: restoreHorizontalCentering,
         minimumSecondaryHorizontalPadding: minimumSecondaryHorizontalPadding,
-        minimumSecondaryVerticalPadding: minimumSecondaryVerticalPadding);
+        minimumSecondaryVerticalPadding: minimumSecondaryVerticalPadding,
+        preferCompactDetachedBaselineForHeight:
+        preferCompactDetachedBaselineForHeight);
     return snapshot;
   }
 
@@ -787,13 +839,19 @@ internal static unsafe class NativeTextNodeLayoutHelper
   /// <param name="drawWidth">The measured text draw width.</param>
   /// <param name="drawHeight">The measured text draw height.</param>
   /// <param name="textFlags">The live text flags.</param>
+  /// <param name="preferCompactWrappedHeight">
+  ///     Whether wrapped-node height measurement should prefer the current draw
+  ///     height over a larger live node height when callers know the live
+  ///     extent may still reflect stale plugin-applied growth.
+  /// </param>
   /// <returns>The effective measured width and height.</returns>
   public static NativeTextNodeResizeResult ResolveMeasuredTextExtent(
       ushort liveWidth,
       ushort liveHeight,
       ushort drawWidth,
       ushort drawHeight,
-      TextFlags textFlags)
+      TextFlags textFlags,
+      bool preferCompactWrappedHeight = false)
   {
     var width = liveWidth;
     var height = liveHeight;
@@ -805,7 +863,17 @@ internal static unsafe class NativeTextNodeLayoutHelper
     if (prefersDrawSize)
     {
       width = Math.Max(width, drawWidth);
-      height = Math.Max(height, drawHeight);
+      if (preferCompactWrappedHeight)
+      {
+        if (drawHeight > 0)
+        {
+          height = drawHeight;
+        }
+      }
+      else
+      {
+        height = Math.Max(height, drawHeight);
+      }
     }
 
     if (width == 0)
@@ -964,22 +1032,40 @@ internal static unsafe class NativeTextNodeLayoutHelper
   ///     The explicit padding that should remain inside the synchronized
   ///     tooltip-style background.
   /// </param>
+  /// <param name="preferCompactDetachedBaseline">
+  ///     Whether the synchronized extent should explicitly prefer the more
+  ///     compact of the preserved detached-container baselines instead of
+  ///     preserving the largest detached extent.
+  /// </param>
   /// <returns>The synchronized extent shared by both containers.</returns>
   public static ushort ResolveSynchronizedContainerExtent(
       ushort primaryContainerExtent,
       ushort secondaryContainerExtent,
       ushort currentTextExtent,
       ushort measuredTextExtent,
-      int minimumSecondaryPadding)
+      int minimumSecondaryPadding,
+      bool preferCompactDetachedBaseline = false)
   {
-    if (minimumSecondaryPadding <= 0 &&
-        secondaryContainerExtent > 0)
+    if (preferCompactDetachedBaseline)
     {
+      var compactBaseline = primaryContainerExtent > 0 &&
+                            secondaryContainerExtent > 0
+          ? Math.Min(
+              primaryContainerExtent,
+              secondaryContainerExtent)
+          : Math.Max(
+              primaryContainerExtent,
+              secondaryContainerExtent);
+      if (compactBaseline <= 0)
+      {
+        return 0;
+      }
+
       return ResolveExpandedContainerExtent(
-          secondaryContainerExtent,
+          compactBaseline,
           currentTextExtent,
           measuredTextExtent,
-          minimumPadding: 0);
+          minimumSecondaryPadding);
     }
 
     var baseExtent = Math.Max(
@@ -1050,10 +1136,16 @@ internal static unsafe class NativeTextNodeLayoutHelper
   /// <param name="textNode">The text node to measure.</param>
   /// <param name="width">Receives the measured width.</param>
   /// <param name="height">Receives the measured height.</param>
+  /// <param name="preferCompactWrappedHeight">
+  ///     Whether wrapped-node height measurement should prefer the current draw
+  ///     height over a larger live node height when callers know the live
+  ///     extent may still reflect stale plugin-applied growth.
+  /// </param>
   public static void TryMeasureTextNode(
       AtkTextNode* textNode,
       out ushort width,
-      out ushort height)
+      out ushort height,
+      bool preferCompactWrappedHeight = false)
   {
     width = 0;
     height = 0;
@@ -1083,7 +1175,8 @@ internal static unsafe class NativeTextNodeLayoutHelper
         liveHeight,
         measuredWidth,
         measuredHeight,
-        textNode->TextFlags);
+        textNode->TextFlags,
+        preferCompactWrappedHeight);
     width = resolvedExtent.Width;
     height = resolvedExtent.Height;
   }

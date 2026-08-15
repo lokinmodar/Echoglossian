@@ -19,24 +19,41 @@ public class DialogueContextPromptHelperTests
         new(2026, 5, 13, 12, 0, 0, DateTimeKind.Utc);
 
     /// <summary>
-    ///     Ensures usable context is detected only when prior turns exist.
+    ///     Ensures a first dialogue turn contributes speaker context to prompts
+    ///     and cache identity without requiring prior history.
     /// </summary>
     [Fact]
-    public void HasUsableDialogueContext_ShouldReflectPriorTurns()
+    public void FirstTurnContext_ShouldIncludeSpeakerInPromptAndCacheKey()
     {
-        DialogueTranslationContext emptyContext = new(
+        DialogueTranslationContext alphinaudContext = new(
             "Talk",
             "speaker",
-            "Krile",
+            "Alphinaud",
             []);
-        DialogueTranslationContext populatedContext = new(
+        DialogueTranslationContext alisaieContext = new(
             "Talk",
             "speaker",
-            "Krile",
-            [CreateTurn("Krile", "Stay alert.")]);
+            "Alisaie",
+            []);
 
-        DialogueContextPromptHelper.HasUsableDialogueContext(emptyContext).Should().BeFalse();
-        DialogueContextPromptHelper.HasUsableDialogueContext(populatedContext).Should().BeTrue();
+        string prompt = DialogueContextPromptHelper.AppendDialogueContext(
+            "Translate this line.",
+            alphinaudContext,
+            static text => text);
+        string alphinaudKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            alphinaudContext);
+        string alisaieKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            alisaieContext);
+
+        DialogueContextPromptHelper.HasUsableDialogueContext(alphinaudContext).Should().BeTrue();
+        prompt.Should().Contain("Current speaker: Alphinaud");
+        alphinaudKey.Should().NotBe(alisaieKey);
     }
 
     /// <summary>
@@ -63,6 +80,92 @@ public class DialogueContextPromptHelperTests
         result.Should().Contain("Current speaker: Krile");
         result.Should().Contain("[1] Krile: Stay alert.");
         result.Should().Contain("[2] Thancred: We move now.");
+    }
+
+    /// <summary>
+    ///     Ensures resolved interlocutor hints contribute ordered prompt metadata
+    ///     and distinct cache identity without changing prior-turn history.
+    /// </summary>
+    [Fact]
+    public void ContextWithInterlocutorHints_ShouldProjectPromptAndCacheIdentity()
+    {
+        DialogueTranslationContext hintedContext = new(
+            "Talk",
+            "quest-1",
+            "Krile",
+            [CreateTurn("Thancred", "We move now.")],
+            SpeakerRoleHint: "npc",
+            SpeakerGenderHint: "female",
+            AddresseeHint: "Alphinaud",
+            AddresseeRoleHint: "npc",
+            AddresseeGenderHint: "male",
+            MetadataProvenance: "quest-sheet",
+            MetadataConfidenceTier: 2);
+        DialogueTranslationContext emptyHintContext = new(
+            "Talk",
+            "quest-1",
+            "Krile",
+            [CreateTurn("Thancred", "We move now.")]);
+
+        string prompt = DialogueContextPromptHelper.AppendDialogueContext(
+            "Translate this line.",
+            hintedContext,
+            static text => text);
+        string hintedKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            hintedContext);
+        string emptyHintKey = DialogueContextPromptHelper.BuildDialogueContextCacheKey(
+            "Advance.",
+            "English",
+            "Portuguese",
+            emptyHintContext);
+
+        prompt.Should().Contain(
+            $"Current speaker: Krile{Environment.NewLine}Speaker role: npc{Environment.NewLine}Speaker gender: female{Environment.NewLine}Addressee: Alphinaud{Environment.NewLine}Addressee role: npc{Environment.NewLine}Addressee gender: male{Environment.NewLine}[1] Thancred: We move now.");
+        hintedKey.Should().NotBe(emptyHintKey);
+        hintedKey.Should().Contain("\"MetadataConfidenceTier\":2");
+        emptyHintKey.Should().NotContain("SpeakerGenderHint");
+        emptyHintKey.Should().NotContain("AddresseeHint");
+    }
+
+    /// <summary>
+    ///     Ensures diagnostics can report dialogue-context richness without
+    ///     leaking speaker names, addressee names, or prior dialogue text.
+    /// </summary>
+    [Fact]
+    public void SummarizeDialogueContextForDiagnostics_ShouldReportPresenceWithoutLeakingNames()
+    {
+        DialogueTranslationContext context = new(
+            "Talk",
+            "quest-1",
+            "Krile",
+            [CreateTurn("Thancred", "We move now.")],
+            SpeakerRoleHint: "npc",
+            SpeakerGenderHint: "female",
+            AddresseeHint: "Alphinaud",
+            AddresseeRoleHint: "npc",
+            AddresseeGenderHint: "male",
+            MetadataProvenance: "QuestSheetDerivedExact",
+            MetadataConfidenceTier: 2);
+
+        string summary = DialogueContextPromptHelper.SummarizeDialogueContextForDiagnostics(
+            context);
+
+        summary.Should().Contain("metadata=populated");
+        summary.Should().Contain("sessionNamespace=Talk");
+        summary.Should().Contain("priorTurns=1");
+        summary.Should().Contain("speaker=true");
+        summary.Should().Contain("speakerGender=true");
+        summary.Should().Contain("addressee=true");
+        summary.Should().Contain("addresseeGender=true");
+        summary.Should().Contain("metadataProvenance=QuestSheetDerivedExact");
+        summary.Should().Contain("metadataConfidenceTier=2");
+        summary.Should().NotContain("Krile");
+        summary.Should().NotContain("Thancred");
+        summary.Should().NotContain("Alphinaud");
+        summary.Should().NotContain("We move now.");
     }
 
     /// <summary>

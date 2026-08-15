@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.OpenAI;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators.Ollama;
 
@@ -52,6 +53,16 @@ public static class OllamaModelManager
                     CurrentModels.Add(model);
                     tooltips[name!] = $"🦙 Ollama model: {tier}";
                 }
+            }
+
+            if (CurrentModels.Count > 0)
+            {
+                LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+                    Echoglossian.TransEngines.Ollama,
+                    "Ollama",
+                    baseUrl,
+                    CurrentModels.Select(static model => model.Id).ToArray(),
+                    DateTime.UtcNow);
             }
         }
         catch (Exception ex)

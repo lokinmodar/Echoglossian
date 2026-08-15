@@ -88,6 +88,11 @@ public class EchoglossianDbContext : DbContext
   /// </summary>
   public DbSet<QuestPopupText> QuestPopupTexts { get; set; }
 
+  /// <summary>
+  ///     Gets or sets derived metadata for exact quest dialogue source rows.
+  /// </summary>
+  public DbSet<QuestDialogueMetadata> QuestDialogueMetadata { get; set; }
+
   public DbSet<NpcNames> NpcName { get; set; }
 
   public DbSet<LocationName> LocationNames { get; set; }
@@ -171,6 +176,16 @@ public class EchoglossianDbContext : DbContext
   ///     the same source/target language pair and engine.
   /// </summary>
   public DbSet<TranslationFailure> TranslationFailures { get; set; }
+
+  /// <summary>
+  ///     Gets or sets persisted LLM capability overlay rules.
+  /// </summary>
+  public DbSet<LlmModelCapabilityRule> LlmModelCapabilityRules { get; set; }
+
+  /// <summary>
+  ///     Gets or sets provider-feedback observations for LLM capabilities.
+  /// </summary>
+  public DbSet<LlmModelCapabilityObservation> LlmModelCapabilityObservations { get; set; }
 
   /// <summary>
   ///     Gets or sets the translated string array records.   Configures the database context options.
@@ -386,6 +401,20 @@ public class EchoglossianDbContext : DbContext
           q.TranslationEngine
         })
         .HasDatabaseName("IX_questpopuptexts_lookup");
+    modelBuilder.Entity<QuestDialogueMetadata>().ToTable("questdialoguemetadata");
+    modelBuilder.Entity<QuestDialogueMetadata>()
+        .HasIndex(q => new
+        {
+          q.QuestId,
+          q.QuestSequence,
+          q.SourceLanguageCode,
+          q.GameVersion,
+          q.SourceRowKey,
+          q.SourceTextHash,
+          q.DerivationVersion,
+        })
+        .IsUnique()
+        .HasDatabaseName("IX_questdialoguemetadata_lookup");
     modelBuilder.Entity<NpcNames>().ToTable("npcnames");
     modelBuilder.Entity<LocationName>().ToTable("locationnames");
     modelBuilder.Entity<TranslationFailure>().ToTable("translationfailures");
@@ -400,6 +429,21 @@ public class EchoglossianDbContext : DbContext
         })
         .IsUnique()
         .HasDatabaseName("IX_translationfailures_lookup");
+    modelBuilder.Entity<LlmModelCapabilityRule>().ToTable("llmmodelcapabilityrules");
+    modelBuilder.Entity<LlmModelCapabilityRule>()
+        .HasIndex(row => new
+        {
+          row.Engine,
+          row.ProviderScope,
+          row.EndpointScope,
+          row.MatchType,
+          row.MatchValue,
+          row.ParameterName,
+        })
+        .IsUnique()
+        .HasDatabaseName("IX_llmmodelcapabilityrules_lookup");
+    modelBuilder.Entity<LlmModelCapabilityObservation>()
+        .ToTable("llmmodelcapabilityobservations");
     modelBuilder.Entity<StringArrayDatas>()
         .HasIndex(s => new
         {

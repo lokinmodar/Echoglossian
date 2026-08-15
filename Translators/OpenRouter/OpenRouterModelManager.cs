@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.OpenAI;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators.OpenRouter;
 
@@ -93,6 +94,16 @@ public static class OpenRouterModelManager
                 {
                     CurrentModelList = models;
                 }
+            }
+
+            if (models.Count > 0)
+            {
+                LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+                    Echoglossian.TransEngines.OpenRouter,
+                    "OpenRouter",
+                    baseUrl,
+                    models.Select(static model => model.Id).ToArray(),
+                    DateTime.UtcNow);
             }
         }
         catch

@@ -4214,7 +4214,7 @@ internal sealed class SourcePublicationLifecycle
         Action invalidate)
     {
         var observedState = Volatile.Read(ref this.currentState);
-        if (observedState?.Scope == scope)
+        if (observedState is not null && observedState.Scope == scope)
         {
             return observedState.CreateOperation();
         }
@@ -4222,7 +4222,7 @@ internal sealed class SourcePublicationLifecycle
         lock (this.gate)
         {
             var currentState = this.currentState;
-            if (currentState?.Scope == scope)
+            if (currentState is not null && currentState.Scope == scope)
             {
                 return currentState.CreateOperation();
             }

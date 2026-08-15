@@ -5,6 +5,7 @@
 
 using Echoglossian.PluginUI.Components;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Ollama;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -89,11 +90,33 @@ public static class OllamaEngineUI
             "Ollama",
             OllamaModelManager.GetTooltips());
 
+        var scope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.Ollama,
+            "Ollama",
+            config.OllamaUrl?.TrimEnd('/') ?? "http://localhost:11434",
+            config.OllamaModel ?? "llama3");
+        var sliderState = LlmCapabilityUiHelper.GetTemperatureSliderState(
+            scope,
+            0.1f,
+            1.0f);
         var temp = config.OllamaTemperature;
-        if (ImGui.SliderFloat(Resources.Temperature, ref temp, 0.1f, 1.0f, "%.1f"))
+        ImGui.BeginDisabled(!sliderState.IsEnabled);
+        if (ImGui.SliderFloat(
+                Resources.Temperature,
+                ref temp,
+                sliderState.MinValue,
+                sliderState.MaxValue,
+                "%.1f"))
         {
             config.OllamaTemperature = temp;
             changed = true;
+        }
+
+        ImGui.EndDisabled();
+        if (!sliderState.IsEnabled &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(sliderState.TooltipText);
         }
 
         PromptEditorUI.Draw(

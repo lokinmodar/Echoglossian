@@ -5,6 +5,7 @@
 
 using Echoglossian.Translators.Helpers;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators;
 
@@ -17,6 +18,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
     private readonly string model;
     private readonly IPluginLog pluginLog;
     private readonly string promptTemplate;
+    private readonly LlmCapabilityScope capabilityScope;
     private readonly float temperature = 0.1f;
     private readonly ConcurrentTranslationRequestCache translationCache = new();
 
@@ -24,6 +26,11 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
     {
         this.apiKey = config.GeminiTranslatorApiKey ?? string.Empty;
         this.model = config.GeminiModel ?? "gemini-2.5-flash";
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.Gemini,
+            "Gemini",
+            "https://generativelanguage.googleapis.com",
+            this.model);
         this.temperature = config.GeminiTemperature;
         this.promptTemplate = string.IsNullOrWhiteSpace(config.GeminiPrompt)
             ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Gemini)
@@ -178,9 +185,14 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
         {
             try
             {
-                var requestData = new
+                var generationConfig = new Dictionary<string, object>();
+                var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                    generationConfig,
+                    this.capabilityScope,
+                    this.temperature);
+                var requestData = new Dictionary<string, object>
                 {
-                    contents = new[]
+                    ["contents"] = new[]
                     {
                         new
                         {
@@ -193,10 +205,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                             },
                         },
                     },
-                    generationConfig = new
-                    {
-                        this.temperature,
-                    },
+                    ["generationConfig"] = generationConfig,
                 };
 
                 var jsonContent = JsonConvert.SerializeObject(requestData);
@@ -213,6 +222,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
                     if (retry < this.maxRetries)
                     {
                         var backoff = this.initialBackoff * Math.Pow(2, retry);
@@ -324,6 +334,8 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        var route = $"v1beta/models/{this.model}:generateContent";
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -347,9 +359,41 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 "Structured dialogue request JSON:\n" +
                 StructuredDialogueOpenAiToolHelper.SerializeRequestPayload(
                     structuredRequest);
-            var requestData = new
+            var generationConfig = new Dictionary<string, object>
             {
-                contents = new[]
+                ["responseFormat"] = new
+                {
+                    text = new
+                    {
+                        mimeType = "application/json",
+                        schema = JObject.Parse(
+                            StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
+                    },
+                },
+            };
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                generationConfig,
+                this.capabilityScope,
+                this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
+            var requestData = new Dictionary<string, object>
+            {
+                ["contents"] = new[]
                 {
                     new
                     {
@@ -362,19 +406,7 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                         },
                     },
                 },
-                generationConfig = new
-                {
-                    this.temperature,
-                    responseFormat = new
-                    {
-                        text = new
-                        {
-                            mimeType = "application/json",
-                            schema = JObject.Parse(
-                                StructuredDialogueOpenAiToolHelper.BuildFunctionParametersSchemaJson()),
-                        },
-                    },
-                },
+                ["generationConfig"] = generationConfig,
             };
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
@@ -383,11 +415,29 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 Encoding.UTF8,
                 "application/json");
             var baseUrl =
-                $"https://generativelanguage.googleapis.com/v1beta/models/{this.model}:generateContent?key={this.apiKey}";
+                $"https://generativelanguage.googleapis.com/{route}?key={this.apiKey}";
+
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    route,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
 
             var response =
                 await this.httpClient!.PostAsync(baseUrl, httpContent)
                     .ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseString =
@@ -411,7 +461,18 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                     "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"Gemini structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "Gemini",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: route,
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -426,6 +487,17 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        route,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload?.Length ?? 0,
+                        translatedText.Length,
+                        rawStructuredPayload ?? string.Empty,
+                        translatedText));
                 return translatedText;
             }
 
@@ -434,6 +506,19 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Gemini",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: route,
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)
@@ -445,7 +530,21 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
                 ex.Message);
             PluginRuntimeLog.Debug(
                 this.pluginLog,
-                $"Gemini structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "Gemini",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    route,
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }
@@ -471,5 +570,31 @@ public class GeminiTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed Gemini request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 }

@@ -11,6 +11,18 @@ using Dalamud.Game.Gui.NamePlate;
 namespace Echoglossian;
 
 /// <summary>
+///     Identifies one exact versioned quest dialogue metadata row.
+/// </summary>
+public readonly record struct QuestDialogueMetadataLookup(
+    uint QuestId,
+    ushort QuestSequence,
+    string SourceLanguageCode,
+    string GameVersion,
+    string SourceRowKey,
+    string SourceTextHash,
+    string DerivationVersion);
+
+/// <summary>
 ///  Defines operations for managing and retrieving translation data
 /// </summary>
 public partial class Echoglossian
@@ -166,6 +178,178 @@ public partial class Echoglossian
     }
     catch (Exception e)
     {
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Finds metadata that exactly matches one quest dialogue source row and
+  ///     derivation version.
+  /// </summary>
+  /// <param name="lookup">The exact source row lookup values.</param>
+  /// <param name="cancellationToken">The token that cancels the database lookup.</param>
+  /// <returns>A matching metadata row; otherwise, <see langword="null" />.</returns>
+  /// <exception cref="OperationCanceledException">
+  ///     The database lookup is cancelled.
+  /// </exception>
+  public async Task<QuestDialogueMetadata?> FindQuestDialogueMetadataAsync(
+      QuestDialogueMetadataLookup lookup,
+      CancellationToken cancellationToken)
+  {
+    if (string.IsNullOrWhiteSpace(lookup.SourceRowKey))
+    {
+      return null;
+    }
+
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    var matches = await context.QuestDialogueMetadata
+        .AsNoTracking()
+        .Where(row => row.QuestId == lookup.QuestId &&
+                      row.QuestSequence == lookup.QuestSequence &&
+                      row.SourceLanguageCode == lookup.SourceLanguageCode &&
+                      row.GameVersion == lookup.GameVersion &&
+                      row.SourceRowKey == lookup.SourceRowKey &&
+                      row.SourceTextHash == lookup.SourceTextHash &&
+                      row.DerivationVersion == lookup.DerivationVersion)
+        .ToListAsync(cancellationToken)
+        .ConfigureAwait(false);
+    return matches.SingleOrDefault();
+  }
+
+  /// <summary>
+  ///     Replaces persisted metadata rows with the supplied exact logical rows.
+  /// </summary>
+  /// <param name="rows">The metadata rows to persist.</param>
+  /// <param name="cancellationToken">The token that cancels the database operation.</param>
+  /// <exception cref="OperationCanceledException">
+  ///     The database operation is cancelled.
+  /// </exception>
+  public async Task UpsertQuestDialogueMetadataBatchAsync(
+      IReadOnlyList<QuestDialogueMetadata> rows,
+      CancellationToken cancellationToken)
+  {
+    if (rows.Count == 0)
+    {
+      return;
+    }
+
+    var rowsByLogicalKey = rows
+        .GroupBy(row => new
+        {
+          row.QuestId,
+          row.QuestSequence,
+          row.SourceLanguageCode,
+          row.GameVersion,
+          row.SourceRowKey,
+          row.SourceTextHash,
+          row.DerivationVersion,
+        })
+        .Select(group => group.MaxBy(row => row.UpdatedAtUtc)!)
+        .ToList();
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+    await using var transaction = await context.Database
+        .BeginTransactionAsync(cancellationToken)
+        .ConfigureAwait(false);
+    foreach (var row in rowsByLogicalKey)
+    {
+      await context.Database.ExecuteSqlInterpolatedAsync(
+          $"""
+          INSERT INTO questdialoguemetadata (
+              QuestId, QuestSequence, SourceLanguageCode, GameVersion,
+              QuestSheetId, QuestTextSheetName, SourceRowKey, SourceTextHash,
+              SourceTextPreview, SpeakerHint, AddresseeHint, SpeakerRoleHint,
+              AddresseeRoleHint, Provenance, ConfidenceTier, DerivationVersion,
+              CreatedAtUtc, UpdatedAtUtc)
+          VALUES (
+              {row.QuestId}, {row.QuestSequence}, {row.SourceLanguageCode}, {row.GameVersion},
+              {row.QuestSheetId}, {row.QuestTextSheetName}, {row.SourceRowKey}, {row.SourceTextHash},
+              {row.SourceTextPreview}, {row.SpeakerHint}, {row.AddresseeHint}, {row.SpeakerRoleHint},
+              {row.AddresseeRoleHint}, {row.Provenance}, {row.ConfidenceTier}, {row.DerivationVersion},
+              {row.CreatedAtUtc}, {row.UpdatedAtUtc})
+          ON CONFLICT (
+              QuestId, QuestSequence, SourceLanguageCode, GameVersion,
+              SourceRowKey, SourceTextHash, DerivationVersion)
+          DO UPDATE SET
+              QuestSheetId = excluded.QuestSheetId,
+              QuestTextSheetName = excluded.QuestTextSheetName,
+              SourceTextPreview = excluded.SourceTextPreview,
+              SpeakerHint = excluded.SpeakerHint,
+              AddresseeHint = excluded.AddresseeHint,
+              SpeakerRoleHint = excluded.SpeakerRoleHint,
+              AddresseeRoleHint = excluded.AddresseeRoleHint,
+              Provenance = excluded.Provenance,
+              ConfidenceTier = excluded.ConfidenceTier,
+              UpdatedAtUtc = excluded.UpdatedAtUtc
+          WHERE excluded.UpdatedAtUtc >= questdialoguemetadata.UpdatedAtUtc;
+          """,
+          cancellationToken).ConfigureAwait(false);
+    }
+
+    cancellationToken.ThrowIfCancellationRequested();
+    await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Asynchronously finds and returns a TalkMessage from the database.
+  /// </summary>
+  /// <param name="talkMessage">The TalkMessage to find in the database.</param>
+  /// <param name="cancellationToken">The token that cancels the database lookup.</param>
+  /// <returns>A matching <see cref="TalkMessage" />, or <see langword="null" />.</returns>
+  /// <exception cref="OperationCanceledException">
+  ///     The database lookup is cancelled.
+  /// </exception>
+  public async Task<TalkMessage?> FindAndReturnTalkMessageAsync(
+      TalkMessage talkMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              talkMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
+      var existingTalkMessages = await context.TalkMessage.AsNoTracking().Where(t =>
+              t.SenderName == talkMessage.SenderName &&
+              t.OriginalTalkMessage == talkMessage.OriginalTalkMessage &&
+              t.TranslationLang == talkMessage.TranslationLang)
+          .ToListAsync(cancellationToken)
+          .ConfigureAwait(false);
+      var candidates = existingTalkMessages.Where(t =>
+          scope.Matches(
+              t.OriginalTalkMessageLang,
+              t.TranslationLang,
+              t.TranslationEngine));
+
+      var localFoundTalkMessage = OrderTalkMessageLookupQuery(
+              candidates.AsQueryable())
+          .FirstOrDefault();
+      if (localFoundTalkMessage == null ||
+          localFoundTalkMessage.OriginalTalkMessage !=
+              talkMessage.OriginalTalkMessage ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundTalkMessage.OriginalTalkMessage,
+              localFoundTalkMessage.TranslatedTalkMessage,
+              localFoundTalkMessage.OriginalTalkMessageLang,
+              localFoundTalkMessage.TranslationLang))
+      {
+        return null;
+      }
+
+      return localFoundTalkMessage;
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug($"FindAndReturnTalkMessageAsync exception {e}");
       return null;
     }
   }
@@ -446,6 +630,79 @@ public partial class Echoglossian
     catch (Exception e)
     {
       PluginRuntimeLog.Debug($"FindAndReturnBattleTalkMessage exception {e}");
+      return null;
+    }
+  }
+
+  /// <summary>
+  ///     Asynchronously finds and returns a BattleTalkMessage from the
+  ///     database.
+  /// </summary>
+  /// <param name="battleTalkMessage">The BattleTalkMessage to find in the database.</param>
+  /// <param name="cancellationToken">The token that cancels the database lookup.</param>
+  /// <returns>
+  ///     A matching <see cref="BattleTalkMessage" />, or <see langword="null" />.
+  /// </returns>
+  /// <exception cref="OperationCanceledException">
+  ///     The database lookup is cancelled.
+  /// </exception>
+  public async Task<BattleTalkMessage?> FindAndReturnBattleTalkMessageAsync(
+      BattleTalkMessage battleTalkMessage,
+      CancellationToken cancellationToken)
+  {
+    using var context = new EchoglossianDbContext(ConfigDirectory);
+
+    try
+    {
+      if (!TranslationReuseScope.TryCreate(
+              this.configuration,
+              battleTalkMessage.TranslationEngine,
+              out var scope))
+      {
+        return null;
+      }
+
+      var existingBattleTalkMessages = await context.BattleTalkMessage.AsNoTracking().Where(t =>
+              t.SenderName == battleTalkMessage.SenderName &&
+              t.OriginalBattleTalkMessage ==
+              battleTalkMessage.OriginalBattleTalkMessage &&
+              t.TranslationLang == battleTalkMessage.TranslationLang &&
+              t.TranslatedBattleTalkMessage != null &&
+              t.TranslatedBattleTalkMessage != string.Empty)
+          .ToListAsync(cancellationToken)
+          .ConfigureAwait(false);
+      var candidates = existingBattleTalkMessages.Where(t =>
+          scope.Matches(
+              t.OriginalBattleTalkMessageLang,
+              t.TranslationLang,
+              t.TranslationEngine));
+
+      var localFoundBattleTalkMessage =
+          OrderBattleTalkMessageLookupQuery(candidates.AsQueryable())
+              .FirstOrDefault();
+      if (localFoundBattleTalkMessage == null ||
+          localFoundBattleTalkMessage.OriginalBattleTalkMessage !=
+              battleTalkMessage.OriginalBattleTalkMessage ||
+          !TranslationPersistenceGuard.IsUsableDialogueTranslation(
+              localFoundBattleTalkMessage.OriginalBattleTalkMessage,
+              localFoundBattleTalkMessage.TranslatedBattleTalkMessage,
+              localFoundBattleTalkMessage.OriginalBattleTalkMessageLang,
+              localFoundBattleTalkMessage.TranslationLang))
+      {
+        return null;
+      }
+
+      FoundBattleTalkMessage = localFoundBattleTalkMessage;
+      return localFoundBattleTalkMessage;
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception e)
+    {
+      PluginRuntimeLog.Debug(
+          $"FindAndReturnBattleTalkMessageAsync exception {e}");
       return null;
     }
   }

@@ -502,6 +502,72 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures cancellation stops waiting for an in-flight translator result.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Fact]
+    public Task TranslateAsync_CancellationToken_CancelsBeforeProviderResult()
+    {
+        var translator = new PendingAsyncTranslator();
+        var service = new TranslationService(
+            text => text,
+            translator);
+        using var cancellationTokenSource = new CancellationTokenSource();
+
+        var translationTask = service.TranslateAsync(
+            "hello",
+            "en",
+            "pt",
+            cancellationTokenSource.Token);
+        cancellationTokenSource.Cancel();
+
+        return this.AssertCanceledTranslationAsync(translationTask, translator);
+    }
+
+    /// <summary>
+    /// Ensures an already-cancelled request never starts provider translation
+    /// work.
+    /// </summary>
+    [Fact]
+    public async Task TranslateAsync_PreCancelledToken_DoesNotInvokeProvider()
+    {
+        var translator = new RecordingTranslator
+        {
+            AsyncResult = "provider-result",
+        };
+        var service = new TranslationService(text => text, translator);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            service.TranslateAsync(
+                "hello",
+                "en",
+                "pt",
+                cancellationTokenSource.Token));
+
+        Assert.Equal(0, translator.AsyncCalls);
+    }
+
+    /// <summary>
+    ///     Verifies that cancellation completes before a pending provider result.
+    /// </summary>
+    /// <param name="translationTask">The in-flight translation task.</param>
+    /// <param name="translator">The pending translator that supplies the later result.</param>
+    /// <returns>A task representing the assertion.</returns>
+    private async Task AssertCanceledTranslationAsync(
+        Task<string> translationTask,
+        PendingAsyncTranslator translator)
+    {
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => translationTask).ConfigureAwait(false);
+
+        translator.Complete("provider-result");
+
+        Assert.True(translationTask.IsCanceled);
+    }
+
+    /// <summary>
     ///     Ensures the service skips exact requests already known to fail for
     ///     the same source and target language pair plus engine.
     /// </summary>
@@ -702,7 +768,7 @@ public class TranslationServiceTests
     /// </summary>
     /// <returns>A task representing the test.</returns>
     [Fact]
-    public async Task TranslateAsync_WithDialogueContext_UsesContextAwareTranslator()
+    public async Task TranslateAsync_WithFirstTurnDialogueContext_UsesContextAwareTranslator()
     {
         var translator = new ContextAwareRecordingTranslator
         {
@@ -716,12 +782,7 @@ public class TranslationServiceTests
             "Talk",
             "Krile|engine:8|target:pt-BR",
             "Krile",
-            [
-                new DialogueTranslationTurn(
-                    "Krile",
-                    "Pray return.",
-                    new DateTime(2026, 05, 12, 15, 20, 0, DateTimeKind.Utc)),
-            ]);
+            []);
 
         var result = await service.TranslateAsync(
             "We must press on.",
@@ -862,23 +923,97 @@ public class TranslationServiceTests
     }
 
     /// <summary>
-    ///     Ensures empty runtime-only dialogue context does not switch the
-    ///     translation service into the context-aware path.
+    ///     Ensures anonymous first-turn dialogue context still routes through
+    ///     the dialogue-aware translator contract.
     /// </summary>
     [Fact]
-    public void WillUseDialogueContext_RequiresPriorTurns()
+    public async Task TranslateAsync_WithAnonymousFirstTurnDialogueContext_UsesContextAwareTranslator()
     {
-        var translator = new ContextAwareRecordingTranslator();
+        var translator = new ContextAwareRecordingTranslator
+        {
+            AsyncResult = "translated-with-context",
+        };
         var service = new TranslationService(
             text => text,
             translator);
         var dialogueContext = new DialogueTranslationContext(
             "Talk",
             "Krile|engine:8|target:pt-BR",
-            "Krile",
+            string.Empty,
             []);
 
-        Assert.False(service.WillUseDialogueContext(dialogueContext));
+        var result = await service.TranslateAsync(
+            "We must press on.",
+            "English",
+            "pt-BR",
+            dialogueContext);
+
+        Assert.Equal("translated-with-context", result);
+        Assert.Equal(1, translator.ContextAwareAsyncCalls);
+        Assert.Equal(0, translator.AsyncCalls);
+        Assert.True(service.WillUseDialogueContext(dialogueContext));
+    }
+
+    /// <summary>
+    ///     Ensures dialogue-aware requests emit a non-sensitive context summary
+    ///     that exposes presence/absence of hints without logging names.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task TranslateAsync_DialogueContextRequest_LogsNonSensitiveContextSummary()
+    {
+        var pluginLog = new CapturingPluginLog();
+        var translator = new ContextAwareRecordingTranslator
+        {
+            AsyncResult = "dialogue-result",
+        };
+        var service = new TranslationService(
+            static text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.Gemini,
+            debugLog: message => pluginLog.Debug(message));
+        var dialogueContext = new DialogueTranslationContext(
+            "Talk",
+            "quest-1",
+            "Minfilia",
+            [
+                new DialogueTranslationTurn(
+                    "Thancred",
+                    "We move now.",
+                    DateTime.UtcNow),
+            ],
+            SpeakerRoleHint: "npc",
+            SpeakerGenderHint: "female",
+            AddresseeHint: "Alphinaud",
+            AddresseeRoleHint: "npc",
+            AddresseeGenderHint: "male",
+            MetadataProvenance: "QuestSheetDerivedExact",
+            MetadataConfidenceTier: 2);
+
+        _ = await service.TranslateAsync(
+            "Current line",
+            new SourceClientLanguage("en", "en"),
+            "it",
+            dialogueContext,
+            TranslationSurfaceGroup.Dialogue,
+            originContext: "Talk/Text");
+
+        string message = Assert.Single(
+            pluginLog.DebugMessages,
+            line => line.StartsWith(
+                "[Talk/Text] TranslationService: dialogue context summary",
+                StringComparison.Ordinal));
+        Assert.Contains("dialogueContext=supplied", message, StringComparison.Ordinal);
+        Assert.Contains("metadata=populated", message, StringComparison.Ordinal);
+        Assert.Contains("speaker=true", message, StringComparison.Ordinal);
+        Assert.Contains("speakerGender=true", message, StringComparison.Ordinal);
+        Assert.Contains("addressee=true", message, StringComparison.Ordinal);
+        Assert.Contains("addresseeGender=true", message, StringComparison.Ordinal);
+        Assert.Contains("metadataProvenance=QuestSheetDerivedExact", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Minfilia", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Thancred", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Alphinaud", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("We move now.", message, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -1051,6 +1186,36 @@ public class TranslationServiceTests
             this.LastAsyncText = text;
             this.asyncSourceLanguages.Add(sourceLanguage);
             return Task.FromResult(this.AsyncResult);
+        }
+    }
+
+    /// <summary>
+    ///     Fake translator that leaves asynchronous requests pending until the
+    ///     test explicitly completes them.
+    /// </summary>
+    private sealed class PendingAsyncTranslator : ITranslator
+    {
+        private readonly TaskCompletionSource<string?> completionSource = new();
+
+        /// <summary>
+        ///     Completes the pending provider request.
+        /// </summary>
+        /// <param name="result">The provider result.</param>
+        public void Complete(string? result)
+        {
+            this.completionSource.SetResult(result);
+        }
+
+        /// <inheritdoc/>
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            throw new InvalidOperationException("Synchronous translation must not be used.");
+        }
+
+        /// <inheritdoc/>
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+        {
+            return this.completionSource.Task;
         }
     }
 

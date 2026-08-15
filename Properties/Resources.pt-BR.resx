@@ -649,6 +649,15 @@
   <data name="Temperature" xml:space="preserve">
     <value>Temperature</value>
   </data>
+  <data name="TemperatureControlDefaultOnlyTooltip" xml:space="preserve">
+    <value>A temperatura não está disponível porque o modelo selecionado exige a configuração padrão do provedor.</value>
+  </data>
+  <data name="TemperatureControlUnknownTooltip" xml:space="preserve">
+    <value>O suporte à temperatura do modelo selecionado é desconhecido, portanto a configuração está desativada e será omitida das solicitações.</value>
+  </data>
+  <data name="TemperatureControlUnsupportedTooltip" xml:space="preserve">
+    <value>A temperatura não está disponível para o modelo selecionado.</value>
+  </data>
   <data name="NoSettingsForEngine" xml:space="preserve">
     <value>No settings required for this engine</value>
   </data>
@@ -941,7 +950,7 @@
     <value>Native UI translation + original Plugin Tooltips</value>
   </data>
   <data name="JournalQuestDisplayModeLabel" xml:space="preserve">
-    <value>Journal quest display mode</value>
+    <value>Modo de exibição da tradução</value>
   </data>
   <data name="JournalQuestDisplayModeDescription" xml:space="preserve">
     <value>This mode controls Journal, ToDoList, RecommendList, ScenarioTree, AreaMap, JournalAccept, and JournalResult. Journal Plugin Tooltips follow this mode directly; the global Plugin Tooltip toggle only affects other translated UI.</value>
@@ -959,7 +968,7 @@
     <value>Native UI translation + original Plugin Tooltips</value>
   </data>
   <data name="QuestDisplayModeLabel" xml:space="preserve">
-    <value>Quest display mode</value>
+    <value>Modo de exibição da tradução</value>
   </data>
   <data name="QuestDisplayModeDescription" xml:space="preserve">
     <value>This mode controls how this quest window is presented. Native UI writes the translation into the addon, Plugin Tooltip translation only keeps the addon intact, and Native UI translation + original Plugin Tooltips writes the translation natively while showing the original in Plugin Tooltips.</value>
@@ -1127,7 +1136,7 @@
     <value>Action and item details</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeLabel" xml:space="preserve">
-    <value>Detail display mode</value>
+    <value>Modo de exibição da tradução</value>
   </data>
   <data name="ActionAndItemTooltipsDisplayModeDescription" xml:space="preserve">
     <value>This mode controls the ActionDetail and ItemDetail surfaces. Native UI writes the translated detail text into the game addon, Plugin Overlay translation only keeps the native addon intact and uses Plugin Overlays, and Native UI translation + original Plugin Overlay writes the translation natively while showing the original in our Plugin Overlay.</value>

@@ -4,6 +4,12 @@
 // </copyright>
 
 using Echoglossian.PluginRuntime.Startup;
+using Echoglossian.Cache;
+using Echoglossian.DBHelpers;
+using Echoglossian.EFCoreSqlite;
+using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.Mock.Hosting;
+using Echoglossian.Translators.Capabilities;
 
 using DalaMock.Core.Plugin;
 using FluentAssertions;
@@ -104,6 +110,72 @@ public class PluginStartupSmokeTests
         snapshot.HasStage(PluginStartupStage.AddonHandlersRegistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.OverlaysRegistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.StartupComplete).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task StartPluginAsync_initializes_the_llm_capability_cache()
+    {
+        var stateRoot = new DirectoryInfo(Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Mock.Tests",
+            Guid.NewGuid().ToString("N")));
+        var seedDirectory = stateRoot.CreateSubdirectory("seed");
+        var seedDatabasePath = Path.Combine(seedDirectory.FullName, "Echoglossian.db");
+        LlmCapabilityPersistenceHelper.UpsertRules(
+            seedDirectory.FullName,
+            [
+                LlmModelCapabilityRule.CreateExactModel(
+                    "ChatGPT",
+                    "OpenAI",
+                    "https://api.openai.com/v1",
+                    "gpt-5.6-terra",
+                    LlmCapabilityParameterName.Temperature,
+                    LlmCapabilitySupportState.Unsupported,
+                    omitWhenDefaultOnly: true,
+                    source: "Observed400",
+                    reason: "provider rejected non-default temperature"),
+                ]);
+
+        try
+        {
+            using (var seedContext = new EchoglossianDbContext(seedDirectory.FullName))
+            {
+                seedContext.LlmModelCapabilityRules
+                    .Should()
+                    .ContainSingle(rule => rule.MatchValue == "gpt-5.6-terra");
+            }
+
+            LlmCapabilityCacheManager.Clear();
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+                new HostedPreviewPluginOptions(
+                    stateRoot,
+                    new DirectoryInfo(Path.Combine(stateRoot.FullName, ".dalamock")),
+                    new FileInfo(Path.Combine(stateRoot.FullName, "test.json")),
+                    seedDatabasePath,
+                    CreateWindow: false));
+
+            using (var context = new EchoglossianDbContext(
+                global::Echoglossian.Echoglossian.ConfigDirectory))
+            {
+                context.LlmModelCapabilityRules
+                    .Should()
+                    .ContainSingle(rule => rule.MatchValue == "gpt-5.6-terra");
+            }
+
+            LlmCapabilityCacheManager.GetRuleDefinitions()
+                .Should()
+                .ContainSingle(rule => rule.MatchValue == "gpt-5.6-terra");
+        }
+        finally
+        {
+            LlmCapabilityCacheManager.Clear();
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            if (stateRoot.Exists)
+            {
+                stateRoot.Delete(recursive: true);
+            }
+        }
     }
 
     [Fact]

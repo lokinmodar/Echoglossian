@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Cache;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.OpenAI;
 using FluentAssertions;
 using Xunit;
@@ -15,6 +17,40 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class OpenAIModelManagerTests
 {
+    /// <summary>
+    ///     Ensures successful model discovery promotes known family defaults
+    ///     to exact-model capability overlays.
+    /// </summary>
+    [Fact]
+    public void ApplyRefreshSuccess_WithKnownFamilyModel_PromotesExactModelOverlay()
+    {
+        this.WithTemporaryConfigurationDirectory(_ =>
+        {
+            OpenAIModelManager.ResetAllForTesting();
+
+            OpenAIModelManager.ApplyRefreshSuccess(
+                "OpenAI",
+                new DateTime(2026, 8, 12, 12, 0, 0, DateTimeKind.Utc),
+                "OpenAI",
+                "https://api.openai.com/v1",
+                [
+                    new LlmTextModel(
+                        "gpt-5.6-terra",
+                        "GPT-5.6 Terra",
+                        true,
+                        false,
+                        false,
+                        false,
+                        false,
+                        "OpenAI"),
+                ]);
+
+            LlmCapabilityCacheManager.GetRuleDefinitions()
+                .Should()
+                .Contain(rule => rule.MatchValue == "gpt-5.6-terra");
+        });
+    }
+
     /// <summary>
     ///     Ensures official OpenAI and custom OpenAI-compatible model lists do
     ///     not overwrite each other inside the shared manager.
@@ -122,5 +158,30 @@ public class OpenAIModelManagerTests
         OpenAIModelManager.GetCurrentModelList("OpenAI-Compatible")
             .Should()
             .BeEquivalentTo(OpenAITextModelDefaults.PredefinedModels);
+    }
+
+    /// <summary>
+    ///     Runs an action with an isolated persisted capability database.
+    /// </summary>
+    /// <param name="action">The action that exercises the model manager.</param>
+    private void WithTemporaryConfigurationDirectory(Action<string> action)
+    {
+        var configDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var originalConfigDirectory = Echoglossian.ConfigDirectory;
+        Directory.CreateDirectory(configDir);
+        Echoglossian.ConfigDirectory = configDir;
+        LlmCapabilityCacheManager.Clear();
+
+        try
+        {
+            action(configDir);
+        }
+        finally
+        {
+            LlmCapabilityCacheManager.Clear();
+            Echoglossian.ConfigDirectory = originalConfigDirectory;
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            Directory.Delete(configDir, recursive: true);
+        }
     }
 }

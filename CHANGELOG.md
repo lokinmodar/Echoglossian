@@ -7,6 +7,104 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0815.1339`
+
+This package is prepared for official Dalamud submission from the current
+`v4-series` head after [PR #262](https://github.com/lokinmodar/Echoglossian/pull/262).
+It focuses on first-line dialogue speaker context recovery, precomputed quest
+dialogue interlocutor metadata, shared glossary enforcement for dialogue LLM
+requests, and capability-aware parameter handling plus diagnostics across the
+structured LLM providers.
+
+Official `DalamudPluginsD17` submission is pending.
+
+Highlights:
+
+- preserves speaker-aware dialogue context from the very first line by
+  carrying speaker identity through the shared translation path and reusing
+  precomputed quest dialogue metadata plus live actor fallbacks when a visible
+  NPC or target can disambiguate the interlocutor
+- precomputes and persists quest dialogue interlocutor metadata asynchronously
+  after quest acceptance, keeping quest-sheet traversal, EF lookups, and stale
+  result suppression off Dalamud callbacks while preserving DB-first lookup
+  semantics for later dialogue resolution
+- enforces glossary term protection in the shared dialogue LLM flow so
+  provider-specific structured requests reuse the same protected replacements
+  instead of silently dropping configured glossary terms
+- adds conservative model capability learning, capability-gated LLM settings
+  UI, and structured request diagnostics so unsupported parameters such as
+  reasoning or temperature controls can be disabled or sanitized without
+  provider-specific guesswork
+
+## Published Release `v4.2601.0809.2000`
+
+This package was published to the official Dalamud feed after
+[PR #265](https://github.com/lokinmodar/Echoglossian/pull/265). It focuses on
+the `_BattleTalk` native-layout restore fix, the remaining `_MiniTalk`
+pooled-background baseline cleanup, and the follow-up localization string
+corrections that shipped with that stabilization pass.
+
+Published in `DalamudPluginsD17` via
+[PR #9183](https://github.com/goatcorp/DalamudPluginsD17/pull/9183) on
+2026-08-10.
+
+Highlights:
+
+- restores clean native `_BattleTalk` and `_MiniTalk` baselines after plugin
+  ownership ends, preventing cumulative stale translated dimensions while
+  preserving game-owned horizontal geometry in `_BattleTalk`
+- scopes compact wrapped-height measurement to the known stale-layout reuse
+  paths in `_BattleTalk` and `_MiniTalk`, keeping the shared tooltip and
+  toast-style helper behavior unchanged for legitimate game-owned padding
+- aligns the plugin UI dialogue-family source strings and unifies the
+  `Translation Display Mode` label across tabs and localized resources
+- includes regression coverage for the helper default height policy plus the
+  explicit compact wrapped-height opt-in used by `_BattleTalk` and `_MiniTalk`
+
+## Published Release `v4.2601.0809.0046`
+
+This package was published to the official Dalamud feed with the runtime
+localization correction merged through
+[PR #260](https://github.com/lokinmodar/Echoglossian/pull/260). It keeps the
+locale-specific resource naming introduced for Crowdin while ensuring the
+plugin actually loads the locale selected in its configuration.
+
+Published in `DalamudPluginsD17` via
+[PR #9177](https://github.com/goatcorp/DalamudPluginsD17/pull/9177) on
+2026-08-09.
+
+Highlights:
+
+- applies the normalized plugin UI culture before the first strongly typed
+  resource lookup, preventing Dalamud's thread culture from silently falling
+  back to English
+- preserves distinct locale-specific resources such as `pt-BR`, `pt-PT`, and
+  `fr-FR`, and adds the missing `ca -> ca-ES` and `nl -> nl-NL` normalization
+  mappings
+- adds exact-resource-set regression coverage and permanent Crowdin review,
+  synchronization, recovery, and rollback guardrails
+
+## Published Release `v4.2601.0807.1730`
+
+This package was published to the official Dalamud feed after the follow-up
+MiniTalk native-layout regression fix and keeps the release focused on the
+remaining recycled-bubble height edge case.
+
+Published in `DalamudPluginsD17` via
+[PR #9163](https://github.com/goatcorp/DalamudPluginsD17/pull/9163) on
+2026-08-08.
+
+Highlights:
+
+- isolates the compact detached-container baseline preference to `_MiniTalk_`
+  so recycled oversized bubble slots stop stretching later native dialogue
+  balloons in `Native` and `Swap` mode
+- keeps the shared detached-container layout helper default unchanged for the
+  tooltip and toast-style callers that still need the historical larger
+  baseline behavior
+- adds regression coverage for both stale-primary and stale-secondary recycled
+  `_MiniTalk_` detached-container height paths
+
 ## Published Release `v4.2601.0806.0051`
 
 This package was published to the official Dalamud feed and focuses on
@@ -248,6 +346,9 @@ repository workflow.
 | 2026-07-19 | [PR #9031](https://github.com/goatcorp/DalamudPluginsD17/pull/9031) `v4.2601.0718.2006` | OpenRouter live-model refresh and hosted preview infrastructure follow-up |
 | 2026-08-05 | [PR #9125](https://github.com/goatcorp/DalamudPluginsD17/pull/9125) `v4.2601.0802.2355` | broad native UI runtime expansion across selection dialogs, tooltips, quest surfaces, nameplates, toasts, persistence, and diagnostics |
 | 2026-08-06 | [PR #9151](https://github.com/goatcorp/DalamudPluginsD17/pull/9151) `v4.2601.0806.0051` | MiniTalk native bubble stabilization follow-up, ActionDetail and ItemDetail overlay control activation, and localized plugin-label sync |
+| 2026-08-08 | [PR #9163](https://github.com/goatcorp/DalamudPluginsD17/pull/9163) `v4.2601.0807.1730` | MiniTalk recycled-bubble height stabilization follow-up |
+| 2026-08-09 | [PR #9177](https://github.com/goatcorp/DalamudPluginsD17/pull/9177) `v4.2601.0809.0046` | plugin UI culture application, locale-specific resource loading, and localization guardrails |
+| 2026-08-10 | [PR #9183](https://github.com/goatcorp/DalamudPluginsD17/pull/9183) `v4.2601.0809.2000` | BattleTalk and MiniTalk stale native-layout stabilization plus dialogue-family label corrections |
 
 ## Pre-Official History
 

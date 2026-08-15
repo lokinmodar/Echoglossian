@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Translators.Capabilities;
+
 namespace Echoglossian.Translators.OpenAI;
 
 public static class OpenAIModelManager
@@ -338,6 +340,13 @@ public static class OpenAIModelManager
           : baseUrl.TrimEnd('/');
       state.LastRefreshFailureDetail = null;
     }
+
+    LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+        Echoglossian.TransEngines.ChatGPT,
+        providerName,
+        baseUrl,
+        models.Select(static model => model.Id).ToArray(),
+        observedAtUtc);
   }
 
   /// <summary>

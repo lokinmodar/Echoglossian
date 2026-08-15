@@ -449,28 +449,31 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     foreach (var bubbleNodeAddress in bubbleTextNodes)
     {
       var textNode = (AtkTextNode*)bubbleNodeAddress;
+      var bubbleKey = this.ResolveBubbleKey(
+          textNode,
+          bubbleNodeAddress);
       if (!this.IsMiniTalkBubbleVisible(textNode))
       {
-        this.clearOverlay(bubbleNodeAddress, false);
+        this.clearOverlay(bubbleKey, false);
         continue;
       }
 
-      activeBubbleKeys.Add(bubbleNodeAddress);
+      activeBubbleKeys.Add(bubbleKey);
 
-      if (!this.TryReadCurrentSource(bubbleNodeAddress, textNode, out var originalText))
+      if (!this.TryReadCurrentSource(bubbleKey, textNode, out var originalText))
       {
         // PluginRuntimeLog.Debug(
         //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} readable text unavailable {this.DescribeMiniTalkTextNode(textNode)}");
         continue;
       }
 
-      this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
+      this.updateOverlayBounds(bubbleKey, addon, textNode);
 
       // PluginRuntimeLog.Debug(
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} bubble=0x{bubbleNodeAddress:X} visible-capture overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} swap={this.ShouldSwapTexts()}");
 
       if (this.TryCaptureOrQueueMiniTalkSource(
-              bubbleNodeAddress,
+              bubbleKey,
               originalText,
               type.ToString(),
               sourceLanguage))
@@ -516,22 +519,25 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
     foreach (var bubbleNodeAddress in bubbleTextNodes)
     {
       var textNode = (AtkTextNode*)bubbleNodeAddress;
+      var bubbleKey = this.ResolveBubbleKey(
+          textNode,
+          bubbleNodeAddress);
       if (!this.IsMiniTalkBubbleVisible(textNode))
       {
-        this.clearOverlay(bubbleNodeAddress, false);
+        this.clearOverlay(bubbleKey, false);
         continue;
       }
 
-      activeBubbleKeys.Add(bubbleNodeAddress);
-      if (!this.TryReadCurrentSource(bubbleNodeAddress, textNode, out var visibleOriginalText))
+      activeBubbleKeys.Add(bubbleKey);
+      if (!this.TryReadCurrentSource(bubbleKey, textNode, out var visibleOriginalText))
       {
         continue;
       }
 
-      this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
+      this.updateOverlayBounds(bubbleKey, addon, textNode);
 
       if (this.TryHandleVisibleSourceChange(
-              bubbleNodeAddress,
+              bubbleKey,
               visibleOriginalText,
               $"{type}-visible-reconcile",
               sourceLanguage))
@@ -543,14 +549,14 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       //     $"[MiniTalk] trigger={type} addon=0x{((nint)addon):X} bubble=0x{bubbleNodeAddress:X} visible-update overlay={this.ShouldUseOverlay()} native={this.ShouldApplyNativeText()} swap={this.ShouldSwapTexts()}");
 
       if (!this.TryGetCurrentResolvedTranslation(
-              bubbleNodeAddress,
+              bubbleKey,
               sourceLanguage,
               out var resolvedOriginalText,
               out var translatedText,
               out var replacementText))
       {
         if (this.TryCaptureOrQueueMiniTalkSource(
-                bubbleNodeAddress,
+                bubbleKey,
                 visibleOriginalText,
                 $"{type}-visible-fallback",
                 sourceLanguage))
@@ -564,7 +570,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       if (this.ShouldUseOverlay())
       {
         this.PublishOverlay(
-            bubbleNodeAddress,
+            bubbleKey,
             resolvedOriginalText,
             translatedText,
             type.ToString());
@@ -576,12 +582,12 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
 
       if (!this.ShouldApplyNativeText())
       {
-        this.RestoreTrackedBubbleLayoutIfNeeded(bubbleNodeAddress);
+        this.RestoreTrackedBubbleLayoutIfNeeded(bubbleKey);
         continue;
       }
 
       this.RestoreTrackedBubbleLayoutIfNeeded(
-          bubbleNodeAddress,
+          bubbleKey,
           resolvedOriginalText);
 
       if (textNode == null)
@@ -598,7 +604,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
       }
 
       this.PrepareTrackedBubbleLayoutForReapply(
-          bubbleNodeAddress,
+          bubbleKey,
           resolvedOriginalText);
 
       var layoutSnapshot = NativeTextNodeLayoutHelper.ApplyTextReplacementWithInferredReflow(
@@ -606,14 +612,16 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
           textNode,
           replacementText,
           allowWidthGrowth: true,
+          preferCompactDetachedBaselineForHeight: true,
           additionalWrapWidth: this.ResolveMiniTalkAdditionalWrapWidth(
               addon,
-              textNode));
+              textNode),
+          preferCompactWrappedHeight: true);
       if (layoutSnapshot != null)
       {
         lock (this.stateGate)
         {
-          if (this.bubbleStates.TryGetValue(bubbleNodeAddress, out var state))
+          if (this.bubbleStates.TryGetValue(bubbleKey, out var state))
           {
             state.NativeLayoutSnapshot = layoutSnapshot;
             state.NativeLayoutOriginalText = resolvedOriginalText;
@@ -622,7 +630,7 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
         }
       }
 
-      this.updateOverlayBounds(bubbleNodeAddress, addon, textNode);
+      this.updateOverlayBounds(bubbleKey, addon, textNode);
     }
 
     this.PruneHiddenMiniTalkBubbles(activeBubbleKeys);
@@ -1330,6 +1338,35 @@ internal sealed class MiniTalkHandler : IAddonTranslationHandler
            left <= viewport.Pos.X + viewport.Size.X &&
            bottom >= viewport.Pos.Y &&
            top <= viewport.Pos.Y + viewport.Size.Y;
+  }
+
+  /// <summary>
+  ///     Resolves one stable MiniTalk bubble key from the owning component slot
+  ///     when available so pooled-slot reuse restores the prior dirty baseline
+  ///     before any new source or text-node address is captured.
+  /// </summary>
+  /// <param name="textNode">The visible MiniTalk text node.</param>
+  /// <param name="fallbackBubbleKey">
+  ///     The fallback key to use when no owning component container can be
+  ///     resolved.
+  /// </param>
+  /// <returns>The stable key used for native and overlay state.</returns>
+  private unsafe nint ResolveBubbleKey(
+      AtkTextNode* textNode,
+      nint fallbackBubbleKey)
+  {
+    if (textNode != null &&
+        NativeTextNodeLayoutHelper.TryResolveContainerNodes(
+            addon: null,
+            textNode,
+            out var containerNode,
+            out _) &&
+        containerNode != null)
+    {
+      return (nint)containerNode;
+    }
+
+    return fallbackBubbleKey;
   }
 
   /// <summary>

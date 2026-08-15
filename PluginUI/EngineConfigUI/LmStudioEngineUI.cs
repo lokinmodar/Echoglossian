@@ -5,6 +5,7 @@
 
 using Echoglossian.PluginUI.Components;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.LmStudio;
 using Echoglossian.Translators.OpenAI;
 
@@ -107,16 +108,33 @@ public static class LmStudioEngineUI
             models,
             "LmStudio");
 
+        var scope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.LmStudio,
+            "LmStudio",
+            config.LmStudioBaseUrl?.TrimEnd('/') ?? "http://localhost:1234/v1",
+            config.LmStudioModel ?? "llama3");
+        var sliderState = LlmCapabilityUiHelper.GetTemperatureSliderState(
+            scope,
+            0.1f,
+            1.0f);
         var temp = config.LmStudioTemperature;
+        ImGui.BeginDisabled(!sliderState.IsEnabled);
         if (ImGui.SliderFloat(
                 Resources.Temperature,
                 ref temp,
-                0.1f,
-                1.0f,
+                sliderState.MinValue,
+                sliderState.MaxValue,
                 "%.1f"))
         {
             config.LmStudioTemperature = temp;
             changed = true;
+        }
+
+        ImGui.EndDisabled();
+        if (!sliderState.IsEnabled &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(sliderState.TooltipText);
         }
 
         PromptEditorUI.Draw(

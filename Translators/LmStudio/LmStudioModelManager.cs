@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.OpenAI;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators.LmStudio;
 
@@ -83,6 +84,12 @@ public static class LmStudioModelManager
             if (models.Any())
             {
                 CurrentModelList = models;
+                LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+                    Echoglossian.TransEngines.LmStudio,
+                    "LmStudio",
+                    baseUrl,
+                    models.Select(static model => model.Id).ToArray(),
+                    DateTime.UtcNow);
             }
         }
         catch (Exception ex)

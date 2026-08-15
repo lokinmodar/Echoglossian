@@ -80,6 +80,11 @@ public class MockFramework : IDisposable, IFramework, IMockService
         throw new NotImplementedException();
     }
 
+    public IDebouncer CreateDebouncer(TimeSpan delay, System.Action action)
+    {
+        return new MockDebouncer(this, delay, action);
+    }
+
     public Task DelayTicks(long numTicks, CancellationToken cancellationToken = default(CancellationToken))
     {
         return Task.CompletedTask;
@@ -419,6 +424,106 @@ public class MockFramework : IDisposable, IFramework, IMockService
     private delegate bool OnUpdateDetour(IntPtr framework);
 
     private delegate IntPtr OnDestroyDetour(); // OnDestroyDelegate
+
+    private sealed class MockDebouncer : IDebouncer
+    {
+        private readonly MockFramework framework;
+        private readonly TimeSpan delay;
+        private readonly System.Action action;
+        private readonly object sync = new();
+        private Timer? timer;
+        private long generation;
+        private bool disposed;
+
+        internal MockDebouncer(MockFramework framework, TimeSpan delay, System.Action action)
+        {
+            this.framework = framework;
+            this.delay = delay;
+            this.action = action;
+        }
+
+        public bool IsPending
+        {
+            get
+            {
+                lock (this.sync)
+                {
+                    return this.timer is not null;
+                }
+            }
+        }
+
+        public void Debounce()
+        {
+            lock (this.sync)
+            {
+                ObjectDisposedException.ThrowIf(this.disposed, this);
+                this.generation++;
+                this.timer?.Dispose();
+                this.timer = new Timer(
+                    state => this.OnTimerElapsed((long)state!),
+                    this.generation,
+                    this.delay,
+                    Timeout.InfiniteTimeSpan);
+            }
+        }
+
+        public void Cancel()
+        {
+            lock (this.sync)
+            {
+                this.generation++;
+                this.timer?.Dispose();
+                this.timer = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (this.sync)
+            {
+                if (this.disposed)
+                {
+                    return;
+                }
+
+                this.disposed = true;
+                this.generation++;
+                this.timer?.Dispose();
+                this.timer = null;
+            }
+        }
+
+        private void OnTimerElapsed(long callbackGeneration)
+        {
+            lock (this.sync)
+            {
+                if (this.disposed ||
+                    this.timer is null ||
+                    callbackGeneration != this.generation)
+                {
+                    return;
+                }
+
+                this.timer.Dispose();
+                this.timer = null;
+                _ = this.framework.RunOnTick(() => this.RunActionIfCurrent(callbackGeneration));
+            }
+        }
+
+        private void RunActionIfCurrent(long callbackGeneration)
+        {
+            lock (this.sync)
+            {
+                if (this.disposed || callbackGeneration != this.generation)
+                {
+                    return;
+                }
+            }
+
+            this.action();
+        }
+    }
 
     private abstract class RunOnNextTickTaskBase
     {

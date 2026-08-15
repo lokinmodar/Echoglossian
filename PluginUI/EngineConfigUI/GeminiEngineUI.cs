@@ -5,6 +5,7 @@
 
 using Echoglossian.PluginUI.Components;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Gemini;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -91,6 +92,35 @@ public static class GeminiEngineUI
             "Gemini",
             tooltips);
         config.GeminiModel = config.GeminiModelId;
+
+        var scope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.Gemini,
+            "Gemini",
+            "https://generativelanguage.googleapis.com",
+            config.GeminiModel ?? "gemini-2.5-flash");
+        var sliderState = LlmCapabilityUiHelper.GetTemperatureSliderState(
+            scope,
+            0.1f,
+            1.0f);
+        var temp = config.GeminiTemperature;
+        ImGui.BeginDisabled(!sliderState.IsEnabled);
+        if (ImGui.SliderFloat(
+                Resources.Temperature,
+                ref temp,
+                sliderState.MinValue,
+                sliderState.MaxValue,
+                "%.1f"))
+        {
+            config.GeminiTemperature = temp;
+            changed = true;
+        }
+
+        ImGui.EndDisabled();
+        if (!sliderState.IsEnabled &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(sliderState.TooltipText);
+        }
 
         PromptEditorUI.Draw(
             promptManager,

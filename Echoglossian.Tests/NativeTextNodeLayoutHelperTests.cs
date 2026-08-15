@@ -34,6 +34,25 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
+    ///     Ensures wrapped text measurement preserves the larger live height by
+    ///     default when it may represent intentional game-owned padding rather
+    ///     than a stale plugin-applied extent.
+    /// </summary>
+    [Fact]
+    public void ResolveMeasuredTextExtent_PreservesWrappedLiveHeightByDefault_WhenItExceedsDrawHeight()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(
+            liveWidth: 392,
+            liveHeight: 118,
+            drawWidth: 368,
+            drawHeight: 42,
+            textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize);
+
+        Assert.Equal((ushort)392, resolved.Width);
+        Assert.Equal((ushort)118, resolved.Height);
+    }
+
+    /// <summary>
     ///     Ensures zero-sized nodes still fall back to the text draw size.
     /// </summary>
     [Fact]
@@ -48,6 +67,26 @@ public class NativeTextNodeLayoutHelperTests
 
         Assert.Equal((ushort)120, resolved.Width);
         Assert.Equal((ushort)32, resolved.Height);
+    }
+
+    /// <summary>
+    ///     Ensures wrapped native measurement does not keep a stale translated
+    ///     high-water height when the live node was already left oversized by a
+    ///     previous apply.
+    /// </summary>
+    [Fact]
+    public void ResolveMeasuredTextExtent_IgnoresStaleWrappedLiveHeight_WhenDrawHeightIsShorter()
+    {
+        var resolved = NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(
+            liveWidth: 392,
+            liveHeight: 118,
+            drawWidth: 368,
+            drawHeight: 42,
+            textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize,
+            preferCompactWrappedHeight: true);
+
+        Assert.Equal((ushort)392, resolved.Width);
+        Assert.Equal((ushort)42, resolved.Height);
     }
 
     /// <summary>
@@ -349,12 +388,12 @@ public class NativeTextNodeLayoutHelperTests
     }
 
     /// <summary>
-    ///     Ensures detached MiniTalk-style component roots do not become the
-    ///     permanent minimum bubble height when the visible nine-grid background
-    ///     is much smaller and no explicit tooltip padding policy is requested.
+    ///     Ensures detached-container synchronization keeps the historical
+    ///     largest container extent by default so tooltip and toast surfaces do
+    ///     not shrink their root containers unexpectedly.
     /// </summary>
     [Fact]
-    public void ResolveSynchronizedContainerExtent_PrefersVisibleBackgroundBaseline_WhenDetachedPrimaryIsLargerAndNoPaddingIsRequested()
+    public void ResolveSynchronizedContainerExtent_PreservesLargestDetachedBaseline_ByDefault()
     {
         var resolvedExtent = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
             primaryContainerExtent: 192,
@@ -362,6 +401,45 @@ public class NativeTextNodeLayoutHelperTests
             currentTextExtent: 37,
             measuredTextExtent: 38,
             minimumSecondaryPadding: 0);
+
+        Assert.Equal((ushort)192, resolvedExtent);
+    }
+
+    /// <summary>
+    ///     Ensures detached MiniTalk-style component roots can explicitly prefer
+    ///     the compact bubble baseline when the detached primary container is
+    ///     the stale oversize surface from a recycled slot.
+    /// </summary>
+    [Fact]
+    public void ResolveSynchronizedContainerExtent_PrefersCompactDetachedBaseline_WhenRequestedAndPrimaryIsStale()
+    {
+        var resolvedExtent = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+            primaryContainerExtent: 192,
+            secondaryContainerExtent: 42,
+            currentTextExtent: 37,
+            measuredTextExtent: 38,
+            minimumSecondaryPadding: 0,
+            preferCompactDetachedBaseline: true);
+
+        Assert.Equal((ushort)43, resolvedExtent);
+    }
+
+    /// <summary>
+    ///     Ensures detached MiniTalk-style component roots can also recover
+    ///     when the visible nine-grid background is the stale oversize surface
+    ///     from a recycled slot and the detached primary height is the compact
+    ///     baseline that should win.
+    /// </summary>
+    [Fact]
+    public void ResolveSynchronizedContainerExtent_PrefersCompactDetachedBaseline_WhenRequestedAndSecondaryIsStale()
+    {
+        var resolvedExtent = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+            primaryContainerExtent: 42,
+            secondaryContainerExtent: 192,
+            currentTextExtent: 37,
+            measuredTextExtent: 38,
+            minimumSecondaryPadding: 0,
+            preferCompactDetachedBaseline: true);
 
         Assert.Equal((ushort)43, resolvedExtent);
     }

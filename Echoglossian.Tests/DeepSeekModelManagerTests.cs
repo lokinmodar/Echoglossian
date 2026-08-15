@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.DeepSeek;
+using Echoglossian.Translators.OpenAI;
 using FluentAssertions;
 using Xunit;
 
@@ -14,6 +15,36 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class DeepSeekModelManagerTests
 {
+    /// <summary>
+    ///     Ensures successful DeepSeek model discovery retains the discovered
+    ///     list while capability overlay promotion runs best-effort.
+    /// </summary>
+    [Fact]
+    public void ApplyRefreshSuccess_WithDiscoveredModels_RetainsDiscoveredModelList()
+    {
+        DeepSeekModelManager.ResetToDefault();
+
+        DeepSeekModelManager.ApplyRefreshSuccess(
+            "https://api.deepseek.com/v1",
+            [
+                new LlmTextModel(
+                    "deepseek-chat",
+                    "DeepSeek Chat",
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    "DeepSeek"),
+            ],
+            new DateTime(2026, 8, 12, 12, 0, 0, DateTimeKind.Utc));
+
+        DeepSeekModelManager.CurrentModelList
+            .Select(static model => model.Id)
+            .Should()
+            .Equal("deepseek-chat");
+    }
+
     /// <summary>
     ///     Ensures the configured DeepSeek base URL maps to the models
     ///     endpoint without duplicating version segments.

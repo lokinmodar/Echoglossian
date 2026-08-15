@@ -145,6 +145,14 @@ public class MockCharacter : ICharacter
     }
 
     /// <inheritdoc/>
+    [ImGuiGroup("Position")]
+    public byte CurrentDistance { get; set; }
+
+    /// <inheritdoc/>
+    [ImGuiGroup("Position")]
+    public byte NextDistance { get; set; }
+
+    /// <inheritdoc/>
     [ImGuiGroup("Basic")]
     public bool IsDead
     {
