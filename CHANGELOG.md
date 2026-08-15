@@ -7,6 +7,35 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0815.1339`
+
+This package is prepared for official Dalamud submission from the current
+`v4-series` head after [PR #262](https://github.com/lokinmodar/Echoglossian/pull/262).
+It focuses on first-line dialogue speaker context recovery, precomputed quest
+dialogue interlocutor metadata, shared glossary enforcement for dialogue LLM
+requests, and capability-aware parameter handling plus diagnostics across the
+structured LLM providers.
+
+Official `DalamudPluginsD17` submission is pending.
+
+Highlights:
+
+- preserves speaker-aware dialogue context from the very first line by
+  carrying speaker identity through the shared translation path and reusing
+  precomputed quest dialogue metadata plus live actor fallbacks when a visible
+  NPC or target can disambiguate the interlocutor
+- precomputes and persists quest dialogue interlocutor metadata asynchronously
+  after quest acceptance, keeping quest-sheet traversal, EF lookups, and stale
+  result suppression off Dalamud callbacks while preserving DB-first lookup
+  semantics for later dialogue resolution
+- enforces glossary term protection in the shared dialogue LLM flow so
+  provider-specific structured requests reuse the same protected replacements
+  instead of silently dropping configured glossary terms
+- adds conservative model capability learning, capability-gated LLM settings
+  UI, and structured request diagnostics so unsupported parameters such as
+  reasoning or temperature controls can be disabled or sanitized without
+  provider-specific guesswork
+
 ## Published Release `v4.2601.0809.2000`
 
 This package was published to the official Dalamud feed after
