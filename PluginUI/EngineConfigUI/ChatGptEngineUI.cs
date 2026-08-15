@@ -5,6 +5,7 @@
 
 using Echoglossian.PluginUI.Components;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.OpenAI;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -71,16 +72,34 @@ public static class ChatGPTEngineUI
             runtimeActionsAvailable);
         changed |= DrawModelSelection(config, settings);
 
+        settings = OpenAiProviderVariantHelper.ResolveActiveSettings(config);
+        var scope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.ChatGPT,
+            settings.ProviderName,
+            settings.BaseUrl,
+            settings.Model);
+        var sliderState = LlmCapabilityUiHelper.GetTemperatureSliderState(
+            scope,
+            0.1f,
+            1.0f);
         var temp = config.ChatGptTemperature;
+        ImGui.BeginDisabled(!sliderState.IsEnabled);
         if (ImGui.SliderFloat(
                 Resources.Temperature,
                 ref temp,
-                0.1f,
-                1.0f,
+                sliderState.MinValue,
+                sliderState.MaxValue,
                 "%.1f"))
         {
             config.ChatGptTemperature = temp;
             changed = true;
+        }
+
+        ImGui.EndDisabled();
+        if (!sliderState.IsEnabled &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(sliderState.TooltipText);
         }
 
         PromptEditorUI.Draw(

@@ -403,6 +403,7 @@ public partial class Echoglossian : IDalamudPlugin
     NamePlateCacheManager.Preload(ConfigDirectory);
     StringArrayDataCacheManager.Preload(ConfigDirectory);
     TranslationFailureCacheManager.Preload(ConfigDirectory);
+    LlmCapabilityCacheManager.Initialize(ConfigDirectory);
     ActionTooltipCacheManager.Preload(ConfigDirectory);
     TraitCacheManager.Preload(ConfigDirectory);
     ReferenceTextCacheRegistry.PreloadAll(ConfigDirectory);
@@ -470,6 +471,10 @@ public partial class Echoglossian : IDalamudPlugin
   [PluginService] public static INamePlateGui NamePlateGuiInterface { get; set; } = null!;
 
   [PluginService] public static IObjectTable ObjectTableInterface { get; set; } = null!;
+
+  [PluginService] public static ITargetManager TargetManagerInterface { get; set; } = null!;
+
+  [PluginService] public static IPlayerState PlayerStateInterface { get; set; } = null!;
 
   [PluginService]
   public static IChatGui ChatGuiInterface { get; set; } = null!;
@@ -574,6 +579,7 @@ public partial class Echoglossian : IDalamudPlugin
       GameWindowCacheManager.Clear();
       NamePlateCacheManager.Clear();
       TranslationFailureCacheManager.Clear();
+      LlmCapabilityCacheManager.Clear();
       ActionTooltipCacheManager.Clear();
       TraitCacheManager.Clear();
       ReferenceTextCacheRegistry.ClearAll();
@@ -585,6 +591,8 @@ public partial class Echoglossian : IDalamudPlugin
     QuestTodoProgressResolver.Clear();
     this.ClearAcceptedQuestPrefetchState();
     this.acceptedQuestPrefetchActionPump.Dispose();
+    this.acceptedQuestDialogueMetadataOperations.Dispose();
+    this.acceptedQuestDialogueMetadataGenerationCancellationSource.Dispose();
     this.ClearTraitDetailPrefetchState();
     this.ClearReferenceTextPrefetchState();
     this.ClearNamePlatePrefetchState();

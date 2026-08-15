@@ -902,6 +902,88 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                     b.ToTable("itemtooltips", (string)null);
                 });
 
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.Journal.QuestDialogueMetadata", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AddresseeHint")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AddresseeRoleHint")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConfidenceTier")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DerivationVersion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameVersion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Provenance")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<uint>("QuestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ushort>("QuestSequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("QuestSheetId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QuestTextSheetName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceLanguageCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceRowKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceTextHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceTextPreview")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SpeakerHint")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SpeakerRoleHint")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestId", "QuestSequence", "SourceLanguageCode", "GameVersion", "SourceRowKey", "SourceTextHash", "DerivationVersion")
+                        .IsUnique()
+                        .HasDatabaseName("IX_questdialoguemetadata_lookup");
+
+                    b.ToTable("questdialoguemetadata", (string)null);
+                });
+
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate", b =>
                 {
                     b.Property<int>("Id")
@@ -1053,6 +1135,131 @@ namespace Echoglossian.EFCoreSqlite.Migrations
                         .HasDatabaseName("IX_questpopuptexts_lookup");
 
                     b.ToTable("questpopuptexts", (string)null);
+                });
+
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.LlmModelCapabilityObservation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EndpointScope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Engine")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MessageExcerpt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ObservedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ParameterName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderErrorCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderScope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("llmmodelcapabilityobservations", (string)null);
+                });
+
+            modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.LlmModelCapabilityRule", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AllowedEnumValuesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Confidence")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EndpointScope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Engine")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MatchType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MatchValue")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<float?>("MaxValue")
+                        .HasColumnType("REAL");
+
+                    b.Property<float?>("MinValue")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("ObservedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("OmitWhenDefaultOnly")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ParameterName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderScope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SupportState")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Engine", "ProviderScope", "EndpointScope", "MatchType", "MatchValue", "ParameterName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_llmmodelcapabilityrules_lookup");
+
+                    b.ToTable("llmmodelcapabilityrules", (string)null);
                 });
 
             modelBuilder.Entity("Echoglossian.EFCoreSqlite.Models.LocationName", b =>

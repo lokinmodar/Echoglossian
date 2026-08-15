@@ -6,6 +6,7 @@
 using System.ClientModel;
 using System.Text;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
 using Echoglossian.Translators.OpenAI;
 using OpenAI;
@@ -15,6 +16,7 @@ namespace Echoglossian.Translators;
 
 public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
 {
+    private readonly LlmCapabilityScope capabilityScope;
     private readonly ChatClient? chatClient;
     private readonly string model;
     private readonly IPluginLog pluginLog;
@@ -41,6 +43,11 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         var baseUrl = providerSettings.BaseUrl;
         var apiKey = providerSettings.ApiKey;
         this.model = providerSettings.Model;
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.ChatGPT,
+            providerSettings.ProviderName,
+            baseUrl,
+            this.model);
         this.unavailableMessage =
             OpenAiProviderVariantHelper.ResolveUnavailableMessage(
                 providerSettings.Variant);
@@ -244,12 +251,11 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             targetLanguage,
             dialogueContext);
 
+        var temperatureWasSent = false;
         try
         {
-            var chatCompletionOptions = new ChatCompletionOptions
-            {
-                Temperature = this.temperature,
-            };
+            var chatCompletionOptions = new ChatCompletionOptions();
+            temperatureWasSent = this.ApplyTemperaturePolicy(chatCompletionOptions);
 
             var messages = new List<ChatMessage>
             {
@@ -278,6 +284,11 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         }
         catch (Exception ex)
         {
+            if (temperatureWasSent)
+            {
+                this.LearnTemperatureFailure(ex);
+            }
+
             PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} {ex.Message}");
             return $"[{Resources.TranslationError} {ex.Message}]";
         }
@@ -316,6 +327,9 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        var temperatureWasSent = false;
+        var reasoningEffortWasSent = false;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -344,16 +358,73 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
 
             var chatCompletionOptions = new ChatCompletionOptions
             {
-                Temperature = this.temperature,
                 ToolChoice = ChatToolChoice.CreateFunctionChoice(
                     StructuredDialogueOpenAiToolHelper.ToolFunctionName),
             };
+            temperatureWasSent = this.ApplyTemperaturePolicy(chatCompletionOptions);
+            reasoningEffortWasSent = this.ApplyStructuredReasoningEffortPolicy(
+                chatCompletionOptions);
             chatCompletionOptions.Tools.Add(structuredTool);
+
+            var capabilitySnapshot = LlmCapabilityPolicyService.GetSnapshot(
+                this.capabilityScope);
+            var temperatureDecision = capabilitySnapshot.GetDecision(
+                LlmCapabilityParameterName.Temperature);
+            var reasoningDecision = capabilitySnapshot.GetDecision(
+                LlmCapabilityParameterName.ReasoningEffort);
+#pragma warning disable OPENAI001
+            var reasoningEffortExplicitlyDisabled = reasoningEffortWasSent &&
+                chatCompletionOptions.ReasoningEffortLevel == ChatReasoningEffortLevel.None;
+#pragma warning restore OPENAI001
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.ReasoningEffort,
+                    reasoningDecision,
+                    reasoningEffortExplicitlyDisabled
+                        ? StructuredDialogueCapabilityEmissionMode.ExplicitDisable
+                        : reasoningEffortWasSent
+                            ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                            : reasoningDecision.OmitWhenDefaultOnly
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                                : reasoningDecision.SupportState == LlmCapabilitySupportState.Supported
+                                    ? StructuredDialogueCapabilityEmissionMode.OmittedSupported
+                                    : reasoningDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                        ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                        : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
 
             var messages = new List<ChatMessage>
             {
                 ChatMessage.CreateUserMessage(structuredPrompt),
             };
+
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "chat/completions",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    null,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
 
             ChatCompletion completion =
                 await this.chatClient!.CompleteChatAsync(
@@ -377,7 +448,18 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                     "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"ChatGPT structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        this.capabilityScope.ProviderScope,
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "chat/completions",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -392,6 +474,17 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "chat/completions",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload.Length,
+                        translatedText.Length,
+                        rawStructuredPayload,
+                        translatedText));
                 return translatedText;
             }
 
@@ -400,18 +493,61 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    this.capabilityScope.ProviderScope,
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "chat/completions",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)
         {
+            if (reasoningEffortWasSent)
+            {
+                this.LearnReasoningEffortFailure(ex);
+            }
+
+            if (temperatureWasSent)
+            {
+                this.LearnTemperatureFailure(ex);
+            }
+
             TranslatorMetricsCollector.RecordStructuredAttempt(
                 (int)Echoglossian.TransEngines.ChatGPT,
                 false,
                 usedGlossary,
                 ex.Message);
+            int? statusCode = ex is ClientResultException clientResultException
+                ? clientResultException.Status
+                : ex is HttpRequestException httpRequestException &&
+                httpRequestException.StatusCode.HasValue
+                    ? (int)httpRequestException.StatusCode.Value
+                    : null;
+            var responseExcerpt = ex is ClientResultException responseException
+                ? responseException.GetRawResponse()?.Content?.ToString()
+                : ex.Message;
             PluginRuntimeLog.Debug(
                 this.pluginLog,
-                $"ChatGPT structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    this.capabilityScope.ProviderScope,
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    statusCode,
+                    responseExcerpt,
+                    this.capabilityScope.EndpointScope,
+                    "chat/completions",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }
@@ -449,6 +585,120 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         }
 
         return builder.ToString().Trim();
+    }
+
+    /// <summary>
+    ///     Applies the shared temperature decision to an OpenAI SDK request.
+    /// </summary>
+    /// <param name="options">The completion options to sanitize.</param>
+    /// <returns>
+    ///     <see langword="true" /> when temperature was added; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    internal bool ApplyTemperaturePolicy(ChatCompletionOptions options)
+    {
+        if (!LlmCapabilityPolicyService.TryResolveTemperature(
+                this.capabilityScope,
+                this.temperature,
+                out var sanitizedTemperature,
+                out _))
+        {
+            return false;
+        }
+
+        options.Temperature = sanitizedTemperature;
+        return true;
+    }
+
+    /// <summary>
+    ///     Applies the effective structured reasoning-effort capability policy
+    ///     to an OpenAI SDK completion request.
+    /// </summary>
+    /// <param name="options">The completion options to sanitize.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a configured reasoning-effort value
+    ///     or an explicit provider disable remains eligible for transmission;
+    ///     otherwise, <see langword="false" />.
+    /// </returns>
+    internal bool ApplyStructuredReasoningEffortPolicy(
+        ChatCompletionOptions options)
+    {
+        var decision = LlmCapabilityPolicyService.GetSnapshot(
+                this.capabilityScope)
+            .GetDecision(LlmCapabilityParameterName.ReasoningEffort);
+
+        if (decision.SupportState == LlmCapabilitySupportState.Supported &&
+            !decision.OmitWhenDefaultOnly)
+        {
+#pragma warning disable OPENAI001
+            return options.ReasoningEffortLevel is not null;
+#pragma warning restore OPENAI001
+        }
+
+        if (decision.SupportState == LlmCapabilitySupportState.Unsupported)
+        {
+#pragma warning disable OPENAI001
+            options.ReasoningEffortLevel = ChatReasoningEffortLevel.None;
+#pragma warning restore OPENAI001
+            return true;
+        }
+
+#pragma warning disable OPENAI001
+        options.ReasoningEffortLevel = null;
+#pragma warning restore OPENAI001
+        return false;
+    }
+
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from an
+    ///     OpenAI SDK request failure.
+    /// </summary>
+    /// <param name="exception">The provider exception associated with the request.</param>
+    private void LearnTemperatureFailure(Exception exception)
+    {
+        int? statusCode = exception is ClientResultException clientResultException
+            ? clientResultException.Status
+            : exception is HttpRequestException httpRequestException &&
+            httpRequestException.StatusCode.HasValue
+                ? (int)httpRequestException.StatusCode.Value
+                : null;
+        var responseText = exception is ClientResultException responseException
+            ? responseException.GetRawResponse()?.Content?.ToString()
+            : null;
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            statusCode,
+            responseText ?? exception.Message);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
+    }
+
+    /// <summary>
+    ///     Records exact-model reasoning-effort feedback from a structured
+    ///     OpenAI SDK request failure.
+    /// </summary>
+    /// <param name="exception">The provider exception associated with the request.</param>
+    private void LearnReasoningEffortFailure(Exception exception)
+    {
+        int? statusCode = exception is ClientResultException clientResultException
+            ? clientResultException.Status
+            : exception is HttpRequestException httpRequestException &&
+            httpRequestException.StatusCode.HasValue
+                ? (int)httpRequestException.StatusCode.Value
+                : null;
+        var responseText = exception is ClientResultException responseException
+            ? responseException.GetRawResponse()?.Content?.ToString()
+            : null;
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.ReasoningEffort,
+            statusCode,
+            responseText ?? exception.Message);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 
     private string BuildPrompt(

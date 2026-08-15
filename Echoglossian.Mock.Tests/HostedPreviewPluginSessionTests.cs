@@ -180,6 +180,7 @@ public sealed class HostedPreviewPluginSessionTests
                 TranslateYesNoScreen = true,
                 TranslateSelectOk = true,
                 TranslateSelectString = true,
+                TranslateSelectIconString = true,
             });
 
         await using var session = await HostedPreviewPluginSessionFactory.StartAsync(

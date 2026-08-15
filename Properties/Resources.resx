@@ -649,6 +649,15 @@
   <data name="Temperature" xml:space="preserve">
     <value>Temperature</value>
   </data>
+  <data name="TemperatureControlDefaultOnlyTooltip" xml:space="preserve">
+    <value>Temperature is unavailable because the selected model requires the provider default-only setting.</value>
+  </data>
+  <data name="TemperatureControlUnknownTooltip" xml:space="preserve">
+    <value>Temperature support for the selected model is unknown, so the setting is disabled and omitted from requests.</value>
+  </data>
+  <data name="TemperatureControlUnsupportedTooltip" xml:space="preserve">
+    <value>Temperature is unavailable for the selected model.</value>
+  </data>
   <data name="NoSettingsForEngine" xml:space="preserve">
     <value>No settings required for this engine</value>
   </data>

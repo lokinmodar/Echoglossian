@@ -131,7 +131,7 @@ public partial class Echoglossian
               Handler: new TalkHandler(
                   this.configuration,
                   TranslationService,
-                  this.FindAndReturnTalkMessage,
+                  this.FindAndReturnTalkMessageAsync,
                   (talkMessage, cancellationToken) =>
                       InsertTalkData(talkMessage, cancellationToken),
                   (translatedName, translatedText, originalName) =>
@@ -143,7 +143,8 @@ public partial class Echoglossian
                   () => this.ClearOverlay(this.talkOverlay, clearText: true),
                   text => this.RemoveDiacritics(
                       text,
-                      this.SpecialCharsSupportedByGameFont))));
+                      this.SpecialCharsSupportedByGameFont),
+                  this.ResolveDialogueInterlocutorHintsAsync)));
     }
 
     if (this.configuration.TranslateBattleTalk)
@@ -153,7 +154,7 @@ public partial class Echoglossian
               Handler: new BattleTalkHandler(
                   this.configuration,
                   TranslationService,
-                  this.FindAndReturnBattleTalkMessage,
+                  this.FindAndReturnBattleTalkMessageAsync,
                   (battleTalkMessage, cancellationToken) =>
                       InsertBattleTalkDataAsync(
                           battleTalkMessage,
@@ -169,7 +170,8 @@ public partial class Echoglossian
                       clearText: true),
                   text => this.RemoveDiacritics(
                       text,
-                      this.SpecialCharsSupportedByGameFont))));
+                      this.SpecialCharsSupportedByGameFont),
+                  this.ResolveDialogueInterlocutorHintsAsync)));
     }
 
     if (this.configuration.TranslateTalkSubtitle)
@@ -628,6 +630,54 @@ public partial class Echoglossian
       //   "_BattleTalk",
       //   lifecycleLogEventsWithoutUpdatesAndDraws);
 
+  }
+
+  /// <summary>
+  ///     Projects resolver output onto the smaller per-request dialogue hint
+  ///     contract without retaining live actor snapshots in translation state.
+  /// </summary>
+  /// <param name="metadata">The resolved quest and live interlocutor metadata.</param>
+  /// <returns>The hints applicable to the current dialogue translation request.</returns>
+  private static DialogueInterlocutorHints CreateDialogueInterlocutorHints(
+      DialogueInterlocutorMetadata? metadata)
+  {
+    return metadata == null
+        ? default
+        : new DialogueInterlocutorHints(
+            metadata.SpeakerRoleHint,
+            metadata.SpeakerGenderHint,
+            metadata.AddresseeHint,
+            metadata.AddresseeRoleHint,
+            metadata.AddresseeGenderHint,
+            metadata.Provenance,
+            metadata.ConfidenceTier);
+  }
+
+  /// <summary>
+  ///     Resolves current dialogue hints through the owned handler operation
+  ///     instead of the native callback that queued it.
+  /// </summary>
+  /// <param name="originalName">The visible dialogue speaker name.</param>
+  /// <param name="originalText">The visible dialogue source text.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="cancellationToken">The handler-owned cancellation token.</param>
+  /// <returns>The resolved hints for the current dialogue request.</returns>
+  private async Task<DialogueInterlocutorHints> ResolveDialogueInterlocutorHintsAsync(
+      string originalName,
+      string originalText,
+      SourceClientLanguage sourceLanguage,
+      CancellationToken cancellationToken)
+  {
+    var resolver = new DialogueInterlocutorMetadataResolver(this);
+    var metadata = await resolver.ResolveAsync(
+        new DialogueInterlocutorMetadataRequest(
+            originalText,
+            originalName,
+            sourceLanguage.PersistenceCode,
+            GetGameVersion() ?? string.Empty,
+            AcceptedQuestDialogueMetadataDerivationVersion),
+        cancellationToken).ConfigureAwait(false);
+    return CreateDialogueInterlocutorHints(metadata);
   }
 }
 

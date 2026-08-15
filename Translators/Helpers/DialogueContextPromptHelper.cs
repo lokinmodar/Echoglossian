@@ -14,17 +14,75 @@ namespace Echoglossian.Translators.Helpers;
 public static class DialogueContextPromptHelper
 {
     /// <summary>
-    ///     Returns whether the provided dialogue context has prior turns that
-    ///     can materially influence a translation request.
+    ///     Returns whether the provided captured dialogue context can
+    ///     materially influence a translation request.
     /// </summary>
     /// <param name="dialogueContext">The dialogue context to inspect.</param>
     /// <returns>
-    ///     <see langword="true" /> when prior turns are available;
+    ///     <see langword="true" /> when captured dialogue context is available;
     ///     otherwise <see langword="false" />.
     /// </returns>
     public static bool HasUsableDialogueContext(DialogueTranslationContext dialogueContext)
     {
-        return dialogueContext.PriorTurns.Count > 0;
+        return true;
+    }
+
+    /// <summary>
+    ///     Returns whether the captured context contains any actual speaker,
+    ///     hint, or history metadata beyond a bare dialogue session identity.
+    /// </summary>
+    /// <param name="dialogueContext">The dialogue context to inspect.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the context carries speaker, hint, or
+    ///     history metadata; otherwise <see langword="false" />.
+    /// </returns>
+    public static bool HasMaterialDialogueMetadata(DialogueTranslationContext dialogueContext)
+    {
+        return !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName) ||
+               dialogueContext.PriorTurns.Count > 0 ||
+               !string.IsNullOrWhiteSpace(dialogueContext.SpeakerRoleHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.SpeakerGenderHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.AddresseeRoleHint) ||
+               !string.IsNullOrWhiteSpace(dialogueContext.AddresseeGenderHint);
+    }
+
+    /// <summary>
+    ///     Builds a non-sensitive one-line diagnostic summary for the captured
+    ///     dialogue context without logging speaker names, addressee names, or
+    ///     prior dialogue text.
+    /// </summary>
+    /// <param name="dialogueContext">The dialogue context to summarize.</param>
+    /// <returns>The diagnostic summary line content.</returns>
+    public static string SummarizeDialogueContextForDiagnostics(DialogueTranslationContext dialogueContext)
+    {
+        var summaryValues = new List<string>
+        {
+            "dialogueContext=supplied",
+            $"metadata={(HasMaterialDialogueMetadata(dialogueContext) ? "populated" : "session-only")}",
+            $"sessionNamespace={dialogueContext.SessionNamespace}",
+            $"priorTurns={dialogueContext.PriorTurns.Count}",
+            $"speaker={FormatPresence(dialogueContext.SpeakerName)}",
+            $"speakerRole={FormatPresence(dialogueContext.SpeakerRoleHint)}",
+            $"speakerGender={FormatPresence(dialogueContext.SpeakerGenderHint)}",
+            $"addressee={FormatPresence(dialogueContext.AddresseeHint)}",
+            $"addresseeRole={FormatPresence(dialogueContext.AddresseeRoleHint)}",
+            $"addresseeGender={FormatPresence(dialogueContext.AddresseeGenderHint)}",
+        };
+
+        if (!string.IsNullOrWhiteSpace(dialogueContext.MetadataProvenance))
+        {
+            summaryValues.Add(
+                $"metadataProvenance={dialogueContext.MetadataProvenance}");
+        }
+
+        if (dialogueContext.MetadataConfidenceTier.HasValue)
+        {
+            summaryValues.Add(
+                $"metadataConfidenceTier={dialogueContext.MetadataConfidenceTier.Value}");
+        }
+
+        return string.Join(", ", summaryValues);
     }
 
     /// <summary>
@@ -42,29 +100,43 @@ public static class DialogueContextPromptHelper
         string targetLanguage,
         DialogueTranslationContext dialogueContext)
     {
-        return JsonConvert.SerializeObject(new
+        var cacheKeyValues = new Dictionary<string, object?>
         {
-            Scope = "dialogue",
-            dialogueContext.SessionNamespace,
-            dialogueContext.SessionKey,
-            Text = text,
-            SourceLanguage = sourceLanguage,
-            TargetLanguage = targetLanguage,
-            PriorTurns = dialogueContext.PriorTurns.Select(turn => new
+            ["Scope"] = "dialogue",
+            ["SessionNamespace"] = dialogueContext.SessionNamespace,
+            ["SessionKey"] = dialogueContext.SessionKey,
+            ["CurrentSpeaker"] = dialogueContext.SpeakerName,
+            ["Text"] = text,
+            ["SourceLanguage"] = sourceLanguage,
+            ["TargetLanguage"] = targetLanguage,
+            ["PriorTurns"] = dialogueContext.PriorTurns.Select(turn => new
             {
                 turn.SpeakerName,
                 turn.SourceText,
             }),
-        });
+        };
+        AddNonEmptyCacheValue(cacheKeyValues, "SpeakerRoleHint", dialogueContext.SpeakerRoleHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "SpeakerGenderHint", dialogueContext.SpeakerGenderHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "AddresseeHint", dialogueContext.AddresseeHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "AddresseeRoleHint", dialogueContext.AddresseeRoleHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "AddresseeGenderHint", dialogueContext.AddresseeGenderHint);
+        AddNonEmptyCacheValue(cacheKeyValues, "MetadataProvenance", dialogueContext.MetadataProvenance);
+        if (dialogueContext.MetadataConfidenceTier.HasValue)
+        {
+            cacheKeyValues["MetadataConfidenceTier"] = dialogueContext.MetadataConfidenceTier.Value;
+        }
+
+        return JsonConvert.SerializeObject(cacheKeyValues);
     }
 
     /// <summary>
-    ///     Appends bounded prior dialogue turns to an already-rendered prompt.
+    ///     Appends captured dialogue metadata and bounded prior dialogue turns
+    ///     to an already-rendered prompt.
     /// </summary>
     /// <param name="prompt">The already-rendered prompt for the current text.</param>
     /// <param name="dialogueContext">The dialogue context to append.</param>
     /// <param name="sanitizeText">A text sanitizer used on prior turns.</param>
-    /// <returns>The prompt, optionally enriched with prior-turn context.</returns>
+    /// <returns>The prompt, optionally enriched with dialogue context.</returns>
     public static string AppendDialogueContext(
         string prompt,
         DialogueTranslationContext dialogueContext,
@@ -75,13 +147,44 @@ public static class DialogueContextPromptHelper
             return prompt;
         }
 
-        string priorTurns = string.Join(
-            Environment.NewLine,
-            dialogueContext.PriorTurns.Select(
-                (turn, index) =>
-                    $"[{index + 1}] {turn.SpeakerName}: {sanitizeText(turn.SourceText)}"));
+        var contextLines = new List<string>();
+        AddNonEmptyPromptLine(contextLines, "Current speaker", dialogueContext.SpeakerName);
+        AddNonEmptyPromptLine(contextLines, "Speaker role", dialogueContext.SpeakerRoleHint);
+        AddNonEmptyPromptLine(contextLines, "Speaker gender", dialogueContext.SpeakerGenderHint);
+        AddNonEmptyPromptLine(contextLines, "Addressee", dialogueContext.AddresseeHint);
+        AddNonEmptyPromptLine(contextLines, "Addressee role", dialogueContext.AddresseeRoleHint);
+        AddNonEmptyPromptLine(contextLines, "Addressee gender", dialogueContext.AddresseeGenderHint);
+        contextLines.AddRange(dialogueContext.PriorTurns.Select(
+            (turn, index) => $"[{index + 1}] {turn.SpeakerName}: {sanitizeText(turn.SourceText)}"));
 
         return
-            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}Current speaker: {dialogueContext.SpeakerName}{Environment.NewLine}{priorTurns}";
+            $"{prompt}{Environment.NewLine}{Environment.NewLine}Previous dialogue context for translation consistency only (translate only the current text, not the history):{Environment.NewLine}{string.Join(Environment.NewLine, contextLines)}";
+    }
+
+    private static void AddNonEmptyCacheValue(
+        IDictionary<string, object?> values,
+        string key,
+        string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            values[key] = value;
+        }
+    }
+
+    private static void AddNonEmptyPromptLine(
+        ICollection<string> lines,
+        string label,
+        string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            lines.Add($"{label}: {value}");
+        }
+    }
+
+    private static string FormatPresence(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "false" : "true";
     }
 }

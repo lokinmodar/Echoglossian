@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Translators.OpenAI;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators.Claude;
 
@@ -122,6 +123,13 @@ public static class ClaudeModelManager
             {
                 CurrentModelList = ordered;
             }
+
+            LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
+                Echoglossian.TransEngines.Claude,
+                "Anthropic",
+                baseUrl,
+                ordered.Select(static model => model.Id).ToArray(),
+                DateTime.UtcNow);
         }
         catch
         {

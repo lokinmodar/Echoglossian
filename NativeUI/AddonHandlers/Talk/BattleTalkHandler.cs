@@ -12,7 +12,11 @@ namespace Echoglossian.NativeUI.AddonHandlers.Talk;
 ///     This includes live text capture from the visible addon, translation lookup,
 ///     async translation, overlay updates, and optional native text replacement.
 /// </summary>
-public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialogueRetranslationHandler
+public sealed class BattleTalkHandler :
+    IAddonTranslationHandler,
+    IVisibleDialogueRetranslationHandler,
+    IPluginUnloadAwareAddonHandler,
+    IDisposable
 {
   private static readonly TimeSpan DialogueSessionTtl = TimeSpan.FromSeconds(30);
   private const string BattleTalkAddonName = "_BattleTalk";
@@ -27,9 +31,15 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   private readonly Action clearOverlay;
   private readonly Config config;
   private readonly Dictionary<AddonEvent, List<LocalAddonHandlerDelegate>> eventHandlers = new();
-  private readonly Func<BattleTalkMessage, BattleTalkMessage?> findBattleTalkMessage;
+  private readonly Func<BattleTalkMessage, CancellationToken, Task<BattleTalkMessage?>>
+      findBattleTalkMessageAsync;
   private readonly Func<BattleTalkMessage, CancellationToken, Task<string>> insertBattleTalkMessageAsync;
   private readonly Func<string, string> normalizeReplacementText;
+  private readonly Func<string, string, SourceClientLanguage, CancellationToken,
+      Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync;
+  private readonly OwnedAsyncOperationSet ownedOperations = new(
+      exception => PluginRuntimeLog.Error(
+          $"[{BattleTalkAddonName}] Unexpected BattleTalk background operation error: {exception}"));
   private readonly SourcePublicationLifecycle sourceLifecycle = new();
   private readonly object stateGate = new();
   private readonly TranslationService translationService;
@@ -64,7 +74,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
   /// <param name="translationService">The translation service used by the plugin.</param>
-  /// <param name="findBattleTalkMessage">
+  /// <param name="findBattleTalkMessageAsync">
   ///     Delegate used to look up previously translated BattleTalk messages.
   /// </param>
   /// <param name="insertBattleTalkMessageAsync">
@@ -80,22 +90,29 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// <param name="normalizeReplacementText">
   ///     Delegate used to normalize translated text before native replacement.
   /// </param>
+  /// <param name="resolveInterlocutorHintsAsync">
+  ///     Delegate used to resolve current-line interlocutor hints after a database miss.
+  /// </param>
   public BattleTalkHandler(
       Config config,
       TranslationService translationService,
-      Func<BattleTalkMessage, BattleTalkMessage?> findBattleTalkMessage,
+      Func<BattleTalkMessage, CancellationToken, Task<BattleTalkMessage?>>
+          findBattleTalkMessageAsync,
       Func<BattleTalkMessage, Task<string>> insertBattleTalkMessageAsync,
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
-      Func<string, string> normalizeReplacementText)
+      Func<string, string> normalizeReplacementText,
+      Func<string, string, SourceClientLanguage, CancellationToken,
+          Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync)
     : this(
         config,
         translationService,
-        findBattleTalkMessage,
+        findBattleTalkMessageAsync,
         (message, _) => insertBattleTalkMessageAsync(message),
         updateOverlay,
         clearOverlay,
-        normalizeReplacementText)
+        normalizeReplacementText,
+        resolveInterlocutorHintsAsync)
   {
   }
 
@@ -105,27 +122,34 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// </summary>
   /// <param name="config">The active plugin configuration.</param>
   /// <param name="translationService">The shared translation service.</param>
-  /// <param name="findBattleTalkMessage">The canonical BattleTalk lookup.</param>
+  /// <param name="findBattleTalkMessageAsync">The canonical asynchronous BattleTalk lookup.</param>
   /// <param name="insertBattleTalkMessageAsync">The cancellation-aware persistence delegate.</param>
   /// <param name="updateOverlay">The overlay publication callback.</param>
   /// <param name="clearOverlay">The overlay clear callback.</param>
   /// <param name="normalizeReplacementText">The native replacement normalizer.</param>
+  /// <param name="resolveInterlocutorHintsAsync">
+  ///     The asynchronous current-line interlocutor hint resolver.
+  /// </param>
   internal BattleTalkHandler(
       Config config,
       TranslationService translationService,
-      Func<BattleTalkMessage, BattleTalkMessage?> findBattleTalkMessage,
+      Func<BattleTalkMessage, CancellationToken, Task<BattleTalkMessage?>>
+          findBattleTalkMessageAsync,
       Func<BattleTalkMessage, CancellationToken, Task<string>> insertBattleTalkMessageAsync,
       Action<string, string, string> updateOverlay,
       Action clearOverlay,
-      Func<string, string> normalizeReplacementText)
+      Func<string, string> normalizeReplacementText,
+      Func<string, string, SourceClientLanguage, CancellationToken,
+          Task<DialogueInterlocutorHints>> resolveInterlocutorHintsAsync)
   {
     this.config = config;
     this.translationService = translationService;
-    this.findBattleTalkMessage = findBattleTalkMessage;
+    this.findBattleTalkMessageAsync = findBattleTalkMessageAsync;
     this.insertBattleTalkMessageAsync = insertBattleTalkMessageAsync;
     this.updateOverlay = updateOverlay;
     this.clearOverlay = clearOverlay;
     this.normalizeReplacementText = normalizeReplacementText;
+    this.resolveInterlocutorHintsAsync = resolveInterlocutorHintsAsync;
 
     this.RegisterHandler(AddonEvent.PreShow, this.OnCaptureHint);
     this.RegisterHandler(AddonEvent.PreRefresh, this.OnCaptureHint);
@@ -152,6 +176,19 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             handler(evt, args);
           }
         }));
+  }
+
+  /// <inheritdoc />
+  public void OnPluginUnload()
+  {
+    this.InvalidateStateForSource(null);
+    this.ownedOperations.Dispose();
+  }
+
+  /// <inheritdoc />
+  public void Dispose()
+  {
+    this.OnPluginUnload();
   }
 
   /// <inheritdoc />
@@ -219,6 +256,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           operationScope.TargetLanguageCode,
           TranslationSurfaceGroup.Dialogue,
           translatorResolution,
+          sourceOperation.CancellationToken,
           originContext: "BattleTalk/Text").ConfigureAwait(false);
       var translatedName = this.ShouldTranslateBattleTalkNpcNames() &&
                            !originalName.IsNullOrEmpty()
@@ -228,6 +266,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
               operationScope.TargetLanguageCode,
               TranslationSurfaceGroup.Dialogue,
               translatorResolution,
+              sourceOperation.CancellationToken,
               originContext: "BattleTalk/Speaker").ConfigureAwait(false)
           : string.Empty;
       var dialogueTranslationEngine = operationScope.TranslationEngine
@@ -515,20 +554,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       this.ShowPendingSwapOverlayIfNeeded(originalName, originalText);
     }
 
-    if (this.TryQueueTranslation(
-            originalName,
-            originalText,
-            sourceLanguage,
-            out var requestId,
-            out var sourceOperation))
-    {
-      Task.Run(() => this.ResolveTranslationAsync(
-          originalName,
-          originalText,
-          requestId,
-          sourceLanguage,
-          sourceOperation));
-    }
+    this.TryQueueTranslation(originalName, originalText, sourceLanguage);
   }
 
   /// <summary>
@@ -555,9 +581,11 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       scheduledGeneration = ++this.hideResetGeneration;
     }
 
-    _ = Task.Run(async () =>
+    this.ownedOperations.Run(async operationToken =>
     {
-      await Task.Delay(HideResetDelayMilliseconds).ConfigureAwait(false);
+      await Task.Delay(
+          HideResetDelayMilliseconds,
+          operationToken).ConfigureAwait(false);
 
       lock (this.stateGate)
       {
@@ -607,7 +635,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   ///     The operation-captured source, or no value when source resolution
   ///     failed.
   /// </param>
-  private void InvalidateStateForSource(
+  internal void InvalidateStateForSource(
       SourceClientLanguage? sourceLanguage)
   {
     this.sourceLifecycle.TransitionTo(
@@ -979,16 +1007,19 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   /// </param>
   /// <param name="sourceLanguage">The resolved source language.</param>
   /// <param name="sourceOperation">The source generation captured when queued.</param>
+  /// <param name="operationToken">The token owned by the queued operation.</param>
   /// <returns>A task that completes when the translation state has been updated.</returns>
-  private async Task ResolveTranslationAsync(
+  internal async Task ResolveTranslationAsync(
       string originalName,
       string originalText,
       int requestId,
       SourceClientLanguage sourceLanguage,
-      SourcePublicationOperation sourceOperation)
+      SourcePublicationOperation sourceOperation,
+      CancellationToken operationToken)
   {
     try
     {
+      operationToken.ThrowIfCancellationRequested();
       var operationScope = sourceOperation.Scope ??
                            this.CreateDialogueReuseScope(sourceLanguage);
       var translatorResolution = this.translationService
@@ -1000,7 +1031,15 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
           originalText,
           sourceLanguage,
           operationScope);
-      var foundBattleTalkMessage = this.findBattleTalkMessage(lookup);
+      var foundBattleTalkMessage = await this.findBattleTalkMessageAsync(
+          lookup,
+          operationToken).ConfigureAwait(false);
+
+      if (!this.sourceLifecycle.IsCurrent(sourceOperation) ||
+          !this.IsCurrentRequest(requestId, sourceLanguage))
+      {
+        return;
+      }
 
       string translatedName;
       string translatedText;
@@ -1023,6 +1062,17 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       }
       else
       {
+        var interlocutorHints = await this.ResolveInterlocutorHintsOrDefaultAsync(
+            originalName,
+            originalText,
+            sourceLanguage,
+            operationToken).ConfigureAwait(false);
+        if (!this.sourceLifecycle.IsCurrent(sourceOperation) ||
+            !this.IsCurrentRequest(requestId, sourceLanguage))
+        {
+          return;
+        }
+
         var dialogueContext = DialogueTranslationSessionStore.BuildContext(
             BattleTalkAddonName,
             this.BuildDialogueSessionKey(
@@ -1032,7 +1082,8 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             originalName,
             originalText,
             DialogueSessionHistoryLimit,
-            DialogueSessionTtl);
+            DialogueSessionTtl,
+            interlocutorHints: interlocutorHints);
         var usesRuntimeOnlyDialogueContext =
             this.translationService.WillUseDialogueContext(
                 dialogueContext,
@@ -1046,7 +1097,14 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             dialogueContext,
             TranslationSurfaceGroup.Dialogue,
             translatorResolution,
+            operationToken,
             originContext: "BattleTalk/Text").ConfigureAwait(false);
+
+        if (!this.sourceLifecycle.IsCurrent(sourceOperation) ||
+            !this.IsCurrentRequest(requestId, sourceLanguage))
+        {
+          return;
+        }
 
         translatedName = string.Empty;
         if (this.ShouldTranslateBattleTalkNpcNames() && !originalName.IsNullOrEmpty())
@@ -1059,13 +1117,20 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
                 operationScope.TargetLanguageCode,
                 TranslationSurfaceGroup.Dialogue,
                 translatorResolution,
+                operationToken,
                 originContext: "BattleTalk/Speaker").ConfigureAwait(false);
           }
-          catch (Exception ex)
+          catch (Exception ex) when (ex is not OperationCanceledException)
           {
             PluginRuntimeLog.Warning(
                 $"[{BattleTalkAddonName}] Speaker name translation failed; continuing with translated text. {ex.Message}");
           }
+        }
+
+        if (!this.sourceLifecycle.IsCurrent(sourceOperation) ||
+            !this.IsCurrentRequest(requestId, sourceLanguage))
+        {
+          return;
         }
 
         if (!usesRuntimeOnlyDialogueContext &&
@@ -1086,7 +1151,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
           await this.insertBattleTalkMessageAsync(
               translatedBattleTalkData,
-              sourceOperation.CancellationToken);
+              operationToken).ConfigureAwait(false);
           provenance = VisibleStorySurfaceProvenanceKind.FreshLiveTranslation;
         }
         else if (!usesRuntimeOnlyDialogueContext)
@@ -1099,6 +1164,13 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
               VisibleStorySurfaceProvenanceKind
                   .FreshLiveTranslationRuntimeOnlyDialogueContext;
         }
+      }
+
+      operationToken.ThrowIfCancellationRequested();
+      if (!this.sourceLifecycle.IsCurrent(sourceOperation) ||
+          !this.IsCurrentRequest(requestId, sourceLanguage))
+      {
+        return;
       }
 
       this.sourceLifecycle.TryPublish(
@@ -1168,6 +1240,16 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
             }
           });
     }
+    catch (OperationCanceledException) when (operationToken.IsCancellationRequested)
+    {
+      lock (this.stateGate)
+      {
+        if (requestId == this.activeRequestId)
+        {
+          this.translationInFlight = false;
+        }
+      }
+    }
     catch (Exception ex)
     {
       lock (this.stateGate)
@@ -1183,6 +1265,38 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
       PluginRuntimeLog.Error(
           $"[{BattleTalkAddonName}] Error resolving BattleTalk translation: {ex}");
+    }
+  }
+
+  /// <summary>
+  ///     Resolves optional BattleTalk metadata without allowing auxiliary
+  ///     failures to abort the dialogue translation.
+  /// </summary>
+  /// <param name="originalName">The original visible speaker name.</param>
+  /// <param name="originalText">The original visible dialogue text.</param>
+  /// <param name="sourceLanguage">The captured source language.</param>
+  /// <param name="cancellationToken">The token that cancels the current source operation.</param>
+  /// <returns>The resolved hints, or an empty hint set after an auxiliary failure.</returns>
+  private async Task<DialogueInterlocutorHints> ResolveInterlocutorHintsOrDefaultAsync(
+      string originalName,
+      string originalText,
+      SourceClientLanguage sourceLanguage,
+      CancellationToken cancellationToken)
+  {
+    try
+    {
+      return await this.resolveInterlocutorHintsAsync(
+          originalName,
+          originalText,
+          sourceLanguage,
+          cancellationToken).ConfigureAwait(false);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      PluginRuntimeLog.Debug(
+          BattleTalkAddonName,
+          $"Interlocutor metadata resolution failed; continuing without hints. {exception.GetType().Name}: {exception.Message}");
+      return default;
     }
   }
 
@@ -1216,6 +1330,68 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
     return !string.IsNullOrWhiteSpace(
         battleTalkMessage.TranslatedBattleTalkMessage);
+  }
+
+  /// <summary>
+  ///     Gets a value indicating whether the current BattleTalk line has
+  ///     unresolved background translation work.
+  /// </summary>
+  internal bool IsTranslationInFlight
+  {
+    get
+    {
+      lock (this.stateGate)
+      {
+        return this.translationInFlight;
+      }
+    }
+  }
+
+  /// <summary>
+  ///     Returns the active resolved BattleTalk translation currently held by
+  ///     the handler state.
+  /// </summary>
+  /// <param name="sourceLanguage">The source language expected by the caller.</param>
+  /// <param name="translatedName">Receives the translated sender name.</param>
+  /// <param name="translatedText">Receives the translated BattleTalk text.</param>
+  /// <param name="replacementName">
+  ///     Receives the sender name already normalized for native replacement.
+  /// </param>
+  /// <param name="replacementText">
+  ///     Receives the BattleTalk text already normalized for native replacement.
+  /// </param>
+  /// <returns>
+  ///     <see langword="true" /> when the handler already has a translated
+  ///     BattleTalk line ready for native replacement; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  internal bool TryGetCurrentResolvedTranslation(
+      SourceClientLanguage sourceLanguage,
+      out string translatedName,
+      out string translatedText,
+      out string replacementName,
+      out string replacementText)
+  {
+    lock (this.stateGate)
+    {
+      if (NativeRuntimeSourceScope.MatchesSource(
+              this.currentSourceLanguageCode,
+              sourceLanguage) &&
+          !string.IsNullOrWhiteSpace(this.currentTranslatedText))
+      {
+        translatedName = this.currentTranslatedName;
+        translatedText = this.currentTranslatedText;
+        replacementName = this.currentReplacementName;
+        replacementText = this.currentReplacementText;
+        return true;
+      }
+    }
+
+    translatedName = string.Empty;
+    translatedText = string.Empty;
+    replacementName = string.Empty;
+    replacementText = string.Empty;
+    return false;
   }
 
   /// <summary>
@@ -1304,6 +1480,55 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   }
 
   /// <summary>
+  ///     Captures one BattleTalk line and starts its handler-owned asynchronous
+  ///     resolution without waiting for persistent lookup to complete.
+  /// </summary>
+  /// <param name="originalName">The source sender name.</param>
+  /// <param name="originalText">The source BattleTalk text.</param>
+  /// <param name="sourceLanguage">The resolved source language.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the operation was queued; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  internal bool TryQueueTranslation(
+      string originalName,
+      string originalText,
+      SourceClientLanguage sourceLanguage)
+  {
+    if (!this.TryQueueTranslation(
+            originalName,
+            originalText,
+            sourceLanguage,
+            out var requestId,
+            out var sourceOperation))
+    {
+      return false;
+    }
+
+    var accepted = this.ownedOperations.Run(
+        operationToken => this.ResolveTranslationAsync(
+            originalName,
+            originalText,
+            requestId,
+            sourceLanguage,
+            sourceOperation,
+            operationToken),
+        sourceOperation.CancellationToken);
+    if (!accepted)
+    {
+      lock (this.stateGate)
+      {
+        if (requestId == this.activeRequestId)
+        {
+          this.translationInFlight = false;
+        }
+      }
+    }
+
+    return accepted;
+  }
+
+  /// <summary>
   ///     Starts a new translation request when the BattleTalk source changes or
   ///     when the current source still has no cached translation available.
   /// </summary>
@@ -1319,7 +1544,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
   ///     <see langword="true" /> when a new translation task should be queued;
   ///     otherwise, <see langword="false" />.
   /// </returns>
-  private bool TryQueueTranslation(
+  internal bool TryQueueTranslation(
       string originalName,
       string originalText,
       SourceClientLanguage sourceLanguage,
@@ -1437,20 +1662,7 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
 
     this.ShowPendingSwapOverlayIfNeeded(originalName, originalText);
 
-    if (this.TryQueueTranslation(
-            originalName,
-            originalText,
-            sourceLanguage,
-            out var requestId,
-            out var sourceOperation))
-    {
-      Task.Run(() => this.ResolveTranslationAsync(
-          originalName,
-          originalText,
-          requestId,
-          sourceLanguage,
-          sourceOperation));
-    }
+    this.TryQueueTranslation(originalName, originalText, sourceLanguage);
   }
 
   /// <summary>
@@ -1977,6 +2189,29 @@ public sealed class BattleTalkHandler : IAddonTranslationHandler, IVisibleDialog
       this.nativeLayoutOriginalText = originalText;
       this.nativeLayoutReplacementName = replacementName;
       this.nativeLayoutReplacementText = replacementText;
+    }
+  }
+
+  /// <summary>
+  ///     Determines whether one request still owns the active BattleTalk
+  ///     managed state for the supplied source language.
+  /// </summary>
+  /// <param name="requestId">The captured request identifier.</param>
+  /// <param name="sourceLanguage">The captured source language.</param>
+  /// <returns>
+  ///     <see langword="true" /> when the request remains current; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool IsCurrentRequest(
+      int requestId,
+      SourceClientLanguage sourceLanguage)
+  {
+    lock (this.stateGate)
+    {
+      return requestId == this.activeRequestId &&
+             NativeRuntimeSourceScope.MatchesSource(
+                 this.currentSourceLanguageCode,
+                 sourceLanguage);
     }
   }
 }

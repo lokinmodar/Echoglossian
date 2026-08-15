@@ -20,6 +20,21 @@ namespace Echoglossian;
 internal static class QuestContentHash
 {
     /// <summary>
+    ///     Computes the stable fingerprint for one exact quest text row.
+    /// </summary>
+    /// <param name="sourceRowKey">The canonical quest text row key.</param>
+    /// <param name="sourceText">The evaluated source text.</param>
+    /// <returns>A 16-character lowercase hex string fingerprint.</returns>
+    public static string ComputeLine(string sourceRowKey, string sourceText)
+    {
+        var input = $"{sourceRowKey}={sourceText}";
+        var inputBytes = Encoding.UTF8.GetBytes(input);
+        var hashBytes = SHA256.HashData(inputBytes);
+
+        return Convert.ToHexString(hashBytes, 0, 8).ToLowerInvariant();
+    }
+
+    /// <summary>
     ///     Computes the content hash from classified quest text rows.
     /// </summary>
     /// <param name="seqRows">SEQ (journal summary) rows.</param>

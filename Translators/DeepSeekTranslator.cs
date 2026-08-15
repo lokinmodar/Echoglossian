@@ -5,11 +5,13 @@
 
 using Echoglossian.Translators.Helpers;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian.Translators;
 
 public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
 {
+    private readonly LlmCapabilityScope capabilityScope;
     private readonly string apiKey;
     private readonly string baseUrl;
     private readonly HttpClient? httpClient;
@@ -29,6 +31,11 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
         this.baseUrl = config.DeepSeekBaseUrl ?? "https://api.deepseek.com/v1";
         this.apiKey = config.DeepSeekTranslatorApiKey ?? string.Empty;
         this.model = config.DeepSeekModel ?? "deepseek-chat";
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.DeepSeek,
+            "DeepSeek",
+            this.baseUrl,
+            this.model);
         this.temperature = config.DeepSeekTemperature;
         this.promptTemplate = string.IsNullOrWhiteSpace(config.DeepSeekPrompt)
             ? PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.DeepSeek)
@@ -53,7 +60,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
 
                 this.httpClient = new HttpClient
                 {
-                    BaseAddress = new Uri(this.baseUrl),
+                    BaseAddress = new Uri(this.baseUrl.TrimEnd('/') + "/"),
                 };
                 this.httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", this.apiKey);
@@ -188,10 +195,10 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
 
         try
         {
-            var requestData = new
+            var requestData = new Dictionary<string, object>
             {
-                this.model,
-                messages = new[]
+                ["model"] = this.model,
+                ["messages"] = new[]
                 {
                     new
                     {
@@ -199,8 +206,11 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         content = prompt,
                     },
                 },
-                this.temperature,
             };
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                requestData,
+                this.capabilityScope,
+                this.temperature);
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
             var httpContent = new StringContent(
@@ -211,6 +221,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             var response = await this.httpClient.PostAsync(
                 "chat/completions",
                 httpContent);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseString = await response.Content.ReadAsStringAsync();
@@ -287,6 +298,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -306,10 +318,10 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         sourceLanguage,
                         targetLanguage),
                     structuredRequest);
-            var requestData = new
+            var requestData = new Dictionary<string, object>
             {
-                this.model,
-                messages = new[]
+                ["model"] = this.model,
+                ["messages"] = new[]
                 {
                     new
                     {
@@ -317,8 +329,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         content = structuredPrompt,
                     },
                 },
-                this.temperature,
-                tools = new[]
+                ["tools"] = new[]
                 {
                     new
                     {
@@ -333,7 +344,7 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                         },
                     },
                 },
-                tool_choice = new
+                ["tool_choice"] = new
                 {
                     type = "function",
                     function = new
@@ -342,6 +353,26 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                requestData,
+                this.capabilityScope,
+                this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
 
             var jsonContent = JsonConvert.SerializeObject(requestData);
             var httpContent = new StringContent(
@@ -349,9 +380,27 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 Encoding.UTF8,
                 "application/json");
 
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "chat/completions",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
+
             var response = await this.httpClient!.PostAsync(
                 "chat/completions",
                 httpContent).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseString =
@@ -375,7 +424,18 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                     "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"DeepSeek structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "DeepSeek",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "chat/completions",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -390,6 +450,17 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "chat/completions",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload.Length,
+                        translatedText.Length,
+                        rawStructuredPayload,
+                        translatedText));
                 return translatedText;
             }
 
@@ -398,6 +469,19 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "DeepSeek",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "chat/completions",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)
@@ -409,7 +493,21 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
                 ex.Message);
             PluginRuntimeLog.Debug(
                 this.pluginLog,
-                $"DeepSeek structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "DeepSeek",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "chat/completions",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }
@@ -435,5 +533,31 @@ public class DeepSeekTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed DeepSeek request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 }

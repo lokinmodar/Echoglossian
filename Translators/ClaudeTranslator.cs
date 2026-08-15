@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -13,6 +14,7 @@ namespace Echoglossian.Translators;
 /// </summary>
 public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
 {
+    private readonly LlmCapabilityScope capabilityScope;
     private const string AnthropicVersion = "2023-06-01";
     private const string DefaultBaseUrl = "https://api.anthropic.com";
     private const string DefaultModel = "claude-sonnet-4-20250514";
@@ -42,6 +44,11 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
         this.model = string.IsNullOrWhiteSpace(config.ClaudeModel)
             ? DefaultModel
             : config.ClaudeModel;
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.Claude,
+            "Anthropic",
+            this.baseUrl,
+            this.model);
         this.temperature = config.ClaudeTemperature;
         this.promptTemplate = string.IsNullOrWhiteSpace(config.ClaudePrompt)
             ? PromptTemplateManager.DefaultPrompt
@@ -180,12 +187,11 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             targetLanguage,
             dialogueContext);
 
-        var requestData = new
+        var requestData = new Dictionary<string, object>
         {
-            model = this.model,
-            max_tokens = MaxOutputTokens,
-            temperature = this.temperature,
-            messages = new[]
+            ["model"] = this.model,
+            ["max_tokens"] = MaxOutputTokens,
+            ["messages"] = new[]
             {
                 new
                 {
@@ -194,6 +200,10 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 },
             },
         };
+        var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+            requestData,
+            this.capabilityScope,
+            this.temperature);
 
         try
         {
@@ -206,6 +216,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             using HttpResponseMessage response = await this.httpClient.PostAsync(
                 "v1/messages",
                 httpContent).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             string responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -282,6 +293,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 sourceLanguage,
                 targetLanguage);
         bool usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             string normalizedText = FixText(text);
@@ -302,12 +314,11 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                     basePrompt,
                     structuredRequest);
 
-            var requestData = new
+            var requestData = new Dictionary<string, object>
             {
-                model = this.model,
-                max_tokens = MaxOutputTokens,
-                temperature = this.temperature,
-                messages = new[]
+                ["model"] = this.model,
+                ["max_tokens"] = MaxOutputTokens,
+                ["messages"] = new[]
                 {
                     new
                     {
@@ -315,7 +326,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                         content = structuredPrompt,
                     },
                 },
-                tools = new[]
+                ["tools"] = new[]
                 {
                     new
                     {
@@ -325,12 +336,32 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                             StructuredDialogueAnthropicToolHelper.BuildInputSchemaJson()),
                     },
                 },
-                tool_choice = new
+                ["tool_choice"] = new
                 {
                     type = "tool",
                     name = StructuredDialogueAnthropicToolHelper.ToolName,
                 },
             };
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                requestData,
+                this.capabilityScope,
+                this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
 
             string jsonContent = JsonConvert.SerializeObject(requestData);
             using StringContent httpContent = new(
@@ -338,9 +369,27 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 Encoding.UTF8,
                 "application/json");
 
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "v1/messages",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
+
             using HttpResponseMessage response = await this.httpClient!.PostAsync(
                 "v1/messages",
                 httpContent).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             string responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -363,7 +412,18 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                     "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"Claude structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        this.capabilityScope.ProviderScope,
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "v1/messages",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -376,6 +436,17 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                     true,
                     usedGlossary);
                 this.translationCache.Remember(cacheKey, translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "v1/messages",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload?.Length ?? 0,
+                        translatedText.Length,
+                        rawStructuredPayload ?? string.Empty,
+                        translatedText));
                 return translatedText;
             }
 
@@ -384,6 +455,19 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    this.capabilityScope.ProviderScope,
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "v1/messages",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)
@@ -395,7 +479,21 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
                 ex.Message);
             PluginRuntimeLog.Debug(
                 this.pluginLog,
-                $"Claude structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    this.capabilityScope.ProviderScope,
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "v1/messages",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }
@@ -420,5 +518,31 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed Anthropic request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 }

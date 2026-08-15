@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Text.Json;
+
 using Echoglossian.Translators;
 using Echoglossian.Translators.Helpers;
 using FluentAssertions;
@@ -103,5 +105,57 @@ public class StructuredDialogueTranslationRequestBuilderTests
     request.DialogueContext.Should().BeEmpty();
     request.Glossary.Should().BeEmpty();
     request.Metadata.SpeakerOriginal.Should().BeEmpty();
+  }
+
+  /// <summary>
+  ///     Ensures resolved current-request interlocutor hints project into the
+  ///     structured metadata contract while empty hints remain absent.
+  /// </summary>
+  [Fact]
+  public void Build_WithInterlocutorHints_ShouldProjectStructuredMetadata()
+  {
+    DialogueTranslationContext hintedContext = new(
+        "Talk",
+        "krile-session",
+        "Krile",
+        [],
+        SpeakerRoleHint: "npc",
+        SpeakerGenderHint: "female",
+        AddresseeHint: "Alphinaud",
+        AddresseeRoleHint: "npc",
+        AddresseeGenderHint: "male",
+        MetadataProvenance: "quest-sheet",
+        MetadataConfidenceTier: 2);
+    DialogueTranslationContext emptyHintContext = new(
+        "Talk",
+        "krile-session",
+        "Krile",
+        []);
+
+    StructuredDialogueTranslationRequest hintedRequest =
+        StructuredDialogueTranslationRequestBuilder.Build(
+            "We must press on.",
+            "ja-JP",
+            "en-US",
+            TranslationSurfaceGroup.Dialogue,
+            hintedContext);
+    StructuredDialogueTranslationRequest emptyHintRequest =
+        StructuredDialogueTranslationRequestBuilder.Build(
+            "We must press on.",
+            "ja-JP",
+            "en-US",
+            TranslationSurfaceGroup.Dialogue,
+            emptyHintContext);
+
+    hintedRequest.Metadata.SpeakerGenderHint.Should().Be("female");
+    hintedRequest.Metadata.AddresseeOriginal.Should().Be("Alphinaud");
+    hintedRequest.Metadata.AddresseeRoleHint.Should().Be("npc");
+    hintedRequest.Metadata.AddresseeGenderHint.Should().Be("male");
+    hintedRequest.Metadata.MetadataProvenance.Should().Be("quest-sheet");
+    hintedRequest.Metadata.MetadataConfidenceTier.Should().Be(2);
+    JsonSerializer.Serialize(hintedRequest)
+        .Should().Contain("\"metadata_confidence_tier\":2");
+    emptyHintRequest.Metadata.SpeakerGenderHint.Should().BeNull();
+    emptyHintRequest.Metadata.AddresseeOriginal.Should().BeNull();
   }
 }

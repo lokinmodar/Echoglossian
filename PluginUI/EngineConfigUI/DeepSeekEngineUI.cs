@@ -5,6 +5,7 @@
 
 using Echoglossian.PluginUI.Components;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.DeepSeek;
 
 namespace Echoglossian.PluginUI.EngineConfigUI;
@@ -104,6 +105,35 @@ public static class DeepSeekEngineUI
             "DeepSeek",
             tooltips);
         config.DeepSeekModel = model;
+
+        var scope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.DeepSeek,
+            "DeepSeek",
+            config.DeepSeekBaseUrl ?? "https://api.deepseek.com/v1",
+            config.DeepSeekModel ?? "deepseek-chat");
+        var sliderState = LlmCapabilityUiHelper.GetTemperatureSliderState(
+            scope,
+            0.1f,
+            1.0f);
+        var temp = config.DeepSeekTemperature;
+        ImGui.BeginDisabled(!sliderState.IsEnabled);
+        if (ImGui.SliderFloat(
+                Resources.Temperature,
+                ref temp,
+                sliderState.MinValue,
+                sliderState.MaxValue,
+                "%.1f"))
+        {
+            config.DeepSeekTemperature = temp;
+            changed = true;
+        }
+
+        ImGui.EndDisabled();
+        if (!sliderState.IsEnabled &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(sliderState.TooltipText);
+        }
 
         PromptEditorUI.Draw(
             promptManager,

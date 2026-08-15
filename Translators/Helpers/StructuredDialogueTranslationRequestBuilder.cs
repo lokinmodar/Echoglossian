@@ -45,6 +45,7 @@ public static class StructuredDialogueTranslationRequestBuilder
         .ToList() ?? [];
     IReadOnlyList<StructuredDialogueGlossaryEntry> glossaryRows =
         glossary?.ToList() ?? [];
+    string? resolvedSpeakerRoleHint = dialogueContext?.SpeakerRoleHint ?? speakerRoleHint;
 
     return new StructuredDialogueTranslationRequest(
         sourceLanguage ?? string.Empty,
@@ -57,7 +58,13 @@ public static class StructuredDialogueTranslationRequestBuilder
         new StructuredDialogueTranslationMetadata(
             questNameOriginal,
             normalizedSpeakerOriginal,
-            speakerRoleHint,
+            resolvedSpeakerRoleHint,
+            dialogueContext?.SpeakerGenderHint,
+            dialogueContext?.AddresseeHint,
+            dialogueContext?.AddresseeRoleHint,
+            dialogueContext?.AddresseeGenderHint,
+            dialogueContext?.MetadataProvenance,
+            dialogueContext?.MetadataConfidenceTier,
             pronounHint,
             subjectHint));
   }

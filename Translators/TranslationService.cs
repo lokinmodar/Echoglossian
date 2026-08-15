@@ -5,6 +5,7 @@
 
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
+using Echoglossian.Translators.Helpers;
 using Echoglossian.Translators.OpenAI;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -123,9 +124,10 @@ public class TranslationService
       Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation = null,
       Action<int, TranslationFailureClassification>? reportTranslationFailure = null,
       Func<TranslationSurfaceGroup, TranslatorResolution>? translatorResolver = null,
-      Func<string, SourceClientLanguage?>? sourceLanguageResolver = null)
+      Func<string, SourceClientLanguage?>? sourceLanguageResolver = null,
+      Action<string>? debugLog = null)
   {
-    this.debugLog = null;
+    this.debugLog = debugLog;
     this.sanitizeText = sanitizeText;
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
@@ -374,6 +376,39 @@ public class TranslationService
         targetLanguage,
         null,
         TranslationSurfaceGroup.Default,
+        CancellationToken.None,
+        originContext,
+        callerMemberName,
+        callerFilePath).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsync(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        null,
+        TranslationSurfaceGroup.Default,
+        cancellationToken,
         originContext,
         callerMemberName,
         callerFilePath).ConfigureAwait(false);
@@ -407,7 +442,42 @@ public class TranslationService
         sourceLanguage,
         originContext,
         callerMemberName,
-        callerFilePath).ConfigureAwait(false);
+        callerFilePath,
+        CancellationToken.None).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously using a captured source contract while
+  ///     observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context.</param>
+  /// <param name="callerMemberName">The caller member name.</param>
+  /// <param name="callerFilePath">The caller file path.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsyncCore(
+        text,
+        sourceLanguage.ProviderCode,
+        targetLanguage,
+        null,
+        TranslationSurfaceGroup.Default,
+        sourceLanguage,
+        originContext,
+        callerMemberName,
+        callerFilePath,
+        cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -440,6 +510,41 @@ public class TranslationService
         targetLanguage,
         null,
         surfaceGroup,
+        CancellationToken.None,
+        originContext,
+        callerMemberName,
+        callerFilePath).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously for a surface group while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      TranslationSurfaceGroup surfaceGroup,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsync(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        null,
+        surfaceGroup,
+        cancellationToken,
         originContext,
         callerMemberName,
         callerFilePath).ConfigureAwait(false);
@@ -475,7 +580,44 @@ public class TranslationService
         sourceLanguage,
         originContext,
         callerMemberName,
-        callerFilePath).ConfigureAwait(false);
+        callerFilePath,
+        CancellationToken.None).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously for a surface group using a captured
+  ///     source contract while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context.</param>
+  /// <param name="callerMemberName">The caller member name.</param>
+  /// <param name="callerFilePath">The caller file path.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      TranslationSurfaceGroup surfaceGroup,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsyncCore(
+        text,
+        sourceLanguage.ProviderCode,
+        targetLanguage,
+        null,
+        surfaceGroup,
+        sourceLanguage,
+        originContext,
+        callerMemberName,
+        callerFilePath,
+        cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -509,6 +651,41 @@ public class TranslationService
         originContext,
         callerMemberName: string.Empty,
         callerFilePath: string.Empty,
+        CancellationToken.None,
+        translatorResolution).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text using a captured translator resolution while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="translatorResolution">The engine and translator instance captured for the operation.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  internal async Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      TranslationSurfaceGroup surfaceGroup,
+      TranslatorResolution translatorResolution,
+      CancellationToken cancellationToken,
+      string? originContext = null)
+  {
+    return await this.TranslateAsyncCore(
+        text,
+        sourceLanguage.ProviderCode,
+        targetLanguage,
+        null,
+        surfaceGroup,
+        sourceLanguage,
+        originContext,
+        callerMemberName: string.Empty,
+        callerFilePath: string.Empty,
+        cancellationToken,
         translatorResolution).ConfigureAwait(false);
   }
 
@@ -542,6 +719,41 @@ public class TranslationService
         targetLanguage,
         dialogueContext,
         TranslationSurfaceGroup.Default,
+        CancellationToken.None,
+        originContext,
+        callerMemberName,
+        callerFilePath).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously with dialogue context while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="dialogueContext">Optional runtime-only short-lived dialogue context.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsync(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        dialogueContext,
+        TranslationSurfaceGroup.Default,
+        cancellationToken,
         originContext,
         callerMemberName,
         callerFilePath).ConfigureAwait(false);
@@ -577,7 +789,44 @@ public class TranslationService
         sourceLanguage,
         originContext,
         callerMemberName,
-        callerFilePath).ConfigureAwait(false);
+        callerFilePath,
+        CancellationToken.None).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously with dialogue context and a captured
+  ///     source contract while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="dialogueContext">Optional runtime-only dialogue context.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context.</param>
+  /// <param name="callerMemberName">The caller member name.</param>
+  /// <param name="callerFilePath">The caller file path.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsyncCore(
+        text,
+        sourceLanguage.ProviderCode,
+        targetLanguage,
+        dialogueContext,
+        TranslationSurfaceGroup.Default,
+        sourceLanguage,
+        originContext,
+        callerMemberName,
+        callerFilePath,
+        cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -613,6 +862,44 @@ public class TranslationService
         originContext,
         callerMemberName: string.Empty,
         callerFilePath: string.Empty,
+        CancellationToken.None,
+        translatorResolution).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates dialogue text using a captured translator resolution while
+  ///     observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="dialogueContext">Optional runtime-only dialogue context.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="translatorResolution">The engine and translator instance captured for the operation.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  internal async Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      TranslationSurfaceGroup surfaceGroup,
+      TranslatorResolution translatorResolution,
+      CancellationToken cancellationToken,
+      string? originContext = null)
+  {
+    return await this.TranslateAsyncCore(
+        text,
+        sourceLanguage.ProviderCode,
+        targetLanguage,
+        dialogueContext,
+        surfaceGroup,
+        sourceLanguage,
+        originContext,
+        callerMemberName: string.Empty,
+        callerFilePath: string.Empty,
+        cancellationToken,
         translatorResolution).ConfigureAwait(false);
   }
 
@@ -652,7 +939,46 @@ public class TranslationService
         capturedSourceLanguage: null,
         originContext,
         callerMemberName,
-        callerFilePath).ConfigureAwait(false);
+        callerFilePath,
+        CancellationToken.None).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously with dialogue context and surface
+  ///     routing while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">Source text language.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="dialogueContext">Optional runtime-only short-lived dialogue context.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context for diagnostics and persistence.</param>
+  /// <param name="callerMemberName">The caller member name when no explicit origin context is provided.</param>
+  /// <param name="callerFilePath">The caller file path when no explicit origin context is provided.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      TranslationSurfaceGroup surfaceGroup,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsyncCore(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        dialogueContext,
+        surfaceGroup,
+        capturedSourceLanguage: null,
+        originContext,
+        callerMemberName,
+        callerFilePath,
+        cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -687,7 +1013,46 @@ public class TranslationService
         sourceLanguage,
         originContext,
         callerMemberName,
-        callerFilePath).ConfigureAwait(false);
+        callerFilePath,
+        CancellationToken.None).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  ///     Translates text asynchronously with dialogue context, surface routing,
+  ///     and a captured source contract while observing cancellation.
+  /// </summary>
+  /// <param name="text">Text to translate.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">Target translation language.</param>
+  /// <param name="dialogueContext">Optional runtime-only dialogue context.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="cancellationToken">Token that cancels waiting for the provider result.</param>
+  /// <param name="originContext">Optional explicit origin context.</param>
+  /// <param name="callerMemberName">The caller member name.</param>
+  /// <param name="callerFilePath">The caller file path.</param>
+  /// <returns>A task containing the translated or sanitized source text.</returns>
+  public async Task<string> TranslateAsync(
+      string text,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      TranslationSurfaceGroup surfaceGroup,
+      CancellationToken cancellationToken,
+      string? originContext = null,
+      [CallerMemberName] string callerMemberName = "",
+      [CallerFilePath] string callerFilePath = "")
+  {
+    return await this.TranslateAsyncCore(
+        text,
+        sourceLanguage.ProviderCode,
+        targetLanguage,
+        dialogueContext,
+        surfaceGroup,
+        sourceLanguage,
+        originContext,
+        callerMemberName,
+        callerFilePath,
+        cancellationToken).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -714,8 +1079,10 @@ public class TranslationService
       string? originContext,
       string callerMemberName,
       string callerFilePath,
+      CancellationToken cancellationToken,
       TranslatorResolution? translatorResolution = null)
   {
+    cancellationToken.ThrowIfCancellationRequested();
     var resolvedOriginContext = ResolveOriginContext(
         originContext,
         callerMemberName,
@@ -785,26 +1152,43 @@ public class TranslationService
     var useDialogueContext = this.WillUseDialogueContext(
         dialogueContext,
         resolvedTranslatorResolution);
+    this.LogDialogueContextSummary(
+        useDialogueContext,
+        dialogueContext,
+        resolvedTranslatorResolution.TranslationEngineId,
+        surfaceGroup,
+        resolvedOriginContext);
+    var glossaryProtection = this.ProtectDialogueGlossaryTerms(
+        parsedText,
+        resolvedSourceLanguage.ProviderCode,
+        targetLanguage,
+        useDialogueContext);
+    var providerInputText = glossaryProtection.Occurrences.Count > 0
+        ? glossaryProtection.ProtectedText
+        : parsedText;
+    cancellationToken.ThrowIfCancellationRequested();
     var stopwatch = Stopwatch.StartNew();
     var finalDialogueText = useDialogueContext &&
                             resolvedTranslatorResolution.Translator is IDialogueContextAwareTranslator contextAwareTranslator
         ? await contextAwareTranslator.TranslateAsync(
-            parsedText,
+            providerInputText,
             resolvedSourceLanguage.ProviderCode,
             targetLanguage,
-            dialogueContext!.Value).ConfigureAwait(false)
+            dialogueContext!.Value).WaitAsync(cancellationToken).ConfigureAwait(false)
         : await resolvedTranslatorResolution.Translator.TranslateAsync(
-            parsedText,
+            providerInputText,
             resolvedSourceLanguage.ProviderCode,
-            targetLanguage).ConfigureAwait(false);
-    var acceptanceResult = this.AcceptTranslatedResultOrFallback(
+            targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
+    var acceptanceResult = this.AcceptDialogueGlossaryResultOrFallback(
         finalDialogueText,
+        glossaryProtection,
         parsedText,
         sanitizedText,
         normalizedSourceLanguage,
         normalizedTargetLanguage,
         resolvedOriginContext,
-        resolvedTranslatorResolution.TranslationEngineId);
+        resolvedTranslatorResolution.TranslationEngineId,
+        surfaceGroup);
     stopwatch.Stop();
     this.RecordTranslationMetric(
         acceptanceResult,
@@ -910,7 +1294,7 @@ public class TranslationService
   /// <param name="dialogueContext">The optional dialogue context.</param>
   /// <returns>
   ///     <see langword="true" /> when the active translator supports dialogue
-  ///     context and at least one prior turn is available; otherwise,
+  ///     context; otherwise,
   ///     <see langword="false" />.
   /// </returns>
   internal bool WillUseDialogueContext(
@@ -932,7 +1316,7 @@ public class TranslationService
   /// </param>
   /// <returns>
   ///     <see langword="true" /> when the captured translator supports
-  ///     dialogue context and at least one prior turn is available; otherwise,
+  ///     dialogue context; otherwise,
   ///     <see langword="false" />.
   /// </returns>
   internal bool WillUseDialogueContext(
@@ -940,7 +1324,6 @@ public class TranslationService
       TranslatorResolution translatorResolution)
   {
     return dialogueContext.HasValue &&
-           dialogueContext.Value.PriorTurns.Count > 0 &&
            translatorResolution.Translator is IDialogueContextAwareTranslator;
   }
 
@@ -1046,6 +1429,108 @@ public class TranslationService
   }
 
   /// <summary>
+  ///     Accepts one dialogue translation result after restoring any protected
+  ///     glossary markers; otherwise records a transient glossary failure and
+  ///     falls back to the sanitized source text.
+  /// </summary>
+  /// <param name="translatedText">The translated text candidate.</param>
+  /// <param name="glossaryProtection">The protected glossary request state.</param>
+  /// <param name="parsedText">The parsed source text sent to the translator.</param>
+  /// <param name="sanitizedText">The sanitized source text shown on fallback.</param>
+  /// <param name="normalizedSourceLanguage">The normalized source language code.</param>
+  /// <param name="normalizedTargetLanguage">The normalized target language code.</param>
+  /// <param name="resolvedOriginContext">The resolved origin context for diagnostics.</param>
+  /// <param name="translationEngineId">The effective translation engine identifier.</param>
+  /// <param name="surfaceGroup">The translation surface group.</param>
+  /// <returns>The accepted translation result or the sanitized fallback.</returns>
+  private TranslationAcceptanceResult AcceptDialogueGlossaryResultOrFallback(
+      string? translatedText,
+      DialogueGlossaryTermProtector.ProtectionResult glossaryProtection,
+      string parsedText,
+      string sanitizedText,
+      string normalizedSourceLanguage,
+      string normalizedTargetLanguage,
+      string? resolvedOriginContext,
+      int translationEngineId,
+      TranslationSurfaceGroup surfaceGroup)
+  {
+    if (glossaryProtection.Occurrences.Count == 0 ||
+        string.IsNullOrWhiteSpace(translatedText))
+    {
+      return this.AcceptTranslatedResultOrFallback(
+          translatedText,
+          parsedText,
+          sanitizedText,
+          normalizedSourceLanguage,
+          normalizedTargetLanguage,
+          resolvedOriginContext,
+          translationEngineId);
+    }
+
+    var restoreResult = DialogueGlossaryTermProtector.TryRestore(
+        translatedText,
+        glossaryProtection);
+    if (restoreResult.Succeeded)
+    {
+      return this.AcceptTranslatedResultOrFallback(
+          restoreResult.RestoredText,
+          parsedText,
+          sanitizedText,
+          normalizedSourceLanguage,
+          normalizedTargetLanguage,
+          resolvedOriginContext,
+          translationEngineId);
+    }
+
+    this.debugLog?.Invoke(
+        $"[{GetSurfaceScope(surfaceGroup, resolvedOriginContext)}] TranslationService: dialogue glossary restore failed - reason={restoreResult.FailureReason}");
+    if (!string.IsNullOrWhiteSpace(restoreResult.FailureReason))
+    {
+      this.RecordTransientFailedTranslation(
+          parsedText,
+          normalizedSourceLanguage,
+          normalizedTargetLanguage,
+          restoreResult.FailureReason,
+          translationEngineId);
+    }
+
+    return new TranslationAcceptanceResult(
+        sanitizedText,
+        false,
+        restoreResult.FailureReason);
+  }
+
+  /// <summary>
+  ///     Writes a non-sensitive dialogue-context summary when the current
+  ///     request will actually use the captured dialogue contract.
+  /// </summary>
+  /// <param name="useDialogueContext">Whether the translator will consume the dialogue context.</param>
+  /// <param name="dialogueContext">The optional captured dialogue context.</param>
+  /// <param name="translationEngineId">The effective translation engine id.</param>
+  /// <param name="surfaceGroup">The coarse translation surface group.</param>
+  /// <param name="originContext">The resolved origin context.</param>
+  private void LogDialogueContextSummary(
+      bool useDialogueContext,
+      DialogueTranslationContext? dialogueContext,
+      int translationEngineId,
+      TranslationSurfaceGroup surfaceGroup,
+      string? originContext)
+  {
+    if (this.debugLog == null ||
+        !useDialogueContext ||
+        !dialogueContext.HasValue)
+    {
+      return;
+    }
+
+    var surfaceScope = GetSurfaceScope(surfaceGroup, originContext);
+    var summary = DialogueContextPromptHelper.SummarizeDialogueContextForDiagnostics(
+        dialogueContext.Value);
+    this.debugLog(
+        $"[{surfaceScope}] TranslationService: dialogue context summary - engineId={translationEngineId}, {summary}");
+  }
+
+  /// <summary>
   ///     Resolves the square-bracketed diagnostic scope for one translation
   ///     request.
   /// </summary>
@@ -1059,6 +1544,38 @@ public class TranslationService
     return string.IsNullOrWhiteSpace(originContext)
         ? surfaceGroup.ToString()
         : originContext;
+  }
+
+  /// <summary>
+  ///     Protects exact glossary terms for dialogue-family LLM requests while
+  ///     leaving non-dialogue and glossary-free requests untouched.
+  /// </summary>
+  /// <param name="parsedText">The parsed visible source text.</param>
+  /// <param name="sourceLanguage">The provider source language code.</param>
+  /// <param name="targetLanguage">The requested target language code.</param>
+  /// <param name="useDialogueContext">Whether the active request uses dialogue context.</param>
+  /// <returns>The protected glossary state for the request.</returns>
+  private DialogueGlossaryTermProtector.ProtectionResult ProtectDialogueGlossaryTerms(
+      string parsedText,
+      string sourceLanguage,
+      string targetLanguage,
+      bool useDialogueContext)
+  {
+    if (!useDialogueContext)
+    {
+      return new DialogueGlossaryTermProtector.ProtectionResult(
+          parsedText,
+          parsedText,
+          string.Empty,
+          []);
+    }
+
+    var glossaryEntries = StructuredDialogueGlossaryStore.GetEntries(
+        sourceLanguage,
+        targetLanguage);
+    return DialogueGlossaryTermProtector.Protect(
+        parsedText,
+        glossaryEntries);
   }
 
   /// <summary>

@@ -5,6 +5,7 @@
 
 using System.Net.Http.Json;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -14,6 +15,7 @@ namespace Echoglossian.Translators;
 /// </summary>
 public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
 {
+    private readonly LlmCapabilityScope capabilityScope;
     private readonly HttpClient httpClient;
     private readonly string model;
     private readonly IPluginLog pluginLog;
@@ -37,7 +39,12 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
 
         var baseUrl = config.LmStudioBaseUrl?.TrimEnd('/') ??
                       "http://localhost:1234/v1";
-        this.httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        this.capabilityScope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.LmStudio,
+            "LmStudio",
+            baseUrl,
+            this.model);
+        this.httpClient = new HttpClient { BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/") };
 
         if (config.UseLmStudioAuth &&
             !string.IsNullOrWhiteSpace(config.LmStudioApiKey))
@@ -158,21 +165,25 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             targetLanguage,
             dialogueContext);
 
-        var request = new
+        var request = new Dictionary<string, object>
         {
-            this.model,
-            this.temperature,
-            messages = new[]
+            ["model"] = this.model,
+            ["messages"] = new[]
             {
                 new { role = "user", content = fullPrompt },
             },
         };
+        var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+            request,
+            this.capabilityScope,
+            this.temperature);
 
         try
         {
             var response = await this.httpClient.PostAsJsonAsync(
                 "chat/completions",
                 request);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var json =
@@ -235,6 +246,7 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             sourceLanguage,
             targetLanguage);
         var usedGlossary = glossaryEntries.Count > 0;
+        IReadOnlyList<string> capabilityDecisionTokens = [];
         try
         {
             var normalizedText = FixText(text);
@@ -253,15 +265,14 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                         sourceLanguage,
                         targetLanguage),
                     structuredRequest);
-            var request = new
+            var request = new Dictionary<string, object>
             {
-                this.model,
-                this.temperature,
-                messages = new[]
+                ["model"] = this.model,
+                ["messages"] = new[]
                 {
                     new { role = "user", content = structuredPrompt },
                 },
-                tools = new[]
+                ["tools"] = new[]
                 {
                     new
                     {
@@ -275,7 +286,7 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                         },
                     },
                 },
-                tool_choice = new
+                ["tool_choice"] = new
                 {
                     type = "function",
                     function = new
@@ -284,10 +295,53 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                     },
                 },
             };
+            var temperatureWasSent = LlmCapabilityRequestPayloadSanitizer.TryAddTemperature(
+                request,
+                this.capabilityScope,
+                this.temperature);
+            var temperatureDecision = LlmCapabilityPolicyService.GetSnapshot(
+                    this.capabilityScope)
+                .GetDecision(LlmCapabilityParameterName.Temperature);
+            capabilityDecisionTokens =
+            [
+                StructuredDialogueCapabilityDecisionLogFormatter.Format(
+                    LlmCapabilityParameterName.Temperature,
+                    temperatureDecision,
+                    temperatureWasSent
+                        ? StructuredDialogueCapabilityEmissionMode.SentConfigured
+                        : temperatureDecision.OmitWhenDefaultOnly
+                            ? StructuredDialogueCapabilityEmissionMode.OmittedDefaultOnly
+                            : temperatureDecision.SupportState == LlmCapabilitySupportState.Unsupported
+                                ? StructuredDialogueCapabilityEmissionMode.OmittedUnsupported
+                                : StructuredDialogueCapabilityEmissionMode.OmittedUnknown),
+            ];
+            var jsonContent = JsonConvert.SerializeObject(request);
+            using var httpContent = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/json");
 
-            var response = await this.httpClient.PostAsJsonAsync(
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredStartMessage(
+                    this.capabilityScope,
+                    "chat/completions",
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    dialogueContext.SessionNamespace,
+                    dialogueContext.PriorTurns.Count,
+                    glossaryEntries.Count,
+                    !string.IsNullOrWhiteSpace(dialogueContext.SpeakerName),
+                    !string.IsNullOrWhiteSpace(dialogueContext.AddresseeHint),
+                    structuredPrompt.Length,
+                    jsonContent.Length,
+                    structuredPrompt,
+                    normalizedText,
+                    capabilityDecisionTokens));
+
+            var response = await this.httpClient.PostAsync(
                 "chat/completions",
-                request).ConfigureAwait(false);
+                httpContent).ConfigureAwait(false);
+            await this.LearnTemperatureFailureAsync(response, temperatureWasSent).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var responseJson =
@@ -311,7 +365,18 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                     "unknown-structured-dialogue-failure");
                 PluginRuntimeLog.Debug(
                     this.pluginLog,
-                    $"LmStudio structured dialogue path rejected provider output and will fall back to plain-text: {structuredValidation.FailureReason ?? "unknown-structured-dialogue-failure"}");
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                        "LmStudio",
+                        this.model,
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        "validation",
+                        structuredValidation.FailureReason ??
+                        "unknown-structured-dialogue-failure",
+                        endpointScope: this.capabilityScope.EndpointScope,
+                        route: "chat/completions",
+                        capabilityDecisionTokens: capabilityDecisionTokens,
+                        glossaryApplied: usedGlossary,
+                        responseExcerpt: rawStructuredPayload));
                 return null;
             }
 
@@ -326,6 +391,17 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 this.translationCache.Remember(
                     cacheKey,
                     translatedText);
+                PluginRuntimeLog.Debug(
+                    this.pluginLog,
+                    StructuredDialogueDiagnosticsHelper.FormatStructuredSuccessMessage(
+                        this.capabilityScope,
+                        "chat/completions",
+                        StructuredDialogueProviderCapability.JsonSchema,
+                        usedGlossary,
+                        rawStructuredPayload.Length,
+                        translatedText.Length,
+                        rawStructuredPayload,
+                        translatedText));
                 return translatedText;
             }
 
@@ -334,6 +410,19 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 false,
                 usedGlossary,
                 "non-persistable-structured-result");
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "LmStudio",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "validation",
+                    "non-persistable-structured-result",
+                    endpointScope: this.capabilityScope.EndpointScope,
+                    route: "chat/completions",
+                    capabilityDecisionTokens: capabilityDecisionTokens,
+                    glossaryApplied: usedGlossary,
+                    responseExcerpt: rawStructuredPayload));
             return null;
         }
         catch (Exception ex)
@@ -345,7 +434,21 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
                 ex.Message);
             PluginRuntimeLog.Debug(
                 this.pluginLog,
-                $"LmStudio structured dialogue path failed and will fall back to plain-text: {ex.Message}");
+                StructuredDialogueDiagnosticsHelper.FormatStructuredFallbackMessage(
+                    "LmStudio",
+                    this.model,
+                    StructuredDialogueProviderCapability.JsonSchema,
+                    "exception",
+                    ex.Message,
+                    ex is HttpRequestException httpRequestException &&
+                    httpRequestException.StatusCode.HasValue
+                        ? (int)httpRequestException.StatusCode.Value
+                        : null,
+                    ex.Message,
+                    this.capabilityScope.EndpointScope,
+                    "chat/completions",
+                    capabilityDecisionTokens,
+                    usedGlossary));
             return null;
         }
     }
@@ -370,6 +473,32 @@ public class LmStudioTranslator : ITranslator, IDialogueContextAwareTranslator
             prompt,
             dialogueContext.Value,
             FixText);
+    }
+
+    /// <summary>
+    ///     Records a sanitized exact-model temperature observation from a
+    ///     failed LM Studio request that included temperature.
+    /// </summary>
+    /// <param name="response">The provider response associated with the request.</param>
+    /// <param name="temperatureWasSent">Whether the request included temperature.</param>
+    private async Task LearnTemperatureFailureAsync(
+        HttpResponseMessage response,
+        bool temperatureWasSent)
+    {
+        if (response.IsSuccessStatusCode || !temperatureWasSent)
+        {
+            return;
+        }
+
+        var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            this.capabilityScope,
+            LlmCapabilityParameterName.Temperature,
+            (int)response.StatusCode,
+            responseText);
+        PluginRuntimeLog.Debug(
+            this.pluginLog,
+            $"Capability learning: promoted={learning.RulePromoted}, kind={learning.FailureKind}");
     }
 
     private sealed class LmStudioResponse

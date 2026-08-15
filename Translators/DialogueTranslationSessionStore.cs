@@ -40,6 +40,7 @@ public static class DialogueTranslationSessionStore
   /// <param name="historyLimit">The maximum number of prior turns to retain.</param>
   /// <param name="ttl">The maximum session idle age.</param>
   /// <param name="observedAtUtc">Optional explicit observation time for tests.</param>
+  /// <param name="interlocutorHints">Optional resolved hints for only the current request.</param>
   /// <returns>The current runtime-only dialogue context.</returns>
   public static DialogueTranslationContext BuildContext(
       string sessionNamespace,
@@ -48,7 +49,8 @@ public static class DialogueTranslationSessionStore
       string sourceText,
       int historyLimit,
       TimeSpan ttl,
-      DateTime? observedAtUtc = null)
+      DateTime? observedAtUtc = null,
+      DialogueInterlocutorHints? interlocutorHints = null)
   {
     var now = observedAtUtc ?? DateTime.UtcNow;
     var normalizedNamespace = sessionNamespace ?? string.Empty;
@@ -81,7 +83,14 @@ public static class DialogueTranslationSessionStore
           normalizedNamespace,
           normalizedKey,
           normalizedSpeakerName,
-          priorTurns);
+          priorTurns,
+          interlocutorHints?.SpeakerRoleHint,
+          interlocutorHints?.SpeakerGenderHint,
+          interlocutorHints?.AddresseeHint,
+          interlocutorHints?.AddresseeRoleHint,
+          interlocutorHints?.AddresseeGenderHint,
+          interlocutorHints?.MetadataProvenance,
+          interlocutorHints?.MetadataConfidenceTier);
     }
   }
 

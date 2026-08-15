@@ -888,6 +888,245 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Ensures asynchronous dialogue lookup selects the same persisted row
+    ///     as the existing synchronous lookup.
+    /// </summary>
+    /// <param name="retrieval">The dialogue retrieval path to invoke.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Theory]
+    [InlineData("Talk")]
+    [InlineData("BattleTalk")]
+    public async Task DialogueLookupAsync_MatchesSynchronousLookupSelection(
+        string retrieval)
+    {
+        var result = await this.RunDialogueLookupParityAsync(retrieval);
+
+        Assert.Equal(("Japanese", 7, result.ExpectedUpdatedDate), result.Sync);
+        Assert.Equal(result.Sync, result.Async);
+    }
+
+    /// <summary>
+    ///     Ensures asynchronous dialogue lookup observes an already-cancelled
+    ///     token before materializing database candidates.
+    /// </summary>
+    /// <param name="retrieval">The dialogue retrieval path to invoke.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Theory]
+    [InlineData("Talk")]
+    [InlineData("BattleTalk")]
+    public async Task DialogueLookupAsync_AlreadyCancelledToken_Cancels(
+        string retrieval)
+    {
+        await this.AssertDialogueLookupCancellationAsync(retrieval);
+    }
+
+    /// <summary>
+    ///     Runs synchronous and asynchronous dialogue lookups against the same
+    ///     competing persisted candidates.
+    /// </summary>
+    /// <param name="retrieval">The dialogue retrieval path to invoke.</param>
+    /// <returns>The synchronous and asynchronous lookup scopes.</returns>
+    private async Task<(
+        (string? SourceLanguage, int? TranslationEngine, DateTime? UpdatedDate) Sync,
+        (string? SourceLanguage, int? TranslationEngine, DateTime? UpdatedDate) Async,
+        DateTime ExpectedUpdatedDate)> RunDialogueLookupParityAsync(
+        string retrieval)
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+        var plugin = CreateFormattingPlugin(new Config
+        {
+            Lang = 28,
+            ChosenTransEngine = 4,
+            TranslateAlreadyTranslatedTexts = true,
+        });
+        var expectedUpdatedDate = new DateTime(
+            2026,
+            8,
+            6,
+            12,
+            0,
+            0,
+            DateTimeKind.Utc);
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(
+                    ClientLanguage.Japanese);
+            PluginEntry.ConfigDirectory =
+                configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = CreateTargetLanguages();
+
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                SeedDialogueLookupRows(context, retrieval, expectedUpdatedDate);
+                context.SaveChanges();
+            }
+
+            return retrieval switch
+            {
+                "Talk" => (
+                    GetLookupScope(plugin.FindAndReturnTalkMessage(
+                        CreateTalkMessage("ja", 7, expectedUpdatedDate))),
+                    GetLookupScope(await plugin.FindAndReturnTalkMessageAsync(
+                        CreateTalkMessage("ja", 7, expectedUpdatedDate),
+                        CancellationToken.None).ConfigureAwait(false)),
+                    expectedUpdatedDate),
+                "BattleTalk" => (
+                    GetLookupScope(plugin.FindAndReturnBattleTalkMessage(
+                        CreateBattleTalkMessage("ja", 7, expectedUpdatedDate))),
+                    GetLookupScope(await plugin.FindAndReturnBattleTalkMessageAsync(
+                        CreateBattleTalkMessage("ja", 7, expectedUpdatedDate),
+                        CancellationToken.None).ConfigureAwait(false)),
+                    expectedUpdatedDate),
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(retrieval),
+                    retrieval,
+                    "Unknown dialogue retrieval."),
+            };
+        }
+        finally
+        {
+            PluginEntry.LangDict = previousLanguages;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.ClientStateInterface = previousClientState;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Verifies that one dialogue lookup honors a pre-cancelled token.
+    /// </summary>
+    /// <param name="retrieval">The dialogue retrieval path to invoke.</param>
+    /// <returns>A task representing the cancellation assertion.</returns>
+    private async Task AssertDialogueLookupCancellationAsync(string retrieval)
+    {
+        var configDir = Path.Combine(
+            Path.GetTempPath(),
+            "Echoglossian.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var previousClientState = PluginEntry.ClientStateInterface;
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        var previousLanguages = PluginEntry.LangDict;
+
+        try
+        {
+            PluginEntry.ClientStateInterface =
+                TranslationReuseScopeTests.CreateClientState(
+                    ClientLanguage.Japanese);
+            PluginEntry.ConfigDirectory =
+                configDir + Path.DirectorySeparatorChar;
+            PluginEntry.LangDict = CreateTargetLanguages();
+            var plugin = CreateFormattingPlugin(new Config
+            {
+                Lang = 28,
+                ChosenTransEngine = 7,
+                TranslateAlreadyTranslatedTexts = true,
+            });
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+            }
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            switch (retrieval)
+            {
+                case "Talk":
+                    await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                        () => plugin.FindAndReturnTalkMessageAsync(
+                            CreateTalkMessage("ja", 7, DateTime.UtcNow),
+                            cancellationTokenSource.Token)).ConfigureAwait(false);
+                    break;
+                case "BattleTalk":
+                    await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                        () => plugin.FindAndReturnBattleTalkMessageAsync(
+                            CreateBattleTalkMessage("ja", 7, DateTime.UtcNow),
+                            cancellationTokenSource.Token)).ConfigureAwait(false);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(retrieval),
+                        retrieval,
+                        "Unknown dialogue retrieval.");
+            }
+        }
+        finally
+        {
+            PluginEntry.LangDict = previousLanguages;
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            PluginEntry.ClientStateInterface = previousClientState;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Seeds dialogue rows that exercise source, engine, target, and
+    ///     recency selection rules.
+    /// </summary>
+    /// <param name="context">The temporary database context.</param>
+    /// <param name="retrieval">The dialogue retrieval path under test.</param>
+    /// <param name="expectedUpdatedDate">The timestamp of the expected row.</param>
+    private static void SeedDialogueLookupRows(
+        EchoglossianDbContext context,
+        string retrieval,
+        DateTime expectedUpdatedDate)
+    {
+        switch (retrieval)
+        {
+            case "Talk":
+                context.TalkMessage.AddRange(CreateDialogueLookupRows(
+                    CreateTalkMessage,
+                    expectedUpdatedDate));
+                break;
+            case "BattleTalk":
+                context.BattleTalkMessage.AddRange(CreateDialogueLookupRows(
+                    CreateBattleTalkMessage,
+                    expectedUpdatedDate));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(retrieval),
+                    retrieval,
+                    "Unknown dialogue retrieval.");
+        }
+    }
+
+    /// <summary>
+    ///     Creates competing dialogue rows with one newest compatible row.
+    /// </summary>
+    /// <typeparam name="T">The dialogue row type.</typeparam>
+    /// <param name="create">The row factory.</param>
+    /// <param name="expectedUpdatedDate">The timestamp of the expected row.</param>
+    /// <returns>The competing persisted rows.</returns>
+    private static T[] CreateDialogueLookupRows<T>(
+        Func<string, int, DateTime, T> create,
+        DateTime expectedUpdatedDate)
+        where T : class
+    {
+        var wrongTarget = create("Japanese", 7, expectedUpdatedDate.AddMinutes(3));
+        SetObjectProperty(wrongTarget, "TranslationLang", "Portuguese");
+
+        return
+        [
+            create("en", 7, expectedUpdatedDate.AddMinutes(4)),
+            create("Japanese", 4, expectedUpdatedDate.AddMinutes(2)),
+            wrongTarget,
+            create("Japanese", 7, expectedUpdatedDate.AddMinutes(-1)),
+            create("Japanese", 7, expectedUpdatedDate),
+        ];
+    }
+
+    /// <summary>
     ///     Ensures explicit Talk retranslation persistence updates the existing
     ///     row for the same source line and engine instead of growing duplicate
     ///     exact-engine history.
@@ -1673,6 +1912,19 @@ public class DbOperationsTests
     }
 
     /// <summary>
+    ///     Gets the persisted lookup fields from a Talk row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity, engine, and update timestamp.</returns>
+    private static (string?, int?, DateTime?) GetLookupScope(TalkMessage? row)
+    {
+        return (
+            row?.OriginalTalkMessageLang,
+            row?.TranslationEngine,
+            row?.UpdatedDate);
+    }
+
+    /// <summary>
     ///     Gets the stored scope fields from a toast row.
     /// </summary>
     /// <param name="row">The selected row.</param>
@@ -1690,6 +1942,20 @@ public class DbOperationsTests
     private static (string?, int?) GetScope(BattleTalkMessage? row)
     {
         return (row?.OriginalBattleTalkMessageLang, row?.TranslationEngine);
+    }
+
+    /// <summary>
+    ///     Gets the persisted lookup fields from a BattleTalk row.
+    /// </summary>
+    /// <param name="row">The selected row.</param>
+    /// <returns>The row's source identity, engine, and update timestamp.</returns>
+    private static (string?, int?, DateTime?) GetLookupScope(
+        BattleTalkMessage? row)
+    {
+        return (
+            row?.OriginalBattleTalkMessageLang,
+            row?.TranslationEngine,
+            row?.UpdatedDate);
     }
 
     /// <summary>

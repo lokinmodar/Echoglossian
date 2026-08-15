@@ -180,4 +180,48 @@ public class DialogueTranslationSessionStoreTests
     Assert.Equal(1, snapshot.RetainedTurnCount);
     Assert.Equal(observedAtUtc, snapshot.LastObservedAtUtc);
   }
+
+  /// <summary>
+  ///     Ensures interlocutor hints apply only to the returned current request
+  ///     and do not become part of retained prior-turn history.
+  /// </summary>
+  [Fact]
+  public void BuildContext_WithInterlocutorHints_ShouldApplyThemOnlyToCurrentRequest()
+  {
+    DialogueTranslationSessionStore.Clear();
+    var observedAtUtc = new DateTime(2026, 05, 12, 15, 20, 0, DateTimeKind.Utc);
+    var hints = new DialogueInterlocutorHints(
+        "npc",
+        "female",
+        "Alphinaud",
+        "npc",
+        "male",
+        "quest-sheet",
+        2);
+
+    var hintedContext = DialogueTranslationSessionStore.BuildContext(
+        "Talk",
+        "krile-session",
+        "Krile",
+        "Stay close.",
+        3,
+        TimeSpan.FromSeconds(30),
+        observedAtUtc,
+        hints);
+    var context = DialogueTranslationSessionStore.BuildContext(
+        "Talk",
+        "krile-session",
+        "Krile",
+        "We move now.",
+        3,
+        TimeSpan.FromSeconds(30),
+        observedAtUtc.AddSeconds(1));
+
+    Assert.Equal("female", hintedContext.SpeakerGenderHint);
+    Assert.Equal("Alphinaud", hintedContext.AddresseeHint);
+    Assert.Null(context.SpeakerGenderHint);
+    Assert.Null(context.AddresseeHint);
+    var priorTurn = Assert.Single(context.PriorTurns);
+    Assert.Equal("Stay close.", priorTurn.SourceText);
+  }
 }

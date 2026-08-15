@@ -5,6 +5,7 @@
 
 using Echoglossian.PluginUI.Components;
 using Echoglossian.PluginUI.Helpers;
+using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.OpenAI;
 using Echoglossian.Translators.OpenRouter;
 
@@ -100,11 +101,35 @@ public static class OpenRouterEngineUI
             "OpenRouter");
         config.OpenRouterModel = model;
 
+        var scope = LlmCapabilityPolicyService.CreateScope(
+            Echoglossian.TransEngines.OpenRouter,
+            "OpenRouter",
+            string.IsNullOrWhiteSpace(config.OpenRouterBaseUrl)
+                ? "https://openrouter.ai/api/v1"
+                : config.OpenRouterBaseUrl,
+            config.OpenRouterModel ?? "mistral");
+        var sliderState = LlmCapabilityUiHelper.GetTemperatureSliderState(
+            scope,
+            0.1f,
+            1.0f);
         var temp = config.OpenRouterTemperature;
-        if (ImGui.SliderFloat(Resources.Temperature, ref temp, 0.1f, 1.0f, "%.1f"))
+        ImGui.BeginDisabled(!sliderState.IsEnabled);
+        if (ImGui.SliderFloat(
+                Resources.Temperature,
+                ref temp,
+                sliderState.MinValue,
+                sliderState.MaxValue,
+                "%.1f"))
         {
             config.OpenRouterTemperature = temp;
             changed = true;
+        }
+
+        ImGui.EndDisabled();
+        if (!sliderState.IsEnabled &&
+            ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(sliderState.TooltipText);
         }
 
         PromptEditorUI.Draw(
