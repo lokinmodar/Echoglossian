@@ -75,13 +75,14 @@ public static class StructuredDialogueGlossaryStore
     {
         var generation = Interlocked.Increment(ref requestedGeneration);
         var observedAtUtc = DateTime.UtcNow;
-        var normalizedPath = string.IsNullOrWhiteSpace(filePath)
-            ? null
-            : Path.GetFullPath(filePath.Trim());
+        string? normalizedPath = null;
         StructuredDialogueGlossaryLoadResult result;
 
         try
         {
+            normalizedPath = string.IsNullOrWhiteSpace(filePath)
+                ? null
+                : Path.GetFullPath(filePath.Trim());
             result = await loadFromFileAsync(
                 normalizedPath ?? string.Empty,
                 cancellationToken).ConfigureAwait(false);

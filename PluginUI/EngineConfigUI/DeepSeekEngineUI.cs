@@ -52,9 +52,10 @@ public static class DeepSeekEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => DeepSeekModelManager.RefreshAsync(
+                    cancellationToken => DeepSeekModelManager.RefreshAsync(
                         config.DeepSeekTranslatorApiKey ?? string.Empty,
-                        config.DeepSeekBaseUrl ?? string.Empty));
+                        config.DeepSeekBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
             else if (!config.UseLiveDeepSeekModelList)
             {
@@ -73,9 +74,10 @@ public static class DeepSeekEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => DeepSeekModelManager.RefreshAsync(
+                    cancellationToken => DeepSeekModelManager.RefreshAsync(
                         config.DeepSeekTranslatorApiKey ?? string.Empty,
-                        config.DeepSeekBaseUrl ?? string.Empty));
+                        config.DeepSeekBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
         }
 
@@ -83,9 +85,10 @@ public static class DeepSeekEngineUI
             LiveModelRefreshScope,
             config.UseLiveDeepSeekModelList,
             BuildLiveModelRefreshSignature(config),
-            () => DeepSeekModelManager.RefreshAsync(
+            cancellationToken => DeepSeekModelManager.RefreshAsync(
                 config.DeepSeekTranslatorApiKey ?? string.Empty,
-                config.DeepSeekBaseUrl ?? string.Empty));
+                config.DeepSeekBaseUrl ?? string.Empty,
+                cancellationToken));
 
         var tooltips = new Dictionary<string, string>
         {

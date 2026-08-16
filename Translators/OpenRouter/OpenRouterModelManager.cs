@@ -24,7 +24,10 @@ public static class OpenRouterModelManager
         }
     }
 
-    public static async Task RefreshAsync(string apiKey, string baseUrl)
+    public static async Task RefreshAsync(
+        string apiKey,
+        string baseUrl,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(apiKey) ||
             string.IsNullOrWhiteSpace(baseUrl))
@@ -40,13 +43,13 @@ public static class OpenRouterModelManager
             request.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", apiKey);
 
-            var response = await HttpClient.SendAsync(request);
+            var response = await HttpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 return;
             }
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
             var root = JObject.Parse(json);
             var modelsArray = root["data"] as JArray;
             if (modelsArray == null)
@@ -90,6 +93,7 @@ public static class OpenRouterModelManager
 
             lock (SyncLock)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (models.Count > 0)
                 {
                     CurrentModelList = models;
@@ -105,6 +109,11 @@ public static class OpenRouterModelManager
                     models.Select(static model => model.Id).ToArray(),
                     DateTime.UtcNow);
             }
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {

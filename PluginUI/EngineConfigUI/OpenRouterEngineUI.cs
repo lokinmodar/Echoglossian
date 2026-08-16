@@ -54,9 +54,10 @@ public static class OpenRouterEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => OpenRouterModelManager.RefreshAsync(
+                    cancellationToken => OpenRouterModelManager.RefreshAsync(
                         config.OpenRouterApiKey ?? string.Empty,
-                        config.OpenRouterBaseUrl ?? string.Empty));
+                        config.OpenRouterBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
             else
             {
@@ -75,9 +76,10 @@ public static class OpenRouterEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => OpenRouterModelManager.RefreshAsync(
+                    cancellationToken => OpenRouterModelManager.RefreshAsync(
                         config.OpenRouterApiKey ?? string.Empty,
-                        config.OpenRouterBaseUrl ?? string.Empty));
+                        config.OpenRouterBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
         }
 
@@ -85,9 +87,10 @@ public static class OpenRouterEngineUI
             LiveModelRefreshScope,
             config.UseLiveOpenRouterModelList,
             BuildLiveModelRefreshSignature(config),
-            () => OpenRouterModelManager.RefreshAsync(
+            cancellationToken => OpenRouterModelManager.RefreshAsync(
                 config.OpenRouterApiKey ?? string.Empty,
-                config.OpenRouterBaseUrl ?? string.Empty));
+                config.OpenRouterBaseUrl ?? string.Empty,
+                cancellationToken));
 
         var models = config.UseLiveOpenRouterModelList
             ? OpenRouterModelManager.CurrentModelList

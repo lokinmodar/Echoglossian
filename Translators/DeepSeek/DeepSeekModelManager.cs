@@ -35,7 +35,11 @@ public static class DeepSeekModelManager
     /// </summary>
     /// <param name="apiKey">The configured DeepSeek API key.</param>
     /// <param name="baseUrl">The configured DeepSeek base URL.</param>
-    public static async Task RefreshAsync(string apiKey, string baseUrl)
+    /// <param name="cancellationToken">The token that cancels live discovery.</param>
+    public static async Task RefreshAsync(
+        string apiKey,
+        string baseUrl,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(apiKey) ||
             string.IsNullOrWhiteSpace(baseUrl))
@@ -52,14 +56,17 @@ public static class DeepSeekModelManager
             request.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", apiKey);
 
-            using var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
+            using var response = await HttpClient.SendAsync(
+                request,
+                cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 ResetToDefault();
                 return;
             }
 
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var json = await response.Content.ReadAsStringAsync(
+                cancellationToken).ConfigureAwait(false);
             var root = JObject.Parse(json);
             var data = root["data"] as JArray;
             if (data == null)
@@ -111,11 +118,17 @@ public static class DeepSeekModelManager
 
             if (models.Count > 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ApplyRefreshSuccess(baseUrl, models, DateTime.UtcNow);
                 return;
             }
 
             ResetToDefault();
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {

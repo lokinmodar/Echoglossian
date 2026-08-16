@@ -184,4 +184,35 @@ public class StructuredDialogueGlossaryStoreTests
             StructuredDialogueGlossaryStore.ResetForTests();
         }
     }
+
+    /// <summary>
+    ///     Ensures an invalid operator-provided glossary path publishes the
+    ///     standard failure snapshot instead of faulting the returned task
+    ///     before the guarded load path runs.
+    /// </summary>
+    /// <returns>A task that completes when the invalid path is processed.</returns>
+    [Fact]
+    public async Task RefreshAsync_InvalidPath_PublishesFailureSnapshot()
+    {
+        StructuredDialogueGlossaryStore.ResetForTests();
+
+        try
+        {
+            var refreshResult = await StructuredDialogueGlossaryStore.RefreshAsync(
+                "invalid\0path.json",
+                CancellationToken.None);
+            var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
+
+            refreshResult.Should().BeFalse();
+            snapshot.LastLoadSucceeded.Should().BeFalse();
+            snapshot.EntryCount.Should().Be(0);
+            snapshot.LastLoadPath.Should().BeNull();
+            snapshot.LastLoadFailureDetail.Should().NotBeNull();
+            snapshot.LastLoadFailureDetail.Should().StartWith("ArgumentException:");
+        }
+        finally
+        {
+            StructuredDialogueGlossaryStore.ResetForTests();
+        }
+    }
 }

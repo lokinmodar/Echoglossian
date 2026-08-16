@@ -19,18 +19,21 @@ public static class OllamaModelManager
     public static IReadOnlyList<LlmTextModel> CurrentModelList =>
         CurrentModels.Count > 0 ? CurrentModels : FallbackModels;
 
-    public static async Task RefreshAsync(string baseUrl)
+    public static async Task RefreshAsync(
+        string baseUrl,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             using var client = new HttpClient();
             var url = baseUrl.TrimEnd('/') + "/api/tags";
-            var response = await client.GetStringAsync(url);
+            var response = await client.GetStringAsync(url, cancellationToken);
             var root = JObject.Parse(response);
             var tags = root["models"]?.Select(m => m["name"]?.ToString())
                 .Where(name => !string.IsNullOrWhiteSpace(name)).Distinct()
                 .ToList();
 
+            cancellationToken.ThrowIfCancellationRequested();
             CurrentModels.Clear();
             tooltips = new Dictionary<string, string>();
 
@@ -64,6 +67,11 @@ public static class OllamaModelManager
                     CurrentModels.Select(static model => model.Id).ToArray(),
                     DateTime.UtcNow);
             }
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

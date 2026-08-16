@@ -68,9 +68,10 @@ public static class ClaudeEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => ClaudeModelManager.RefreshAsync(
+                    cancellationToken => ClaudeModelManager.RefreshAsync(
                         config.ClaudeApiKey,
-                        config.ClaudeBaseUrl));
+                        config.ClaudeBaseUrl,
+                        cancellationToken));
             }
             else if (!config.UseLiveClaudeModelList)
             {
@@ -89,9 +90,10 @@ public static class ClaudeEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => ClaudeModelManager.RefreshAsync(
+                    cancellationToken => ClaudeModelManager.RefreshAsync(
                         config.ClaudeApiKey,
-                        config.ClaudeBaseUrl));
+                        config.ClaudeBaseUrl,
+                        cancellationToken));
             }
         }
 
@@ -99,9 +101,10 @@ public static class ClaudeEngineUI
             LiveModelRefreshScope,
             config.UseLiveClaudeModelList,
             BuildLiveModelRefreshSignature(config),
-            () => ClaudeModelManager.RefreshAsync(
+            cancellationToken => ClaudeModelManager.RefreshAsync(
                 config.ClaudeApiKey,
-                config.ClaudeBaseUrl));
+                config.ClaudeBaseUrl,
+                cancellationToken));
 
         var tooltips = new Dictionary<string, string>
         {

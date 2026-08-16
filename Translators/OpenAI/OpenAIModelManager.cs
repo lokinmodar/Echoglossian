@@ -105,12 +105,15 @@ public static class OpenAIModelManager
     }
   }
 
-  public static async Task<bool> RefreshAsync(string apiKey)
+  public static async Task<bool> RefreshAsync(
+      string apiKey,
+      CancellationToken cancellationToken = default)
   {
     return await RefreshAsync(
         apiKey,
         DefaultOpenAiModelsBaseUrl,
-        OfficialProviderStateKey);
+        OfficialProviderStateKey,
+        cancellationToken);
   }
 
   /// <summary>
@@ -120,10 +123,12 @@ public static class OpenAIModelManager
   /// <param name="apiKey">The API key used by the provider.</param>
   /// <param name="baseUrl">The provider base URL.</param>
   /// <param name="providerName">The displayable provider label.</param>
+  /// <param name="cancellationToken">The token that cancels live discovery.</param>
   public static async Task<bool> RefreshAsync(
       string apiKey,
       string baseUrl,
-      string providerName)
+      string providerName,
+      CancellationToken cancellationToken = default)
   {
     var observedAtUtc = DateTime.UtcNow;
     var providerStateKey = ResolveProviderStateKey(providerName);
@@ -162,7 +167,7 @@ public static class OpenAIModelManager
       request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
       request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-      using var response = await HttpClient.SendAsync(request);
+      using var response = await HttpClient.SendAsync(request, cancellationToken);
       if (!response.IsSuccessStatusCode)
       {
         ResetToDefault(providerStateKey);
@@ -176,7 +181,7 @@ public static class OpenAIModelManager
         return false;
       }
 
-      string json = await response.Content.ReadAsStringAsync();
+      string json = await response.Content.ReadAsStringAsync(cancellationToken);
       var root = JObject.Parse(json);
       var data = root["data"] as JArray;
       if (data == null)
@@ -234,6 +239,7 @@ public static class OpenAIModelManager
 
       if (models.Count > 0)
       {
+        cancellationToken.ThrowIfCancellationRequested();
         ApplyRefreshSuccess(
             providerStateKey,
             observedAtUtc,
@@ -251,6 +257,11 @@ public static class OpenAIModelManager
           normalizedBaseUrl,
           false,
           "Provider returned no supported text models.");
+    }
+    catch (OperationCanceledException)
+      when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
     }
     catch (Exception ex)
     {

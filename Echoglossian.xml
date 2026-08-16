@@ -33870,7 +33870,7 @@
             <param name="config">The active plugin configuration.</param>
             <param name="variant">The provider variant being refreshed.</param>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.RefreshCustomLiveModelsAsync(System.String,System.String)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.RefreshCustomLiveModelsAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
                 Refreshes the custom OpenAI-compatible live model list and captures
                 the outcome for provider-specific UI feedback.
@@ -33878,7 +33878,7 @@
             <param name="apiKey">The custom provider API key.</param>
             <param name="baseUrl">The custom provider base URL.</param>
         </member>
-        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.RefreshLiveModelsAsync(Echoglossian.Config,Echoglossian.OpenAiProviderVariant)">
+        <member name="M:Echoglossian.PluginUI.EngineConfigUI.ChatGPTEngineUI.RefreshLiveModelsAsync(Echoglossian.Config,Echoglossian.OpenAiProviderVariant,System.Threading.CancellationToken)">
             <summary>
                 Refreshes the live model list for the selected provider variant.
             </summary>
@@ -38841,12 +38841,13 @@
                 Restores the committed fallback model list.
             </summary>
         </member>
-        <member name="M:Echoglossian.Translators.Claude.ClaudeModelManager.RefreshAsync(System.String,System.String)">
+        <member name="M:Echoglossian.Translators.Claude.ClaudeModelManager.RefreshAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
                 Refreshes the Claude model list from Anthropic's official models endpoint.
             </summary>
             <param name="apiKey">The Anthropic API key.</param>
             <param name="baseUrl">The Anthropic API base URL.</param>
+            <param name="cancellationToken">The token that cancels live discovery.</param>
             <returns>A task that completes when refresh finishes.</returns>
         </member>
         <member name="T:Echoglossian.Translators.Claude.ClaudeTextModelDefaults">
@@ -39023,12 +39024,13 @@
                 Restores the predefined DeepSeek model catalog.
             </summary>
         </member>
-        <member name="M:Echoglossian.Translators.DeepSeek.DeepSeekModelManager.RefreshAsync(System.String,System.String)">
+        <member name="M:Echoglossian.Translators.DeepSeek.DeepSeekModelManager.RefreshAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
                 Refreshes the DeepSeek model list from the configured endpoint.
             </summary>
             <param name="apiKey">The configured DeepSeek API key.</param>
             <param name="baseUrl">The configured DeepSeek base URL.</param>
+            <param name="cancellationToken">The token that cancels live discovery.</param>
         </member>
         <member name="M:Echoglossian.Translators.DeepSeek.DeepSeekModelManager.BuildModelsEndpoint(System.String)">
             <summary>
@@ -40343,12 +40345,13 @@
                 Restores the committed fallback model list.
             </summary>
         </member>
-        <member name="M:Echoglossian.Translators.LmStudio.LmStudioModelManager.RefreshAsync(System.String,System.String)">
+        <member name="M:Echoglossian.Translators.LmStudio.LmStudioModelManager.RefreshAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
                 Refreshes the LM Studio model list from the live API.
             </summary>
             <param name="baseUrl">Base API URL.</param>
             <param name="apiKey">Optional API key.</param>
+            <param name="cancellationToken">The token that cancels live discovery.</param>
             <returns>Awaitable task.</returns>
         </member>
         <member name="T:Echoglossian.Translators.LmStudio.LmStudioTextModelDefaults">
@@ -40509,7 +40512,7 @@
             </summary>
             <param name="providerStateKey">The provider-profile state key.</param>
         </member>
-        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.RefreshAsync(System.String,System.String,System.String)">
+        <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.RefreshAsync(System.String,System.String,System.String,System.Threading.CancellationToken)">
             <summary>
                 Refreshes the model list from the specified OpenAI-compatible
                 provider endpoint.
@@ -40517,6 +40520,7 @@
             <param name="apiKey">The API key used by the provider.</param>
             <param name="baseUrl">The provider base URL.</param>
             <param name="providerName">The displayable provider label.</param>
+            <param name="cancellationToken">The token that cancels live discovery.</param>
         </member>
         <member name="M:Echoglossian.Translators.OpenAI.OpenAIModelManager.GetRefreshSnapshot">
             <summary>

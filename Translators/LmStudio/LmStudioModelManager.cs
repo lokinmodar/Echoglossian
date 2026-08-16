@@ -34,8 +34,12 @@ public static class LmStudioModelManager
     /// </summary>
     /// <param name="baseUrl">Base API URL.</param>
     /// <param name="apiKey">Optional API key.</param>
+    /// <param name="cancellationToken">The token that cancels live discovery.</param>
     /// <returns>Awaitable task.</returns>
-    public static async Task RefreshAsync(string baseUrl, string? apiKey = null)
+    public static async Task RefreshAsync(
+        string baseUrl,
+        string? apiKey = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -48,10 +52,10 @@ public static class LmStudioModelManager
                     new AuthenticationHeaderValue("Bearer", apiKey);
             }
 
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
             var parsed = JObject.Parse(json);
             var data = parsed["data"]?.ToObject<List<JObject>>() ?? [];
 
@@ -83,6 +87,7 @@ public static class LmStudioModelManager
 
             if (models.Any())
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 CurrentModelList = models;
                 LlmCapabilityRefreshPromoter.PromoteDiscoveredModels(
                     Echoglossian.TransEngines.LmStudio,
@@ -91,6 +96,11 @@ public static class LmStudioModelManager
                     models.Select(static model => model.Id).ToArray(),
                     DateTime.UtcNow);
             }
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
