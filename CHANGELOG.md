@@ -7,6 +7,29 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0816.1235`
+
+This package is prepared for official Dalamud submission from the current
+`v4-series` head after [PR #271](https://github.com/lokinmodar/Echoglossian/pull/271).
+It focuses on the remaining dialogue LLM release follow-ups: prompt save and
+async glossary refresh completion, per-surface runtime invalidation when the
+dialogue-only LLM override is active, and shutdown-safe cancellation for live
+model discovery.
+
+Official `DalamudPluginsD17` submission is pending.
+
+Highlights:
+
+- completes the remaining `#252` follow-up by saving LLM prompt edits through
+  the shared persistence flow and refreshing structured dialogue glossaries
+  asynchronously instead of blocking the caller path
+- fixes `#270` so dialogue-only LLM override changes and quest/map surface
+  toggles rebuild the right runtime state, keeping disabled surfaces such as
+  Journal, RecommendList, and AreaMap turned off
+- cancels in-flight live model discovery during plugin shutdown or reload so
+  provider model catalogs and capability overlays cannot keep updating after
+  teardown
+
 ## Published Release `v4.2601.0815.1339`
 
 This package was published to the official Dalamud feed after
