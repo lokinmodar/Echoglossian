@@ -17,6 +17,34 @@ namespace Echoglossian.Tests;
 public sealed class RuntimeConfigurationRefreshContractTests
 {
     /// <summary>
+    ///     Ensures every quest-surface toggle that can leave handler-owned
+    ///     native state on screen invalidates the addon-handler refresh
+    ///     signature.
+    /// </summary>
+    /// <param name="fieldName">The config field that toggles one quest surface.</param>
+    [Theory]
+    [InlineData(nameof(Config.TranslateJournal))]
+    [InlineData(nameof(Config.TranslateJournalDetail))]
+    [InlineData(nameof(Config.TranslateJournalAccept))]
+    [InlineData(nameof(Config.TranslateJournalResult))]
+    [InlineData(nameof(Config.TranslateRecommendList))]
+    [InlineData(nameof(Config.TranslateAreaMap))]
+    public void AddonHandlerRegistrationSignature_ChangesWhenQuestSurfaceToggleChanges(
+        string fieldName)
+    {
+        var disabled = new Config();
+        var enabled = new Config();
+        var field = typeof(Config).GetField(fieldName);
+
+        Assert.NotNull(field);
+        field!.SetValue(enabled, true);
+
+        Assert.NotEqual(
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(disabled),
+            Echoglossian.ComputeAddonHandlerRegistrationSignature(enabled));
+    }
+
+    /// <summary>
     ///     Ensures visible addon-owned presentation is restored before runtime
     ///     reset and translator rebuild happen.
     /// </summary>
@@ -151,6 +179,34 @@ public sealed class RuntimeConfigurationRefreshContractTests
         Assert.Contains("this.configuration.YandexCloudPrompt,", source, StringComparison.Ordinal);
         Assert.Contains("this.configuration.OllamaPrompt,", source, StringComparison.Ordinal);
         Assert.Contains("this.configuration.LmStudioPrompt,", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Ensures the dialogue-only LLM override contributes to the
+    ///     translation runtime signature so override-only saves rebuild the
+    ///     live translation service.
+    /// </summary>
+    [Fact]
+    public void Translation_runtime_signature_includes_dialogue_override_fields()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "RuntimeConfigurationRefresh.cs"));
+
+        Assert.Contains(
+            "this.configuration.UseDialogueLlmOverride,",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.configuration.DialogueLlmEngine,",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "this.configuration.DialogueLlmEngineKey,",
+            source,
+            StringComparison.Ordinal);
     }
 
     /// <summary>
