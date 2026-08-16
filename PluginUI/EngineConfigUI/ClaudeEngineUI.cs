@@ -68,9 +68,10 @@ public static class ClaudeEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => ClaudeModelManager.RefreshAsync(
+                    cancellationToken => ClaudeModelManager.RefreshAsync(
                         config.ClaudeApiKey,
-                        config.ClaudeBaseUrl));
+                        config.ClaudeBaseUrl,
+                        cancellationToken));
             }
             else if (!config.UseLiveClaudeModelList)
             {
@@ -89,9 +90,10 @@ public static class ClaudeEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => ClaudeModelManager.RefreshAsync(
+                    cancellationToken => ClaudeModelManager.RefreshAsync(
                         config.ClaudeApiKey,
-                        config.ClaudeBaseUrl));
+                        config.ClaudeBaseUrl,
+                        cancellationToken));
             }
         }
 
@@ -99,9 +101,10 @@ public static class ClaudeEngineUI
             LiveModelRefreshScope,
             config.UseLiveClaudeModelList,
             BuildLiveModelRefreshSignature(config),
-            () => ClaudeModelManager.RefreshAsync(
+            cancellationToken => ClaudeModelManager.RefreshAsync(
                 config.ClaudeApiKey,
-                config.ClaudeBaseUrl));
+                config.ClaudeBaseUrl,
+                cancellationToken));
 
         var tooltips = new Dictionary<string, string>
         {
@@ -155,7 +158,7 @@ public static class ClaudeEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Claude,
             PromptTemplateManager.DefaultPrompt,
@@ -164,7 +167,6 @@ public static class ClaudeEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

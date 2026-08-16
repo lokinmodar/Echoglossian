@@ -1446,4 +1446,14 @@ public class Config : IPluginConfiguration
   /// Gets or sets a value indicating whether translation should run asynchronously.
   /// </summary>
   [DefaultValue(true)] public bool EnableAsyncTranslation { get; set; } = true;
+
+  /// <summary>
+  ///     Creates a shallow immutable persistence snapshot after the live config
+  ///     has already been normalized by the caller.
+  /// </summary>
+  /// <returns>The snapshot safe to persist on a background worker.</returns>
+  public Config CreatePersistenceSnapshot()
+  {
+    return (Config)this.MemberwiseClone();
+  }
 }

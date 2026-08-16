@@ -361,6 +361,11 @@ public static class TranslationEnginesTab
             Resources.DialogueGlossarySectionLabel);
         ImGui.TextWrapped(
             Resources.DialogueGlossaryDescription);
+        ImGui.TextWrapped(
+            string.Format(
+                CultureInfo.CurrentCulture,
+                Resources.TranslationSettingsNewRequestsOnlyNotice,
+                Resources.TranslatorDebuggerRetranslateVisibleDialogueAndPersist));
 
         changed |= ImGui.Checkbox(
             Resources.EnableDialogueGlossaryInjectionLabel,
@@ -382,8 +387,9 @@ public static class TranslationEnginesTab
         if (ImGui.Button(
                 Resources.ReloadDialogueGlossaryButtonLabel))
         {
-            StructuredDialogueGlossaryStore.Refresh(
-                config.DialogueGlossaryFilePath);
+            _ = StructuredDialogueGlossaryStore.RefreshAsync(
+                config.DialogueGlossaryFilePath,
+                CancellationToken.None);
         }
 
         ImGui.EndDisabled();

@@ -4489,6 +4489,17 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Pesquisa uma cadeia de caracteres localizada semelhante a Changes here affect new requests only. Existing stored translations stay in the database. Use Translator Debugger &gt; &quot;{0}&quot; if you want to refresh the current visible story text explicitly..
+        /// </summary>
+        public static string TranslationSettingsNewRequestsOnlyNotice
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationSettingsNewRequestsOnlyNotice", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a This translation engine does not require any special settings..
         /// </summary>
         public static string TranslationEngineSettingsNotRequired

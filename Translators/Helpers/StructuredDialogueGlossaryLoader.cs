@@ -17,8 +17,11 @@ public static class StructuredDialogueGlossaryLoader
     ///     Loads one glossary file from disk.
     /// </summary>
     /// <param name="filePath">The operator-configured glossary file path.</param>
+    /// <param name="cancellationToken">The token that cancels file loading.</param>
     /// <returns>The normalized glossary load result.</returns>
-    public static StructuredDialogueGlossaryLoadResult LoadFromFile(string filePath)
+    public static async Task<StructuredDialogueGlossaryLoadResult> LoadFromFileAsync(
+        string filePath,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {
@@ -40,8 +43,16 @@ public static class StructuredDialogueGlossaryLoader
 
         try
         {
-            var json = File.ReadAllText(filePath);
+            cancellationToken.ThrowIfCancellationRequested();
+            var json = await File.ReadAllTextAsync(
+                filePath,
+                cancellationToken).ConfigureAwait(false);
             return LoadFromJson(json);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

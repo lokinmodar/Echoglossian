@@ -42,8 +42,9 @@ public static class GeminiEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => GeminiModelManager.RefreshAsync(
-                        config.GeminiTranslatorApiKey ?? string.Empty));
+                    cancellationToken => GeminiModelManager.RefreshAsync(
+                        config.GeminiTranslatorApiKey ?? string.Empty,
+                        cancellationToken));
             }
             else
             {
@@ -62,8 +63,9 @@ public static class GeminiEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => GeminiModelManager.RefreshAsync(
-                        config.GeminiTranslatorApiKey ?? string.Empty));
+                    cancellationToken => GeminiModelManager.RefreshAsync(
+                        config.GeminiTranslatorApiKey ?? string.Empty,
+                        cancellationToken));
             }
         }
 
@@ -71,8 +73,9 @@ public static class GeminiEngineUI
             LiveModelRefreshScope,
             config.UseLiveGeminiModelList,
             BuildLiveModelRefreshSignature(config),
-            () => GeminiModelManager.RefreshAsync(
-                config.GeminiTranslatorApiKey ?? string.Empty));
+            cancellationToken => GeminiModelManager.RefreshAsync(
+                config.GeminiTranslatorApiKey ?? string.Empty,
+                cancellationToken));
 
         var tooltips = new Dictionary<string, string>
         {
@@ -122,7 +125,7 @@ public static class GeminiEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Gemini,
             PromptTemplateManager.DefaultPrompt,
@@ -131,7 +134,6 @@ public static class GeminiEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

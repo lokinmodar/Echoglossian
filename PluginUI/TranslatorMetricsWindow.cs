@@ -590,8 +590,9 @@ public sealed class TranslatorMetricsWindow
     if (ImGui.Button(
             Resources.TranslatorDebuggerReloadDialogueGlossary))
     {
-      StructuredDialogueGlossaryStore.Refresh(
-          this.config.DialogueGlossaryFilePath);
+      _ = StructuredDialogueGlossaryStore.RefreshAsync(
+          this.config.DialogueGlossaryFilePath,
+          CancellationToken.None);
     }
 
     if (!this.runtimeActionsAvailable &&

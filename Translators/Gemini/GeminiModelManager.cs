@@ -24,7 +24,9 @@ public static class GeminiModelManager
         }
     }
 
-    public static async Task RefreshAsync(string apiKey)
+    public static async Task RefreshAsync(
+        string apiKey,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -39,13 +41,13 @@ public static class GeminiModelManager
             request.Headers.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var response = await HttpClient.SendAsync(request);
+            var response = await HttpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 return;
             }
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
             var root = JObject.Parse(json);
             var modelsToken = root["models"];
 
@@ -106,6 +108,7 @@ public static class GeminiModelManager
 
             lock (SyncLock)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (models.Count > 0)
                 {
                     CurrentModelList = models;
@@ -121,6 +124,11 @@ public static class GeminiModelManager
                     models.Select(static model => model.Id).ToArray(),
                     DateTime.UtcNow);
             }
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {

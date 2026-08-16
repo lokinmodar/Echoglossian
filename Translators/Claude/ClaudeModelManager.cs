@@ -39,8 +39,12 @@ public static class ClaudeModelManager
     /// </summary>
     /// <param name="apiKey">The Anthropic API key.</param>
     /// <param name="baseUrl">The Anthropic API base URL.</param>
+    /// <param name="cancellationToken">The token that cancels live discovery.</param>
     /// <returns>A task that completes when refresh finishes.</returns>
-    public static async Task RefreshAsync(string apiKey, string baseUrl)
+    public static async Task RefreshAsync(
+        string apiKey,
+        string baseUrl,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(baseUrl))
         {
@@ -57,13 +61,16 @@ public static class ClaudeModelManager
             request.Headers.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
 
-            using HttpResponseMessage response = await HttpClient.SendAsync(request).ConfigureAwait(false);
+            using HttpResponseMessage response = await HttpClient.SendAsync(
+                request,
+                cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 return;
             }
 
-            string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string json = await response.Content.ReadAsStringAsync(
+                cancellationToken).ConfigureAwait(false);
             JObject root = JObject.Parse(json);
             JArray? data = root["data"] as JArray;
             if (data is null)
@@ -116,6 +123,7 @@ public static class ClaudeModelManager
                 defaultIndex = 0;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             LlmTextModel defaultModel = ordered[defaultIndex];
             ordered[defaultIndex] = defaultModel with { IsDefault = true };
 
@@ -130,6 +138,11 @@ public static class ClaudeModelManager
                 baseUrl,
                 ordered.Select(static model => model.Id).ToArray(),
                 DateTime.UtcNow);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {

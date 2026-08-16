@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Collections.Immutable;
+
 using Echoglossian.Translators.Helpers;
 
 namespace Echoglossian.Translators;
@@ -13,13 +15,12 @@ namespace Echoglossian.Translators;
 /// </summary>
 public static class StructuredDialogueGlossaryStore
 {
-    private static readonly object SyncLock = new();
-    private static List<StructuredDialogueGlossaryEntry> currentEntries = [];
-    private static string? lastFailureDetail;
-    private static DateTime? lastLoadObservedAtUtc;
-    private static string? lastLoadPath;
-    private static bool? lastLoadSucceeded;
-    private static int lastSkippedEntryCount;
+    private static readonly Func<string, CancellationToken, Task<StructuredDialogueGlossaryLoadResult>>
+        DefaultLoader = StructuredDialogueGlossaryLoader.LoadFromFileAsync;
+    private static Func<string, CancellationToken, Task<StructuredDialogueGlossaryLoadResult>>
+        loadFromFileAsync = DefaultLoader;
+    private static StoreState currentState = StoreState.Empty;
+    private static long requestedGeneration;
 
     /// <summary>
     ///     Describes the current shared structured dialogue glossary state.
@@ -47,15 +48,8 @@ public static class StructuredDialogueGlossaryStore
     /// </summary>
     public static void Clear()
     {
-        lock (SyncLock)
-        {
-            currentEntries = [];
-            lastFailureDetail = null;
-            lastLoadObservedAtUtc = null;
-            lastLoadPath = null;
-            lastLoadSucceeded = null;
-            lastSkippedEntryCount = 0;
-        }
+        var generation = Interlocked.Increment(ref requestedGeneration);
+        PublishState(StoreState.Empty with { Generation = generation });
     }
 
     /// <summary>
@@ -65,45 +59,66 @@ public static class StructuredDialogueGlossaryStore
     /// <returns>Whether the refresh succeeded.</returns>
     public static bool Refresh(string? filePath)
     {
+        return RefreshAsync(filePath, CancellationToken.None).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    ///     Refreshes the glossary rows from one operator-provided file path
+    ///     without blocking the caller thread.
+    /// </summary>
+    /// <param name="filePath">The glossary file path.</param>
+    /// <param name="cancellationToken">The token that cancels the load.</param>
+    /// <returns>A task containing the refresh result.</returns>
+    public static async Task<bool> RefreshAsync(
+        string? filePath,
+        CancellationToken cancellationToken)
+    {
+        var generation = Interlocked.Increment(ref requestedGeneration);
         var observedAtUtc = DateTime.UtcNow;
+        string? normalizedPath = null;
+        StructuredDialogueGlossaryLoadResult result;
+
         try
         {
-            var normalizedPath = string.IsNullOrWhiteSpace(filePath)
+            normalizedPath = string.IsNullOrWhiteSpace(filePath)
                 ? null
                 : Path.GetFullPath(filePath.Trim());
-            var result = StructuredDialogueGlossaryLoader.LoadFromFile(
-                normalizedPath ?? string.Empty);
-
-            lock (SyncLock)
-            {
-                currentEntries = result.Succeeded
-                    ? result.Entries.ToList()
-                    : [];
-                lastLoadObservedAtUtc = observedAtUtc;
-                lastLoadPath = normalizedPath;
-                lastLoadSucceeded = result.Succeeded;
-                lastSkippedEntryCount = result.SkippedEntryCount;
-                lastFailureDetail = result.Succeeded
-                    ? null
-                    : result.FailureDetail;
-            }
-
-            return result.Succeeded;
+            result = await loadFromFileAsync(
+                normalizedPath ?? string.Empty,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            return false;
         }
         catch (Exception ex)
         {
-            lock (SyncLock)
-            {
-                currentEntries = [];
-                lastLoadObservedAtUtc = observedAtUtc;
-                lastLoadPath = filePath;
-                lastLoadSucceeded = false;
-                lastSkippedEntryCount = 0;
-                lastFailureDetail = ex.Message;
-            }
-
-            return false;
+            result = new StructuredDialogueGlossaryLoadResult(
+                false,
+                [],
+                0,
+                $"{ex.GetType().Name}: {ex.Message}");
         }
+
+        if (generation != Volatile.Read(ref requestedGeneration))
+        {
+            return result.Succeeded;
+        }
+
+        PublishState(new StoreState(
+            generation,
+            result.Succeeded
+                ? result.Entries.ToImmutableArray()
+                : ImmutableArray<StructuredDialogueGlossaryEntry>.Empty,
+            observedAtUtc,
+            result.Succeeded,
+            normalizedPath,
+            result.SkippedEntryCount,
+            result.Succeeded
+                ? null
+                : result.FailureDetail));
+        return result.Succeeded;
     }
 
     /// <summary>
@@ -117,13 +132,11 @@ public static class StructuredDialogueGlossaryStore
         string? sourceLanguage,
         string? targetLanguage)
     {
-        lock (SyncLock)
-        {
-            return currentEntries
-                .Where(entry => LanguageMatches(entry.SourceLanguage, sourceLanguage))
-                .Where(entry => LanguageMatches(entry.TargetLanguage, targetLanguage))
-                .ToList();
-        }
+        var state = Volatile.Read(ref currentState);
+        return state.Entries
+            .Where(entry => LanguageMatches(entry.SourceLanguage, sourceLanguage))
+            .Where(entry => LanguageMatches(entry.TargetLanguage, targetLanguage))
+            .ToArray();
     }
 
     /// <summary>
@@ -132,16 +145,27 @@ public static class StructuredDialogueGlossaryStore
     /// <returns>The current glossary snapshot.</returns>
     public static StructuredDialogueGlossarySnapshot GetSnapshot()
     {
-        lock (SyncLock)
-        {
-            return new StructuredDialogueGlossarySnapshot(
-                lastLoadObservedAtUtc,
-                lastLoadSucceeded,
-                lastLoadPath,
-                currentEntries.Count,
-                lastSkippedEntryCount,
-                lastFailureDetail);
-        }
+        var state = Volatile.Read(ref currentState);
+        return new StructuredDialogueGlossarySnapshot(
+            state.LastLoadObservedAtUtc,
+            state.LastLoadSucceeded,
+            state.LastLoadPath,
+            state.Entries.Length,
+            state.LastSkippedEntryCount,
+            state.LastLoadFailureDetail);
+    }
+
+    /// <summary>
+    ///     Resets retained state for isolated tests and optionally overrides
+    ///     the async file loader.
+    /// </summary>
+    /// <param name="loadOverride">The async file loader override.</param>
+    internal static void ResetForTests(
+        Func<string, CancellationToken, Task<StructuredDialogueGlossaryLoadResult>>? loadOverride = null)
+    {
+        loadFromFileAsync = loadOverride ?? DefaultLoader;
+        Interlocked.Exchange(ref requestedGeneration, 0);
+        PublishState(StoreState.Empty);
     }
 
     /// <summary>
@@ -168,5 +192,46 @@ public static class StructuredDialogueGlossaryStore
             entryLanguage.Trim(),
             requestedLanguage.Trim(),
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    ///     Publishes one immutable store state atomically.
+    /// </summary>
+    /// <param name="state">The immutable state to publish.</param>
+    private static void PublishState(StoreState state)
+    {
+        Volatile.Write(ref currentState, state);
+    }
+
+    /// <summary>
+    ///     Retains one immutable glossary snapshot plus its published entries.
+    /// </summary>
+    /// <param name="Generation">The monotonic publication generation.</param>
+    /// <param name="Entries">The published immutable glossary entries.</param>
+    /// <param name="LastLoadObservedAtUtc">The last load observation time.</param>
+    /// <param name="LastLoadSucceeded">Whether the last load succeeded.</param>
+    /// <param name="LastLoadPath">The last attempted glossary path.</param>
+    /// <param name="LastSkippedEntryCount">The skipped-row count.</param>
+    /// <param name="LastLoadFailureDetail">The failure detail when the load failed.</param>
+    private sealed record StoreState(
+        long Generation,
+        ImmutableArray<StructuredDialogueGlossaryEntry> Entries,
+        DateTime? LastLoadObservedAtUtc,
+        bool? LastLoadSucceeded,
+        string? LastLoadPath,
+        int LastSkippedEntryCount,
+        string? LastLoadFailureDetail)
+    {
+        /// <summary>
+        ///     Gets the empty published store state.
+        /// </summary>
+        public static StoreState Empty { get; } = new(
+            0,
+            ImmutableArray<StructuredDialogueGlossaryEntry>.Empty,
+            null,
+            null,
+            null,
+            0,
+            null);
     }
 }

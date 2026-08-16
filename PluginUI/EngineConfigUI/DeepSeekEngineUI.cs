@@ -52,9 +52,10 @@ public static class DeepSeekEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => DeepSeekModelManager.RefreshAsync(
+                    cancellationToken => DeepSeekModelManager.RefreshAsync(
                         config.DeepSeekTranslatorApiKey ?? string.Empty,
-                        config.DeepSeekBaseUrl ?? string.Empty));
+                        config.DeepSeekBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
             else if (!config.UseLiveDeepSeekModelList)
             {
@@ -73,9 +74,10 @@ public static class DeepSeekEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => DeepSeekModelManager.RefreshAsync(
+                    cancellationToken => DeepSeekModelManager.RefreshAsync(
                         config.DeepSeekTranslatorApiKey ?? string.Empty,
-                        config.DeepSeekBaseUrl ?? string.Empty));
+                        config.DeepSeekBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
         }
 
@@ -83,9 +85,10 @@ public static class DeepSeekEngineUI
             LiveModelRefreshScope,
             config.UseLiveDeepSeekModelList,
             BuildLiveModelRefreshSignature(config),
-            () => DeepSeekModelManager.RefreshAsync(
+            cancellationToken => DeepSeekModelManager.RefreshAsync(
                 config.DeepSeekTranslatorApiKey ?? string.Empty,
-                config.DeepSeekBaseUrl ?? string.Empty));
+                config.DeepSeekBaseUrl ?? string.Empty,
+                cancellationToken));
 
         var tooltips = new Dictionary<string, string>
         {
@@ -135,7 +138,7 @@ public static class DeepSeekEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.DeepSeek,
             PromptTemplateManager.DefaultPrompt,
@@ -144,7 +147,6 @@ public static class DeepSeekEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

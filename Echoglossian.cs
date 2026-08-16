@@ -127,6 +127,7 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly CultureInfo cultureInfo;
   private readonly IDalamudTextureWrap cutsceneChoiceImage;
   private readonly IDalamudTextureWrap logo;
+  private readonly ConfigurationSaveCoordinator configurationSaveCoordinator;
   private QueuedTranslationBroker queuedTranslationBroker;
   private readonly HoverTooltipManager hoverTooltipManager;
   private readonly RtlTexturePresentationService rtlTexturePresentationService;
@@ -155,6 +156,7 @@ public partial class Echoglossian : IDalamudPlugin
   private bool translationRefreshRestoreApplied;
   private bool runtimeConfigurationDirty;
   private bool runtimeConfigurationReady;
+  private Task? configurationSaveShutdownTask;
 
   private AtkTextNodeBufferWrapper atkTextNodeBufferWrapper;
 
@@ -190,15 +192,18 @@ public partial class Echoglossian : IDalamudPlugin
     this.configuration.DefaultPluginCulture = normalizedPluginCulture;
     this.cultureInfo = PluginCultureLocaleHelper.ApplyPersistedCultureName(
         normalizedPluginCulture);
-    if (persistedConfig == null)
-    {
-      PluginInterface.SavePluginConfig(this.configuration);
-    }
-
     var loadedConfigVersion = this.configuration.Version;
     var currentConfigVersion = new Config().Version;
     ConfigDirectory = PluginInterface.GetPluginConfigDirectory() +
                       Path.DirectorySeparatorChar;
+    this.configurationSaveCoordinator = new ConfigurationSaveCoordinator(
+        this.PersistPluginConfigurationSnapshotAsync,
+        this.ObserveConfigurationSaveFailure);
+    activeInstance = this;
+    if (persistedConfig == null)
+    {
+      SaveConfig(this.configuration);
+    }
 
     CommandManager.AddHandler(
         SlashCommand,
@@ -319,7 +324,7 @@ public partial class Echoglossian : IDalamudPlugin
     LanguagePresentationPolicy.ApplyLanguageFlags(this.configuration);
     if (languagePolicyChanged)
     {
-      PluginInterface.SavePluginConfig(this.configuration);
+      SaveConfig(this.configuration);
     }
 
     AssetsManager.RefreshPluginAssetsState(SelectedLanguage);
@@ -441,7 +446,6 @@ public partial class Echoglossian : IDalamudPlugin
 
     PluginInterface.UiBuilder.Draw += this.BuildUi;
     this.startupAudit.Mark(PluginStartupStage.PluginUiRegistered);
-    activeInstance = this;
     this.structuredDialogueGlossaryRuntimeSignature =
         this.ComputeStructuredDialogueGlossaryRuntimeSignature();
     this.namePlatePresentationSignature =
@@ -555,6 +559,8 @@ public partial class Echoglossian : IDalamudPlugin
   protected virtual void Dispose(bool disposing)
   {
     this.startupAudit.Mark(PluginStartupStage.DisposeStarted);
+    this.BeginConfigurationSaveShutdown();
+    LiveModelRefreshCoordinator.ResetForPluginShutdown();
 
     if (this.registeredAddonHandlers != null)
     {

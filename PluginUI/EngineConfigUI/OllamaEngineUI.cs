@@ -42,7 +42,9 @@ public static class OllamaEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
+                    cancellationToken => OllamaModelManager.RefreshAsync(
+                        config.OllamaUrl ?? string.Empty,
+                        cancellationToken));
             }
             else if (!config.UseLiveOllamaModelList)
             {
@@ -61,7 +63,9 @@ public static class OllamaEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
+                    cancellationToken => OllamaModelManager.RefreshAsync(
+                        config.OllamaUrl ?? string.Empty,
+                        cancellationToken));
             }
         }
 
@@ -69,7 +73,9 @@ public static class OllamaEngineUI
             LiveModelRefreshScope,
             config.UseLiveOllamaModelList,
             BuildLiveModelRefreshSignature(config),
-            () => OllamaModelManager.RefreshAsync(config.OllamaUrl ?? string.Empty));
+            cancellationToken => OllamaModelManager.RefreshAsync(
+                config.OllamaUrl ?? string.Empty,
+                cancellationToken));
 
         if (config.UseLiveOllamaModelList &&
             OllamaModelManager.CurrentModelList.Count == 0)
@@ -119,7 +125,7 @@ public static class OllamaEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.Ollama,
             PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.Ollama),
@@ -128,7 +134,6 @@ public static class OllamaEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

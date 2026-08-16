@@ -63,9 +63,10 @@ public static class LmStudioEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => LmStudioModelManager.RefreshAsync(
+                    cancellationToken => LmStudioModelManager.RefreshAsync(
                         config.LmStudioBaseUrl ?? string.Empty,
-                        config.UseLmStudioAuth ? config.LmStudioApiKey : null));
+                        config.UseLmStudioAuth ? config.LmStudioApiKey : null,
+                        cancellationToken));
             }
             else if (!config.UseLiveLmStudioModelList)
             {
@@ -88,9 +89,10 @@ public static class LmStudioEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => LmStudioModelManager.RefreshAsync(
+                    cancellationToken => LmStudioModelManager.RefreshAsync(
                         config.LmStudioBaseUrl ?? string.Empty,
-                        config.UseLmStudioAuth ? config.LmStudioApiKey : null));
+                        config.UseLmStudioAuth ? config.LmStudioApiKey : null,
+                        cancellationToken));
             }
         }
 
@@ -98,9 +100,10 @@ public static class LmStudioEngineUI
             LiveModelRefreshScope,
             config.UseLiveLmStudioModelList,
             BuildLiveModelRefreshSignature(config),
-            () => LmStudioModelManager.RefreshAsync(
+            cancellationToken => LmStudioModelManager.RefreshAsync(
                 config.LmStudioBaseUrl ?? string.Empty,
-                config.UseLmStudioAuth ? config.LmStudioApiKey : null));
+                config.UseLmStudioAuth ? config.LmStudioApiKey : null,
+                cancellationToken));
 
         changed |= ModelDropdownUI.Draw(
             Resources.Model,
@@ -137,7 +140,7 @@ public static class LmStudioEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.LmStudio,
             PromptTemplateManager.GetDefaultPrompt(Echoglossian.PromptType.LmStudio),
@@ -146,7 +149,6 @@ public static class LmStudioEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

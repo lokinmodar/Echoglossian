@@ -19,7 +19,7 @@ public class StructuredDialogueGlossaryStoreTests
     ///     Ensures the shared store filters loaded entries by language scope.
     /// </summary>
     [Fact]
-    public void GetEntries_ShouldFilterBySourceAndTargetLanguage()
+    public async Task GetEntries_ShouldFilterBySourceAndTargetLanguage()
     {
         var filePath = Path.GetTempFileName();
         try
@@ -44,7 +44,9 @@ public class StructuredDialogueGlossaryStoreTests
                 """);
 
             StructuredDialogueGlossaryStore.Clear();
-            StructuredDialogueGlossaryStore.Refresh(filePath).Should().BeTrue();
+            (await StructuredDialogueGlossaryStore.RefreshAsync(
+                filePath,
+                CancellationToken.None)).Should().BeTrue();
 
             var japaneseToEnglishEntries =
                 StructuredDialogueGlossaryStore.GetEntries("ja-JP", "en-US");
@@ -60,6 +62,157 @@ public class StructuredDialogueGlossaryStoreTests
         {
             StructuredDialogueGlossaryStore.Clear();
             File.Delete(filePath);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures a newer refresh result stays published even if an older
+    ///     in-flight refresh completes afterward.
+    /// </summary>
+    /// <returns>A task that completes when the competing refreshes settle.</returns>
+    [Fact]
+    public async Task RefreshAsync_NewerCompletedLoadStaysPublished()
+    {
+        var firstLoad = new TaskCompletionSource<StructuredDialogueGlossaryLoadResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondLoad = new TaskCompletionSource<StructuredDialogueGlossaryLoadResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var invocationCount = 0;
+
+        StructuredDialogueGlossaryStore.ResetForTests(
+            (_, _) =>
+            {
+                var invocation = Interlocked.Increment(ref invocationCount);
+                return invocation == 1 ? firstLoad.Task : secondLoad.Task;
+            });
+
+        try
+        {
+            var firstRefresh = StructuredDialogueGlossaryStore.RefreshAsync(
+                "first.json",
+                CancellationToken.None);
+            var secondRefresh = StructuredDialogueGlossaryStore.RefreshAsync(
+                "second.json",
+                CancellationToken.None);
+
+            secondLoad.SetResult(new StructuredDialogueGlossaryLoadResult(
+                true,
+                [
+                    new StructuredDialogueGlossaryEntry(
+                        "Krile",
+                        "Krile",
+                        null,
+                        "en-US",
+                        "pt-BR"),
+                ],
+                0,
+                null));
+            await secondRefresh.WaitAsync(TimeSpan.FromSeconds(1));
+
+            firstLoad.SetResult(new StructuredDialogueGlossaryLoadResult(
+                true,
+                [
+                    new StructuredDialogueGlossaryEntry(
+                        "スフェーン",
+                        "Sphene",
+                        null,
+                        "ja-JP",
+                        "en-US"),
+                ],
+                0,
+                null));
+            await firstRefresh.WaitAsync(TimeSpan.FromSeconds(1));
+
+            var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
+            var entries = StructuredDialogueGlossaryStore.GetEntries("en-US", "pt-BR");
+
+            snapshot.LastLoadPath.Should().Be(Path.GetFullPath("second.json"));
+            entries.Should().ContainSingle();
+            entries[0].SourceText.Should().Be("Krile");
+        }
+        finally
+        {
+            StructuredDialogueGlossaryStore.ResetForTests();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures clearing the store invalidates any older in-flight refresh
+    ///     so it cannot repopulate stale glossary rows afterward.
+    /// </summary>
+    /// <returns>A task that completes when the stale refresh is discarded.</returns>
+    [Fact]
+    public async Task Clear_RejectsOlderInFlightRefreshResult()
+    {
+        var pendingLoad = new TaskCompletionSource<StructuredDialogueGlossaryLoadResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        StructuredDialogueGlossaryStore.ResetForTests(
+            (_, _) => pendingLoad.Task);
+
+        try
+        {
+            var refreshTask = StructuredDialogueGlossaryStore.RefreshAsync(
+                "stale.json",
+                CancellationToken.None);
+            StructuredDialogueGlossaryStore.Clear();
+
+            pendingLoad.SetResult(new StructuredDialogueGlossaryLoadResult(
+                true,
+                [
+                    new StructuredDialogueGlossaryEntry(
+                        "スフェーン",
+                        "Sphene",
+                        null,
+                        "ja-JP",
+                        "en-US"),
+                ],
+                0,
+                null));
+            await refreshTask.WaitAsync(TimeSpan.FromSeconds(1));
+
+            var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
+
+            snapshot.EntryCount.Should().Be(0);
+            snapshot.LastLoadPath.Should().BeNull();
+            StructuredDialogueGlossaryStore.GetEntries("ja-JP", "en-US")
+                .Should()
+                .BeEmpty();
+        }
+        finally
+        {
+            StructuredDialogueGlossaryStore.ResetForTests();
+        }
+    }
+
+    /// <summary>
+    ///     Ensures an invalid operator-provided glossary path publishes the
+    ///     standard failure snapshot instead of faulting the returned task
+    ///     before the guarded load path runs.
+    /// </summary>
+    /// <returns>A task that completes when the invalid path is processed.</returns>
+    [Fact]
+    public async Task RefreshAsync_InvalidPath_PublishesFailureSnapshot()
+    {
+        StructuredDialogueGlossaryStore.ResetForTests();
+
+        try
+        {
+            var refreshResult = await StructuredDialogueGlossaryStore.RefreshAsync(
+                "invalid\0path.json",
+                CancellationToken.None);
+            var snapshot = StructuredDialogueGlossaryStore.GetSnapshot();
+
+            refreshResult.Should().BeFalse();
+            snapshot.LastLoadSucceeded.Should().BeFalse();
+            snapshot.EntryCount.Should().Be(0);
+            snapshot.LastLoadPath.Should().BeNull();
+            snapshot.LastLoadFailureDetail.Should().NotBeNull();
+            snapshot.LastLoadFailureDetail.Should().StartWith("ArgumentException:");
+        }
+        finally
+        {
+            StructuredDialogueGlossaryStore.ResetForTests();
         }
     }
 }

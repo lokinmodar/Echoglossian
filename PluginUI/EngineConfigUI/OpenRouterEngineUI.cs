@@ -54,9 +54,10 @@ public static class OpenRouterEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => OpenRouterModelManager.RefreshAsync(
+                    cancellationToken => OpenRouterModelManager.RefreshAsync(
                         config.OpenRouterApiKey ?? string.Empty,
-                        config.OpenRouterBaseUrl ?? string.Empty));
+                        config.OpenRouterBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
             else
             {
@@ -75,9 +76,10 @@ public static class OpenRouterEngineUI
                 LiveModelRefreshCoordinator.ForceRefresh(
                     LiveModelRefreshScope,
                     BuildLiveModelRefreshSignature(config),
-                    () => OpenRouterModelManager.RefreshAsync(
+                    cancellationToken => OpenRouterModelManager.RefreshAsync(
                         config.OpenRouterApiKey ?? string.Empty,
-                        config.OpenRouterBaseUrl ?? string.Empty));
+                        config.OpenRouterBaseUrl ?? string.Empty,
+                        cancellationToken));
             }
         }
 
@@ -85,9 +87,10 @@ public static class OpenRouterEngineUI
             LiveModelRefreshScope,
             config.UseLiveOpenRouterModelList,
             BuildLiveModelRefreshSignature(config),
-            () => OpenRouterModelManager.RefreshAsync(
+            cancellationToken => OpenRouterModelManager.RefreshAsync(
                 config.OpenRouterApiKey ?? string.Empty,
-                config.OpenRouterBaseUrl ?? string.Empty));
+                config.OpenRouterBaseUrl ?? string.Empty,
+                cancellationToken));
 
         var models = config.UseLiveOpenRouterModelList
             ? OpenRouterModelManager.CurrentModelList
@@ -132,7 +135,7 @@ public static class OpenRouterEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.OpenRouter,
             PromptTemplateManager.DefaultPrompt,
@@ -141,7 +144,6 @@ public static class OpenRouterEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;

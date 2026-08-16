@@ -102,7 +102,7 @@ public static class ChatGPTEngineUI
             ImGui.SetTooltip(sliderState.TooltipText);
         }
 
-        PromptEditorUI.Draw(
+        changed |= PromptEditorUI.Draw(
             promptManager,
             Echoglossian.PromptType.ChatGPT,
             PromptTemplateManager.DefaultPrompt,
@@ -111,7 +111,6 @@ public static class ChatGPTEngineUI
         if (changed)
         {
             FieldValidationHelper.MarkAllRequiredFieldsTouched(config);
-            Echoglossian.SaveConfig(config);
         }
 
         return changed;
@@ -391,7 +390,10 @@ public static class ChatGPTEngineUI
         LiveModelRefreshCoordinator.ForceRefresh(
             GetLiveModelRefreshScope(variant),
             BuildLiveModelRefreshSignature(config, variant),
-            () => RefreshLiveModelsAsync(config, variant));
+            cancellationToken => RefreshLiveModelsAsync(
+                config,
+                variant,
+                cancellationToken));
     }
 
     /// <summary>
@@ -411,7 +413,10 @@ public static class ChatGPTEngineUI
             GetLiveModelRefreshScope(variant),
             useLiveModels,
             BuildLiveModelRefreshSignature(config, variant),
-            () => RefreshLiveModelsAsync(config, variant));
+            cancellationToken => RefreshLiveModelsAsync(
+                config,
+                variant,
+                cancellationToken));
     }
 
     /// <summary>
@@ -422,13 +427,15 @@ public static class ChatGPTEngineUI
     /// <param name="baseUrl">The custom provider base URL.</param>
     private static async Task RefreshCustomLiveModelsAsync(
         string apiKey,
-        string baseUrl)
+        string baseUrl,
+        CancellationToken cancellationToken)
     {
         customLiveModelFetchSucceeded =
             await OpenAIModelManager.RefreshAsync(
                 apiKey,
                 baseUrl,
-                "OpenAI-Compatible");
+                "OpenAI-Compatible",
+                cancellationToken);
     }
 
     /// <summary>
@@ -438,20 +445,28 @@ public static class ChatGPTEngineUI
     /// <param name="variant">The provider variant being refreshed.</param>
     private static async Task RefreshLiveModelsAsync(
         Config config,
-        OpenAiProviderVariant variant)
+        OpenAiProviderVariant variant,
+        CancellationToken cancellationToken)
     {
         if (variant == OpenAiProviderVariant.CustomOpenAICompatible)
         {
             customLiveModelFetchAttempted = true;
             string apiKey = config.CustomOpenAiCompatibleApiKey ?? string.Empty;
             string baseUrl = config.CustomOpenAiCompatibleBaseUrl ?? string.Empty;
-            await RefreshCustomLiveModelsAsync(apiKey, baseUrl);
+            await RefreshCustomLiveModelsAsync(
+                apiKey,
+                baseUrl,
+                cancellationToken);
             return;
         }
 
         string officialApiKey = config.ChatGptApiKey ?? string.Empty;
         string officialBaseUrl = config.ChatGPTBaseUrl ?? string.Empty;
-        await OpenAIModelManager.RefreshAsync(officialApiKey, officialBaseUrl, "OpenAI");
+        await OpenAIModelManager.RefreshAsync(
+            officialApiKey,
+            officialBaseUrl,
+            "OpenAI",
+            cancellationToken);
     }
 
     /// <summary>

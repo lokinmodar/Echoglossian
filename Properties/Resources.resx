@@ -1348,6 +1348,9 @@
   <data name="DialogueGlossaryDescription" xml:space="preserve">
     <value>Inject a structured glossary into dialogue-family LLM requests using an operator-managed JSON file.</value>
   </data>
+  <data name="TranslationSettingsNewRequestsOnlyNotice" xml:space="preserve">
+    <value>Changes here affect new requests only. Existing stored translations stay in the database. Use Translator Debugger &gt; "{0}" if you want to refresh the current visible story text explicitly.</value>
+  </data>
   <data name="EnableDialogueGlossaryInjectionLabel" xml:space="preserve">
     <value>Enable dialogue glossary injection</value>
   </data>

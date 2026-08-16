@@ -16,6 +16,82 @@ namespace Echoglossian.Tests;
 public class StructuredDialogueGlossaryLoaderTests
 {
     /// <summary>
+    ///     Ensures glossary files can be loaded asynchronously from disk.
+    /// </summary>
+    /// <returns>A task that completes when the file load finishes.</returns>
+    [Fact]
+    public async Task LoadFromFileAsync_ShouldLoadExistingGlossaryFile()
+    {
+        var filePath = Path.Combine(
+            Path.GetTempPath(),
+            $"{nameof(StructuredDialogueGlossaryLoaderTests)}-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            await File.WriteAllTextAsync(
+                filePath,
+                """
+                [
+                  {
+                    "source_text": "スフェーン",
+                    "target_text": "Sphene"
+                  }
+                ]
+                """);
+
+            var result = await StructuredDialogueGlossaryLoader.LoadFromFileAsync(
+                filePath,
+                CancellationToken.None);
+
+            result.Succeeded.Should().BeTrue();
+            result.Entries.Should().ContainSingle();
+            result.Entries[0].TargetText.Should().Be("Sphene");
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures asynchronous file loading honors cancellation before doing
+    ///     any disk work.
+    /// </summary>
+    /// <returns>A task that completes when cancellation is observed.</returns>
+    [Fact]
+    public async Task LoadFromFileAsync_WithCanceledToken_ThrowsOperationCanceledException()
+    {
+        var filePath = Path.Combine(
+            Path.GetTempPath(),
+            $"{nameof(StructuredDialogueGlossaryLoaderTests)}-{Guid.NewGuid():N}.json");
+        using var cancellationTokenSource = new CancellationTokenSource();
+
+        try
+        {
+            await File.WriteAllTextAsync(
+                filePath,
+                """
+                [
+                  {
+                    "source_text": "Krile",
+                    "target_text": "Krile"
+                  }
+                ]
+                """);
+            cancellationTokenSource.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                () => StructuredDialogueGlossaryLoader.LoadFromFileAsync(
+                    filePath,
+                    cancellationTokenSource.Token));
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    /// <summary>
     ///     Ensures the loader accepts a root JSON array of glossary rows.
     /// </summary>
     [Fact]

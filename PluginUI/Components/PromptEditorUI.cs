@@ -23,12 +23,13 @@ public static class PromptEditorUI
   ///     is set.
   /// </param>
   /// <param name="label">The label used to identify the prompt editor instance.</param>
-  public static void Draw(
+  public static bool Draw(
       PromptTemplateManager templateManager,
       Echoglossian.PromptType type,
       string defaultPrompt,
       string label)
   {
+    var changed = false;
     var state = PromptEditorStateManager.Get(label);
     var previewTargetLanguage =
         RuntimeLanguageHelper.GetConfiguredTargetLanguageDisplayName(
@@ -49,6 +50,11 @@ public static class PromptEditorUI
     ImGui.BulletText("{text}");
     ImGui.BulletText("{sourceLanguage}");
     ImGui.BulletText("{targetLanguage}");
+    ImGui.Spacing();
+    ImGui.TextWrapped(
+        string.Format(
+            Resources.TranslationSettingsNewRequestsOnlyNotice,
+            Resources.TranslatorDebuggerRetranslateVisibleDialogueAndPersist));
 
     ImGui.Columns(2, default, true);
     ImGui.TextWrapped(Resources.Editor);
@@ -81,6 +87,7 @@ public static class PromptEditorUI
       {
         templateManager.SetPrompt(type, state.EditedPrompt);
         state.ShowPromptInvalidWarning = false;
+        changed = true;
       }
       else
       {
@@ -95,6 +102,7 @@ public static class PromptEditorUI
       state.EditedPrompt = defaultPrompt;
       templateManager.SetPrompt(type, null);
       state.ShowPromptInvalidWarning = false;
+      changed = true;
     }
 
     ImGui.NextColumn();
@@ -121,5 +129,6 @@ public static class PromptEditorUI
     }
 
     ImGui.Columns(1);
+    return changed;
   }
 }

@@ -114,6 +114,9 @@ public partial class Echoglossian
           this.configuration.Translate,
           this.configuration.TranslateAlreadyTranslatedTexts,
           this.configuration.AiTranslatorPrompt,
+          this.configuration.UseDialogueLlmOverride,
+          this.configuration.DialogueLlmEngine,
+          this.configuration.DialogueLlmEngineKey,
           this.configuration.GoogleTranslateVersion,
           this.configuration.DeeplTranslatorApiKey,
           this.configuration.DeeplTranslatorUsingApiKey,
@@ -239,8 +242,9 @@ public partial class Echoglossian
       return;
     }
 
-    StructuredDialogueGlossaryStore.Refresh(
-        this.configuration.DialogueGlossaryFilePath);
+    _ = StructuredDialogueGlossaryStore.RefreshAsync(
+        this.configuration.DialogueGlossaryFilePath,
+        CancellationToken.None);
   }
 
   /// <summary>
@@ -275,6 +279,12 @@ public partial class Echoglossian
           configuration.TranslateBattleTalk,
           configuration.TranslateTalkSubtitle,
           configuration.TranslateMiniTalk,
+          configuration.TranslateJournal,
+          configuration.TranslateJournalDetail,
+          configuration.TranslateJournalAccept,
+          configuration.TranslateJournalResult,
+          configuration.TranslateRecommendList,
+          configuration.TranslateAreaMap,
           configuration.TranslateCutSceneSelectString,
           configuration.TranslateYesNoScreen,
           configuration.TranslateSelectOk,
