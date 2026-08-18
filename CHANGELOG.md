@@ -7,16 +7,17 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0816.1235`
+## Published Release `v4.2601.0816.1235`
 
-This package is prepared for official Dalamud submission from the current
-`v4-series` head after [PR #271](https://github.com/lokinmodar/Echoglossian/pull/271).
-It focuses on the remaining dialogue LLM release follow-ups: prompt save and
-async glossary refresh completion, per-surface runtime invalidation when the
-dialogue-only LLM override is active, and shutdown-safe cancellation for live
-model discovery.
+This package was published to the official Dalamud feed after
+[PR #271](https://github.com/lokinmodar/Echoglossian/pull/271). It focuses on
+the remaining dialogue LLM release follow-ups: prompt save and async glossary
+refresh completion, per-surface runtime invalidation when the dialogue-only LLM
+override is active, and shutdown-safe cancellation for live model discovery.
 
-Official `DalamudPluginsD17` submission is pending.
+Published in `DalamudPluginsD17` via
+[PR #9213](https://github.com/goatcorp/DalamudPluginsD17/pull/9213) on
+2026-08-16.
 
 Highlights:
 
