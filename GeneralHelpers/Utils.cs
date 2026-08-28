@@ -479,7 +479,7 @@ public partial class Echoglossian
         .NormalizeAndSyncSelection(
             this.configuration,
             loadedConfigVersion,
-            LangDict.TryGetValue(this.configuration.Lang, out var language)
+            this.languagesDictionary.TryGetValue(this.configuration.Lang, out var language)
                 ? language.SupportedEngines
                 : null);
 
