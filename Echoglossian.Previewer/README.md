@@ -117,8 +117,8 @@ windows only; overlay preview remains on the existing standalone pipeline.
 
 Registered Phase A scenario keys are `talk`, `battle-talk`, `talk-subtitle`,
 `mini-talk`, `cutscene-select-string`, `text-gimmick-hint`, `wide-text-toast`,
-`error-toast`, `area-toast`, `class-change-toast`, `quest-toast`, and
-`chat-bubble`.
+`error-toast`, `area-toast`, `class-change-toast`, `quest-toast`,
+`chat-bubble`, and `talk-arabic-274`.
 
 Built-in viewport presets are `1280x720`, `1920x1080`, `2560x1440`, and
 `3440x1440`; arbitrary positive `widthxheight` values are also accepted.
@@ -151,6 +151,7 @@ dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Deb
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot surface --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\surface
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot batch --viewport 1920x1080 --output artifacts\previewer\screenshots\batch
 dotnet run --project Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --screenshot full --capture-target config-window --scenario talk --viewport 1920x1080 --output artifacts\previewer\screenshots\config-window
+dotnet run --project .\Echoglossian.Previewer\Echoglossian.Previewer.csproj -c Debug --no-build -- --config .\Echoglossian.Previewer\Samples\issue-274-arabic.json --scenario talk-arabic-274 --viewport 1920x1080 --screenshot surface --output .\artifacts\previewer\issue-274
 ```
 
 Batch mode with a single viewport writes 12 overlay PNG files plus

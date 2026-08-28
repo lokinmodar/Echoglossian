@@ -16,10 +16,10 @@ namespace Echoglossian.Previewer.Tests.Scenarios;
 public sealed class PreviewScenarioCatalogTests
 {
     /// <summary>
-    /// Ensures every runtime overlay surface has exactly one default preview scenario.
+    /// Ensures every runtime overlay surface has at least one default preview scenario.
     /// </summary>
     [Fact]
-    public void Defaults_ContainsOneScenarioForEachRuntimeOverlaySurface()
+    public void Defaults_ContainsScenarioForEachRuntimeOverlaySurface()
     {
         var expectedSurfaces = new[]
         {
@@ -39,18 +39,33 @@ public sealed class PreviewScenarioCatalogTests
 
         var scenarios = PreviewScenarioCatalog.Defaults;
 
-        Assert.Equal(expectedSurfaces.Length, scenarios.Count);
         foreach (var surface in expectedSurfaces)
         {
-            var scenario = Assert.Single(
-                scenarios,
+            var scenario = scenarios.FirstOrDefault(
                 candidate => candidate.SurfaceId == surface);
+            Assert.NotNull(scenario);
             Assert.False(string.IsNullOrWhiteSpace(scenario.Key));
             Assert.True(scenario.Visible);
             Assert.False(string.IsNullOrWhiteSpace(scenario.TranslatedText));
             Assert.True(scenario.AddonBounds.Width > 0f);
             Assert.True(scenario.AddonBounds.Height > 0f);
         }
+    }
+
+    /// <summary>
+    /// Ensures the issue #274 Arabic Talk scenario remains available and uses
+    /// stable preview bounds.
+    /// </summary>
+    [Fact]
+    public void ResolveScenario_Issue274Arabic_ReturnsTalkScenarioWithArabicText()
+    {
+        var scenario = PreviewScenarioCatalog.ResolveScenario("talk-arabic-274");
+
+        Assert.Equal("talk-arabic-274", scenario.Key);
+        Assert.Equal(TranslationOverlaySurfaceId.Talk, scenario.SurfaceId);
+        Assert.Contains('أ', scenario.TranslatedText);
+        Assert.True(scenario.AddonBounds.Width > 0f);
+        Assert.True(scenario.AddonBounds.Height > 0f);
     }
 
     /// <summary>

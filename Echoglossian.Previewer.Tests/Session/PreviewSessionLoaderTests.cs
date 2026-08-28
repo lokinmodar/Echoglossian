@@ -220,6 +220,38 @@ public sealed class PreviewSessionLoaderTests
     }
 
     /// <summary>
+    /// Ensures the tracked issue #274 preview sample loads the expected Arabic
+    /// overlay settings without modifying the source file.
+    /// </summary>
+    [Fact]
+    public void Load_Issue274ArabicSample_PreservesSourceAndExpectedSettings()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var samplePath = Path.Combine(
+            repositoryRoot.FullName,
+            "Echoglossian.Previewer",
+            "Samples",
+            "issue-274-arabic.json");
+        var originalSample = File.Exists(samplePath)
+            ? File.ReadAllText(samplePath)
+            : string.Empty;
+
+        using (var session = PreviewSessionLoader.Load(
+            new PreviewSessionSourceOptions(samplePath, null, null)))
+        {
+            Assert.Equal(2, session.EditableConfiguration.Lang);
+            Assert.True(session.EditableConfiguration.Translate);
+            Assert.True(session.EditableConfiguration.TranslateTalk);
+            Assert.Equal(
+                JournalTranslationDisplayMode.TooltipTranslation,
+                session.EditableConfiguration.TalkTranslationDisplayMode);
+            Assert.Equal(originalSample, File.ReadAllText(samplePath));
+        }
+
+        Assert.Equal(originalSample, File.ReadAllText(samplePath));
+    }
+
+    /// <summary>
     /// Creates a WAL-mode database with a committed row that remains outside the main database file.
     /// </summary>
     /// <param name="databasePath">The SQLite database file to create.</param>
@@ -259,5 +291,27 @@ public sealed class PreviewSessionLoaderTests
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT Value FROM SessionData LIMIT 1;";
         return command.ExecuteScalar() as string;
+    }
+
+    /// <summary>
+    /// Finds the repository root from the current test output directory.
+    /// </summary>
+    /// <returns>The absolute repository root path.</returns>
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Echoglossian.sln")))
+            {
+                return directory;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            "Could not locate the Echoglossian repository root.");
     }
 }

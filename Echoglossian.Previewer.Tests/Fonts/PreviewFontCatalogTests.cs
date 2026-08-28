@@ -246,14 +246,29 @@ public sealed class PreviewFontCatalogTests
     [Fact]
     public void InitializePreviewLanguageRuntime_AppliesSupportAndPresentationFlags()
     {
+        var previousLanguageInt = global::Echoglossian.Echoglossian.LanguageInt;
+        var previousSelectedLanguage = global::Echoglossian.Echoglossian.SelectedLanguage;
+        var previousLanguages = global::Echoglossian.Echoglossian.LangDict;
         var configuration = new Config { Lang = 21 };
 
-        var (languages, selectedLanguage) = Program.InitializePreviewLanguageRuntime(configuration);
+        try
+        {
+            var (languages, selectedLanguage) = Program.InitializePreviewLanguageRuntime(configuration);
 
-        Assert.Same(languages[21], selectedLanguage);
-        Assert.Contains(2, selectedLanguage.SupportedEngines!);
-        Assert.True(configuration.OverlayOnlyLanguage);
-        Assert.False(configuration.UnsupportedLanguage);
+            Assert.Same(languages[21], selectedLanguage);
+            Assert.Same(languages, global::Echoglossian.Echoglossian.LangDict);
+            Assert.Equal(21, global::Echoglossian.Echoglossian.LanguageInt);
+            Assert.Same(selectedLanguage, global::Echoglossian.Echoglossian.SelectedLanguage);
+            Assert.Contains(2, selectedLanguage.SupportedEngines!);
+            Assert.True(configuration.OverlayOnlyLanguage);
+            Assert.False(configuration.UnsupportedLanguage);
+        }
+        finally
+        {
+            global::Echoglossian.Echoglossian.LanguageInt = previousLanguageInt;
+            global::Echoglossian.Echoglossian.SelectedLanguage = previousSelectedLanguage;
+            global::Echoglossian.Echoglossian.LangDict = previousLanguages;
+        }
     }
 
     /// <summary>
