@@ -253,9 +253,7 @@ public partial class Echoglossian : IDalamudPlugin
 
     Sanitizer = PluginInterface.Sanitizer as Sanitizer;
 
-    LangDict = this.languagesDictionary;
-
-    LanguageEngineSupport.ApplySupportTo(LangDict);
+    LanguageEngineSupport.ApplySupportTo(this.languagesDictionary);
 
     try
     {
@@ -315,19 +313,20 @@ public partial class Echoglossian : IDalamudPlugin
 
     this.EnsureConfigDefaultsPersistedForMissingKeys();
 
-    SelectedLanguage = this.languagesDictionary[this.configuration.Lang];
     var languagePolicyChanged =
         this.configuration.UnsupportedLanguage !=
         LanguagePresentationPolicy.IsUnsupportedLanguage(this.configuration.Lang) ||
         this.configuration.OverlayOnlyLanguage !=
         LanguagePresentationPolicy.RequiresOverlayOnly(this.configuration.Lang);
-    LanguagePresentationPolicy.ApplyLanguageFlags(this.configuration);
+    var selectedLanguage = TargetLanguageRuntimeState.Synchronize(
+        this.configuration,
+        this.languagesDictionary);
     if (languagePolicyChanged)
     {
       SaveConfig(this.configuration);
     }
 
-    AssetsManager.RefreshPluginAssetsState(SelectedLanguage);
+    AssetsManager.RefreshPluginAssetsState(selectedLanguage);
     this.configuration.PluginAssetsDownloaded = AssetsManager.PluginAssetsDownloaded;
 
     this.pluginAssetsState = this.configuration.PluginAssetsDownloaded;
@@ -337,9 +336,9 @@ public partial class Echoglossian : IDalamudPlugin
     PluginRuntimeLog.Debug($"Assets state var: {this.pluginAssetsState}");
 
     if (!this.pluginAssetsState &&
-        AssetsManager.RequiresDownloadedAssets(SelectedLanguage))
+        AssetsManager.RequiresDownloadedAssets(selectedLanguage))
     {
-      AssetsManager.PluginAssetsChecker(SelectedLanguage);
+      AssetsManager.PluginAssetsChecker(selectedLanguage);
     }
 
     this.EnforceTranslationActivationConstraints();
@@ -366,11 +365,9 @@ public partial class Echoglossian : IDalamudPlugin
         loadedConfigVersion,
         currentConfigVersion);
 
-    LanguageInt = this.configuration.Lang;
-
     fontSize = this.configuration.FontSize;
 
-    this.LangToTranslateTo = LangDict[LanguageInt].Code;
+    this.LangToTranslateTo = selectedLanguage.Code;
 
     MountFontPaths();
 

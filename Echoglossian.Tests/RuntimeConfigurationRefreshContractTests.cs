@@ -77,6 +77,35 @@ public sealed class RuntimeConfigurationRefreshContractTests
     }
 
     /// <summary>
+    /// Ensures live configuration refresh synchronizes the authoritative
+    /// target-language runtime state before translation signatures and
+    /// translator rebuilds are evaluated.
+    /// </summary>
+    [Fact]
+    public void Translation_refresh_synchronizes_target_language_before_signature_and_rebuild()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "RuntimeConfigurationRefresh.cs"));
+
+        var synchronizeCall = source.IndexOf(
+            "TargetLanguageRuntimeState.Synchronize(",
+            StringComparison.Ordinal);
+        var signatureCall = source.IndexOf(
+            "this.ComputeTranslationRuntimeSignature();",
+            StringComparison.Ordinal);
+        var rebuildCall = source.IndexOf(
+            "this.RebuildTranslationServiceSafely();",
+            StringComparison.Ordinal);
+
+        Assert.True(synchronizeCall >= 0);
+        Assert.True(signatureCall > synchronizeCall);
+        Assert.True(rebuildCall > synchronizeCall);
+    }
+
+    /// <summary>
     ///     Ensures a live translator rebuild also recreates the NamePlate
     ///     runtime so it cannot keep using a stale captured
     ///     <c>TranslationService</c> instance after language or provider
