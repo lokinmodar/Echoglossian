@@ -88,8 +88,18 @@ In `C:\Dante\_dalamud\DalamudPluginsD17`:
    `goatcorp/DalamudPluginsD17:main`.
 
 The official pull request must include the disclosure defined in
-`docs/official-plugin-repo-ai-usage-disclosure.md`. Runtime-generated text
-textures are not AI-generated repository assets.
+`docs/official-plugin-repo-ai-usage-disclosure.md` and must follow
+`docs/discord-webhook-safe-pr-format.md`. Runtime-generated text textures are
+not AI-generated repository assets.
+
+For the official D17 PR body:
+
+- use the repo-approved Discord-safe subset, not generic GitHub-only Markdown
+- use bold section labels instead of Markdown heading syntax
+- use flat lists and fenced `text` blocks only when they add clarity
+- use full raw URLs for the Echoglossian PR, release tag, and issue links
+- do not use task lists, tables, HTML, `<details>`, masked links, or nested
+  formatting that depends on GitHub rendering
 
 When choosing the official disclosure level:
 

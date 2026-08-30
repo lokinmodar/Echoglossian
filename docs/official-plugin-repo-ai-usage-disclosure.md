@@ -40,6 +40,12 @@ For this repo, the expected workflow is:
 4. keep the disclosure concise but specific enough that a reviewer can tell how
    the work was produced and validated
 
+For the official `DalamudPluginsD17` PR body, also follow
+`docs/discord-webhook-safe-pr-format.md` so any Discord webhook mirror keeps
+the disclosure readable. Prefer bold section labels, flat bullets, fenced
+`text` blocks, and raw URLs over GitHub-only constructs such as task lists,
+tables, masked links, HTML, or collapsible sections.
+
 ## Avoid Overstating Autonomy
 
 These notes do not mean every official `DalamudPluginsD17` submission requires
@@ -72,12 +78,13 @@ translation.
 
 ## Suggested Disclosure Snippet
 
-Use this when a PR needs disclosure:
+Use this when a PR needs disclosure in the official D17 PR body:
 
 ```text
-AI Usage Disclosure: Assist
+**AI Usage Disclosure**
+`Assist`
 
-Used AI for:
+AI scope:
 - bounded implementation help
 - code explanation / review assistance
 - test drafting
