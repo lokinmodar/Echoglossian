@@ -7,14 +7,18 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
-## Submitted Release `v4.2601.0829.2219`
+## Published Release `v4.2601.0829.2219`
 
-This package is prepared for submission after the `#274` Arabic RTL overlay
-investigation and fix. It keeps configured target-language identity consistent
-from translator request through overlay presentation, adds a deterministic
-Arabic Previewer regression gate with the bundled font path, and hardens
-startup engine-selection migration against stale global language state exposed
-by hosted validation.
+This package was published to the official Dalamud feed after the `#274`
+Arabic RTL overlay investigation and fix. It keeps configured target-language
+identity consistent from translator request through overlay presentation, adds
+a deterministic Arabic Previewer regression gate with the bundled font path,
+and hardens startup engine-selection migration against stale global language
+state exposed by hosted validation.
+
+Published in `DalamudPluginsD17` via
+[PR #9271](https://github.com/goatcorp/DalamudPluginsD17/pull/9271) on
+2026-08-30.
 
 Highlights:
 
