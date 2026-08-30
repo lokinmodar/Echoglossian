@@ -68,6 +68,10 @@ Use this body shape for future official D17 submissions:
 - this pulls in the merged fix or release already published from `v4-series`
 - concise fix description in 1-3 bullets
 
+**Validation**
+- local release build completed
+- targeted tests completed
+
 **Source Links**
 - Echoglossian PR: https://github.com/lokinmodar/Echoglossian/pull/NNN
 - Release tag: https://github.com/lokinmodar/Echoglossian/releases/tag/vX.Y.Z
@@ -90,6 +94,25 @@ AI-generated assets:
 - none
 ```
 ````
+
+## Repo Script
+
+Generate this body with the repo-local helper instead of freehand Markdown when
+possible:
+
+```powershell
+.\scripts\new-d17-pr-body.ps1 `
+  -Version "vX.Y.Z" `
+  -EchoglossianPrUrl "https://github.com/lokinmodar/Echoglossian/pull/NNN" `
+  -ReleaseTagUrl "https://github.com/lokinmodar/Echoglossian/releases/tag/vX.Y.Z" `
+  -IssueUrl "https://github.com/lokinmodar/Echoglossian/issues/NNN" `
+  -SummaryLine "pull in the merged fix from v4-series" `
+  -ValidationLine "local release build completed"
+```
+
+The helper intentionally emits only the repo-approved subset and rejects common
+GitHub-only constructs such as task-list bullets and masked links in
+user-supplied lines.
 
 ## Practical Rule
 

@@ -80,6 +80,8 @@ For release submissions that update `DalamudPluginsD17` manifests:
 - Verify the same hash exists on the remote with `git ls-remote <remote> <hash>`.
 - Write the official `DalamudPluginsD17` PR body with the Discord-webhook-safe
   subset documented in `docs/discord-webhook-safe-pr-format.md`.
+- Prefer `.\scripts\new-d17-pr-body.ps1` to generate that body from structured
+  inputs instead of hand-writing Markdown.
 - Use bold section labels, flat lists, inline or fenced code, and full raw
   URLs for PR, release, and issue links.
 - Do not use GitHub-only formatting such as task lists, tables, masked links,

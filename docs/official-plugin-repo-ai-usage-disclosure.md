@@ -44,7 +44,9 @@ For the official `DalamudPluginsD17` PR body, also follow
 `docs/discord-webhook-safe-pr-format.md` so any Discord webhook mirror keeps
 the disclosure readable. Prefer bold section labels, flat bullets, fenced
 `text` blocks, and raw URLs over GitHub-only constructs such as task lists,
-tables, masked links, HTML, or collapsible sections.
+tables, masked links, HTML, or collapsible sections. Prefer generating that
+body with `.\scripts\new-d17-pr-body.ps1` so the final text stays inside the
+repo-approved subset.
 
 ## Avoid Overstating Autonomy
 

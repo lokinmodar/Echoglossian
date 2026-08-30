@@ -95,6 +95,8 @@ not AI-generated repository assets.
 For the official D17 PR body:
 
 - use the repo-approved Discord-safe subset, not generic GitHub-only Markdown
+- prefer `.\scripts\new-d17-pr-body.ps1` to generate the body from structured
+  inputs instead of hand-writing Markdown
 - use bold section labels instead of Markdown heading syntax
 - use flat lists and fenced `text` blocks only when they add clarity
 - use full raw URLs for the Echoglossian PR, release tag, and issue links
