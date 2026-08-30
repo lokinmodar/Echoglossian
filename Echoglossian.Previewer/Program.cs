@@ -570,8 +570,9 @@ internal static class Program
         ArgumentNullException.ThrowIfNull(configuration);
         var languages = Echoglossian.CreateLanguagesDictionary();
         LanguageEngineSupport.ApplySupportTo(languages);
-        var selectedLanguage = NormalizePreviewLanguage(languages, configuration);
-        LanguagePresentationPolicy.ApplyLanguageFlags(configuration);
+        var selectedLanguage = global::Echoglossian.TargetLanguageRuntimeState.Synchronize(
+            configuration,
+            languages);
         return (languages, selectedLanguage);
     }
 

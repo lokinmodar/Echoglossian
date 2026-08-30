@@ -43,6 +43,9 @@ public partial class Echoglossian
     }
 
     this.runtimeConfigurationDirty = false;
+    TargetLanguageRuntimeState.Synchronize(
+        this.configuration,
+        this.languagesDictionary);
     this.EnforceTranslationActivationConstraints();
     this.TryShowTranslationActivationBlockedNotification();
     PluginInterface.UiBuilder.DisableCutsceneUiHide =

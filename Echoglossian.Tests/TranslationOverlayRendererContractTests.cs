@@ -72,6 +72,30 @@ public sealed class TranslationOverlayRendererContractTests
     }
 
     /// <summary>
+    /// Ensures overlay text-layout requests derive both target-language
+    /// metadata values from the configured language instead of mixing config
+    /// identifiers with the mutable global selected-language code.
+    /// </summary>
+    [Fact]
+    public void Draw_UsesConfiguredTargetLanguageCodeForTextLayoutRequest()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            this.RepositoryRoot,
+            "UIOverlays",
+            "TranslationOverlay",
+            "TranslationOverlayRenderer.cs"));
+
+        Assert.Contains(
+            "RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.configuration.Lang)",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "SelectedLanguage.Code",
+            source,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Gets the repository root discovered from the test output directory.
     /// </summary>
     private string RepositoryRoot => FindRepositoryRoot();

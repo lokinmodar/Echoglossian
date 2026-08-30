@@ -18,6 +18,38 @@ namespace Echoglossian.Tests;
 public class TextPresentationResolverTests
 {
     /// <summary>
+    /// Ensures consistent configured language identifiers and codes resolve to
+    /// the expected presentation backend.
+    /// </summary>
+    /// <param name="languageId">The configured target-language identifier.</param>
+    /// <param name="languageCode">The configured target-language code.</param>
+    /// <param name="expectedBackend">The expected presentation backend name.</param>
+    [Theory]
+    [InlineData(2, "ar", "RtlTexture")]
+    [InlineData(28, "en", "PlainImGui")]
+    public void Resolve_ConsistentConfiguredLanguageMetadata_UsesExpectedBackend(
+        int languageId,
+        string languageCode,
+        string expectedBackend)
+    {
+        var request = new TextLayoutRequest(
+            "Hello world",
+            languageId,
+            languageCode,
+            400f,
+            1.0f,
+            false,
+            Vector4.One,
+            new Vector4(0f, 0f, 0f, 0f),
+            TranslationOverlaySurfaceId.Talk,
+            false);
+
+        Assert.Equal(
+            expectedBackend,
+            TextPresentationResolver.ResolveBackendKind(request).ToString());
+    }
+
+    /// <summary>
     /// Ensures plain LTR requests keep using the plain ImGui backend.
     /// </summary>
     [Fact]

@@ -17,6 +17,38 @@ namespace Echoglossian.Tests;
 public class TextImageRendererTests
 {
     /// <summary>
+    /// Ensures the bundled Arabic font renders the issue #274 sentence with
+    /// visible pixels without falling back to a system font.
+    /// </summary>
+    [Fact]
+    public void RenderShapedText_Issue274Arabic_UsesBundledFontAndDrawsPixels()
+    {
+        var fontPath = Path.Combine(
+            FindRepositoryRoot().FullName,
+            "Font",
+            "NotoSansArabic-Medium.ttf");
+        const string text =
+            "أعتذر، ولكن أخشى أنني يجب أن أبعدك في الوقت الحالي. " +
+            "يرجى العودة في وقت لاحق.";
+
+        using var renderer = new TextImageRenderer(
+            fontPath,
+            24f,
+            FontStyle.Regular,
+            1f);
+        using var bitmap = renderer.RenderShapedText(
+            text,
+            Color.White,
+            Color.Transparent,
+            480);
+
+        Assert.False(renderer.FallbackFontUsed);
+        Assert.InRange(bitmap.Width, 1, 2048);
+        Assert.InRange(bitmap.Height, 1, 2048);
+        Assert.True(ContainsVisiblePixel(bitmap));
+    }
+
+    /// <summary>
     /// Ensures texture-backed LTR text uses normal direction and near
     /// alignment instead of inheriting the RTL rasterization format.
     /// </summary>
@@ -168,5 +200,46 @@ public class TextImageRendererTests
 
         Assert.InRange(bitmap.Width, 1, 2048);
         Assert.InRange(bitmap.Height, 1, 2048);
+    }
+
+    /// <summary>
+    /// Finds the repository root from the current test output directory.
+    /// </summary>
+    /// <returns>The repository root directory.</returns>
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Echoglossian.sln")))
+            {
+                return current;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Unable to locate repository root.");
+    }
+
+    /// <summary>
+    /// Determines whether a bitmap contains at least one visible pixel.
+    /// </summary>
+    /// <param name="bitmap">The bitmap to scan.</param>
+    /// <returns><see langword="true" /> when a visible pixel exists.</returns>
+    private static bool ContainsVisiblePixel(Bitmap bitmap)
+    {
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                if (bitmap.GetPixel(x, y).A > 0)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

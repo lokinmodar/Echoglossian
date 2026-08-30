@@ -29,6 +29,7 @@ internal static class PreviewScenarioCatalog
     internal static IReadOnlyList<PreviewScenario> Defaults { get; } =
     [
         Create("talk", "Talk", TranslationOverlaySurfaceId.Talk, 440, 690, 1040, 240, "The road opens before us. Keep your eyes on the horizon.", "Alphinaud"),
+        Create("talk-arabic-274", "Talk Arabic #274", TranslationOverlaySurfaceId.Talk, 440, 690, 1040, 240, "أعتذر، ولكن أخشى أنني يجب أن أبعدك في الوقت الحالي. يرجى العودة في وقت لاحق.", "Alisaie"),
         Create("battle-talk", "Battle Talk", TranslationOverlaySurfaceId.BattleTalk, 360, 620, 1200, 210, "Steel yourself. The next strike will decide the field.", "Thancred"),
         Create("talk-subtitle", "Talk Subtitle", TranslationOverlaySurfaceId.TalkSubtitle, 300, 780, 1320, 120, "A gentle wind carries the sound of distant bells.", null),
         Create("mini-talk", "Mini Talk", TranslationOverlaySurfaceId.MiniTalk, 1260, 180, 420, 150, "This device is older than it looks.", "Y'shtola"),

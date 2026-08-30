@@ -99,9 +99,12 @@ internal sealed class TranslationOverlayRenderer : IDisposable
         var effectiveFontScale = GetEffectiveOverlayFontScale(
             config.FontScale * runtimeScaleMultiplier);
         var shouldCenterOverlayText = ShouldCenterOverlayText(config.SurfaceId);
+        var presentationLanguageId = this.configuration.Lang;
+        var presentationLanguageCode =
+            RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.configuration.Lang);
         var shouldRightAlignOverlayText =
             !shouldCenterOverlayText &&
-            LanguagePresentationPolicy.ShouldRightAlign(this.configuration.Lang);
+            LanguagePresentationPolicy.ShouldRightAlign(presentationLanguageId);
         var horizontalPadding = ImGui.GetStyle().WindowPadding.X * 2f;
         var textureMaxWidthOverride = this.ResolveTextureMaxWidthOverride(
             request,
@@ -121,8 +124,8 @@ internal sealed class TranslationOverlayRenderer : IDisposable
                 config));
         var textRequest = new TextLayoutRequest(
             overlayText,
-            this.configuration.Lang,
-            SelectedLanguage.Code,
+            presentationLanguageId,
+            presentationLanguageCode,
             this.ResolveMeasurementWrapWidth(
                 request,
                 config,

@@ -13043,6 +13043,25 @@
         <member name="P:Echoglossian.SourceClientLanguage.ProviderCode">
             <summary>The code supplied to translation providers.</summary>
         </member>
+        <member name="T:Echoglossian.TargetLanguageRuntimeState">
+            <summary>
+            Synchronizes the authoritative configured target language into the legacy
+            runtime mirrors consumed across the plugin.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TargetLanguageRuntimeState.Synchronize(Echoglossian.Config,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
+            <summary>
+            Synchronizes the configured target language into the shared runtime
+            language dictionary, legacy integer identifier, selected language, and
+            presentation flags.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <param name="languages">The registered runtime language metadata.</param>
+            <returns>The resolved selected language.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">
+            Thrown when the configured language identifier is not registered.
+            </exception>
+        </member>
         <member name="T:Echoglossian.TranslationActivationGuard">
             <summary>
             Determines whether translation activation must stay blocked for the current
@@ -39029,6 +39048,14 @@
             </summary>
             <param name="pluginLog">The plugin log.</param>
             <param name="config">The configuration settings.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.GTranslateTranslator.ResolveRequestedTargetLanguage(System.String)">
+            <summary>
+            Resolves the requested target language using the runtime language
+            normalization contract shared across translation services.
+            </summary>
+            <param name="requestedTargetLanguage">The requested target language code.</param>
+            <returns>The resolved GTranslate language metadata.</returns>
         </member>
         <member name="M:Echoglossian.Translators.GTranslateTranslator.Translate(System.String,System.String,System.String)">
             <summary>

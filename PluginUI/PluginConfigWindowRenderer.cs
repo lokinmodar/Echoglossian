@@ -31,9 +31,9 @@ public sealed class PluginConfigWindowRenderer
         var changed = false;
         var languages = context.Languages as Dictionary<int, LanguageInfo> ??
                         new Dictionary<int, LanguageInfo>(context.Languages);
-        Echoglossian.LangDict = languages;
-        Echoglossian.LanguageInt = context.Configuration.Lang;
-        Echoglossian.SelectedLanguage = languages[context.Configuration.Lang];
+        TargetLanguageRuntimeState.Synchronize(
+            context.Configuration,
+            languages);
         LanguageDropdownHelper.Initialize(languages);
 
         ImGui.SetNextWindowSizeConstraints(
@@ -249,26 +249,24 @@ public sealed class PluginConfigWindowRenderer
         using (context.PushGeneralFont())
         {
             Echoglossian.LangToRemoveDiacritics =
-                languages.TryGetValue(config.Lang, out var selectedLanguage) &&
-                selectedLanguage.SupportsNativeReplacementDiacriticsFallback;
+                Echoglossian.SelectedLanguage
+                    .SupportsNativeReplacementDiacriticsFallback;
 
             if (LanguageDropdownHelper.DrawLanguageDropdown(
                     ref config.Lang,
                     Resources.LanguageSelectLabelText))
             {
-                Echoglossian.LanguageInt = config.Lang;
-                Echoglossian.SpecialFontFileName = languages[config.Lang].FontName;
-                Echoglossian.SelectedLanguage = languages[config.Lang];
+                var selectedLanguage = TargetLanguageRuntimeState.Synchronize(
+                    config,
+                    languages);
                 Echoglossian.LangToRemoveDiacritics =
-                    Echoglossian.SelectedLanguage
-                        .SupportsNativeReplacementDiacriticsFallback;
-                LanguagePresentationPolicy.ApplyLanguageFlags(config);
+                    selectedLanguage.SupportsNativeReplacementDiacriticsFallback;
 
                 if (TranslationEngineSelectionMigrationHelper
                     .NormalizeAndSyncSelection(
                         config,
                         config.Version,
-                        languages[config.Lang].SupportedEngines))
+                        selectedLanguage.SupportedEngines))
                 {
                     context.RebuildTranslationService();
                     changed = true;
@@ -277,7 +275,7 @@ public sealed class PluginConfigWindowRenderer
                 changed = true;
                 context.ApplyLanguageRuntimeChanges(
                     config,
-                    Echoglossian.SelectedLanguage);
+                    selectedLanguage);
             }
         }
 

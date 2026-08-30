@@ -13,8 +13,6 @@ namespace Echoglossian.Translators;
 /// </summary>
 public class GTranslateTranslator : ITranslator
 {
-    private readonly Config config;
-    private readonly Language gTransTargetLanguage;
     private readonly IPluginLog pluginLog;
     private readonly AggregateTranslator translator;
 
@@ -27,10 +25,29 @@ public class GTranslateTranslator : ITranslator
     public GTranslateTranslator(IPluginLog pluginLog, Config config)
     {
         this.pluginLog = pluginLog;
-        this.config = config;
         this.translator =
             new AggregateTranslator(); // Switch to GoogleTranslator() if you want to force only Google
-        this.gTransTargetLanguage = Language.GetLanguage(SelectedLanguage.Code);
+    }
+
+    /// <summary>
+    /// Resolves the requested target language using the runtime language
+    /// normalization contract shared across translation services.
+    /// </summary>
+    /// <param name="requestedTargetLanguage">The requested target language code.</param>
+    /// <returns>The resolved GTranslate language metadata.</returns>
+    internal static Language ResolveRequestedTargetLanguage(
+        string requestedTargetLanguage)
+    {
+        var normalizedTargetLanguage =
+            RuntimeLanguageHelper.NormalizeLanguage(requestedTargetLanguage);
+        if (string.IsNullOrWhiteSpace(normalizedTargetLanguage))
+        {
+            throw new ArgumentException(
+                "A target language is required.",
+                nameof(requestedTargetLanguage));
+        }
+
+        return Language.GetLanguage(normalizedTargetLanguage);
     }
 
     /// <summary>
@@ -76,17 +93,18 @@ public class GTranslateTranslator : ITranslator
         PluginRuntimeLog.Debug(this.pluginLog, $"GTranslate input: {fixedText}");
 
         PluginRuntimeLog.Debug(this.pluginLog, $"GTranslate source language: {sourceLanguage}");
-        PluginRuntimeLog.Debug(
-            this.pluginLog,
-            $"GTranslate target language: {this.gTransTargetLanguage}");
 
         try
         {
-            // targetLanguage = Echoglossian.NormalizeLanguageCode(targetLanguage);
+            var resolvedTargetLanguage =
+                ResolveRequestedTargetLanguage(targetLanguage);
+            PluginRuntimeLog.Debug(
+                this.pluginLog,
+                $"GTranslate target language: {resolvedTargetLanguage}");
 
             var result = await this.translator.TranslateAsync(
                 fixedText,
-                this.gTransTargetLanguage.Name,
+                resolvedTargetLanguage.Name,
                 sourceLanguage);
             var cleaned = FixText(result.Translation);
             PluginRuntimeLog.Debug(this.pluginLog, $"GTranslate result: {cleaned}");
