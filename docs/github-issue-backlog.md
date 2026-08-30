@@ -14,9 +14,9 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 - Official submission: [`goatcorp/DalamudPluginsD17#9271`](https://github.com/goatcorp/DalamudPluginsD17/pull/9271)
 - D17 status: approved and merged on 2026-08-30
 - D17 merge commit: `5831729758e8f2469bdca1a4770dad933a2f188e`
-- Open issues after post-publication triage: 19
-- Open issues at the current audit head: 19
-- Focused open issues besides the living tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12): 18
+- Open issues after post-publication triage: 18
+- Open issues at the current audit head: 18
+- Focused open issues besides the living tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12): 17
 
 ## Current `v4-series` Delta
 
@@ -24,7 +24,7 @@ release history belongs in [`CHANGELOG.md`](../CHANGELOG.md), not in this file.
 - Latest tagged and officially published runtime build on `v4-series`: `v4.2601.0829.2219` at `fcda77e8c294a9a821c18b23db12cc9828138d38`
 - The audit head currently matches the latest published runtime baseline; there are no newer `origin/v4-series` commits beyond this published release.
 - Issue [#12](https://github.com/lokinmodar/Echoglossian/issues/12) remains the living known-issues tracker and should stay aligned with this document whenever focused issue state changes materially.
-- Publication of `v4.2601.0829.2219` completed the configured-target-language synchronization and Arabic RTL overlay fix for [#274](https://github.com/lokinmodar/Echoglossian/issues/274), but the GitHub issue itself remains open pending the manual post-publication closure comment.
+- Publication of `v4.2601.0829.2219` completed the configured-target-language synchronization and Arabic RTL overlay fix for [#274](https://github.com/lokinmodar/Echoglossian/issues/274), and the issue was closed with the published-version confirmation on 2026-08-30.
 - Publication of `v4.2601.0816.1235` completed the remaining prompt-persistence and asynchronous glossary-refresh work for [#252](https://github.com/lokinmodar/Echoglossian/issues/252), resolved the per-surface toggle regression from [#270](https://github.com/lokinmodar/Echoglossian/issues/270), and added shutdown-safe live-model discovery cancellation.
 - Publication of `v4.2601.0815.1339` completed first-line speaker context recovery from [#214](https://github.com/lokinmodar/Echoglossian/issues/214) and the exact dialogue-glossary preservation defect from [#252](https://github.com/lokinmodar/Echoglossian/issues/252), while broader structured LLM work remains tracked in [#148](https://github.com/lokinmodar/Echoglossian/issues/148).
 - Publication of `v4.2601.0809.2000` completed the `_BattleTalk` and `_MiniTalk` stale native-layout stabilization from [#264](https://github.com/lokinmodar/Echoglossian/issues/264), including BattleTalk horizontal-geometry preservation plus the dialogue-family and `Translation Display Mode` label corrections that shipped with that pass.
@@ -61,6 +61,7 @@ most relevant resolved fronts to reference during follow-up triage.
 | [#189 MSQ bar and mission windows untranslated](https://github.com/lokinmodar/Echoglossian/issues/189) | Quest-family handlers use source-scoped state and incremental application across `ScenarioTree`, `RecommendList`, `JournalAccept`, `JournalDetail`, and `ToDoList`. |
 | [#204 OpenRouter not translating](https://github.com/lokinmodar/Echoglossian/issues/204) | Shared prompt expansion performs one safe placeholder pass and no longer reinterprets placeholder-like content introduced by an earlier replacement. |
 | [#207 ToDoList not translating](https://github.com/lokinmodar/Echoglossian/issues/207) | `ToDoList` applies available translations without waiting for every visible quest and scopes runtime state to the current source and target languages. |
+| [#274 Arabic Text / RTL letters print incorrectly](https://github.com/lokinmodar/Echoglossian/issues/274) | The published `v4.2601.0829.2219` release keeps configured target-language identity authoritative through translator selection and overlay presentation, fixing the Arabic RTL overlay rendering path that was producing incorrect letter order and shaping. |
 
 ## Additional Recent Closures
 
@@ -98,7 +99,6 @@ most relevant resolved fronts to reference during follow-up triage.
 | --- | --- |
 | [#167 Overlay-only dialogue glitches](https://github.com/lokinmodar/Echoglossian/issues/167) | Still awaiting a fresh retest with display mode, screenshot, and log if native text continues to change or glitch. |
 | [#175 Overlay problem](https://github.com/lokinmodar/Echoglossian/issues/175) | Still awaiting a fresh retest with saved display mode, affected addon, and startup/runtime log if the overlay remains absent. |
-| [#274 Arabic Text / RTL letters print incorrectly](https://github.com/lokinmodar/Echoglossian/issues/274) | The published `v4.2601.0829.2219` release fixed the reported overlay path and the official D17 PR is merged, but the issue remains administratively open until the post-publication closure comment is sent. |
 
 ### Translation Engines, Prompts, And Provider Support
 
@@ -127,18 +127,18 @@ most relevant resolved fronts to reference during follow-up triage.
 
 ## Complete Open-Issue Inventory
 
-This table is the countable audit of all 19 open issues at the snapshot date, including the living meta-tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12).
+This table is the countable audit of all 18 open issues at the snapshot date, including the living meta-tracker [#12](https://github.com/lokinmodar/Echoglossian/issues/12).
 
 | Problem type | Issues | Count |
 | --- | --- | ---: |
 | Meta tracking and living documentation | #12 | 1 |
 | Quest-family runtime and surfaces | #104, #171, #172, #237 | 4 |
 | Reference-text and sheet coverage | #238 | 1 |
-| Overlay and presentation behavior | #167, #175, #274 | 3 |
+| Overlay and presentation behavior | #167, #175 | 2 |
 | Translation engines, prompts, and provider support | #148, #176, #203, #209, #212 | 5 |
 | Compatibility, diagnostics, and UX polish | #173, #179, #192, #239 | 4 |
 | Performance, scheduling, and persistence architecture | #258 | 1 |
-| **Total open at snapshot** |  | **19** |
+| **Total open at snapshot** |  | **18** |
 
 ## Next Actions
 
@@ -148,6 +148,5 @@ This table is the countable audit of all 19 open issues at the snapshot date, in
 4. Continue the structural remediation in [#239](https://github.com/lokinmodar/Echoglossian/issues/239) beyond the already published unchanged-batch fallback fix.
 5. Decide whether [#258](https://github.com/lokinmodar/Echoglossian/issues/258) should stay as one bounded performance architecture front or be split further once the first remediation tranche lands.
 6. Decide whether draft PR [#193](https://github.com/lokinmodar/Echoglossian/pull/193) should be reconciled, retargeted, or closed now that [#181](https://github.com/lokinmodar/Echoglossian/issues/181) itself is resolved.
-7. Post the manual published-version closure comment for [#274](https://github.com/lokinmodar/Echoglossian/issues/274) and close it once that external GitHub action is explicitly requested.
-8. Monitor reporter retests on [#167](https://github.com/lokinmodar/Echoglossian/issues/167), [#175](https://github.com/lokinmodar/Echoglossian/issues/175), and [#203](https://github.com/lokinmodar/Echoglossian/issues/203) and close only after the exact symptom is validated or replaced by a more focused issue.
-9. Re-run the open-issue audit and refresh [#12](https://github.com/lokinmodar/Echoglossian/issues/12) whenever issue state changes again or when the next runtime or provider-support tranche lands.
+7. Monitor reporter retests on [#167](https://github.com/lokinmodar/Echoglossian/issues/167), [#175](https://github.com/lokinmodar/Echoglossian/issues/175), and [#203](https://github.com/lokinmodar/Echoglossian/issues/203) and close only after the exact symptom is validated or replaced by a more focused issue.
+8. Re-run the open-issue audit and refresh [#12](https://github.com/lokinmodar/Echoglossian/issues/12) whenever issue state changes again or when the next runtime or provider-support tranche lands.
