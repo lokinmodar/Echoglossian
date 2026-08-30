@@ -7,6 +7,27 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.0829.2219`
+
+This package is prepared for submission after the `#274` Arabic RTL overlay
+investigation and fix. It keeps configured target-language identity consistent
+from translator request through overlay presentation, adds a deterministic
+Arabic Previewer regression gate with the bundled font path, and hardens
+startup engine-selection migration against stale global language state exposed
+by hosted validation.
+
+Highlights:
+
+- fixes `#274` by making `Config.Lang` plus the language dictionary
+  authoritative for target-language runtime synchronization across startup,
+  config refresh, and overlay presentation
+- makes `GTranslateTranslator` honor the per-call target-language argument and
+  removes the overlay's dependency on `SelectedLanguage.Code` for RTL backend
+  selection
+- adds a real Arabic raster test, deterministic Previewer scenario and sample
+  config, and a Mock-validated guard against constructor-time engine migration
+  reading stale global language state
+
 ## Published Release `v4.2601.0816.1235`
 
 This package was published to the official Dalamud feed after
