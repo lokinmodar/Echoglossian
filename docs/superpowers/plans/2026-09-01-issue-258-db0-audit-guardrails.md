@@ -643,11 +643,11 @@ Expected: hashes match. Report the branch, commit list, validation, and pull-req
 Task 4 was executed on 2026-09-01 and its pull-request review remediation was
 validated on 2026-09-02 in native Windows PowerShell. The normal audit command
 exited `0` with zero unexpected, resolved, or changed baseline findings. The
-approved debt inventory is 232 findings:
+approved debt inventory is 231 findings:
 
 - DB-2: 10
 - DB-3: 2
-- DB-4: 43
+- DB-4: 42
 - DB-5: 18
 - DB-6: 15
 - DB-7: 131
@@ -658,7 +658,7 @@ errors in this incremental workspace. Clean non-incremental rebuilds
 (`-t:Rebuild`) for both the solution and the test project each succeeded with
 61 warnings and 0 errors.
 The required `dotnet test` command with `--no-build`,
-`-p:VSTestMaxCpuCount=1`, and `--nologo` passed 1,329 of 1,329 tests, with 0
+`-p:VSTestMaxCpuCount=1`, and `--nologo` passed 1,335 of 1,335 tests, with 0
 failed and 0 skipped.
 
 Repository hygiene passed: `git diff --check` returned no whitespace errors;
@@ -679,7 +679,9 @@ source content, preserves query provenance through local aliases, inventories
 database debt regardless of directory. Final review remediation covers raw
 SQLite execution, the remaining synchronous EF terminals and `foreach`
 enumeration, and task-associated `.Result` without classifying ordinary DTO
-properties. The focused audit suite passes all 35 cases.
+properties. Latest remediation adds `ExecuteSqlInterpolated` and removes C#
+comments and literals before scanning while preserving source positions. The
+focused audit suite passes all 41 cases.
 
 DB-0 tooling and unit tests do not claim Mock/DalaMock coverage or live FFXIV
 coverage. Controlled in-game baseline capture, following
