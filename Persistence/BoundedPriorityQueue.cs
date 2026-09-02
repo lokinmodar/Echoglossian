@@ -273,13 +273,15 @@ internal sealed class BoundedPriorityQueue<T>
   /// </returns>
   private bool TryReadInteractive(out T item)
   {
+    item = default!;
     lock (this.admissionGate)
     {
-      if (!this.interactiveLane.Reader.TryRead(out item))
+      if (!this.interactiveLane.Reader.TryRead(out T? readItem))
       {
         return false;
       }
 
+      item = readItem!;
       _ = Interlocked.Decrement(ref this.interactiveDepth);
       return true;
     }
@@ -295,13 +297,15 @@ internal sealed class BoundedPriorityQueue<T>
   /// </returns>
   private bool TryReadBackground(out T item)
   {
+    item = default!;
     lock (this.admissionGate)
     {
-      if (!this.backgroundLane.Reader.TryRead(out item))
+      if (!this.backgroundLane.Reader.TryRead(out T? readItem))
       {
         return false;
       }
 
+      item = readItem!;
       _ = Interlocked.Decrement(ref this.backgroundDepth);
       return true;
     }

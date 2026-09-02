@@ -43,38 +43,42 @@ internal sealed class LlmCapabilityObservationWriter
             snapshot.ObservedAtUtc = DateTime.UtcNow;
         }
 
-        return this.coordinator.TryScheduleWrite(new PersistenceWriteRequest(
-            new PersistenceWorkKey(Domain, BuildIdentity(snapshot)),
-            PersistencePriority.Interactive,
-            async (context, cancellationToken) =>
-            {
-                var existing = await context.LlmModelCapabilityObservations.FirstOrDefaultAsync(row =>
-                    row.Engine == snapshot.Engine && row.ProviderScope == snapshot.ProviderScope &&
-                    row.EndpointScope == snapshot.EndpointScope && row.ModelId == snapshot.ModelId &&
-                    row.ParameterName == snapshot.ParameterName && row.StatusCode == snapshot.StatusCode &&
-                    row.MessageExcerpt == snapshot.MessageExcerpt, cancellationToken).ConfigureAwait(false);
-                if (existing is null)
+        return this.coordinator.TryScheduleWrite(
+            new PersistenceWriteRequest(
+                new PersistenceWorkKey(Domain, BuildIdentity(snapshot)),
+                PersistencePriority.Interactive,
+                async (context, cancellationToken) =>
                 {
-                    await context.LlmModelCapabilityObservations.AddAsync(Clone(snapshot), cancellationToken).ConfigureAwait(false);
+                    var existing = await context.LlmModelCapabilityObservations.FirstOrDefaultAsync(
+                        row =>
+                            row.Engine == snapshot.Engine && row.ProviderScope == snapshot.ProviderScope &&
+                            row.EndpointScope == snapshot.EndpointScope && row.ModelId == snapshot.ModelId &&
+                            row.ParameterName == snapshot.ParameterName && row.StatusCode == snapshot.StatusCode &&
+                            row.MessageExcerpt == snapshot.MessageExcerpt,
+                        cancellationToken).ConfigureAwait(false);
+                    if (existing is null)
+                    {
+                        await context.LlmModelCapabilityObservations.AddAsync(Clone(snapshot), cancellationToken).ConfigureAwait(false);
+                        return PersistenceWriteMutation.ChangedResult;
+                    }
+
+                    if (existing.ProviderErrorCode == snapshot.ProviderErrorCode && existing.ObservedAtUtc == snapshot.ObservedAtUtc)
+                    {
+                        return PersistenceWriteMutation.UnchangedResult;
+                    }
+
+                    existing.ProviderErrorCode = snapshot.ProviderErrorCode;
+                    existing.ObservedAtUtc = snapshot.ObservedAtUtc;
                     return PersistenceWriteMutation.ChangedResult;
-                }
-
-                if (existing.ProviderErrorCode == snapshot.ProviderErrorCode && existing.ObservedAtUtc == snapshot.ObservedAtUtc)
+                },
+                () =>
                 {
-                    return PersistenceWriteMutation.UnchangedResult;
-                }
-
-                existing.ProviderErrorCode = snapshot.ProviderErrorCode;
-                existing.ObservedAtUtc = snapshot.ObservedAtUtc;
-                return PersistenceWriteMutation.ChangedResult;
-            },
-            () =>
-            {
-                if (Volatile.Read(ref this.publicationEnabled) != 0)
-                {
-                    LlmCapabilityCacheManager.PublishObservation(Clone(snapshot));
-                }
-            }), out completion);
+                    if (Volatile.Read(ref this.publicationEnabled) != 0)
+                    {
+                        LlmCapabilityCacheManager.PublishObservation(Clone(snapshot));
+                    }
+                }),
+            out completion);
     }
 
     private static string BuildIdentity(LlmModelCapabilityObservation value) => string.Concat(
