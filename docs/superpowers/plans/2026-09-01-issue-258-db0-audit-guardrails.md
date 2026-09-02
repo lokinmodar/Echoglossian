@@ -621,7 +621,7 @@ Expected: no whitespace errors, tracked artifacts, secrets, production C# change
 
 Check completed boxes and append an `## Execution Notes` section containing audit totals grouped by DB-2 through DB-8, exact test totals, build warning/error totals, the DB-0 Mock/DalaMock limitation, and the controlled in-game baseline gate required before DB-2 performance claims.
 
-- [ ] **Step 5: Commit, push, and verify the remote branch**
+- [x] **Step 5: Commit, push, and verify the remote branch**
 
 ```powershell
 git add -- docs\superpowers\plans\2026-09-01-issue-258-db0-audit-guardrails.md
