@@ -20,6 +20,7 @@ namespace Echoglossian.Tests;
 /// <summary>
 ///     Covers persistence and in-memory hydration of LLM capability overlays.
 /// </summary>
+[Collection(CapabilityRuntimeCollection.Name)]
 public class LlmCapabilityPersistenceTests
 {
     /// <summary>

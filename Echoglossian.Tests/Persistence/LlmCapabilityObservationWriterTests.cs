@@ -24,6 +24,7 @@ using System.Data.Common;
 namespace Echoglossian.Tests.Persistence;
 
 /// <summary>Verifies the coordinator-backed capability observation adapter.</summary>
+[Collection(global::Echoglossian.Tests.CapabilityRuntimeCollection.Name)]
 public sealed class LlmCapabilityObservationWriterTests
 {
     /// <summary>Ensures all seven identity fields are inserted as one row.</summary>

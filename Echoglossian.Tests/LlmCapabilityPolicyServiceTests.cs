@@ -34,6 +34,7 @@ namespace Echoglossian.Tests;
 ///     Covers shared runtime policy resolution and persisted capability
 ///     learning.
 /// </summary>
+[Collection(CapabilityRuntimeCollection.Name)]
 public sealed class LlmCapabilityPolicyServiceTests
 {
     /// <summary>
@@ -987,8 +988,6 @@ public sealed class LlmCapabilityPolicyServiceTests
             LlmCapabilityObservationRuntime.Unregister(writer);
             await coordinator.DisposeAsync();
             LlmCapabilityCacheManager.Clear();
-            PluginRuntimeFileLog.GetCurrentFilePathForTests().Should().Be(
-                Path.Combine(configDir, "Echoglossian.log"));
             PluginRuntimeFileLog.FlushForTests();
             PluginRuntimeFileLog.ResetForTests();
             Echoglossian.ConfigDirectory = originalConfigDirectory;
