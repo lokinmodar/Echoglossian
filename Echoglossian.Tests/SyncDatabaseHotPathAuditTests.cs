@@ -62,6 +62,7 @@ public sealed class SyncDatabaseHotPathAuditTests
     [InlineData("ExecuteNonQuery")]
     [InlineData("ExecuteReader")]
     [InlineData("ExecuteScalar")]
+    [InlineData("ExecuteSqlInterpolated")]
     public void AuditScript_SynchronousSqliteCommand_ReturnsFailure(
         string methodName)
     {
@@ -75,6 +76,27 @@ public sealed class SyncDatabaseHotPathAuditTests
         Assert.NotEqual(0, result.ExitCode);
         Assert.Contains("sync-sql-command", result.Output, StringComparison.Ordinal);
         Assert.Contains(methodName, result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures database-like text in comments and literals does not create an
+    /// audit finding.
+    /// </summary>
+    /// <param name="source">The non-code source fixture.</param>
+    [Theory]
+    [InlineData("// context.SaveChanges();")]
+    [InlineData("/// <summary>context.SaveChanges()</summary>")]
+    [InlineData("/* context.SaveChanges(); */")]
+    [InlineData("var text = \"context.SaveChanges();\";")]
+    [InlineData("var text = @\"context.SaveChanges();\";")]
+    public void AuditScript_NonCodeDatabaseText_IsIgnored(string source)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource("NativeUI/NonCodeFixture.cs", source);
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.Equal(0, result.ExitCode);
     }
 
     /// <summary>

@@ -69,6 +69,28 @@ function ConvertTo-NormalizedEvidence {
     return [regex]::Replace($Evidence.Trim(), '\s+', ' ')
 }
 
+function ConvertTo-CodeOnlyContent {
+    param(
+        [Parameter(Mandatory)][AllowEmptyString()][string]$Content)
+
+    if ([string]::IsNullOrEmpty($Content)) {
+        return $Content
+    }
+
+    $nonCodePattern = [regex]::new(
+        '(?s)/\*.*?\*/|//[^\r\n]*|' +
+        '\$*"{3,}.*?"{3,}|' +
+        '@"(?:""|[^"])*"|' +
+        '"(?:\\.|[^"\\])*"|' +
+        '''(?:\\.|[^''\\])*''')
+    return $nonCodePattern.Replace(
+        $Content,
+        {
+            param($match)
+            return [regex]::Replace($match.Value, '[^\r\n]', ' ')
+        })
+}
+
 function Test-ExcludedPath {
     param([Parameter(Mandatory)][string]$RelativePath)
 
@@ -489,7 +511,7 @@ $directPatterns = @(
     [pscustomobject]@{ Category = 'sync-ef-migrate'; Pattern = '\.Database\.(?:Migrate|EnsureCreated)\s*\(' },
     [pscustomobject]@{
         Category = 'sync-sql-command'
-        Pattern = '\bExecute(?:SqlRaw|NonQuery|Reader|Scalar)\s*\('
+        Pattern = '\bExecute(?:SqlRaw|SqlInterpolated|NonQuery|Reader|Scalar)\s*\('
     },
     [pscustomobject]@{ Category = 'sync-ef-bulk-write'; Pattern = '\bExecute(?:Update|Delete)\s*\(' },
     [pscustomobject]@{ Category = 'direct-db-context'; Pattern = '\bnew\s+EchoglossianDbContext\s*\(' },
@@ -529,7 +551,8 @@ foreach ($sourceFile in ($sourceFiles | Sort-Object FullName)) {
         continue
     }
 
-    $content = Get-Content -Raw -Encoding utf8 -LiteralPath $sourceFile.FullName
+    $sourceContent = Get-Content -Raw -Encoding utf8 -LiteralPath $sourceFile.FullName
+    $content = ConvertTo-CodeOnlyContent -Content $sourceContent
     foreach ($directPattern in $directPatterns) {
         Add-MatchesForContent `
             -Findings $findings `

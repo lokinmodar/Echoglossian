@@ -198,13 +198,6 @@
       "evidence": ".Wait( [occurrence 2]"
     },
     {
-      "id": "blocking-wait|NativeUI/Handlers/UiActionDetailHandler.cs|.Result [occurrence 1]",
-      "category": "blocking-wait",
-      "stage": "DB-4",
-      "path": "NativeUI/Handlers/UiActionDetailHandler.cs",
-      "evidence": ".Result [occurrence 1]"
-    },
-    {
       "id": "blocking-wait|NativeUI/Helpers/ActionItemDetailUiRuntime.cs|.Wait( [occurrence 1]",
       "category": "blocking-wait",
       "stage": "DB-4",
