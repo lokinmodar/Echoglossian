@@ -58,7 +58,7 @@ internal sealed class BoundedPriorityQueue<T>
         {
           AllowSynchronousContinuations = false,
           FullMode = BoundedChannelFullMode.DropWrite,
-          SingleReader = true,
+          SingleReader = false,
           SingleWriter = false,
         });
   }
