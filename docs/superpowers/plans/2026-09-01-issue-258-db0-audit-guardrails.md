@@ -652,10 +652,7 @@ baseline findings. The approved debt inventory remains 222 findings:
 - DB-7: 119
 - DB-8: 21
 
-`dotnet build .\Echoglossian.sln -c Debug --no-restore` and
-`dotnet build .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`
-both succeeded with 1 warning and 0 errors each. The warning is the existing
-Multilingual App Toolkit-unavailable warning from `Echoglossian.csproj`.
+The solution build (`dotnet build .\Echoglossian.sln -c Debug --no-restore`) succeeded with 61 warnings and 0 errors. The test-project build (`dotnet build .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`) succeeded with 1 warning and 0 errors; that warning is the existing Multilingual App Toolkit-unavailable warning from `Echoglossian.csproj`.
 The required `dotnet test` command with `--no-build`,
 `-p:VSTestMaxCpuCount=1`, and `--nologo` passed 1,299 of 1,299 tests, with 0
 failed and 0 skipped.
