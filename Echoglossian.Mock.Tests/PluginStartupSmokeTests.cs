@@ -24,7 +24,7 @@ using Xunit;
 namespace Echoglossian.Mock.Tests;
 
 /// <summary>
-/// Covers startup and shutdown milestones under DalaMock.
+/// Covers startup and shutdown registration/order milestones under DalaMock only; these assertions do not prove an awaited persistence drain, SQLite scheduling, or native runtime behavior.
 /// </summary>
 public class PluginStartupSmokeTests
 {

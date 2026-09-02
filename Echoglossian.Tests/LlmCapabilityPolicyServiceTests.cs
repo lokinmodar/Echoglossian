@@ -17,12 +17,16 @@ using FluentAssertions;
 
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 using Newtonsoft.Json;
 
 using OpenAI.Chat;
 
 using Xunit;
+
+using System.Data.Common;
 
 namespace Echoglossian.Tests;
 
@@ -857,6 +861,104 @@ public sealed class LlmCapabilityPolicyServiceTests
     }
 
     /// <summary>
+    ///     Ensures learning reports a failed persistence outcome when the
+    ///     process-lifetime observation writer is unavailable.
+    /// </summary>
+    [Fact]
+    public async Task LearnFromProviderFailureAsync_WhenAdmissionRejects_ReportsPersistenceFailed()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var original = Echoglossian.ConfigDirectory;
+        Directory.CreateDirectory(directory);
+        Echoglossian.ConfigDirectory = directory;
+        LlmCapabilityCacheManager.Clear();
+        try
+        {
+            var result = await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
+                new LlmCapabilityScope(Echoglossian.TransEngines.ChatGPT, "OpenAI", "https://api.openai.com/v1", "gpt-test"),
+                LlmCapabilityParameterName.Temperature,
+                400,
+                "Request could not be processed.");
+            result.ObservationRecorded.Should().BeFalse();
+            result.RulePromoted.Should().BeFalse();
+            result.FailureKind.Should().Be("persistence-failed");
+            LlmCapabilityCacheManager.GetObservationDefinitions().Should().BeEmpty();
+        }
+        finally
+        {
+            PluginRuntimeFileLog.FlushForTests();
+            PluginRuntimeFileLog.ResetForTests();
+            LlmCapabilityCacheManager.Clear();
+            Echoglossian.ConfigDirectory = original;
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures awaited learning cannot report a recorded observation before
+    ///     its SQLite transaction commits.
+    /// </summary>
+    [Fact]
+    public async Task LearnFromProviderFailureAsync_ReportsObservationOnlyAfterCommit()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var original = Echoglossian.ConfigDirectory;
+        var gate = new CommitGateInterceptor();
+        Directory.CreateDirectory(directory);
+        Echoglossian.ConfigDirectory = directory;
+        var factory = new InterceptingFactory(Path.Combine(directory, "Echoglossian.db"), gate);
+        var coordinator = new PersistenceCoordinator(factory);
+        var writer = new LlmCapabilityObservationWriter(coordinator);
+        LlmCapabilityCacheManager.Clear();
+        try
+        {
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            gate.Enabled = true;
+            LlmCapabilityObservationRuntime.Register(writer);
+            var learning = LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
+                new LlmCapabilityScope(Echoglossian.TransEngines.ChatGPT, "OpenAI", "https://api.openai.com/v1", "gpt-test"),
+                LlmCapabilityParameterName.Temperature,
+                400,
+                "Request could not be processed.");
+            await gate.CommitEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            learning.IsCompleted.Should().BeFalse();
+            LlmCapabilityCacheManager.GetObservationDefinitions().Should().BeEmpty();
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                (await context.LlmModelCapabilityObservations.CountAsync()).Should().Be(0);
+            }
+
+            gate.ReleaseCommit.SetResult(true);
+            var result = await learning;
+            result.ObservationRecorded.Should().BeTrue();
+            result.RulePromoted.Should().BeFalse();
+            result.FailureKind.Should().Be("ambiguous-client-error");
+            LlmCapabilityCacheManager.GetObservationDefinitions().Should().ContainSingle();
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                (await context.LlmModelCapabilityObservations.CountAsync()).Should().Be(1);
+            }
+        }
+        finally
+        {
+            gate.ReleaseCommit.TrySetResult(true);
+            LlmCapabilityObservationRuntime.Unregister(writer);
+            await coordinator.DisposeAsync();
+            PluginRuntimeFileLog.FlushForTests();
+            PluginRuntimeFileLog.ResetForTests();
+            LlmCapabilityCacheManager.Clear();
+            Echoglossian.ConfigDirectory = original;
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
     ///     Runs an asynchronous action with the real observation runtime
     ///     registered.
     /// </summary>
@@ -900,6 +1002,36 @@ public sealed class LlmCapabilityPolicyServiceTests
         typeof(OpenRouterTranslator)
             .GetField("httpClient", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
             .SetValue(translator, httpClient);
+    }
+
+    private sealed class InterceptingFactory : IDbContextFactory<EchoglossianDbContext>
+    {
+        private readonly DbContextOptions<EchoglossianDbContext> options;
+        internal InterceptingFactory(string path, DbTransactionInterceptor interceptor)
+        {
+            this.options = new DbContextOptionsBuilder<EchoglossianDbContext>()
+                .UseSqlite($"Data Source={path}")
+                .AddInterceptors(interceptor)
+                .Options;
+        }
+
+        public EchoglossianDbContext CreateDbContext() => new(this.options);
+        public Task<EchoglossianDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) => Task.FromResult(this.CreateDbContext());
+    }
+
+    private sealed class CommitGateInterceptor : DbTransactionInterceptor
+    {
+        internal bool Enabled { get; set; }
+        internal TaskCompletionSource<bool> CommitEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource<bool> ReleaseCommit { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public override async ValueTask<InterceptionResult> TransactionCommittingAsync(DbTransaction transaction, TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
+        {
+            if (!this.Enabled) { return result; }
+            this.CommitEntered.TrySetResult(true);
+            await this.ReleaseCommit.Task.WaitAsync(cancellationToken);
+            return result;
+        }
     }
 
     private void ReplaceHttpClient(DeepSeekTranslator translator, HttpClient httpClient)
