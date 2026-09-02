@@ -212,7 +212,15 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     catch (Exception exception)
     {
       this.metrics.RecordTerminalFailure();
-      this.errorLog?.Invoke($"Persistence read failed for domain '{work.Key.Domain}'.");
+      try
+      {
+        this.errorLog?.Invoke($"Persistence read failed for domain '{work.Key.Domain}'.");
+      }
+      catch (Exception)
+      {
+        // Host-provided diagnostics must not disrupt bounded worker progress.
+      }
+
       work.CompleteFailed(exception);
     }
     finally

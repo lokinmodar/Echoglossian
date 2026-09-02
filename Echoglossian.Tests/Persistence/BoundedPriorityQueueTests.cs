@@ -166,6 +166,43 @@ public sealed class BoundedPriorityQueueTests
   }
 
   /// <summary>
+  ///     Ensures concurrent readers consume one background item in each first
+  ///     four-item selection while both lanes are ready.
+  /// </summary>
+  /// <returns>A task that completes after concurrent selection is verified.</returns>
+  [Fact]
+  public async Task ConcurrentDequeueAsync_WhenBothLanesAreReady_PreservesThreeToOneBudget()
+  {
+    for (var iteration = 0; iteration < 32; iteration++)
+    {
+      var queue = new BoundedPriorityQueue<string>(4, 1);
+      foreach (var label in new[] { "I1", "I2", "I3", "I4" })
+      {
+        Assert.True(queue.TryEnqueue(label, PersistencePriority.Interactive));
+      }
+
+      Assert.True(queue.TryEnqueue("B1", PersistencePriority.Background));
+      var start = new TaskCompletionSource<bool>(
+          TaskCreationOptions.RunContinuationsAsynchronously);
+      var selections = Enumerable.Range(0, 4)
+          .Select(
+              _ => Task.Run(
+                  async () =>
+                  {
+                    await start.Task.ConfigureAwait(false);
+                    return await queue.DequeueAsync(CancellationToken.None).ConfigureAwait(false);
+                  }))
+          .ToArray();
+
+      start.SetResult(true);
+      var selected = await Task.WhenAll(selections).WaitAsync(TimeSpan.FromSeconds(5));
+
+      Assert.Equal(3, selected.Count(item => item.StartsWith("I", StringComparison.Ordinal)));
+      Assert.Equal(1, selected.Count(item => item.StartsWith("B", StringComparison.Ordinal)));
+    }
+  }
+
+  /// <summary>
   ///     Ensures background work is immediately selected when interactive work
   ///     is unavailable.
   /// </summary>

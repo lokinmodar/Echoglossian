@@ -177,7 +177,7 @@ internal sealed class BoundedPriorityQueue<T>
         {
           AllowSynchronousContinuations = false,
           FullMode = BoundedChannelFullMode.Wait,
-          SingleReader = true,
+          SingleReader = false,
           SingleWriter = false,
         });
   }
@@ -214,29 +214,32 @@ internal sealed class BoundedPriorityQueue<T>
   /// </returns>
   private bool TryDequeue(out T item)
   {
-    if (this.remainingInteractiveBudget > 0
-        && this.TryReadInteractive(out item))
+    lock (this.admissionGate)
     {
-      this.remainingInteractiveBudget--;
-      this.ResignalIfItemsRemain();
-      return true;
-    }
+      if (this.remainingInteractiveBudget > 0
+          && this.TryReadInteractive(out item))
+      {
+        this.remainingInteractiveBudget--;
+        this.ResignalIfItemsRemain();
+        return true;
+      }
 
-    if (this.TryReadBackground(out item))
-    {
-      this.remainingInteractiveBudget = InteractiveBudget;
-      this.ResignalIfItemsRemain();
-      return true;
-    }
+      if (this.TryReadBackground(out item))
+      {
+        this.remainingInteractiveBudget = InteractiveBudget;
+        this.ResignalIfItemsRemain();
+        return true;
+      }
 
-    if (this.TryReadInteractive(out item))
-    {
-      this.ResignalIfItemsRemain();
-      return true;
-    }
+      if (this.TryReadInteractive(out item))
+      {
+        this.ResignalIfItemsRemain();
+        return true;
+      }
 
-    item = default!;
-    return false;
+      item = default!;
+      return false;
+    }
   }
 
   /// <summary>

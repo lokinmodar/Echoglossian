@@ -286,6 +286,56 @@ public sealed class PersistenceCoordinatorReadTests
     }
   }
 
+  /// <summary>
+  ///     Ensures a hostile error sink cannot prevent a failed read completion
+  ///     or stop the reader that processes later work.
+  /// </summary>
+  /// <returns>A task that completes after the later read succeeds.</returns>
+  [Fact]
+  public async Task TryScheduleRead_WhenErrorLogThrows_CompletesFailureAndProcessesLaterRead()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    await using var coordinator = new PersistenceCoordinator(
+        factory,
+        new PersistenceCoordinatorOptions(
+            4,
+            4,
+            1,
+            32,
+            TimeSpan.FromMilliseconds(5),
+            3,
+            new[] { TimeSpan.FromMilliseconds(25), TimeSpan.FromMilliseconds(100) },
+            4,
+            1,
+            TimeSpan.FromSeconds(5)),
+        errorLog: _ => throw new InvalidOperationException("hostile sink"));
+
+    Assert.Equal(
+        PersistenceAdmissionStatus.Accepted,
+        coordinator.TryScheduleRead<string>(
+            new PersistenceWorkKey("test", "failure"),
+            PersistencePriority.Interactive,
+            (_, _) => throw new InvalidOperationException("query failure"),
+            null,
+            out var failedCompletion));
+
+    var failure = await failedCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(PersistenceCompletionStatus.Failed, failure.Status);
+
+    Assert.Equal(
+        PersistenceAdmissionStatus.Accepted,
+        coordinator.TryScheduleRead(
+            new PersistenceWorkKey("test", "later"),
+            PersistencePriority.Interactive,
+            (_, _) => Task.FromResult("later value"),
+            null,
+            out var laterCompletion));
+
+    var later = await laterCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(PersistenceCompletionStatus.Succeeded, later.Status);
+    Assert.Equal("later value", later.Value);
+  }
+
   private PersistenceCoordinator CreateCoordinator(
       PersistenceCoordinatorTestContextFactory factory,
       int interactiveCapacity = 4,
