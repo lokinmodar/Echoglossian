@@ -33,6 +33,28 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures synchronous set-based update and delete operations fail the audit.
+    /// </summary>
+    /// <param name="methodName">The synchronous bulk operation method name.</param>
+    [Theory]
+    [InlineData("ExecuteUpdate")]
+    [InlineData("ExecuteDelete")]
+    public void AuditScript_SynchronousBulkWrite_ReturnsFailure(string methodName)
+    {
+        using var fixture = this.CreateFixture();
+        var statement = methodName == "ExecuteUpdate"
+            ? "query.ExecuteUpdate(setters => setters);"
+            : "query.ExecuteDelete();";
+        fixture.WriteSource("DBHelpers/BulkWriteFixture.cs", statement);
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("sync-ef-bulk-write", result.Output, StringComparison.Ordinal);
+        Assert.Contains(methodName, result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures an untracked synchronous database context construction in the
     /// startup cache path fails the audit and is assigned an approved stage.
     /// </summary>
@@ -51,6 +73,29 @@ public sealed class SyncDatabaseHotPathAuditTests
         Assert.Contains("direct-db-context", result.Output, StringComparison.Ordinal);
         Assert.Contains("Cache/Fixture.cs", result.Output, StringComparison.Ordinal);
         Assert.Contains("## DB-7", report, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures every production source directory is audited without requiring
+    /// an explicit scanner allowlist entry.
+    /// </summary>
+    /// <param name="sourceDirectory">The production source directory.</param>
+    [Theory]
+    [InlineData("PluginRuntime")]
+    [InlineData("Services")]
+    public void AuditScript_ProductionSourceDirectory_ReturnsFailure(
+        string sourceDirectory)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            $"{sourceDirectory}/Fixture.cs",
+            "public void Save() { context.SaveChanges(); }");
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("sync-ef-save", result.Output, StringComparison.Ordinal);
+        Assert.Contains($"{sourceDirectory}/Fixture.cs", result.Output, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -75,6 +120,37 @@ public sealed class SyncDatabaseHotPathAuditTests
         Assert.Contains(
             "resolved baseline finding",
             resolved.Output,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Ensures changing baseline metadata without regenerating the baseline
+    /// fails the exact-contract comparison.
+    /// </summary>
+    [Fact]
+    public void AuditScript_ChangedBaselineStage_ReturnsFailure()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "DBHelpers/ActionFixture.cs",
+            "public void Save() { context.SaveChanges(); }");
+        var update = this.RunAudit(fixture, updateBaseline: true);
+        var baseline = File.ReadAllText(fixture.BaselinePath);
+        Assert.Contains("\"stage\": \"DB-4\"", baseline, StringComparison.Ordinal);
+        File.WriteAllText(
+            fixture.BaselinePath,
+            baseline.Replace(
+                "\"stage\": \"DB-4\"",
+                "\"stage\": \"DB-7\"",
+                StringComparison.Ordinal));
+
+        var changed = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.Equal(0, update.ExitCode);
+        Assert.NotEqual(0, changed.ExitCode);
+        Assert.Contains(
+            "changed baseline finding",
+            changed.Output,
             StringComparison.OrdinalIgnoreCase);
     }
 

@@ -6,7 +6,7 @@
 Audits synchronous database operations in production runtime source.
 
 .DESCRIPTION
-Scans the approved production source roots for synchronous Entity Framework,
+Scans the production source tree for synchronous Entity Framework,
 SQLite, persistence-helper, and blocking operation patterns. The current
 findings must exactly match the checked-in baseline unless -UpdateBaseline is
 used to deliberately refresh that baseline.
@@ -76,9 +76,19 @@ function Test-ExcludedPath {
     foreach ($excludedSegment in @(
             '/bin/',
             '/obj/',
+            '/.git/',
+            '/.worktrees/',
+            '/worktrees/',
+            '/artifacts/',
             '/vendor/',
+            '/scripts/',
+            '/.superpowers/',
             '/Echoglossian.Tests/',
+            '/Echoglossian.Mock/',
             '/Echoglossian.Mock.Tests/',
+            '/Echoglossian.Previewer/',
+            '/Echoglossian.Previewer.Tests/',
+            '/Echoglossian.Docs/',
             '/EFCoreSqlite/Migrations/')) {
         if ($paddedPath.IndexOf(
                 $excludedSegment,
@@ -274,12 +284,30 @@ function Write-Utf8NoBom {
         [System.Text.UTF8Encoding]::new($false))
 }
 
+function Test-EquivalentFindingContract {
+    param(
+        [Parameter(Mandatory)][object]$CurrentFinding,
+        [Parameter(Mandatory)][object]$BaselineFinding)
+
+    foreach ($propertyName in @('id', 'category', 'stage', 'path', 'evidence')) {
+        if (-not [string]::Equals(
+                [string]$CurrentFinding.$propertyName,
+                [string]$BaselineFinding.$propertyName,
+                [StringComparison]::Ordinal)) {
+            return $false
+        }
+    }
+
+    return $true
+}
+
 $resolvedRepositoryRoot = (Resolve-Path -LiteralPath $RepositoryRoot).Path.TrimEnd('\', '/')
 $directPatterns = @(
     [pscustomobject]@{ Category = 'sync-ef-save'; Pattern = '(?<!Async)\bSaveChanges\s*\(' },
     [pscustomobject]@{ Category = 'sync-ef-transaction'; Pattern = '(?<!Async)\bBeginTransaction\s*\(' },
     [pscustomobject]@{ Category = 'sync-ef-migrate'; Pattern = '\.Database\.(?:Migrate|EnsureCreated)\s*\(' },
     [pscustomobject]@{ Category = 'sync-sql-command'; Pattern = '(?<!Async)\bExecuteSqlRaw\s*\(' },
+    [pscustomobject]@{ Category = 'sync-ef-bulk-write'; Pattern = '\bExecute(?:Update|Delete)\s*\(' },
     [pscustomobject]@{ Category = 'direct-db-context'; Pattern = '\bnew\s+EchoglossianDbContext\s*\(' },
     [pscustomobject]@{ Category = 'blocking-wait'; Pattern = '\.(?:Result\b|Wait\s*\()' }
 )
@@ -295,30 +323,13 @@ $databaseQueryPattern = [regex]::new(
     '(?<!Async)\b(?:First|FirstOrDefault|Single|SingleOrDefault|ToList|' +
     'ToArray|Any|Count|LongCount|Find)\s*\(')
 
-$scanRoots = @(
-    'Cache',
-    'DBHelpers',
-    'DBManagerUI',
-    'EFCoreSqlite',
-    'GeneralHelpers',
-    'NativeUI',
-    'PluginUI',
-    'Translators',
-    'UIOverlays'
-)
 $sourceFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
-foreach ($scanRoot in $scanRoots) {
-    $scanPath = Join-Path $resolvedRepositoryRoot $scanRoot
-    if (Test-Path -LiteralPath $scanPath -PathType Container) {
-        foreach ($sourceFile in Get-ChildItem -LiteralPath $scanPath -Recurse -File -Filter '*.cs') {
-            $sourceFiles.Add($sourceFile)
-        }
-    }
-}
-
-$rootSourceFile = Join-Path $resolvedRepositoryRoot 'Echoglossian.cs'
-if (Test-Path -LiteralPath $rootSourceFile -PathType Leaf) {
-    $sourceFiles.Add((Get-Item -LiteralPath $rootSourceFile))
+foreach ($sourceFile in Get-ChildItem `
+        -LiteralPath $resolvedRepositoryRoot `
+        -Recurse `
+        -File `
+        -Filter '*.cs') {
+    $sourceFiles.Add($sourceFile)
 }
 
 $findings = [System.Collections.Generic.List[object]]::new()
@@ -363,12 +374,32 @@ if ($UpdateBaseline) {
 }
 
 $baselineFindings = @(Get-BaselineFindings -Path $BaselinePath)
-$baselineIds = @($baselineFindings | ForEach-Object { $_.id })
-$currentIds = @($currentFindings | ForEach-Object { $_.id })
-$unexpected = @($currentFindings | Where-Object { $_.id -notin $baselineIds })
-$resolved = @($baselineFindings | Where-Object { $_.id -notin $currentIds })
+$baselineById = [System.Collections.Generic.Dictionary[string, object]]::new(
+    [StringComparer]::Ordinal)
+foreach ($finding in $baselineFindings) {
+    $baselineById[[string]$finding.id] = $finding
+}
 
-if ($unexpected.Count -gt 0 -or $resolved.Count -gt 0) {
+$currentById = [System.Collections.Generic.Dictionary[string, object]]::new(
+    [StringComparer]::Ordinal)
+foreach ($finding in $currentFindings) {
+    $currentById[[string]$finding.id] = $finding
+}
+
+$unexpected = @($currentFindings | Where-Object {
+        -not $baselineById.ContainsKey([string]$_.id)
+    })
+$resolved = @($baselineFindings | Where-Object {
+        -not $currentById.ContainsKey([string]$_.id)
+    })
+$changed = @($baselineFindings | Where-Object {
+        $currentById.ContainsKey([string]$_.id) -and
+        -not (Test-EquivalentFindingContract `
+            -CurrentFinding $currentById[[string]$_.id] `
+            -BaselineFinding $_)
+    })
+
+if ($unexpected.Count -gt 0 -or $resolved.Count -gt 0 -or $changed.Count -gt 0) {
     $messages = [System.Collections.Generic.List[string]]::new()
     foreach ($finding in $unexpected) {
         $messages.Add("unexpected sync database finding: $($finding.id)")
@@ -376,6 +407,10 @@ if ($unexpected.Count -gt 0 -or $resolved.Count -gt 0) {
 
     foreach ($finding in $resolved) {
         $messages.Add("resolved baseline finding: $($finding.id)")
+    }
+
+    foreach ($finding in $changed) {
+        $messages.Add("changed baseline finding: $($finding.id)")
     }
 
     throw ($messages -join [Environment]::NewLine)

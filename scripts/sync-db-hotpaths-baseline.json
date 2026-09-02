@@ -947,6 +947,13 @@
       "evidence": "TranslationFailurePersistenceHelper.RecordFailure( [occurrence 1]"
     },
     {
+      "id": "sync-ef-bulk-write|DBHelpers/DbOperations.cs|ExecuteUpdate( [occurrence 1]",
+      "category": "sync-ef-bulk-write",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "ExecuteUpdate( [occurrence 1]"
+    },
+    {
       "id": "sync-ef-migrate|DBHelpers/DbOperations.cs|.Database.Migrate( [occurrence 1]",
       "category": "sync-ef-migrate",
       "stage": "DB-7",
