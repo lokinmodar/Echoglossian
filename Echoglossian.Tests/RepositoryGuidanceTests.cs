@@ -118,6 +118,27 @@ public class RepositoryGuidanceTests
     }
 
     /// <summary>
+    /// Ensures pull requests run the synchronous database hot-path audit on Windows.
+    /// </summary>
+    [Fact]
+    public void ContinuousIntegration_runs_sync_database_audit_without_baseline_updates()
+    {
+        var root = FindRepositoryRoot();
+        var workflowPath = Path.Combine(
+            root.FullName,
+            ".github",
+            "workflows",
+            "audit-sync-db-hotpaths.yml");
+
+        Assert.True(File.Exists(workflowPath), "The sync DB audit workflow must be committed.");
+        var text = File.ReadAllText(workflowPath);
+
+        Assert.Contains("windows-latest", text, StringComparison.Ordinal);
+        Assert.Contains("audit-sync-db-hotpaths.ps1", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateBaseline", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>
