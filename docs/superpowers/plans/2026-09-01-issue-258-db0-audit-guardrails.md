@@ -642,19 +642,22 @@ Expected: hashes match. Report the branch, commit list, validation, and pull-req
 
 Task 4 was executed on 2026-09-01 in native Windows PowerShell. The normal
 audit command exited `0` with zero unexpected findings and zero resolved
-baseline findings. The approved debt inventory remains 222 findings:
+baseline findings. The approved debt inventory remains 232 findings:
 
-- DB-2: 8
+- DB-2: 9
 - DB-3: 11
-- DB-4: 35
-- DB-5: 15
-- DB-6: 13
-- DB-7: 119
+- DB-4: 39
+- DB-5: 16
+- DB-6: 14
+- DB-7: 122
 - DB-8: 21
 
-The solution build (`dotnet build .\Echoglossian.sln -c Debug --no-restore`) succeeded with 61 warnings and 0 errors. The test-project build (`dotnet build .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`) succeeded with 1 warning and 0 errors; that warning is the existing Multilingual App Toolkit-unavailable warning from `Echoglossian.csproj`.
+Both required `--no-restore` build commands succeeded with 1 warning and 0
+errors in this incremental workspace. Clean non-incremental rebuilds
+(`-t:Rebuild`) for both the solution and the test project each succeeded with
+61 warnings and 0 errors.
 The required `dotnet test` command with `--no-build`,
-`-p:VSTestMaxCpuCount=1`, and `--nologo` passed 1,299 of 1,299 tests, with 0
+`-p:VSTestMaxCpuCount=1`, and `--nologo` passed 1,301 of 1,301 tests, with 0
 failed and 0 skipped.
 
 Repository hygiene passed: `git diff --check` returned no whitespace errors;
@@ -662,6 +665,9 @@ the generated audit artifact remained ignored; and the Issue 258 DB-0 commit
 range contains only DB-0 audit, evidence-protocol, validation-rail, and plan
 work. `Echoglossian.xml` was an unrelated pre-existing modified file; it was
 not staged or committed. DB-0 makes no runtime or schema changes.
+
+CI now runs the normal synchronous-database audit on pull requests and manual
+workflow dispatch.
 
 DB-0 tooling and unit tests do not claim Mock/DalaMock coverage or live FFXIV
 coverage. Controlled in-game baseline capture, following
