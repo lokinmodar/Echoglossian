@@ -26,10 +26,18 @@ public sealed class PersistenceCoordinatorSqliteTests
   {
     await using var owner = await SqliteOwner.CreateAsync();
     var published = 0;
-    await using var coordinator = CreateCoordinator(owner.Factory);
+    var collecting = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var releaseCollection = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    await using var coordinator = CreateCoordinator(owner.Factory, async (_, _) =>
+    {
+      collecting.SetResult(true);
+      await releaseCollection.Task.ConfigureAwait(false);
+    });
     coordinator.TryScheduleWrite(Insert("one", () => Interlocked.Increment(ref published)), out var one);
+    await collecting.Task.WaitAsync(TimeSpan.FromSeconds(5));
     coordinator.TryScheduleWrite(new PersistenceWriteRequest(new PersistenceWorkKey("sqlite", "fail"), PersistencePriority.Interactive,
         (_, _) => throw new InvalidOperationException("fail"), () => Interlocked.Increment(ref published)), out var two);
+    releaseCollection.SetResult(true);
     await Task.WhenAll(one, two).WaitAsync(TimeSpan.FromSeconds(5));
     await using var check = owner.Factory.CreateDbContext();
     Assert.Empty(check.LlmModelCapabilityObservations);
@@ -108,8 +116,10 @@ public sealed class PersistenceCoordinatorSqliteTests
     Assert.Equal(3, attempts); Assert.Equal(0, published); Assert.Equal(1, coordinator.GetMetrics().TerminalFailures);
   }
 
-  private static PersistenceCoordinator CreateCoordinator(IDbContextFactory<EchoglossianDbContext> factory) => new(factory,
-      new PersistenceCoordinatorOptions(8, 8, 1, 32, TimeSpan.FromMilliseconds(1), 3, [TimeSpan.Zero, TimeSpan.Zero], 4, 1, TimeSpan.FromSeconds(5)));
+  private static PersistenceCoordinator CreateCoordinator(
+      IDbContextFactory<EchoglossianDbContext> factory,
+      Func<TimeSpan, CancellationToken, Task>? delayAsync = null) => new(factory,
+      new PersistenceCoordinatorOptions(8, 8, 1, 32, TimeSpan.FromMilliseconds(1), 3, [TimeSpan.Zero, TimeSpan.Zero], 4, 1, TimeSpan.FromSeconds(5)), delayAsync);
 
   private static PersistenceWriteRequest Insert(string model, Action publish) => new(new PersistenceWorkKey("sqlite", model), PersistencePriority.Interactive,
       (context, _) => { context.LlmModelCapabilityObservations.Add(Observation(model)); return Task.FromResult(PersistenceWriteMutation.ChangedResult); }, publish);

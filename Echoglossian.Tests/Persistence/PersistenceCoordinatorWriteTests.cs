@@ -52,11 +52,20 @@ public sealed class PersistenceCoordinatorWriteTests
   public async Task Writer_CollectsCompatibleRequestsIntoOneBoundedBatch()
   {
     var factory = new PersistenceCoordinatorTestContextFactory();
-    await using var coordinator = CreateCoordinator(factory, 4);
+    var collecting = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var releaseCollection = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    await using var coordinator = CreateCoordinator(factory, 4, async (_, _) =>
+    {
+      collecting.SetResult(true);
+      await releaseCollection.Task.ConfigureAwait(false);
+    });
     coordinator.TryScheduleWrite(Request("one", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out var one);
+    await collecting.Task.WaitAsync(TimeSpan.FromSeconds(5));
     coordinator.TryScheduleWrite(Request("two", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out var two);
+    releaseCollection.SetResult(true);
     await Task.WhenAll(one, two).WaitAsync(TimeSpan.FromSeconds(5));
     Assert.Equal(1, coordinator.GetMetrics().BatchCount);
+    Assert.Single(factory.ContextIds);
   }
 
   [Fact]
@@ -155,11 +164,14 @@ public sealed class PersistenceCoordinatorWriteTests
     Assert.Equal(1, coordinator.GetMetrics().MaximumActiveWriters);
   }
 
-  private static PersistenceCoordinator CreateCoordinator(PersistenceCoordinatorTestContextFactory factory, int capacity)
+  private static PersistenceCoordinator CreateCoordinator(
+      PersistenceCoordinatorTestContextFactory factory,
+      int capacity,
+      Func<TimeSpan, CancellationToken, Task>? delayAsync = null)
   {
     return new PersistenceCoordinator(factory, new PersistenceCoordinatorOptions(
         capacity, capacity, 1, 32, TimeSpan.FromMilliseconds(1), 3,
-        new[] { TimeSpan.Zero, TimeSpan.Zero }, 4, 1, TimeSpan.FromSeconds(5)));
+        new[] { TimeSpan.Zero, TimeSpan.Zero }, 4, 1, TimeSpan.FromSeconds(5)), delayAsync);
   }
 
   private static PersistenceWriteRequest Request(
