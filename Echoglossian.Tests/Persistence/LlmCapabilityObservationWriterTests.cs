@@ -7,6 +7,7 @@ using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Persistence;
+using Echoglossian.Translators.Capabilities;
 
 using FluentAssertions;
 
@@ -89,6 +90,36 @@ public sealed class LlmCapabilityObservationWriterTests
             LlmCapabilityCacheManager.Clear(); writer.DisablePublication();
             writer.TryRecord(CreateObservation(), out var completion); await completion;
             LlmCapabilityCacheManager.GetObservationDefinitions().Should().BeEmpty();
+        });
+    }
+
+    /// <summary>Ensures an unrelated unregister cannot disable the live writer.</summary>
+    [Fact]
+    public async Task Unregister_WrongWriter_DoesNotDisableRegisteredWriter()
+    {
+        await this.WithWriterAsync(async (writerA, factory, _) =>
+        {
+            await using var otherCoordinator = new PersistenceCoordinator(factory);
+            var writerB = new LlmCapabilityObservationWriter(otherCoordinator);
+            LlmCapabilityObservationRuntime.Register(writerA);
+            try
+            {
+                LlmCapabilityObservationRuntime.Unregister(writerB);
+                LlmCapabilityObservationRuntime.TryRecord(CreateObservation(), out var completion);
+                await completion;
+                LlmCapabilityCacheManager.GetObservationDefinitions().Should().ContainSingle();
+                LlmCapabilityObservationRuntime.Unregister(writerA);
+                LlmCapabilityObservationRuntime.Register(writerB);
+                LlmCapabilityCacheManager.Clear();
+                LlmCapabilityObservationRuntime.TryRecord(CreateObservation(), out completion);
+                await completion;
+                LlmCapabilityCacheManager.GetObservationDefinitions().Should().ContainSingle();
+            }
+            finally
+            {
+                LlmCapabilityObservationRuntime.Unregister(writerA);
+                LlmCapabilityObservationRuntime.Unregister(writerB);
+            }
         });
     }
 

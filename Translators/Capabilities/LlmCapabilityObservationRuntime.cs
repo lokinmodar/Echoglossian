@@ -29,8 +29,10 @@ internal static class LlmCapabilityObservationRuntime
     internal static void Unregister(LlmCapabilityObservationWriter value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.DisablePublication();
-        _ = Interlocked.CompareExchange(ref writer, null, value);
+        if (ReferenceEquals(Interlocked.CompareExchange(ref writer, null, value), value))
+        {
+            value.DisablePublication();
+        }
     }
 
     /// <summary>Schedules an observation if the runtime is available.</summary>
