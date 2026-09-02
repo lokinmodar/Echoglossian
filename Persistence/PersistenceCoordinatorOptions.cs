@@ -44,7 +44,7 @@ internal sealed class PersistenceCoordinatorOptions
     ValidatePositive(contextPoolSize, nameof(contextPoolSize));
     ValidatePositive(sqliteDefaultTimeoutSeconds, nameof(sqliteDefaultTimeoutSeconds));
     ValidatePositive(batchCollectionWindow, nameof(batchCollectionWindow));
-    ValidatePositive(shutdownTimeout, nameof(shutdownTimeout));
+    ValidateNonNegative(shutdownTimeout, nameof(shutdownTimeout));
     ArgumentNullException.ThrowIfNull(retryDelays);
 
     if (retryDelays.Count != maxAttempts - 1)
@@ -150,6 +150,14 @@ internal sealed class PersistenceCoordinatorOptions
     if (value <= TimeSpan.Zero)
     {
       throw new ArgumentOutOfRangeException(parameterName, "The value must be positive.");
+    }
+  }
+
+  private static void ValidateNonNegative(TimeSpan value, string parameterName)
+  {
+    if (value < TimeSpan.Zero)
+    {
+      throw new ArgumentOutOfRangeException(parameterName, "The value cannot be negative.");
     }
   }
 }

@@ -165,6 +165,27 @@ internal sealed class BoundedPriorityQueue<T>
     }
   }
 
+  /// <summary>Cancels queued items that will never be consumed.</summary>
+  /// <param name="cancel">Completes each removed item.</param>
+  internal void Cancel(Action<T> cancel)
+  {
+    ArgumentNullException.ThrowIfNull(cancel);
+    lock (this.admissionGate)
+    {
+      while (this.interactiveLane.Reader.TryRead(out var interactive))
+      {
+        _ = Interlocked.Decrement(ref this.interactiveDepth);
+        cancel(interactive);
+      }
+
+      while (this.backgroundLane.Reader.TryRead(out var background))
+      {
+        _ = Interlocked.Decrement(ref this.backgroundDepth);
+        cancel(background);
+      }
+    }
+  }
+
   /// <summary>
   ///     Creates an independent bounded work lane.
   /// </summary>

@@ -120,7 +120,7 @@ internal abstract record PersistenceWriteRequestValidation
 /// </summary>
 /// <param name="Key">The canonical identity of the requested write.</param>
 /// <param name="Priority">The bounded lane that receives the write.</param>
-/// <param name="ApplyAsync">The mutation applied within a transaction.</param>
+/// <param name="ApplyAsync">The retry-safe mutation applied within a transaction. It must create or attach entities in the supplied context and must not capture tracked entities.</param>
 /// <param name="PublishAfterCommit">The projection published after commit.</param>
 internal sealed record PersistenceWriteRequest(
     PersistenceWorkKey Key,

@@ -13,6 +13,33 @@ namespace Echoglossian.Tests.Persistence;
 /// <summary>Verifies bounded, idempotent persistence coordinator completion.</summary>
 public sealed class PersistenceCoordinatorShutdownTests
 {
+  [Fact]
+  public async Task CompleteAsync_WhenDeadlineExpires_CancelsAndRollsBackRemainingBatch()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    await using var coordinator = CreateCoordinator(factory, TimeSpan.Zero);
+    var never = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    coordinator.TryScheduleWrite(Request("timeout", async (_, token) => { entered.SetResult(true); await never.Task.WaitAsync(token); return PersistenceWriteMutation.UnchangedResult; }), out var completion);
+    await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    await coordinator.CompleteAsync().WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(PersistenceCompletionStatus.Cancelled, (await completion).Status);
+  }
+
+  [Fact]
+  public async Task DisposeAsync_LeavesZeroQueuedAndActiveMetrics()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var coordinator = CreateCoordinator(factory, TimeSpan.Zero);
+    var never = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    coordinator.TryScheduleWrite(Request("active", async (_, token) => { entered.SetResult(true); await never.Task.WaitAsync(token); return PersistenceWriteMutation.UnchangedResult; }), out _);
+    await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    coordinator.TryScheduleWrite(Request("queued", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out _);
+    await coordinator.DisposeAsync();
+    var metrics = coordinator.GetMetrics();
+    Assert.Equal(0, metrics.WriteInteractiveDepth); Assert.Equal(0, metrics.ActiveWriters);
+  }
   /// <summary>Ensures completion closes admission and drains accepted writes.</summary>
   [Fact]
   public async Task CompleteAsync_RejectsNewAdmissionAndDrainsAcceptedWrites()

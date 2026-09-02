@@ -14,6 +14,66 @@ namespace Echoglossian.Tests.Persistence;
 /// <summary>Verifies bounded, serialized persistence-write admission.</summary>
 public sealed class PersistenceCoordinatorWriteTests
 {
+  [Fact]
+  public async Task TryScheduleWrite_WhenLaneIsFull_ReturnsRejectedCapacityWithoutDroppingAcceptedWork()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    await using var coordinator = CreateCoordinator(factory, 1);
+    coordinator.TryScheduleWrite(Request("run", async (_, _) => { entered.SetResult(true); await release.Task; return PersistenceWriteMutation.UnchangedResult; }), out _);
+    await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    coordinator.TryScheduleWrite(Request("kept", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out var kept);
+    Assert.Equal(PersistenceAdmissionStatus.RejectedCapacity, coordinator.TryScheduleWrite(Request("reject", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out var rejected));
+    Assert.Equal(PersistenceCompletionStatus.Rejected, (await rejected).Status);
+    release.SetResult(true);
+    Assert.Equal(PersistenceCompletionStatus.Unchanged, (await kept.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+  }
+
+  [Fact]
+  public async Task DuplicateAfterClaim_UsesANewBoundedSlotWithoutMutatingActiveRequest()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var active = 0;
+    var later = 0;
+    await using var coordinator = CreateCoordinator(factory, 2);
+    coordinator.TryScheduleWrite(Request("same", async (_, _) => { active++; entered.SetResult(true); await release.Task; return PersistenceWriteMutation.UnchangedResult; }), out var first);
+    await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(PersistenceAdmissionStatus.Accepted, coordinator.TryScheduleWrite(Request("same", (_, _) => { later++; return Task.FromResult(PersistenceWriteMutation.UnchangedResult); }), out var second));
+    Assert.NotSame(first, second);
+    release.SetResult(true);
+    await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(1, active); Assert.Equal(1, later);
+  }
+
+  [Fact]
+  public async Task Writer_CollectsCompatibleRequestsIntoOneBoundedBatch()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    await using var coordinator = CreateCoordinator(factory, 4);
+    coordinator.TryScheduleWrite(Request("one", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out var one);
+    coordinator.TryScheduleWrite(Request("two", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out var two);
+    await Task.WhenAll(one, two).WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(1, coordinator.GetMetrics().BatchCount);
+  }
+
+  [Fact]
+  public async Task Publication_DoesNotRunUntilCommitCompletes()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var gate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var published = false;
+    await using var coordinator = CreateCoordinator(factory, 2);
+    var request = new PersistenceWriteRequest(new PersistenceWorkKey("write", "publication"), PersistencePriority.Interactive,
+        async (_, _) => { await gate.Task; return PersistenceWriteMutation.UnchangedResult; }, () => published = true);
+    coordinator.TryScheduleWrite(request, out var completion);
+    Assert.False(published);
+    gate.SetResult(true);
+    await completion.WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.True(published);
+  }
   /// <summary>Ensures write admission transfers ownership without waiting.</summary>
   [Fact]
   public async Task TryScheduleWrite_WhenWorkerIsBlocked_ReturnsAcceptedWithoutWaiting()

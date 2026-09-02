@@ -320,6 +320,11 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
   {
     lock (this.admissionGate)
     {
+      this.writeQueue.Cancel(work =>
+      {
+        work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
+        this.metrics.RecordCancelled();
+      });
       foreach (var work in this.pendingWrites.Values)
       {
         work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
@@ -427,8 +432,16 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
             && this.transientFailureClassifier(exception))
         {
           this.metrics.RecordRetry();
-          await this.delayAsync(this.options.RetryDelays[attempt], this.shutdownCancellation.Token)
-              .ConfigureAwait(false);
+          try
+          {
+            await this.delayAsync(this.options.RetryDelays[attempt], this.shutdownCancellation.Token)
+                .ConfigureAwait(false);
+          }
+          catch (OperationCanceledException cancellation)
+          {
+            this.CompleteBatchCancelled(batch, cancellation);
+            return;
+          }
         }
         catch (Exception exception)
         {
@@ -520,6 +533,14 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
         }
       }
 
+      foreach (var work in this.pendingWrites.Values)
+      {
+        if (oldestQueuedAt is null || work.QueuedAt < oldestQueuedAt.Value)
+        {
+          oldestQueuedAt = work.QueuedAt;
+        }
+      }
+
       return oldestQueuedAt is null ? TimeSpan.Zero : this.utcNow() - oldestQueuedAt.Value;
     }
   }
@@ -556,6 +577,7 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     private readonly TaskCompletionSource<PersistenceWriteResult> completionSource = new(
         TaskCreationOptions.RunContinuationsAsynchronously);
     private PersistenceWriteRequest request;
+    private int claimed;
 
     internal WriteWork(PersistenceWriteRequest request, DateTimeOffset queuedAt)
     {
@@ -571,13 +593,15 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
     internal PersistenceWriteRequest Request => this.request;
 
-    internal void Claim()
-    {
-      // Claiming occurs under the coordinator admission lock.
-    }
+    internal void Claim() => Interlocked.Exchange(ref this.claimed, 1);
 
     internal void Replace(PersistenceWriteRequest replacement)
     {
+      if (Volatile.Read(ref this.claimed) != 0)
+      {
+        throw new InvalidOperationException("A claimed write cannot be replaced.");
+      }
+
       this.request = replacement;
     }
 
