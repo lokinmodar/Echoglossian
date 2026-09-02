@@ -29,6 +29,7 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
   private readonly Func<Exception, bool> transientFailureClassifier;
   private readonly Func<DateTimeOffset> utcNow;
   private readonly Action<string>? warningLog;
+  private readonly Func<Task>? writeDequeuedBeforeClaimAsync;
   private readonly Task[] readerWorkers;
   private readonly BoundedPriorityQueue<WriteWork> writeQueue;
   private readonly Task writerWorker;
@@ -52,7 +53,8 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
       Func<DateTimeOffset>? utcNow = null,
       Func<Exception, bool>? transientFailureClassifier = null,
       Action<string>? warningLog = null,
-      Action<string>? errorLog = null)
+      Action<string>? errorLog = null,
+      Func<Task>? writeDequeuedBeforeClaimAsync = null)
   {
     ArgumentNullException.ThrowIfNull(contextFactory);
     this.contextFactory = contextFactory;
@@ -69,6 +71,7 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     this.transientFailureClassifier = transientFailureClassifier ?? IsSqliteBusyOrLocked;
     this.warningLog = warningLog;
     this.errorLog = errorLog;
+    this.writeDequeuedBeforeClaimAsync = writeDequeuedBeforeClaimAsync;
     this.readerWorkers = Enumerable.Range(0, options.ReaderConcurrency)
         .Select(_ => Task.Run(this.RunReadWorkerAsync))
         .ToArray();
@@ -378,6 +381,11 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
       catch (OperationCanceledException)
       {
         return;
+      }
+
+      if (this.writeDequeuedBeforeClaimAsync is not null)
+      {
+        await this.writeDequeuedBeforeClaimAsync().ConfigureAwait(false);
       }
 
       var claimedFirst = this.ClaimWrite(first);

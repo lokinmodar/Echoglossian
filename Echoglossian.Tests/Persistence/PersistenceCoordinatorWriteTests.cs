@@ -15,6 +15,24 @@ namespace Echoglossian.Tests.Persistence;
 public sealed class PersistenceCoordinatorWriteTests
 {
   [Fact]
+  public async Task CompleteAsync_BetweenWriteDequeueAndClaim_CancelsExactlyOnce()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var dequeued = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    await using var coordinator = new PersistenceCoordinator(factory,
+        new PersistenceCoordinatorOptions(2, 2, 1, 32, TimeSpan.FromMilliseconds(1), 3, [TimeSpan.Zero, TimeSpan.Zero], 4, 1, TimeSpan.Zero),
+        writeDequeuedBeforeClaimAsync: async () => { dequeued.SetResult(true); await release.Task.ConfigureAwait(false); });
+    coordinator.TryScheduleWrite(Request("claim-race", (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult)), out var completion);
+    await dequeued.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    var shutdown = coordinator.CompleteAsync();
+    release.SetResult(true);
+    await shutdown.WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(PersistenceCompletionStatus.Cancelled, (await completion).Status);
+    Assert.Equal(1, coordinator.GetMetrics().CancelledOperations);
+    Assert.Equal(0, coordinator.GetMetrics().WriteInteractiveDepth);
+  }
+  [Fact]
   public async Task TryScheduleWrite_WhenLaneIsFull_ReturnsRejectedCapacityWithoutDroppingAcceptedWork()
   {
     var factory = new PersistenceCoordinatorTestContextFactory();
