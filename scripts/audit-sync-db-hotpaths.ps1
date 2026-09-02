@@ -149,6 +149,69 @@ function Add-MatchesForContent {
     }
 }
 
+function Add-TaskResultMatchesForContent {
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[object]]$Findings,
+        [Parameter(Mandatory)][string]$RelativePath,
+        [Parameter(Mandatory)][AllowEmptyString()][string]$Content)
+
+    if ([string]::IsNullOrEmpty($Content)) {
+        return
+    }
+
+    $taskNames = [System.Collections.Generic.HashSet[string]]::new(
+        [StringComparer]::OrdinalIgnoreCase)
+    $taskSourcePatterns = @(
+        [regex]::new(
+            '\bTask(?:\s*<[^;=]+>)?\s+(?<name>[A-Za-z_]\w*)'),
+        [regex]::new(
+            '\.ContinueWith\s*\(\s*(?<name>[A-Za-z_]\w*)\s*=>'),
+        [regex]::new(
+            '(?s)\bvar\s+(?<name>[A-Za-z_]\w*)\s*=\s*[^;]*' +
+            '(?:[A-Za-z_]\w*Async\s*\(|Task\s*\.\s*' +
+            '(?:Run|Delay|WhenAll|WhenAny|FromResult)\s*\()[^;]*;')
+    )
+    foreach ($taskSourcePattern in $taskSourcePatterns) {
+        foreach ($match in $taskSourcePattern.Matches($Content)) {
+            $taskNames.Add($match.Groups['name'].Value) | Out-Null
+        }
+    }
+
+    $directTaskExpressionPattern = [regex]::new(
+        '(?s)(?:[A-Za-z_]\w*Async\s*\([^;]*\)|' +
+        'Task\s*\.\s*(?:Run|Delay|WhenAll|WhenAny|FromResult)\s*\([^;]*\)|' +
+        '\.ContinueWith\s*\([^;]*\))\s*$')
+    $resultPattern = [regex]::new('\.Result\b')
+    $receiverPattern = [regex]::new('(?<name>[A-Za-z_]\w*)\s*$')
+    $occurrence = 0
+    foreach ($match in $resultPattern.Matches($Content)) {
+        $statementStart = $Content.LastIndexOf(';', $match.Index)
+        $statementPrefix = $Content.Substring(
+            $statementStart + 1,
+            $match.Index - $statementStart - 1)
+        $receiverMatch = $receiverPattern.Match($statementPrefix)
+        $isTaskReceiver = $receiverMatch.Success -and
+            ($taskNames.Contains($receiverMatch.Groups['name'].Value) -or
+             $receiverMatch.Groups['name'].Value.EndsWith(
+                 'Task',
+                 [StringComparison]::OrdinalIgnoreCase))
+        if (-not $isTaskReceiver -and
+            -not $directTaskExpressionPattern.IsMatch($statementPrefix)) {
+            continue
+        }
+
+        $occurrence++
+        $prefix = $Content.Substring(0, $match.Index)
+        $line = 1 + [regex]::Matches($prefix, "\r\n|\r|\n").Count
+        $Findings.Add((New-Finding `
+            -Category 'blocking-wait' `
+            -RelativePath $RelativePath `
+            -Evidence $match.Value `
+            -Occurrence $occurrence `
+            -Line $line)) | Out-Null
+    }
+}
+
 function Add-DatabaseQueryMatchesForContent {
     param(
         [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[object]]$Findings,
@@ -183,6 +246,8 @@ function Add-DatabaseQueryMatchesForContent {
         'IOrderedQueryable(?:<[^;=]+>)?|IEnumerable(?:<[^;=]+>)?|' +
         'IOrderedEnumerable(?:<[^;=]+>)?|DbSet(?:<[^;=]+>)?)' +
         '\s+(?<name>[A-Za-z_]\w*)\s*=\s*(?<value>.+)$')
+    $foreachPattern = [regex]::new(
+        '(?s)\bforeach\s*\([^;{}]*?\bin\b(?<source>[^;{}]*?)\)')
     $occurrences = @{}
     $statementStart = 0
     while ($statementStart -lt $Content.Length) {
@@ -226,7 +291,33 @@ function Add-DatabaseQueryMatchesForContent {
             }
         }
 
-        if ($queryMatches.Count -eq 0) {
+        $foreachMatches = @($foreachPattern.Matches($statement))
+        foreach ($match in $foreachMatches) {
+            $foreachSource = $match.Groups['source'].Value
+            if (-not $databaseSourcePattern.IsMatch($foreachSource) -or
+                $Pattern.IsMatch($foreachSource)) {
+                continue
+            }
+
+            $matchEvidence = 'foreach ('
+            $occurrence = 1
+            if ($occurrences.ContainsKey($matchEvidence)) {
+                $occurrence = $occurrences[$matchEvidence] + 1
+            }
+
+            $occurrences[$matchEvidence] = $occurrence
+            $absoluteMatchIndex = $statementStart + $match.Index
+            $prefix = $Content.Substring(0, $absoluteMatchIndex)
+            $line = 1 + [regex]::Matches($prefix, "\r\n|\r|\n").Count
+            $Findings.Add((New-Finding `
+                -Category 'sync-ef-query' `
+                -RelativePath $RelativePath `
+                -Evidence $matchEvidence `
+                -Occurrence $occurrence `
+                -Line $line)) | Out-Null
+        }
+
+        if ($queryMatches.Count -eq 0 -and $foreachMatches.Count -eq 0) {
             $queryAliasMatch = $queryAliasPattern.Match($statement)
             if ($queryAliasMatch.Success -and
                 $databaseSourcePattern.IsMatch(
@@ -396,12 +487,15 @@ $directPatterns = @(
     [pscustomobject]@{ Category = 'sync-ef-save'; Pattern = '(?<!Async)\bSaveChanges\s*\(' },
     [pscustomobject]@{ Category = 'sync-ef-transaction'; Pattern = '(?<!Async)\bBeginTransaction\s*\(' },
     [pscustomobject]@{ Category = 'sync-ef-migrate'; Pattern = '\.Database\.(?:Migrate|EnsureCreated)\s*\(' },
-    [pscustomobject]@{ Category = 'sync-sql-command'; Pattern = '(?<!Async)\bExecuteSqlRaw\s*\(' },
+    [pscustomobject]@{
+        Category = 'sync-sql-command'
+        Pattern = '\bExecute(?:SqlRaw|NonQuery|Reader|Scalar)\s*\('
+    },
     [pscustomobject]@{ Category = 'sync-ef-bulk-write'; Pattern = '\bExecute(?:Update|Delete)\s*\(' },
     [pscustomobject]@{ Category = 'direct-db-context'; Pattern = '\bnew\s+EchoglossianDbContext\s*\(' },
     [pscustomobject]@{
         Category = 'blocking-wait'
-        Pattern = '(?:\.(?:Result\b|Wait\s*\()|' +
+        Pattern = '(?:\.Wait\s*\(|' +
             '\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\()'
     }
 )
@@ -414,8 +508,10 @@ $persistenceHelperPattern = [regex]::new(
     '\s*\.\s*(?<method>Find\w*|Insert\w*|Record\w*|Upsert\w*)\s*\(')
 
 $databaseQueryPattern = [regex]::new(
-    '(?<!Async)\b(?:First|FirstOrDefault|Single|SingleOrDefault|ToList|' +
-    'ToArray|Any|Count|LongCount|Find)\s*\(')
+    '(?<!Async)\b(?:Aggregate|All|Any|Average|Contains|Count|ElementAt|' +
+    'ElementAtOrDefault|Find|First|FirstOrDefault|Last|LastOrDefault|' +
+    'LongCount|Max|Min|Single|SingleOrDefault|Sum|ToArray|ToDictionary|' +
+    'ToHashSet|ToList|ToLookup)\s*\(')
 
 $sourceFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
 foreach ($sourceFile in Get-ChildItem `
@@ -442,6 +538,11 @@ foreach ($sourceFile in ($sourceFiles | Sort-Object FullName)) {
             -RelativePath $relativePath `
             -Content $content
     }
+
+    Add-TaskResultMatchesForContent `
+        -Findings $findings `
+        -RelativePath $relativePath `
+        -Content $content
 
     Add-MatchesForContent `
         -Findings $findings `

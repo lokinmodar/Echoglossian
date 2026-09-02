@@ -55,6 +55,29 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures raw synchronous SQLite command execution fails the audit.
+    /// </summary>
+    /// <param name="methodName">The synchronous SQLite method name.</param>
+    [Theory]
+    [InlineData("ExecuteNonQuery")]
+    [InlineData("ExecuteReader")]
+    [InlineData("ExecuteScalar")]
+    public void AuditScript_SynchronousSqliteCommand_ReturnsFailure(
+        string methodName)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "NativeUI/RawSqliteFixture.cs",
+            $"command.{methodName}();");
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("sync-sql-command", result.Output, StringComparison.Ordinal);
+        Assert.Contains(methodName, result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures direct synchronous operations split before their opening
     /// parenthesis fail the audit.
     /// </summary>
@@ -105,6 +128,48 @@ public sealed class SyncDatabaseHotPathAuditTests
         Assert.NotEqual(0, result.ExitCode);
         Assert.Contains("blocking-wait", result.Output, StringComparison.Ordinal);
         Assert.Contains("GetAwaiter", result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures a regular Result property on a response DTO is not classified as
+    /// a blocking task wait.
+    /// </summary>
+    [Fact]
+    public void AuditScript_OrdinaryResultProperty_IsNotBlockingWait()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "Translators/ResponseFixture.cs",
+            "_ = deepLResponse.Result.Texts;");
+
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var blockingFindings = document.RootElement
+            .GetProperty("allowedFindings")
+            .EnumerateArray()
+            .Where(finding => finding.GetProperty("category").GetString() == "blocking-wait")
+            .ToArray();
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Empty(blockingFindings);
+    }
+
+    /// <summary>
+    /// Ensures Result access on a declared task remains blocking debt.
+    /// </summary>
+    [Fact]
+    public void AuditScript_TaskResult_ReturnsFailure()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "NativeUI/TaskResultFixture.cs",
+            "Task<string> translationTask = TranslateAsync(); _ = translationTask.Result;");
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("blocking-wait", result.Output, StringComparison.Ordinal);
+        Assert.Contains(".Result", result.Output, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -197,6 +262,31 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures synchronous EF query terminals beyond the original allowlist
+    /// fail the audit.
+    /// </summary>
+    /// <param name="methodName">The synchronous query terminal.</param>
+    [Theory]
+    [InlineData("Last")]
+    [InlineData("Max")]
+    [InlineData("Sum")]
+    [InlineData("ToDictionary")]
+    public void AuditScript_AdditionalDbContextQueryTerminal_ReturnsFailure(
+        string methodName)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "NativeUI/AdditionalQueryFixture.cs",
+            $"public void Load(EchoglossianDbContext context) {{ _ = context.Rows.{methodName}(); }}");
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("sync-ef-query", result.Output, StringComparison.Ordinal);
+        Assert.Contains(methodName, result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures database-query provenance survives local query aliases until
     /// materialization.
     /// </summary>
@@ -220,6 +310,34 @@ public sealed class SyncDatabaseHotPathAuditTests
         Assert.NotEqual(0, result.ExitCode);
         Assert.Contains("sync-ef-query", result.Output, StringComparison.Ordinal);
         Assert.Contains("ToList", result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures synchronously enumerating a context-derived alias with foreach
+    /// fails the audit.
+    /// </summary>
+    [Fact]
+    public void AuditScript_DbContextQueryForeachAlias_ReturnsFailure()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "NativeUI/ForeachQueryFixture.cs",
+            string.Join(
+                Environment.NewLine,
+                "public void Load(EchoglossianDbContext context)",
+                "{",
+                "    var query = context.Rows.Where(row => row.Id > 0);",
+                "    foreach (var row in query)",
+                "    {",
+                "        Consume(row);",
+                "    }",
+                "}"));
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("sync-ef-query", result.Output, StringComparison.Ordinal);
+        Assert.Contains("foreach", result.Output, StringComparison.Ordinal);
     }
 
     /// <summary>

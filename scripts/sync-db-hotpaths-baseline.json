@@ -268,27 +268,6 @@
       "evidence": ".Result [occurrence 2]"
     },
     {
-      "id": "blocking-wait|Translators/DeepLTranslator.cs|.Result [occurrence 3]",
-      "category": "blocking-wait",
-      "stage": "DB-7",
-      "path": "Translators/DeepLTranslator.cs",
-      "evidence": ".Result [occurrence 3]"
-    },
-    {
-      "id": "blocking-wait|Translators/DeepLTranslator.cs|.Result [occurrence 4]",
-      "category": "blocking-wait",
-      "stage": "DB-7",
-      "path": "Translators/DeepLTranslator.cs",
-      "evidence": ".Result [occurrence 4]"
-    },
-    {
-      "id": "blocking-wait|Translators/DeepLTranslator.cs|.Result [occurrence 5]",
-      "category": "blocking-wait",
-      "stage": "DB-7",
-      "path": "Translators/DeepLTranslator.cs",
-      "evidence": ".Result [occurrence 5]"
-    },
-    {
       "id": "blocking-wait|Translators/DeepSeekTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
       "category": "blocking-wait",
       "stage": "DB-7",
