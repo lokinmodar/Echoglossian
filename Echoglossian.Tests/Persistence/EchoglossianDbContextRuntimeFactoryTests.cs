@@ -20,14 +20,22 @@ namespace Echoglossian.Tests.Persistence;
 /// <summary>Verifies the public database-context API alongside the pooled runtime factory.</summary>
 public sealed class EchoglossianDbContextRuntimeFactoryTests
 {
-    /// <summary>Ensures consumers can still construct a context from the plugin config directory.</summary>
+    /// <summary>Ensures consumers can still construct a context through both historical public constructors.</summary>
     [Fact]
     public void EchoglossianDbContext_ConfigDirectoryConstructor_RemainsPublic()
     {
-        var constructor = typeof(EchoglossianDbContext).GetConstructor(new[] { typeof(string) });
+        var constructors = typeof(EchoglossianDbContext)
+            .GetConstructors(BindingFlags.Instance | BindingFlags.Public);
 
-        constructor.Should().NotBeNull();
-        constructor!.IsPublic.Should().BeTrue();
+        constructors.Should().HaveCount(2);
+        constructors.Should().ContainSingle(constructor => constructor.IsPublic && constructor
+            .GetParameters()
+            .Select(parameter => parameter.ParameterType)
+            .SequenceEqual(new[] { typeof(string) }));
+        constructors.Should().ContainSingle(constructor => constructor.IsPublic && constructor
+            .GetParameters()
+            .Select(parameter => parameter.ParameterType)
+            .SequenceEqual(new[] { typeof(DbContextOptions<EchoglossianDbContext>) }));
     }
 
     /// <summary>Ensures the runtime factory pools a derived context while returning the public base type.</summary>
