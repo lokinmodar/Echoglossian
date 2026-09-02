@@ -296,6 +296,7 @@ $databaseQueryPattern = [regex]::new(
     'ToArray|Any|Count|LongCount|Find)\s*\(')
 
 $scanRoots = @(
+    'Cache',
     'DBHelpers',
     'DBManagerUI',
     'EFCoreSqlite',

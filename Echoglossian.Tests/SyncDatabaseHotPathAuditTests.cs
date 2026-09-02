@@ -33,6 +33,27 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures an untracked synchronous database context construction in the
+    /// startup cache path fails the audit and is assigned an approved stage.
+    /// </summary>
+    [Fact]
+    public void AuditScript_NewCacheDbContext_ReturnsFailureWithApprovedStage()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "Cache/Fixture.cs",
+            "public void Load() { using var context = new EchoglossianDbContext(configDir); }");
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+        var report = File.ReadAllText(fixture.ReportPath);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("direct-db-context", result.Output, StringComparison.Ordinal);
+        Assert.Contains("Cache/Fixture.cs", result.Output, StringComparison.Ordinal);
+        Assert.Contains("## DB-7", report, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures an explicitly captured baseline passes unchanged and fails after
     /// the finding is removed without refreshing the baseline.
     /// </summary>

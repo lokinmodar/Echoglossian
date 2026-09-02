@@ -317,6 +317,76 @@
       "evidence": ".Wait( [occurrence 2]"
     },
     {
+      "id": "direct-db-context|Cache/ActionTooltipCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/ActionTooltipCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/GameWindowCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-5",
+      "path": "Cache/GameWindowCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/ItemTooltipCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/ItemTooltipCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/LlmCapabilityCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "Cache/LlmCapabilityCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/NamePlateCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "Cache/NamePlateCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/ReferenceTextCacheStore.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-2",
+      "path": "Cache/ReferenceTextCacheStore.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/StringArrayDataCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-6",
+      "path": "Cache/StringArrayDataCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/TooltipTextCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/TooltipTextCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/TraitCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/TraitCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/TranslationFailureCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "Cache/TranslationFailureCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
       "id": "direct-db-context|DBHelpers/ActionTooltipPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
       "category": "direct-db-context",
       "stage": "DB-4",
