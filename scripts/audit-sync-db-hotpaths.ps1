@@ -95,9 +95,11 @@ function New-Finding {
         [Parameter(Mandatory)][string]$Category,
         [Parameter(Mandatory)][string]$RelativePath,
         [Parameter(Mandatory)][string]$Evidence,
+        [Parameter(Mandatory)][int]$Occurrence,
         [Parameter(Mandatory)][int]$Line)
 
     $normalizedEvidence = ConvertTo-NormalizedEvidence -Evidence $Evidence
+    $normalizedEvidence = "$normalizedEvidence [occurrence $Occurrence]"
     $id = "$Category|$RelativePath|$normalizedEvidence"
     return [pscustomobject][ordered]@{
         id = $id
@@ -117,13 +119,22 @@ function Add-MatchesForPattern {
         [Parameter(Mandatory)][string]$RelativePath,
         [Parameter(Mandatory)][AllowEmptyCollection()][AllowEmptyString()][string[]]$Lines)
 
+    $occurrences = @{}
     for ($index = 0; $index -lt $Lines.Count; $index++) {
         $line = $Lines[$index]
         foreach ($match in $Pattern.Matches($line)) {
+            $matchEvidence = ConvertTo-NormalizedEvidence -Evidence $match.Value
+            $occurrence = 1
+            if ($occurrences.ContainsKey($matchEvidence)) {
+                $occurrence = $occurrences[$matchEvidence] + 1
+            }
+
+            $occurrences[$matchEvidence] = $occurrence
             $Findings.Add((New-Finding `
                 -Category $Category `
                 -RelativePath $RelativePath `
                 -Evidence $match.Value `
+                -Occurrence $occurrence `
                 -Line ($index + 1))) | Out-Null
         }
     }
@@ -149,28 +160,31 @@ function Write-Baseline {
         [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Findings,
         [Parameter(Mandatory)][string]$Path)
 
-    $baselineFindings = @(
-        $Findings |
-            Sort-Object id |
-            ForEach-Object {
-                [ordered]@{
-                    id = $_.id
-                    category = $_.category
-                    stage = $_.stage
-                    path = $_.path
-                    evidence = $_.evidence
-                }
-            })
-    $baseline = [ordered]@{
-        schemaVersion = 1
-        allowedFindings = $baselineFindings
-    }
     $directory = Split-Path -Parent $Path
     if (-not [string]::IsNullOrWhiteSpace($directory)) {
         New-Item -ItemType Directory -Force -Path $directory | Out-Null
     }
 
-    $baseline | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 -LiteralPath $Path
+    $lines = [System.Collections.Generic.List[string]]::new()
+    $lines.Add('{')
+    $lines.Add('  "schemaVersion": 1,')
+    $lines.Add('  "allowedFindings": [')
+    $sortedFindings = @($Findings | Sort-Object id)
+    for ($index = 0; $index -lt $sortedFindings.Count; $index++) {
+        $finding = $sortedFindings[$index]
+        $suffix = if ($index -lt ($sortedFindings.Count - 1)) { ',' } else { '' }
+        $lines.Add('    {')
+        $lines.Add(('      "id": "{0}",' -f (ConvertTo-JsonString -Value $finding.id)))
+        $lines.Add(('      "category": "{0}",' -f (ConvertTo-JsonString -Value $finding.category)))
+        $lines.Add(('      "stage": "{0}",' -f (ConvertTo-JsonString -Value $finding.stage)))
+        $lines.Add(('      "path": "{0}",' -f (ConvertTo-JsonString -Value $finding.path)))
+        $lines.Add(('      "evidence": "{0}"' -f (ConvertTo-JsonString -Value $finding.evidence)))
+        $lines.Add("    }$suffix")
+    }
+
+    $lines.Add('  ]')
+    $lines.Add('}')
+    Write-Utf8NoBom -Path $Path -Content ([string]::Join("`n", $lines) + "`n")
 }
 
 function Write-Report {
@@ -206,7 +220,58 @@ function Write-Report {
         New-Item -ItemType Directory -Force -Path $directory | Out-Null
     }
 
-    $reportLines | Set-Content -Encoding utf8 -LiteralPath $Path
+    Write-Utf8NoBom `
+        -Path $Path `
+        -Content ([string]::Join("`n", $reportLines) + "`n")
+}
+
+function ConvertTo-JsonString {
+    param([Parameter(Mandatory)][string]$Value)
+
+    $builder = [System.Text.StringBuilder]::new()
+    foreach ($character in $Value.ToCharArray()) {
+        $codePoint = [int][char]$character
+        if ($codePoint -eq 34) {
+            $null = $builder.Append('\"')
+        }
+        elseif ($codePoint -eq 92) {
+            $null = $builder.Append('\\')
+        }
+        elseif ($codePoint -eq 8) {
+            $null = $builder.Append('\b')
+        }
+        elseif ($codePoint -eq 9) {
+            $null = $builder.Append('\t')
+        }
+        elseif ($codePoint -eq 10) {
+            $null = $builder.Append('\n')
+        }
+        elseif ($codePoint -eq 12) {
+            $null = $builder.Append('\f')
+        }
+        elseif ($codePoint -eq 13) {
+            $null = $builder.Append('\r')
+        }
+        elseif ($codePoint -lt 32) {
+            $null = $builder.Append(('\u{0:x4}' -f $codePoint))
+        }
+        else {
+            $null = $builder.Append($character)
+        }
+    }
+
+    return $builder.ToString()
+}
+
+function Write-Utf8NoBom {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Content)
+
+    [System.IO.File]::WriteAllText(
+        $Path,
+        $Content,
+        [System.Text.UTF8Encoding]::new($false))
 }
 
 $resolvedRepositoryRoot = (Resolve-Path -LiteralPath $RepositoryRoot).Path.TrimEnd('\', '/')

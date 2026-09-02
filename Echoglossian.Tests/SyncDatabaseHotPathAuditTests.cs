@@ -98,6 +98,72 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures removing one repeated synchronous call fails without refreshing
+    /// the baseline, even when the remaining call is in the same source file.
+    /// </summary>
+    [Fact]
+    public void AuditScript_RepeatedCallLifecycle_DetectsOneResolvedOccurrence()
+    {
+        using var fixture = this.CreateFixture();
+        const string relativePath = "DBHelpers/RepeatedSaveFixture.cs";
+        fixture.WriteSource(
+            relativePath,
+            "public void Save() { context.SaveChanges(); context.SaveChanges(); }");
+
+        var update = this.RunAudit(fixture, updateBaseline: true);
+        using var baseline = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var ids = baseline.RootElement
+            .GetProperty("allowedFindings")
+            .EnumerateArray()
+            .Select(finding => finding.GetProperty("id").GetString())
+            .ToArray();
+        fixture.WriteSource(
+            relativePath,
+            "public void Save() { context.SaveChanges(); }");
+        var resolved = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.Equal(0, update.ExitCode);
+        Assert.Equal(2, ids.Length);
+        Assert.Equal(2, ids.Distinct(StringComparer.Ordinal).Count());
+        Assert.All(ids, id => Assert.Equal(2, id!.Count(character => character == '|')));
+        Assert.All(ids, id => Assert.DoesNotContain("line", id!, StringComparison.OrdinalIgnoreCase));
+        Assert.NotEqual(0, resolved.ExitCode);
+        Assert.Contains(
+            "resolved baseline finding",
+            resolved.Output,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Ensures baseline and Markdown report bytes are identical when generated
+    /// by Windows PowerShell and PowerShell 7.
+    /// </summary>
+    [Fact]
+    public void AuditScript_UpdateBaseline_IsByteStableAcrossPowerShellEngines()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "NativeUI/Helpers/Fixture.cs",
+            "public void Tick() { context.SaveChanges(); }");
+
+        var windowsPowerShell = this.RunAudit(
+            fixture,
+            updateBaseline: true,
+            shellFileName: "powershell.exe");
+        var windowsBaseline = File.ReadAllBytes(fixture.BaselinePath);
+        var windowsReport = File.ReadAllBytes(fixture.ReportPath);
+        var powerShell7 = this.RunAudit(
+            fixture,
+            updateBaseline: true,
+            shellFileName: "pwsh.exe");
+
+        Assert.Equal(0, windowsPowerShell.ExitCode);
+        Assert.Equal(0, powerShell7.ExitCode);
+        Assert.Equal(windowsBaseline, File.ReadAllBytes(fixture.BaselinePath));
+        Assert.Equal(windowsReport, File.ReadAllBytes(fixture.ReportPath));
+    }
+
+    /// <summary>
     /// Creates an isolated audit fixture repository.
     /// </summary>
     /// <returns>The isolated audit fixture repository.</returns>
@@ -116,7 +182,10 @@ public sealed class SyncDatabaseHotPathAuditTests
     /// <param name="fixture">The fixture repository to audit.</param>
     /// <param name="updateBaseline">Whether the audit should refresh its baseline.</param>
     /// <returns>The process result.</returns>
-    private AuditProcessResult RunAudit(AuditFixture fixture, bool updateBaseline)
+    private AuditProcessResult RunAudit(
+        AuditFixture fixture,
+        bool updateBaseline,
+        string shellFileName = "powershell.exe")
     {
         var scriptPath = Path.Combine(
             this.FindRepositoryRoot().FullName,
@@ -124,7 +193,7 @@ public sealed class SyncDatabaseHotPathAuditTests
             "audit-sync-db-hotpaths.ps1");
         var startInfo = new ProcessStartInfo
         {
-            FileName = "powershell.exe",
+            FileName = shellFileName,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

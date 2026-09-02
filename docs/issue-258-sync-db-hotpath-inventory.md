@@ -7,315 +7,315 @@ Total findings: 222
 ## DB-2
 
 ### DBHelpers/ReferenceTextDbOperations.cs
-- Line 56: `persistence-helper-call` - `ReferenceTextPersistenceHelper.FindReferenceText(`
-- Line 84: `persistence-helper-call` - `ReferenceTextPersistenceHelper.InsertReferenceText(`
+- Line 56: `persistence-helper-call` - `ReferenceTextPersistenceHelper.FindReferenceText( [occurrence 1]`
+- Line 84: `persistence-helper-call` - `ReferenceTextPersistenceHelper.InsertReferenceText( [occurrence 1]`
 
 ### DBHelpers/ReferenceTextPersistenceHelper.cs
-- Line 78: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 108: `sync-ef-query` - `FirstOrDefault(`
-- Line 115: `sync-ef-save` - `SaveChanges(`
-- Line 125: `sync-ef-save` - `SaveChanges(`
-- Line 184: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 214: `sync-ef-query` - `FirstOrDefault(`
+- Line 78: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 108: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 115: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 125: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 184: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 214: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
 
 ## DB-3
 
 ### EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs
-- Line 54: `sync-ef-query` - `ToList(`
-- Line 57: `sync-ef-query` - `FirstOrDefault(`
-- Line 93: `sync-ef-query` - `ToList(`
-- Line 326: `sync-ef-query` - `FirstOrDefault(`
-- Line 366: `sync-ef-query` - `ToList(`
-- Line 558: `sync-ef-query` - `FirstOrDefault(`
-- Line 564: `sync-ef-query` - `FirstOrDefault(`
-- Line 594: `sync-ef-query` - `FirstOrDefault(`
-- Line 600: `sync-ef-query` - `FirstOrDefault(`
-- Line 835: `sync-ef-query` - `ToArray(`
+- Line 54: `sync-ef-query` - `ToList( [occurrence 1]`
+- Line 57: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 93: `sync-ef-query` - `ToList( [occurrence 2]`
+- Line 326: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
+- Line 366: `sync-ef-query` - `ToList( [occurrence 3]`
+- Line 558: `sync-ef-query` - `FirstOrDefault( [occurrence 3]`
+- Line 564: `sync-ef-query` - `FirstOrDefault( [occurrence 4]`
+- Line 594: `sync-ef-query` - `FirstOrDefault( [occurrence 5]`
+- Line 600: `sync-ef-query` - `FirstOrDefault( [occurrence 6]`
+- Line 835: `sync-ef-query` - `ToArray( [occurrence 1]`
 
 ### NativeUI/Helpers/QuestProbeCommandHelpers.cs
-- Line 233: `direct-db-context` - `new EchoglossianDbContext(`
+- Line 233: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
 
 ## DB-4
 
 ### DBHelpers/ActionItemTooltipDbOperations.cs
-- Line 64: `persistence-helper-call` - `ActionTooltipPersistenceHelper.FindActionTooltip(`
-- Line 83: `persistence-helper-call` - `ActionTooltipPersistenceHelper.InsertActionTooltip(`
-- Line 135: `persistence-helper-call` - `TraitPersistenceHelper.FindTrait(`
-- Line 154: `persistence-helper-call` - `TraitPersistenceHelper.InsertTrait(`
-- Line 208: `persistence-helper-call` - `ItemTooltipPersistenceHelper.FindItemTooltip(`
-- Line 227: `persistence-helper-call` - `ItemTooltipPersistenceHelper.InsertItemTooltip(`
+- Line 64: `persistence-helper-call` - `ActionTooltipPersistenceHelper.FindActionTooltip( [occurrence 1]`
+- Line 83: `persistence-helper-call` - `ActionTooltipPersistenceHelper.InsertActionTooltip( [occurrence 1]`
+- Line 135: `persistence-helper-call` - `TraitPersistenceHelper.FindTrait( [occurrence 1]`
+- Line 154: `persistence-helper-call` - `TraitPersistenceHelper.InsertTrait( [occurrence 1]`
+- Line 208: `persistence-helper-call` - `ItemTooltipPersistenceHelper.FindItemTooltip( [occurrence 1]`
+- Line 227: `persistence-helper-call` - `ItemTooltipPersistenceHelper.InsertItemTooltip( [occurrence 1]`
 
 ### DBHelpers/ActionTooltipPersistenceHelper.cs
-- Line 82: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 113: `sync-ef-query` - `FirstOrDefault(`
-- Line 120: `sync-ef-save` - `SaveChanges(`
-- Line 130: `sync-ef-save` - `SaveChanges(`
-- Line 179: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 207: `sync-ef-query` - `FirstOrDefault(`
+- Line 82: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 113: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 120: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 130: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 179: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 207: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
 
 ### DBHelpers/ItemTooltipPersistenceHelper.cs
-- Line 82: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 113: `sync-ef-query` - `FirstOrDefault(`
-- Line 120: `sync-ef-save` - `SaveChanges(`
-- Line 130: `sync-ef-save` - `SaveChanges(`
-- Line 179: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 207: `sync-ef-query` - `FirstOrDefault(`
+- Line 82: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 113: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 120: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 130: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 179: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 207: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
 
 ### DBHelpers/TraitPersistenceHelper.cs
-- Line 81: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 111: `sync-ef-query` - `FirstOrDefault(`
-- Line 118: `sync-ef-save` - `SaveChanges(`
-- Line 128: `sync-ef-save` - `SaveChanges(`
-- Line 177: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 205: `sync-ef-query` - `FirstOrDefault(`
+- Line 81: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 111: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 118: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 128: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 177: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 205: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
 
 ### GeneralHelpers/AsyncSerialActionPump.cs
-- Line 56: `blocking-wait` - `.Wait(`
-- Line 84: `blocking-wait` - `.Wait(`
-- Line 87: `blocking-wait` - `.Wait(`
-- Line 134: `blocking-wait` - `.Wait(`
+- Line 56: `blocking-wait` - `.Wait( [occurrence 1]`
+- Line 84: `blocking-wait` - `.Wait( [occurrence 2]`
+- Line 87: `blocking-wait` - `.Wait( [occurrence 3]`
+- Line 134: `blocking-wait` - `.Wait( [occurrence 4]`
 
 ### NativeUI/AddonHandlers/Common/TooltipHandler.cs
-- Line 306: `blocking-wait` - `.Result`
-- Line 309: `blocking-wait` - `.Result`
-- Line 316: `blocking-wait` - `.Result`
-- Line 317: `blocking-wait` - `.Result`
+- Line 306: `blocking-wait` - `.Result [occurrence 1]`
+- Line 309: `blocking-wait` - `.Result [occurrence 2]`
+- Line 316: `blocking-wait` - `.Result [occurrence 3]`
+- Line 317: `blocking-wait` - `.Result [occurrence 4]`
 
 ### NativeUI/Handlers/UiActionDetailHandler.cs
-- Line 30: `blocking-wait` - `.Result`
+- Line 30: `blocking-wait` - `.Result [occurrence 1]`
 
 ### NativeUI/Helpers/ActionItemDetailUiRuntime.cs
-- Line 3425: `blocking-wait` - `.Wait(`
-- Line 3536: `blocking-wait` - `.Wait(`
+- Line 3425: `blocking-wait` - `.Wait( [occurrence 1]`
+- Line 3536: `blocking-wait` - `.Wait( [occurrence 2]`
 
 ## DB-5
 
 ### DBHelpers/GameWindowPersistenceHelper.cs
-- Line 32: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 53: `sync-ef-save` - `SaveChanges(`
-- Line 63: `sync-ef-save` - `SaveChanges(`
-- Line 101: `sync-ef-query` - `FirstOrDefault(`
+- Line 32: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 53: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 63: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 101: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
 
 ### NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs
-- Line 1864: `persistence-helper-call` - `StringArrayDataPersistenceHelper.FindStringArrayData(`
-- Line 2112: `persistence-helper-call` - `GameWindowPersistenceHelper.InsertGameWindow(`
-- Line 2225: `blocking-wait` - `.Result`
-- Line 2231: `blocking-wait` - `.Result`
-- Line 2232: `blocking-wait` - `.Result`
-- Line 2233: `blocking-wait` - `.Result`
-- Line 2551: `blocking-wait` - `.Result`
-- Line 2565: `blocking-wait` - `.Result`
-- Line 2613: `blocking-wait` - `.Result`
-- Line 2615: `blocking-wait` - `.Result`
-- Line 2636: `blocking-wait` - `.Result`
+- Line 1864: `persistence-helper-call` - `StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]`
+- Line 2112: `persistence-helper-call` - `GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]`
+- Line 2225: `blocking-wait` - `.Result [occurrence 1]`
+- Line 2231: `blocking-wait` - `.Result [occurrence 2]`
+- Line 2232: `blocking-wait` - `.Result [occurrence 3]`
+- Line 2233: `blocking-wait` - `.Result [occurrence 4]`
+- Line 2551: `blocking-wait` - `.Result [occurrence 5]`
+- Line 2565: `blocking-wait` - `.Result [occurrence 6]`
+- Line 2613: `blocking-wait` - `.Result [occurrence 7]`
+- Line 2615: `blocking-wait` - `.Result [occurrence 8]`
+- Line 2636: `blocking-wait` - `.Result [occurrence 9]`
 
 ## DB-6
 
 ### DBHelpers/StringArrayDataPersistenceHelper.cs
-- Line 90: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 102: `sync-ef-query` - `FirstOrDefault(`
-- Line 109: `sync-ef-save` - `SaveChanges(`
-- Line 118: `sync-ef-save` - `SaveChanges(`
-- Line 146: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 153: `sync-ef-query` - `FirstOrDefault(`
-- Line 185: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 198: `sync-ef-query` - `FirstOrDefault(`
+- Line 90: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 102: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 109: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 118: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 146: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 153: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
+- Line 185: `direct-db-context` - `new EchoglossianDbContext( [occurrence 3]`
+- Line 198: `sync-ef-query` - `FirstOrDefault( [occurrence 3]`
 
 ### NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs
-- Line 574: `persistence-helper-call` - `StringArrayDataPersistenceHelper.FindStringArrayData(`
-- Line 637: `blocking-wait` - `.Result`
-- Line 639: `blocking-wait` - `.Result`
-- Line 698: `persistence-helper-call` - `StringArrayDataPersistenceHelper.InsertStringArrayData(`
+- Line 574: `persistence-helper-call` - `StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]`
+- Line 637: `blocking-wait` - `.Result [occurrence 1]`
+- Line 639: `blocking-wait` - `.Result [occurrence 2]`
+- Line 698: `persistence-helper-call` - `StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]`
 
 ### NativeUI/Helpers/DbFirstStructuredStringArrayHelper.cs
-- Line 363: `persistence-helper-call` - `StringArrayDataPersistenceHelper.InsertStringArrayData(`
+- Line 363: `persistence-helper-call` - `StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]`
 
 ## DB-7
 
 ### DBHelpers/DbOperations.cs
-- Line 94: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 100: `sync-ef-query` - `ToList(`
-- Line 106: `sync-ef-migrate` - `.Database.Migrate(`
-- Line 109: `sync-ef-query` - `ToList(`
-- Line 136: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 160: `sync-ef-query` - `FirstOrDefault(`
-- Line 204: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 216: `sync-ef-query` - `SingleOrDefault(`
-- Line 248: `sync-ef-query` - `ToList(`
-- Line 249: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 305: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 331: `sync-ef-query` - `FirstOrDefault(`
-- Line 396: `sync-ef-query` - `FirstOrDefault(`
-- Line 470: `sync-ef-query` - `FirstOrDefault(`
-- Line 554: `sync-ef-query` - `FirstOrDefault(`
-- Line 582: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 609: `sync-ef-query` - `FirstOrDefault(`
-- Line 653: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 682: `sync-ef-query` - `FirstOrDefault(`
-- Line 731: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 828: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 850: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 919: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 984: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1002: `sync-ef-query` - `FirstOrDefault(`
-- Line 1036: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1054: `sync-ef-query` - `FirstOrDefault(`
-- Line 1089: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1106: `sync-ef-query` - `FirstOrDefault(`
-- Line 1135: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1153: `sync-ef-query` - `FirstOrDefault(`
-- Line 1191: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1252: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1284: `sync-ef-query` - `FirstOrDefault(`
-- Line 1303: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1333: `sync-ef-query` - `FirstOrDefault(`
-- Line 1378: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1399: `sync-ef-query` - `FirstOrDefault(`
-- Line 1447: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1466: `sync-ef-query` - `ToList(`
-- Line 1490: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1543: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1573: `sync-ef-query` - `FirstOrDefault(`
-- Line 1614: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1639: `sync-ef-save` - `SaveChanges(`
-- Line 1660: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1691: `sync-ef-query` - `FirstOrDefault(`
-- Line 1763: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1789: `sync-ef-save` - `SaveChanges(`
-- Line 1810: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1854: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1897: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1944: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 1978: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2017: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2059: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2086: `sync-ef-query` - `FirstOrDefault(`
-- Line 2114: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2137: `sync-ef-query` - `FirstOrDefault(`
-- Line 2164: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2191: `sync-ef-query` - `FirstOrDefault(`
-- Line 2220: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2254: `sync-ef-save` - `SaveChanges(`
-- Line 2276: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2310: `sync-ef-save` - `SaveChanges(`
-- Line 2333: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2357: `sync-ef-save` - `SaveChanges(`
-- Line 2375: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2393: `sync-ef-save` - `SaveChanges(`
-- Line 2405: `sync-ef-save` - `SaveChanges(`
-- Line 2423: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2455: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 2473: `sync-ef-save` - `SaveChanges(`
-- Line 2485: `sync-ef-save` - `SaveChanges(`
-- Line 3232: `sync-ef-query` - `FirstOrDefault(`
-- Line 3561: `persistence-helper-call` - `GameWindowPersistenceHelper.InsertGameWindow(`
-- Line 3572: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 3579: `sync-ef-query` - `ToList(`
-- Line 3593: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 3600: `sync-ef-query` - `ToList(`
-- Line 3647: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 3654: `sync-ef-query` - `FirstOrDefault(`
-- Line 3678: `direct-db-context` - `new EchoglossianDbContext(`
+- Line 94: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 100: `sync-ef-query` - `ToList( [occurrence 1]`
+- Line 106: `sync-ef-migrate` - `.Database.Migrate( [occurrence 1]`
+- Line 109: `sync-ef-query` - `ToList( [occurrence 2]`
+- Line 136: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 160: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 204: `direct-db-context` - `new EchoglossianDbContext( [occurrence 3]`
+- Line 216: `sync-ef-query` - `SingleOrDefault( [occurrence 1]`
+- Line 248: `sync-ef-query` - `ToList( [occurrence 3]`
+- Line 249: `direct-db-context` - `new EchoglossianDbContext( [occurrence 4]`
+- Line 305: `direct-db-context` - `new EchoglossianDbContext( [occurrence 5]`
+- Line 331: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
+- Line 396: `sync-ef-query` - `FirstOrDefault( [occurrence 3]`
+- Line 470: `sync-ef-query` - `FirstOrDefault( [occurrence 4]`
+- Line 554: `sync-ef-query` - `FirstOrDefault( [occurrence 5]`
+- Line 582: `direct-db-context` - `new EchoglossianDbContext( [occurrence 6]`
+- Line 609: `sync-ef-query` - `FirstOrDefault( [occurrence 6]`
+- Line 653: `direct-db-context` - `new EchoglossianDbContext( [occurrence 7]`
+- Line 682: `sync-ef-query` - `FirstOrDefault( [occurrence 7]`
+- Line 731: `direct-db-context` - `new EchoglossianDbContext( [occurrence 8]`
+- Line 828: `direct-db-context` - `new EchoglossianDbContext( [occurrence 9]`
+- Line 850: `direct-db-context` - `new EchoglossianDbContext( [occurrence 10]`
+- Line 919: `direct-db-context` - `new EchoglossianDbContext( [occurrence 11]`
+- Line 984: `direct-db-context` - `new EchoglossianDbContext( [occurrence 12]`
+- Line 1002: `sync-ef-query` - `FirstOrDefault( [occurrence 8]`
+- Line 1036: `direct-db-context` - `new EchoglossianDbContext( [occurrence 13]`
+- Line 1054: `sync-ef-query` - `FirstOrDefault( [occurrence 9]`
+- Line 1089: `direct-db-context` - `new EchoglossianDbContext( [occurrence 14]`
+- Line 1106: `sync-ef-query` - `FirstOrDefault( [occurrence 10]`
+- Line 1135: `direct-db-context` - `new EchoglossianDbContext( [occurrence 15]`
+- Line 1153: `sync-ef-query` - `FirstOrDefault( [occurrence 11]`
+- Line 1191: `direct-db-context` - `new EchoglossianDbContext( [occurrence 16]`
+- Line 1252: `direct-db-context` - `new EchoglossianDbContext( [occurrence 17]`
+- Line 1284: `sync-ef-query` - `FirstOrDefault( [occurrence 12]`
+- Line 1303: `direct-db-context` - `new EchoglossianDbContext( [occurrence 18]`
+- Line 1333: `sync-ef-query` - `FirstOrDefault( [occurrence 13]`
+- Line 1378: `direct-db-context` - `new EchoglossianDbContext( [occurrence 19]`
+- Line 1399: `sync-ef-query` - `FirstOrDefault( [occurrence 14]`
+- Line 1447: `direct-db-context` - `new EchoglossianDbContext( [occurrence 20]`
+- Line 1466: `sync-ef-query` - `ToList( [occurrence 4]`
+- Line 1490: `direct-db-context` - `new EchoglossianDbContext( [occurrence 21]`
+- Line 1543: `direct-db-context` - `new EchoglossianDbContext( [occurrence 22]`
+- Line 1573: `sync-ef-query` - `FirstOrDefault( [occurrence 15]`
+- Line 1614: `direct-db-context` - `new EchoglossianDbContext( [occurrence 23]`
+- Line 1639: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 1660: `direct-db-context` - `new EchoglossianDbContext( [occurrence 24]`
+- Line 1691: `sync-ef-query` - `FirstOrDefault( [occurrence 16]`
+- Line 1763: `direct-db-context` - `new EchoglossianDbContext( [occurrence 25]`
+- Line 1789: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 1810: `direct-db-context` - `new EchoglossianDbContext( [occurrence 26]`
+- Line 1854: `direct-db-context` - `new EchoglossianDbContext( [occurrence 27]`
+- Line 1897: `direct-db-context` - `new EchoglossianDbContext( [occurrence 28]`
+- Line 1944: `direct-db-context` - `new EchoglossianDbContext( [occurrence 29]`
+- Line 1978: `direct-db-context` - `new EchoglossianDbContext( [occurrence 30]`
+- Line 2017: `direct-db-context` - `new EchoglossianDbContext( [occurrence 31]`
+- Line 2059: `direct-db-context` - `new EchoglossianDbContext( [occurrence 32]`
+- Line 2086: `sync-ef-query` - `FirstOrDefault( [occurrence 17]`
+- Line 2114: `direct-db-context` - `new EchoglossianDbContext( [occurrence 33]`
+- Line 2137: `sync-ef-query` - `FirstOrDefault( [occurrence 18]`
+- Line 2164: `direct-db-context` - `new EchoglossianDbContext( [occurrence 34]`
+- Line 2191: `sync-ef-query` - `FirstOrDefault( [occurrence 19]`
+- Line 2220: `direct-db-context` - `new EchoglossianDbContext( [occurrence 35]`
+- Line 2254: `sync-ef-save` - `SaveChanges( [occurrence 3]`
+- Line 2276: `direct-db-context` - `new EchoglossianDbContext( [occurrence 36]`
+- Line 2310: `sync-ef-save` - `SaveChanges( [occurrence 4]`
+- Line 2333: `direct-db-context` - `new EchoglossianDbContext( [occurrence 37]`
+- Line 2357: `sync-ef-save` - `SaveChanges( [occurrence 5]`
+- Line 2375: `direct-db-context` - `new EchoglossianDbContext( [occurrence 38]`
+- Line 2393: `sync-ef-save` - `SaveChanges( [occurrence 6]`
+- Line 2405: `sync-ef-save` - `SaveChanges( [occurrence 7]`
+- Line 2423: `direct-db-context` - `new EchoglossianDbContext( [occurrence 39]`
+- Line 2455: `direct-db-context` - `new EchoglossianDbContext( [occurrence 40]`
+- Line 2473: `sync-ef-save` - `SaveChanges( [occurrence 8]`
+- Line 2485: `sync-ef-save` - `SaveChanges( [occurrence 9]`
+- Line 3232: `sync-ef-query` - `FirstOrDefault( [occurrence 20]`
+- Line 3561: `persistence-helper-call` - `GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]`
+- Line 3572: `direct-db-context` - `new EchoglossianDbContext( [occurrence 41]`
+- Line 3579: `sync-ef-query` - `ToList( [occurrence 5]`
+- Line 3593: `direct-db-context` - `new EchoglossianDbContext( [occurrence 42]`
+- Line 3600: `sync-ef-query` - `ToList( [occurrence 6]`
+- Line 3647: `direct-db-context` - `new EchoglossianDbContext( [occurrence 43]`
+- Line 3654: `sync-ef-query` - `FirstOrDefault( [occurrence 21]`
+- Line 3678: `direct-db-context` - `new EchoglossianDbContext( [occurrence 44]`
 
 ### DBHelpers/LlmCapabilityPersistenceHelper.cs
-- Line 25: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 26: `sync-ef-migrate` - `.Database.Migrate(`
-- Line 30: `sync-ef-query` - `FirstOrDefault(`
-- Line 56: `sync-ef-save` - `SaveChanges(`
-- Line 69: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 70: `sync-ef-migrate` - `.Database.Migrate(`
-- Line 74: `sync-ef-query` - `FirstOrDefault(`
-- Line 86: `sync-ef-save` - `SaveChanges(`
-- Line 91: `sync-ef-save` - `SaveChanges(`
+- Line 25: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 26: `sync-ef-migrate` - `.Database.Migrate( [occurrence 1]`
+- Line 30: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 56: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 69: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 70: `sync-ef-migrate` - `.Database.Migrate( [occurrence 2]`
+- Line 74: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
+- Line 86: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 91: `sync-ef-save` - `SaveChanges( [occurrence 3]`
 
 ### DBHelpers/TranslationFailurePersistenceHelper.cs
-- Line 57: `direct-db-context` - `new EchoglossianDbContext(`
-- Line 58: `sync-ef-query` - `FirstOrDefault(`
-- Line 75: `sync-ef-save` - `SaveChanges(`
-- Line 96: `sync-ef-save` - `SaveChanges(`
+- Line 57: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 58: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 75: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 96: `sync-ef-save` - `SaveChanges( [occurrence 2]`
 
 ### EFCoreSqlite/EchoglossianDbContextFactory.cs
-- Line 19: `direct-db-context` - `new EchoglossianDbContext(`
+- Line 19: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
 
 ### EFCoreSqlite/Models/SelectString.partial.cs
-- Line 75: `sync-ef-query` - `ToArray(`
+- Line 75: `sync-ef-query` - `ToArray( [occurrence 1]`
 
 ### GeneralHelpers/AssetsManager.cs
-- Line 335: `blocking-wait` - `.Wait(`
+- Line 335: `blocking-wait` - `.Wait( [occurrence 1]`
 
 ### NativeUI/AddonHandlers/Toasts/ToastGuiSupportedToastRuntime.cs
-- Line 240: `blocking-wait` - `.Wait(`
-- Line 279: `blocking-wait` - `.Wait(`
+- Line 240: `blocking-wait` - `.Wait( [occurrence 1]`
+- Line 279: `blocking-wait` - `.Wait( [occurrence 2]`
 
 ### PluginUI/PluginRuntimeUi.cs
-- Line 127: `blocking-wait` - `.Wait(`
+- Line 127: `blocking-wait` - `.Wait( [occurrence 1]`
 
 ### Translators/AmazonTranslateTranslator.cs
-- Line 105: `blocking-wait` - `.Result`
+- Line 105: `blocking-wait` - `.Result [occurrence 1]`
 
 ### Translators/Capabilities/LlmCapabilityPolicyService.cs
-- Line 138: `persistence-helper-call` - `LlmCapabilityPersistenceHelper.RecordObservation(`
-- Line 160: `persistence-helper-call` - `LlmCapabilityPersistenceHelper.UpsertRules(`
+- Line 138: `persistence-helper-call` - `LlmCapabilityPersistenceHelper.RecordObservation( [occurrence 1]`
+- Line 160: `persistence-helper-call` - `LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]`
 
 ### Translators/Capabilities/LlmCapabilityRefreshPromoter.cs
-- Line 83: `persistence-helper-call` - `LlmCapabilityPersistenceHelper.UpsertRules(`
+- Line 83: `persistence-helper-call` - `LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]`
 
 ### Translators/DeepLTranslator.cs
-- Line 113: `blocking-wait` - `.Result`
-- Line 136: `blocking-wait` - `.Result`
-- Line 309: `blocking-wait` - `.Result`
-- Line 310: `blocking-wait` - `.Result`
-- Line 313: `blocking-wait` - `.Result`
+- Line 113: `blocking-wait` - `.Result [occurrence 1]`
+- Line 136: `blocking-wait` - `.Result [occurrence 2]`
+- Line 309: `blocking-wait` - `.Result [occurrence 3]`
+- Line 310: `blocking-wait` - `.Result [occurrence 4]`
+- Line 313: `blocking-wait` - `.Result [occurrence 5]`
 
 ### Translators/GTranslateTranslator.cs
-- Line 68: `blocking-wait` - `.Result`
+- Line 68: `blocking-wait` - `.Result [occurrence 1]`
 
 ### Translators/LibreTranslateTranslator.cs
-- Line 30: `blocking-wait` - `.Result`
+- Line 30: `blocking-wait` - `.Result [occurrence 1]`
 
 ### Translators/TranslationService.cs
-- Line 61: `persistence-helper-call` - `TranslationFailurePersistenceHelper.RecordFailure(`
+- Line 61: `persistence-helper-call` - `TranslationFailurePersistenceHelper.RecordFailure( [occurrence 1]`
 
 ### Translators/YandexTranslator.cs
-- Line 43: `blocking-wait` - `.Result`
+- Line 43: `blocking-wait` - `.Result [occurrence 1]`
 
 ### UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs
-- Line 168: `blocking-wait` - `.Wait(`
-- Line 599: `blocking-wait` - `.Wait(`
+- Line 168: `blocking-wait` - `.Wait( [occurrence 1]`
+- Line 599: `blocking-wait` - `.Wait( [occurrence 2]`
 
 ### UIOverlays/TranslationOverlay/TranslationOverlayRenderer.cs
-- Line 71: `blocking-wait` - `.Wait(`
-- Line 289: `blocking-wait` - `.Wait(`
+- Line 71: `blocking-wait` - `.Wait( [occurrence 1]`
+- Line 289: `blocking-wait` - `.Wait( [occurrence 2]`
 
 ## DB-8
 
 ### DBManagerUI/Components/DbTableView.cs
-- Line 68: `sync-ef-query` - `ToList(`
-- Line 89: `sync-ef-query` - `ToList(`
-- Line 91: `sync-ef-query` - `ToList(`
+- Line 68: `sync-ef-query` - `ToList( [occurrence 1]`
+- Line 89: `sync-ef-query` - `ToList( [occurrence 2]`
+- Line 91: `sync-ef-query` - `ToList( [occurrence 3]`
 
 ### DBManagerUI/DBEditorWindow.cs
-- Line 235: `sync-ef-query` - `ToList(`
-- Line 262: `sync-ef-query` - `FirstOrDefault(`
-- Line 279: `sync-ef-query` - `ToList(`
-- Line 328: `sync-ef-save` - `SaveChanges(`
-- Line 354: `sync-ef-save` - `SaveChanges(`
-- Line 386: `sync-ef-query` - `ToList(`
-- Line 394: `sync-ef-save` - `SaveChanges(`
-- Line 424: `sync-ef-query` - `ToList(`
-- Line 425: `sync-ef-query` - `ToList(`
+- Line 235: `sync-ef-query` - `ToList( [occurrence 1]`
+- Line 262: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 279: `sync-ef-query` - `ToList( [occurrence 2]`
+- Line 328: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 354: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 386: `sync-ef-query` - `ToList( [occurrence 3]`
+- Line 394: `sync-ef-save` - `SaveChanges( [occurrence 3]`
+- Line 424: `sync-ef-query` - `ToList( [occurrence 4]`
+- Line 425: `sync-ef-query` - `ToList( [occurrence 5]`
 
 ### DBManagerUI/Services/DbMetadataCache.cs
-- Line 41: `sync-ef-query` - `ToList(`
+- Line 41: `sync-ef-query` - `ToList( [occurrence 1]`
 
 ### DBManagerUI/Services/DbTableNameMatcher.cs
-- Line 30: `sync-ef-query` - `FirstOrDefault(`
+- Line 30: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
 
 ### Echoglossian.cs
-- Line 348: `blocking-wait` - `.Result`
-- Line 350: `blocking-wait` - `.Result`
-- Line 352: `blocking-wait` - `.Result`
-- Line 354: `blocking-wait` - `.Result`
-- Line 356: `blocking-wait` - `.Result`
-- Line 357: `blocking-wait` - `.Result`
-- Line 435: `direct-db-context` - `new EchoglossianDbContext(`
+- Line 348: `blocking-wait` - `.Result [occurrence 1]`
+- Line 350: `blocking-wait` - `.Result [occurrence 2]`
+- Line 352: `blocking-wait` - `.Result [occurrence 3]`
+- Line 354: `blocking-wait` - `.Result [occurrence 4]`
+- Line 356: `blocking-wait` - `.Result [occurrence 5]`
+- Line 357: `blocking-wait` - `.Result [occurrence 6]`
+- Line 435: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
