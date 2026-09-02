@@ -261,8 +261,10 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     }
     catch (OperationCanceledException exception)
     {
-      this.metrics.RecordCancelled();
-      work.CompleteCancelled(exception);
+      if (work.CompleteCancelled(exception))
+      {
+        this.metrics.RecordCancelled();
+      }
     }
     catch (Exception exception)
     {
@@ -328,13 +330,17 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
       this.writeQueue.Cancel(work =>
       {
         _ = this.pendingWrites.Remove(work.Key);
-        work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
-        this.metrics.RecordCancelled();
+        if (work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token)))
+        {
+          this.metrics.RecordCancelled();
+        }
       });
       foreach (var work in this.pendingWrites.Values.ToArray())
       {
-        work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
-        this.metrics.RecordCancelled();
+        if (work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token)))
+        {
+          this.metrics.RecordCancelled();
+        }
       }
 
       this.pendingWrites.Clear();
@@ -348,8 +354,10 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
       this.readQueue.Cancel(work =>
       {
         _ = this.inFlightReads.Remove(work.Key);
-        work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
-        this.metrics.RecordCancelled();
+        if (work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token)))
+        {
+          this.metrics.RecordCancelled();
+        }
       });
     }
   }
@@ -372,7 +380,13 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
         return;
       }
 
-      var batch = new List<WriteWork> { this.ClaimWrite(first) };
+      var claimedFirst = this.ClaimWrite(first);
+      if (claimedFirst is null)
+      {
+        continue;
+      }
+
+      var batch = new List<WriteWork> { claimedFirst };
       if (this.options.BatchCollectionWindow > TimeSpan.Zero)
       {
         try
@@ -394,19 +408,27 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
           break;
         }
 
-        batch.Add(this.ClaimWrite(next));
+        var claimed = this.ClaimWrite(next);
+        if (claimed is not null)
+        {
+          batch.Add(claimed);
+        }
       }
 
       await this.ExecuteWriteBatchAsync(batch).ConfigureAwait(false);
     }
   }
 
-  private WriteWork ClaimWrite(WriteWork work)
+  private WriteWork? ClaimWrite(WriteWork work)
   {
     lock (this.admissionGate)
     {
+      if (!work.TryClaim())
+      {
+        return null;
+      }
+
       _ = this.pendingWrites.Remove(work.Key);
-      work.Claim();
       this.metrics.ObserveWriteDepths(
           this.writeQueue.InteractiveDepth,
           this.writeQueue.BackgroundDepth);
@@ -529,8 +551,10 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     var cancellation = exception ?? new OperationCanceledException(this.shutdownCancellation.Token);
     foreach (var work in batch)
     {
-      work.CompleteCancelled(cancellation);
-      this.metrics.RecordCancelled();
+      if (work.CompleteCancelled(cancellation))
+      {
+        this.metrics.RecordCancelled();
+      }
     }
   }
 
@@ -586,7 +610,7 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
     internal abstract void CompleteSucceeded();
 
-    internal abstract void CompleteCancelled(OperationCanceledException exception);
+    internal abstract bool CompleteCancelled(OperationCanceledException exception);
 
     internal abstract void CompleteFailed(Exception exception);
   }
@@ -612,7 +636,15 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
     internal PersistenceWriteRequest Request => this.request;
 
-    internal void Claim() => Interlocked.Exchange(ref this.claimed, 1);
+    internal bool TryClaim()
+    {
+      if (this.completionSource.Task.IsCompleted)
+      {
+        return false;
+      }
+
+      return Interlocked.CompareExchange(ref this.claimed, 1, 0) == 0;
+    }
 
     internal void Replace(PersistenceWriteRequest replacement)
     {
@@ -642,7 +674,7 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     internal void CompleteUnchanged() => _ = this.completionSource.TrySetResult(
         new PersistenceWriteResult(PersistenceCompletionStatus.Unchanged, 0, null));
 
-    internal void CompleteCancelled(OperationCanceledException exception) => _ = this.completionSource.TrySetResult(
+    internal bool CompleteCancelled(OperationCanceledException exception) => this.completionSource.TrySetResult(
         new PersistenceWriteResult(PersistenceCompletionStatus.Cancelled, 0, exception));
 
     internal void CompleteFailed(Exception exception) => _ = this.completionSource.TrySetResult(
@@ -687,9 +719,9 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
           new PersistenceReadResult<T>(PersistenceCompletionStatus.Succeeded, this.value, null));
     }
 
-    internal override void CompleteCancelled(OperationCanceledException exception)
+    internal override bool CompleteCancelled(OperationCanceledException exception)
     {
-      _ = this.completionSource.TrySetResult(
+      return this.completionSource.TrySetResult(
           new PersistenceReadResult<T>(PersistenceCompletionStatus.Cancelled, default, exception));
     }
 
