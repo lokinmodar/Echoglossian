@@ -219,13 +219,17 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
       ReadWork work;
       try
       {
-        work = await this.readQueue.DequeueAsync(CancellationToken.None).ConfigureAwait(false);
+        work = await this.readQueue.DequeueAsync(this.shutdownCancellation.Token).ConfigureAwait(false);
         work.MarkDequeued();
         this.metrics.ObserveReadDepths(
             this.readQueue.InteractiveDepth,
             this.readQueue.BackgroundDepth);
       }
       catch (ChannelClosedException)
+      {
+        return;
+      }
+      catch (OperationCanceledException)
       {
         return;
       }
@@ -239,13 +243,13 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     try
     {
       await using (var context = await this.contextFactory
-          .CreateDbContextAsync(CancellationToken.None)
+          .CreateDbContextAsync(this.shutdownCancellation.Token)
           .ConfigureAwait(false))
       {
         this.metrics.RecordReaderStarted();
         try
         {
-          await work.ExecuteAsync(context, CancellationToken.None).ConfigureAwait(false);
+          await work.ExecuteAsync(context, this.shutdownCancellation.Token).ConfigureAwait(false);
         }
         finally
         {
@@ -311,6 +315,7 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     catch (TimeoutException)
     {
       await this.shutdownCancellation.CancelAsync().ConfigureAwait(false);
+      this.CancelPendingReads();
       this.CancelPendingWrites();
       await workers.ConfigureAwait(false);
     }
@@ -322,16 +327,30 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     {
       this.writeQueue.Cancel(work =>
       {
+        _ = this.pendingWrites.Remove(work.Key);
         work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
         this.metrics.RecordCancelled();
       });
-      foreach (var work in this.pendingWrites.Values)
+      foreach (var work in this.pendingWrites.Values.ToArray())
       {
         work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
         this.metrics.RecordCancelled();
       }
 
       this.pendingWrites.Clear();
+    }
+  }
+
+  private void CancelPendingReads()
+  {
+    lock (this.admissionGate)
+    {
+      this.readQueue.Cancel(work =>
+      {
+        _ = this.inFlightReads.Remove(work.Key);
+        work.CompleteCancelled(new OperationCanceledException(this.shutdownCancellation.Token));
+        this.metrics.RecordCancelled();
+      });
     }
   }
 
