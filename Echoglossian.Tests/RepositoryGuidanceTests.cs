@@ -96,6 +96,28 @@ public class RepositoryGuidanceTests
     }
 
     /// <summary>
+    /// Ensures the local validation rail audits synchronous database work before
+    /// running the .NET build and test commands.
+    /// </summary>
+    [Fact]
+    public void LocalValidation_runs_sync_database_audit_before_dotnet()
+    {
+        var root = FindRepositoryRoot();
+        var validationPath = Path.Combine(
+            root.FullName,
+            "scripts",
+            "validate-local-tests.ps1");
+        var text = File.ReadAllText(validationPath);
+        var auditIndex = text.IndexOf(
+            "audit-sync-db-hotpaths.ps1",
+            StringComparison.Ordinal);
+        var dotnetIndex = text.IndexOf("dotnet restore", StringComparison.Ordinal);
+
+        Assert.True(auditIndex >= 0, "Validation must invoke the sync DB audit.");
+        Assert.True(dotnetIndex > auditIndex, "Audit must run before dotnet restore.");
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>
