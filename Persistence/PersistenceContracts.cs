@@ -93,52 +93,12 @@ internal readonly record struct PersistenceWriteMutation(bool Changed)
 /// <summary>
 ///     Describes one write that can be applied and published after commit.
 /// </summary>
-internal sealed record PersistenceWriteRequest
-{
-  /// <summary>
-  ///     Initializes a new instance of the <see cref="PersistenceWriteRequest" />
-  ///     class.
-  /// </summary>
-  /// <param name="key">The canonical identity of the requested write.</param>
-  /// <param name="priority">The bounded lane that receives the write.</param>
-  /// <param name="applyAsync">The mutation applied within a transaction.</param>
-  /// <param name="publishAfterCommit">The projection published after commit.</param>
-  /// <exception cref="ArgumentNullException">
-  ///     <paramref name="applyAsync" /> or <paramref name="publishAfterCommit" />
-  ///     is <see langword="null" />.
-  /// </exception>
-  internal PersistenceWriteRequest(
-      PersistenceWorkKey key,
-      PersistencePriority priority,
-      Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> applyAsync,
-      Action publishAfterCommit)
-  {
-    ArgumentNullException.ThrowIfNull(applyAsync);
-    ArgumentNullException.ThrowIfNull(publishAfterCommit);
-
-    this.Key = key;
-    this.Priority = priority;
-    this.ApplyAsync = applyAsync;
-    this.PublishAfterCommit = publishAfterCommit;
-  }
-
-  /// <summary>
-  ///     Gets the canonical identity of the requested write.
-  /// </summary>
-  internal PersistenceWorkKey Key { get; }
-
-  /// <summary>
-  ///     Gets the bounded lane that receives the write.
-  /// </summary>
-  internal PersistencePriority Priority { get; }
-
-  /// <summary>
-  ///     Gets the mutation applied within a transaction.
-  /// </summary>
-  internal Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> ApplyAsync { get; }
-
-  /// <summary>
-  ///     Gets the projection published after commit.
-  /// </summary>
-  internal Action PublishAfterCommit { get; }
-}
+/// <param name="Key">The canonical identity of the requested write.</param>
+/// <param name="Priority">The bounded lane that receives the write.</param>
+/// <param name="ApplyAsync">The mutation applied within a transaction.</param>
+/// <param name="PublishAfterCommit">The projection published after commit.</param>
+internal sealed record PersistenceWriteRequest(
+    PersistenceWorkKey Key,
+    PersistencePriority Priority,
+    Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> ApplyAsync,
+    Action PublishAfterCommit);

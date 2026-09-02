@@ -16,6 +16,7 @@ internal sealed class BoundedPriorityQueue<T>
 {
   private const int InteractiveBudget = 3;
 
+  private readonly object admissionGate = new();
   private readonly Channel<T> backgroundLane;
   private readonly Channel<T> interactiveLane;
   private readonly Channel<bool> wakeSignals;
@@ -83,30 +84,33 @@ internal sealed class BoundedPriorityQueue<T>
   /// </returns>
   internal bool TryEnqueue(T item, PersistencePriority priority)
   {
-    if (Volatile.Read(ref this.completing) != 0)
+    lock (this.admissionGate)
     {
-      return false;
-    }
+      if (Volatile.Read(ref this.completing) != 0)
+      {
+        return false;
+      }
 
-    var lane = priority == PersistencePriority.Interactive
-        ? this.interactiveLane
-        : this.backgroundLane;
-    if (!lane.Writer.TryWrite(item))
-    {
-      return false;
-    }
+      var lane = priority == PersistencePriority.Interactive
+          ? this.interactiveLane
+          : this.backgroundLane;
+      if (!lane.Writer.TryWrite(item))
+      {
+        return false;
+      }
 
-    if (priority == PersistencePriority.Interactive)
-    {
-      Interlocked.Increment(ref this.interactiveDepth);
-    }
-    else
-    {
-      Interlocked.Increment(ref this.backgroundDepth);
-    }
+      if (priority == PersistencePriority.Interactive)
+      {
+        Interlocked.Increment(ref this.interactiveDepth);
+      }
+      else
+      {
+        Interlocked.Increment(ref this.backgroundDepth);
+      }
 
-    this.SignalReader();
-    return true;
+      this.SignalReader();
+      return true;
+    }
   }
 
   /// <summary>
@@ -147,15 +151,18 @@ internal sealed class BoundedPriorityQueue<T>
   /// </summary>
   internal void Complete()
   {
-    if (Interlocked.Exchange(ref this.completing, 1) != 0)
+    lock (this.admissionGate)
     {
-      return;
-    }
+      if (Interlocked.Exchange(ref this.completing, 1) != 0)
+      {
+        return;
+      }
 
-    this.interactiveLane.Writer.TryComplete();
-    this.backgroundLane.Writer.TryComplete();
-    this.SignalReader();
-    this.wakeSignals.Writer.TryComplete();
+      this.interactiveLane.Writer.TryComplete();
+      this.backgroundLane.Writer.TryComplete();
+      this.SignalReader();
+      this.wakeSignals.Writer.TryComplete();
+    }
   }
 
   /// <summary>
@@ -242,13 +249,16 @@ internal sealed class BoundedPriorityQueue<T>
   /// </returns>
   private bool TryReadInteractive(out T item)
   {
-    if (!this.interactiveLane.Reader.TryRead(out item))
+    lock (this.admissionGate)
     {
-      return false;
-    }
+      if (!this.interactiveLane.Reader.TryRead(out item))
+      {
+        return false;
+      }
 
-    _ = Interlocked.Decrement(ref this.interactiveDepth);
-    return true;
+      _ = Interlocked.Decrement(ref this.interactiveDepth);
+      return true;
+    }
   }
 
   /// <summary>
@@ -261,13 +271,16 @@ internal sealed class BoundedPriorityQueue<T>
   /// </returns>
   private bool TryReadBackground(out T item)
   {
-    if (!this.backgroundLane.Reader.TryRead(out item))
+    lock (this.admissionGate)
     {
-      return false;
-    }
+      if (!this.backgroundLane.Reader.TryRead(out item))
+      {
+        return false;
+      }
 
-    _ = Interlocked.Decrement(ref this.backgroundDepth);
-    return true;
+      _ = Interlocked.Decrement(ref this.backgroundDepth);
+      return true;
+    }
   }
 
   /// <summary>

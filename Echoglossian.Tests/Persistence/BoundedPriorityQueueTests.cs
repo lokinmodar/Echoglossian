@@ -3,8 +3,10 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Collections.Concurrent;
 using System.Threading.Channels;
 
+using Echoglossian.EFCoreSqlite;
 using Echoglossian.Persistence;
 
 using Xunit;
@@ -60,6 +62,31 @@ public sealed class BoundedPriorityQueueTests
     Assert.Equal(4, options.ContextPoolSize);
     Assert.Equal(1, options.SqliteDefaultTimeoutSeconds);
     Assert.Equal(TimeSpan.FromSeconds(5), options.ShutdownTimeout);
+  }
+
+  /// <summary>
+  ///     Ensures write requests retain the positional record contract consumed
+  ///     by persistence callers.
+  /// </summary>
+  [Fact]
+  public void PersistenceWriteRequest_SupportsPositionalDeconstruction()
+  {
+    var key = new PersistenceWorkKey("capability", "model-a");
+    Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> applyAsync =
+        (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult);
+    Action publishAfterCommit = () => { };
+    var request = new PersistenceWriteRequest(
+        key,
+        PersistencePriority.Background,
+        applyAsync,
+        publishAfterCommit);
+
+    var (deconstructedKey, priority, deconstructedApplyAsync, publication) = request;
+
+    Assert.Equal(key, deconstructedKey);
+    Assert.Equal(PersistencePriority.Background, priority);
+    Assert.Same(applyAsync, deconstructedApplyAsync);
+    Assert.Same(publishAfterCommit, publication);
   }
 
   /// <summary>
@@ -134,5 +161,107 @@ public sealed class BoundedPriorityQueueTests
     Assert.Equal("I1", await queue.DequeueAsync(CancellationToken.None));
     await Assert.ThrowsAsync<ChannelClosedException>(
         async () => await queue.DequeueAsync(CancellationToken.None));
+  }
+
+  /// <summary>
+  ///     Ensures concurrent writers and a live reader never expose a negative
+  ///     depth or lose an accepted item between channel admission and counting.
+  /// </summary>
+  /// <returns>A task that completes after concurrent work drains.</returns>
+  [Fact]
+  public async Task ConcurrentEnqueueAndDequeue_MaintainsNonnegativeDepth()
+  {
+    const int producerCount = 4;
+    const int itemsPerProducer = 500;
+    var queue = new BoundedPriorityQueue<int>(64, 1);
+    var start = new TaskCompletionSource<bool>(
+        TaskCreationOptions.RunContinuationsAsynchronously);
+    var producers = Enumerable.Range(0, producerCount)
+        .Select(
+            producer => Task.Run(
+                async () =>
+                {
+                  await start.Task.ConfigureAwait(false);
+                  for (var item = 0; item < itemsPerProducer; item++)
+                  {
+                    while (!queue.TryEnqueue(
+                        (producer * itemsPerProducer) + item,
+                        PersistencePriority.Interactive))
+                    {
+                      Thread.Yield();
+                    }
+                  }
+                }))
+        .ToArray();
+    var consumer = Task.Run(
+        async () =>
+        {
+          await start.Task.ConfigureAwait(false);
+          for (var item = 0; item < producerCount * itemsPerProducer; item++)
+          {
+            _ = await queue.DequeueAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.InRange(queue.InteractiveDepth, 0, 64);
+          }
+        });
+
+    start.SetResult(true);
+    await Task.WhenAll(producers.Append(consumer)).WaitAsync(TimeSpan.FromSeconds(5));
+
+    Assert.Equal(0, queue.InteractiveDepth);
+  }
+
+  /// <summary>
+  ///     Ensures a blocked reader does not close before all concurrent
+  ///     admission that reports success has drained during completion.
+  /// </summary>
+  /// <returns>A task that completes after completion races are verified.</returns>
+  [Fact]
+  public async Task ConcurrentCompletionAndAdmission_DrainsEveryReportedAcceptedItem()
+  {
+    for (var iteration = 0; iteration < 100; iteration++)
+    {
+      var queue = new BoundedPriorityQueue<int>(16, 1);
+      var start = new TaskCompletionSource<bool>(
+          TaskCreationOptions.RunContinuationsAsynchronously);
+      var accepted = new ConcurrentBag<int>();
+      var blockedDequeue = queue.DequeueAsync(CancellationToken.None).AsTask();
+      var enqueuers = Enumerable.Range(0, 8)
+          .Select(
+              item => Task.Run(
+                  async () =>
+                  {
+                    await start.Task.ConfigureAwait(false);
+                    if (queue.TryEnqueue(item, PersistencePriority.Interactive))
+                    {
+                      accepted.Add(item);
+                    }
+                  }))
+          .ToArray();
+      var completion = Task.Run(
+          async () =>
+          {
+            await start.Task.ConfigureAwait(false);
+            queue.Complete();
+          });
+
+      start.SetResult(true);
+      await Task.WhenAll(enqueuers.Append(completion)).WaitAsync(TimeSpan.FromSeconds(5));
+
+      if (accepted.IsEmpty)
+      {
+        await Assert.ThrowsAsync<ChannelClosedException>(async () => await blockedDequeue);
+        continue;
+      }
+
+      var drained = new List<int> { await blockedDequeue.WaitAsync(TimeSpan.FromSeconds(5)) };
+      while (drained.Count < accepted.Count)
+      {
+        drained.Add(
+            await queue.DequeueAsync(CancellationToken.None).AsTask()
+                .WaitAsync(TimeSpan.FromSeconds(5)));
+      }
+
+      Assert.Equal(accepted.Order(), drained.Order());
+    }
   }
 }
