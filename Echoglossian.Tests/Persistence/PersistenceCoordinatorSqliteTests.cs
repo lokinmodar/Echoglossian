@@ -58,12 +58,18 @@ public sealed class PersistenceCoordinatorSqliteTests
   [Fact]
   public async Task ChangedMutation_EmitsOneUpdateAndPublishesAfterCommit()
   {
-    await using var owner = await SqliteOwner.CreateAsync();
+    var commitGate = new CommitGateInterceptor();
+    await using var owner = await SqliteOwner.CreateAsync(commitGate);
     await using (var seed = owner.Factory.CreateDbContext()) { seed.LlmModelCapabilityObservations.Add(Observation("row")); await seed.SaveChangesAsync(); }
+    commitGate.Enabled = true;
     var published = 0;
     await using var coordinator = CreateCoordinator(owner.Factory);
     coordinator.TryScheduleWrite(new PersistenceWriteRequest(new PersistenceWorkKey("sqlite", "changed"), PersistencePriority.Interactive,
         async (context, token) => { var row = await context.LlmModelCapabilityObservations.SingleAsync(token); row.ProviderErrorCode = "changed"; return PersistenceWriteMutation.ChangedResult; }, () => Interlocked.Increment(ref published)), out var completion);
+    await commitGate.CommitEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    Assert.Equal(0, published);
+    Assert.False(completion.IsCompleted);
+    commitGate.ReleaseCommit.SetResult(true);
     Assert.Equal(PersistenceCompletionStatus.Succeeded, (await completion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
     Assert.Equal(1, owner.Interceptor.UpdateCount); Assert.Equal(1, published);
   }
@@ -129,17 +135,17 @@ public sealed class PersistenceCoordinatorSqliteTests
   private sealed class SqliteOwner : IAsyncDisposable
   {
     private readonly string directory;
-    private SqliteOwner(string directory, UpdateInterceptor interceptor) { this.directory = directory; this.Interceptor = interceptor; this.Factory = new Factory(Path.Combine(directory, "Echoglossian.db"), interceptor); }
+    private SqliteOwner(string directory, UpdateInterceptor interceptor, CommitGateInterceptor? commitGate) { this.directory = directory; this.Interceptor = interceptor; this.Factory = new Factory(Path.Combine(directory, "Echoglossian.db"), interceptor, commitGate); }
     internal Factory Factory { get; }
     internal UpdateInterceptor Interceptor { get; }
-    internal static async Task<SqliteOwner> CreateAsync() { var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory); var owner = new SqliteOwner(directory, new UpdateInterceptor()); await using var context = owner.Factory.CreateDbContext(); await context.Database.MigrateAsync(); return owner; }
+    internal static async Task<SqliteOwner> CreateAsync(CommitGateInterceptor? commitGate = null) { var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory); var owner = new SqliteOwner(directory, new UpdateInterceptor(), commitGate); await using var context = owner.Factory.CreateDbContext(); await context.Database.MigrateAsync(); return owner; }
     public ValueTask DisposeAsync() { SqliteConnection.ClearAllPools(); try { Directory.Delete(this.directory, true); } catch (IOException) { Directory.Delete(this.directory, true); } catch (UnauthorizedAccessException) { Directory.Delete(this.directory, true); } return ValueTask.CompletedTask; }
   }
 
   private sealed class Factory : IDbContextFactory<EchoglossianDbContext>
   {
     private readonly DbContextOptions<EchoglossianDbContext> options;
-    internal Factory(string path, UpdateInterceptor interceptor) { this.options = new DbContextOptionsBuilder<EchoglossianDbContext>().UseSqlite($"Data Source={path}").AddInterceptors(interceptor).Options; }
+    internal Factory(string path, UpdateInterceptor interceptor, CommitGateInterceptor? commitGate) { var builder = new DbContextOptionsBuilder<EchoglossianDbContext>().UseSqlite($"Data Source={path}").AddInterceptors(interceptor); if (commitGate is not null) { builder.AddInterceptors(commitGate); } this.options = builder.Options; }
     public EchoglossianDbContext CreateDbContext() => new(this.options);
     public Task<EchoglossianDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) => Task.FromResult(this.CreateDbContext());
   }
@@ -153,5 +159,28 @@ public sealed class PersistenceCoordinatorSqliteTests
     public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result) { this.Count(command); return result; }
     public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default) { this.Count(command); return ValueTask.FromResult(result); }
     private void Count(DbCommand command) { if (command.CommandText.TrimStart().StartsWith("UPDATE", StringComparison.OrdinalIgnoreCase)) { Interlocked.Increment(ref this.updateCount); } }
+  }
+
+  private sealed class CommitGateInterceptor : DbTransactionInterceptor
+  {
+    internal bool Enabled { get; set; }
+    internal TaskCompletionSource<bool> CommitEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    internal TaskCompletionSource<bool> ReleaseCommit { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    public override async ValueTask<InterceptionResult> TransactionCommittingAsync(
+        DbTransaction transaction,
+        TransactionEventData eventData,
+        InterceptionResult result,
+        CancellationToken cancellationToken = default)
+    {
+      if (!this.Enabled)
+      {
+        return result;
+      }
+
+      this.CommitEntered.TrySetResult(true);
+      await this.ReleaseCommit.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+      return result;
+    }
   }
 }
