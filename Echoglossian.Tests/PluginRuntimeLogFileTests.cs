@@ -17,6 +17,7 @@ namespace Echoglossian.Tests;
 ///     Covers the dedicated Echoglossian runtime log mirror that writes
 ///     <see cref="PluginRuntimeLog" /> output into an exclusive file.
 /// </summary>
+[Collection(CapabilityRuntimeCollection.Name)]
 public sealed class PluginRuntimeLogFileTests : IDisposable
 {
     private readonly string configDirectory;
