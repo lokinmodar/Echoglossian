@@ -91,6 +91,31 @@ internal readonly record struct PersistenceWriteMutation(bool Changed)
 }
 
 /// <summary>
+///     Validates the delegates required by one positional persistence write
+///     request.
+/// </summary>
+internal abstract record PersistenceWriteRequestValidation
+{
+  /// <summary>
+  ///     Initializes a new instance of the
+  ///     <see cref="PersistenceWriteRequestValidation" /> class.
+  /// </summary>
+  /// <param name="ApplyAsync">The mutation applied within a transaction.</param>
+  /// <param name="PublishAfterCommit">The projection published after commit.</param>
+  /// <exception cref="ArgumentNullException">
+  ///     <paramref name="ApplyAsync" /> or
+  ///     <paramref name="PublishAfterCommit" /> is <see langword="null" />.
+  /// </exception>
+  protected PersistenceWriteRequestValidation(
+      Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> ApplyAsync,
+      Action PublishAfterCommit)
+  {
+    ArgumentNullException.ThrowIfNull(ApplyAsync);
+    ArgumentNullException.ThrowIfNull(PublishAfterCommit);
+  }
+}
+
+/// <summary>
 ///     Describes one write that can be applied and published after commit.
 /// </summary>
 /// <param name="Key">The canonical identity of the requested write.</param>
@@ -101,4 +126,5 @@ internal sealed record PersistenceWriteRequest(
     PersistenceWorkKey Key,
     PersistencePriority Priority,
     Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> ApplyAsync,
-    Action PublishAfterCommit);
+    Action PublishAfterCommit)
+    : PersistenceWriteRequestValidation(ApplyAsync, PublishAfterCommit);

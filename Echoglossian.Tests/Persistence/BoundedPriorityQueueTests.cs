@@ -90,6 +90,40 @@ public sealed class BoundedPriorityQueueTests
   }
 
   /// <summary>
+  ///     Ensures write requests reject a missing transactional mutation.
+  /// </summary>
+  [Fact]
+  public void PersistenceWriteRequest_WithNullApplyAsync_ThrowsArgumentNullException()
+  {
+    var exception = Assert.Throws<ArgumentNullException>(
+        () => new PersistenceWriteRequest(
+            new PersistenceWorkKey("capability", "model-a"),
+            PersistencePriority.Background,
+            null!,
+            () => { }));
+
+    Assert.Equal("ApplyAsync", exception.ParamName);
+  }
+
+  /// <summary>
+  ///     Ensures write requests reject a missing post-commit publication.
+  /// </summary>
+  [Fact]
+  public void PersistenceWriteRequest_WithNullPublishAfterCommit_ThrowsArgumentNullException()
+  {
+    Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> applyAsync =
+        (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult);
+    var exception = Assert.Throws<ArgumentNullException>(
+        () => new PersistenceWriteRequest(
+            new PersistenceWorkKey("capability", "model-a"),
+            PersistencePriority.Background,
+            applyAsync,
+            null!));
+
+    Assert.Equal("PublishAfterCommit", exception.ParamName);
+  }
+
+  /// <summary>
   ///     Ensures full lanes reject new work without dropping an accepted item.
   /// </summary>
   [Fact]
