@@ -25,6 +25,7 @@
 - Use short commits with `#258` and push every validated stable commit.
 - Never stage `Echoglossian.xml` in DB-0 because this stage changes no production C# XML documentation.
 - Do not create, merge, or release a pull request from the execution task; report the pushed branch for human review.
+- Never publish a release without first providing the user a build to test, receiving explicit confirmation that the tested build passed, and then receiving an express request for that specific release. Test approval, merge approval, or release eligibility alone is not authorization.
 
 ## File Structure
 
@@ -635,4 +636,4 @@ if ($localHash -ne $remoteHash)
 }
 ```
 
-Expected: hashes match. Report the branch, commit list, validation, and pull-request URL. Do not begin DB-1, open or merge a pull request, or publish a release.
+Expected: hashes match. Report the branch, commit list, validation, and pull-request URL. Do not begin DB-1, open or merge a pull request, prepare release metadata, or publish a release. DB-0 is not release-eligible; future stages must satisfy the master design's mandatory user-test and explicit-release-request gate.

@@ -11,7 +11,7 @@
 
 Echoglossian must move all runtime Entity Framework and SQLite I/O away from Dalamud Framework, addon lifecycle, Draw, and PreDraw callbacks. The migration will introduce one bounded persistence coordinator, short-lived database contexts, bounded asynchronous reads, and a single asynchronous writer. Existing tables, row identities, lookup fallbacks, and save compatibility remain unchanged.
 
-The work will ship through small issue-specific pull requests. The first two stages establish audit coverage and shared infrastructure without a release. The first user-facing release occurs after the high-impact reference-text migration. Later domain migrations receive normal releases. A global translation command and draggable HUD button are a small independent addendum and ship with the action/item/trait release.
+The work will ship through small issue-specific pull requests. The first two stages establish audit coverage and shared infrastructure without a release. The high-impact reference-text migration is the first stage eligible for a user-facing release. Later domain migrations may also become release-eligible. Eligibility never authorizes a release: every build must first be tested by the user, and a release may occur only after the user expressly requests that specific release. A global translation command and draggable HUD button are a small independent addendum intended to ship with the action/item/trait release after the same gate is satisfied.
 
 The final lifecycle stage adopts `IAsyncDalamudPlugin` only after startup, persistence, translation brokers, configuration saves, and shutdown can be awaited safely.
 
@@ -33,7 +33,7 @@ Changing individual calls from `SaveChanges()` to `SaveChangesAsync()` is insuff
 - Preserve the database as the source of truth.
 - Preserve all current schemas, canonical identities, lookup semantics, fallbacks, and existing-user compatibility.
 - Support bounded, awaited startup and shutdown as preparation for `IAsyncDalamudPlugin`.
-- Deliver reviewable pull requests and normal intermediate releases.
+- Deliver reviewable pull requests and release-eligible intermediate stages without automatically publishing releases.
 - Add an optional global translation command and draggable HUD toggle that restores and reapplies UI safely.
 
 ## Non-Goals
@@ -192,19 +192,33 @@ The supplied `translation-icon.svg` is treated only as a proposed visual asset. 
 
 Every stage begins from the latest `origin/v4-series`, uses a fresh Issue 258 branch, and targets `v4-series` through a small pull request. A migrated domain is complete only when its runtime synchronous path is removed and its focused tests pass.
 
+### Mandatory User Test and Release Authorization Gate
+
+No agent, task, automation, or stage policy may infer permission to publish a release. Terms such as "normal release", "release-eligible", "ready", "approved PR", or "merged" describe technical readiness only.
+
+For every release, in this exact order:
+
+1. Complete the implementation and automated validation without publishing a release.
+2. Provide the user with a testable build and its exact source commit.
+3. Wait for the user to test that build and explicitly confirm the result.
+4. Even after a successful test, wait for the user to expressly request that specific release. Test approval alone is not release authorization unless the same message explicitly requests the release.
+5. Only then may the release workflow change version/release metadata, create a tag or GitHub release, or submit a DalamudPluginsD17 manifest pull request.
+
+Prior release authorization never carries forward to another stage or build. If the tested commit changes materially, produce a new build and repeat the gate. Without both an explicit successful user test and an explicit release request, stop at a validated branch/build and report that release is awaiting authorization.
+
 | Stage | Branch | Scope | Release policy |
 |---|---|---|---|
 | DB-0 | `issue-258-00-db-audit` | Master spec, reusable sync-I/O audit, baseline evidence protocol, and contract-test skeleton | No release |
 | DB-1 | `issue-258-01-persistence-coordinator` | Bounded priority lanes, context factory, single writer, batching, coalescing, retry, metrics, shutdown, and one low-frequency pilot | No release |
-| DB-2 | `issue-258-02-reference-text` | Reference text, canonical-row persistence, prefetch reads/writes, unchanged-row suppression | Normal release; first performance release |
-| DB-3 | `issue-258-03-quest-todo` | QuestPlate, accepted-quest prefetch, ToDoList cache-first reads, in-flight deduplication | Normal release |
+| DB-2 | `issue-258-02-reference-text` | Reference text, canonical-row persistence, prefetch reads/writes, unchanged-row suppression | First performance release-eligible stage; mandatory user test and explicit release request |
+| DB-3 | `issue-258-03-quest-todo` | QuestPlate, accepted-quest prefetch, ToDoList cache-first reads, in-flight deduplication | Release-eligible after mandatory user test and explicit release request |
 | UI-A | `issue-258-04-translation-toggle` | Activation coordinator, command, draggable HUD button, restoration and reapplication | No standalone release; ships with DB-4 |
-| DB-4 | `issue-258-05-action-item-trait` | Action, item, and trait detail persistence and bounded prefetch | Normal release, including UI-A |
-| DB-5 | `issue-258-06-game-window` | Shared DB-first GameWindow persistence | Normal release |
-| DB-6 | `issue-258-07-string-array-data` | Structured StringArrayData persistence and consumers | Normal release |
-| DB-7 | `issue-258-08-remaining-domains` | Talk, BattleTalk, MiniTalk, text hints, toasts, nameplates, selections, context menus, NPC/location, capabilities, failures, and residual runtime helpers | Normal release |
+| DB-4 | `issue-258-05-action-item-trait` | Action, item, and trait detail persistence and bounded prefetch | Release-eligible with UI-A after mandatory user test and explicit release request |
+| DB-5 | `issue-258-06-game-window` | Shared DB-first GameWindow persistence | Release-eligible after mandatory user test and explicit release request |
+| DB-6 | `issue-258-07-string-array-data` | Structured StringArrayData persistence and consumers | Release-eligible after mandatory user test and explicit release request |
+| DB-7 | `issue-258-08-remaining-domains` | Talk, BattleTalk, MiniTalk, text hints, toasts, nameplates, selections, context menus, NPC/location, capabilities, failures, and residual runtime helpers | Release-eligible after mandatory user test and explicit release request |
 | DB-8 | `issue-258-09-async-lifecycle` | Async startup, migrations, preload, configuration flush, runtime DB editor, bounded disposal, and `IAsyncDalamudPlugin` | No separate label or preview release |
-| DB-9 | `issue-258-10-enforcement` | Remove residual runtime sync APIs, final audit, compatibility proof, and before/after report | Normal final release; never labeled canary or candidate |
+| DB-9 | `issue-258-10-enforcement` | Remove residual runtime sync APIs, final audit, compatibility proof, and before/after report | Final release-eligible stage after mandatory user test and explicit release request; never labeled canary or candidate |
 
 DB-1's pilot must be low-frequency and semantically simple, using LLM capability observation persistence. It proves coordinator wiring without delaying the high-value reference-text migration. It must not create a second active persistence path.
 
@@ -254,7 +268,7 @@ Lifecycle and UI stages additionally run the Mock/DalaMock startup and shutdown 
 
 ### In-Game Evidence
 
-DB-0 records a reproducible Issue 258 scenario before behavior changes. DB-2 and each later performance release repeat the same scenario and record:
+DB-0 records a reproducible Issue 258 scenario before behavior changes. DB-2 and each later release-eligible performance stage repeat the same scenario before presenting a build for user testing and record:
 
 - median, p95, and p99 frame time;
 - observed FPS range;
@@ -264,7 +278,7 @@ DB-0 records a reproducible Issue 258 scenario before behavior changes. DB-2 and
 - number of unchanged rows suppressed;
 - WAL write frequency during accepted-quest and reference-text prefetch.
 
-Diagnostics use counters and summarized `PluginRuntimeLog` messages. Per-item hot-path logs are forbidden and temporary probes are removed or disabled before release.
+Diagnostics use counters and summarized `PluginRuntimeLog` messages. Per-item hot-path logs are forbidden and temporary probes are removed or disabled before presenting the test build.
 
 ## Acceptance Criteria
 
@@ -284,6 +298,7 @@ The Issue 258 migration is complete when all of the following are true:
 - Shutdown is awaited and bounded; no configuration or database flush is fire-and-forget.
 - `IAsyncDalamudPlugin` is adopted only after the lifecycle contract above passes unit, Mock/DalaMock, and in-game checks.
 - Before/after evidence demonstrates removal of the Issue 258 persistence-correlated frame spikes without new error or log spam.
+- Every published release corresponds to an exact build the user tested successfully and to a subsequent express user request authorizing that specific release.
 
 ## Compatibility and Rollback
 
