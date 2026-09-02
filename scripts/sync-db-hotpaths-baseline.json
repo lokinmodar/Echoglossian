@@ -891,6 +891,13 @@
       "evidence": "GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]"
     },
     {
+      "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|StringArrayDataPersistenceHelper .InsertStringArrayData( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": "StringArrayDataPersistenceHelper .InsertStringArrayData( [occurrence 1]"
+    },
+    {
       "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]",
       "category": "persistence-helper-call",
       "stage": "DB-5",
@@ -973,6 +980,83 @@
       "stage": "DB-7",
       "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
       "evidence": ".Database.Migrate( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|Cache/ActionTooltipCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/ActionTooltipCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/GameWindowCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-5",
+      "path": "Cache/GameWindowCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/ItemTooltipCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/ItemTooltipCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/LlmCapabilityCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/LlmCapabilityCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/LlmCapabilityCacheManager.cs|ToList( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/LlmCapabilityCacheManager.cs",
+      "evidence": "ToList( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|Cache/NamePlateCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/NamePlateCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/ReferenceTextCacheStore.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-2",
+      "path": "Cache/ReferenceTextCacheStore.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/StringArrayDataCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-6",
+      "path": "Cache/StringArrayDataCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/TooltipTextCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/TooltipTextCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/TraitCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/TraitCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/TranslationFailureCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/TranslationFailureCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
     },
     {
       "id": "sync-ef-query|DBHelpers/ActionTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
@@ -1428,6 +1512,13 @@
       "stage": "DB-7",
       "path": "EFCoreSqlite/Models/SelectString.partial.cs",
       "evidence": "ToArray( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|NativeUI/Helpers/QuestProbeCommandHelpers.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-3",
+      "path": "NativeUI/Helpers/QuestProbeCommandHelpers.cs",
+      "evidence": "ToList( [occurrence 1]"
     },
     {
       "id": "sync-ef-save|DBHelpers/ActionTooltipPersistenceHelper.cs|SaveChanges( [occurrence 1]",

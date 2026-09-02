@@ -55,6 +55,28 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures a persistence-helper invocation split across source lines fails
+    /// the audit.
+    /// </summary>
+    [Fact]
+    public void AuditScript_WrappedPersistenceHelperCall_ReturnsFailure()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "NativeUI/WrappedHelperFixture.cs",
+            string.Join(
+                Environment.NewLine,
+                "StringArrayDataPersistenceHelper",
+                "    .InsertStringArrayData(config, row);"));
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("persistence-helper-call", result.Output, StringComparison.Ordinal);
+        Assert.Contains("InsertStringArrayData", result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures an untracked synchronous database context construction in the
     /// startup cache path fails the audit and is assigned an approved stage.
     /// </summary>
@@ -96,6 +118,56 @@ public sealed class SyncDatabaseHotPathAuditTests
         Assert.NotEqual(0, result.ExitCode);
         Assert.Contains("sync-ef-save", result.Output, StringComparison.Ordinal);
         Assert.Contains($"{sourceDirectory}/Fixture.cs", result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures synchronous queries through the plugin database context fail the
+    /// audit outside the legacy database directories.
+    /// </summary>
+    /// <param name="sourceDirectory">The production source directory.</param>
+    [Theory]
+    [InlineData("Cache")]
+    [InlineData("NativeUI/Helpers")]
+    public void AuditScript_DbContextQueryOutsideDatabaseDirectories_ReturnsFailure(
+        string sourceDirectory)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            $"{sourceDirectory}/Fixture.cs",
+            "public void Load(EchoglossianDbContext context) { _ = context.Rows.ToList(); }");
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("sync-ef-query", result.Output, StringComparison.Ordinal);
+        Assert.Contains($"{sourceDirectory}/Fixture.cs", result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures an in-memory LINQ terminal in a database-context source file is
+    /// not misclassified as synchronous database debt.
+    /// </summary>
+    [Fact]
+    public void AuditScript_InMemoryQueryInDbContextFile_IsNotDatabaseDebt()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "Cache/Fixture.cs",
+            string.Join(
+                Environment.NewLine,
+                "public void Load(EchoglossianDbContext context) { _ = context.Rows.ToList().Select(row => row.Id).ToList(); }",
+                "public void Normalize(List<int> rows) { _ = rows.ToList(); }"));
+
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var queryFindings = document.RootElement
+            .GetProperty("allowedFindings")
+            .EnumerateArray()
+            .Where(finding => finding.GetProperty("category").GetString() == "sync-ef-query")
+            .ToArray();
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Single(queryFindings);
     }
 
     /// <summary>

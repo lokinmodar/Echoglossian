@@ -150,6 +150,109 @@ function Add-MatchesForPattern {
     }
 }
 
+function Add-MatchesForContent {
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[object]]$Findings,
+        [Parameter(Mandatory)][string]$Category,
+        [Parameter(Mandatory)][regex]$Pattern,
+        [Parameter(Mandatory)][string]$RelativePath,
+        [Parameter(Mandatory)][AllowEmptyString()][string]$Content)
+
+    $occurrences = @{}
+    foreach ($match in $Pattern.Matches($Content)) {
+        $matchEvidence = ConvertTo-NormalizedEvidence -Evidence $match.Value
+        $occurrence = 1
+        if ($occurrences.ContainsKey($matchEvidence)) {
+            $occurrence = $occurrences[$matchEvidence] + 1
+        }
+
+        $occurrences[$matchEvidence] = $occurrence
+        $prefix = $Content.Substring(0, $match.Index)
+        $line = 1 + [regex]::Matches($prefix, "\r\n|\r|\n").Count
+        $Findings.Add((New-Finding `
+            -Category $Category `
+            -RelativePath $RelativePath `
+            -Evidence $match.Value `
+            -Occurrence $occurrence `
+            -Line $line)) | Out-Null
+    }
+}
+
+function Add-DatabaseQueryMatchesForContent {
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[object]]$Findings,
+        [Parameter(Mandatory)][regex]$Pattern,
+        [Parameter(Mandatory)][string]$RelativePath,
+        [Parameter(Mandatory)][AllowEmptyString()][string]$Content)
+
+    if ([string]::IsNullOrEmpty($Content)) {
+        return
+    }
+
+    $contextNames = [System.Collections.Generic.HashSet[string]]::new(
+        [StringComparer]::Ordinal)
+    $contextDeclarationPatterns = @(
+        [regex]::new(
+            '\bEchoglossianDbContext\s*\??\s+(?<name>[A-Za-z_]\w*)'),
+        [regex]::new(
+            '(?<name>[A-Za-z_]\w*)\s*=\s*new\s+EchoglossianDbContext\s*\(')
+    )
+    foreach ($contextDeclarationPattern in $contextDeclarationPatterns) {
+        foreach ($match in $contextDeclarationPattern.Matches($Content)) {
+            $contextNames.Add($match.Groups['name'].Value) | Out-Null
+        }
+    }
+
+    if ($contextNames.Count -eq 0) {
+        return
+    }
+
+    $escapedContextNames = @($contextNames | ForEach-Object {
+        [regex]::Escape($_)
+    })
+    $contextReferencePattern = [regex]::new(
+        '\b(?:' + ($escapedContextNames -join '|') + ')\b')
+    $occurrences = @{}
+    $statementStart = 0
+    while ($statementStart -lt $Content.Length) {
+        $statementEnd = $Content.IndexOf(';', $statementStart)
+        if ($statementEnd -lt 0) {
+            $statementEnd = $Content.Length
+        }
+
+        $statement = $Content.Substring(
+            $statementStart,
+            $statementEnd - $statementStart)
+        $querySegmentStart = 0
+        foreach ($match in $Pattern.Matches($statement)) {
+            $queryPrefix = $statement.Substring(
+                $querySegmentStart,
+                $match.Index - $querySegmentStart)
+            $querySegmentStart = $match.Index + $match.Length
+            if ($contextReferencePattern.IsMatch($queryPrefix)) {
+                $matchEvidence = ConvertTo-NormalizedEvidence -Evidence $match.Value
+                $occurrence = 1
+                if ($occurrences.ContainsKey($matchEvidence)) {
+                    $occurrence = $occurrences[$matchEvidence] + 1
+                }
+
+                $occurrences[$matchEvidence] = $occurrence
+                $absoluteMatchIndex = $statementStart + $match.Index
+                $prefix = $Content.Substring(0, $absoluteMatchIndex)
+                $line = 1 + [regex]::Matches($prefix, "\r\n|\r|\n").Count
+                $Findings.Add((New-Finding `
+                    -Category 'sync-ef-query' `
+                    -RelativePath $RelativePath `
+                    -Evidence $match.Value `
+                    -Occurrence $occurrence `
+                    -Line $line)) | Out-Null
+            }
+        }
+
+        $statementStart = $statementEnd + 1
+    }
+}
+
 function Get-BaselineFindings {
     param([Parameter(Mandatory)][string]$Path)
 
@@ -317,7 +420,7 @@ $persistenceHelperPattern = [regex]::new(
     'ItemTooltipPersistenceHelper|TraitPersistenceHelper|' +
     'StringArrayDataPersistenceHelper|GameWindowPersistenceHelper|' +
     'TranslationFailurePersistenceHelper|LlmCapabilityPersistenceHelper)' +
-    '\.(?<method>Find\w*|Insert\w*|Record\w*|Upsert\w*)\s*\(')
+    '\s*\.\s*(?<method>Find\w*|Insert\w*|Record\w*|Upsert\w*)\s*\(')
 
 $databaseQueryPattern = [regex]::new(
     '(?<!Async)\b(?:First|FirstOrDefault|Single|SingleOrDefault|ToList|' +
@@ -339,6 +442,7 @@ foreach ($sourceFile in ($sourceFiles | Sort-Object FullName)) {
         continue
     }
 
+    $content = Get-Content -Raw -Encoding utf8 -LiteralPath $sourceFile.FullName
     $lines = @(Get-Content -Encoding utf8 -LiteralPath $sourceFile.FullName)
     foreach ($directPattern in $directPatterns) {
         Add-MatchesForPattern `
@@ -349,12 +453,12 @@ foreach ($sourceFile in ($sourceFiles | Sort-Object FullName)) {
             -Lines $lines
     }
 
-    Add-MatchesForPattern `
+    Add-MatchesForContent `
         -Findings $findings `
         -Category 'persistence-helper-call' `
         -Pattern $persistenceHelperPattern `
         -RelativePath $relativePath `
-        -Lines $lines
+        -Content $content
 
     if ($relativePath -match '^(DBHelpers|DBManagerUI|EFCoreSqlite)/') {
         Add-MatchesForPattern `
@@ -363,6 +467,13 @@ foreach ($sourceFile in ($sourceFiles | Sort-Object FullName)) {
             -Pattern $databaseQueryPattern `
             -RelativePath $relativePath `
             -Lines $lines
+    }
+    else {
+        Add-DatabaseQueryMatchesForContent `
+            -Findings $findings `
+            -Pattern $databaseQueryPattern `
+            -RelativePath $relativePath `
+            -Content $content
     }
 }
 
