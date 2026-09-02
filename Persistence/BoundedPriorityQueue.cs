@@ -212,7 +212,7 @@ internal sealed class BoundedPriorityQueue<T>
   ///     <see langword="true" /> if an item was selected; otherwise,
   ///     <see langword="false" />.
   /// </returns>
-  private bool TryDequeue(out T item)
+  internal bool TryDequeue(out T item)
   {
     lock (this.admissionGate)
     {

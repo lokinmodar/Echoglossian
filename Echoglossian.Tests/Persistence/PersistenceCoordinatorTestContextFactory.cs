@@ -22,7 +22,9 @@ public sealed class PersistenceCoordinatorTestContextFactory
 {
   private readonly ConcurrentQueue<int> contextIds = new();
   private readonly DbContextOptions<EchoglossianDbContext> options =
-      new DbContextOptionsBuilder<EchoglossianDbContext>().Options;
+      new DbContextOptionsBuilder<EchoglossianDbContext>()
+          .UseSqlite("Data Source=:memory:")
+          .Options;
   private int activeLeases;
   private int nextContextId;
   private int maximumConcurrentLeases;
