@@ -53,7 +53,7 @@
 - Produces: `audit-sync-db-hotpaths.ps1` with explicit `-RepositoryRoot`, `-BaselinePath`, `-ReportPath`, and optional `-UpdateBaseline` arguments; a standalone process exits successfully only when current findings exactly match the baseline.
 - Produces baseline schema `{ "schemaVersion": 1, "allowedFindings": [{ "id", "category", "stage", "path", "evidence" }] }` sorted by `id`.
 
-- [ ] **Step 1: Write failing process-level audit tests**
+- [x] **Step 1: Write failing process-level audit tests**
 
 Create `SyncDatabaseHotPathAuditTests.cs` with the normal repository copyright header and XML documentation. The tests run the real script against disposable fixture roots rather than scanning or modifying the working repository:
 
@@ -262,7 +262,7 @@ public sealed class SyncDatabaseHotPathAuditTests
 }
 ```
 
-- [ ] **Step 2: Run the focused tests and verify the red state**
+- [x] **Step 2: Run the focused tests and verify the red state**
 
 ```powershell
 dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter FullyQualifiedName~SyncDatabaseHotPathAuditTests -p:VSTestMaxCpuCount=1 --nologo
@@ -270,7 +270,7 @@ dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore
 
 Expected: FAIL because `scripts/audit-sync-db-hotpaths.ps1` does not exist.
 
-- [ ] **Step 3: Implement the scanner CLI and stable finding model**
+- [x] **Step 3: Implement the scanner CLI and stable finding model**
 
 Create the script with the repository copyright/SPDX header, comment help, strict mode, and this contract:
 
@@ -342,7 +342,7 @@ $resolved = @($baselineFindings | Where-Object { $_.id -notin $currentIds })
 
 `-UpdateBaseline` writes current sorted findings as UTF-8 JSON before comparison. Both modes write deterministic Markdown grouped by stage, path, and line. On mismatch, include each new or stale ID in an exception message, using the phrase `resolved baseline finding` for stale entries. On success, print totals by stage and return normally. An unhandled exception gives standalone callers a nonzero process exit without terminating a parent validation script on success.
 
-- [ ] **Step 4: Run the focused audit tests**
+- [x] **Step 4: Run the focused audit tests**
 
 ```powershell
 dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter FullyQualifiedName~SyncDatabaseHotPathAuditTests -p:VSTestMaxCpuCount=1 --nologo
@@ -350,7 +350,7 @@ dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore
 
 Expected: four tests pass.
 
-- [ ] **Step 5: Generate and verify the repository baseline**
+- [x] **Step 5: Generate and verify the repository baseline**
 
 ```powershell
 .\scripts\audit-sync-db-hotpaths.ps1 -UpdateBaseline -ReportPath .\docs\issue-258-sync-db-hotpath-inventory.md
@@ -366,7 +366,7 @@ if (@($baseline.allowedFindings | Where-Object stage -notin $approvedStages).Cou
 
 Expected: both audit commands exit `0`; JSON and Markdown are non-empty; the artifact stays ignored.
 
-- [ ] **Step 6: Commit the scanner, tests, and inventory**
+- [x] **Step 6: Commit the scanner, tests, and inventory**
 
 ```powershell
 git add -- scripts\audit-sync-db-hotpaths.ps1 scripts\sync-db-hotpaths-baseline.json Echoglossian.Tests\SyncDatabaseHotPathAuditTests.cs docs\issue-258-sync-db-hotpath-inventory.md
@@ -386,7 +386,7 @@ git push
 - Consumes: Issue 258 observations, `Echoglossian.log`, accepted-quest diagnostic logs, and repeatable in-game actions.
 - Produces: one stable protocol that DB-2 and every later performance release must use for comparable evidence.
 
-- [ ] **Step 1: Add a failing repository-guidance contract**
+- [x] **Step 1: Add a failing repository-guidance contract**
 
 Add this documented test to `RepositoryGuidanceTests`:
 
@@ -417,7 +417,7 @@ public void Issue258Baseline_documents_reproducible_persistence_evidence()
 }
 ```
 
-- [ ] **Step 2: Run the focused test and verify the red state**
+- [x] **Step 2: Run the focused test and verify the red state**
 
 ```powershell
 dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter FullyQualifiedName~Issue258Baseline_documents_reproducible_persistence_evidence -p:VSTestMaxCpuCount=1 --nologo
@@ -425,7 +425,7 @@ dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore
 
 Expected: FAIL because the baseline protocol file does not exist.
 
-- [ ] **Step 3: Write the controlled baseline protocol**
+- [x] **Step 3: Write the controlled baseline protocol**
 
 Create `docs/issue-258-async-persistence-baseline.md` with this exact content:
 
@@ -486,7 +486,7 @@ per-row production logs to obtain the measurements.
 
 Keep controlled capture as an explicit in-game gate. DB-0 tooling and unit tests must not claim live frame-time measurement.
 
-- [ ] **Step 4: Run the focused repository-guidance tests**
+- [x] **Step 4: Run the focused repository-guidance tests**
 
 ```powershell
 dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter FullyQualifiedName~RepositoryGuidanceTests -p:VSTestMaxCpuCount=1 --nologo
@@ -494,7 +494,7 @@ dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore
 
 Expected: all selected tests pass.
 
-- [ ] **Step 5: Commit and push the evidence protocol**
+- [x] **Step 5: Commit and push the evidence protocol**
 
 ```powershell
 git add -- docs\issue-258-async-persistence-baseline.md Echoglossian.Tests\RepositoryGuidanceTests.cs
@@ -514,7 +514,7 @@ git push
 - Consumes: `scripts/audit-sync-db-hotpaths.ps1` and its checked-in baseline.
 - Produces: local validation that stops before restore/build when synchronous DB debt changes unexpectedly.
 
-- [ ] **Step 1: Add a failing validation-order contract**
+- [x] **Step 1: Add a failing validation-order contract**
 
 Add this documented test to `RepositoryGuidanceTests`:
 
@@ -542,7 +542,7 @@ public void LocalValidation_runs_sync_database_audit_before_dotnet()
 }
 ```
 
-- [ ] **Step 2: Run the focused test and verify the red state**
+- [x] **Step 2: Run the focused test and verify the red state**
 
 ```powershell
 dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore --filter FullyQualifiedName~LocalValidation_runs_sync_database_audit_before_dotnet -p:VSTestMaxCpuCount=1 --nologo
@@ -550,7 +550,7 @@ dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore
 
 Expected: FAIL because `validate-local-tests.ps1` does not invoke the audit.
 
-- [ ] **Step 3: Invoke the audit before dependency restore**
+- [x] **Step 3: Invoke the audit before dependency restore**
 
 Inside the existing `Push-Location`/`try` block, insert this before the first `dotnet restore`:
 
@@ -561,7 +561,7 @@ Inside the existing `Push-Location`/`try` block, insert this before the first `d
 
 Do not add `-UpdateBaseline` to the validation path.
 
-- [ ] **Step 4: Run the audit and focused contracts**
+- [x] **Step 4: Run the audit and focused contracts**
 
 ```powershell
 .\scripts\audit-sync-db-hotpaths.ps1 -ReportPath .\artifacts\issue-258\sync-db-hotpath-audit.md
@@ -570,7 +570,7 @@ dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore
 
 Expected: audit exits `0`; all selected tests pass; the artifact remains ignored.
 
-- [ ] **Step 5: Commit and push validation enforcement**
+- [x] **Step 5: Commit and push validation enforcement**
 
 ```powershell
 git add -- scripts\validate-local-tests.ps1 Echoglossian.Tests\RepositoryGuidanceTests.cs
@@ -589,7 +589,7 @@ git push
 - Consumes: all DB-0 commits and standard validation commands.
 - Produces: a pushed, review-ready DB-0 branch with exact audit and test evidence and no production behavior change.
 
-- [ ] **Step 1: Run the audit in normal mode**
+- [x] **Step 1: Run the audit in normal mode**
 
 ```powershell
 .\scripts\audit-sync-db-hotpaths.ps1 -ReportPath .\artifacts\issue-258\sync-db-hotpath-audit.md
@@ -597,7 +597,7 @@ git push
 
 Expected: exit code `0`, zero unexpected findings, and zero resolved baseline findings.
 
-- [ ] **Step 2: Run the standard build and unit tests**
+- [x] **Step 2: Run the standard build and unit tests**
 
 ```powershell
 dotnet build .\Echoglossian.sln -c Debug --no-restore
@@ -607,7 +607,7 @@ dotnet test .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build -
 
 Expected: both builds succeed and all unit tests pass. DB-0 changes tooling only, so this branch does not claim Mock/DalaMock or live FFXIV coverage.
 
-- [ ] **Step 3: Run repository hygiene checks**
+- [x] **Step 3: Run repository hygiene checks**
 
 ```powershell
 git diff --check
@@ -617,7 +617,7 @@ git log --oneline --decorate origin/v4-series..HEAD
 
 Expected: no whitespace errors, tracked artifacts, secrets, production C# changes, or staged/committed `Echoglossian.xml`; commits are limited to Issue 258 DB-0.
 
-- [ ] **Step 4: Record exact execution evidence in this plan**
+- [x] **Step 4: Record exact execution evidence in this plan**
 
 Check completed boxes and append an `## Execution Notes` section containing audit totals grouped by DB-2 through DB-8, exact test totals, build warning/error totals, the DB-0 Mock/DalaMock limitation, and the controlled in-game baseline gate required before DB-2 performance claims.
 
@@ -637,3 +637,36 @@ if ($localHash -ne $remoteHash)
 ```
 
 Expected: hashes match. Report the branch, commit list, validation, and pull-request URL. Do not begin DB-1, open or merge a pull request, prepare release metadata, or publish a release. DB-0 is not release-eligible; future stages must satisfy the master design's mandatory user-test and explicit-release-request gate.
+
+## Execution Notes
+
+Task 4 was executed on 2026-09-01 in native Windows PowerShell. The normal
+audit command exited `0` with zero unexpected findings and zero resolved
+baseline findings. The approved debt inventory remains 222 findings:
+
+- DB-2: 8
+- DB-3: 11
+- DB-4: 35
+- DB-5: 15
+- DB-6: 13
+- DB-7: 119
+- DB-8: 21
+
+`dotnet build .\Echoglossian.sln -c Debug --no-restore` and
+`dotnet build .\Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`
+both succeeded with 1 warning and 0 errors each. The warning is the existing
+Multilingual App Toolkit-unavailable warning from `Echoglossian.csproj`.
+The required `dotnet test` command with `--no-build`,
+`-p:VSTestMaxCpuCount=1`, and `--nologo` passed 1,299 of 1,299 tests, with 0
+failed and 0 skipped.
+
+Repository hygiene passed: `git diff --check` returned no whitespace errors;
+the generated audit artifact remained ignored; and the Issue 258 DB-0 commit
+range contains only DB-0 audit, evidence-protocol, validation-rail, and plan
+work. `Echoglossian.xml` was an unrelated pre-existing modified file; it was
+not staged or committed. DB-0 makes no runtime or schema changes.
+
+DB-0 tooling and unit tests do not claim Mock/DalaMock coverage or live FFXIV
+coverage. Controlled in-game baseline capture, following
+`docs/issue-258-async-persistence-baseline.md`, is required before making
+DB-2 performance claims.
