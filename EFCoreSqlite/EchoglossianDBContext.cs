@@ -28,7 +28,7 @@ public class EchoglossianDbContext : DbContext
   ///     Gets or sets the translated string array records.   class.
   /// </summary>
   /// <param name="configDir">Plugin config directory.</param>
-  public EchoglossianDbContext(string configDir)
+  internal EchoglossianDbContext(string configDir)
   {
     this.dbPath = Path.Combine(configDir, "Echoglossian.db");
   }
