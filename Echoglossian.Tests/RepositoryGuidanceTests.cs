@@ -71,6 +71,31 @@ public class RepositoryGuidanceTests
     }
 
     /// <summary>
+    /// Ensures the Issue 258 performance protocol remains versioned and includes
+    /// comparable frame-time, SQLite, queue, and log evidence.
+    /// </summary>
+    [Fact]
+    public void Issue258Baseline_documents_reproducible_persistence_evidence()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root.FullName,
+            "docs",
+            "issue-258-async-persistence-baseline.md");
+
+        Assert.True(File.Exists(path), "Issue 258 baseline protocol must be committed.");
+        var text = File.ReadAllText(path);
+        Assert.Contains("https://github.com/lokinmodar/Echoglossian/issues/258", text);
+        Assert.Contains("median", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("p95", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("p99", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("WAL", text, StringComparison.Ordinal);
+        Assert.Contains("Echoglossian.log", text, StringComparison.Ordinal);
+        Assert.Contains("accepted-quest-prefetch-activity.log", text, StringComparison.Ordinal);
+        Assert.Contains("DB-2", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>
