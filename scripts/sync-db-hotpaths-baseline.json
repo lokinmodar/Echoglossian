@@ -1,0 +1,1622 @@
+{
+  "schemaVersion": 1,
+  "allowedFindings": [
+    {
+      "id": "blocking-wait|Echoglossian.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-8",
+      "path": "Echoglossian.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Echoglossian.cs|.Result [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-8",
+      "path": "Echoglossian.cs",
+      "evidence": ".Result [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|Echoglossian.cs|.Result [occurrence 3]",
+      "category": "blocking-wait",
+      "stage": "DB-8",
+      "path": "Echoglossian.cs",
+      "evidence": ".Result [occurrence 3]"
+    },
+    {
+      "id": "blocking-wait|Echoglossian.cs|.Result [occurrence 4]",
+      "category": "blocking-wait",
+      "stage": "DB-8",
+      "path": "Echoglossian.cs",
+      "evidence": ".Result [occurrence 4]"
+    },
+    {
+      "id": "blocking-wait|Echoglossian.cs|.Result [occurrence 5]",
+      "category": "blocking-wait",
+      "stage": "DB-8",
+      "path": "Echoglossian.cs",
+      "evidence": ".Result [occurrence 5]"
+    },
+    {
+      "id": "blocking-wait|Echoglossian.cs|.Result [occurrence 6]",
+      "category": "blocking-wait",
+      "stage": "DB-8",
+      "path": "Echoglossian.cs",
+      "evidence": ".Result [occurrence 6]"
+    },
+    {
+      "id": "blocking-wait|GeneralHelpers/AssetsManager.cs|.Wait( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "GeneralHelpers/AssetsManager.cs",
+      "evidence": ".Wait( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|GeneralHelpers/AsyncSerialActionPump.cs|.Wait( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "GeneralHelpers/AsyncSerialActionPump.cs",
+      "evidence": ".Wait( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|GeneralHelpers/AsyncSerialActionPump.cs|.Wait( [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "GeneralHelpers/AsyncSerialActionPump.cs",
+      "evidence": ".Wait( [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|GeneralHelpers/AsyncSerialActionPump.cs|.Wait( [occurrence 3]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "GeneralHelpers/AsyncSerialActionPump.cs",
+      "evidence": ".Wait( [occurrence 3]"
+    },
+    {
+      "id": "blocking-wait|GeneralHelpers/AsyncSerialActionPump.cs|.Wait( [occurrence 4]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "GeneralHelpers/AsyncSerialActionPump.cs",
+      "evidence": ".Wait( [occurrence 4]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 3]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 3]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 4]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 4]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 5]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 5]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 6]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 6]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 7]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 7]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 8]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 8]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 9]",
+      "category": "blocking-wait",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": ".Result [occurrence 9]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/TooltipHandler.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "NativeUI/AddonHandlers/Common/TooltipHandler.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/TooltipHandler.cs|.Result [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "NativeUI/AddonHandlers/Common/TooltipHandler.cs",
+      "evidence": ".Result [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/TooltipHandler.cs|.Result [occurrence 3]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "NativeUI/AddonHandlers/Common/TooltipHandler.cs",
+      "evidence": ".Result [occurrence 3]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Common/TooltipHandler.cs|.Result [occurrence 4]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "NativeUI/AddonHandlers/Common/TooltipHandler.cs",
+      "evidence": ".Result [occurrence 4]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-6",
+      "path": "NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs|.Result [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-6",
+      "path": "NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs",
+      "evidence": ".Result [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Toasts/ToastGuiSupportedToastRuntime.cs|.Wait( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "NativeUI/AddonHandlers/Toasts/ToastGuiSupportedToastRuntime.cs",
+      "evidence": ".Wait( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/AddonHandlers/Toasts/ToastGuiSupportedToastRuntime.cs|.Wait( [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "NativeUI/AddonHandlers/Toasts/ToastGuiSupportedToastRuntime.cs",
+      "evidence": ".Wait( [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/Helpers/ActionItemDetailUiRuntime.cs|.Wait( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "NativeUI/Helpers/ActionItemDetailUiRuntime.cs",
+      "evidence": ".Wait( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|NativeUI/Helpers/ActionItemDetailUiRuntime.cs|.Wait( [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-4",
+      "path": "NativeUI/Helpers/ActionItemDetailUiRuntime.cs",
+      "evidence": ".Wait( [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|PluginUI/PluginRuntimeUi.cs|.Wait( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "PluginUI/PluginRuntimeUi.cs",
+      "evidence": ".Wait( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|PluginUI/TranslatorMetricsWindow.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "PluginUI/TranslatorMetricsWindow.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/AmazonTranslateTranslator.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/AmazonTranslateTranslator.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/ChatGPTTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/ChatGPTTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/ClaudeTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/ClaudeTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/DeepLTranslator.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/DeepLTranslator.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/DeepLTranslator.cs|.Result [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/DeepLTranslator.cs",
+      "evidence": ".Result [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|Translators/DeepSeekTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/DeepSeekTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/GeminiTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/GeminiTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/GoogleTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/GoogleTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/GTranslateTranslator.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/GTranslateTranslator.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/LibreTranslateTranslator.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/LibreTranslateTranslator.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/LmStudioTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/LmStudioTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/MicrosoftTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/MicrosoftTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/OllamaTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/OllamaTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/OpenRouterTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/OpenRouterTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/StructuredDialogueGlossaryStore.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/StructuredDialogueGlossaryStore.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/YandexPublicTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/YandexPublicTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/YandexTranslator.cs|.Result [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/YandexTranslator.cs",
+      "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs|.Wait( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs",
+      "evidence": ".Wait( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs|.Wait( [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "UIOverlays/TranslationOverlay/TranslationOverlayDrawer.cs",
+      "evidence": ".Wait( [occurrence 2]"
+    },
+    {
+      "id": "blocking-wait|UIOverlays/TranslationOverlay/TranslationOverlayRenderer.cs|.Wait( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "UIOverlays/TranslationOverlay/TranslationOverlayRenderer.cs",
+      "evidence": ".Wait( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|UIOverlays/TranslationOverlay/TranslationOverlayRenderer.cs|.Wait( [occurrence 2]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "UIOverlays/TranslationOverlay/TranslationOverlayRenderer.cs",
+      "evidence": ".Wait( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|Cache/ActionTooltipCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/ActionTooltipCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/GameWindowCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-5",
+      "path": "Cache/GameWindowCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/ItemTooltipCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/ItemTooltipCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/LlmCapabilityCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "Cache/LlmCapabilityCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/NamePlateCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "Cache/NamePlateCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/ReferenceTextCacheStore.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-2",
+      "path": "Cache/ReferenceTextCacheStore.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/StringArrayDataCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-6",
+      "path": "Cache/StringArrayDataCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/TooltipTextCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/TooltipTextCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/TraitCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "Cache/TraitCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Cache/TranslationFailureCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "Cache/TranslationFailureCacheManager.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/ActionTooltipPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/ActionTooltipPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 2]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 10]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 10]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 11]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 11]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 12]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 12]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 13]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 13]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 14]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 14]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 15]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 15]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 16]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 16]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 17]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 17]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 18]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 18]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 19]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 19]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 2]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 20]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 20]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 21]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 21]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 22]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 22]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 23]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 23]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 24]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 24]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 25]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 25]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 26]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 26]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 27]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 27]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 28]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 28]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 29]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 29]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 3]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 3]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 30]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 30]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 31]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 31]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 32]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 32]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 33]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 33]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 34]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 34]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 35]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 35]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 36]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 36]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 37]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 37]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 38]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 38]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 39]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 39]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 4]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 4]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 40]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 40]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 41]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 41]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 42]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 42]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 43]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 43]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 44]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 44]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 5]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 5]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 6]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 6]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 7]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 7]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 8]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 8]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/DbOperations.cs|new EchoglossianDbContext( [occurrence 9]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 9]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/GameWindowPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-5",
+      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/ItemTooltipPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/ItemTooltipPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 2]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/LlmCapabilityPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/LlmCapabilityPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 2]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/ReferenceTextPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/ReferenceTextPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 2]",
+      "category": "direct-db-context",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/StringArrayDataPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/StringArrayDataPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 2]",
+      "category": "direct-db-context",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/StringArrayDataPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 3]",
+      "category": "direct-db-context",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 3]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/TraitPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "DBHelpers/TraitPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/TraitPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 2]",
+      "category": "direct-db-context",
+      "stage": "DB-4",
+      "path": "DBHelpers/TraitPersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 2]"
+    },
+    {
+      "id": "direct-db-context|DBHelpers/TranslationFailurePersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "DBHelpers/TranslationFailurePersistenceHelper.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|Echoglossian.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-8",
+      "path": "Echoglossian.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|EFCoreSqlite/EchoglossianDbContextFactory.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-7",
+      "path": "EFCoreSqlite/EchoglossianDbContextFactory.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "direct-db-context|NativeUI/Helpers/QuestProbeCommandHelpers.cs|new EchoglossianDbContext( [occurrence 1]",
+      "category": "direct-db-context",
+      "stage": "DB-3",
+      "path": "NativeUI/Helpers/QuestProbeCommandHelpers.cs",
+      "evidence": "new EchoglossianDbContext( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ActionItemTooltipDbOperations.cs|ActionTooltipPersistenceHelper.FindActionTooltip( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionItemTooltipDbOperations.cs",
+      "evidence": "ActionTooltipPersistenceHelper.FindActionTooltip( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ActionItemTooltipDbOperations.cs|ActionTooltipPersistenceHelper.InsertActionTooltip( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionItemTooltipDbOperations.cs",
+      "evidence": "ActionTooltipPersistenceHelper.InsertActionTooltip( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ActionItemTooltipDbOperations.cs|ItemTooltipPersistenceHelper.FindItemTooltip( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionItemTooltipDbOperations.cs",
+      "evidence": "ItemTooltipPersistenceHelper.FindItemTooltip( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ActionItemTooltipDbOperations.cs|ItemTooltipPersistenceHelper.InsertItemTooltip( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionItemTooltipDbOperations.cs",
+      "evidence": "ItemTooltipPersistenceHelper.InsertItemTooltip( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ActionItemTooltipDbOperations.cs|TraitPersistenceHelper.FindTrait( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionItemTooltipDbOperations.cs",
+      "evidence": "TraitPersistenceHelper.FindTrait( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ActionItemTooltipDbOperations.cs|TraitPersistenceHelper.InsertTrait( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionItemTooltipDbOperations.cs",
+      "evidence": "TraitPersistenceHelper.InsertTrait( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/DbOperations.cs|GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ReferenceTextDbOperations.cs|ReferenceTextPersistenceHelper.FindReferenceText( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextDbOperations.cs",
+      "evidence": "ReferenceTextPersistenceHelper.FindReferenceText( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|DBHelpers/ReferenceTextDbOperations.cs|ReferenceTextPersistenceHelper.InsertReferenceText( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextDbOperations.cs",
+      "evidence": "ReferenceTextPersistenceHelper.InsertReferenceText( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": "GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|StringArrayDataPersistenceHelper .InsertStringArrayData( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": "StringArrayDataPersistenceHelper .InsertStringArrayData( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-5",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
+      "evidence": "StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs|StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-6",
+      "path": "NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs",
+      "evidence": "StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs|StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-6",
+      "path": "NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs",
+      "evidence": "StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|NativeUI/Helpers/DbFirstStructuredStringArrayHelper.cs|StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-6",
+      "path": "NativeUI/Helpers/DbFirstStructuredStringArrayHelper.cs",
+      "evidence": "StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|Translators/Capabilities/LlmCapabilityPolicyService.cs|LlmCapabilityPersistenceHelper.RecordObservation( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-7",
+      "path": "Translators/Capabilities/LlmCapabilityPolicyService.cs",
+      "evidence": "LlmCapabilityPersistenceHelper.RecordObservation( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|Translators/Capabilities/LlmCapabilityPolicyService.cs|LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-7",
+      "path": "Translators/Capabilities/LlmCapabilityPolicyService.cs",
+      "evidence": "LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|Translators/Capabilities/LlmCapabilityRefreshPromoter.cs|LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-7",
+      "path": "Translators/Capabilities/LlmCapabilityRefreshPromoter.cs",
+      "evidence": "LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|Translators/TranslationService.cs|TranslationFailurePersistenceHelper.RecordFailure( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-7",
+      "path": "Translators/TranslationService.cs",
+      "evidence": "TranslationFailurePersistenceHelper.RecordFailure( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-bulk-write|DBHelpers/DbOperations.cs|ExecuteUpdate( [occurrence 1]",
+      "category": "sync-ef-bulk-write",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "ExecuteUpdate( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-migrate|DBHelpers/DbOperations.cs|.Database.Migrate( [occurrence 1]",
+      "category": "sync-ef-migrate",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": ".Database.Migrate( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-migrate|DBHelpers/LlmCapabilityPersistenceHelper.cs|.Database.Migrate( [occurrence 1]",
+      "category": "sync-ef-migrate",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": ".Database.Migrate( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-migrate|DBHelpers/LlmCapabilityPersistenceHelper.cs|.Database.Migrate( [occurrence 2]",
+      "category": "sync-ef-migrate",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": ".Database.Migrate( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|Cache/ActionTooltipCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/ActionTooltipCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/GameWindowCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-5",
+      "path": "Cache/GameWindowCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/ItemTooltipCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/ItemTooltipCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/LlmCapabilityCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/LlmCapabilityCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/LlmCapabilityCacheManager.cs|ToList( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/LlmCapabilityCacheManager.cs",
+      "evidence": "ToList( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|Cache/NamePlateCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/NamePlateCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/ReferenceTextCacheStore.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-2",
+      "path": "Cache/ReferenceTextCacheStore.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/StringArrayDataCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-6",
+      "path": "Cache/StringArrayDataCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/TooltipTextCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/TooltipTextCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/TraitCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "Cache/TraitCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|Cache/TranslationFailureCacheManager.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "Cache/TranslationFailureCacheManager.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/ActionTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/ActionTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 10]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 10]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 11]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 11]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 12]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 12]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 13]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 13]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 14]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 14]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 15]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 15]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 16]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 16]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 17]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 17]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 18]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 18]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 3]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 3]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 4]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 4]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 5]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 5]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 6]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 6]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 7]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 7]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 8]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 8]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 9]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "FirstOrDefault( [occurrence 9]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|SingleOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SingleOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|ToList( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "ToList( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|ToList( [occurrence 3]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "ToList( [occurrence 3]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|ToList( [occurrence 4]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "ToList( [occurrence 4]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/DbOperations.cs|ToList( [occurrence 5]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "ToList( [occurrence 5]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/GameWindowPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-5",
+      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/ItemTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/ItemTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/LlmCapabilityPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/LlmCapabilityPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/ReferenceTextPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/ReferenceTextPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/StringArrayDataPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/StringArrayDataPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/StringArrayDataPersistenceHelper.cs|FirstOrDefault( [occurrence 3]",
+      "category": "sync-ef-query",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 3]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/TraitPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "DBHelpers/TraitPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/TraitPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-4",
+      "path": "DBHelpers/TraitPersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|DBHelpers/TranslationFailurePersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-7",
+      "path": "DBHelpers/TranslationFailurePersistenceHelper.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBManagerUI/DBEditorWindow.cs|FirstOrDefault( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-8",
+      "path": "DBManagerUI/DBEditorWindow.cs",
+      "evidence": "FirstOrDefault( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBManagerUI/DBEditorWindow.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-8",
+      "path": "DBManagerUI/DBEditorWindow.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-query|DBManagerUI/DBEditorWindow.cs|ToList( [occurrence 2]",
+      "category": "sync-ef-query",
+      "stage": "DB-8",
+      "path": "DBManagerUI/DBEditorWindow.cs",
+      "evidence": "ToList( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-query|NativeUI/Helpers/QuestProbeCommandHelpers.cs|ToList( [occurrence 1]",
+      "category": "sync-ef-query",
+      "stage": "DB-3",
+      "path": "NativeUI/Helpers/QuestProbeCommandHelpers.cs",
+      "evidence": "ToList( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/ActionTooltipPersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/ActionTooltipPersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-4",
+      "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 3]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 3]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 4]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 4]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 5]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 5]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 6]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 6]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 7]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 7]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 8]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 8]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/DbOperations.cs|SaveChanges( [occurrence 9]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/DbOperations.cs",
+      "evidence": "SaveChanges( [occurrence 9]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/GameWindowPersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-5",
+      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/GameWindowPersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-5",
+      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/ItemTooltipPersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-4",
+      "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/ItemTooltipPersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-4",
+      "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/LlmCapabilityPersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/LlmCapabilityPersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/LlmCapabilityPersistenceHelper.cs|SaveChanges( [occurrence 3]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 3]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/ReferenceTextPersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/ReferenceTextPersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-2",
+      "path": "DBHelpers/ReferenceTextPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/StringArrayDataPersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/StringArrayDataPersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-6",
+      "path": "DBHelpers/StringArrayDataPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/TraitPersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-4",
+      "path": "DBHelpers/TraitPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/TraitPersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-4",
+      "path": "DBHelpers/TraitPersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/TranslationFailurePersistenceHelper.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/TranslationFailurePersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBHelpers/TranslationFailurePersistenceHelper.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-7",
+      "path": "DBHelpers/TranslationFailurePersistenceHelper.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBManagerUI/DBEditorWindow.cs|SaveChanges( [occurrence 1]",
+      "category": "sync-ef-save",
+      "stage": "DB-8",
+      "path": "DBManagerUI/DBEditorWindow.cs",
+      "evidence": "SaveChanges( [occurrence 1]"
+    },
+    {
+      "id": "sync-ef-save|DBManagerUI/DBEditorWindow.cs|SaveChanges( [occurrence 2]",
+      "category": "sync-ef-save",
+      "stage": "DB-8",
+      "path": "DBManagerUI/DBEditorWindow.cs",
+      "evidence": "SaveChanges( [occurrence 2]"
+    },
+    {
+      "id": "sync-ef-save|DBManagerUI/DBEditorWindow.cs|SaveChanges( [occurrence 3]",
+      "category": "sync-ef-save",
+      "stage": "DB-8",
+      "path": "DBManagerUI/DBEditorWindow.cs",
+      "evidence": "SaveChanges( [occurrence 3]"
+    }
+  ]
+}

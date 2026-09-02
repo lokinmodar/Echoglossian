@@ -1,0 +1,18 @@
+name: Audit synchronous database hotpaths
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Run synchronous database audit
+        shell: pwsh
+        run: ./scripts/audit-sync-db-hotpaths.ps1 -ReportPath ./artifacts/issue-258/sync-db-hotpath-audit.md

@@ -88,6 +88,14 @@ For release submissions that update `DalamudPluginsD17` manifests:
   HTML, or `<details>` blocks in the official D17 PR text.
 - Only then write the `commit = "..."` field and open the official PR.
 
+## Release Authorization
+
+- Never create or publish a release until the user has tested a build from the exact source commit and explicitly confirmed the test result.
+- A successful test, approved or merged pull request, release-eligible milestone, or prior release authorization does not authorize a release by itself.
+- After successful user testing, wait for the user to expressly request that specific release before changing release metadata, creating a tag or GitHub release, or submitting a `DalamudPluginsD17` manifest pull request.
+- If the source commit changes materially after testing, provide a new build and repeat the user-test and explicit-release-request gate.
+- Without both gates, stop at the validated branch/build and report that the release is awaiting user authorization.
+
 ## Issue Workflow
 
 - Treat each GitHub issue as its own branch by default.

@@ -71,6 +71,74 @@ public class RepositoryGuidanceTests
     }
 
     /// <summary>
+    /// Ensures the Issue 258 performance protocol remains versioned and includes
+    /// comparable frame-time, SQLite, queue, and log evidence.
+    /// </summary>
+    [Fact]
+    public void Issue258Baseline_documents_reproducible_persistence_evidence()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root.FullName,
+            "docs",
+            "issue-258-async-persistence-baseline.md");
+
+        Assert.True(File.Exists(path), "Issue 258 baseline protocol must be committed.");
+        var text = File.ReadAllText(path);
+        Assert.Contains("https://github.com/lokinmodar/Echoglossian/issues/258", text);
+        Assert.Contains("median", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("p95", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("p99", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("WAL", text, StringComparison.Ordinal);
+        Assert.Contains("Echoglossian.log", text, StringComparison.Ordinal);
+        Assert.Contains("accepted-quest-prefetch-activity.log", text, StringComparison.Ordinal);
+        Assert.Contains("DB-2", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures the local validation rail audits synchronous database work before
+    /// running the .NET build and test commands.
+    /// </summary>
+    [Fact]
+    public void LocalValidation_runs_sync_database_audit_before_dotnet()
+    {
+        var root = FindRepositoryRoot();
+        var validationPath = Path.Combine(
+            root.FullName,
+            "scripts",
+            "validate-local-tests.ps1");
+        var text = File.ReadAllText(validationPath);
+        var auditIndex = text.IndexOf(
+            "audit-sync-db-hotpaths.ps1",
+            StringComparison.Ordinal);
+        var dotnetIndex = text.IndexOf("dotnet restore", StringComparison.Ordinal);
+
+        Assert.True(auditIndex >= 0, "Validation must invoke the sync DB audit.");
+        Assert.True(dotnetIndex > auditIndex, "Audit must run before dotnet restore.");
+    }
+
+    /// <summary>
+    /// Ensures pull requests run the synchronous database hot-path audit on Windows.
+    /// </summary>
+    [Fact]
+    public void ContinuousIntegration_runs_sync_database_audit_without_baseline_updates()
+    {
+        var root = FindRepositoryRoot();
+        var workflowPath = Path.Combine(
+            root.FullName,
+            ".github",
+            "workflows",
+            "audit-sync-db-hotpaths.yml");
+
+        Assert.True(File.Exists(workflowPath), "The sync DB audit workflow must be committed.");
+        var text = File.ReadAllText(workflowPath);
+
+        Assert.Contains("windows-latest", text, StringComparison.Ordinal);
+        Assert.Contains("audit-sync-db-hotpaths.ps1", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateBaseline", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>
