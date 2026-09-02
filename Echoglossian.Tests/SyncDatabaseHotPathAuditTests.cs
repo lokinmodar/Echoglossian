@@ -55,6 +55,59 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures direct synchronous operations split before their opening
+    /// parenthesis fail the audit.
+    /// </summary>
+    /// <param name="operationName">The operation or constructed type name.</param>
+    /// <param name="category">The expected audit category.</param>
+    [Theory]
+    [InlineData("SaveChanges", "sync-ef-save")]
+    [InlineData("ExecuteUpdate", "sync-ef-bulk-write")]
+    [InlineData("EchoglossianDbContext", "direct-db-context")]
+    [InlineData("Wait", "blocking-wait")]
+    public void AuditScript_WrappedDirectOperation_ReturnsFailure(
+        string operationName,
+        string category)
+    {
+        using var fixture = this.CreateFixture();
+        var source = operationName == "EchoglossianDbContext"
+            ? string.Join(
+                Environment.NewLine,
+                "var context = new EchoglossianDbContext",
+                "    (configDir);")
+            : string.Join(
+                Environment.NewLine,
+                $"operation.{operationName}",
+                "    ();");
+        fixture.WriteSource("NativeUI/WrappedDirectFixture.cs", source);
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains(category, result.Output, StringComparison.Ordinal);
+        Assert.Contains(operationName, result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures synchronously awaiting a task through GetAwaiter and GetResult
+    /// fails the audit.
+    /// </summary>
+    [Fact]
+    public void AuditScript_GetAwaiterGetResult_ReturnsFailure()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "NativeUI/BlockingFixture.cs",
+            "databaseTask.GetAwaiter().GetResult();");
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("blocking-wait", result.Output, StringComparison.Ordinal);
+        Assert.Contains("GetAwaiter", result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures a persistence-helper invocation split across source lines fails
     /// the audit.
     /// </summary>
@@ -144,6 +197,32 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    /// Ensures database-query provenance survives local query aliases until
+    /// materialization.
+    /// </summary>
+    [Fact]
+    public void AuditScript_DbContextQueryThroughLocalAliases_ReturnsFailure()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "Cache/AliasedQueryFixture.cs",
+            string.Join(
+                Environment.NewLine,
+                "public void Load(EchoglossianDbContext context)",
+                "{",
+                "    var query = context.Rows.Where(row => row.Id > 0);",
+                "    var orderedQuery = query.OrderBy(row => row.Id);",
+                "    _ = orderedQuery.ToList();",
+                "}"));
+
+        var result = this.RunAudit(fixture, updateBaseline: false);
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("sync-ef-query", result.Output, StringComparison.Ordinal);
+        Assert.Contains("ToList", result.Output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures an in-memory LINQ terminal in a database-context source file is
     /// not misclassified as synchronous database debt.
     /// </summary>
@@ -168,6 +247,35 @@ public sealed class SyncDatabaseHotPathAuditTests
 
         Assert.Equal(0, result.ExitCode);
         Assert.Single(queryFindings);
+    }
+
+    /// <summary>
+    /// Ensures database-oriented directories do not make an in-memory LINQ
+    /// terminal database debt by location alone.
+    /// </summary>
+    /// <param name="relativePath">The production fixture path.</param>
+    [Theory]
+    [InlineData("DBHelpers/Fixture.cs")]
+    [InlineData("DBManagerUI/Services/Fixture.cs")]
+    [InlineData("EFCoreSqlite/Models/Fixture.cs")]
+    public void AuditScript_InMemoryQueryInDatabaseDirectory_IsNotDatabaseDebt(
+        string relativePath)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            relativePath,
+            "public void Normalize(List<int> rows) { _ = rows.ToList(); }");
+
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var queryFindings = document.RootElement
+            .GetProperty("allowedFindings")
+            .EnumerateArray()
+            .Where(finding => finding.GetProperty("category").GetString() == "sync-ef-query")
+            .ToArray();
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Empty(queryFindings);
     }
 
     /// <summary>

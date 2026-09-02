@@ -226,11 +226,32 @@
       "evidence": ".Wait( [occurrence 1]"
     },
     {
+      "id": "blocking-wait|PluginUI/TranslatorMetricsWindow.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "PluginUI/TranslatorMetricsWindow.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
       "id": "blocking-wait|Translators/AmazonTranslateTranslator.cs|.Result [occurrence 1]",
       "category": "blocking-wait",
       "stage": "DB-7",
       "path": "Translators/AmazonTranslateTranslator.cs",
       "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/ChatGPTTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/ChatGPTTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/ClaudeTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/ClaudeTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
     },
     {
       "id": "blocking-wait|Translators/DeepLTranslator.cs|.Result [occurrence 1]",
@@ -268,6 +289,27 @@
       "evidence": ".Result [occurrence 5]"
     },
     {
+      "id": "blocking-wait|Translators/DeepSeekTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/DeepSeekTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/GeminiTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/GeminiTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/GoogleTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/GoogleTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
       "id": "blocking-wait|Translators/GTranslateTranslator.cs|.Result [occurrence 1]",
       "category": "blocking-wait",
       "stage": "DB-7",
@@ -280,6 +322,48 @@
       "stage": "DB-7",
       "path": "Translators/LibreTranslateTranslator.cs",
       "evidence": ".Result [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/LmStudioTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/LmStudioTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/MicrosoftTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/MicrosoftTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/OllamaTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/OllamaTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/OpenRouterTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/OpenRouterTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/StructuredDialogueGlossaryStore.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/StructuredDialogueGlossaryStore.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
+    },
+    {
+      "id": "blocking-wait|Translators/YandexPublicTranslator.cs|.GetAwaiter().GetResult( [occurrence 1]",
+      "category": "blocking-wait",
+      "stage": "DB-7",
+      "path": "Translators/YandexPublicTranslator.cs",
+      "evidence": ".GetAwaiter().GetResult( [occurrence 1]"
     },
     {
       "id": "blocking-wait|Translators/YandexTranslator.cs|.Result [occurrence 1]",
@@ -1143,32 +1227,11 @@
       "evidence": "FirstOrDefault( [occurrence 18]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 19]",
-      "category": "sync-ef-query",
-      "stage": "DB-7",
-      "path": "DBHelpers/DbOperations.cs",
-      "evidence": "FirstOrDefault( [occurrence 19]"
-    },
-    {
       "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 2]",
       "category": "sync-ef-query",
       "stage": "DB-7",
       "path": "DBHelpers/DbOperations.cs",
       "evidence": "FirstOrDefault( [occurrence 2]"
-    },
-    {
-      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 20]",
-      "category": "sync-ef-query",
-      "stage": "DB-7",
-      "path": "DBHelpers/DbOperations.cs",
-      "evidence": "FirstOrDefault( [occurrence 20]"
-    },
-    {
-      "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 21]",
-      "category": "sync-ef-query",
-      "stage": "DB-7",
-      "path": "DBHelpers/DbOperations.cs",
-      "evidence": "FirstOrDefault( [occurrence 21]"
     },
     {
       "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 3]",
@@ -1262,13 +1325,6 @@
       "evidence": "ToList( [occurrence 5]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/DbOperations.cs|ToList( [occurrence 6]",
-      "category": "sync-ef-query",
-      "stage": "DB-7",
-      "path": "DBHelpers/DbOperations.cs",
-      "evidence": "ToList( [occurrence 6]"
-    },
-    {
       "id": "sync-ef-query|DBHelpers/GameWindowPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
       "category": "sync-ef-query",
       "stage": "DB-5",
@@ -1360,27 +1416,6 @@
       "evidence": "FirstOrDefault( [occurrence 1]"
     },
     {
-      "id": "sync-ef-query|DBManagerUI/Components/DbTableView.cs|ToList( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/Components/DbTableView.cs",
-      "evidence": "ToList( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-query|DBManagerUI/Components/DbTableView.cs|ToList( [occurrence 2]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/Components/DbTableView.cs",
-      "evidence": "ToList( [occurrence 2]"
-    },
-    {
-      "id": "sync-ef-query|DBManagerUI/Components/DbTableView.cs|ToList( [occurrence 3]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/Components/DbTableView.cs",
-      "evidence": "ToList( [occurrence 3]"
-    },
-    {
       "id": "sync-ef-query|DBManagerUI/DBEditorWindow.cs|FirstOrDefault( [occurrence 1]",
       "category": "sync-ef-query",
       "stage": "DB-8",
@@ -1400,118 +1435,6 @@
       "stage": "DB-8",
       "path": "DBManagerUI/DBEditorWindow.cs",
       "evidence": "ToList( [occurrence 2]"
-    },
-    {
-      "id": "sync-ef-query|DBManagerUI/DBEditorWindow.cs|ToList( [occurrence 3]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/DBEditorWindow.cs",
-      "evidence": "ToList( [occurrence 3]"
-    },
-    {
-      "id": "sync-ef-query|DBManagerUI/DBEditorWindow.cs|ToList( [occurrence 4]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/DBEditorWindow.cs",
-      "evidence": "ToList( [occurrence 4]"
-    },
-    {
-      "id": "sync-ef-query|DBManagerUI/DBEditorWindow.cs|ToList( [occurrence 5]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/DBEditorWindow.cs",
-      "evidence": "ToList( [occurrence 5]"
-    },
-    {
-      "id": "sync-ef-query|DBManagerUI/Services/DbMetadataCache.cs|ToList( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/Services/DbMetadataCache.cs",
-      "evidence": "ToList( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-query|DBManagerUI/Services/DbTableNameMatcher.cs|FirstOrDefault( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-8",
-      "path": "DBManagerUI/Services/DbTableNameMatcher.cs",
-      "evidence": "FirstOrDefault( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|FirstOrDefault( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "FirstOrDefault( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|FirstOrDefault( [occurrence 2]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "FirstOrDefault( [occurrence 2]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|FirstOrDefault( [occurrence 3]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "FirstOrDefault( [occurrence 3]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|FirstOrDefault( [occurrence 4]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "FirstOrDefault( [occurrence 4]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|FirstOrDefault( [occurrence 5]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "FirstOrDefault( [occurrence 5]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|FirstOrDefault( [occurrence 6]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "FirstOrDefault( [occurrence 6]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|ToArray( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "ToArray( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|ToList( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "ToList( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|ToList( [occurrence 2]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "ToList( [occurrence 2]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs|ToList( [occurrence 3]",
-      "category": "sync-ef-query",
-      "stage": "DB-3",
-      "path": "EFCoreSqlite/Models/Journal/QuestPlate.Canonical.cs",
-      "evidence": "ToList( [occurrence 3]"
-    },
-    {
-      "id": "sync-ef-query|EFCoreSqlite/Models/SelectString.partial.cs|ToArray( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-7",
-      "path": "EFCoreSqlite/Models/SelectString.partial.cs",
-      "evidence": "ToArray( [occurrence 1]"
     },
     {
       "id": "sync-ef-query|NativeUI/Helpers/QuestProbeCommandHelpers.cs|ToList( [occurrence 1]",

@@ -121,35 +121,6 @@ function New-Finding {
     }
 }
 
-function Add-MatchesForPattern {
-    param(
-        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[object]]$Findings,
-        [Parameter(Mandatory)][string]$Category,
-        [Parameter(Mandatory)][regex]$Pattern,
-        [Parameter(Mandatory)][string]$RelativePath,
-        [Parameter(Mandatory)][AllowEmptyCollection()][AllowEmptyString()][string[]]$Lines)
-
-    $occurrences = @{}
-    for ($index = 0; $index -lt $Lines.Count; $index++) {
-        $line = $Lines[$index]
-        foreach ($match in $Pattern.Matches($line)) {
-            $matchEvidence = ConvertTo-NormalizedEvidence -Evidence $match.Value
-            $occurrence = 1
-            if ($occurrences.ContainsKey($matchEvidence)) {
-                $occurrence = $occurrences[$matchEvidence] + 1
-            }
-
-            $occurrences[$matchEvidence] = $occurrence
-            $Findings.Add((New-Finding `
-                -Category $Category `
-                -RelativePath $RelativePath `
-                -Evidence $match.Value `
-                -Occurrence $occurrence `
-                -Line ($index + 1))) | Out-Null
-        }
-    }
-}
-
 function Add-MatchesForContent {
     param(
         [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[object]]$Findings,
@@ -189,7 +160,7 @@ function Add-DatabaseQueryMatchesForContent {
         return
     }
 
-    $contextNames = [System.Collections.Generic.HashSet[string]]::new(
+    $databaseSourceNames = [System.Collections.Generic.HashSet[string]]::new(
         [StringComparer]::Ordinal)
     $contextDeclarationPatterns = @(
         [regex]::new(
@@ -199,19 +170,19 @@ function Add-DatabaseQueryMatchesForContent {
     )
     foreach ($contextDeclarationPattern in $contextDeclarationPatterns) {
         foreach ($match in $contextDeclarationPattern.Matches($Content)) {
-            $contextNames.Add($match.Groups['name'].Value) | Out-Null
+            $databaseSourceNames.Add($match.Groups['name'].Value) | Out-Null
         }
     }
 
-    if ($contextNames.Count -eq 0) {
+    if ($databaseSourceNames.Count -eq 0) {
         return
     }
 
-    $escapedContextNames = @($contextNames | ForEach-Object {
-        [regex]::Escape($_)
-    })
-    $contextReferencePattern = [regex]::new(
-        '\b(?:' + ($escapedContextNames -join '|') + ')\b')
+    $queryAliasPattern = [regex]::new(
+        '(?s)\b(?:var|IQueryable(?:<[^;=]+>)?|' +
+        'IOrderedQueryable(?:<[^;=]+>)?|IEnumerable(?:<[^;=]+>)?|' +
+        'IOrderedEnumerable(?:<[^;=]+>)?|DbSet(?:<[^;=]+>)?)' +
+        '\s+(?<name>[A-Za-z_]\w*)\s*=\s*(?<value>.+)$')
     $occurrences = @{}
     $statementStart = 0
     while ($statementStart -lt $Content.Length) {
@@ -223,13 +194,19 @@ function Add-DatabaseQueryMatchesForContent {
         $statement = $Content.Substring(
             $statementStart,
             $statementEnd - $statementStart)
+        $escapedDatabaseSourceNames = @($databaseSourceNames | ForEach-Object {
+            [regex]::Escape($_)
+        })
+        $databaseSourcePattern = [regex]::new(
+            '\b(?:' + ($escapedDatabaseSourceNames -join '|') + ')\b')
+        $queryMatches = @($Pattern.Matches($statement))
         $querySegmentStart = 0
-        foreach ($match in $Pattern.Matches($statement)) {
+        foreach ($match in $queryMatches) {
             $queryPrefix = $statement.Substring(
                 $querySegmentStart,
                 $match.Index - $querySegmentStart)
             $querySegmentStart = $match.Index + $match.Length
-            if ($contextReferencePattern.IsMatch($queryPrefix)) {
+            if ($databaseSourcePattern.IsMatch($queryPrefix)) {
                 $matchEvidence = ConvertTo-NormalizedEvidence -Evidence $match.Value
                 $occurrence = 1
                 if ($occurrences.ContainsKey($matchEvidence)) {
@@ -246,6 +223,16 @@ function Add-DatabaseQueryMatchesForContent {
                     -Evidence $match.Value `
                     -Occurrence $occurrence `
                     -Line $line)) | Out-Null
+            }
+        }
+
+        if ($queryMatches.Count -eq 0) {
+            $queryAliasMatch = $queryAliasPattern.Match($statement)
+            if ($queryAliasMatch.Success -and
+                $databaseSourcePattern.IsMatch(
+                    $queryAliasMatch.Groups['value'].Value)) {
+                $databaseSourceNames.Add(
+                    $queryAliasMatch.Groups['name'].Value) | Out-Null
             }
         }
 
@@ -412,7 +399,11 @@ $directPatterns = @(
     [pscustomobject]@{ Category = 'sync-sql-command'; Pattern = '(?<!Async)\bExecuteSqlRaw\s*\(' },
     [pscustomobject]@{ Category = 'sync-ef-bulk-write'; Pattern = '\bExecute(?:Update|Delete)\s*\(' },
     [pscustomobject]@{ Category = 'direct-db-context'; Pattern = '\bnew\s+EchoglossianDbContext\s*\(' },
-    [pscustomobject]@{ Category = 'blocking-wait'; Pattern = '\.(?:Result\b|Wait\s*\()' }
+    [pscustomobject]@{
+        Category = 'blocking-wait'
+        Pattern = '(?:\.(?:Result\b|Wait\s*\()|' +
+            '\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\()'
+    }
 )
 
 $persistenceHelperPattern = [regex]::new(
@@ -443,14 +434,13 @@ foreach ($sourceFile in ($sourceFiles | Sort-Object FullName)) {
     }
 
     $content = Get-Content -Raw -Encoding utf8 -LiteralPath $sourceFile.FullName
-    $lines = @(Get-Content -Encoding utf8 -LiteralPath $sourceFile.FullName)
     foreach ($directPattern in $directPatterns) {
-        Add-MatchesForPattern `
+        Add-MatchesForContent `
             -Findings $findings `
             -Category $directPattern.Category `
             -Pattern ([regex]::new($directPattern.Pattern)) `
             -RelativePath $relativePath `
-            -Lines $lines
+            -Content $content
     }
 
     Add-MatchesForContent `
@@ -460,21 +450,11 @@ foreach ($sourceFile in ($sourceFiles | Sort-Object FullName)) {
         -RelativePath $relativePath `
         -Content $content
 
-    if ($relativePath -match '^(DBHelpers|DBManagerUI|EFCoreSqlite)/') {
-        Add-MatchesForPattern `
-            -Findings $findings `
-            -Category 'sync-ef-query' `
-            -Pattern $databaseQueryPattern `
-            -RelativePath $relativePath `
-            -Lines $lines
-    }
-    else {
-        Add-DatabaseQueryMatchesForContent `
-            -Findings $findings `
-            -Pattern $databaseQueryPattern `
-            -RelativePath $relativePath `
-            -Content $content
-    }
+    Add-DatabaseQueryMatchesForContent `
+        -Findings $findings `
+        -Pattern $databaseQueryPattern `
+        -RelativePath $relativePath `
+        -Content $content
 }
 
 $currentFindings = @($findings | Sort-Object id, line -Unique)
