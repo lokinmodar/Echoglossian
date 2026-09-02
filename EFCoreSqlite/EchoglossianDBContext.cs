@@ -24,11 +24,20 @@ public class EchoglossianDbContext : DbContext
   }
 
   /// <summary>
+  ///     Initializes a new instance of the <see cref="EchoglossianDbContext" /> class with non-generic options.
+  /// </summary>
+  /// <param name="options">Configuration options.</param>
+  protected EchoglossianDbContext(DbContextOptions options)
+    : base(options)
+  {
+  }
+
+  /// <summary>
   ///     Gets or sets the translated string array records.   Initializes a new instance of the <see cref="EchoglossianDbContext" />
   ///     Gets or sets the translated string array records.   class.
   /// </summary>
   /// <param name="configDir">Plugin config directory.</param>
-  internal EchoglossianDbContext(string configDir)
+  public EchoglossianDbContext(string configDir)
   {
     this.dbPath = Path.Combine(configDir, "Echoglossian.db");
   }
