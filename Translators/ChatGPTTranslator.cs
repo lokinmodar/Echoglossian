@@ -286,7 +286,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         {
             if (temperatureWasSent)
             {
-                this.LearnTemperatureFailure(ex);
+                await this.LearnTemperatureFailureAsync(ex).ConfigureAwait(false);
             }
 
             PluginRuntimeLog.Error(this.pluginLog, $"{Resources.TranslationError} {ex.Message}");
@@ -512,12 +512,12 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         {
             if (reasoningEffortWasSent)
             {
-                this.LearnReasoningEffortFailure(ex);
+                await this.LearnReasoningEffortFailureAsync(ex).ConfigureAwait(false);
             }
 
             if (temperatureWasSent)
             {
-                this.LearnTemperatureFailure(ex);
+                await this.LearnTemperatureFailureAsync(ex).ConfigureAwait(false);
             }
 
             TranslatorMetricsCollector.RecordStructuredAttempt(
@@ -654,7 +654,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
     ///     OpenAI SDK request failure.
     /// </summary>
     /// <param name="exception">The provider exception associated with the request.</param>
-    private void LearnTemperatureFailure(Exception exception)
+    private async Task LearnTemperatureFailureAsync(Exception exception)
     {
         int? statusCode = exception is ClientResultException clientResultException
             ? clientResultException.Status
@@ -665,7 +665,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         var responseText = exception is ClientResultException responseException
             ? responseException.GetRawResponse()?.Content?.ToString()
             : null;
-        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+        var learning = await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
             this.capabilityScope,
             LlmCapabilityParameterName.Temperature,
             statusCode,
@@ -680,7 +680,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
     ///     OpenAI SDK request failure.
     /// </summary>
     /// <param name="exception">The provider exception associated with the request.</param>
-    private void LearnReasoningEffortFailure(Exception exception)
+    private async Task LearnReasoningEffortFailureAsync(Exception exception)
     {
         int? statusCode = exception is ClientResultException clientResultException
             ? clientResultException.Status
@@ -691,7 +691,7 @@ public class ChatGPTTranslator : ITranslator, IDialogueContextAwareTranslator
         var responseText = exception is ClientResultException responseException
             ? responseException.GetRawResponse()?.Content?.ToString()
             : null;
-        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+        var learning = await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
             this.capabilityScope,
             LlmCapabilityParameterName.ReasoningEffort,
             statusCode,

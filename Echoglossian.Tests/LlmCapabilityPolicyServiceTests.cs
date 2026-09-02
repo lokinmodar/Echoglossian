@@ -5,6 +5,8 @@
 
 using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
+using Echoglossian.DBHelpers;
+using Echoglossian.Persistence;
 using Echoglossian.Translators;
 using Echoglossian.Translators.Capabilities;
 using Echoglossian.Translators.Helpers;
@@ -610,9 +612,9 @@ public sealed class LlmCapabilityPolicyServiceTests
     ///     model that returned the structured tool-calling error.
     /// </summary>
     [Fact]
-    public void LearnFromProviderFailure_WithReasoningEffort400_PromotesExactModelFeedback()
+    public async Task LearnFromProviderFailure_WithReasoningEffort400_PromotesExactModelFeedback()
     {
-        this.WithTemporaryConfigurationDirectory(_ =>
+        await this.WithTemporaryConfigurationDirectoryAsync(async _ =>
         {
             var scope = new LlmCapabilityScope(
                 Echoglossian.TransEngines.ChatGPT,
@@ -620,7 +622,7 @@ public sealed class LlmCapabilityPolicyServiceTests
                 "https://api.openai.com/v1",
                 "gpt-5.6-terra");
 
-            var result = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            var result = await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
                 scope,
                 LlmCapabilityParameterName.ReasoningEffort,
                 400,
@@ -688,9 +690,9 @@ public sealed class LlmCapabilityPolicyServiceTests
     ///     promoted for the exact model only.
     /// </summary>
     [Fact]
-    public void LearnFromProviderFailure_WithClassifiedTemperature400_PromotesExactModelOnly()
+    public async Task LearnFromProviderFailure_WithClassifiedTemperature400_PromotesExactModelOnly()
     {
-        this.WithTemporaryConfigurationDirectory(configDir =>
+        await this.WithTemporaryConfigurationDirectoryAsync(async configDir =>
         {
             var scope = new LlmCapabilityScope(
                 Echoglossian.TransEngines.ChatGPT,
@@ -698,7 +700,7 @@ public sealed class LlmCapabilityPolicyServiceTests
                 "https://api.openai.com/v1",
                 "gpt-5.6-terra");
 
-            var result = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            var result = await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
                 scope,
                 LlmCapabilityParameterName.Temperature,
                 400,
@@ -726,11 +728,11 @@ public sealed class LlmCapabilityPolicyServiceTests
     ///     provider did not identify the active model.
     /// </summary>
     [Fact]
-    public void LearnFromProviderFailure_WithBlankModelId_DoesNotPersistCapabilityFeedback()
+    public async Task LearnFromProviderFailure_WithBlankModelId_DoesNotPersistCapabilityFeedback()
     {
-        this.WithTemporaryConfigurationDirectory(configDir =>
+        await this.WithTemporaryConfigurationDirectoryAsync(async configDir =>
         {
-            var result = LlmCapabilityPolicyService.LearnFromProviderFailure(
+            var result = await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
                 new LlmCapabilityScope(
                     Echoglossian.TransEngines.ChatGPT,
                     "OpenAI",
@@ -756,9 +758,9 @@ public sealed class LlmCapabilityPolicyServiceTests
     ///     persisted observation table.
     /// </summary>
     [Fact]
-    public void LearnFromProviderFailure_WithRepeatedAmbiguous400_DeduplicatesObservation()
+    public async Task LearnFromProviderFailure_WithRepeatedAmbiguous400_DeduplicatesObservation()
     {
-        this.WithTemporaryConfigurationDirectory(configDir =>
+        await this.WithTemporaryConfigurationDirectoryAsync(async configDir =>
         {
             var scope = new LlmCapabilityScope(
                 Echoglossian.TransEngines.ChatGPT,
@@ -766,12 +768,12 @@ public sealed class LlmCapabilityPolicyServiceTests
                 "https://api.openai.com/v1",
                 "gpt-5.6-terra");
 
-            LlmCapabilityPolicyService.LearnFromProviderFailure(
+            await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
                 scope,
                 LlmCapabilityParameterName.Temperature,
                 400,
                 "{ \"error\": { \"message\": \"Request could not be processed.\" } }");
-            LlmCapabilityPolicyService.LearnFromProviderFailure(
+            await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
                 scope,
                 LlmCapabilityParameterName.Temperature,
                 400,
@@ -848,6 +850,45 @@ public sealed class LlmCapabilityPolicyServiceTests
         finally
         {
             LlmCapabilityCacheManager.Clear();
+            Echoglossian.ConfigDirectory = originalConfigDirectory;
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(configDir, recursive: true);
+        }
+    }
+
+    /// <summary>
+    ///     Runs an asynchronous action with the real observation runtime
+    ///     registered.
+    /// </summary>
+    /// <param name="action">The asynchronous action that exercises learning.</param>
+    private async Task WithTemporaryConfigurationDirectoryAsync(Func<string, Task> action)
+    {
+        var configDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var originalConfigDirectory = Echoglossian.ConfigDirectory;
+        Directory.CreateDirectory(configDir);
+        Echoglossian.ConfigDirectory = configDir;
+        LlmCapabilityCacheManager.Clear();
+        var factory = new EchoglossianDbContextRuntimeFactory(configDir);
+        var coordinator = new PersistenceCoordinator(factory);
+        var writer = new LlmCapabilityObservationWriter(coordinator);
+        LlmCapabilityObservationRuntime.Register(writer);
+        try
+        {
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                await context.Database.MigrateAsync();
+            }
+            await action(configDir);
+        }
+        finally
+        {
+            LlmCapabilityObservationRuntime.Unregister(writer);
+            await coordinator.DisposeAsync();
+            LlmCapabilityCacheManager.Clear();
+            PluginRuntimeFileLog.GetCurrentFilePathForTests().Should().Be(
+                Path.Combine(configDir, "Echoglossian.log"));
+            PluginRuntimeFileLog.FlushForTests();
+            PluginRuntimeFileLog.ResetForTests();
             Echoglossian.ConfigDirectory = originalConfigDirectory;
             SqliteConnection.ClearAllPools();
             Directory.Delete(configDir, recursive: true);

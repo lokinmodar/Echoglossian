@@ -4,10 +4,13 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.DBHelpers;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.Persistence;
 using Echoglossian.PluginRuntime.Startup;
 using Echoglossian.PluginUI.Runtime;
+using Echoglossian.Translators.Capabilities;
 
 namespace Echoglossian;
 
@@ -129,6 +132,9 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly IDalamudTextureWrap logo;
   private readonly ConfigurationSaveCoordinator configurationSaveCoordinator;
   private QueuedTranslationBroker queuedTranslationBroker;
+  private PersistenceCoordinator? persistenceCoordinator;
+  private LlmCapabilityObservationWriter? capabilityObservationWriter;
+  private Task? persistenceCompletionTask;
   private readonly HoverTooltipManager hoverTooltipManager;
   private readonly RtlTexturePresentationService rtlTexturePresentationService;
   private readonly PluginStartupAudit startupAudit = new();
@@ -258,6 +264,14 @@ public partial class Echoglossian : IDalamudPlugin
     try
     {
       this.CreateOrUseDb();
+      var contextFactory = new EchoglossianDbContextRuntimeFactory(ConfigDirectory);
+      this.persistenceCoordinator = new PersistenceCoordinator(
+          contextFactory,
+          warningLog: PluginRuntimeLog.Warning,
+          errorLog: PluginRuntimeLog.Error);
+      this.capabilityObservationWriter = new LlmCapabilityObservationWriter(this.persistenceCoordinator);
+      LlmCapabilityObservationRuntime.Register(this.capabilityObservationWriter);
+      this.startupAudit.Mark(PluginStartupStage.PersistenceCoordinatorStarted);
       PluginRuntimeLog.Debug("Eglo database created or used successfully.");
     }
     catch (Exception e)
@@ -556,6 +570,12 @@ public partial class Echoglossian : IDalamudPlugin
   protected virtual void Dispose(bool disposing)
   {
     this.startupAudit.Mark(PluginStartupStage.DisposeStarted);
+    if (this.capabilityObservationWriter is not null)
+    {
+      LlmCapabilityObservationRuntime.Unregister(this.capabilityObservationWriter);
+    }
+    this.persistenceCoordinator?.StopAccepting();
+    this.startupAudit.Mark(PluginStartupStage.PersistenceAdmissionsStopped);
     this.BeginConfigurationSaveShutdown();
     LiveModelRefreshCoordinator.ResetForPluginShutdown();
 
@@ -610,6 +630,13 @@ public partial class Echoglossian : IDalamudPlugin
       this.UnregisterNamePlateTranslationRuntime();
       this.namePlateTranslationRuntime.Dispose();
       this.queuedTranslationBroker.Dispose();
+      if (this.persistenceCoordinator is not null)
+      {
+        this.persistenceCompletionTask ??= this.persistenceCoordinator.CompleteAsync();
+        _ = this.persistenceCompletionTask.ContinueWith(
+            task => PluginRuntimeLog.Warning($"[PersistenceCoordinator] Shutdown completion ended: {task.Status}"),
+            TaskContinuationOptions.OnlyOnFaulted);
+      }
       this.translationOverlayRenderer.Dispose();
       this.uiFontRuntime.Dispose();
       this.rtlTexturePresentationService.Dispose();

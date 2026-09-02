@@ -92,11 +92,12 @@ public static class LlmCapabilityPolicyService
     /// <param name="statusCode">The provider response status code.</param>
     /// <param name="responseText">The provider response body.</param>
     /// <returns>The persisted observation and promotion outcome.</returns>
-    public static LlmCapabilityLearningResult LearnFromProviderFailure(
+    public static async Task<LlmCapabilityLearningResult> LearnFromProviderFailureAsync(
         LlmCapabilityScope scope,
         LlmCapabilityParameterName parameterName,
         int? statusCode,
-        string? responseText)
+        string? responseText,
+        CancellationToken cancellationToken = default)
     {
         var normalizedScope = NormalizeScope(scope);
         if (string.IsNullOrWhiteSpace(normalizedScope.ModelId))
@@ -135,10 +136,14 @@ public static class LlmCapabilityPolicyService
 
         try
         {
-            LlmCapabilityPersistenceHelper.RecordObservation(
-                Echoglossian.ConfigDirectory,
-                observation);
-            LlmCapabilityCacheManager.PublishObservation(observation);
+            _ = LlmCapabilityObservationRuntime.TryRecord(observation, out var completion);
+            var observationResult = await completion.ConfigureAwait(false);
+            if (observationResult.Status is not (global::Echoglossian.Persistence.PersistenceCompletionStatus.Succeeded or global::Echoglossian.Persistence.PersistenceCompletionStatus.Unchanged))
+            {
+                PluginRuntimeLog.Warning(
+                    $"[LlmCapabilityPolicyService] Capability observation persistence did not complete: {observationResult.Status}");
+                return new LlmCapabilityLearningResult(false, false, "persistence-failed");
+            }
 
             if (!classification.RulePromoted)
             {

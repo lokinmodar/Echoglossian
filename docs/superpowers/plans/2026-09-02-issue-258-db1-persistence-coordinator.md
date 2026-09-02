@@ -610,6 +610,13 @@ Expected: one to four behavioral commits plus the plan commit are on `issue-258-
 
 ## Final Branch Gate
 
+## Execution Notes
+
+- Task 4 removed six DB-1 audit findings and added none: one direct context, migrate, query, two saves, and the policy helper invocation. The resulting audit is 225 findings (DB-7 remains 125 approved findings).
+- Capability observation writes now use the one coordinator writer, a four-context `PooledDbContextFactory`, a one-second SQLite timeout, seven-field length-prefixed identity, immutable snapshots, and post-commit publication.
+- Focused unit tests: 41 passed for `LlmCapability`; observation writer coverage: 5 passed. Mock lifecycle smoke tests: 10 passed. The Mock asserts registration/order only; it does not prove SQLite scheduling or an awaited drain.
+- Schema and migrations were unchanged. DB-1 does not claim an awaited plugin drain or in-game performance improvement; `Dispose` stops admission and begins one retained completion task after producers stop.
+
 After all four tasks pass their per-task spec and quality reviews:
 
 1. Generate a whole-branch review package from merge base `d799e53` through `HEAD`.

@@ -11,6 +11,8 @@ using Echoglossian.Translators.Capabilities;
 
 using FluentAssertions;
 
+using Microsoft.EntityFrameworkCore;
+
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -46,9 +48,10 @@ public class LlmCapabilityPersistenceTests
                         source: "Observed400",
                         reason: "provider rejected non-default temperature"),
                 ]);
-            LlmCapabilityPersistenceHelper.RecordObservation(
-                configDir,
-                new LlmModelCapabilityObservation
+            using (var context = new EchoglossianDbContext(configDir))
+            {
+                context.Database.Migrate();
+                context.LlmModelCapabilityObservations.Add(new LlmModelCapabilityObservation
                 {
                     Engine = "ChatGPT",
                     ProviderScope = "OpenAI",
@@ -59,6 +62,8 @@ public class LlmCapabilityPersistenceTests
                     ProviderErrorCode = "unsupported_parameter",
                     MessageExcerpt = "temperature is unsupported",
                 });
+                context.SaveChanges();
+            }
 
             LlmCapabilityCacheManager.Initialize(configDir);
 

@@ -74,6 +74,16 @@ public static class LlmCapabilityCacheManager
         }
     }
 
+    /// <summary>Gets the committed observation snapshot without querying SQLite.</summary>
+    /// <returns>The cached provider-feedback observations.</returns>
+    internal static IReadOnlyList<LlmModelCapabilityObservation> GetObservationDefinitions()
+    {
+        lock (SyncLock)
+        {
+            return cachedObservations;
+        }
+    }
+
     /// <summary>
     ///     Publishes one persisted rule to the DB-free runtime cache.
     /// </summary>
