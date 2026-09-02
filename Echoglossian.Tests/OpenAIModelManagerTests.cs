@@ -15,6 +15,7 @@ namespace Echoglossian.Tests;
 ///     Covers provider-scoped state retained by the shared OpenAI-family model
 ///     manager.
 /// </summary>
+[Collection(CapabilityRuntimeCollection.Name)]
 public class OpenAIModelManagerTests
 {
     /// <summary>

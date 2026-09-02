@@ -19,6 +19,7 @@ namespace Echoglossian.Tests;
 /// <summary>
 ///     Covers policy-driven temperature slider state for LLM engine UI.
 /// </summary>
+[Collection(CapabilityRuntimeCollection.Name)]
 public sealed class LlmCapabilityUiHelperTests
 {
     /// <summary>

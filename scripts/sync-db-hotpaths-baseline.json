@@ -793,13 +793,6 @@
       "evidence": "new EchoglossianDbContext( [occurrence 1]"
     },
     {
-      "id": "direct-db-context|DBHelpers/LlmCapabilityPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 2]",
-      "category": "direct-db-context",
-      "stage": "DB-7",
-      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
-      "evidence": "new EchoglossianDbContext( [occurrence 2]"
-    },
-    {
       "id": "direct-db-context|DBHelpers/ReferenceTextPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
       "category": "direct-db-context",
       "stage": "DB-2",
@@ -982,13 +975,6 @@
       "evidence": "StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]"
     },
     {
-      "id": "persistence-helper-call|Translators/Capabilities/LlmCapabilityPolicyService.cs|LlmCapabilityPersistenceHelper.RecordObservation( [occurrence 1]",
-      "category": "persistence-helper-call",
-      "stage": "DB-7",
-      "path": "Translators/Capabilities/LlmCapabilityPolicyService.cs",
-      "evidence": "LlmCapabilityPersistenceHelper.RecordObservation( [occurrence 1]"
-    },
-    {
       "id": "persistence-helper-call|Translators/Capabilities/LlmCapabilityPolicyService.cs|LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]",
       "category": "persistence-helper-call",
       "stage": "DB-7",
@@ -1029,13 +1015,6 @@
       "stage": "DB-7",
       "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
       "evidence": ".Database.Migrate( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-migrate|DBHelpers/LlmCapabilityPersistenceHelper.cs|.Database.Migrate( [occurrence 2]",
-      "category": "sync-ef-migrate",
-      "stage": "DB-7",
-      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
-      "evidence": ".Database.Migrate( [occurrence 2]"
     },
     {
       "id": "sync-ef-query|Cache/ActionTooltipCacheManager.cs|ToList( [occurrence 1]",
@@ -1325,13 +1304,6 @@
       "evidence": "FirstOrDefault( [occurrence 1]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/LlmCapabilityPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
-      "category": "sync-ef-query",
-      "stage": "DB-7",
-      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 2]"
-    },
-    {
       "id": "sync-ef-query|DBHelpers/ReferenceTextPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
       "category": "sync-ef-query",
       "stage": "DB-2",
@@ -1526,20 +1498,6 @@
       "stage": "DB-7",
       "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
       "evidence": "SaveChanges( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-save|DBHelpers/LlmCapabilityPersistenceHelper.cs|SaveChanges( [occurrence 2]",
-      "category": "sync-ef-save",
-      "stage": "DB-7",
-      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
-      "evidence": "SaveChanges( [occurrence 2]"
-    },
-    {
-      "id": "sync-ef-save|DBHelpers/LlmCapabilityPersistenceHelper.cs|SaveChanges( [occurrence 3]",
-      "category": "sync-ef-save",
-      "stage": "DB-7",
-      "path": "DBHelpers/LlmCapabilityPersistenceHelper.cs",
-      "evidence": "SaveChanges( [occurrence 3]"
     },
     {
       "id": "sync-ef-save|DBHelpers/ReferenceTextPersistenceHelper.cs|SaveChanges( [occurrence 1]",
