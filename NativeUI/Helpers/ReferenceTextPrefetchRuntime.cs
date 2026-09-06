@@ -212,6 +212,22 @@ public unsafe partial class Echoglossian
             state.QueueIndex = 0;
         }
 
+        return TickReferenceTextPrefetchQueue(state, remainingBudget,
+            referenceId => this.PrefetchReferenceText(
+                registration, referenceId, sourceLanguage, scope, gameVersion,
+                state.Cancellation.Token));
+    }
+
+    /// <summary>Advances a registration cursor only after its captured operation completes.</summary>
+    /// <param name="state">The existing registration state.</param>
+    /// <param name="remainingBudget">The maximum admissions for this tick.</param>
+    /// <param name="schedule">Captures and admits the next reference operation.</param>
+    /// <returns>The admissions consumed without blocking the Framework callback.</returns>
+    internal static int TickReferenceTextPrefetchQueue(
+        ReferenceTextPrefetchState state,
+        int remainingBudget,
+        Func<uint, Task<bool>> schedule)
+    {
         if (state.QueueIndex >= state.Queue.Count)
         {
             return 0;
@@ -242,9 +258,7 @@ public unsafe partial class Echoglossian
             }
 
             var referenceId = state.Queue[state.QueueIndex];
-            state.Pending = this.PrefetchReferenceText(
-                registration, referenceId, sourceLanguage, scope, gameVersion,
-                state.Cancellation.Token);
+            state.Pending = schedule(referenceId);
             processedCount++;
             if (!state.Pending.IsCompleted)
             {
@@ -1860,7 +1874,7 @@ public unsafe partial class Echoglossian
     /// <summary>
     ///     Holds mutable queue state for one shared sheet-family registration.
     /// </summary>
-    private sealed class ReferenceTextPrefetchState
+    internal sealed class ReferenceTextPrefetchState
     {
         /// <summary>
         ///     Gets the row-identifier queue.

@@ -9,6 +9,7 @@ using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Persistence;
 using Echoglossian.Translators;
+using Echoglossian.Translators.Helpers;
 using Newtonsoft.Json;
 
 namespace Echoglossian.NativeUI.Helpers;
@@ -171,48 +172,40 @@ internal static class ReferenceTextPrefetchOperation
             });
             if (!broker.TryGetCached(key, out var translated))
             {
-                var completion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var completion = new TaskCompletionSource<(string? Text, bool Cancelled)>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
                 if (!broker.Queue(key, async () =>
                     {
-                        try
+                        var batch = await translate(fields, source, scope.TargetLanguageCode, origin, cancellationToken)
+                            .ConfigureAwait(false);
+                        var values = fields.Select(field => new TranslationField(field.Name, batch.GetTranslation(field.Name))).ToArray();
+                        if (values.Any(field => string.IsNullOrWhiteSpace(field.Text)))
                         {
-                            var batch = await translate(fields, source, scope.TargetLanguageCode, origin, cancellationToken)
-                                .ConfigureAwait(false);
-                            var values = fields.Select(field => new TranslationField(field.Name, batch.GetTranslation(field.Name))).ToArray();
-                            if (values.Any(field => string.IsNullOrWhiteSpace(field.Text)))
-                            {
-                                throw new InvalidOperationException("The reference-text field batch is incomplete.");
-                            }
+                            throw new InvalidOperationException("The reference-text field batch is incomplete.");
+                        }
 
-                            return JsonConvert.SerializeObject(values);
-                        }
-                        catch (Exception)
-                        {
-                            // A late resolver failure must not leave an unobserved
-                            // exception after the generation's wait was cancelled.
-                            completion.TrySetResult(string.Empty);
-                            throw;
-                        }
-                    }, value => completion.TrySetResult(value), origin))
+                        return TranslationFieldEnvelopeCodec.Encode(values);
+                    },
+                    value => completion.TrySetResult((value, false)),
+                    origin,
+                    cancelled => completion.TrySetResult((null, cancelled))))
                 {
                     return false;
                 }
 
-                // The broker can time out or be replaced without invoking success.
-                // Keep the cursor retryable in that case, using its existing cooldown.
-                translated = await completion.Task.WaitAsync(TimeSpan.FromMinutes(5), cancellationToken).ConfigureAwait(false);
+                // The shared broker alone owns request timeout, retry and cooldown.
+                var outcome = await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (outcome.Text is null)
+                {
+                    return !outcome.Cancelled;
+                }
+
+                translated = outcome.Text;
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            if (string.IsNullOrWhiteSpace(translated))
-            {
-                // One terminal translator failure must not starve the rest of
-                // this sheet. Broker failure cooldown remains authoritative.
-                return true;
-            }
-
-            var translatedFields = JsonConvert.DeserializeObject<TranslationField[]>(translated);
-            if (translatedFields is null || translatedFields.Length != fields.Count)
+            if (!TranslationFieldEnvelopeCodec.TryDecode(translated, fields, out var translatedFields))
             {
                 return false;
             }
@@ -256,12 +249,6 @@ internal static class ReferenceTextPrefetchOperation
         catch (OperationCanceledException)
         {
             return false;
-        }
-        catch (TimeoutException)
-        {
-            // A broker that timed out without a success callback completed this
-            // attempt. A future generation or visible request may retry it.
-            return true;
         }
         catch (Exception exception)
         {

@@ -332,18 +332,267 @@ public class ReferenceTextPrefetchRuntimeTests
         Assert.Empty(await context.MainCommandTexts.ToListAsync());
     }
 
+    /// <summary>Legitimate error-like words inside translated fields must survive broker transport.</summary>
+    [Fact]
+    public async Task BatchWithUnavailableVocabulary_PersistsThroughRealBroker()
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var cancellation = new CancellationTokenSource();
+        var operation = harness.Start(Harness.Payload(), (fields, _, _, _, _) => Task.FromResult(
+            new TranslationFieldBatchResult(fields.Select(field => new TranslationField(field.Name,
+                field.Name == "Name" ? "Action unavailable" : "Displays why this action is unavailable.")), false)), cancellation.Token);
+        try
+        {
+            Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+            await using var context = await harness.Factory.CreateDbContextAsync();
+            var row = await context.MainCommandTexts.SingleAsync();
+            Assert.Equal("Action unavailable", row.TranslatedName);
+            Assert.Equal("Displays why this action is unavailable.", row.TranslatedDescription);
+        }
+        finally
+        {
+            cancellation.Cancel();
+        }
+    }
+
+    /// <summary>A rate-limited attempt stays pending until the broker retry resolves successfully.</summary>
+    [Fact]
+    public async Task RateLimitRetry_RemainsPendingAndPersistsCompleteSuccess()
+    {
+        await using var harness = await Harness.CreateAsync(maxRateLimitRetries: 1);
+        using var cancellation = new CancellationTokenSource();
+        var retryEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseRetry = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = 0;
+        var operation = harness.Start(Harness.Payload(), async (fields, _, _, _, token) =>
+        {
+            if (Interlocked.Increment(ref calls) == 1)
+            {
+                throw new HttpRequestException("HTTP 429 Too Many Requests");
+            }
+
+            retryEntered.SetResult();
+            await releaseRetry.Task.WaitAsync(token);
+            return Harness.Translate(fields);
+        }, cancellation.Token);
+        try
+        {
+            await retryEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert.False(operation.IsCompleted);
+            releaseRetry.SetResult();
+            Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(2, calls);
+            await using var context = await harness.Factory.CreateDbContextAsync();
+            var row = await context.MainCommandTexts.SingleAsync();
+            Assert.Equal("Acoes", row.TranslatedName);
+            Assert.Equal("Abre acoes.", row.TranslatedDescription);
+            Assert.Equal(1, harness.Coordinator.GetMetrics().CommittedWrites);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            releaseRetry.TrySetResult();
+        }
+    }
+
+    /// <summary>The broker timeout, rather than a separate operation timer, ends a hung provider attempt.</summary>
+    [Fact]
+    public async Task BrokerTimeout_CompletesAttemptWithoutLocalDeadline()
+    {
+        await using var harness = await Harness.CreateAsync(requestTimeout: TimeSpan.FromMilliseconds(50));
+        using var cancellation = new CancellationTokenSource();
+        var resolver = new TaskCompletionSource<TranslationFieldBatchResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operation = harness.Start(Harness.Payload(), (_, _, _, _, _) => resolver.Task, cancellation.Token);
+        try
+        {
+            Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            resolver.TrySetResult(Harness.Translate([new TranslationField("Name", "Actions")]));
+        }
+    }
+
+    /// <summary>The runtime cursor retains work after a read or write failure and retries on a later tick.</summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task RuntimeCursor_ReadOrWriteFailure_RetainsThenRetries(int failingContext)
+    {
+        await using var harness = await Harness.CreateAsync(failingContext: failingContext);
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.Add(12);
+        Task<bool> Schedule(uint _) => harness.Start(Harness.Payload());
+        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
+        Assert.False(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
+        Assert.Equal(0, state.QueueIndex);
+        Assert.Null(state.Pending);
+        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
+        Assert.True(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>A terminal broker failure advances the actual cursor once and admits the next row.</summary>
+    [Fact]
+    public async Task RuntimeCursor_TerminalTranslationFailure_AdvancesToNextRow()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var attempted = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            attempted.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload, (fields, _, _, _, _) => id == 12
+                ? throw new InvalidOperationException("Terminal provider failure")
+                : Task.FromResult(Harness.Translate(fields)));
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.True(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(new uint[] { 12, 13 }, attempted);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Pending and capacity-rejected work do not advance or cause per-tick resubmission.</summary>
+    [Fact]
+    public async Task RuntimeCursor_CapacityAndPendingRead_RemainNonblocking()
+    {
+        await using var harness = await Harness.CreateAsync(backgroundCapacity: 1);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("cursor", "active"), PersistencePriority.Background,
+            async (_, token) => { entered.SetResult(); await release.Task.WaitAsync(token); return 1; }, null, out var active);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("cursor", "queued"), PersistencePriority.Background,
+            (_, _) => Task.FromResult(1), null, out var queued);
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.Add(12);
+        var schedules = 0;
+        Task<bool> Schedule(uint _)
+        {
+            schedules++;
+            return harness.Start(Harness.Payload());
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(0, state.QueueIndex);
+        Assert.Equal(1, schedules);
+        release.SetResult();
+        await Task.WhenAll(active, queued).WaitAsync(TimeSpan.FromSeconds(2));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        var pending = state.Pending!;
+        Assert.NotNull(pending);
+        Assert.True(await pending.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.Equal(2, schedules);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Repeated Framework ticks do not block or reschedule one incomplete operation.</summary>
+    [Fact]
+    public void RuntimeCursor_PendingOperation_IsNotResubmittedOnRepeatedTicks()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.Add(12);
+        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var schedules = 0;
+        Task<bool> Schedule(uint id)
+        {
+            Assert.Equal((uint)12, id);
+            schedules++;
+            return pending.Task;
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        for (var tick = 0; tick < 100; tick++)
+        {
+            Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
+        }
+
+        Assert.Equal(1, schedules);
+        Assert.Equal(0, state.QueueIndex);
+        pending.SetResult(true);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.Equal(1, schedules);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Cancelled pending work retains its cursor; lifecycle clear cancels and discards the generation.</summary>
+    [Fact]
+    public async Task RuntimeCursor_CancelAndClear_AllowsFreshGeneration()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.Add(12);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, _ => harness.Start(Harness.Payload(), async (fields, _, _, _, token) =>
+        {
+            entered.SetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
+            return Harness.Translate(fields);
+        }, state.Cancellation.Token));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        state.Cancellation.Cancel();
+        Assert.False(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, _ => throw new InvalidOperationException("Retried in same completion tick."));
+        Assert.Equal(0, state.QueueIndex);
+
+        var plugin = (PluginEntry)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(PluginEntry));
+        var states = new Dictionary<string, PluginEntry.ReferenceTextPrefetchState> { ["test"] = state };
+        var operations = new Dictionary<string, Task<bool>> { ["old"] = Task.FromResult(false) };
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        typeof(PluginEntry).GetField("referenceTextPrefetchStates", flags)!.SetValue(plugin, states);
+        typeof(PluginEntry).GetField("referenceTextPrefetchOperations", flags)!.SetValue(plugin, operations);
+        typeof(PluginEntry).GetMethod("ClearReferenceTextPrefetchState", flags)!.Invoke(plugin, null);
+        Assert.Empty(states);
+        Assert.Empty(operations);
+
+        var restarted = new PluginEntry.ReferenceTextPrefetchState();
+        restarted.Queue.Add(13);
+        PluginEntry.TickReferenceTextPrefetchQueue(restarted, 8, id =>
+        {
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload, cancellationToken: restarted.Cancellation.Token);
+        });
+        Assert.True(await restarted.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(restarted, 8, _ => throw new InvalidOperationException("Completed row repeated."));
+        Assert.Equal(1, restarted.QueueIndex);
+        restarted.Cancellation.Dispose();
+    }
+
     /// <summary>Owns a real SQLite/coordinator/broker fixture for captured prefetch operations.</summary>
     private sealed class Harness : IAsyncDisposable
     {
         private readonly string directory;
 
         /// <summary>Initializes one temporary runtime fixture.</summary>
-        private Harness(string directory, IDbContextFactory<EchoglossianDbContext> factory, PersistenceCoordinator coordinator)
+        private Harness(string directory, IDbContextFactory<EchoglossianDbContext> factory, PersistenceCoordinator coordinator,
+            int maxRateLimitRetries, TimeSpan? requestTimeout)
         {
             this.directory = directory;
             this.Factory = factory;
             this.Coordinator = coordinator;
             this.Writer = new ReferenceTextPersistenceWriter(coordinator);
+            this.Broker = new QueuedTranslationBroker(TimeSpan.Zero, TimeSpan.Zero,
+                requestTimeout ?? TimeSpan.FromSeconds(5), TimeSpan.Zero, maxRateLimitRetries);
         }
 
         /// <summary>Gets the fixed source/target/engine test scope.</summary>
@@ -357,20 +606,22 @@ public class ReferenceTextPrefetchRuntimeTests
         /// <summary>Gets the concurrent canonical cache.</summary>
         internal ReferenceTextCacheStore<MainCommandText> Cache { get; } = new("ReferenceTextOperationTest");
         /// <summary>Gets the shared broker with test pacing.</summary>
-        internal QueuedTranslationBroker Broker { get; } = new(TimeSpan.Zero, TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.Zero, 0);
+        internal QueuedTranslationBroker Broker { get; }
         /// <summary>Gets a probe built by the production MainCommand row creator.</summary>
         internal MainCommandText Probe => Row("en", "pt", 0, "7.3", Payload(), null);
 
         /// <summary>Creates and migrates a temporary SQLite fixture.</summary>
-        internal static async Task<Harness> CreateAsync(int backgroundCapacity = 8)
+        internal static async Task<Harness> CreateAsync(int backgroundCapacity = 8, int maxRateLimitRetries = 0, TimeSpan? requestTimeout = null, int failingContext = 0)
         {
             var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(directory);
             var factory = new EchoglossianDbContextRuntimeFactory(directory);
             await using var context = await factory.CreateDbContextAsync();
             await context.Database.MigrateAsync();
-            return new Harness(directory, factory, new PersistenceCoordinator(factory,
-                new PersistenceCoordinatorOptions(8, backgroundCapacity, 1, 8, TimeSpan.FromMilliseconds(1), 1, [], 4, 1, TimeSpan.FromSeconds(5))));
+            return new Harness(directory, factory, new PersistenceCoordinator(
+                failingContext == 0 ? factory : new FailingFactory(factory, failingContext),
+                new PersistenceCoordinatorOptions(8, backgroundCapacity, 1, 8, TimeSpan.FromMilliseconds(1), 1, [], 4, 1, TimeSpan.FromSeconds(5))),
+                maxRateLimitRetries, requestTimeout);
         }
 
         /// <summary>Admits one captured request through the production operation.</summary>
@@ -422,6 +673,26 @@ public class ReferenceTextPrefetchRuntimeTests
             await this.Coordinator.DisposeAsync();
             SqliteConnection.ClearAllPools();
             Directory.Delete(this.directory, true);
+        }
+    }
+
+    /// <summary>Injects one real worker context-open failure to exercise cursor retry outcomes.</summary>
+    private sealed class FailingFactory(IDbContextFactory<EchoglossianDbContext> inner, int failingContext) : IDbContextFactory<EchoglossianDbContext>
+    {
+        private int opens;
+
+        /// <inheritdoc />
+        public EchoglossianDbContext CreateDbContext() => throw new InvalidOperationException("Synchronous context creation is forbidden.");
+
+        /// <inheritdoc />
+        public Task<EchoglossianDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+        {
+            if (Interlocked.Increment(ref this.opens) == failingContext)
+            {
+                throw new InvalidOperationException("Injected worker context-open failure.");
+            }
+
+            return inner.CreateDbContextAsync(cancellationToken);
         }
     }
 }
