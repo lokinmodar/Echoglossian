@@ -4,6 +4,8 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.Translators;
+using Echoglossian.Persistence;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.Helpers;
@@ -47,6 +49,7 @@ public unsafe partial class Echoglossian
         referenceTextPrefetchRegistrations;
     private DateTime referenceTextPrefetchLastTickUtc = DateTime.MinValue;
     private int referenceTextPrefetchRoundRobinIndex;
+    private readonly Dictionary<string, Task<bool>> referenceTextPrefetchOperations = new(StringComparer.Ordinal);
 
     /// <summary>
     ///     Ticks the shared reference-text prefetch runtime so action-adjacent
@@ -63,6 +66,12 @@ public unsafe partial class Echoglossian
         }
 
         this.referenceTextPrefetchLastTickUtc = DateTime.UtcNow;
+
+        foreach (var key in this.referenceTextPrefetchOperations
+                     .Where(entry => entry.Value.IsCompleted).Select(entry => entry.Key).ToArray())
+        {
+            this.referenceTextPrefetchOperations.Remove(key);
+        }
 
         var registrations = this.GetReferenceTextPrefetchRegistrations();
         if (registrations.Count == 0)
@@ -93,7 +102,14 @@ public unsafe partial class Echoglossian
     /// </summary>
     private void ClearReferenceTextPrefetchState()
     {
+        foreach (var state in this.referenceTextPrefetchStates.Values)
+        {
+            state.Cancellation.Cancel();
+            state.Cancellation.Dispose();
+        }
+
         this.referenceTextPrefetchStates.Clear();
+        this.referenceTextPrefetchOperations.Clear();
         this.referenceTextPrefetchLastTickUtc = DateTime.MinValue;
         this.referenceTextPrefetchRoundRobinIndex = 0;
     }
@@ -153,24 +169,43 @@ public unsafe partial class Echoglossian
     {
         if (!registration.IsEnabled())
         {
-            this.referenceTextPrefetchStates.Remove(registration.Key);
+            if (this.referenceTextPrefetchStates.Remove(registration.Key, out var removed))
+            {
+                removed.Cancellation.Cancel();
+                removed.Cancellation.Dispose();
+            }
             return 0;
         }
 
         if (!registration.TryCollectReferenceIds(out var referenceIds))
         {
-            this.referenceTextPrefetchStates.Remove(registration.Key);
+            if (this.referenceTextPrefetchStates.Remove(registration.Key, out var removed))
+            {
+                removed.Cancellation.Cancel();
+                removed.Cancellation.Dispose();
+            }
             return 0;
         }
 
         var state = this.GetOrCreateReferenceTextPrefetchState(
             registration.Key);
-        var signature = string.Join(',', referenceIds);
+        if (!TryCapturePrefetchOperationScope(ResolveCurrentPrefetchSourceLanguage, this.configuration,
+                out var sourceLanguage, out var scope))
+        {
+            return 0;
+        }
+
+        var gameVersion = GetGameVersion();
+        var signature = BuildTranslationReuseScopedKey($"{gameVersion}|{string.Join(',', referenceIds)}", scope);
         if (!string.Equals(
                 state.Signature,
                 signature,
                 StringComparison.Ordinal))
         {
+            state.Cancellation.Cancel();
+            state.Cancellation.Dispose();
+            state.Cancellation = new CancellationTokenSource();
+            state.Pending = null;
             state.Signature = signature;
             state.Queue.Clear();
             state.Queue.AddRange(referenceIds);
@@ -186,138 +221,94 @@ public unsafe partial class Echoglossian
         while (processedCount < remainingBudget &&
                state.QueueIndex < state.Queue.Count)
         {
-            var referenceId = state.Queue[state.QueueIndex++];
-            this.PrefetchReferenceText(registration, referenceId);
+            if (state.Pending is not null)
+            {
+                if (!state.Pending.IsCompleted)
+                {
+                    break;
+                }
+
+                // The completion guard makes retrieval non-blocking.
+                var completed = state.Pending.IsCompletedSuccessfully && state.Pending.GetAwaiter().GetResult();
+                state.Pending = null;
+                if (completed)
+                {
+                    state.QueueIndex++;
+                    continue;
+                }
+
+                // Failed admission or completion retries this cursor on a later tick.
+                break;
+            }
+
+            var referenceId = state.Queue[state.QueueIndex];
+            state.Pending = this.PrefetchReferenceText(
+                registration, referenceId, sourceLanguage, scope, gameVersion,
+                state.Cancellation.Token);
             processedCount++;
+            if (!state.Pending.IsCompleted)
+            {
+                break;
+            }
         }
 
         return processedCount;
     }
 
-    /// <summary>
-    ///     Prefetches one canonical reference-text payload and any missing
-    ///     translations.
-    /// </summary>
-    /// <param name="registration">The registration describing the sheet family.</param>
-    /// <param name="referenceId">The sheet-row identifier.</param>
-    private void PrefetchReferenceText(
+    /// <summary>Schedules a visible reference through the same bounded registration state.</summary>
+    /// <param name="registration">The captured sheet registration.</param>
+    /// <param name="referenceId">The visible reference identity.</param>
+    /// <param name="sourceLanguage">The caller-captured source language.</param>
+    /// <param name="scope">The caller-captured reuse scope.</param>
+    private void PrefetchReferenceTextOnDemand(
         ReferenceTextPrefetchRegistration registration,
-        uint referenceId)
-    {
-        if (!registration.TryBuildPayload(referenceId, out var originalPayload))
-        {
-            return;
-        }
-
-        var translationService = TranslationService;
-        RunReferenceTextPrefetchOperationEntry(
-            registration.Key,
-            originalPayload,
-            GetGameVersion(),
-            ResolveCurrentPrefetchSourceLanguage,
-            this.configuration,
-            this.TryGetQueuedTranslation,
-            this.QueueTranslation,
-            (sourceText, capturedSource, targetLanguage, originContext) =>
-                translationService.Translate(
-                    sourceText,
-                    capturedSource,
-                    targetLanguage,
-                    originContext: originContext),
-            registration.CreateRow,
-            registration.FindRow,
-            registration.InsertRow,
-            out var sourceLanguage,
-            out var scope,
-            out var existingRow);
-        if (existingRow == null)
-        {
-            return;
-        }
-
-        this.PrefetchReferenceTextDescription(
-            registration,
-            originalPayload,
-            existingRow,
-            sourceLanguage,
-            scope);
-    }
-
-    /// <summary>
-    ///     Prefetches the translated reference-text description when it is not
-    ///     yet persisted.
-    /// </summary>
-    /// <param name="registration">The registration describing the sheet family.</param>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    /// <param name="scope">The immutable operation reuse scope.</param>
-    private void PrefetchReferenceTextDescription(
-        ReferenceTextPrefetchRegistration registration,
-        ReferenceTextCanonicalPayload originalPayload,
-        ReferenceTextRowBase existingRow,
+        uint referenceId,
         SourceClientLanguage sourceLanguage,
         TranslationReuseScope scope)
     {
-        if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedDescription))
-        {
-            return;
-        }
-
-        var translationService = TranslationService;
-        DispatchReferenceTextPrefetchTranslation(
-            $"{registration.Key}|{originalPayload.ReferenceId}|Description|{originalPayload.Description}",
-            sourceLanguage,
-            scope,
-            this.TryGetQueuedTranslation,
-            this.QueueTranslation,
-            () => translationService.Translate(
-                originalPayload.Description,
-                sourceLanguage,
-                scope.TargetLanguageCode,
-                originContext: BuildReferenceTextOriginContext(
-                    registration.Key,
-                    originalPayload,
-                    "Description")),
-            (translatedDescription, capturedScope, _) =>
-                this.ApplyReferenceTextTranslation(
-                    registration,
-                    originalPayload.ReferenceId,
-                    capturedScope,
-                    translatedDescription: translatedDescription));
+        var state = this.GetOrCreateReferenceTextPrefetchState(registration.Key);
+        _ = this.PrefetchReferenceText(
+            registration, referenceId, sourceLanguage, scope, GetGameVersion(), state.Cancellation.Token,
+            PersistencePriority.Interactive);
     }
 
-    /// <summary>
-    ///     Applies one resolved reference-text translation into canonical
-    ///     storage.
-    /// </summary>
-    /// <param name="registration">The registration describing the sheet family.</param>
-    /// <param name="referenceId">The sheet-row identifier.</param>
-    /// <param name="scope">The immutable operation reuse scope.</param>
-    /// <param name="translatedName">The translated name, if any.</param>
-    /// <param name="translatedDescription">The translated description, if any.</param>
-    private void ApplyReferenceTextTranslation(
+    /// <summary>Captures a sheet payload and admits background persistence work.</summary>
+    /// <param name="registration">The captured sheet-family registration.</param>
+    /// <param name="referenceId">The sheet row to capture.</param>
+    /// <param name="sourceLanguage">The captured source contract.</param>
+    /// <param name="scope">The immutable reuse scope.</param>
+    /// <param name="gameVersion">The captured game version.</param>
+    /// <param name="cancellationToken">The registration generation token.</param>
+    /// <param name="priority">The lane for background or visible-reference admission.</param>
+    /// <returns>The operation completion; false keeps the cursor retryable.</returns>
+    private Task<bool> PrefetchReferenceText(
         ReferenceTextPrefetchRegistration registration,
         uint referenceId,
+        SourceClientLanguage sourceLanguage,
         TranslationReuseScope scope,
-        string? translatedName = null,
-        string? translatedDescription = null)
+        string? gameVersion,
+        CancellationToken cancellationToken,
+        PersistencePriority priority = PersistencePriority.Background)
     {
-        if (!registration.TryBuildPayload(referenceId, out var originalPayload))
+        if (!registration.TryBuildPayload(referenceId, out var payload))
         {
-            return;
+            return Task.FromResult(true);
         }
 
-        var translatedRow = CreateReferenceTextTranslationRow(
-            originalPayload,
-            GetGameVersion(),
-            scope,
-            registration.CreateRow,
-            registration.FindRow,
-            translatedName,
-            translatedDescription);
-        registration.InsertRow(translatedRow);
+        var key = BuildTranslationReuseScopedKey(
+            $"{registration.Key}|{gameVersion}|{payload.Serialize()}", scope);
+        if (this.referenceTextPrefetchOperations.TryGetValue(key, out var pending) && !pending.IsCompleted)
+        {
+            return pending;
+        }
+
+        var operation = registration.Schedule(payload, sourceLanguage, scope, gameVersion, cancellationToken, priority);
+        if (!operation.IsCompleted)
+        {
+            this.referenceTextPrefetchOperations[key] = operation;
+        }
+
+        return operation;
     }
 
     /// <summary>
@@ -546,6 +537,13 @@ public unsafe partial class Echoglossian
             originalPayload,
             null);
         existingRow = findRow(originalRow) ?? originalRow;
+        if (!string.IsNullOrWhiteSpace(existingRow.TranslatedName) &&
+            (string.IsNullOrWhiteSpace(originalPayload.Description) ||
+             !string.IsNullOrWhiteSpace(existingRow.TranslatedDescription)))
+        {
+            return PrefetchTranslationDispatchResult.Rejected;
+        }
+
         persistRow(originalRow);
 
         if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
@@ -722,29 +720,26 @@ public unsafe partial class Echoglossian
             IsEnabled = isEnabled ?? (() => true),
             TryCollectReferenceIds = tryCollectReferenceIds,
             TryBuildPayload = tryBuildPayload,
-            CreateRow = (
-                originalLang,
-                translationLang,
-                translationEngine,
-                gameVersion,
-                originalPayload,
-                translatedPayload) =>
-                (createRow ??
-                 ReferenceTextPersistenceHelper.CreateCanonicalRow<TRow>)(
-                    originalLang,
-                    translationLang,
-                    translationEngine,
-                    gameVersion,
-                    originalPayload,
-                    translatedPayload),
-            FindRow = row =>
-                this.FindReferenceText((TRow)row, cacheStore, setSelector),
-            InsertRow = row =>
+            Schedule = (payload, source, scope, version, token, priority) =>
             {
-                _ = this.InsertReferenceText(
-                    (TRow)row,
-                    cacheStore,
-                    setSelector);
+                var writer = this.referenceTextPersistenceWriter;
+                if (writer is null)
+                {
+                    return Task.FromResult(false);
+                }
+
+                var translationService = TranslationService;
+                var resolution = translationService.CaptureTranslatorResolution(
+                    scope.TranslationEngine!.Value, TranslationSurfaceGroup.Default);
+                return ReferenceTextPrefetchOperation.Start(
+                    writer, this.queuedTranslationBroker, cacheStore, setSelector,
+                    createRow ?? ReferenceTextPersistenceHelper.CreateCanonicalRow<TRow>,
+                    payload, version, source, scope,
+                    BuildReferenceTextOriginContext(key, payload, "Fields"),
+                    (fields, capturedSource, target, origin, cancellationToken) =>
+                        translationService.TranslateFieldsAsync(
+                            fields, capturedSource, target, resolution, origin, cancellationToken),
+                    token, priority);
             },
         };
     }
@@ -1856,28 +1851,10 @@ public unsafe partial class Echoglossian
             set;
         }
 
-        /// <summary>
-        ///     Gets or sets the canonical row creator.
-        /// </summary>
-        public required Func<string, string, int?, string?, ReferenceTextCanonicalPayload, ReferenceTextCanonicalPayload?, ReferenceTextRowBase> CreateRow
-        {
-            get;
-            set;
-        }
+        /// <summary>Gets the cache-first background admission operation.</summary>
+        public required Func<ReferenceTextCanonicalPayload, SourceClientLanguage,
+            TranslationReuseScope, string?, CancellationToken, PersistencePriority, Task<bool>> Schedule { get; init; }
 
-        /// <summary>
-        ///     Gets or sets the cache-first finder.
-        /// </summary>
-        public required Func<ReferenceTextRowBase, ReferenceTextRowBase?> FindRow
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        ///     Gets or sets the insert/update operation.
-        /// </summary>
-        public required Action<ReferenceTextRowBase> InsertRow { get; set; }
     }
 
     /// <summary>
@@ -1899,6 +1876,12 @@ public unsafe partial class Echoglossian
         ///     Gets or sets the next queue index to process.
         /// </summary>
         public int QueueIndex { get; set; }
+
+        /// <summary>Gets or sets the sole active operation for this cursor.</summary>
+        public Task<bool>? Pending { get; set; }
+
+        /// <summary>Gets or sets cancellation for the captured registration generation.</summary>
+        public CancellationTokenSource Cancellation { get; set; } = new();
     }
 
     /// <summary>

@@ -251,6 +251,26 @@ public class TranslationService
       string? originContext = null,
       CancellationToken cancellationToken = default)
   {
+    return await this.TranslateFieldsAsync(fields, sourceLanguage, targetLanguage,
+        this.ResolveTranslator(TranslationSurfaceGroup.Default), originContext, cancellationToken).ConfigureAwait(false);
+  }
+
+  /// <summary>Translates fields using the operation-captured engine resolution.</summary>
+  /// <param name="fields">The named fields to translate.</param>
+  /// <param name="sourceLanguage">The captured source contract.</param>
+  /// <param name="targetLanguage">The captured target language.</param>
+  /// <param name="translatorResolution">The captured translator and engine identity.</param>
+  /// <param name="originContext">The diagnostic origin.</param>
+  /// <param name="cancellationToken">The operation cancellation token.</param>
+  /// <returns>The complete translated field result.</returns>
+  internal async Task<TranslationFieldBatchResult> TranslateFieldsAsync(
+      IReadOnlyList<TranslationField> fields,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      TranslatorResolution translatorResolution,
+      string? originContext = null,
+      CancellationToken cancellationToken = default)
+  {
     ArgumentNullException.ThrowIfNull(fields);
     ArgumentException.ThrowIfNullOrWhiteSpace(targetLanguage);
     var requestedFields = fields.ToArray();
@@ -272,8 +292,6 @@ public class TranslationService
       return new TranslationFieldBatchResult([], false);
     }
 
-    var translatorResolution = this.ResolveTranslator(
-        TranslationSurfaceGroup.Default);
     if (!this.TryPrepareFieldBatch(
             requestedFields,
             sourceLanguage,

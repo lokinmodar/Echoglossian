@@ -15,6 +15,31 @@ namespace Echoglossian.Tests;
 /// </summary>
 public sealed class TranslationFieldBatchTests
 {
+    /// <summary>Batch and individual fallback retain the engine captured before settings change.</summary>
+    /// <param name="malformed">Whether the provider forces individual fallback.</param>
+    /// <returns>The asynchronous test task.</returns>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TranslateFieldsAsync_CapturedResolutionSurvivesSettingsChange(bool malformed)
+    {
+        var original = new EnvelopeTranslator(fields => malformed ? "broken envelope" :
+            TranslationFieldEnvelopeCodec.Encode(fields.Select(field => new TranslationField(field.Name, "captured:" + field.Text))),
+            text => "captured:" + text);
+        var replacement = new EnvelopeTranslator(_ => throw new InvalidOperationException("Live engine used after capture."));
+        var current = new TranslationService.TranslatorResolution(0, original);
+        var service = new TranslationService(text => text, original, translatorResolver: _ => current);
+        var captured = service.CaptureTranslatorResolution(0, TranslationSurfaceGroup.Default);
+        current = new TranslationService.TranslatorResolution(4, replacement);
+        var result = await service.TranslateFieldsAsync(
+            [new TranslationField("Name", "Actions"), new TranslationField("Description", "Open actions.")],
+            new SourceClientLanguage("en", "en"), "pt", captured);
+        Assert.Equal("captured:Actions", result.GetTranslation("Name"));
+        Assert.Equal("captured:Open actions.", result.GetTranslation("Description"));
+        Assert.Equal(malformed, result.UsedIndividualFallback);
+        Assert.Equal(0, replacement.CallCount);
+    }
+
     /// <summary>
     ///     Ensures a valid field envelope uses one translator invocation.
     /// </summary>

@@ -22,6 +22,7 @@ internal sealed class ReferenceTextPersistenceWriter
     private const string WriteDomain = "reference-text-write";
 
     private readonly IPersistenceCoordinator coordinator;
+    private readonly object publicationGate = new();
     private int publicationEnabled = 1;
 
     /// <summary>
@@ -39,7 +40,23 @@ internal sealed class ReferenceTextPersistenceWriter
     /// </summary>
     internal void DisablePublication()
     {
-        Interlocked.Exchange(ref this.publicationEnabled, 0);
+        lock (this.publicationGate)
+        {
+            this.publicationEnabled = 0;
+        }
+    }
+
+    /// <summary>Publishes an already completed read under the shared unload gate.</summary>
+    /// <param name="publish">The cache publication owned by one read subscriber.</param>
+    internal void PublishRead(Action publish)
+    {
+        lock (this.publicationGate)
+        {
+            if (this.publicationEnabled != 0)
+            {
+                publish();
+            }
+        }
     }
 
     /// <summary>
@@ -52,13 +69,15 @@ internal sealed class ReferenceTextPersistenceWriter
     /// <param name="setSelector">Selects the matching DbSet.</param>
     /// <param name="publish">The cache projection invoked after a successful read.</param>
     /// <param name="completion">The terminal read completion.</param>
+    /// <param name="priority">The admission lane; visible requests may use interactive priority.</param>
     /// <returns>The non-blocking admission outcome.</returns>
     internal PersistenceAdmissionStatus TryFind<TRow>(
         TRow probe,
         TranslationReuseScope scope,
         Func<EchoglossianDbContext, DbSet<TRow>> setSelector,
         Action<TRow>? publish,
-        out Task<PersistenceReadResult<TRow?>> completion)
+        out Task<PersistenceReadResult<TRow?>> completion,
+        PersistencePriority priority = PersistencePriority.Background)
         where TRow : ReferenceTextRowBase
     {
         ArgumentNullException.ThrowIfNull(probe);
@@ -66,7 +85,7 @@ internal sealed class ReferenceTextPersistenceWriter
 
         return this.coordinator.TryScheduleRead(
             new PersistenceWorkKey(ReadDomain, BuildReadIdentity<TRow>(probe, scope)),
-            PersistencePriority.Background,
+            priority,
             (context, cancellationToken) => ReferenceTextPersistenceHelper
                 .FindReferenceTextAsync(
                     context,
@@ -76,9 +95,12 @@ internal sealed class ReferenceTextPersistenceWriter
                     cancellationToken),
             row =>
             {
-                if (row is not null && Volatile.Read(ref this.publicationEnabled) != 0)
+                lock (this.publicationGate)
                 {
-                    publish?.Invoke(row);
+                    if (row is not null && this.publicationEnabled != 0)
+                    {
+                        publish?.Invoke(row);
+                    }
                 }
             },
             out completion);
@@ -93,12 +115,14 @@ internal sealed class ReferenceTextPersistenceWriter
     /// <param name="setSelector">Selects the matching DbSet.</param>
     /// <param name="publish">The cache projection invoked after commit or a successful unchanged read.</param>
     /// <param name="completion">The terminal write completion.</param>
+    /// <param name="priority">The admission lane captured with the originating request.</param>
     /// <returns>The non-blocking admission outcome.</returns>
     internal PersistenceAdmissionStatus TryPersist<TRow>(
         TRow row,
         Func<EchoglossianDbContext, DbSet<TRow>> setSelector,
         Action<TRow>? publish,
-        out Task<PersistenceWriteResult> completion)
+        out Task<PersistenceWriteResult> completion,
+        PersistencePriority priority = PersistencePriority.Background)
         where TRow : ReferenceTextRowBase
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -114,7 +138,7 @@ internal sealed class ReferenceTextPersistenceWriter
         return this.coordinator.TryScheduleWrite(
             new PersistenceWriteRequest(
                 new PersistenceWorkKey(WriteDomain, BuildWriteIdentity<TRow>(row)),
-                PersistencePriority.Background,
+                priority,
                 async (context, cancellationToken) =>
                 {
                     var result = await ReferenceTextPersistenceHelper
@@ -131,9 +155,12 @@ internal sealed class ReferenceTextPersistenceWriter
                 },
                 () =>
                 {
-                    if (persistedRow is not null && Volatile.Read(ref this.publicationEnabled) != 0)
+                    lock (this.publicationGate)
                     {
-                        publish?.Invoke(persistedRow);
+                        if (persistedRow is not null && this.publicationEnabled != 0)
+                        {
+                            publish?.Invoke(persistedRow);
+                        }
                     }
                 }),
             out completion);
