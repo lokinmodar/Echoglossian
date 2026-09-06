@@ -84,6 +84,39 @@ public sealed class LlmCapabilityObservationWriterTests
         }, writeDequeuedBeforeClaimAsync: async () => { dequeued.SetResult(true); await release.Task; });
     }
 
+    /// <summary>Ensures a matching write admitted during batch collection executes in the following batch.</summary>
+    [Fact]
+    public async Task RecordAsync_SameIdentityDuringBatchCollection_DoesNotInsertDuplicateRows()
+    {
+        var collecting = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseCollection = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await this.WithWriterAsync(async (writer, factory, _) =>
+        {
+            var first = CreateObservation();
+            first.ObservedAtUtc = DateTime.UnixEpoch;
+            var latest = CreateObservation();
+            latest.ProviderErrorCode = "latest";
+            latest.ObservedAtUtc = DateTime.UnixEpoch.AddMinutes(1);
+
+            writer.TryRecord(first, out var one).Should().Be(PersistenceAdmissionStatus.Accepted);
+            await collecting.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            writer.TryRecord(latest, out var two).Should().Be(PersistenceAdmissionStatus.Accepted);
+            ReferenceEquals(one, two).Should().BeFalse();
+            releaseCollection.SetResult(true);
+
+            await Task.WhenAll(one, two).WaitAsync(TimeSpan.FromSeconds(5));
+            await using var context = await factory.CreateDbContextAsync();
+            (await context.LlmModelCapabilityObservations.CountAsync()).Should().Be(1);
+            var row = await context.LlmModelCapabilityObservations.SingleAsync();
+            row.ProviderErrorCode.Should().Be("latest");
+            row.ObservedAtUtc.Should().Be(latest.ObservedAtUtc);
+        }, delayAsync: async (_, cancellationToken) =>
+        {
+            collecting.TrySetResult(true);
+            await releaseCollection.Task.WaitAsync(cancellationToken);
+        });
+    }
+
     /// <summary>Ensures committed writes publish the cache projection.</summary>
     [Fact]
     public async Task RecordAsync_DoesNotPublishBeforeCommit()
@@ -180,13 +213,17 @@ public sealed class LlmCapabilityObservationWriterTests
     private async Task WithWriterAsync(
         Func<LlmCapabilityObservationWriter, IDbContextFactory<EchoglossianDbContext>, string, Task> action,
         DbTransactionInterceptor? interceptor = null,
-        Func<Task>? writeDequeuedBeforeClaimAsync = null)
+        Func<Task>? writeDequeuedBeforeClaimAsync = null,
+        Func<TimeSpan, CancellationToken, Task>? delayAsync = null)
     {
         var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
         IDbContextFactory<EchoglossianDbContext> factory = interceptor is null
             ? new EchoglossianDbContextRuntimeFactory(directory)
             : new TestFactory(Path.Combine(directory, "Echoglossian.db"), interceptor);
-        await using var coordinator = new PersistenceCoordinator(factory, writeDequeuedBeforeClaimAsync: writeDequeuedBeforeClaimAsync);
+        await using var coordinator = new PersistenceCoordinator(
+            factory,
+            delayAsync: delayAsync,
+            writeDequeuedBeforeClaimAsync: writeDequeuedBeforeClaimAsync);
         try
         {
             if (interceptor is CommitGateInterceptor gate) { gate.Enabled = false; }

@@ -367,20 +367,29 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
   private async Task RunWriterWorkerAsync()
   {
+    WriteWork? deferredWrite = null;
     while (true)
     {
       WriteWork first;
-      try
+      if (deferredWrite is not null)
       {
-        first = await this.writeQueue.DequeueAsync(this.shutdownCancellation.Token).ConfigureAwait(false);
+        first = deferredWrite;
+        deferredWrite = null;
       }
-      catch (ChannelClosedException)
+      else
       {
-        return;
-      }
-      catch (OperationCanceledException)
-      {
-        return;
+        try
+        {
+          first = await this.writeQueue.DequeueAsync(this.shutdownCancellation.Token).ConfigureAwait(false);
+        }
+        catch (ChannelClosedException)
+        {
+          return;
+        }
+        catch (OperationCanceledException)
+        {
+          return;
+        }
       }
 
       if (this.writeDequeuedBeforeClaimAsync is not null)
@@ -395,6 +404,7 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
       }
 
       var batch = new List<WriteWork> { claimedFirst };
+      var batchKeys = new HashSet<PersistenceWorkKey> { claimedFirst.Key };
       if (this.options.BatchCollectionWindow > TimeSpan.Zero)
       {
         try
@@ -416,10 +426,17 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
           break;
         }
 
+        if (batchKeys.Contains(next.Key))
+        {
+          deferredWrite = next;
+          break;
+        }
+
         var claimed = this.ClaimWrite(next);
         if (claimed is not null)
         {
           batch.Add(claimed);
+          _ = batchKeys.Add(claimed.Key);
         }
       }
 
