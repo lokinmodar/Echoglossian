@@ -536,7 +536,7 @@ public class ClaudeTranslator : ITranslator, IDialogueContextAwareTranslator
         }
 
         var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-        var learning = LlmCapabilityPolicyService.LearnFromProviderFailure(
+        var learning = await LlmCapabilityPolicyService.LearnFromProviderFailureAsync(
             this.capabilityScope,
             LlmCapabilityParameterName.Temperature,
             (int)response.StatusCode,

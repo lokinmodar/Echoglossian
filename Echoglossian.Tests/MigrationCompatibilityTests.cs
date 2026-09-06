@@ -1,7 +1,9 @@
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.EFCoreSqlite.Models.Journal;
+using Echoglossian.Persistence;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -101,6 +103,71 @@ public class MigrationCompatibilityTests
         finally
         {
             TryDeleteDirectory(configDir);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the pooled runtime context upgrades an existing base-context database
+    ///     without losing rows or diverging from the base-context migration history.
+    /// </summary>
+    [Fact]
+    public async Task Migrate_FromPenultimateBaseMigration_ThroughPooledRuntimeFactory_PreservesDataAndHistory()
+    {
+        var configDir = Path.Combine(Path.GetTempPath(), "Echoglossian.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(configDir);
+        var expectedSender = "Pooled migration compatibility";
+        string[] expectedMigrations;
+
+        try
+        {
+            await using (var baseContext = new EchoglossianDbContext(configDir))
+            {
+                expectedMigrations = baseContext.Database.GetMigrations().ToArray();
+                var targetMigration = expectedMigrations[^2];
+                await baseContext.GetService<IMigrator>().MigrateAsync(targetMigration);
+                baseContext.TalkMessage.Add(new TalkMessage(
+                    senderName: expectedSender,
+                    originalTalkMessage: "Existing database row",
+                    originalTalkMessageLang: "en",
+                    originalSenderNameLang: "en",
+                    translatedSenderName: expectedSender,
+                    translatedTalkMessage: "Linha existente",
+                    translationLang: "pt",
+                    translationEngine: 1,
+                    rtlLangTranslationImageData: null,
+                    createdDate: DateTime.UtcNow,
+                    updatedDate: DateTime.UtcNow));
+                await baseContext.SaveChangesAsync();
+            }
+
+            SqliteConnection.ClearAllPools();
+            var factory = new EchoglossianDbContextRuntimeFactory(configDir);
+            await using var runtimeContext = await factory.CreateDbContextAsync();
+
+            await runtimeContext.Database.MigrateAsync();
+            Assert.Equal(expectedSender, await runtimeContext.TalkMessage
+                .Where(row => row.SenderName == expectedSender)
+                .Select(row => row.SenderName)
+                .SingleAsync());
+            Assert.Empty(await runtimeContext.Database.GetPendingMigrationsAsync());
+            Assert.Equal(expectedMigrations, await runtimeContext.Database.GetAppliedMigrationsAsync());
+
+            var appliedBeforeIdempotentMigration = await runtimeContext.Database.GetAppliedMigrationsAsync();
+            var rowCountBeforeIdempotentMigration = await runtimeContext.TalkMessage.CountAsync(
+                row => row.SenderName == expectedSender);
+
+            await runtimeContext.Database.MigrateAsync();
+
+            Assert.Equal(
+                appliedBeforeIdempotentMigration,
+                await runtimeContext.Database.GetAppliedMigrationsAsync());
+            Assert.Equal(
+                rowCountBeforeIdempotentMigration,
+                await runtimeContext.TalkMessage.CountAsync(row => row.SenderName == expectedSender));
+        }
+        finally
+        {
+            TryDeleteDirectoryWithPoolCleanup(configDir);
         }
     }
 
@@ -349,6 +416,26 @@ public class MigrationCompatibilityTests
         catch (UnauthorizedAccessException)
         {
             // Best effort cleanup for transient SQLite file locks during tests.
+        }
+    }
+
+    /// <summary>Clears SQLite pools and makes a bounded best-effort attempt to delete a temporary test directory.</summary>
+    /// <param name="path">The temporary directory to delete.</param>
+    private static void TryDeleteDirectoryWithPoolCleanup(string path)
+    {
+        for (var attempt = 0; attempt < 3 && Directory.Exists(path); attempt++)
+        {
+            SqliteConnection.ClearAllPools();
+            try
+            {
+                Directory.Delete(path, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
         }
     }
 }

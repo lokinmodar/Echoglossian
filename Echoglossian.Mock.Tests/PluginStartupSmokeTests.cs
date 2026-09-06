@@ -24,7 +24,7 @@ using Xunit;
 namespace Echoglossian.Mock.Tests;
 
 /// <summary>
-/// Covers startup and shutdown milestones under DalaMock.
+/// Covers startup and shutdown registration/order milestones under DalaMock only; these assertions do not prove an awaited persistence drain, SQLite scheduling, or native runtime behavior.
 /// </summary>
 public class PluginStartupSmokeTests
 {
@@ -105,6 +105,7 @@ public class PluginStartupSmokeTests
         snapshot.HasStage(PluginStartupStage.CommandHandlersRegistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.PluginUiRegistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.RuntimeServicesBuilt).Should().BeTrue();
+        snapshot.HasStage(PluginStartupStage.PersistenceCoordinatorStarted).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.RuntimeCachesPreloaded).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.FrameworkUpdateRegistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.AddonHandlersRegistered).Should().BeTrue();
@@ -188,6 +189,7 @@ public class PluginStartupSmokeTests
         var snapshot = started.Plugin.StartupAudit.CaptureSnapshot();
 
         snapshot.HasStage(PluginStartupStage.DisposeStarted).Should().BeTrue();
+        snapshot.HasStage(PluginStartupStage.PersistenceAdmissionsStopped).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.PluginUiUnregistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.FrameworkUpdateUnregistered).Should().BeTrue();
         snapshot.HasStage(PluginStartupStage.RuntimeServicesDisposed).Should().BeTrue();
