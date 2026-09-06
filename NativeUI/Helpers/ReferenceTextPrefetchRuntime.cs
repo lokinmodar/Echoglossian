@@ -239,13 +239,13 @@ public unsafe partial class Echoglossian
         {
             if (state.Pending is not null)
             {
-                if (!state.Pending.IsCompleted)
+                if (!state.Pending.Completion.IsCompleted)
                 {
                     break;
                 }
 
-                // The completion guard makes retrieval non-blocking.
-                var completed = state.Pending.IsCompletedSuccessfully && state.Pending.GetAwaiter().GetResult();
+                // The async observer publishes the outcome before completing.
+                var completed = state.Pending.Succeeded;
                 state.Pending = null;
                 if (completed)
                 {
@@ -258,9 +258,9 @@ public unsafe partial class Echoglossian
             }
 
             var referenceId = state.Queue[state.QueueIndex];
-            state.Pending = schedule(referenceId);
+            state.Pending = new ReferenceTextPrefetchCompletion(schedule(referenceId));
             processedCount++;
-            if (!state.Pending.IsCompleted)
+            if (!state.Pending.Completion.IsCompleted)
             {
                 break;
             }
@@ -1892,7 +1892,7 @@ public unsafe partial class Echoglossian
         public int QueueIndex { get; set; }
 
         /// <summary>Gets or sets the sole active operation for this cursor.</summary>
-        public Task<bool>? Pending { get; set; }
+        public ReferenceTextPrefetchCompletion? Pending { get; set; }
 
         /// <summary>Gets or sets cancellation for the captured registration generation.</summary>
         public CancellationTokenSource Cancellation { get; set; } = new();

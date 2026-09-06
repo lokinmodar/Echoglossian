@@ -208,14 +208,16 @@ public static class ReferenceTextPersistenceHelper
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return candidates
+        var matches = candidates
             .Where(existing => scope.Matches(
                 existing.OriginalLang,
                 existing.TranslationLang,
                 existing.TranslationEngine))
             .OrderByDescending(GetTranslationCompletenessScore)
-            .ThenByDescending(existing => existing.UpdatedDate)
-            .FirstOrDefault();
+            .ThenByDescending(existing => existing.UpdatedDate);
+        // Candidates are already materialized; only enumerate the in-memory ordering.
+        using var enumerator = matches.GetEnumerator();
+        return enumerator.MoveNext() ? enumerator.Current : null;
     }
 
     /// <summary>
@@ -260,15 +262,16 @@ public static class ReferenceTextPersistenceHelper
                 existing.SourceContentHash == row.SourceContentHash)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        var existing = candidates
+        var matches = candidates
             .Where(candidate => RuntimeLanguageHelper.LanguagesMatch(
                 candidate.OriginalLang,
                 row.OriginalLang) && RuntimeLanguageHelper.LanguagesMatch(
                 candidate.TranslationLang,
                 row.TranslationLang))
             .OrderByDescending(GetTranslationCompletenessScore)
-            .ThenByDescending(candidate => candidate.UpdatedDate)
-            .FirstOrDefault();
+            .ThenByDescending(candidate => candidate.UpdatedDate);
+        using var enumerator = matches.GetEnumerator();
+        var existing = enumerator.MoveNext() ? enumerator.Current : null;
         if (existing is not null)
         {
             if (!MergeValues(existing, row))

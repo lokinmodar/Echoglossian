@@ -426,12 +426,12 @@ public class ReferenceTextPrefetchRuntimeTests
         state.Queue.Add(12);
         Task<bool> Schedule(uint _) => harness.Start(Harness.Payload());
         Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
-        Assert.False(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.False(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
         Assert.Equal(0, state.QueueIndex);
         Assert.Null(state.Pending);
         Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
-        Assert.True(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
         Assert.Equal(1, state.QueueIndex);
         state.Cancellation.Dispose();
@@ -456,11 +456,11 @@ public class ReferenceTextPrefetchRuntimeTests
         }
 
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
-        Assert.True(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
         Assert.Equal(1, state.QueueIndex);
-        Assert.True(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
         Assert.Equal(2, state.QueueIndex);
@@ -497,7 +497,7 @@ public class ReferenceTextPrefetchRuntimeTests
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
         var pending = state.Pending!;
         Assert.NotNull(pending);
-        Assert.True(await pending.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await pending.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
         Assert.Equal(1, state.QueueIndex);
         Assert.Equal(2, schedules);
@@ -506,7 +506,7 @@ public class ReferenceTextPrefetchRuntimeTests
 
     /// <summary>Repeated Framework ticks do not block or reschedule one incomplete operation.</summary>
     [Fact]
-    public void RuntimeCursor_PendingOperation_IsNotResubmittedOnRepeatedTicks()
+    public async Task RuntimeCursor_PendingOperation_IsNotResubmittedOnRepeatedTicks()
     {
         var state = new PluginEntry.ReferenceTextPrefetchState();
         state.Queue.Add(12);
@@ -528,6 +528,7 @@ public class ReferenceTextPrefetchRuntimeTests
         Assert.Equal(1, schedules);
         Assert.Equal(0, state.QueueIndex);
         pending.SetResult(true);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
         Assert.Equal(1, state.QueueIndex);
         Assert.Equal(1, schedules);
@@ -550,7 +551,7 @@ public class ReferenceTextPrefetchRuntimeTests
         }, state.Cancellation.Token));
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
         state.Cancellation.Cancel();
-        Assert.False(await state.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.False(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         PluginEntry.TickReferenceTextPrefetchQueue(state, 8, _ => throw new InvalidOperationException("Retried in same completion tick."));
         Assert.Equal(0, state.QueueIndex);
 
@@ -572,7 +573,7 @@ public class ReferenceTextPrefetchRuntimeTests
             payload.ReferenceId = id;
             return harness.Start(payload, cancellationToken: restarted.Cancellation.Token);
         });
-        Assert.True(await restarted.Pending!.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await restarted.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
         PluginEntry.TickReferenceTextPrefetchQueue(restarted, 8, _ => throw new InvalidOperationException("Completed row repeated."));
         Assert.Equal(1, restarted.QueueIndex);
         restarted.Cancellation.Dispose();
