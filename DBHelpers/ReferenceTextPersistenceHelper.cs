@@ -7,6 +7,8 @@ using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.Helpers;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace Echoglossian;
 
 /// <summary>
@@ -165,6 +167,126 @@ public static class ReferenceTextPersistenceHelper
     }
 
     /// <summary>
+    ///     Finds one canonical reference-text row asynchronously using an
+    ///     explicit translation reuse scope.
+    /// </summary>
+    /// <typeparam name="TRow">The concrete row type.</typeparam>
+    /// <param name="context">The short-lived context that executes the lookup.</param>
+    /// <param name="probe">The probe row that defines the content and version identity.</param>
+    /// <param name="scope">The source, target, and engine reuse policy.</param>
+    /// <param name="setSelector">Selects the matching DbSet.</param>
+    /// <param name="cancellationToken">The cancellation token for the query.</param>
+    /// <returns>The matching row, or <see langword="null" />.</returns>
+    internal static async Task<TRow?> FindReferenceTextAsync<TRow>(
+        EchoglossianDbContext context,
+        TRow probe,
+        TranslationReuseScope scope,
+        Func<EchoglossianDbContext, DbSet<TRow>> setSelector,
+        CancellationToken cancellationToken)
+        where TRow : ReferenceTextRowBase
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(probe);
+        ArgumentNullException.ThrowIfNull(setSelector);
+
+        if (!IsValidForPersistence(probe))
+        {
+            return null;
+        }
+
+        var hasRequestedGameVersion =
+            GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion);
+        var candidates = await setSelector(context)
+            .AsNoTracking()
+            .Where(existing =>
+                existing.ReferenceId == probe.ReferenceId &&
+                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (existing.GameVersion == null ||
+                   existing.GameVersion == probe.GameVersion))) &&
+                existing.SourceContentHash == probe.SourceContentHash)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return candidates
+            .Where(existing => scope.Matches(
+                existing.OriginalLang,
+                existing.TranslationLang,
+                existing.TranslationEngine))
+            .OrderByDescending(GetTranslationCompletenessScore)
+            .ThenByDescending(existing => existing.UpdatedDate)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    ///     Applies one canonical reference-text upsert to the supplied
+    ///     coordinator-owned context without saving it.
+    /// </summary>
+    /// <typeparam name="TRow">The concrete row type.</typeparam>
+    /// <param name="context">The coordinator-owned write context.</param>
+    /// <param name="row">The immutable incoming canonical row.</param>
+    /// <param name="setSelector">Selects the matching DbSet.</param>
+    /// <param name="cancellationToken">The cancellation token for the query.</param>
+    /// <returns>The persisted row and whether tracked state changed.</returns>
+    internal static async Task<(TRow Row, bool Changed)> UpsertReferenceTextAsync<TRow>(
+        EchoglossianDbContext context,
+        TRow row,
+        Func<EchoglossianDbContext, DbSet<TRow>> setSelector,
+        CancellationToken cancellationToken)
+        where TRow : ReferenceTextRowBase
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(row);
+        ArgumentNullException.ThrowIfNull(setSelector);
+
+        if (!IsValidForPersistence(row))
+        {
+            throw new ArgumentException(
+                "The reference-text row does not contain a valid persistence identity.",
+                nameof(row));
+        }
+
+        var set = setSelector(context);
+        var hasRequestedGameVersion =
+            GameVersionLookupHelper.HasRequestedVersion(row.GameVersion);
+        var candidates = await set
+            .Where(existing =>
+                existing.ReferenceId == row.ReferenceId &&
+                existing.TranslationEngine == row.TranslationEngine &&
+                ((!hasRequestedGameVersion && existing.GameVersion == null) ||
+                 (hasRequestedGameVersion &&
+                  (existing.GameVersion == null ||
+                   existing.GameVersion == row.GameVersion))) &&
+                existing.SourceContentHash == row.SourceContentHash)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var existing = candidates
+            .Where(candidate => RuntimeLanguageHelper.LanguagesMatch(
+                candidate.OriginalLang,
+                row.OriginalLang) && RuntimeLanguageHelper.LanguagesMatch(
+                candidate.TranslationLang,
+                row.TranslationLang))
+            .OrderByDescending(GetTranslationCompletenessScore)
+            .ThenByDescending(candidate => candidate.UpdatedDate)
+            .FirstOrDefault();
+        if (existing is not null)
+        {
+            if (!MergeValues(existing, row))
+            {
+                return (existing, false);
+            }
+
+            existing.UpdatedDate = DateTime.UtcNow;
+            return (existing, true);
+        }
+
+        row.CreatedDate = DateTime.UtcNow;
+        row.UpdatedDate = DateTime.UtcNow;
+        await set.AddAsync(row, cancellationToken).ConfigureAwait(false);
+        return (row, true);
+    }
+
+    /// <summary>
     ///     Finds one canonical reference-text row using an explicit translation
     ///     reuse scope.
     /// </summary>
@@ -226,7 +348,7 @@ public static class ReferenceTextPersistenceHelper
     /// <typeparam name="TRow">The concrete row type.</typeparam>
     /// <param name="row">The row to validate.</param>
     /// <returns>True when the row has a safe persistence identity.</returns>
-    private static bool IsValidForPersistence<TRow>(TRow row)
+    internal static bool IsValidForPersistence<TRow>(TRow row)
         where TRow : ReferenceTextRowBase
     {
         return row != null &&
@@ -243,23 +365,59 @@ public static class ReferenceTextPersistenceHelper
     /// <typeparam name="TRow">The concrete row type.</typeparam>
     /// <param name="target">The existing stored row.</param>
     /// <param name="source">The incoming row.</param>
-    private static void MergeValues<TRow>(TRow target, TRow source)
+    private static bool MergeValues<TRow>(TRow target, TRow source)
         where TRow : ReferenceTextRowBase
     {
-        target.OriginalName = FirstNonEmpty(source.OriginalName, target.OriginalName);
-        target.OriginalDescription = FirstNonEmpty(
-            source.OriginalDescription,
-            target.OriginalDescription);
-        target.OriginalLang = FirstNonEmpty(source.OriginalLang, target.OriginalLang);
-        target.TranslatedName = FirstNonEmpty(
-            source.TranslatedName,
-            target.TranslatedName);
-        target.TranslatedDescription = FirstNonEmpty(
-            source.TranslatedDescription,
-            target.TranslatedDescription);
-        target.CanonicalPayloadAsText = FirstNonEmpty(
-            source.CanonicalPayloadAsText,
-            target.CanonicalPayloadAsText);
+        var changed = false;
+        changed |= AssignIfChanged(
+            target.OriginalName,
+            FirstNonEmpty(source.OriginalName, target.OriginalName),
+            value => target.OriginalName = value);
+        changed |= AssignIfChanged(
+            target.OriginalDescription,
+            FirstNonEmpty(source.OriginalDescription, target.OriginalDescription),
+            value => target.OriginalDescription = value);
+        changed |= AssignIfChanged(
+            target.OriginalLang,
+            FirstNonEmpty(source.OriginalLang, target.OriginalLang),
+            value => target.OriginalLang = value);
+        changed |= AssignIfChanged(
+            target.TranslatedName,
+            FirstNonEmpty(source.TranslatedName, target.TranslatedName),
+            value => target.TranslatedName = value);
+        changed |= AssignIfChanged(
+            target.TranslatedDescription,
+            FirstNonEmpty(source.TranslatedDescription, target.TranslatedDescription),
+            value => target.TranslatedDescription = value);
+        changed |= AssignIfChanged(
+            target.CanonicalPayloadAsText,
+            FirstNonEmpty(source.CanonicalPayloadAsText, target.CanonicalPayloadAsText),
+            value => target.CanonicalPayloadAsText = value);
+        return changed;
+    }
+
+    /// <summary>
+    ///     Assigns a string field only when its non-null-aware value changes.
+    /// </summary>
+    /// <param name="current">The currently stored value.</param>
+    /// <param name="incoming">The preferred incoming value.</param>
+    /// <param name="assign">Assigns the changed value.</param>
+    /// <returns>
+    ///     <see langword="true" /> when the value changed; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    private static bool AssignIfChanged(
+        string? current,
+        string? incoming,
+        Action<string?> assign)
+    {
+        if (string.Equals(current, incoming, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        assign(incoming);
+        return true;
     }
 
     /// <summary>
