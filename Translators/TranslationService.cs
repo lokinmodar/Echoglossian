@@ -235,6 +235,81 @@ public class TranslationService
   }
 
   /// <summary>
+  ///     Translates a complete named field set through one engine-neutral
+  ///     request when the translated response preserves the field envelope.
+  /// </summary>
+  /// <param name="fields">The named fields to translate.</param>
+  /// <param name="sourceLanguage">The operation-captured source contract.</param>
+  /// <param name="targetLanguage">The target translation language.</param>
+  /// <param name="originContext">The optional explicit origin context.</param>
+  /// <param name="cancellationToken">The cancellation token for the operation.</param>
+  /// <returns>The complete translated field result.</returns>
+  public async Task<TranslationFieldBatchResult> TranslateFieldsAsync(
+      IReadOnlyList<TranslationField> fields,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      string? originContext = null,
+      CancellationToken cancellationToken = default)
+  {
+    ArgumentNullException.ThrowIfNull(fields);
+    ArgumentException.ThrowIfNullOrWhiteSpace(targetLanguage);
+    var requestedFields = fields.ToArray();
+    var names = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var field in requestedFields)
+    {
+      field.Validate();
+      if (!names.Add(field.Name))
+      {
+        throw new ArgumentException(
+            "Translation field names must be unique.",
+            nameof(fields));
+      }
+    }
+
+    cancellationToken.ThrowIfCancellationRequested();
+    if (requestedFields.Length == 0)
+    {
+      return new TranslationFieldBatchResult([], false);
+    }
+
+    var translatorResolution = this.ResolveTranslator(
+        TranslationSurfaceGroup.Default);
+    string? translatedEnvelope = null;
+    try
+    {
+      translatedEnvelope = await translatorResolution.Translator.TranslateAsync(
+          TranslationFieldEnvelopeCodec.Encode(requestedFields),
+          sourceLanguage.ProviderCode,
+          targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      throw;
+    }
+    catch (Exception)
+    {
+      // A malformed batch response and a transport error both safely use the
+      // established per-field acceptance and failure handling below.
+    }
+
+    if (TranslationFieldEnvelopeCodec.TryDecode(
+            translatedEnvelope,
+            requestedFields,
+            out var translatedFields))
+    {
+      return new TranslationFieldBatchResult(translatedFields, false);
+    }
+
+    return await this.TranslateFieldsIndividuallyAsync(
+        requestedFields,
+        sourceLanguage,
+        targetLanguage,
+        originContext,
+        cancellationToken,
+        translatorResolution).ConfigureAwait(false);
+  }
+
+  /// <summary>
   ///     Executes one synchronous translation with a resolved source contract.
   /// </summary>
   /// <param name="text">Text to translate.</param>
@@ -1056,6 +1131,49 @@ public class TranslationService
   }
 
   /// <summary>
+  ///     Translates every field individually using a captured translator
+  ///     resolution after batch validation fails.
+  /// </summary>
+  /// <param name="fields">The fields to translate individually.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">The requested target language.</param>
+  /// <param name="originContext">The optional parent origin context.</param>
+  /// <param name="cancellationToken">The cancellation token for the operation.</param>
+  /// <param name="translatorResolution">The translator resolution captured for the batch.</param>
+  /// <returns>The complete individual-fallback result.</returns>
+  private async Task<TranslationFieldBatchResult> TranslateFieldsIndividuallyAsync(
+      IReadOnlyList<TranslationField> fields,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      string? originContext,
+      CancellationToken cancellationToken,
+      TranslatorResolution translatorResolution)
+  {
+    var translatedFields = new List<TranslationField>(fields.Count);
+    foreach (var field in fields)
+    {
+      var fieldOriginContext = string.IsNullOrWhiteSpace(originContext)
+          ? null
+          : string.Concat(originContext, "/", field.Name);
+      var translatedText = await this.TranslateAsyncCore(
+          field.Text,
+          sourceLanguage.ProviderCode,
+          targetLanguage,
+          dialogueContext: null,
+          TranslationSurfaceGroup.Default,
+          sourceLanguage,
+          fieldOriginContext,
+          callerMemberName: nameof(this.TranslateFieldsAsync),
+          callerFilePath: string.Empty,
+          cancellationToken,
+          translatorResolution).ConfigureAwait(false);
+      translatedFields.Add(new TranslationField(field.Name, translatedText));
+    }
+
+    return new TranslationFieldBatchResult(translatedFields, true);
+  }
+
+  /// <summary>
   ///     Executes one asynchronous translation with an optional captured source
   ///     contract.
   /// </summary>
@@ -1068,6 +1186,8 @@ public class TranslationService
   /// <param name="originContext">The optional origin context.</param>
   /// <param name="callerMemberName">The caller member name.</param>
   /// <param name="callerFilePath">The caller file path.</param>
+  /// <param name="cancellationToken">The cancellation token for the operation.</param>
+  /// <param name="translatorResolution">The optional previously resolved translator.</param>
   /// <returns>A task containing the translated or sanitized source text.</returns>
   private async Task<string> TranslateAsyncCore(
       string text,
