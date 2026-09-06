@@ -275,6 +275,56 @@ public sealed class TranslationFieldBatchTests
         Assert.Equal(0, translator.CallCount);
     }
 
+    /// <summary>
+    ///     Ensures a translator timeout without caller cancellation safely
+    ///     falls back to individual field translation.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslateFieldsAsync_TranslatorCancellationWithoutCallerCancellation_FallsBackIndividually()
+    {
+        var translator = new EnvelopeTranslator(
+            static _ => throw new TaskCanceledException("translator timeout"),
+            static text => $"single:{text}");
+        var service = this.CreateService(translator);
+
+        var result = await service.TranslateFieldsAsync(
+            [
+                new TranslationField("Name", "Actions"),
+                new TranslationField("Description", "Opens the window."),
+            ],
+            new SourceClientLanguage("en", "en"),
+            "pt-BR");
+
+        Assert.True(result.UsedIndividualFallback);
+        Assert.Equal("single:Actions", result.GetTranslation("Name"));
+        Assert.Equal("single:Opens the window.", result.GetTranslation("Description"));
+        Assert.Equal(3, translator.CallCount);
+    }
+
+    /// <summary>
+    ///     Ensures caller-requested cancellation remains observable rather
+    ///     than being transformed into a fallback result.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslateFieldsAsync_CallerCancellation_Propagates()
+    {
+        var translator = new EnvelopeTranslator(static _ => throw new InvalidOperationException());
+        var service = this.CreateService(translator);
+        using var cancellationSource = new CancellationTokenSource();
+        cancellationSource.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await service.TranslateFieldsAsync(
+                [new TranslationField("Name", "Actions")],
+                new SourceClientLanguage("en", "en"),
+                "pt-BR",
+                cancellationToken: cancellationSource.Token));
+
+        Assert.Equal(0, translator.CallCount);
+    }
+
     private TranslationService CreateService(ITranslator translator)
     {
         return new TranslationService(

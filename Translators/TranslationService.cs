@@ -300,7 +300,7 @@ public class TranslationService
           sourceLanguage.ProviderCode,
           targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
     }
-    catch (OperationCanceledException)
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
     {
       throw;
     }
