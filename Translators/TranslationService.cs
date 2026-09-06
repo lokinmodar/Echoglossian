@@ -274,15 +274,33 @@ public class TranslationService
 
     var translatorResolution = this.ResolveTranslator(
         TranslationSurfaceGroup.Default);
+    if (!this.TryPrepareFieldBatch(
+            requestedFields,
+            sourceLanguage,
+            targetLanguage,
+            originContext,
+            translatorResolution,
+            out var preparedFields))
+    {
+      return await this.TranslateFieldsIndividuallyAsync(
+          requestedFields,
+          sourceLanguage,
+          targetLanguage,
+          originContext,
+          cancellationToken,
+          translatorResolution).ConfigureAwait(false);
+    }
+
     string? translatedEnvelope = null;
+    var stopwatch = Stopwatch.StartNew();
     try
     {
       translatedEnvelope = await translatorResolution.Translator.TranslateAsync(
-          TranslationFieldEnvelopeCodec.Encode(requestedFields),
+          TranslationFieldEnvelopeCodec.Encode(preparedFields),
           sourceLanguage.ProviderCode,
           targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
     }
-    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    catch (OperationCanceledException)
     {
       throw;
     }
@@ -294,11 +312,29 @@ public class TranslationService
 
     if (TranslationFieldEnvelopeCodec.TryDecode(
             translatedEnvelope,
-            requestedFields,
-            out var translatedFields))
+            preparedFields,
+            out var translatedFields) &&
+        translatedFields.All(static field =>
+            TranslationResultGuard.IsPersistableTranslation(field.Text)))
     {
+      stopwatch.Stop();
+      this.RecordTranslationMetric(
+          new TranslationAcceptanceResult(string.Empty, true, null),
+          stopwatch.Elapsed,
+          false,
+          translatorResolution.TranslationEngineId);
       return new TranslationFieldBatchResult(translatedFields, false);
     }
+
+    stopwatch.Stop();
+    this.RecordTranslationMetric(
+        new TranslationAcceptanceResult(
+            string.Empty,
+            false,
+            "invalid-field-batch-result"),
+        stopwatch.Elapsed,
+        false,
+        translatorResolution.TranslationEngineId);
 
     return await this.TranslateFieldsIndividuallyAsync(
         requestedFields,
@@ -1171,6 +1207,84 @@ public class TranslationService
     }
 
     return new TranslationFieldBatchResult(translatedFields, true);
+  }
+
+  /// <summary>
+  ///     Applies the standard translation-service admission guards before one
+  ///     field envelope reaches a provider.
+  /// </summary>
+  /// <param name="fields">The requested fields.</param>
+  /// <param name="sourceLanguage">The captured source-language contract.</param>
+  /// <param name="targetLanguage">The requested target language.</param>
+  /// <param name="originContext">The optional parent origin context.</param>
+  /// <param name="translatorResolution">The captured translator resolution.</param>
+  /// <param name="preparedFields">The sanitized provider field request.</param>
+  /// <returns>
+  ///     <see langword="true" /> when batch admission is safe; otherwise,
+  ///     <see langword="false" />.
+  /// </returns>
+  private bool TryPrepareFieldBatch(
+      IReadOnlyList<TranslationField> fields,
+      SourceClientLanguage sourceLanguage,
+      string targetLanguage,
+      string? originContext,
+      TranslatorResolution translatorResolution,
+      out IReadOnlyList<TranslationField> preparedFields)
+  {
+    var prepared = new List<TranslationField>(fields.Count);
+    foreach (var field in fields)
+    {
+      var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(
+          field.Text);
+      if (!shouldTranslate ||
+          sanitizedText.StartsWith("...", StringComparison.Ordinal))
+      {
+        preparedFields = [];
+        return false;
+      }
+
+      prepared.Add(new TranslationField(field.Name, sanitizedText));
+    }
+
+    if (!this.TryResolveRequestSourceLanguage(
+            sourceLanguage.ProviderCode,
+            sourceLanguage,
+            out var resolvedSourceLanguage) ||
+        string.IsNullOrWhiteSpace(
+            RuntimeLanguageHelper.NormalizeLanguage(targetLanguage)))
+    {
+      preparedFields = [];
+      return false;
+    }
+
+    var resolvedOriginContext = ResolveOriginContext(
+        originContext,
+        nameof(this.TranslateFieldsAsync),
+        string.Empty);
+    if (this.ShouldBypassTranslationDueToMissingLanguageAssets(
+            TranslationSurfaceGroup.Default,
+            resolvedOriginContext))
+    {
+      preparedFields = [];
+      return false;
+    }
+
+    var normalizedSourceLanguage = RuntimeLanguageHelper.NormalizeLanguage(
+        resolvedSourceLanguage.PersistenceCode);
+    var normalizedTargetLanguage = RuntimeLanguageHelper.NormalizeLanguage(
+        targetLanguage);
+    if (prepared.Any(field => this.IsKnownFailedTranslation(
+            field.Text,
+            normalizedSourceLanguage,
+            normalizedTargetLanguage,
+            translatorResolution.TranslationEngineId)))
+    {
+      preparedFields = [];
+      return false;
+    }
+
+    preparedFields = prepared;
+    return true;
   }
 
   /// <summary>

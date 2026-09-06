@@ -202,6 +202,79 @@ public sealed class TranslationFieldBatchTests
         Assert.Equal(0, replacementTranslator.CallCount);
     }
 
+    /// <summary>
+    ///     Ensures a structurally valid envelope that contains a provider
+    ///     failure cannot partially bypass normal result acceptance.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslateFieldsAsync_ProviderFailureField_FallsBackForEveryField()
+    {
+        var translator = new EnvelopeTranslator(
+            static fields => TranslationFieldEnvelopeCodec.Encode(
+                fields.Select(field => new TranslationField(
+                    field.Name,
+                    string.Equals(field.Name, "Description", StringComparison.Ordinal)
+                        ? "[Translation Error: provider timeout]"
+                        : "batch:Acoes"))),
+            static text => $"single:{text}");
+        var service = this.CreateService(translator);
+
+        var result = await service.TranslateFieldsAsync(
+            [
+                new TranslationField("Name", "Actions"),
+                new TranslationField("Description", "Opens the window."),
+            ],
+            new SourceClientLanguage("en", "en"),
+            "pt-BR");
+
+        Assert.True(result.UsedIndividualFallback);
+        Assert.Equal("single:Actions", result.GetTranslation("Name"));
+        Assert.Equal("single:Opens the window.", result.GetTranslation("Description"));
+        Assert.Equal(3, translator.CallCount);
+    }
+
+    /// <summary>
+    ///     Ensures blank field identifiers cannot enter a batch request.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslateFieldsAsync_BlankFieldIdentifier_RejectsBeforeTranslation()
+    {
+        var translator = new EnvelopeTranslator(static _ => throw new InvalidOperationException());
+        var service = this.CreateService(translator);
+
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await service.TranslateFieldsAsync(
+                [new TranslationField(string.Empty, "Actions")],
+                new SourceClientLanguage("en", "en"),
+                "pt-BR"));
+
+        Assert.Equal(0, translator.CallCount);
+    }
+
+    /// <summary>
+    ///     Ensures duplicate field identifiers cannot overwrite a batch result.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslateFieldsAsync_DuplicateFieldIdentifier_RejectsBeforeTranslation()
+    {
+        var translator = new EnvelopeTranslator(static _ => throw new InvalidOperationException());
+        var service = this.CreateService(translator);
+
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await service.TranslateFieldsAsync(
+                [
+                    new TranslationField("Name", "Actions"),
+                    new TranslationField("Name", "Other actions"),
+                ],
+                new SourceClientLanguage("en", "en"),
+                "pt-BR"));
+
+        Assert.Equal(0, translator.CallCount);
+    }
+
     private TranslationService CreateService(ITranslator translator)
     {
         return new TranslationService(
