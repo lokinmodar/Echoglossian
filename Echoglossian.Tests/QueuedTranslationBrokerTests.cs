@@ -16,6 +16,30 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class QueuedTranslationBrokerTests
 {
+    /// <summary>Atomic admission distinguishes active work, terminal failure cooldown, and shutdown while bool callers remain compatible.</summary>
+    [Fact]
+    public async Task TryQueue_DistinguishesAdmissionReasonsAndPreservesBoolQueue()
+    {
+        using var broker = new QueuedTranslationBroker(TimeSpan.Zero, TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(2), TimeSpan.Zero, 0);
+        var resolver = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var terminal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.Equal(QueuedTranslationAdmission.Accepted,
+            broker.TryQueue("admission-key", () => resolver.Task, null, "test", _ => terminal.TrySetResult()));
+        Assert.Equal(QueuedTranslationAdmission.AlreadyInFlight,
+            broker.TryQueue("admission-key", () => Task.FromResult("unused"), null, "test", null));
+        Assert.False(broker.Queue("admission-key", () => Task.FromResult("unused")));
+        resolver.SetResult("[Translation Error: unavailable]");
+        await terminal.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.Equal(QueuedTranslationAdmission.FailureCooldown,
+            broker.TryQueue("admission-key", () => Task.FromResult("unused"), null, "test", null));
+        Assert.False(broker.Queue("admission-key", () => Task.FromResult("unused")));
+        broker.Dispose();
+        Assert.Equal(QueuedTranslationAdmission.RejectedShutdown,
+            broker.TryQueue("fresh-key", () => Task.FromResult("unused"), null, "test", null));
+        Assert.False(broker.Queue("fresh-key", () => Task.FromResult("unused")));
+    }
+
     /// <summary>Terminal notification occurs once only after all broker rate-limit attempts fail.</summary>
     [Theory]
     [InlineData(false)]

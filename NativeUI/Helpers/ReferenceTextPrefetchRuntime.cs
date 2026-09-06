@@ -258,7 +258,22 @@ public unsafe partial class Echoglossian
             }
 
             var referenceId = state.Queue[state.QueueIndex];
-            state.Pending = new ReferenceTextPrefetchCompletion(schedule(referenceId));
+            Task<bool> operation;
+            try
+            {
+                operation = schedule(referenceId);
+            }
+            catch (OperationCanceledException)
+            {
+                operation = Task.FromResult(false);
+            }
+            catch (Exception exception)
+            {
+                operation = Task.FromResult(ReferenceTextPrefetchOperation.CompleteTerminalFailure(
+                    $"ReferenceText/{referenceId}", "schedule", exception));
+            }
+
+            state.Pending = new ReferenceTextPrefetchCompletion(operation);
             processedCount++;
             if (!state.Pending.Completion.IsCompleted)
             {
@@ -304,25 +319,37 @@ public unsafe partial class Echoglossian
         CancellationToken cancellationToken,
         PersistencePriority priority = PersistencePriority.Background)
     {
-        if (!registration.TryBuildPayload(referenceId, out var payload))
+        try
         {
-            return Task.FromResult(true);
-        }
+            if (!registration.TryBuildPayload(referenceId, out var payload))
+            {
+                return Task.FromResult(true);
+            }
 
-        var key = BuildTranslationReuseScopedKey(
-            $"{registration.Key}|{gameVersion}|{payload.Serialize()}", scope);
-        if (this.referenceTextPrefetchOperations.TryGetValue(key, out var pending) && !pending.IsCompleted)
+            var key = BuildTranslationReuseScopedKey(
+                $"{registration.Key}|{gameVersion}|{payload.Serialize()}", scope);
+            if (this.referenceTextPrefetchOperations.TryGetValue(key, out var pending) && !pending.IsCompleted)
+            {
+                return pending;
+            }
+
+            var operation = registration.Schedule(payload, sourceLanguage, scope, gameVersion, cancellationToken, priority);
+            if (!operation.IsCompleted)
+            {
+                this.referenceTextPrefetchOperations[key] = operation;
+            }
+
+            return operation;
+        }
+        catch (OperationCanceledException)
         {
-            return pending;
+            return Task.FromResult(false);
         }
-
-        var operation = registration.Schedule(payload, sourceLanguage, scope, gameVersion, cancellationToken, priority);
-        if (!operation.IsCompleted)
+        catch (Exception exception)
         {
-            this.referenceTextPrefetchOperations[key] = operation;
+            return Task.FromResult(ReferenceTextPrefetchOperation.CompleteTerminalFailure(
+                $"ReferenceText/{registration.Key}/{referenceId}", "admission", exception));
         }
-
-        return operation;
     }
 
     /// <summary>

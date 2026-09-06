@@ -18,6 +18,10 @@ namespace Echoglossian.Tests.TestDoubles;
 internal sealed class CapturingPluginLog : IPluginLog
 {
     private readonly List<string> debugMessages = [];
+    private readonly List<string> warningMessages = [];
+
+    /// <summary>Gets captured warning messages.</summary>
+    public IReadOnlyList<string> WarningMessages => this.warningMessages;
 
     /// <summary>
     ///     Gets captured debug messages.
@@ -47,10 +51,16 @@ internal sealed class CapturingPluginLog : IPluginLog
     public void Error(Exception? exception, string messageTemplate, params object[] values) { }
 
     /// <inheritdoc/>
-    public void Warning(string messageTemplate, params object[] values) { }
+    public void Warning(string messageTemplate, params object[] values)
+    {
+        this.warningMessages.Add(this.Render(messageTemplate, values));
+    }
 
     /// <inheritdoc/>
-    public void Warning(Exception? exception, string messageTemplate, params object[] values) { }
+    public void Warning(Exception? exception, string messageTemplate, params object[] values)
+    {
+        this.warningMessages.Add(this.Render(messageTemplate, values));
+    }
 
     /// <inheritdoc/>
     public void Information(string messageTemplate, params object[] values) { }

@@ -512,7 +512,7 @@ public class ReferenceTextPrefetchRuntimeTests
         Assert.Equal(3, translator.Calls);
         Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
         Assert.Null(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
-        Assert.False(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(2)));
         Assert.Equal(3, translator.Calls);
         await using var context = await harness.Factory.CreateDbContextAsync();
         Assert.Empty(await context.MainCommandTexts.ToListAsync());
@@ -660,6 +660,137 @@ public class ReferenceTextPrefetchRuntimeTests
         restarted.Cancellation.Dispose();
     }
 
+    /// <summary>A cursor encountering an exact-key failure cooldown advances without repeatedly reading or translating it.</summary>
+    [Fact]
+    public async Task RuntimeCursor_FailureCooldown_AdvancesOnceWithoutRepeatedReads()
+    {
+        await using var harness = await Harness.CreateAsync(failureRetryCooldown: TimeSpan.FromSeconds(30));
+        var calls = 0;
+        Task<TranslationFieldBatchResult> Fail(IReadOnlyList<TranslationField> fields, SourceClientLanguage source,
+            string target, string? origin, CancellationToken token)
+        {
+            calls++;
+            throw new InvalidOperationException("Terminal provider failure.");
+        }
+
+        Assert.True(await harness.Start(Harness.Payload(), Fail).WaitAsync(TimeSpan.FromSeconds(2)));
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var scheduled = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            scheduled.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload, id == 12 ? Fail : null);
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        var admissions = harness.Coordinator.GetMetrics().AcceptedOperations;
+        for (var tick = 0; tick < 10; tick++)
+        {
+            PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        }
+
+        Assert.Equal(admissions, harness.Coordinator.GetMetrics().AcceptedOperations);
+        Assert.Equal(1, calls);
+        Assert.Equal(new uint[] { 12, 13 }, scheduled);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>A synchronous initial probe exception cannot escape the Framework admission boundary.</summary>
+    [Fact]
+    public async Task Start_InitialProbeThrows_ReturnsTerminalCompletionWithoutEscaping()
+    {
+        await using var harness = await Harness.CreateAsync();
+        Task<bool>? operation = null;
+        var exception = Record.Exception(() => { operation = ReferenceTextPrefetchOperation.Start<MainCommandText>(
+            harness.Writer, harness.Broker, harness.Cache, context => context.MainCommandTexts,
+            (_, _, _, _, _, _) => throw new InvalidOperationException("Initial probe failed."), Harness.Payload(), "7.3",
+            new SourceClientLanguage("en", "en"), Harness.Scope, "ProbeTest",
+            (_, _, _, _, _) => throw new InvalidOperationException("Translator must not run."), CancellationToken.None); });
+        Assert.Null(exception);
+        Assert.True(await operation!);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().AcceptedOperations);
+
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var calls = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            calls.Add(id);
+            return id == 13 ? Task.FromResult(true) : ReferenceTextPrefetchOperation.Start<MainCommandText>(
+                harness.Writer, harness.Broker, harness.Cache, context => context.MainCommandTexts,
+                (_, _, _, _, _, _) => throw new InvalidOperationException("Initial probe failed."), Harness.Payload(), "7.3",
+                new SourceClientLanguage("en", "en"), Harness.Scope, "ProbeTest",
+                (_, _, _, _, _) => throw new InvalidOperationException("Translator must not run."), CancellationToken.None);
+        }
+
+        Assert.Null(Record.Exception(() => PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(new uint[] { 12, 13 }, calls);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().AcceptedOperations);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Unexpected synchronous schedule exceptions finish only the bad row; cancellation retains it.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RuntimeCursor_SynchronousScheduleException_IsContained(bool cancelled)
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var calls = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            calls.Add(id);
+            if (calls.Count == 1)
+            {
+                throw cancelled ? new OperationCanceledException() : new InvalidOperationException("Capture failed.");
+            }
+
+            return Task.FromResult(true);
+        }
+
+        Assert.Null(Record.Exception(() => PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule)));
+        Assert.Equal(cancelled ? 0 : 2, state.QueueIndex);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(cancelled ? new uint[] { 12, 12, 13 } : new uint[] { 12, 13 }, calls);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Exhausted coordinator failures have one coordinator log and no duplicate ReferenceText warning.</summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task ExhaustedPersistenceFailure_DoesNotDuplicateCoordinatorLog(int failingContext)
+    {
+        var log = new TestDoubles.CapturingPluginLog();
+        var original = PluginEntry.PluginLog;
+        PluginEntry.PluginLog = log;
+        var coordinatorLogs = 0;
+        try
+        {
+            await using var harness = await Harness.CreateAsync(failingContext: failingContext,
+                coordinatorErrorLog: _ => Interlocked.Increment(ref coordinatorLogs));
+            Assert.True(await harness.Start(Harness.Payload()).WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(1, coordinatorLogs);
+            Assert.Empty(log.WarningMessages);
+        }
+        finally
+        {
+            PluginEntry.PluginLog = original;
+        }
+    }
+
     /// <summary>Owns a real SQLite/coordinator/broker fixture for captured prefetch operations.</summary>
     private sealed class Harness : IAsyncDisposable
     {
@@ -693,7 +824,7 @@ public class ReferenceTextPrefetchRuntimeTests
         internal MainCommandText Probe => Row("en", "pt", 0, "7.3", Payload(), null);
 
         /// <summary>Creates and migrates a temporary SQLite fixture.</summary>
-        internal static async Task<Harness> CreateAsync(int backgroundCapacity = 8, int maxRateLimitRetries = 0, TimeSpan? requestTimeout = null, int failingContext = 0, TimeSpan? failureRetryCooldown = null)
+        internal static async Task<Harness> CreateAsync(int backgroundCapacity = 8, int maxRateLimitRetries = 0, TimeSpan? requestTimeout = null, int failingContext = 0, TimeSpan? failureRetryCooldown = null, Action<string>? coordinatorErrorLog = null)
         {
             var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(directory);
@@ -702,7 +833,8 @@ public class ReferenceTextPrefetchRuntimeTests
             await context.Database.MigrateAsync();
             return new Harness(directory, factory, new PersistenceCoordinator(
                 failingContext == 0 ? factory : new FailingFactory(factory, failingContext),
-                new PersistenceCoordinatorOptions(8, backgroundCapacity, 1, 8, TimeSpan.FromMilliseconds(1), 1, [], 4, 1, TimeSpan.FromSeconds(5))),
+                new PersistenceCoordinatorOptions(8, backgroundCapacity, 1, 8, TimeSpan.FromMilliseconds(1), 1, [], 4, 1, TimeSpan.FromSeconds(5)),
+                errorLog: coordinatorErrorLog),
                 maxRateLimitRetries, requestTimeout, failureRetryCooldown);
         }
 

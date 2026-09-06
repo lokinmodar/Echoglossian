@@ -52,33 +52,45 @@ internal static class ReferenceTextPrefetchOperation
         PersistencePriority priority = PersistencePriority.Background)
         where TRow : ReferenceTextRowBase
     {
-        if (cancellationToken.IsCancellationRequested)
+        try
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromResult(false);
+            }
+
+            // The sheet-owned mutable payload never escapes the Framework capture.
+            var captured = ReferenceTextCanonicalPayload.Deserialize(payload.Serialize())!;
+            var probe = createRow(scope.SourceLanguageCode, scope.TargetLanguageCode,
+                scope.TranslationEngine, gameVersion, captured, null);
+            var cached = cache.TryFindCanonicalMatch(probe.ReferenceId, scope, gameVersion, probe.SourceContentHash!);
+            if (IsComplete(captured, cached))
+            {
+                return Task.FromResult(true);
+            }
+
+            var admission = writer.TryFind(probe, scope, setSelector, null, out var read, priority);
+            if (admission is PersistenceAdmissionStatus.RejectedCapacity or PersistenceAdmissionStatus.RejectedShutdown)
+            {
+                return Task.FromResult(false);
+            }
+
+            // Even an already-completed coordinator read must not execute the broker
+            // continuation on the Framework thread. This is orchestration, not a queue.
+            return read.ContinueWith(
+                _ => CompleteAsync(writer, broker, cache, setSelector, createRow, captured,
+                    gameVersion, source, scope, origin, translate, read, cancellationToken, priority),
+                CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default).Unwrap();
+        }
+        catch (OperationCanceledException)
         {
             return Task.FromResult(false);
         }
-
-        // The sheet-owned mutable payload never escapes the Framework capture.
-        var captured = ReferenceTextCanonicalPayload.Deserialize(payload.Serialize())!;
-        var probe = createRow(scope.SourceLanguageCode, scope.TargetLanguageCode,
-            scope.TranslationEngine, gameVersion, captured, null);
-        var cached = cache.TryFindCanonicalMatch(probe.ReferenceId, scope, gameVersion, probe.SourceContentHash!);
-        if (IsComplete(captured, cached))
+        catch (Exception exception)
         {
-            return Task.FromResult(true);
+            return Task.FromResult(ReferenceTextPrefetchOperation.CompleteTerminalFailure(
+                origin, "admission", exception));
         }
-
-        var admission = writer.TryFind(probe, scope, setSelector, null, out var read, priority);
-        if (admission is PersistenceAdmissionStatus.RejectedCapacity or PersistenceAdmissionStatus.RejectedShutdown)
-        {
-            return Task.FromResult(false);
-        }
-
-        // Even an already-completed coordinator read must not execute the broker
-        // continuation on the Framework thread. This is orchestration, not a queue.
-        return read.ContinueWith(
-            _ => CompleteAsync(writer, broker, cache, setSelector, createRow, captured,
-                gameVersion, source, scope, origin, translate, read, cancellationToken, priority),
-            CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default).Unwrap();
     }
 
     /// <summary>Checks the required canonical fields without treating unchanged translation as missing.</summary>
@@ -132,7 +144,8 @@ internal static class ReferenceTextPrefetchOperation
             cancellationToken.ThrowIfCancellationRequested();
             if (result.Status == PersistenceCompletionStatus.Failed)
             {
-                return CompleteTerminalFailure(origin, "read", result.Error);
+                // The coordinator already emitted its exhausted-retry summary.
+                return true;
             }
 
             if (result.Status != PersistenceCompletionStatus.Succeeded)
@@ -179,7 +192,7 @@ internal static class ReferenceTextPrefetchOperation
             {
                 var completion = new TaskCompletionSource<(string? Text, bool Cancelled)>(
                     TaskCreationOptions.RunContinuationsAsynchronously);
-                if (!broker.Queue(key, async () =>
+                var brokerAdmission = broker.TryQueue(key, async () =>
                     {
                         var batch = await translate(fields, source, scope.TargetLanguageCode, origin, cancellationToken)
                             .ConfigureAwait(false);
@@ -193,8 +206,17 @@ internal static class ReferenceTextPrefetchOperation
                     },
                     value => completion.TrySetResult((value, false)),
                     origin,
-                    cancelled => completion.TrySetResult((null, cancelled))))
+                    cancelled => completion.TrySetResult((null, cancelled)));
+                if (brokerAdmission == QueuedTranslationAdmission.FailureCooldown)
                 {
+                    return true;
+                }
+
+                if (brokerAdmission != QueuedTranslationAdmission.Accepted)
+                {
+                    // A same-key generation overlap can retry at the existing
+                    // paced tick until the broker's active request terminates.
+                    // Local canonical identity tracking suppresses normal duplicates.
                     return false;
                 }
 
@@ -251,7 +273,8 @@ internal static class ReferenceTextPrefetchOperation
             var persistedResult = await write.WaitAsync(cancellationToken).ConfigureAwait(false);
             if (persistedResult.Status == PersistenceCompletionStatus.Failed)
             {
-                return CompleteTerminalFailure(origin, "write", persistedResult.Error);
+                // The coordinator already emitted its exhausted-retry summary.
+                return true;
             }
 
             return persistedResult.Status is PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged;
@@ -271,7 +294,7 @@ internal static class ReferenceTextPrefetchOperation
     /// <param name="stage">The terminal stage.</param>
     /// <param name="exception">The terminal exception, if available.</param>
     /// <returns>True so the current background attempt advances.</returns>
-    private static bool CompleteTerminalFailure(string origin, string stage, Exception? exception)
+    internal static bool CompleteTerminalFailure(string origin, string stage, Exception? exception)
     {
         PluginRuntimeLog.Warning("ReferenceTextPrefetch", $"{origin}: terminal {stage} failure: {exception?.Message ?? "invalid result"}");
         return true;

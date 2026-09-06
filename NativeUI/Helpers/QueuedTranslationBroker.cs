@@ -8,6 +8,19 @@ using System.Threading;
 
 namespace Echoglossian.NativeUI.Helpers;
 
+/// <summary>Describes the atomic result of attempting broker admission.</summary>
+internal enum QueuedTranslationAdmission
+{
+    /// <summary>The request was accepted.</summary>
+    Accepted,
+    /// <summary>A previous terminal failure is still cooling down.</summary>
+    FailureCooldown,
+    /// <summary>The exact identity already has an active request.</summary>
+    AlreadyInFlight,
+    /// <summary>The broker has started shutdown.</summary>
+    RejectedShutdown,
+}
+
 /// <summary>
 ///     Keeps a shared in-memory translation cache and drains translation
 ///     requests through a single paced background pump so dense UI refreshes do
@@ -180,22 +193,39 @@ public sealed class QueuedTranslationBroker : IDisposable
         string? surfaceIdentity,
         Action<bool>? onTerminalFailure)
     {
+        return this.TryQueue(key, resolver, onResolved, surfaceIdentity, onTerminalFailure) == QueuedTranslationAdmission.Accepted;
+    }
+
+    /// <summary>Admits a request atomically while preserving the reason for rejection.</summary>
+    /// <param name="key">The stable request identity.</param>
+    /// <param name="resolver">The provider resolver.</param>
+    /// <param name="onResolved">The successful cached-result callback.</param>
+    /// <param name="surfaceIdentity">The diagnostic surface identity.</param>
+    /// <param name="onTerminalFailure">The terminal failure or shutdown callback.</param>
+    /// <returns>The admission decision made under the lifecycle gate.</returns>
+    internal QueuedTranslationAdmission TryQueue(
+        string key,
+        Func<Task<string>> resolver,
+        Action<string>? onResolved,
+        string? surfaceIdentity,
+        Action<bool>? onTerminalFailure)
+    {
         lock (this.lifecycleGate)
         {
             if (Volatile.Read(ref this.shutdownRequested) != 0)
             {
-                return false;
+                return QueuedTranslationAdmission.RejectedShutdown;
             }
 
             if (this.failedTranslations.TryGetValue(key, out var lastFailureUtc) &&
                 DateTime.UtcNow - lastFailureUtc < this.failureRetryCooldown)
             {
-                return false;
+                return QueuedTranslationAdmission.FailureCooldown;
             }
 
             if (!this.translationInFlight.TryAdd(key, 0))
             {
-                return false;
+                return QueuedTranslationAdmission.AlreadyInFlight;
             }
 
             this.pendingRequests.Enqueue(
@@ -209,7 +239,7 @@ public sealed class QueuedTranslationBroker : IDisposable
             this.pendingRequestsSignal.Release();
             this.StartPump();
 
-            return true;
+            return QueuedTranslationAdmission.Accepted;
         }
     }
 
