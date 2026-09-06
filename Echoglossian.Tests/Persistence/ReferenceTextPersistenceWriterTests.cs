@@ -57,6 +57,11 @@ public sealed class ReferenceTextPersistenceWriterTests
             Assert.Equal("nome", persisted.TranslatedName);
             Assert.Equal("descricao", persisted.TranslatedDescription);
             Assert.Equal(row.CanonicalPayloadAsText, persisted.CanonicalPayloadAsText);
+            Assert.Equal((uint)42, persisted.IconId);
+            Assert.Equal((uint)7, persisted.CategoryId);
+            Assert.Equal((uint)3, persisted.MainCommandCategoryId);
+            Assert.Equal((uint)9, persisted.Unknown0);
+            Assert.Equal((uint)40, persisted.SortId);
         });
     }
 
@@ -209,6 +214,98 @@ public sealed class ReferenceTextPersistenceWriterTests
     }
 
     /// <summary>
+    ///     Ensures equivalent target aliases with mixed casing coalesce before
+    ///     either unsaved insert can create duplicate logical rows.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_MixedCaseEquivalentAlias_CoalescesBeforeInsert()
+    {
+        var dequeued = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await this.WithWriterAsync(async (writer, factory, _) =>
+        {
+            var firstRow = CreateRow("primeiro", "primeira descricao");
+            firstRow.TranslationLang = "pt";
+            var latestRow = CreateRow("ultimo", "ultima descricao");
+            latestRow.TranslationLang = "PT-br";
+
+            Assert.Equal(
+                PersistenceAdmissionStatus.Accepted,
+                writer.TryPersist(
+                    firstRow,
+                    static context => context.MainCommandTexts,
+                    publish: null,
+                    out var first));
+            await dequeued.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            try
+            {
+                Assert.Equal(
+                    PersistenceAdmissionStatus.Replaced,
+                    writer.TryPersist(
+                        latestRow,
+                        static context => context.MainCommandTexts,
+                        publish: null,
+                        out var latest));
+                Assert.Same(first, latest);
+
+                release.SetResult(true);
+                await latest.WaitAsync(TimeSpan.FromSeconds(5));
+
+                await using var context = await factory.CreateDbContextAsync();
+                var persisted = await context.MainCommandTexts.SingleAsync();
+                Assert.Equal("ultimo", persisted.TranslatedName);
+                Assert.Equal("ultima descricao", persisted.TranslatedDescription);
+            }
+            finally
+            {
+                release.TrySetResult(true);
+            }
+        }, writeDequeuedBeforeClaimAsync: async () =>
+        {
+            dequeued.SetResult(true);
+            await release.Task.ConfigureAwait(false);
+        });
+    }
+
+    /// <summary>
+    ///     Ensures distinct source, target, and engine identities remain
+    ///     isolated even when their canonical payload hash is the same.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_SourceTargetAndEngineVariants_RemainIsolated()
+    {
+        await this.WithWriterAsync(async (writer, factory, _) =>
+        {
+            var englishToPortuguese = CreateRow("nome", "descricao");
+            var germanToPortuguese = CreateRow("name", "beschreibung");
+            germanToPortuguese.OriginalLang = "de";
+            var englishToFrench = CreateRow("nom", "description");
+            englishToFrench.TranslationLang = "fr";
+            var otherEngine = CreateRow("nome por outro engine", "descricao");
+            otherEngine.TranslationEngine = 1;
+
+            foreach (var row in new[]
+                     {
+                         englishToPortuguese,
+                         germanToPortuguese,
+                         englishToFrench,
+                         otherEngine,
+                     })
+            {
+                writer.TryPersist(
+                    row,
+                    static context => context.MainCommandTexts,
+                    publish: null,
+                    out var completion);
+                await completion.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+
+            await using var context = await factory.CreateDbContextAsync();
+            Assert.Equal(4, await context.MainCommandTexts.CountAsync());
+        });
+    }
+
+    /// <summary>
     ///     Ensures a full background lane rejects new work without dropping
     ///     an already accepted row.
     /// </summary>
@@ -305,27 +402,174 @@ public sealed class ReferenceTextPersistenceWriterTests
     ///     can be disabled before that commit completes.
     /// </summary>
     [Fact]
-    public async Task TryPersist_PublicationWaitsForCommitAndHonorsDisable()
+    public async Task TryPersist_SuccessfulCommitPublishesCacheOnlyAfterCommit()
     {
         var gate = new CommitGateInterceptor();
         await this.WithWriterAsync(async (writer, _, _) =>
         {
-            var publications = 0;
+            var cache = new ReferenceTextCacheStore<MainCommandText>("ReferenceTextPersistenceWriterTests");
             writer.TryPersist(
                 CreateRow("nome", "descricao"),
                 static context => context.MainCommandTexts,
-                _ => Interlocked.Increment(ref publications),
+                cache.Update,
                 out var completion);
             await gate.CommitEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.Equal(0, publications);
+            Assert.Null(cache.TryFindCanonicalMatch(
+                1,
+                new TranslationReuseScope("en", "pt", 0, true),
+                "7.3",
+                CreateRow("nome", "descricao").SourceContentHash!));
 
-            writer.DisablePublication();
             gate.ReleaseCommit.SetResult(true);
             Assert.Equal(
                 PersistenceCompletionStatus.Succeeded,
                 (await completion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
-            Assert.Equal(0, publications);
+            Assert.NotNull(cache.TryFindCanonicalMatch(
+                1,
+                new TranslationReuseScope("en", "pt", 0, true),
+                "7.3",
+                CreateRow("nome", "descricao").SourceContentHash!));
         }, interceptor: gate);
+    }
+
+    /// <summary>
+    ///     Ensures publication can be disabled while an accepted write waits
+    ///     to commit.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_DisabledPublication_DoesNotPublishAfterCommit()
+    {
+        var gate = new CommitGateInterceptor();
+        await this.WithWriterAsync(async (writer, _, _) =>
+        {
+            var cache = new ReferenceTextCacheStore<MainCommandText>("ReferenceTextPersistenceWriterTests");
+            writer.TryPersist(
+                CreateRow("nome", "descricao"),
+                static context => context.MainCommandTexts,
+                cache.Update,
+                out var completion);
+            await gate.CommitEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+            writer.DisablePublication();
+            gate.ReleaseCommit.SetResult(true);
+            await completion.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Null(cache.TryFindCanonicalMatch(
+                1,
+                new TranslationReuseScope("en", "pt", 0, true),
+                "7.3",
+                CreateRow("nome", "descricao").SourceContentHash!));
+        }, interceptor: gate);
+    }
+
+    /// <summary>
+    ///     Ensures a failed commit neither persists a row nor publishes its
+    ///     cache projection.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_FailedCommit_DoesNotPersistOrPublishCache()
+    {
+        var gate = new CommitGateInterceptor { ThrowOnCommit = true };
+        await this.WithWriterAsync(async (writer, factory, _) =>
+        {
+            var cache = new ReferenceTextCacheStore<MainCommandText>("ReferenceTextPersistenceWriterTests");
+            writer.TryPersist(
+                CreateRow("nome", "descricao"),
+                static context => context.MainCommandTexts,
+                cache.Update,
+                out var completion);
+
+            Assert.Equal(
+                PersistenceCompletionStatus.Failed,
+                (await completion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+            await using var context = await factory.CreateDbContextAsync();
+            Assert.Equal(0, await context.MainCommandTexts.CountAsync());
+            Assert.Null(cache.TryFindCanonicalMatch(
+                1,
+                new TranslationReuseScope("en", "pt", 0, true),
+                "7.3",
+                CreateRow("nome", "descricao").SourceContentHash!));
+        }, interceptor: gate);
+    }
+
+    /// <summary>
+    ///     Ensures an unchanged write publishes the DB-backed stored row to an
+    ///     empty cache projection.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_UnchangedRow_PublishesStoredCommittedProjection()
+    {
+        await this.WithWriterAsync(async (writer, _, _) =>
+        {
+            writer.TryPersist(
+                CreateRow("nome", "descricao"),
+                static context => context.MainCommandTexts,
+                publish: null,
+                out var initial);
+            await initial.WaitAsync(TimeSpan.FromSeconds(5));
+
+            var cache = new ReferenceTextCacheStore<MainCommandText>("ReferenceTextPersistenceWriterTests");
+            writer.TryPersist(
+                CreateRow("nome", "descricao"),
+                static context => context.MainCommandTexts,
+                cache.Update,
+                out var unchanged);
+            Assert.Equal(
+                PersistenceCompletionStatus.Unchanged,
+                (await unchanged.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+
+            var cached = cache.TryFindCanonicalMatch(
+                1,
+                new TranslationReuseScope("en", "pt", 0, true),
+                "7.3",
+                CreateRow("nome", "descricao").SourceContentHash!);
+            Assert.NotNull(cached);
+            Assert.True(cached.Id > 0);
+            Assert.Equal("nome", cached.TranslatedName);
+            Assert.Equal("descricao", cached.TranslatedDescription);
+        });
+    }
+
+    /// <summary>
+    ///     Ensures current-version lookups include a null-version fallback and
+    ///     prefer the more complete translation over an incomplete exact row.
+    /// </summary>
+    [Fact]
+    public async Task TryFind_NullVersionFallback_PrefersCompleteTranslation()
+    {
+        await this.WithWriterAsync(async (writer, _, _) =>
+        {
+            var currentVersion = CreateRow("nome", null);
+            var fallbackVersion = CreateRow("nome completo", "descricao completa");
+            fallbackVersion.GameVersion = null;
+            writer.TryPersist(
+                currentVersion,
+                static context => context.MainCommandTexts,
+                publish: null,
+                out var currentCompletion);
+            await currentCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+            writer.TryPersist(
+                fallbackVersion,
+                static context => context.MainCommandTexts,
+                publish: null,
+                out var fallbackCompletion);
+            await fallbackCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+
+            var probe = CreateRow("nome", "descricao");
+            MainCommandText? published = null;
+            writer.TryFind(
+                probe,
+                new TranslationReuseScope("en", "pt", 0, true),
+                static context => context.MainCommandTexts,
+                row => published = row,
+                out var completion);
+            Assert.Equal(
+                PersistenceCompletionStatus.Succeeded,
+                (await completion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+            Assert.NotNull(published);
+            Assert.Null(published.GameVersion);
+            Assert.Equal("nome completo", published.TranslatedName);
+            Assert.Equal("descricao completa", published.TranslatedDescription);
+        });
     }
 
     /// <summary>
@@ -613,6 +857,12 @@ public sealed class ReferenceTextPersistenceWriterTests
         internal bool Enabled { get; set; }
 
         /// <summary>
+        ///     Gets or sets a value indicating whether the intercepted commit
+        ///     throws instead of completing.
+        /// </summary>
+        internal bool ThrowOnCommit { get; init; }
+
+        /// <summary>
         ///     Gets the task completed when a commit enters the gate.
         /// </summary>
         internal TaskCompletionSource<bool> CommitEntered { get; } = new(
@@ -637,6 +887,11 @@ public sealed class ReferenceTextPersistenceWriterTests
             }
 
             this.CommitEntered.TrySetResult(true);
+            if (this.ThrowOnCommit)
+            {
+                throw new InvalidOperationException("Commit failed.");
+            }
+
             await this.ReleaseCommit.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
             return result;
         }

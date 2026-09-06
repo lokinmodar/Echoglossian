@@ -152,8 +152,8 @@ internal sealed class ReferenceTextPersistenceWriter
         return BuildIdentity(
             typeof(TRow).FullName ?? typeof(TRow).Name,
             row.ReferenceId.ToString(CultureInfo.InvariantCulture),
-            RuntimeLanguageHelper.NormalizeLanguage(row.OriginalLang),
-            RuntimeLanguageHelper.NormalizeLanguage(row.TranslationLang),
+            NormalizeLanguageIdentity(row.OriginalLang),
+            NormalizeLanguageIdentity(row.TranslationLang),
             row.TranslationEngine?.ToString(CultureInfo.InvariantCulture),
             row.GameVersion,
             row.SourceContentHash);
@@ -173,8 +173,8 @@ internal sealed class ReferenceTextPersistenceWriter
         return BuildIdentity(
             typeof(TRow).FullName ?? typeof(TRow).Name,
             probe.ReferenceId.ToString(CultureInfo.InvariantCulture),
-            RuntimeLanguageHelper.NormalizeLanguage(scope.SourceLanguageCode),
-            RuntimeLanguageHelper.NormalizeLanguage(scope.TargetLanguageCode),
+            NormalizeLanguageIdentity(scope.SourceLanguageCode),
+            NormalizeLanguageIdentity(scope.TargetLanguageCode),
             scope.RequireMatchingEngine
                 ? scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture)
                 : "*",
@@ -199,5 +199,17 @@ internal sealed class ReferenceTextPersistenceWriter
         }
 
         return builder.ToString();
+    }
+
+    /// <summary>
+    ///     Converts one language value into the case-insensitive identity used
+    ///     by <see cref="RuntimeLanguageHelper.LanguagesMatch" />.
+    /// </summary>
+    /// <param name="language">The source or target language value.</param>
+    /// <returns>The stable language identity segment.</returns>
+    private static string NormalizeLanguageIdentity(string? language)
+    {
+        return RuntimeLanguageHelper.NormalizeLanguage(language)
+            .ToUpperInvariant();
     }
 }
