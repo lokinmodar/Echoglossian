@@ -15,6 +15,56 @@ namespace Echoglossian.Tests;
 /// </summary>
 public sealed class TranslationFieldBatchTests
 {
+    /// <summary>Individual fallback must preserve rejection rather than returning source text as accepted output.</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("[Translation Error: simulated provider failure]")]
+    [InlineData("unavailable-fixture")]
+    public async Task TranslateFieldsAsync_RejectedIndividualField_RejectsEntireBatch(string rejected)
+    {
+        if (rejected == "unavailable-fixture")
+        {
+            rejected = global::Echoglossian.Properties.Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        var translator = new EnvelopeTranslator(_ => "invalid envelope", text => text == "Actions" ? "Acoes" : rejected);
+        var failures = 0;
+        var service = new TranslationService(text => text, translator,
+            recordFailedTranslation: (_, _, _, _, _, _) => failures++,
+            recordTransientFailedTranslation: (_, _, _, _, _, _) => failures++);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.TranslateFieldsAsync(
+            [new TranslationField("Name", "Actions"), new TranslationField("Description", "Open actions.")],
+            new SourceClientLanguage("en", "en"), "pt"));
+        Assert.Equal(3, translator.CallCount);
+        Assert.Equal(1, failures);
+    }
+
+    /// <summary>A known failed field must not become accepted merely because the service bypasses the provider.</summary>
+    [Fact]
+    public async Task TranslateFieldsAsync_KnownFailureCache_RejectsWithoutProviderCall()
+    {
+        var translator = new EnvelopeTranslator(_ => throw new InvalidOperationException("Provider should not run."));
+        var service = new TranslationService(text => text, translator,
+            isKnownFailedTranslation: (_, _, _, _) => true);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.TranslateFieldsAsync(
+            [new TranslationField("Name", "Actions")], new SourceClientLanguage("en", "en"), "pt"));
+        Assert.Equal(0, translator.CallCount);
+        Assert.Equal("Actions", await service.TranslateAsync("Actions", "en", "pt"));
+    }
+
+    /// <summary>A real accepted translation may equal the source and must remain distinguishable from fallback.</summary>
+    [Fact]
+    public async Task TranslateFieldsAsync_AcceptedIdenticalIndividualField_RemainsAccepted()
+    {
+        var translator = new EnvelopeTranslator(_ => "invalid envelope", text => text);
+        var result = await this.CreateService(translator).TranslateFieldsAsync(
+            [new TranslationField("Name", "Actions"), new TranslationField("Description", "Open actions.")],
+            new SourceClientLanguage("en", "en"), "pt");
+        Assert.Equal("Actions", result.GetTranslation("Name"));
+        Assert.Equal("Open actions.", result.GetTranslation("Description"));
+        Assert.True(result.UsedIndividualFallback);
+    }
+
     /// <summary>Batch and individual fallback retain the engine captured before settings change.</summary>
     /// <param name="malformed">Whether the provider forces individual fallback.</param>
     /// <returns>The asynchronous test task.</returns>

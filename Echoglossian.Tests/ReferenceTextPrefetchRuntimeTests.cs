@@ -415,26 +415,107 @@ public class ReferenceTextPrefetchRuntimeTests
         }
     }
 
-    /// <summary>The runtime cursor retains work after a read or write failure and retries on a later tick.</summary>
+    /// <summary>Exhausted coordinator failures terminate one row and let later rows proceed without repeated admission.</summary>
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
-    public async Task RuntimeCursor_ReadOrWriteFailure_RetainsThenRetries(int failingContext)
+    public async Task RuntimeCursor_ExhaustedReadOrWriteFailure_AdvancesWithoutRetry(int failingContext)
     {
         await using var harness = await Harness.CreateAsync(failingContext: failingContext);
         var state = new PluginEntry.ReferenceTextPrefetchState();
-        state.Queue.Add(12);
-        Task<bool> Schedule(uint _) => harness.Start(Harness.Payload());
-        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
-        Assert.False(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
-        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
-        Assert.Equal(0, state.QueueIndex);
-        Assert.Null(state.Pending);
+        state.Queue.AddRange([12, 13]);
+        var scheduled = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            scheduled.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload);
+        }
+
         Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
         Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
-        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Null(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
+        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
         Assert.Equal(1, state.QueueIndex);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(new uint[] { 12, 13 }, scheduled);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        Assert.Equal((uint)13, (await context.MainCommandTexts.SingleAsync()).ReferenceId);
         state.Cancellation.Dispose();
+    }
+
+    /// <summary>An unexpected worker-side row construction exception is terminal and cannot repeatedly admit the failed row.</summary>
+    [Fact]
+    public async Task RuntimeCursor_UnexpectedCompletionException_AdvancesToNextRow()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var creations = 0;
+        MainCommandText Create(string source, string target, int? engine, string? version,
+            ReferenceTextCanonicalPayload original, ReferenceTextCanonicalPayload? translated)
+        {
+            if (++creations == 2)
+            {
+                throw new InvalidOperationException("Unexpected complete-row construction failure.");
+            }
+
+            return Harness.Row(source, target, engine, version, original, translated);
+        }
+
+        var scheduled = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            scheduled.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return id == 12 ? ReferenceTextPrefetchOperation.Start(harness.Writer, harness.Broker, harness.Cache,
+                context => context.MainCommandTexts, Create, payload, "7.3", new SourceClientLanguage("en", "en"),
+                Harness.Scope, "ReferenceText/MainCommand/12", (fields, _, _, _, _) => Task.FromResult(Harness.Translate(fields)),
+                CancellationToken.None) : harness.Start(payload);
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(new uint[] { 12, 13 }, scheduled);
+        Assert.Equal(2, state.QueueIndex);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Actual synthetic provider failures must not store a sibling or source fallback.</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("[Translation Error: simulated provider failure]")]
+    [InlineData("unavailable-fixture")]
+    public async Task RejectedProviderPayload_DoesNotPersistPartialOrSourceFallback(string rejected)
+    {
+        if (rejected == "unavailable-fixture")
+        {
+            rejected = global::Echoglossian.Properties.Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        await using var harness = await Harness.CreateAsync(failureRetryCooldown: TimeSpan.FromSeconds(30));
+        var translator = new PayloadTranslator(rejected);
+        var service = new TranslationService(text => text, translator);
+        Task<TranslationFieldBatchResult> Translate(IReadOnlyList<TranslationField> fields, SourceClientLanguage source,
+            string target, string? origin, CancellationToken token) => service.TranslateFieldsAsync(fields, source, target, origin, token);
+        Assert.True(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(3, translator.Calls);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        Assert.Null(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
+        Assert.False(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(3, translator.Calls);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        Assert.Empty(await context.MainCommandTexts.ToListAsync());
     }
 
     /// <summary>A terminal broker failure advances the actual cursor once and admits the next row.</summary>
@@ -586,13 +667,13 @@ public class ReferenceTextPrefetchRuntimeTests
 
         /// <summary>Initializes one temporary runtime fixture.</summary>
         private Harness(string directory, IDbContextFactory<EchoglossianDbContext> factory, PersistenceCoordinator coordinator,
-            int maxRateLimitRetries, TimeSpan? requestTimeout)
+            int maxRateLimitRetries, TimeSpan? requestTimeout, TimeSpan? failureRetryCooldown)
         {
             this.directory = directory;
             this.Factory = factory;
             this.Coordinator = coordinator;
             this.Writer = new ReferenceTextPersistenceWriter(coordinator);
-            this.Broker = new QueuedTranslationBroker(TimeSpan.Zero, TimeSpan.Zero,
+            this.Broker = new QueuedTranslationBroker(TimeSpan.Zero, failureRetryCooldown ?? TimeSpan.Zero,
                 requestTimeout ?? TimeSpan.FromSeconds(5), TimeSpan.Zero, maxRateLimitRetries);
         }
 
@@ -612,7 +693,7 @@ public class ReferenceTextPrefetchRuntimeTests
         internal MainCommandText Probe => Row("en", "pt", 0, "7.3", Payload(), null);
 
         /// <summary>Creates and migrates a temporary SQLite fixture.</summary>
-        internal static async Task<Harness> CreateAsync(int backgroundCapacity = 8, int maxRateLimitRetries = 0, TimeSpan? requestTimeout = null, int failingContext = 0)
+        internal static async Task<Harness> CreateAsync(int backgroundCapacity = 8, int maxRateLimitRetries = 0, TimeSpan? requestTimeout = null, int failingContext = 0, TimeSpan? failureRetryCooldown = null)
         {
             var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(directory);
@@ -622,7 +703,7 @@ public class ReferenceTextPrefetchRuntimeTests
             return new Harness(directory, factory, new PersistenceCoordinator(
                 failingContext == 0 ? factory : new FailingFactory(factory, failingContext),
                 new PersistenceCoordinatorOptions(8, backgroundCapacity, 1, 8, TimeSpan.FromMilliseconds(1), 1, [], 4, 1, TimeSpan.FromSeconds(5))),
-                maxRateLimitRetries, requestTimeout);
+                maxRateLimitRetries, requestTimeout, failureRetryCooldown);
         }
 
         /// <summary>Admits one captured request through the production operation.</summary>
@@ -675,6 +756,25 @@ public class ReferenceTextPrefetchRuntimeTests
             SqliteConnection.ClearAllPools();
             Directory.Delete(this.directory, true);
         }
+    }
+
+    /// <summary>Returns real provider error payloads alongside a successfully translated sibling.</summary>
+    private sealed class PayloadTranslator(string rejected) : ITranslator
+    {
+        /// <summary>Gets the actual provider invocation count.</summary>
+        internal int Calls { get; private set; }
+
+        /// <inheritdoc />
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            this.Calls++;
+            return text.StartsWith("EGLO-FIELDS-1", StringComparison.Ordinal) ? "invalid envelope"
+                : text == "Actions" ? "Acoes" : rejected;
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage) =>
+            Task.FromResult(this.Translate(text, sourceLanguage, targetLanguage));
     }
 
     /// <summary>Injects one real worker context-open failure to exercise cursor retry outcomes.</summary>

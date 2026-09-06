@@ -1209,7 +1209,7 @@ public class TranslationService
       var fieldOriginContext = string.IsNullOrWhiteSpace(originContext)
           ? null
           : string.Concat(originContext, "/", field.Name);
-      var translatedText = await this.TranslateAsyncCore(
+      var acceptance = await this.TranslateAsyncAcceptedCore(
           field.Text,
           sourceLanguage.ProviderCode,
           targetLanguage,
@@ -1221,7 +1221,13 @@ public class TranslationService
           callerFilePath: string.Empty,
           cancellationToken,
           translatorResolution).ConfigureAwait(false);
-      translatedFields.Add(new TranslationField(field.Name, translatedText));
+      if (!acceptance.Succeeded)
+      {
+        throw new InvalidOperationException(
+            $"Translation field '{field.Name}' was rejected: {acceptance.FailureReason}");
+      }
+
+      translatedFields.Add(new TranslationField(field.Name, acceptance.Text));
     }
 
     return new TranslationFieldBatchResult(translatedFields, true);
@@ -1334,6 +1340,39 @@ public class TranslationService
       CancellationToken cancellationToken,
       TranslatorResolution? translatorResolution = null)
   {
+    var result = await this.TranslateAsyncAcceptedCore(
+        text, sourceLanguage, targetLanguage, dialogueContext, surfaceGroup,
+        capturedSourceLanguage, originContext, callerMemberName, callerFilePath,
+        cancellationToken, translatorResolution).ConfigureAwait(false);
+    return result.Text;
+  }
+
+  /// <summary>Runs the normal async translation path while preserving its acceptance outcome for structured callers.</summary>
+  /// <param name="text">The requested source text.</param>
+  /// <param name="sourceLanguage">The requested provider source code.</param>
+  /// <param name="targetLanguage">The requested target code.</param>
+  /// <param name="dialogueContext">The optional dialogue context.</param>
+  /// <param name="surfaceGroup">The translation surface.</param>
+  /// <param name="capturedSourceLanguage">The captured persistence source contract.</param>
+  /// <param name="originContext">The optional origin context.</param>
+  /// <param name="callerMemberName">The caller member name.</param>
+  /// <param name="callerFilePath">The caller file path.</param>
+  /// <param name="cancellationToken">The operation cancellation token.</param>
+  /// <param name="translatorResolution">The optional captured engine and translator.</param>
+  /// <returns>The final text together with explicit acceptance and failure information.</returns>
+  private async Task<TranslationAcceptanceResult> TranslateAsyncAcceptedCore(
+      string text,
+      string sourceLanguage,
+      string targetLanguage,
+      DialogueTranslationContext? dialogueContext,
+      TranslationSurfaceGroup surfaceGroup,
+      SourceClientLanguage? capturedSourceLanguage,
+      string? originContext,
+      string callerMemberName,
+      string callerFilePath,
+      CancellationToken cancellationToken,
+      TranslatorResolution? translatorResolution = null)
+  {
     cancellationToken.ThrowIfCancellationRequested();
     var resolvedOriginContext = ResolveOriginContext(
         originContext,
@@ -1350,7 +1389,7 @@ public class TranslationService
     var (sanitizedText, shouldTranslate) = this.CheckTextToTranslate(text);
     if (!shouldTranslate)
     {
-      return sanitizedText;
+      return new TranslationAcceptanceResult(sanitizedText, true, null);
     }
 
     if (!this.TryResolveRequestSourceLanguage(
@@ -1360,14 +1399,14 @@ public class TranslationService
         string.IsNullOrWhiteSpace(
             RuntimeLanguageHelper.NormalizeLanguage(targetLanguage)))
     {
-      return sanitizedText;
+      return new TranslationAcceptanceResult(sanitizedText, false, "invalid-language");
     }
 
     if (this.ShouldBypassTranslationDueToMissingLanguageAssets(
             surfaceGroup,
             resolvedOriginContext))
     {
-      return sanitizedText;
+      return new TranslationAcceptanceResult(sanitizedText, false, "missing-language-assets");
     }
 
     var startingEllipsis = string.Empty;
@@ -1398,7 +1437,7 @@ public class TranslationService
           TimeSpan.Zero,
           "known-failure-cache",
           false);
-      return sanitizedText;
+      return new TranslationAcceptanceResult(sanitizedText, false, "known-failure-cache");
     }
 
     var useDialogueContext = this.WillUseDialogueContext(
@@ -1449,10 +1488,13 @@ public class TranslationService
         resolvedTranslatorResolution.TranslationEngineId);
     finalDialogueText = acceptanceResult.Text;
 
-    return string.IsNullOrEmpty(startingEllipsis) ||
-           string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
-        ? finalDialogueText
-        : startingEllipsis + finalDialogueText;
+    return acceptanceResult with
+    {
+      Text = string.IsNullOrEmpty(startingEllipsis) ||
+             string.Equals(finalDialogueText, sanitizedText, StringComparison.Ordinal)
+          ? finalDialogueText
+          : startingEllipsis + finalDialogueText,
+    };
   }
 
   /// <summary>

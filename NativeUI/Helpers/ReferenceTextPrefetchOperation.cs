@@ -130,6 +130,11 @@ internal static class ReferenceTextPrefetchOperation
         {
             var result = await read.WaitAsync(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
+            if (result.Status == PersistenceCompletionStatus.Failed)
+            {
+                return CompleteTerminalFailure(origin, "read", result.Error);
+            }
+
             if (result.Status != PersistenceCompletionStatus.Succeeded)
             {
                 return false;
@@ -207,7 +212,7 @@ internal static class ReferenceTextPrefetchOperation
             cancellationToken.ThrowIfCancellationRequested();
             if (!TranslationFieldEnvelopeCodec.TryDecode(translated, fields, out var translatedFields))
             {
-                return false;
+                return CompleteTerminalFailure(origin, "invalid cached field batch", null);
             }
 
             foreach (var field in fields)
@@ -215,7 +220,7 @@ internal static class ReferenceTextPrefetchOperation
                 var matches = translatedFields.Where(value => value.Name == field.Name).ToArray();
                 if (matches.Length != 1 || string.IsNullOrWhiteSpace(matches[0].Text))
                 {
-                    return false;
+                    return CompleteTerminalFailure(origin, "incomplete field batch", null);
                 }
 
                 if (field.Name == "Name")
@@ -244,6 +249,11 @@ internal static class ReferenceTextPrefetchOperation
             }
 
             var persistedResult = await write.WaitAsync(cancellationToken).ConfigureAwait(false);
+            if (persistedResult.Status == PersistenceCompletionStatus.Failed)
+            {
+                return CompleteTerminalFailure(origin, "write", persistedResult.Error);
+            }
+
             return persistedResult.Status is PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged;
         }
         catch (OperationCanceledException)
@@ -252,8 +262,18 @@ internal static class ReferenceTextPrefetchOperation
         }
         catch (Exception exception)
         {
-            PluginRuntimeLog.Debug("ReferenceTextPrefetch", $"Captured operation remains retryable: {exception.Message}");
-            return false;
+            return CompleteTerminalFailure(origin, "operation", exception);
         }
+    }
+
+    /// <summary>Logs one exhausted operation and releases its cursor without scheduling another attempt.</summary>
+    /// <param name="origin">The captured diagnostic identity.</param>
+    /// <param name="stage">The terminal stage.</param>
+    /// <param name="exception">The terminal exception, if available.</param>
+    /// <returns>True so the current background attempt advances.</returns>
+    private static bool CompleteTerminalFailure(string origin, string stage, Exception? exception)
+    {
+        PluginRuntimeLog.Warning("ReferenceTextPrefetch", $"{origin}: terminal {stage} failure: {exception?.Message ?? "invalid result"}");
+        return true;
     }
 }
