@@ -787,7 +787,7 @@ public unsafe partial class Echoglossian
                     hoverActionKind,
                     out var registration))
             {
-                this.PrefetchReferenceText(registration, referenceId);
+                this.PrefetchReferenceTextOnDemand(registration, referenceId, sourceLanguage, scope);
             }
 
             return;
@@ -836,7 +836,7 @@ public unsafe partial class Echoglossian
                 sourceKind,
                 out var registration))
         {
-            this.PrefetchReferenceText(registration, originalPayload.ItemId);
+            this.PrefetchReferenceTextOnDemand(registration, originalPayload.ItemId, sourceLanguage, scope);
         }
     }
 

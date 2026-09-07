@@ -8,6 +8,19 @@ using System.Threading;
 
 namespace Echoglossian.NativeUI.Helpers;
 
+/// <summary>Describes the atomic result of attempting broker admission.</summary>
+internal enum QueuedTranslationAdmission
+{
+    /// <summary>The request was accepted.</summary>
+    Accepted,
+    /// <summary>A previous terminal failure is still cooling down.</summary>
+    FailureCooldown,
+    /// <summary>The exact identity already has an active request.</summary>
+    AlreadyInFlight,
+    /// <summary>The broker has started shutdown.</summary>
+    RejectedShutdown,
+}
+
 /// <summary>
 ///     Keeps a shared in-memory translation cache and drains translation
 ///     requests through a single paced background pump so dense UI refreshes do
@@ -19,6 +32,7 @@ public sealed class QueuedTranslationBroker : IDisposable
         string Key,
         Func<Task<string>> Resolver,
         Action<string>? OnResolved,
+        Action<bool>? OnTerminalFailure,
         string? SurfaceIdentity,
         int RateLimitAttempt);
 
@@ -29,6 +43,8 @@ public sealed class QueuedTranslationBroker : IDisposable
     private readonly SemaphoreSlim pendingRequestsSignal = new(0);
     private readonly CancellationTokenSource shutdownTokenSource = new();
     private readonly object pacingLock = new();
+    private readonly object lifecycleGate = new();
+    private readonly CancellationToken shutdownToken;
     private readonly Action<string>? errorLog;
     private readonly TimeSpan failureRetryCooldown;
     private readonly TimeSpan minimumRequestSpacing;
@@ -38,6 +54,7 @@ public sealed class QueuedTranslationBroker : IDisposable
     private readonly Action<string>? warningLog;
     private DateTime nextAvailableRequestUtc = DateTime.MinValue;
     private int pumpStarted;
+    private int shutdownRequested;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="QueuedTranslationBroker" />
@@ -81,6 +98,7 @@ public sealed class QueuedTranslationBroker : IDisposable
         Action<string>? warningLog = null,
         Action<string>? errorLog = null)
     {
+        this.shutdownToken = this.shutdownTokenSource.Token;
         this.minimumRequestSpacing = minimumRequestSpacing;
         this.failureRetryCooldown = failureRetryCooldown;
         this.requestTimeout = requestTimeout;
@@ -158,28 +176,71 @@ public sealed class QueuedTranslationBroker : IDisposable
         Action<string>? onResolved,
         string? surfaceIdentity)
     {
-        if (this.failedTranslations.TryGetValue(key, out var lastFailureUtc) &&
-            DateTime.UtcNow - lastFailureUtc < this.failureRetryCooldown)
+        return this.Queue(key, resolver, onResolved, surfaceIdentity, onTerminalFailure: null);
+    }
+
+    /// <summary>Queues work with an optional notification after the broker exhausts its retry policy.</summary>
+    /// <param name="key">The stable translation identity.</param>
+    /// <param name="resolver">The translation resolver.</param>
+    /// <param name="onResolved">The success callback invoked after caching.</param>
+    /// <param name="surfaceIdentity">The diagnostic surface identity.</param>
+    /// <param name="onTerminalFailure">Receives true for broker shutdown cancellation, or false for terminal provider failure.</param>
+    /// <returns>Whether the request was admitted.</returns>
+    public bool Queue(
+        string key,
+        Func<Task<string>> resolver,
+        Action<string>? onResolved,
+        string? surfaceIdentity,
+        Action<bool>? onTerminalFailure)
+    {
+        return this.TryQueue(key, resolver, onResolved, surfaceIdentity, onTerminalFailure) == QueuedTranslationAdmission.Accepted;
+    }
+
+    /// <summary>Admits a request atomically while preserving the reason for rejection.</summary>
+    /// <param name="key">The stable request identity.</param>
+    /// <param name="resolver">The provider resolver.</param>
+    /// <param name="onResolved">The successful cached-result callback.</param>
+    /// <param name="surfaceIdentity">The diagnostic surface identity.</param>
+    /// <param name="onTerminalFailure">The terminal failure or shutdown callback.</param>
+    /// <returns>The admission decision made under the lifecycle gate.</returns>
+    internal QueuedTranslationAdmission TryQueue(
+        string key,
+        Func<Task<string>> resolver,
+        Action<string>? onResolved,
+        string? surfaceIdentity,
+        Action<bool>? onTerminalFailure)
+    {
+        lock (this.lifecycleGate)
         {
-            return false;
+            if (Volatile.Read(ref this.shutdownRequested) != 0)
+            {
+                return QueuedTranslationAdmission.RejectedShutdown;
+            }
+
+            if (this.failedTranslations.TryGetValue(key, out var lastFailureUtc) &&
+                DateTime.UtcNow - lastFailureUtc < this.failureRetryCooldown)
+            {
+                return QueuedTranslationAdmission.FailureCooldown;
+            }
+
+            if (!this.translationInFlight.TryAdd(key, 0))
+            {
+                return QueuedTranslationAdmission.AlreadyInFlight;
+            }
+
+            this.pendingRequests.Enqueue(
+                new QueuedTranslationRequest(
+                    key,
+                    resolver,
+                    onResolved,
+                    onTerminalFailure,
+                    surfaceIdentity,
+                    RateLimitAttempt: 0));
+            this.pendingRequestsSignal.Release();
+            this.StartPump();
+
+            return QueuedTranslationAdmission.Accepted;
         }
-
-        if (!this.translationInFlight.TryAdd(key, 0))
-        {
-            return false;
-        }
-
-        this.pendingRequests.Enqueue(
-            new QueuedTranslationRequest(
-                key,
-                resolver,
-                onResolved,
-                surfaceIdentity,
-                RateLimitAttempt: 0));
-        this.pendingRequestsSignal.Release();
-        this.StartPump();
-
-        return true;
     }
 
     /// <summary>
@@ -202,15 +263,25 @@ public sealed class QueuedTranslationBroker : IDisposable
     {
         try
         {
-            while (!this.shutdownTokenSource.IsCancellationRequested)
+            while (!this.shutdownToken.IsCancellationRequested)
             {
                 await this.pendingRequestsSignal.WaitAsync(
-                    this.shutdownTokenSource.Token).ConfigureAwait(false);
+                    this.shutdownToken).ConfigureAwait(false);
 
-                while (this.pendingRequests.TryDequeue(out var request))
+                while (!this.shutdownToken.IsCancellationRequested && this.pendingRequests.TryDequeue(out var request))
                 {
-                    await this.DelayForNextRequestSlotAsync(
-                        this.shutdownTokenSource.Token).ConfigureAwait(false);
+                    try
+                    {
+                        await this.DelayForNextRequestSlotAsync(
+                            this.shutdownToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        this.translationInFlight.TryRemove(request.Key, out _);
+                        this.NotifyTerminalFailure(request, cancelled: true);
+                        throw;
+                    }
+
                     await this.ProcessRequestAsync(request)
                         .ConfigureAwait(false);
                 }
@@ -221,6 +292,12 @@ public sealed class QueuedTranslationBroker : IDisposable
         }
         finally
         {
+            while (this.pendingRequests.TryDequeue(out var pending))
+            {
+                this.translationInFlight.TryRemove(pending.Key, out _);
+                this.NotifyTerminalFailure(pending, cancelled: true);
+            }
+
             Interlocked.Exchange(ref this.pumpStarted, 0);
         }
     }
@@ -260,11 +337,12 @@ public sealed class QueuedTranslationBroker : IDisposable
     private async Task ProcessRequestAsync(QueuedTranslationRequest request)
     {
         var requeued = false;
+        var resolved = false;
         try
         {
             var translatedText = await request.Resolver().WaitAsync(
                 this.requestTimeout,
-                this.shutdownTokenSource.Token).ConfigureAwait(false);
+                this.shutdownToken).ConfigureAwait(false);
             if (LooksLikeRateLimitPayload(translatedText))
             {
                 requeued = this.TryRequeueAfterRateLimit(
@@ -289,6 +367,7 @@ public sealed class QueuedTranslationBroker : IDisposable
             {
                 this.translationCache[request.Key] = translatedText;
                 this.failedTranslations.TryRemove(request.Key, out _);
+                resolved = true;
                 request.OnResolved?.Invoke(translatedText);
                 return;
             }
@@ -320,7 +399,26 @@ public sealed class QueuedTranslationBroker : IDisposable
             if (!requeued)
             {
                 this.translationInFlight.TryRemove(request.Key, out _);
+                if (!resolved)
+                {
+                    this.NotifyTerminalFailure(request, Volatile.Read(ref this.shutdownRequested) != 0);
+                }
             }
+        }
+    }
+
+    /// <summary>Reports one terminal failure without allowing a subscriber to stop the broker pump.</summary>
+    /// <param name="request">The failed or cancelled request.</param>
+    /// <param name="cancelled">Whether broker shutdown cancelled the request.</param>
+    private void NotifyTerminalFailure(QueuedTranslationRequest request, bool cancelled)
+    {
+        try
+        {
+            request.OnTerminalFailure?.Invoke(cancelled);
+        }
+        catch (Exception exception)
+        {
+            this.errorLog?.Invoke($"[QueuedTranslationBroker] Terminal callback failed: {exception.Message}");
         }
     }
 
@@ -338,28 +436,36 @@ public sealed class QueuedTranslationBroker : IDisposable
         QueuedTranslationRequest request,
         string details)
     {
-        this.ExtendGlobalCooldown(this.rateLimitCooldown);
-
-        if (request.RateLimitAttempt >= this.maxRateLimitRetries)
+        lock (this.lifecycleGate)
         {
-            this.warningLog?.Invoke(
-                $"[QueuedTranslationBroker] Rate limit persisted for '{request.Key}' after {request.RateLimitAttempt + 1} attempts. " +
-                $"Cooling queue for {this.rateLimitCooldown.TotalSeconds:F0}s{FormatSurfaceIdentitySuffix(request.SurfaceIdentity)}. Details: {FormatDiagnosticPreview(details)}");
-            return false;
-        }
-
-        this.warningLog?.Invoke(
-            $"[QueuedTranslationBroker] Rate limit detected for '{request.Key}'. " +
-            $"Cooling queue for {this.rateLimitCooldown.TotalSeconds:F0}s before retry {request.RateLimitAttempt + 2}. " +
-            $"Details{FormatSurfaceIdentityLabel(request.SurfaceIdentity)}: {FormatDiagnosticPreview(details)}");
-
-        this.pendingRequests.Enqueue(
-            request with
+            if (this.shutdownToken.IsCancellationRequested)
             {
-                RateLimitAttempt = request.RateLimitAttempt + 1,
-            });
-        this.pendingRequestsSignal.Release();
-        return true;
+                return false;
+            }
+
+            this.ExtendGlobalCooldown(this.rateLimitCooldown);
+
+            if (request.RateLimitAttempt >= this.maxRateLimitRetries)
+            {
+                this.warningLog?.Invoke(
+                    $"[QueuedTranslationBroker] Rate limit persisted for '{request.Key}' after {request.RateLimitAttempt + 1} attempts. " +
+                    $"Cooling queue for {this.rateLimitCooldown.TotalSeconds:F0}s{FormatSurfaceIdentitySuffix(request.SurfaceIdentity)}. Details: {FormatDiagnosticPreview(details)}");
+                return false;
+            }
+
+            this.warningLog?.Invoke(
+                $"[QueuedTranslationBroker] Rate limit detected for '{request.Key}'. " +
+                $"Cooling queue for {this.rateLimitCooldown.TotalSeconds:F0}s before retry {request.RateLimitAttempt + 2}. " +
+                $"Details{FormatSurfaceIdentityLabel(request.SurfaceIdentity)}: {FormatDiagnosticPreview(details)}");
+
+            this.pendingRequests.Enqueue(
+                request with
+                {
+                    RateLimitAttempt = request.RateLimitAttempt + 1,
+                });
+            this.pendingRequestsSignal.Release();
+            return true;
+        }
     }
 
     /// <summary>
@@ -612,9 +718,17 @@ public sealed class QueuedTranslationBroker : IDisposable
     /// </summary>
     public void Dispose()
     {
-        this.shutdownTokenSource.Cancel();
-        this.pendingRequestsSignal.Release();
-        this.pendingRequestsSignal.Dispose();
-        this.shutdownTokenSource.Dispose();
+        lock (this.lifecycleGate)
+        {
+            if (Interlocked.Exchange(ref this.shutdownRequested, 1) != 0)
+            {
+                return;
+            }
+
+            this.shutdownTokenSource.Cancel();
+            this.pendingRequestsSignal.Release();
+            this.pendingRequestsSignal.Dispose();
+            this.shutdownTokenSource.Dispose();
+        }
     }
 }

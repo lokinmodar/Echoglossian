@@ -527,7 +527,7 @@ $persistenceHelperPattern = [regex]::new(
     'ItemTooltipPersistenceHelper|TraitPersistenceHelper|' +
     'StringArrayDataPersistenceHelper|GameWindowPersistenceHelper|' +
     'TranslationFailurePersistenceHelper|LlmCapabilityPersistenceHelper)' +
-    '\s*\.\s*(?<method>Find\w*|Insert\w*|Record\w*|Upsert\w*)\s*\(')
+    '\s*\.\s*(?<method>Find\w*|Insert\w*|Record\w*|Upsert\w*)(?<!Async)\s*\(')
 
 $databaseQueryPattern = [regex]::new(
     '(?<!Async)\b(?:Aggregate|All|Any|Average|Contains|Count|ElementAt|' +

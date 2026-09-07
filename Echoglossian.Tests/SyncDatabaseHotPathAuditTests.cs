@@ -15,6 +15,34 @@ namespace Echoglossian.Tests;
 public sealed class SyncDatabaseHotPathAuditTests
 {
     /// <summary>
+    /// Ensures async helper calls are excluded while synchronous calls remain findings.
+    /// </summary>
+    /// <param name="methodName">The persistence operation prefix.</param>
+    [Theory]
+    [InlineData("FindReferenceText")]
+    [InlineData("InsertReferenceText")]
+    [InlineData("RecordReferenceText")]
+    [InlineData("UpsertReferenceText")]
+    public void AuditScript_AsyncPersistenceHelper_IsNotSynchronousDebt(string methodName)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "DBHelpers/Fixture.cs",
+            $"ReferenceTextPersistenceHelper.{methodName}(context, row); " +
+            $"await ReferenceTextPersistenceHelper.{methodName}Async(context, row);");
+
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var finding = Assert.Single(document.RootElement.GetProperty("allowedFindings").EnumerateArray());
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("persistence-helper-call", finding.GetProperty("category").GetString());
+        Assert.Equal(
+            $"ReferenceTextPersistenceHelper.{methodName}( [occurrence 1]",
+            finding.GetProperty("evidence").GetString());
+    }
+
+    /// <summary>
     /// Ensures an untracked synchronous save in a runtime path fails the audit.
     /// </summary>
     [Fact]
