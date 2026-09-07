@@ -76,8 +76,34 @@
 
 ## Execution Notes
 
-- The complete unit/integration suite passed 1,464/1,464 tests.
+- The complete unit/integration suite passed 1,466/1,466 tests after adding
+  regressions for active ReferenceText read and commit cancellation during
+  plugin unload.
 - The Mock/DalaMock suite passed 25/25 tests after restoring its missing assets. Its build completed with zero errors; existing vendor and Multilingual App Toolkit warnings remain.
 - The synchronous database audit passed with 225 findings and DB-2 at 10. The baseline was not expanded or regenerated; retained DB-2 findings are startup preload and synchronous setup/helper debt assigned to later lifecycle/enforcement stages.
 - Automated coverage drives real SQLite, the production persistence coordinator, shared translation broker, field batching/fallback, post-commit cache publication, and the production-used cursor logic. Live Lumina enumeration, the actual Dalamud Framework subscription, native tooltip lifecycle, and provider-specific envelope preservation remain explicit in-game verification boundaries.
 - The final handoff records the absolute Debug DLL path and exact source commit; no schema, release metadata, translation toggle, Talk/BattleTalk, or DB-4+ migration is included.
+
+### Post-validation unload/reload correction
+
+- The first manual Test 5 run froze indefinitely when the plugin was enabled
+  immediately after unload. The prior instance stopped cache publication but
+  did not cancel accepted ReferenceText SQLite work, so a read or transaction
+  could outlive its owner and compete with synchronous startup migration checks.
+- The correction preserves the current `IDalamudPlugin` lifecycle and does not
+  adopt the DB-8 `IAsyncDalamudPlugin` work early. It gives ReferenceText work an
+  owner-lifetime cancellation token and propagates it through active reads and
+  the coordinator's complete write transaction, including save and commit.
+- The two new real-SQLite regression tests were each observed failing without
+  that propagation and passing with it. The full unit suite passed 1,466/1,466,
+  Mock/DalaMock passed 25/25, and the synchronous database audit remained at
+  225 findings with DB-2 at 10.
+- The user repeated Test 5 with the correction while ReferenceText/prefetch
+  activity was present and reported no unload/reload errors. The tested
+  pre-commit DLL SHA-256 was
+  `AE86FFC9FA436611C2492287D108027C03D02001EE1373DF767E187808A84349`.
+- This functional validation does not substitute for the controlled DB-2
+  before/after performance capture defined in
+  `docs/issue-258-async-persistence-baseline.md`. The logs do not contain frame
+  percentiles or every required coordinator metric, so those values remain
+  explicitly unreported rather than inferred.

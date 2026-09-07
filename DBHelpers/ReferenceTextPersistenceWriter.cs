@@ -22,8 +22,10 @@ internal sealed class ReferenceTextPersistenceWriter
     private const string WriteDomain = "reference-text-write";
 
     private readonly IPersistenceCoordinator coordinator;
+    private readonly CancellationTokenSource operationCancellation = new();
     private readonly object publicationGate = new();
     private int publicationEnabled = 1;
+    private int shutdownRequested;
 
     /// <summary>
     ///     Initializes a new instance of the
@@ -36,13 +38,19 @@ internal sealed class ReferenceTextPersistenceWriter
     }
 
     /// <summary>
-    ///     Stops publication to caches after accepted work completes.
+    ///     Stops cache publication and cancels accepted reference-text database
+    ///     work when the owning plugin lifetime ends.
     /// </summary>
     internal void DisablePublication()
     {
         lock (this.publicationGate)
         {
             this.publicationEnabled = 0;
+        }
+
+        if (Interlocked.Exchange(ref this.shutdownRequested, 1) == 0)
+        {
+            this.operationCancellation.Cancel();
         }
     }
 
@@ -86,13 +94,20 @@ internal sealed class ReferenceTextPersistenceWriter
         return this.coordinator.TryScheduleRead(
             new PersistenceWorkKey(ReadDomain, BuildReadIdentity<TRow>(probe, scope)),
             priority,
-            (context, cancellationToken) => ReferenceTextPersistenceHelper
-                .FindReferenceTextAsync(
-                    context,
-                    probe,
-                    scope,
-                    setSelector,
-                    cancellationToken),
+            async (context, cancellationToken) =>
+            {
+                using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken,
+                    this.operationCancellation.Token);
+                return await ReferenceTextPersistenceHelper
+                    .FindReferenceTextAsync(
+                        context,
+                        probe,
+                        scope,
+                        setSelector,
+                        linkedCancellation.Token)
+                    .ConfigureAwait(false);
+            },
             row =>
             {
                 lock (this.publicationGate)
@@ -162,7 +177,10 @@ internal sealed class ReferenceTextPersistenceWriter
                             publish?.Invoke(persistedRow);
                         }
                     }
-                }),
+                })
+            {
+                CancellationToken = this.operationCancellation.Token,
+            },
             out completion);
     }
 

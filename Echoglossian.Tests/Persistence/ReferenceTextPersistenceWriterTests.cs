@@ -462,6 +462,73 @@ public sealed class ReferenceTextPersistenceWriterTests
     }
 
     /// <summary>
+    ///     Ensures disabling publication during plugin unload cancels an
+    ///     active reference-text database operation instead of leaving it
+    ///     alive after the owning plugin instance is released.
+    /// </summary>
+    [Fact]
+    public async Task DisablePublication_WhenWriteIsActive_CancelsDatabaseWork()
+    {
+        var gate = new CommitGateInterceptor();
+        try
+        {
+            await this.WithWriterAsync(async (writer, _, _) =>
+            {
+                writer.TryPersist(
+                    CreateRow("nome", "descricao"),
+                    static context => context.MainCommandTexts,
+                    publish: null,
+                    out var completion);
+                await gate.CommitEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+                writer.DisablePublication();
+
+                Assert.Equal(
+                    PersistenceCompletionStatus.Cancelled,
+                    (await completion.WaitAsync(TimeSpan.FromSeconds(1))).Status);
+            }, interceptor: gate, options: CreateOptions(shutdownTimeout: TimeSpan.Zero));
+        }
+        finally
+        {
+            gate.ReleaseCommit.TrySetResult(true);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures disabling publication during plugin unload cancels an
+    ///     active reference-text query instead of retaining its database
+    ///     context after the owning plugin instance is released.
+    /// </summary>
+    [Fact]
+    public async Task DisablePublication_WhenReadIsActive_CancelsDatabaseWork()
+    {
+        var gate = new ReaderGateInterceptor();
+        try
+        {
+            await this.WithWriterAsync(async (writer, _, _) =>
+            {
+                writer.TryFind(
+                    CreateRow("nome", "descricao"),
+                    new TranslationReuseScope("en", "pt", 0, true),
+                    static context => context.MainCommandTexts,
+                    publish: null,
+                    out var completion);
+                await gate.ReaderEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+                writer.DisablePublication();
+
+                Assert.Equal(
+                    PersistenceCompletionStatus.Cancelled,
+                    (await completion.WaitAsync(TimeSpan.FromSeconds(1))).Status);
+            }, interceptor: gate, options: CreateOptions(shutdownTimeout: TimeSpan.Zero));
+        }
+        finally
+        {
+            gate.ReleaseReader.TrySetResult(true);
+        }
+    }
+
+    /// <summary>
     ///     Ensures a failed commit neither persists a row nor publishes its
     ///     cache projection.
     /// </summary>
@@ -640,6 +707,11 @@ public sealed class ReferenceTextPersistenceWriterTests
             if (interceptor is CommitGateInterceptor commitGate)
             {
                 commitGate.Enabled = true;
+            }
+
+            if (interceptor is ReaderGateInterceptor readerGate)
+            {
+                readerGate.Enabled = true;
             }
 
             await using var coordinator = new PersistenceCoordinator(
@@ -841,6 +913,48 @@ public sealed class ReferenceTextPersistenceWriterTests
             {
                 Interlocked.Increment(ref this.updateCount);
             }
+        }
+    }
+
+    /// <summary>
+    ///     Delays a SQLite reader until a test releases the gate or cancels
+    ///     the query.
+    /// </summary>
+    private sealed class ReaderGateInterceptor : DbCommandInterceptor
+    {
+        /// <summary>
+        ///     Gets or sets a value indicating whether reader interception is
+        ///     enabled after test database migration.
+        /// </summary>
+        internal bool Enabled { get; set; }
+
+        /// <summary>
+        ///     Gets the task completed when a reader enters the gate.
+        /// </summary>
+        internal TaskCompletionSource<bool> ReaderEntered { get; } = new(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <summary>
+        ///     Gets the task completion source that releases the reader.
+        /// </summary>
+        internal TaskCompletionSource<bool> ReleaseReader { get; } = new(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <inheritdoc />
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (!this.Enabled)
+            {
+                return result;
+            }
+
+            this.ReaderEntered.TrySetResult(true);
+            await this.ReleaseReader.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return result;
         }
     }
 
