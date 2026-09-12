@@ -195,9 +195,21 @@ public sealed class TranslationFieldBatchTests
     public async Task TranslateFieldsAsync_SingleField_UsesCapturedTranslatorOnceWithRawText(
         Echoglossian.TransEngines engine)
     {
-        var translator = new RawResponseTranslator(static text => "pt:" + text);
-        var service = this.CreateService(translator, engine);
+        var capturedTranslator = new RawResponseTranslator(static text => "pt:" + text);
+        var replacementTranslator = new RawResponseTranslator(
+            static _ => throw new InvalidOperationException("Live translator was used after capture."));
+        var current = new TranslationService.TranslatorResolution(
+            (int)engine,
+            capturedTranslator);
+        var service = new TranslationService(
+            static text => text,
+            capturedTranslator,
+            translationEngine: (int)engine,
+            translatorResolver: _ => current);
         var captured = service.CaptureTranslatorResolution((int)engine, TranslationSurfaceGroup.Default);
+        current = new TranslationService.TranslatorResolution(
+            (int)engine,
+            replacementTranslator);
 
         var result = await service.TranslateFieldsAsync(
             [new TranslationField("Name", "Actions")],
@@ -207,7 +219,8 @@ public sealed class TranslationFieldBatchTests
 
         Assert.False(result.UsedIndividualFallback);
         Assert.Equal("pt:Actions", result.GetTranslation("Name"));
-        Assert.Equal(["Actions"], translator.Requests);
+        Assert.Equal(["Actions"], capturedTranslator.Requests);
+        Assert.Empty(replacementTranslator.Requests);
     }
 
     /// <summary>
