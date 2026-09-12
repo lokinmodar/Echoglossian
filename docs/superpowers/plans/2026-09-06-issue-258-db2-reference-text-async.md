@@ -129,6 +129,51 @@
   suite passed 1,498/1,498; the synchronous audit passed with 225 findings and
   DB-2 at 10. Debug DLL: `D:\.codex\worktrees\8bb2\Echoglossian\bin\x64\Debug\win-x64\Echoglossian.dll`.
 
+### Task 6: Post-validation restart queue reconstruction
+
+**Files:**
+- Modify: `DBHelpers/ReferenceTextPersistenceWriter.cs`
+- Modify: `NativeUI/Helpers/ReferenceTextPrefetchRuntime.cs`
+- Test: `Echoglossian.Tests/Persistence/ReferenceTextPersistenceWriterTests.cs`
+- Test: `Echoglossian.Tests/ReferenceTextPrefetchRuntimeTests.cs`
+
+- [x] Write a failing real-SQLite regression proving that a fresh plugin
+  generation can load the complete canonical rows for one registration in one
+  bounded background read, with source hash, language, engine, and game-version
+  scope preserved.
+- [x] Write a failing runtime regression proving that restart initialization
+  waits without blocking the Framework callback, removes only complete and
+  unchanged rows from the rebuilt queue, and admits the first missing row
+  without replaying one coordinator read per completed row.
+- [x] Implement restart queue reconstruction through the existing persistence
+  coordinator. Do not add a database migration, configuration cursor, parallel
+  queue, synchronous database access, or a new translation path.
+- [x] Preserve cancellation ownership: an unloaded generation must publish no
+  cache or queue state, and the replacement generation must initialize cleanly.
+- [x] Run focused tests, the full solution build and unit suite, Mock/DalaMock
+  lifecycle validation, and the synchronous DB audit. Record the Debug DLL path,
+  source commit, and hash for one final in-game unload/reload check.
+
+#### Task 6 execution evidence
+
+- RED: the snapshot/restart regressions failed because registration snapshot,
+  bounded reconstruction, and generation invalidation contracts did not exist.
+  Reviewer-driven REDs additionally proved unrelated language rows were
+  materialized and cancellation could allow later bulk publication.
+- GREEN: the three correction regressions passed 3/3 and the complete
+  ReferenceText writer/runtime suites passed 56/56.
+- Validation: Debug solution build completed with 0 errors; the complete unit
+  suite passed 1,503/1,503; the synchronous audit passed with 225 findings and
+  DB-2 at 10. Mock/DalaMock remains blocked before test execution by the
+  pre-existing vendored `MockDtrBarEntry`/`IDisposable.Dispose()` incompatibility.
+- Review: the first task review found unbounded Framework capture, an
+  insufficiently bounded SQL snapshot, and a generation-publication race. Fix
+  round 1 addressed all three findings and the scoped re-review found no new
+  Critical or Important breakage.
+- Debug DLL: `D:\.codex\worktrees\8bb2\Echoglossian\bin\x64\Debug\win-x64\Echoglossian.dll`;
+  behavioral source commit `967696f4b2792021ae66d8d0b920fdd8a73ea816`;
+  SHA-256 `4D2CC96B95C53AC58A92B74E73ED0AEB1B8B54F18D3CBEC06B4025337D59772B`.
+
 ## Execution Notes
 
 - The complete unit/integration suite passed 1,466/1,466 tests after adding
