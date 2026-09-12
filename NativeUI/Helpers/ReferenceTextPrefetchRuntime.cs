@@ -40,16 +40,21 @@ namespace Echoglossian;
 public unsafe partial class Echoglossian
 {
     private const int ReferenceTextPrefetchRowsPerTick = 8;
+    private const int ReferenceTextPrefetchReconstructionRowsPerTick = 32;
 
     private static readonly TimeSpan ReferenceTextPrefetchTickInterval =
         TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan ReferenceTextPrefetchReconstructionTickInterval =
+        TimeSpan.FromMilliseconds(50);
 
     private readonly Dictionary<string, ReferenceTextPrefetchState>
         referenceTextPrefetchStates = new(StringComparer.Ordinal);
     private IReadOnlyList<ReferenceTextPrefetchRegistration>?
         referenceTextPrefetchRegistrations;
     private DateTime referenceTextPrefetchLastTickUtc = DateTime.MinValue;
+    private DateTime referenceTextPrefetchLastReconstructionTickUtc = DateTime.MinValue;
     private int referenceTextPrefetchRoundRobinIndex;
+    private int referenceTextPrefetchReconstructionRoundRobinIndex;
     private readonly Dictionary<string, Task<bool>> referenceTextPrefetchOperations = new(StringComparer.Ordinal);
 
     /// <summary>
@@ -59,19 +64,18 @@ public unsafe partial class Echoglossian
     /// </summary>
     private void TickReferenceTextPrefetch()
     {
-        if (!this.ShouldPrefetchReferenceTexts() ||
-            DateTime.UtcNow - this.referenceTextPrefetchLastTickUtc <
-            ReferenceTextPrefetchTickInterval)
+        if (!this.ShouldPrefetchReferenceTexts())
         {
             return;
         }
 
-        this.referenceTextPrefetchLastTickUtc = DateTime.UtcNow;
-
-        foreach (var key in this.referenceTextPrefetchOperations
-                     .Where(entry => entry.Value.IsCompleted).Select(entry => entry.Key).ToArray())
+        var budget = GetDueReferenceTextPrefetchBudget(
+            DateTime.UtcNow,
+            ref this.referenceTextPrefetchLastReconstructionTickUtc,
+            ref this.referenceTextPrefetchLastTickUtc);
+        if (budget.ReconstructionRows == 0 && budget.AdmissionRows == 0)
         {
-            this.referenceTextPrefetchOperations.Remove(key);
+            return;
         }
 
         var registrations = this.GetReferenceTextPrefetchRegistrations();
@@ -80,22 +84,78 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        var startIndex =
-            this.referenceTextPrefetchRoundRobinIndex % registrations.Count;
-        var remaining = ReferenceTextPrefetchRowsPerTick;
-        for (var offset = 0;
-             offset < registrations.Count && remaining > 0;
-             offset++)
+        if (budget.AdmissionRows > 0)
         {
-            var registration =
-                registrations[(startIndex + offset) % registrations.Count];
-            remaining -= this.TickReferenceTextPrefetchRegistration(
-                registration,
-                remaining);
+            foreach (var key in this.referenceTextPrefetchOperations
+                         .Where(entry => entry.Value.IsCompleted).Select(entry => entry.Key).ToArray())
+            {
+                this.referenceTextPrefetchOperations.Remove(key);
+            }
+
+            var startIndex =
+                this.referenceTextPrefetchRoundRobinIndex % registrations.Count;
+            var remaining = budget.AdmissionRows;
+            for (var offset = 0;
+                 offset < registrations.Count && remaining > 0;
+                 offset++)
+            {
+                var registration =
+                    registrations[(startIndex + offset) % registrations.Count];
+                remaining -= this.TickReferenceTextPrefetchRegistration(
+                    registration,
+                    remaining);
+            }
+
+            this.referenceTextPrefetchRoundRobinIndex =
+                (startIndex + 1) % registrations.Count;
         }
 
-        this.referenceTextPrefetchRoundRobinIndex =
-            (startIndex + 1) % registrations.Count;
+        if (budget.ReconstructionRows > 0)
+        {
+            var startIndex = this.referenceTextPrefetchReconstructionRoundRobinIndex % registrations.Count;
+            var remaining = budget.ReconstructionRows;
+            for (var offset = 0;
+                 offset < registrations.Count && remaining > 0;
+                 offset++)
+            {
+                var registration = registrations[(startIndex + offset) % registrations.Count];
+                remaining -= this.TickReferenceTextPrefetchReconstructionRegistration(
+                    registration,
+                    remaining);
+            }
+
+            this.referenceTextPrefetchReconstructionRoundRobinIndex =
+                (startIndex + 1) % registrations.Count;
+        }
+    }
+
+    /// <summary>Gets the independent bounded work due at one Framework timestamp.</summary>
+    /// <param name="utcNow">The current Framework timestamp.</param>
+    /// <param name="lastReconstructionTickUtc">The last reconstruction timestamp.</param>
+    /// <param name="lastAdmissionTickUtc">The last translation-admission timestamp.</param>
+    /// <returns>The independently paced reconstruction and translation budgets.</returns>
+    internal static ReferenceTextPrefetchTickBudget GetDueReferenceTextPrefetchBudget(
+        DateTime utcNow,
+        ref DateTime lastReconstructionTickUtc,
+        ref DateTime lastAdmissionTickUtc)
+    {
+        var reconstructionRows = 0;
+        if (utcNow - lastReconstructionTickUtc >= ReferenceTextPrefetchReconstructionTickInterval)
+        {
+            lastReconstructionTickUtc = utcNow;
+            reconstructionRows = ReferenceTextPrefetchReconstructionRowsPerTick;
+        }
+
+        var admissionRows = 0;
+        if (utcNow - lastAdmissionTickUtc >= ReferenceTextPrefetchTickInterval)
+        {
+            lastAdmissionTickUtc = utcNow;
+            admissionRows = ReferenceTextPrefetchRowsPerTick;
+        }
+
+        return new ReferenceTextPrefetchTickBudget(
+            reconstructionRows,
+            admissionRows);
     }
 
     /// <summary>
@@ -111,7 +171,9 @@ public unsafe partial class Echoglossian
         this.referenceTextPrefetchStates.Clear();
         this.referenceTextPrefetchOperations.Clear();
         this.referenceTextPrefetchLastTickUtc = DateTime.MinValue;
+        this.referenceTextPrefetchLastReconstructionTickUtc = DateTime.MinValue;
         this.referenceTextPrefetchRoundRobinIndex = 0;
+        this.referenceTextPrefetchReconstructionRoundRobinIndex = 0;
     }
 
     /// <summary>
@@ -203,10 +265,34 @@ public unsafe partial class Echoglossian
                 scope, gameVersion, request, generation),
             referenceId => registration.TryBuildPayload(referenceId, out var payload) ? payload : null,
             payload => registration.BuildSourceHash(payload, scope, gameVersion),
+            0,
             remainingBudget,
             referenceId => this.PrefetchReferenceText(
                 registration, referenceId, sourceLanguage, scope, gameVersion,
                 state.Cancellation.Token));
+    }
+
+    /// <summary>Advances only the bounded restart reconstruction for one registration.</summary>
+    /// <param name="registration">The registration whose existing initialization may advance.</param>
+    /// <param name="remainingBudget">The remaining reconstruction budget for this Framework tick.</param>
+    /// <returns>The reconstruction rows consumed.</returns>
+    private int TickReferenceTextPrefetchReconstructionRegistration(
+        ReferenceTextPrefetchRegistration registration,
+        int remainingBudget)
+    {
+        if (!registration.IsEnabled())
+        {
+            if (this.referenceTextPrefetchStates.Remove(registration.Key, out var removed))
+            {
+                removed.InvalidateGeneration();
+            }
+
+            return 0;
+        }
+
+        return this.referenceTextPrefetchStates.TryGetValue(registration.Key, out var state)
+            ? TickReferenceTextPrefetchInitialization(state, remainingBudget)
+            : 0;
     }
 
     /// <summary>
@@ -219,6 +305,7 @@ public unsafe partial class Echoglossian
     /// <param name="loadSnapshot">Schedules one registration-level snapshot.</param>
     /// <param name="capturePayload">Captures the current canonical source payload.</param>
     /// <param name="buildSourceHash">Builds the registration-specific source hash.</param>
+    /// <param name="reconstructionBudget">The independent source-capture budget for this tick.</param>
     /// <param name="remainingBudget">The maximum per-row admissions for this tick.</param>
     /// <param name="schedule">Captures and admits the next reference operation.</param>
     /// <returns>The admissions consumed without blocking the Framework callback.</returns>
@@ -231,6 +318,7 @@ public unsafe partial class Echoglossian
             Task<ReferenceTextPrefetchSnapshotResult>> loadSnapshot,
         Func<uint, ReferenceTextCanonicalPayload?> capturePayload,
         Func<ReferenceTextCanonicalPayload, string?> buildSourceHash,
+        int reconstructionBudget,
         int remainingBudget,
         Func<uint, Task<bool>> schedule)
     {
@@ -239,13 +327,35 @@ public unsafe partial class Echoglossian
             state.ReplaceGeneration();
             state.Pending = null;
             state.Initialization = new ReferenceTextPrefetchInitialization(
-                referenceIds);
+                referenceIds,
+                loadSnapshot,
+                capturePayload,
+                buildSourceHash);
             state.Signature = signature;
             state.Queue.Clear();
             state.QueueIndex = 0;
             return 0;
         }
 
+        _ = TickReferenceTextPrefetchInitialization(
+            state,
+            reconstructionBudget);
+        if (state.Initialization is not null)
+        {
+            return 0;
+        }
+
+        return TickReferenceTextPrefetchQueue(state, remainingBudget, schedule);
+    }
+
+    /// <summary>Advances only one registration's bounded restart reconstruction.</summary>
+    /// <param name="state">The mutable registration state.</param>
+    /// <param name="remainingBudget">The maximum source rows to capture on this tick.</param>
+    /// <returns>The reconstruction rows consumed.</returns>
+    internal static int TickReferenceTextPrefetchInitialization(
+        ReferenceTextPrefetchState state,
+        int remainingBudget)
+    {
         var initialization = state.Initialization;
         if (initialization is not null)
         {
@@ -256,13 +366,13 @@ public unsafe partial class Echoglossian
                 var referenceId = initialization.ReferenceIds[initialization.ReconstructionIndex];
                 initialization.ReconstructionIndex++;
                 processedCount++;
-                var payload = capturePayload(referenceId);
+                var payload = initialization.CapturePayload(referenceId);
                 if (payload is null)
                 {
                     continue;
                 }
 
-                var sourceHash = buildSourceHash(payload);
+                var sourceHash = initialization.BuildSourceHash(payload);
                 if (!string.IsNullOrWhiteSpace(sourceHash))
                 {
                     initialization.AddSnapshotKey(referenceId, sourceHash);
@@ -276,7 +386,7 @@ public unsafe partial class Echoglossian
 
             if (initialization.Completion is null)
             {
-                initialization.Start(loadSnapshot(
+                initialization.Start(initialization.LoadSnapshot(
                     initialization.CreateSnapshotRequest(),
                     state.Generation));
                 return processedCount;
@@ -294,16 +404,13 @@ public unsafe partial class Echoglossian
                 return 0;
             }
 
-            state.Queue.AddRange(initialization.PendingReferenceIds);
+            state.PublishQueue(initialization.PendingReferenceIds);
 
             state.Initialization = null;
-            return processedCount + TickReferenceTextPrefetchQueue(
-                state,
-                remainingBudget - processedCount,
-                schedule);
+            return processedCount;
         }
 
-        return TickReferenceTextPrefetchQueue(state, remainingBudget, schedule);
+        return 0;
     }
 
     /// <summary>Gets whether one snapshot row completely covers its canonical source payload.</summary>
@@ -2083,7 +2190,7 @@ public unsafe partial class Echoglossian
         /// <summary>
         ///     Gets the row-identifier queue.
         /// </summary>
-        public List<uint> Queue { get; } = [];
+        public List<uint> Queue { get; private set; } = [];
 
         /// <summary>
         ///     Gets or sets the last queue signature.
@@ -2119,7 +2226,22 @@ public unsafe partial class Echoglossian
             this.Generation.Invalidate();
             this.Generation = new ReferenceTextPrefetchGeneration();
         }
+
+        /// <summary>Atomically replaces the Framework-owned admission queue.</summary>
+        /// <param name="queue">The fully reconstructed pending queue.</param>
+        internal void PublishQueue(List<uint> queue)
+        {
+            this.Queue = queue;
+            this.QueueIndex = 0;
+        }
     }
+
+    /// <summary>Contains independently paced Framework work budgets.</summary>
+    /// <param name="ReconstructionRows">The source rows allowed for restart reconstruction.</param>
+    /// <param name="AdmissionRows">The rows allowed for translation admission.</param>
+    internal readonly record struct ReferenceTextPrefetchTickBudget(
+        int ReconstructionRows,
+        int AdmissionRows);
 
     /// <summary>
     ///     Coordinates cancellation with single-row cache publication for one
@@ -2193,14 +2315,36 @@ public unsafe partial class Echoglossian
 
         /// <summary>Initializes a snapshot observer for captured row identifiers.</summary>
         /// <param name="referenceIds">The immutable row identifiers for this generation.</param>
+        /// <param name="loadSnapshot">Schedules the captured registration snapshot.</param>
+        /// <param name="capturePayload">Captures one source payload.</param>
+        /// <param name="buildSourceHash">Builds one canonical source hash.</param>
         internal ReferenceTextPrefetchInitialization(
-            IReadOnlyList<uint> referenceIds)
+            IReadOnlyList<uint> referenceIds,
+            Func<ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest,
+                ReferenceTextPrefetchGeneration,
+                Task<ReferenceTextPrefetchSnapshotResult>> loadSnapshot,
+            Func<uint, ReferenceTextCanonicalPayload?> capturePayload,
+            Func<ReferenceTextCanonicalPayload, string?> buildSourceHash)
         {
             this.ReferenceIds = referenceIds.ToArray();
+            this.LoadSnapshot = loadSnapshot;
+            this.CapturePayload = capturePayload;
+            this.BuildSourceHash = buildSourceHash;
         }
 
         /// <summary>Gets the immutable captured row identifiers.</summary>
         internal IReadOnlyList<uint> ReferenceIds { get; }
+
+        /// <summary>Gets the captured registration snapshot loader.</summary>
+        internal Func<ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest,
+            ReferenceTextPrefetchGeneration,
+            Task<ReferenceTextPrefetchSnapshotResult>> LoadSnapshot { get; }
+
+        /// <summary>Gets the captured source-payload resolver.</summary>
+        internal Func<uint, ReferenceTextCanonicalPayload?> CapturePayload { get; }
+
+        /// <summary>Gets the captured canonical source-hash builder.</summary>
+        internal Func<ReferenceTextCanonicalPayload, string?> BuildSourceHash { get; }
 
         /// <summary>Gets completion after the result fields are published.</summary>
         internal Task? Completion { get; private set; }
@@ -2219,7 +2363,7 @@ public unsafe partial class Echoglossian
             new HashSet<ReferenceTextPrefetchSnapshotIdentity>();
 
         /// <summary>Gets the fully reconstructed queue ready for atomic publication.</summary>
-        internal IReadOnlyList<uint> PendingReferenceIds { get; private set; } = [];
+        internal List<uint> PendingReferenceIds { get; private set; } = [];
 
         /// <summary>Adds one source identity and advances the bounded request digest.</summary>
         /// <param name="referenceId">The stable sheet-row identifier.</param>
@@ -2257,6 +2401,12 @@ public unsafe partial class Echoglossian
                 operation,
                 result =>
                 {
+                    if (!result.Succeeded)
+                    {
+                        this.Succeeded = false;
+                        return;
+                    }
+
                     this.CompletedIdentities = result.Rows
                         .Where(HasCompleteReferenceTextSnapshotRow)
                         .Select(row => new ReferenceTextPrefetchSnapshotIdentity(
@@ -2270,8 +2420,8 @@ public unsafe partial class Echoglossian
                             !capturedIdentities.TryGetValue(referenceId, out var sourceHash) ||
                             !this.CompletedIdentities.Contains(
                                 new ReferenceTextPrefetchSnapshotIdentity(referenceId, sourceHash)))
-                        .ToArray();
-                    this.Succeeded = result.Succeeded;
+                        .ToList();
+                    this.Succeeded = true;
                 });
         }
 
@@ -2309,16 +2459,45 @@ internal static class ReferenceTextPrefetchSnapshotObserver
     /// <param name="generation">The registration generation publication gate.</param>
     /// <param name="publishRow">Publishes one row to the existing canonical cache.</param>
     /// <returns>The cancellation-safe snapshot result.</returns>
-    internal static async Task<Echoglossian.ReferenceTextPrefetchSnapshotResult> CompleteAsync<TRow>(
+    internal static Task<Echoglossian.ReferenceTextPrefetchSnapshotResult> CompleteAsync<TRow>(
         ReferenceTextPersistenceWriter writer,
         Task<PersistenceReadResult<IReadOnlyList<TRow>>> completion,
         Echoglossian.ReferenceTextPrefetchGeneration generation,
         Action<TRow> publishRow)
         where TRow : ReferenceTextRowBase
     {
+        var generationToken = generation.Token;
+        return Task.Factory.StartNew(
+            () => CompleteOnWorkerAsync(
+                writer,
+                completion,
+                generation,
+                generationToken,
+                publishRow),
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default).Unwrap();
+    }
+
+    /// <summary>Awaits and publishes one snapshot after explicit worker dispatch.</summary>
+    /// <typeparam name="TRow">The concrete persisted row type.</typeparam>
+    /// <param name="writer">The owner-lifetime persistence adapter.</param>
+    /// <param name="completion">The admitted coordinator read.</param>
+    /// <param name="generation">The registration generation publication gate.</param>
+    /// <param name="generationToken">The registration token captured before worker dispatch.</param>
+    /// <param name="publishRow">Publishes one row to the existing canonical cache.</param>
+    /// <returns>The cancellation-safe snapshot result.</returns>
+    private static async Task<Echoglossian.ReferenceTextPrefetchSnapshotResult> CompleteOnWorkerAsync<TRow>(
+        ReferenceTextPersistenceWriter writer,
+        Task<PersistenceReadResult<IReadOnlyList<TRow>>> completion,
+        Echoglossian.ReferenceTextPrefetchGeneration generation,
+        CancellationToken generationToken,
+        Action<TRow> publishRow)
+        where TRow : ReferenceTextRowBase
+    {
         try
         {
-            var result = await completion.WaitAsync(generation.Token).ConfigureAwait(false);
+            var result = await completion.WaitAsync(generationToken).ConfigureAwait(false);
             if (result.Status != PersistenceCompletionStatus.Succeeded || result.Value is null)
             {
                 return new Echoglossian.ReferenceTextPrefetchSnapshotResult(false, []);
@@ -2349,7 +2528,22 @@ internal static class ReferenceTextPrefetchSnapshotObserver
     /// <param name="operation">The scheduled snapshot operation.</param>
     /// <param name="publish">Publishes the immutable result to its owning state.</param>
     /// <returns>The asynchronous observer task.</returns>
-    internal static async Task ObserveAsync(
+    internal static Task ObserveAsync(
+        Task<Echoglossian.ReferenceTextPrefetchSnapshotResult> operation,
+        Action<Echoglossian.ReferenceTextPrefetchSnapshotResult> publish)
+    {
+        return Task.Factory.StartNew(
+            () => ObserveOnWorkerAsync(operation, publish),
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default).Unwrap();
+    }
+
+    /// <summary>Observes and publishes one snapshot after explicit worker dispatch.</summary>
+    /// <param name="operation">The scheduled snapshot operation.</param>
+    /// <param name="publish">Publishes the immutable result to its owning state.</param>
+    /// <returns>The asynchronous worker task.</returns>
+    private static async Task ObserveOnWorkerAsync(
         Task<Echoglossian.ReferenceTextPrefetchSnapshotResult> operation,
         Action<Echoglossian.ReferenceTextPrefetchSnapshotResult> publish)
     {

@@ -20,6 +20,9 @@ namespace Echoglossian.Tests;
 /// <summary>Verifies cache-first canonical prefetch behavior.</summary>
 public class ReferenceTextPrefetchRuntimeTests
 {
+    [ThreadStatic]
+    private static bool snapshotCallActive;
+
     /// <summary>Completed rows must not cause redundant writes or translation.</summary>
     [Fact]
     public void CompletedRow_DoesNotPersistOrTranslate()
@@ -631,15 +634,15 @@ public class ReferenceTextPrefetchRuntimeTests
         }
 
         Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
-            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 0, 2, Schedule));
         Assert.Empty(state.Queue);
         Assert.Empty(rowAdmissions);
-        Assert.Equal(2, PluginEntry.TickReferenceTextPrefetchQueue(
-            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
+        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, 2, Schedule));
         Assert.Equal(2, state.Initialization!.ReconstructionIndex);
         Assert.Empty(state.Queue);
-        Assert.Equal(2, PluginEntry.TickReferenceTextPrefetchQueue(
-            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
+        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, 2, Schedule));
         Assert.Equal(4, state.Initialization!.ReconstructionIndex);
         Assert.Empty(state.Queue);
 
@@ -650,12 +653,225 @@ public class ReferenceTextPrefetchRuntimeTests
         await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
 
         Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(
-            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, 2, Schedule));
         Assert.Equal(new uint[] { 13, 14, 15 }, state.Queue);
         Assert.Equal(new uint[] { 13 }, rowAdmissions);
         Assert.Equal(1, snapshotAdmissions);
         state.InvalidateGeneration();
         rowPending.SetResult(false);
+    }
+
+    /// <summary>A large restart reconstruction advances on the production cadence independently of translation pacing.</summary>
+    [Fact]
+    public async Task RuntimeRestart_LargeRegistrationUsesIndependentProductionReconstructionCadence()
+    {
+        const int rowCount = 4000;
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var referenceIds = Enumerable.Range(1, rowCount).Select(value => (uint)value).ToArray();
+        var snapshotAdmissions = 0;
+        var rowAdmissions = new List<uint>();
+        var capturedRows = 0;
+        var maximumCapturedInOneTick = 0;
+        var lastReconstructionTickUtc = DateTime.MinValue;
+        var lastAdmissionTickUtc = DateTime.MinValue;
+        var startedUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> Load(
+            ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest _,
+            PluginEntry.ReferenceTextPrefetchGeneration __)
+        {
+            snapshotAdmissions++;
+            return Task.FromResult(new PluginEntry.ReferenceTextPrefetchSnapshotResult(true, []));
+        }
+
+        ReferenceTextCanonicalPayload Capture(uint id)
+        {
+            capturedRows++;
+            return Harness.Payload(id);
+        }
+
+        Task<bool> Schedule(uint id)
+        {
+            rowAdmissions.Add(id);
+            return Task.FromResult(true);
+        }
+
+        void Tick(int elapsedMilliseconds)
+        {
+            var budget = PluginEntry.GetDueReferenceTextPrefetchBudget(
+                startedUtc.AddMilliseconds(elapsedMilliseconds),
+                ref lastReconstructionTickUtc,
+                ref lastAdmissionTickUtc);
+            if (budget.AdmissionRows > 0)
+            {
+                _ = PluginEntry.TickReferenceTextPrefetchQueue(
+                    state,
+                    "large-generation",
+                    referenceIds,
+                    Load,
+                    Capture,
+                    _ => "SOURCE-HASH",
+                    0,
+                    budget.AdmissionRows,
+                    Schedule);
+            }
+
+            if (budget.ReconstructionRows > 0)
+            {
+                var before = capturedRows;
+                _ = PluginEntry.TickReferenceTextPrefetchInitialization(
+                    state,
+                    budget.ReconstructionRows);
+                maximumCapturedInOneTick = Math.Max(
+                    maximumCapturedInOneTick,
+                    capturedRows - before);
+            }
+        }
+
+        var elapsedMilliseconds = 0;
+        for (;
+             elapsedMilliseconds <= TimeSpan.FromSeconds(12).TotalMilliseconds && snapshotAdmissions == 0;
+             elapsedMilliseconds += 16)
+        {
+            Tick(elapsedMilliseconds);
+            await Task.Yield();
+        }
+
+        Assert.Equal(1, snapshotAdmissions);
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
+        for (;
+             elapsedMilliseconds <= TimeSpan.FromSeconds(12).TotalMilliseconds && rowAdmissions.Count == 0;
+             elapsedMilliseconds += 16)
+        {
+            Tick(elapsedMilliseconds);
+            await Task.Yield();
+        }
+
+        Assert.Equal(rowCount, capturedRows);
+        Assert.InRange(maximumCapturedInOneTick, 1, 64);
+        Assert.Equal(1, snapshotAdmissions);
+        Assert.Equal(new uint[] { 1, 2, 3, 4, 5, 6, 7, 8 }, rowAdmissions);
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>An already-completed successful read cannot publish a cache batch on the calling thread.</summary>
+    [Fact]
+    public async Task SnapshotCompletion_AlreadyCompletedSuccessPublishesCacheOnSchedulerWorker()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var generation = new PluginEntry.ReferenceTextPrefetchGeneration();
+        var inlinePublications = new System.Collections.Concurrent.ConcurrentBag<bool>();
+        var rows = Enumerable.Range(1, 64)
+            .Select(value => Harness.Row(
+                "en",
+                "pt",
+                0,
+                "7.3",
+                Harness.Payload((uint)value),
+                Harness.TranslatedPayload((uint)value)))
+            .ToArray();
+        var completion = Task.FromResult(
+            new PersistenceReadResult<IReadOnlyList<MainCommandText>>(
+                PersistenceCompletionStatus.Succeeded,
+                rows,
+                null));
+
+        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> publication;
+        snapshotCallActive = true;
+        try
+        {
+            publication = ReferenceTextPrefetchSnapshotObserver.CompleteAsync(
+                harness.Writer,
+                completion,
+                generation,
+                _ => inlinePublications.Add(snapshotCallActive));
+        }
+        finally
+        {
+            snapshotCallActive = false;
+        }
+
+        var result = await publication.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(rows.Length, inlinePublications.Count);
+        Assert.DoesNotContain(true, inlinePublications);
+        generation.Invalidate();
+    }
+
+    /// <summary>An already-completed snapshot reconstructs its large pending queue on a scheduler worker.</summary>
+    [Fact]
+    public async Task SnapshotInitialization_AlreadyCompletedSuccessReconstructsOnSchedulerWorker()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var inlineEnumerations = new System.Collections.Concurrent.ConcurrentBag<bool>();
+        var referenceIds = Enumerable.Range(1, 128).Select(value => (uint)value).ToArray();
+        var rows = referenceIds.Select(id => (ReferenceTextRowBase)Harness.Row(
+                "en",
+                "pt",
+                0,
+                "7.3",
+                Harness.Payload(id),
+                Harness.TranslatedPayload(id))).ToArray();
+        var trackedRows = new ThreadTrackingReadOnlyList<ReferenceTextRowBase>(
+            rows,
+            inlineEnumerations);
+
+        _ = PluginEntry.TickReferenceTextPrefetchQueue(
+            state,
+            "completed-success",
+            referenceIds,
+            (_, _) => Task.FromResult(
+                new PluginEntry.ReferenceTextPrefetchSnapshotResult(true, trackedRows)),
+            Harness.Payload,
+            payload => rows[(int)payload.ReferenceId - 1].SourceContentHash,
+            referenceIds.Length,
+            0,
+            _ => throw new InvalidOperationException("No pending row should be admitted."));
+        snapshotCallActive = true;
+        try
+        {
+            _ = PluginEntry.TickReferenceTextPrefetchInitialization(state, referenceIds.Length);
+        }
+        finally
+        {
+            snapshotCallActive = false;
+        }
+
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.NotEmpty(inlineEnumerations);
+        Assert.DoesNotContain(true, inlineEnumerations);
+        Assert.Empty(state.Initialization.PendingReferenceIds);
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>An already-completed rejected snapshot skips row enumeration and pending-queue reconstruction.</summary>
+    [Fact]
+    public async Task SnapshotInitialization_AlreadyCompletedRejectionSkipsBulkReconstruction()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var referenceIds = Enumerable.Range(1, 128).Select(value => (uint)value).ToArray();
+        var rejectedRows = new RejectEnumerationReadOnlyList<ReferenceTextRowBase>();
+
+        _ = PluginEntry.TickReferenceTextPrefetchQueue(
+            state,
+            "completed-rejection",
+            referenceIds,
+            (_, _) => Task.FromResult(
+                new PluginEntry.ReferenceTextPrefetchSnapshotResult(false, rejectedRows)),
+            Harness.Payload,
+            _ => "SOURCE-HASH",
+            referenceIds.Length,
+            0,
+            _ => throw new InvalidOperationException("A rejected snapshot cannot admit rows."));
+        _ = PluginEntry.TickReferenceTextPrefetchInitialization(state, referenceIds.Length);
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(0, rejectedRows.EnumerationAttempts);
+        Assert.False(state.Initialization.Succeeded);
+        Assert.Empty(state.Initialization.PendingReferenceIds);
+        state.InvalidateGeneration();
     }
 
     /// <summary>An invalidated generation publishes no cache rows after its current bounded unit.</summary>
@@ -1112,6 +1328,51 @@ public class ReferenceTextPrefetchRuntimeTests
                 ? "[Translation Error: HTTP 429 Too Many Requests]"
                 : "Acoes";
         }
+    }
+
+    /// <summary>Records the threads that enumerate a real immutable row collection.</summary>
+    private sealed class ThreadTrackingReadOnlyList<T>(
+        IReadOnlyList<T> values,
+        System.Collections.Concurrent.ConcurrentBag<bool> inlineEnumerations) : IReadOnlyList<T>
+    {
+        /// <inheritdoc />
+        public int Count => values.Count;
+
+        /// <inheritdoc />
+        public T this[int index] => values[index];
+
+        /// <inheritdoc />
+        public IEnumerator<T> GetEnumerator()
+        {
+            inlineEnumerations.Add(snapshotCallActive);
+            return values.GetEnumerator();
+        }
+
+        /// <inheritdoc />
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
+    }
+
+    /// <summary>Fails the test boundary if a rejected result tries to inspect its rows.</summary>
+    private sealed class RejectEnumerationReadOnlyList<T> : IReadOnlyList<T>
+    {
+        /// <summary>Gets the number of invalid enumeration attempts.</summary>
+        internal int EnumerationAttempts { get; private set; }
+
+        /// <inheritdoc />
+        public int Count => 0;
+
+        /// <inheritdoc />
+        public T this[int index] => throw new ArgumentOutOfRangeException(nameof(index));
+
+        /// <inheritdoc />
+        public IEnumerator<T> GetEnumerator()
+        {
+            this.EnumerationAttempts++;
+            throw new InvalidOperationException("Rejected rows must not be enumerated.");
+        }
+
+        /// <inheritdoc />
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
     }
 
     /// <summary>Injects one real worker context-open failure to exercise cursor retry outcomes.</summary>
