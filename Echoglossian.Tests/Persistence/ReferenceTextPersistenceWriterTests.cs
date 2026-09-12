@@ -676,6 +676,70 @@ public sealed class ReferenceTextPersistenceWriterTests
     }
 
     /// <summary>
+    ///     Ensures one bounded read returns only complete rows in the requested
+    ///     registration scope while preserving their source identities.
+    /// </summary>
+    [Fact]
+    public async Task TryLoadCompleteSnapshot_OneReadPreservesExactRegistrationScope()
+    {
+        var counter = new SelectCounterInterceptor();
+        await this.WithWriterAsync(async (writer, factory, coordinator) =>
+        {
+            var matching = CreateRow("nome", "descricao", 1);
+            var changedSource = CreateRow("outro", "texto", 2);
+            changedSource.SourceContentHash = "CHANGED-SOURCE-HASH";
+            var incomplete = CreateRow("incompleto", null, 3);
+            var wrongSource = CreateRow("quelle", "beschreibung", 4);
+            wrongSource.OriginalLang = "de";
+            var wrongTarget = CreateRow("nombre", "descripcion", 5);
+            wrongTarget.TranslationLang = "es";
+            var wrongEngine = CreateRow("motor", "diferente", 6);
+            wrongEngine.TranslationEngine = 1;
+            var wrongVersion = CreateRow("versao", "antiga", 7);
+            wrongVersion.GameVersion = "7.2";
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                context.MainCommandTexts.AddRange(
+                    matching,
+                    changedSource,
+                    incomplete,
+                    wrongSource,
+                    wrongTarget,
+                    wrongEngine,
+                    wrongVersion);
+                await context.SaveChangesAsync();
+            }
+
+            counter.Reset();
+            var acceptedBefore = coordinator.GetMetrics().AcceptedOperations;
+            Assert.Equal(
+                PersistenceAdmissionStatus.Accepted,
+                writer.TryLoadCompleteSnapshot(
+                    new TranslationReuseScope("en", "pt", 0, true),
+                    "7.3",
+                    static context => context.MainCommandTexts,
+                    out var completion));
+
+            var result = await completion.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, result.Status);
+            Assert.Equal(acceptedBefore + 1, coordinator.GetMetrics().AcceptedOperations);
+            Assert.Equal(1, counter.SelectCount);
+            Assert.Collection(
+                result.Value!.OrderBy(row => row.ReferenceId),
+                row =>
+                {
+                    Assert.Equal((uint)1, row.ReferenceId);
+                    Assert.Equal(matching.SourceContentHash, row.SourceContentHash);
+                },
+                row =>
+                {
+                    Assert.Equal((uint)2, row.ReferenceId);
+                    Assert.Equal("CHANGED-SOURCE-HASH", row.SourceContentHash);
+                });
+        }, counter);
+    }
+
+    /// <summary>
     ///     Runs one test action with a real temporary SQLite database and a
     ///     short-lived-context persistence coordinator.
     /// </summary>
@@ -913,6 +977,36 @@ public sealed class ReferenceTextPersistenceWriterTests
             {
                 Interlocked.Increment(ref this.updateCount);
             }
+        }
+    }
+
+    /// <summary>Counts SQLite SELECT statements emitted by one snapshot read.</summary>
+    private sealed class SelectCounterInterceptor : DbCommandInterceptor
+    {
+        private int selectCount;
+
+        /// <summary>Gets the observed SELECT statement count.</summary>
+        internal int SelectCount => Volatile.Read(ref this.selectCount);
+
+        /// <summary>Resets the observed SELECT statement count.</summary>
+        internal void Reset()
+        {
+            Interlocked.Exchange(ref this.selectCount, 0);
+        }
+
+        /// <inheritdoc />
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (command.CommandText.TrimStart().StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+            {
+                Interlocked.Increment(ref this.selectCount);
+            }
+
+            return ValueTask.FromResult(result);
         }
     }
 

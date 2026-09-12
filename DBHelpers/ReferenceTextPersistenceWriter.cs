@@ -19,6 +19,7 @@ namespace Echoglossian.DBHelpers;
 internal sealed class ReferenceTextPersistenceWriter
 {
     private const string ReadDomain = "reference-text-read";
+    private const string SnapshotDomain = "reference-text-snapshot";
     private const string WriteDomain = "reference-text-write";
 
     private readonly IPersistenceCoordinator coordinator;
@@ -118,6 +119,58 @@ internal sealed class ReferenceTextPersistenceWriter
                     }
                 }
             },
+            out completion);
+    }
+
+    /// <summary>
+    ///     Schedules one registration-level snapshot of complete canonical
+    ///     rows at background priority.
+    /// </summary>
+    /// <typeparam name="TRow">The concrete row type.</typeparam>
+    /// <param name="scope">The translation reuse scope.</param>
+    /// <param name="gameVersion">The exact game-version scope.</param>
+    /// <param name="setSelector">Selects the matching DbSet.</param>
+    /// <param name="completion">The terminal snapshot completion.</param>
+    /// <param name="priority">The admission lane.</param>
+    /// <returns>The non-blocking admission outcome.</returns>
+    internal PersistenceAdmissionStatus TryLoadCompleteSnapshot<TRow>(
+        TranslationReuseScope scope,
+        string? gameVersion,
+        Func<EchoglossianDbContext, DbSet<TRow>> setSelector,
+        out Task<PersistenceReadResult<IReadOnlyList<TRow>>> completion,
+        PersistencePriority priority = PersistencePriority.Background)
+        where TRow : ReferenceTextRowBase
+    {
+        ArgumentNullException.ThrowIfNull(setSelector);
+
+        return this.coordinator.TryScheduleRead(
+            new PersistenceWorkKey(
+                SnapshotDomain,
+                BuildSnapshotIdentity<TRow>(scope, gameVersion)),
+            priority,
+            async (context, cancellationToken) =>
+            {
+                using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken,
+                    this.operationCancellation.Token);
+                var candidates = await setSelector(context)
+                    .AsNoTracking()
+                    .Where(row =>
+                        row.GameVersion == gameVersion &&
+                        (!scope.RequireMatchingEngine ||
+                         row.TranslationEngine == scope.TranslationEngine))
+                    .ToListAsync(linkedCancellation.Token)
+                    .ConfigureAwait(false);
+                return (IReadOnlyList<TRow>)candidates
+                    .Where(row =>
+                        scope.Matches(
+                            row.OriginalLang,
+                            row.TranslationLang,
+                            row.TranslationEngine) &&
+                        HasCompleteTranslation(row))
+                    .ToArray();
+            },
+            publish: null,
             out completion);
     }
 
@@ -225,6 +278,36 @@ internal sealed class ReferenceTextPersistenceWriter
                 : "*",
             probe.GameVersion,
             probe.SourceContentHash);
+    }
+
+    /// <summary>Builds the coalescing identity for one registration snapshot.</summary>
+    /// <typeparam name="TRow">The concrete row type.</typeparam>
+    /// <param name="scope">The requested translation reuse scope.</param>
+    /// <param name="gameVersion">The exact game-version scope.</param>
+    /// <returns>The collision-safe coordinator identity.</returns>
+    private static string BuildSnapshotIdentity<TRow>(
+        TranslationReuseScope scope,
+        string? gameVersion)
+        where TRow : ReferenceTextRowBase
+    {
+        return BuildIdentity(
+            typeof(TRow).FullName ?? typeof(TRow).Name,
+            NormalizeLanguageIdentity(scope.SourceLanguageCode),
+            NormalizeLanguageIdentity(scope.TargetLanguageCode),
+            scope.RequireMatchingEngine
+                ? scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture)
+                : "*",
+            gameVersion);
+    }
+
+    /// <summary>Gets whether all source fields have stored translations.</summary>
+    /// <param name="row">The persisted canonical row.</param>
+    /// <returns>True when the row is complete for its source payload.</returns>
+    private static bool HasCompleteTranslation(ReferenceTextRowBase row)
+    {
+        return !string.IsNullOrWhiteSpace(row.TranslatedName) &&
+               (string.IsNullOrWhiteSpace(row.OriginalDescription) ||
+                !string.IsNullOrWhiteSpace(row.TranslatedDescription));
     }
 
     /// <summary>

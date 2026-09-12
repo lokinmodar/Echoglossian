@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.DBHelpers;
 using Echoglossian.Translators;
 using Echoglossian.Persistence;
 using Echoglossian.EFCoreSqlite;
@@ -187,35 +188,115 @@ public unsafe partial class Echoglossian
             return 0;
         }
 
-        var state = this.GetOrCreateReferenceTextPrefetchState(
-            registration.Key);
         if (!TryCapturePrefetchOperationScope(ResolveCurrentPrefetchSourceLanguage, this.configuration,
                 out var sourceLanguage, out var scope))
         {
             return 0;
         }
 
+        var state = this.GetOrCreateReferenceTextPrefetchState(
+            registration.Key);
         var gameVersion = GetGameVersion();
         var signature = BuildTranslationReuseScopedKey($"{gameVersion}|{string.Join(',', referenceIds)}", scope);
-        if (!string.Equals(
-                state.Signature,
-                signature,
-                StringComparison.Ordinal))
+        return TickReferenceTextPrefetchQueue(
+            state,
+            signature,
+            referenceIds,
+            token => registration.LoadSnapshot(scope, gameVersion, token),
+            referenceId => registration.TryBuildPayload(referenceId, out var payload) ? payload : null,
+            payload => registration.BuildSourceHash(payload, scope, gameVersion),
+            remainingBudget,
+            referenceId => this.PrefetchReferenceText(
+                registration, referenceId, sourceLanguage, scope, gameVersion,
+                state.Cancellation.Token));
+    }
+
+    /// <summary>
+    ///     Initializes one registration from a bounded canonical snapshot, then
+    ///     advances its existing per-row queue without blocking the caller.
+    /// </summary>
+    /// <param name="state">The mutable registration state.</param>
+    /// <param name="signature">The current registration generation signature.</param>
+    /// <param name="referenceIds">The current sheet-row identifiers.</param>
+    /// <param name="loadSnapshot">Schedules one registration-level snapshot.</param>
+    /// <param name="capturePayload">Captures the current canonical source payload.</param>
+    /// <param name="buildSourceHash">Builds the registration-specific source hash.</param>
+    /// <param name="remainingBudget">The maximum per-row admissions for this tick.</param>
+    /// <param name="schedule">Captures and admits the next reference operation.</param>
+    /// <returns>The admissions consumed without blocking the Framework callback.</returns>
+    internal static int TickReferenceTextPrefetchQueue(
+        ReferenceTextPrefetchState state,
+        string signature,
+        IReadOnlyList<uint> referenceIds,
+        Func<CancellationToken, Task<ReferenceTextPrefetchSnapshotResult>> loadSnapshot,
+        Func<uint, ReferenceTextCanonicalPayload?> capturePayload,
+        Func<ReferenceTextCanonicalPayload, string?> buildSourceHash,
+        int remainingBudget,
+        Func<uint, Task<bool>> schedule)
+    {
+        if (!string.Equals(state.Signature, signature, StringComparison.Ordinal))
         {
             state.Cancellation.Cancel();
             state.Cancellation.Dispose();
             state.Cancellation = new CancellationTokenSource();
             state.Pending = null;
+            state.Initialization = new ReferenceTextPrefetchInitialization(
+                referenceIds,
+                loadSnapshot(state.Cancellation.Token));
             state.Signature = signature;
             state.Queue.Clear();
-            state.Queue.AddRange(referenceIds);
             state.QueueIndex = 0;
+            return 0;
         }
 
-        return TickReferenceTextPrefetchQueue(state, remainingBudget,
-            referenceId => this.PrefetchReferenceText(
-                registration, referenceId, sourceLanguage, scope, gameVersion,
-                state.Cancellation.Token));
+        var initialization = state.Initialization;
+        if (initialization is not null)
+        {
+            if (!initialization.Completion.IsCompleted)
+            {
+                return 0;
+            }
+
+            if (!initialization.Succeeded)
+            {
+                state.Initialization = null;
+                state.Signature = string.Empty;
+                return 0;
+            }
+
+            foreach (var referenceId in initialization.ReferenceIds)
+            {
+                var payload = capturePayload(referenceId);
+                if (payload is null)
+                {
+                    state.Queue.Add(referenceId);
+                    continue;
+                }
+
+                var sourceHash = buildSourceHash(payload);
+                var complete = initialization.CompletedIdentities.Contains(
+                    new ReferenceTextPrefetchSnapshotIdentity(referenceId, sourceHash));
+                if (!complete)
+                {
+                    state.Queue.Add(referenceId);
+                }
+            }
+
+            state.Initialization = null;
+        }
+
+        return TickReferenceTextPrefetchQueue(state, remainingBudget, schedule);
+    }
+
+    /// <summary>Gets whether one snapshot row completely covers its canonical source payload.</summary>
+    /// <param name="row">The persisted snapshot row.</param>
+    /// <returns>True when all required translated fields are populated.</returns>
+    private static bool HasCompleteReferenceTextSnapshotRow(ReferenceTextRowBase row)
+    {
+        return (string.IsNullOrWhiteSpace(row.OriginalName) ||
+                !string.IsNullOrWhiteSpace(row.TranslatedName)) &&
+               (string.IsNullOrWhiteSpace(row.OriginalDescription) ||
+                !string.IsNullOrWhiteSpace(row.TranslatedDescription));
     }
 
     /// <summary>Advances a registration cursor only after its captured operation completes.</summary>
@@ -755,12 +836,26 @@ public unsafe partial class Echoglossian
             Func<string, string, int?, string?, ReferenceTextCanonicalPayload, ReferenceTextCanonicalPayload?, TRow>? createRow = null)
             where TRow : ReferenceTextRowBase, new()
     {
+        var rowFactory = createRow ?? ReferenceTextPersistenceHelper.CreateCanonicalRow<TRow>;
         return new ReferenceTextPrefetchRegistration
         {
             Key = key,
             IsEnabled = isEnabled ?? (() => true),
             TryCollectReferenceIds = tryCollectReferenceIds,
             TryBuildPayload = tryBuildPayload,
+            BuildSourceHash = (payload, scope, version) => rowFactory(
+                scope.SourceLanguageCode,
+                scope.TargetLanguageCode,
+                scope.TranslationEngine,
+                version,
+                payload,
+                null).SourceContentHash,
+            LoadSnapshot = (scope, version, token) => this.LoadReferenceTextPrefetchSnapshotAsync(
+                cacheStore,
+                setSelector,
+                scope,
+                version,
+                token),
             Schedule = (payload, source, scope, version, token, priority) =>
             {
                 var writer = this.referenceTextPersistenceWriter;
@@ -774,7 +869,7 @@ public unsafe partial class Echoglossian
                     scope.TranslationEngine!.Value, TranslationSurfaceGroup.Default);
                 return ReferenceTextPrefetchOperation.Start(
                     writer, this.queuedTranslationBroker, cacheStore, setSelector,
-                    createRow ?? ReferenceTextPersistenceHelper.CreateCanonicalRow<TRow>,
+                    rowFactory,
                     payload, version, source, scope,
                     BuildReferenceTextOriginContext(key, payload, "Fields"),
                     (fields, capturedSource, target, origin, cancellationToken) =>
@@ -783,6 +878,53 @@ public unsafe partial class Echoglossian
                     token, priority);
             },
         };
+    }
+
+    /// <summary>Loads and publishes one registration-level canonical snapshot.</summary>
+    /// <typeparam name="TRow">The concrete persisted row type.</typeparam>
+    /// <param name="cacheStore">The existing canonical cache.</param>
+    /// <param name="setSelector">Selects the matching DbSet.</param>
+    /// <param name="scope">The captured translation reuse scope.</param>
+    /// <param name="gameVersion">The exact captured game version.</param>
+    /// <param name="cancellationToken">The registration generation token.</param>
+    /// <returns>The observed snapshot result.</returns>
+    private Task<ReferenceTextPrefetchSnapshotResult> LoadReferenceTextPrefetchSnapshotAsync<TRow>(
+        ReferenceTextCacheStore<TRow> cacheStore,
+        Func<EchoglossianDbContext, DbSet<TRow>> setSelector,
+        TranslationReuseScope scope,
+        string? gameVersion,
+        CancellationToken cancellationToken)
+        where TRow : ReferenceTextRowBase
+    {
+        try
+        {
+            var writer = this.referenceTextPersistenceWriter;
+            if (writer is null)
+            {
+                return Task.FromResult(new ReferenceTextPrefetchSnapshotResult(false, []));
+            }
+
+            var admission = writer.TryLoadCompleteSnapshot(
+                scope,
+                gameVersion,
+                setSelector,
+                out var completion);
+            if (admission is PersistenceAdmissionStatus.RejectedCapacity or
+                PersistenceAdmissionStatus.RejectedShutdown)
+            {
+                return Task.FromResult(new ReferenceTextPrefetchSnapshotResult(false, []));
+            }
+
+            return ReferenceTextPrefetchSnapshotObserver.CompleteAsync(
+                writer,
+                cacheStore,
+                completion,
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return Task.FromResult(new ReferenceTextPrefetchSnapshotResult(false, []));
+        }
     }
 
     /// <summary>
@@ -1892,6 +2034,17 @@ public unsafe partial class Echoglossian
             set;
         }
 
+        /// <summary>Gets the registration-specific source-hash builder.</summary>
+        public required Func<ReferenceTextCanonicalPayload, TranslationReuseScope, string?, string?> BuildSourceHash
+        {
+            get;
+            init;
+        }
+
+        /// <summary>Gets the registration-level canonical snapshot operation.</summary>
+        public required Func<TranslationReuseScope, string?, CancellationToken,
+            Task<ReferenceTextPrefetchSnapshotResult>> LoadSnapshot { get; init; }
+
         /// <summary>Gets the cache-first background admission operation.</summary>
         public required Func<ReferenceTextCanonicalPayload, SourceClientLanguage,
             TranslationReuseScope, string?, CancellationToken, PersistencePriority, Task<bool>> Schedule { get; init; }
@@ -1921,8 +2074,65 @@ public unsafe partial class Echoglossian
         /// <summary>Gets or sets the sole active operation for this cursor.</summary>
         public ReferenceTextPrefetchCompletion? Pending { get; set; }
 
+        /// <summary>Gets or sets the asynchronous registration initialization.</summary>
+        public ReferenceTextPrefetchInitialization? Initialization { get; set; }
+
         /// <summary>Gets or sets cancellation for the captured registration generation.</summary>
         public CancellationTokenSource Cancellation { get; set; } = new();
+    }
+
+    /// <summary>Represents one immutable registration-level snapshot outcome.</summary>
+    /// <param name="Succeeded">Whether the snapshot read completed successfully.</param>
+    /// <param name="Rows">The complete canonical rows in the captured scope.</param>
+    internal readonly record struct ReferenceTextPrefetchSnapshotResult(
+        bool Succeeded,
+        IReadOnlyList<ReferenceTextRowBase> Rows);
+
+    /// <summary>Identifies one complete canonical row by stable source content.</summary>
+    /// <param name="ReferenceId">The stable sheet-row identifier.</param>
+    /// <param name="SourceContentHash">The exact canonical source hash.</param>
+    internal readonly record struct ReferenceTextPrefetchSnapshotIdentity(
+        uint ReferenceId,
+        string? SourceContentHash);
+
+    /// <summary>Observes one asynchronous snapshot before Framework publication.</summary>
+    internal sealed class ReferenceTextPrefetchInitialization
+    {
+        /// <summary>Initializes a snapshot observer for captured row identifiers.</summary>
+        /// <param name="referenceIds">The immutable row identifiers for this generation.</param>
+        /// <param name="operation">The scheduled snapshot operation.</param>
+        internal ReferenceTextPrefetchInitialization(
+            IReadOnlyList<uint> referenceIds,
+            Task<ReferenceTextPrefetchSnapshotResult> operation)
+        {
+            this.ReferenceIds = referenceIds.ToArray();
+            this.Completion = ReferenceTextPrefetchSnapshotObserver.ObserveAsync(
+                operation,
+                result =>
+                {
+                    this.CompletedIdentities = result.Rows
+                        .Where(HasCompleteReferenceTextSnapshotRow)
+                        .Select(row => new ReferenceTextPrefetchSnapshotIdentity(
+                            row.ReferenceId,
+                            row.SourceContentHash))
+                        .ToHashSet();
+                    this.Succeeded = result.Succeeded;
+                });
+        }
+
+        /// <summary>Gets the immutable captured row identifiers.</summary>
+        internal IReadOnlyList<uint> ReferenceIds { get; }
+
+        /// <summary>Gets completion after the result fields are published.</summary>
+        internal Task Completion { get; }
+
+        /// <summary>Gets whether the snapshot completed successfully.</summary>
+        internal bool Succeeded { get; private set; }
+
+        /// <summary>Gets the completed canonical source identities.</summary>
+        internal IReadOnlySet<ReferenceTextPrefetchSnapshotIdentity> CompletedIdentities { get; private set; } =
+            new HashSet<ReferenceTextPrefetchSnapshotIdentity>();
+
     }
 
     /// <summary>
@@ -1942,4 +2152,72 @@ public unsafe partial class Echoglossian
     private delegate bool TryBuildReferencePayloadDelegate(
         uint referenceId,
         out ReferenceTextCanonicalPayload payload);
+}
+
+/// <summary>
+///     Awaits snapshot persistence outside the unsafe plugin partial so no
+///     Framework callback performs synchronous task result access.
+/// </summary>
+internal static class ReferenceTextPrefetchSnapshotObserver
+{
+    /// <summary>Awaits and publishes one typed registration snapshot.</summary>
+    /// <typeparam name="TRow">The concrete persisted row type.</typeparam>
+    /// <param name="writer">The owner-lifetime persistence adapter.</param>
+    /// <param name="cacheStore">The existing canonical cache.</param>
+    /// <param name="completion">The admitted coordinator read.</param>
+    /// <param name="cancellationToken">The registration generation token.</param>
+    /// <returns>The cancellation-safe snapshot result.</returns>
+    internal static async Task<Echoglossian.ReferenceTextPrefetchSnapshotResult> CompleteAsync<TRow>(
+        ReferenceTextPersistenceWriter writer,
+        ReferenceTextCacheStore<TRow> cacheStore,
+        Task<PersistenceReadResult<IReadOnlyList<TRow>>> completion,
+        CancellationToken cancellationToken)
+        where TRow : ReferenceTextRowBase
+    {
+        try
+        {
+            var result = await completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (result.Status != PersistenceCompletionStatus.Succeeded || result.Value is null)
+            {
+                return new Echoglossian.ReferenceTextPrefetchSnapshotResult(false, []);
+            }
+
+            writer.PublishRead(() =>
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    foreach (var row in result.Value)
+                    {
+                        cacheStore.Update(row);
+                    }
+                }
+            });
+            return new Echoglossian.ReferenceTextPrefetchSnapshotResult(
+                true,
+                result.Value.Cast<ReferenceTextRowBase>().ToArray());
+        }
+        catch (OperationCanceledException)
+        {
+            return new Echoglossian.ReferenceTextPrefetchSnapshotResult(false, []);
+        }
+    }
+
+    /// <summary>Observes one snapshot and publishes its result before completion.</summary>
+    /// <param name="operation">The scheduled snapshot operation.</param>
+    /// <param name="publish">Publishes the immutable result to its owning state.</param>
+    /// <returns>The asynchronous observer task.</returns>
+    internal static async Task ObserveAsync(
+        Task<Echoglossian.ReferenceTextPrefetchSnapshotResult> operation,
+        Action<Echoglossian.ReferenceTextPrefetchSnapshotResult> publish)
+    {
+        try
+        {
+            publish(await operation.ConfigureAwait(false));
+        }
+        catch (Exception)
+        {
+            publish(new Echoglossian.ReferenceTextPrefetchSnapshotResult(false, []));
+        }
+    }
 }

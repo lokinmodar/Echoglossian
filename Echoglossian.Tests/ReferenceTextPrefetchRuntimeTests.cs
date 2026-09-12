@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using System.Diagnostics;
+
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
@@ -585,6 +587,76 @@ public class ReferenceTextPrefetchRuntimeTests
         state.Cancellation.Dispose();
     }
 
+    /// <summary>
+    ///     A restarted registration waits for one snapshot without blocking,
+    ///     removes only unchanged complete rows, and starts at the first pending row.
+    /// </summary>
+    [Fact]
+    public async Task RuntimeRestart_SnapshotRebuildsPendingQueueWithoutSerialCompletedReads()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var snapshot = new TaskCompletionSource<PluginEntry.ReferenceTextPrefetchSnapshotResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var snapshotAdmissions = 0;
+        var rowAdmissions = new List<uint>();
+        var rowPending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var payloads = new Dictionary<uint, ReferenceTextCanonicalPayload>
+        {
+            [12] = Harness.Payload(12),
+            [13] = Harness.Payload(13),
+            [14] = Harness.Payload(14),
+            [15] = Harness.Payload(15),
+        };
+        var completed = Harness.Row("en", "pt", 0, "7.3", payloads[12], Harness.TranslatedPayload(12));
+        var changed = Harness.Row("en", "pt", 0, "7.3", payloads[13], Harness.TranslatedPayload(13));
+        changed.SourceContentHash = "OLD-SOURCE-HASH";
+        var incomplete = Harness.Row("en", "pt", 0, "7.3", payloads[14], Harness.TranslatedPayload(14));
+        incomplete.TranslatedDescription = null;
+
+        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> Load(CancellationToken _)
+        {
+            snapshotAdmissions++;
+            return snapshot.Task;
+        }
+
+        ReferenceTextCanonicalPayload? Capture(uint id) => payloads.GetValueOrDefault(id);
+        string? Hash(ReferenceTextCanonicalPayload payload) =>
+            Harness.Row("en", "pt", 0, "7.3", payload, null).SourceContentHash;
+        Task<bool> Schedule(uint id)
+        {
+            rowAdmissions.Add(id);
+            return rowPending.Task;
+        }
+
+        var started = Stopwatch.StartNew();
+        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 8, Schedule));
+        started.Stop();
+        Assert.True(started.Elapsed < TimeSpan.FromSeconds(1));
+        Assert.Empty(state.Queue);
+        Assert.Empty(rowAdmissions);
+        for (var tick = 0; tick < 20; tick++)
+        {
+            Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
+                state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 8, Schedule));
+        }
+
+        Assert.Equal(1, snapshotAdmissions);
+        snapshot.SetResult(new PluginEntry.ReferenceTextPrefetchSnapshotResult(
+            true,
+            new ReferenceTextRowBase[] { completed, changed, incomplete }));
+        await state.Initialization!.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 8, Schedule));
+        Assert.Equal(new uint[] { 13, 14, 15 }, state.Queue);
+        Assert.Equal(new uint[] { 13 }, rowAdmissions);
+        Assert.Equal(1, snapshotAdmissions);
+        state.Cancellation.Cancel();
+        rowPending.SetResult(false);
+        state.Cancellation.Dispose();
+    }
+
     /// <summary>Repeated Framework ticks do not block or reschedule one incomplete operation.</summary>
     [Fact]
     public async Task RuntimeCursor_PendingOperation_IsNotResubmittedOnRepeatedTicks()
@@ -907,10 +979,19 @@ public class ReferenceTextPrefetchRuntimeTests
         }
 
         /// <summary>Creates an independent source payload with MainCommand metadata.</summary>
-        internal static ReferenceTextCanonicalPayload Payload() => new()
+        internal static ReferenceTextCanonicalPayload Payload(uint referenceId = 12) => new()
         {
-            ReferenceId = 12, Name = "Actions", Description = "Open actions.", IconId = 42, CategoryId = 7,
+            ReferenceId = referenceId, Name = "Actions", Description = "Open actions.", IconId = 42, CategoryId = 7,
         };
+
+        /// <summary>Creates a complete deterministic translated payload.</summary>
+        internal static ReferenceTextCanonicalPayload TranslatedPayload(uint referenceId)
+        {
+            var payload = Payload(referenceId);
+            payload.TranslatedName = "Acoes";
+            payload.TranslatedDescription = "Abre acoes.";
+            return payload;
+        }
 
         /// <summary>Provides deterministic engine output at the external-provider boundary.</summary>
         internal static TranslationFieldBatchResult Translate(IReadOnlyList<TranslationField> fields) => new(
