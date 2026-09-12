@@ -129,6 +129,7 @@ internal sealed class ReferenceTextPersistenceWriter
     /// <typeparam name="TRow">The concrete row type.</typeparam>
     /// <param name="scope">The translation reuse scope.</param>
     /// <param name="gameVersion">The exact game-version scope.</param>
+    /// <param name="snapshotRequest">The bounded registration snapshot request.</param>
     /// <param name="setSelector">Selects the matching DbSet.</param>
     /// <param name="completion">The terminal snapshot completion.</param>
     /// <param name="priority">The admission lane.</param>
@@ -136,26 +137,58 @@ internal sealed class ReferenceTextPersistenceWriter
     internal PersistenceAdmissionStatus TryLoadCompleteSnapshot<TRow>(
         TranslationReuseScope scope,
         string? gameVersion,
+        ReferenceTextSnapshotRequest snapshotRequest,
         Func<EchoglossianDbContext, DbSet<TRow>> setSelector,
         out Task<PersistenceReadResult<IReadOnlyList<TRow>>> completion,
         PersistencePriority priority = PersistencePriority.Background)
         where TRow : ReferenceTextRowBase
     {
+        ArgumentNullException.ThrowIfNull(snapshotRequest);
         ArgumentNullException.ThrowIfNull(setSelector);
+        var sourceLanguages = BuildEquivalentLanguageValues(
+            scope.SourceLanguageCode);
+        var targetLanguages = BuildEquivalentLanguageValues(
+            scope.TargetLanguageCode);
 
         return this.coordinator.TryScheduleRead(
             new PersistenceWorkKey(
                 SnapshotDomain,
-                BuildSnapshotIdentity<TRow>(scope, gameVersion)),
+                BuildSnapshotIdentity<TRow>(scope, gameVersion, snapshotRequest.Identity)),
             priority,
             async (context, cancellationToken) =>
             {
                 using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
                     cancellationToken,
                     this.operationCancellation.Token);
+                var keys = snapshotRequest.Keys
+                    .Distinct()
+                    .ToArray();
+                var referenceIds = keys
+                    .Select(key => key.ReferenceId)
+                    .Distinct()
+                    .ToArray();
+                var sourceContentHashes = keys
+                    .Select(key => key.SourceContentHash)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+                var databaseKeys = keys
+                    .Select(key => BuildDatabaseSnapshotKey(
+                        key.ReferenceId,
+                        key.SourceContentHash))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+                var exactKeys = keys.ToHashSet();
                 var candidates = await setSelector(context)
                     .AsNoTracking()
                     .Where(row =>
+                        referenceIds.Contains(row.ReferenceId) &&
+                        sourceContentHashes.Contains(row.SourceContentHash!) &&
+                        databaseKeys.Contains(
+                            row.ReferenceId.ToString() + ":" + row.SourceContentHash) &&
+                        row.OriginalLang != null &&
+                        sourceLanguages.Contains(row.OriginalLang.Trim().ToLower()) &&
+                        row.TranslationLang != null &&
+                        targetLanguages.Contains(row.TranslationLang.Trim().ToLower()) &&
                         row.GameVersion == gameVersion &&
                         (!scope.RequireMatchingEngine ||
                          row.TranslationEngine == scope.TranslationEngine))
@@ -163,6 +196,10 @@ internal sealed class ReferenceTextPersistenceWriter
                     .ConfigureAwait(false);
                 return (IReadOnlyList<TRow>)candidates
                     .Where(row =>
+                        row.SourceContentHash is not null &&
+                        exactKeys.Contains(new ReferenceTextSnapshotKey(
+                            row.ReferenceId,
+                            row.SourceContentHash)) &&
                         scope.Matches(
                             row.OriginalLang,
                             row.TranslationLang,
@@ -284,10 +321,12 @@ internal sealed class ReferenceTextPersistenceWriter
     /// <typeparam name="TRow">The concrete row type.</typeparam>
     /// <param name="scope">The requested translation reuse scope.</param>
     /// <param name="gameVersion">The exact game-version scope.</param>
+    /// <param name="registrationIdentity">The incrementally built source-set identity.</param>
     /// <returns>The collision-safe coordinator identity.</returns>
     private static string BuildSnapshotIdentity<TRow>(
         TranslationReuseScope scope,
-        string? gameVersion)
+        string? gameVersion,
+        string registrationIdentity)
         where TRow : ReferenceTextRowBase
     {
         return BuildIdentity(
@@ -297,7 +336,61 @@ internal sealed class ReferenceTextPersistenceWriter
             scope.RequireMatchingEngine
                 ? scope.TranslationEngine?.ToString(CultureInfo.InvariantCulture)
                 : "*",
-            gameVersion);
+            gameVersion,
+            registrationIdentity);
+    }
+
+    /// <summary>Identifies one source row captured from a registration generation.</summary>
+    /// <param name="ReferenceId">The stable sheet-row identifier.</param>
+    /// <param name="SourceContentHash">The exact canonical source hash.</param>
+    internal readonly record struct ReferenceTextSnapshotKey(
+        uint ReferenceId,
+        string SourceContentHash);
+
+    /// <summary>Describes one bounded registration-level snapshot query.</summary>
+    /// <param name="Keys">The captured current source identities.</param>
+    /// <param name="Identity">The incrementally built coordinator identity.</param>
+    internal sealed record ReferenceTextSnapshotRequest(
+        IReadOnlyList<ReferenceTextSnapshotKey> Keys,
+        string Identity);
+
+    /// <summary>Builds the exact SQL-filterable registration identity.</summary>
+    /// <param name="referenceId">The stable sheet-row identifier.</param>
+    /// <param name="sourceContentHash">The exact canonical source hash.</param>
+    /// <returns>The unambiguous database candidate identity.</returns>
+    private static string BuildDatabaseSnapshotKey(
+        uint referenceId,
+        string sourceContentHash)
+    {
+        return string.Concat(
+            referenceId.ToString(CultureInfo.InvariantCulture),
+            ":",
+            sourceContentHash);
+    }
+
+    /// <summary>Builds the finite SQL candidate set for one normalized language.</summary>
+    /// <param name="language">The requested language value.</param>
+    /// <returns>Lower-case values accepted by the shared language semantics.</returns>
+    private static IReadOnlyList<string> BuildEquivalentLanguageValues(string? language)
+    {
+        var normalized = RuntimeLanguageHelper.NormalizeLanguage(language)
+            .ToLowerInvariant();
+        return normalized switch
+        {
+            "en" => ["en", "english"],
+            "de" => ["de", "german", "deutsch"],
+            "fr" => ["fr", "french", "français", "francais"],
+            "ja" => ["ja", "japanese", "日本語"],
+            "zh-cn" => ["zh-cn", "zh", "zh-hans"],
+            "zh-tw" => ["zh-tw", "zh-hant"],
+            "pt-br" => ["pt-br", "pt"],
+            "iw" => ["iw", "he"],
+            "no" => ["no", "nb"],
+            "tl" => ["tl", "fil"],
+            "jw" => ["jw", "jv"],
+            _ when !string.IsNullOrWhiteSpace(normalized) => [normalized],
+            _ => [],
+        };
     }
 
     /// <summary>Gets whether all source fields have stored translations.</summary>

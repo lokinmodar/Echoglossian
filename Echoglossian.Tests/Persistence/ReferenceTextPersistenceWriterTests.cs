@@ -697,6 +697,25 @@ public sealed class ReferenceTextPersistenceWriterTests
             wrongEngine.TranslationEngine = 1;
             var wrongVersion = CreateRow("versao", "antiga", 7);
             wrongVersion.GameVersion = "7.2";
+            var languageAlias = CreateRow("alias", "regional", 8);
+            languageAlias.OriginalLang = "English";
+            languageAlias.TranslationLang = "pt-BR";
+            var unrelatedLanguageForMatching = CreateRow("idioma", "ignorado", 1);
+            unrelatedLanguageForMatching.SourceContentHash = matching.SourceContentHash;
+            unrelatedLanguageForMatching.OriginalLang = "de";
+            unrelatedLanguageForMatching.TranslationLang = "es";
+            var unrelatedLanguageForChanged = CreateRow("idioma", "ignorado", 2);
+            unrelatedLanguageForChanged.SourceContentHash = changedSource.SourceContentHash;
+            unrelatedLanguageForChanged.OriginalLang = "fr";
+            unrelatedLanguageForChanged.TranslationLang = "it";
+            var unrelatedCrossPair = CreateRow("historico", "cruzado", 1);
+            unrelatedCrossPair.SourceContentHash = changedSource.SourceContentHash;
+            var unrelatedHistory = Enumerable.Range(0, 64).Select(index =>
+            {
+                var row = CreateRow("historico", "ignorado", index % 2 == 0 ? 1U : (uint)(100 + index));
+                row.SourceContentHash = $"HISTORICAL-{index}";
+                return row;
+            }).ToArray();
             await using (var context = await factory.CreateDbContextAsync())
             {
                 context.MainCommandTexts.AddRange(
@@ -706,17 +725,38 @@ public sealed class ReferenceTextPersistenceWriterTests
                     wrongSource,
                     wrongTarget,
                     wrongEngine,
-                    wrongVersion);
+                    wrongVersion,
+                    languageAlias,
+                    unrelatedLanguageForMatching,
+                    unrelatedLanguageForChanged,
+                    unrelatedCrossPair);
+                context.MainCommandTexts.AddRange(unrelatedHistory);
                 await context.SaveChangesAsync();
             }
 
             counter.Reset();
             var acceptedBefore = coordinator.GetMetrics().AcceptedOperations;
+            var registrationKeys = new[]
+            {
+                new ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey(
+                    matching.ReferenceId,
+                    matching.SourceContentHash!),
+                new ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey(
+                    changedSource.ReferenceId,
+                    changedSource.SourceContentHash!),
+                new ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey(
+                    languageAlias.ReferenceId,
+                    languageAlias.SourceContentHash!),
+            };
+            var snapshotRequest = new ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest(
+                registrationKeys,
+                "bounded-registration");
             Assert.Equal(
                 PersistenceAdmissionStatus.Accepted,
                 writer.TryLoadCompleteSnapshot(
                     new TranslationReuseScope("en", "pt", 0, true),
                     "7.3",
+                    snapshotRequest,
                     static context => context.MainCommandTexts,
                     out var completion));
 
@@ -724,6 +764,7 @@ public sealed class ReferenceTextPersistenceWriterTests
             Assert.Equal(PersistenceCompletionStatus.Succeeded, result.Status);
             Assert.Equal(acceptedBefore + 1, coordinator.GetMetrics().AcceptedOperations);
             Assert.Equal(1, counter.SelectCount);
+            Assert.Equal(3, counter.MaterializedRows);
             Assert.Collection(
                 result.Value!.OrderBy(row => row.ReferenceId),
                 row =>
@@ -735,6 +776,12 @@ public sealed class ReferenceTextPersistenceWriterTests
                 {
                     Assert.Equal((uint)2, row.ReferenceId);
                     Assert.Equal("CHANGED-SOURCE-HASH", row.SourceContentHash);
+                },
+                row =>
+                {
+                    Assert.Equal((uint)8, row.ReferenceId);
+                    Assert.Equal("English", row.OriginalLang);
+                    Assert.Equal("pt-BR", row.TranslationLang);
                 });
         }, counter);
     }
@@ -981,9 +1028,13 @@ public sealed class ReferenceTextPersistenceWriterTests
     }
 
     /// <summary>Counts SQLite SELECT statements emitted by one snapshot read.</summary>
-    private sealed class SelectCounterInterceptor : DbCommandInterceptor
+    private sealed class SelectCounterInterceptor : DbCommandInterceptor, IMaterializationInterceptor
     {
+        private int materializedRows;
         private int selectCount;
+
+        /// <summary>Gets the materialized reference-text row count.</summary>
+        internal int MaterializedRows => Volatile.Read(ref this.materializedRows);
 
         /// <summary>Gets the observed SELECT statement count.</summary>
         internal int SelectCount => Volatile.Read(ref this.selectCount);
@@ -991,7 +1042,21 @@ public sealed class ReferenceTextPersistenceWriterTests
         /// <summary>Resets the observed SELECT statement count.</summary>
         internal void Reset()
         {
+            Interlocked.Exchange(ref this.materializedRows, 0);
             Interlocked.Exchange(ref this.selectCount, 0);
+        }
+
+        /// <inheritdoc />
+        public object InitializedInstance(
+            MaterializationInterceptionData materializationData,
+            object entity)
+        {
+            if (entity is ReferenceTextRowBase)
+            {
+                Interlocked.Increment(ref this.materializedRows);
+            }
+
+            return entity;
         }
 
         /// <inheritdoc />

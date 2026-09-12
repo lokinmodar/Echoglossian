@@ -3,8 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using System.Diagnostics;
-
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
@@ -613,9 +611,13 @@ public class ReferenceTextPrefetchRuntimeTests
         var incomplete = Harness.Row("en", "pt", 0, "7.3", payloads[14], Harness.TranslatedPayload(14));
         incomplete.TranslatedDescription = null;
 
-        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> Load(CancellationToken _)
+        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> Load(
+            ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest request,
+            PluginEntry.ReferenceTextPrefetchGeneration _)
         {
             snapshotAdmissions++;
+            Assert.Equal(4, request.Keys.Count);
+            Assert.False(string.IsNullOrWhiteSpace(request.Identity));
             return snapshot.Task;
         }
 
@@ -628,33 +630,81 @@ public class ReferenceTextPrefetchRuntimeTests
             return rowPending.Task;
         }
 
-        var started = Stopwatch.StartNew();
         Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
-            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 8, Schedule));
-        started.Stop();
-        Assert.True(started.Elapsed < TimeSpan.FromSeconds(1));
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
         Assert.Empty(state.Queue);
         Assert.Empty(rowAdmissions);
-        for (var tick = 0; tick < 20; tick++)
-        {
-            Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
-                state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 8, Schedule));
-        }
+        Assert.Equal(2, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
+        Assert.Equal(2, state.Initialization!.ReconstructionIndex);
+        Assert.Empty(state.Queue);
+        Assert.Equal(2, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
+        Assert.Equal(4, state.Initialization!.ReconstructionIndex);
+        Assert.Empty(state.Queue);
 
         Assert.Equal(1, snapshotAdmissions);
         snapshot.SetResult(new PluginEntry.ReferenceTextPrefetchSnapshotResult(
             true,
             new ReferenceTextRowBase[] { completed, changed, incomplete }));
-        await state.Initialization!.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
 
         Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(
-            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 8, Schedule));
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, Schedule));
         Assert.Equal(new uint[] { 13, 14, 15 }, state.Queue);
         Assert.Equal(new uint[] { 13 }, rowAdmissions);
         Assert.Equal(1, snapshotAdmissions);
-        state.Cancellation.Cancel();
+        state.InvalidateGeneration();
         rowPending.SetResult(false);
-        state.Cancellation.Dispose();
+    }
+
+    /// <summary>An invalidated generation publishes no cache rows after its current bounded unit.</summary>
+    [Fact]
+    public async Task SnapshotPublication_GenerationReplacementStopsFurtherRows()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var generation = state.Generation;
+        var firstEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirst = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var published = new List<uint>();
+        var rows = new[]
+        {
+            Harness.Row("en", "pt", 0, "7.3", Harness.Payload(12), Harness.TranslatedPayload(12)),
+            Harness.Row("en", "pt", 0, "7.3", Harness.Payload(13), Harness.TranslatedPayload(13)),
+            Harness.Row("en", "pt", 0, "7.3", Harness.Payload(14), Harness.TranslatedPayload(14)),
+        };
+        var completion = new TaskCompletionSource<PersistenceReadResult<IReadOnlyList<MainCommandText>>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var publication = ReferenceTextPrefetchSnapshotObserver.CompleteAsync(
+            harness.Writer,
+            completion.Task,
+            generation,
+            row =>
+            {
+                published.Add(row.ReferenceId);
+                if (row.ReferenceId == 12)
+                {
+                    firstEntered.SetResult();
+                    releaseFirst.Task.GetAwaiter().GetResult();
+                }
+            });
+        completion.SetResult(new PersistenceReadResult<IReadOnlyList<MainCommandText>>(
+            PersistenceCompletionStatus.Succeeded,
+            rows,
+            null));
+        await firstEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var invalidationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var invalidationRegistration = generation.Token.Register(invalidationStarted.SetResult);
+        var invalidation = Task.Run(state.ReplaceGeneration);
+        await invalidationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        releaseFirst.SetResult();
+        await Task.WhenAll(publication, invalidation).WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(new uint[] { 12 }, published);
+        Assert.False((await publication).Succeeded);
+        Assert.NotSame(generation, state.Generation);
     }
 
     /// <summary>Repeated Framework ticks do not block or reschedule one incomplete operation.</summary>
