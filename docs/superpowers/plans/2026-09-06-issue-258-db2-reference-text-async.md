@@ -4,7 +4,7 @@
 
 **Goal:** Move ReferenceText prefetch persistence out of Framework callbacks while preserving canonical lookup, promotion, and cache semantics.
 
-**Architecture:** The Framework callback captures immutable sheet payloads and submits background work to the existing `PersistenceCoordinator`. A ReferenceText adapter performs the short-lived async lookup and coordinator-backed upsert, publishing the existing cache projection only after successful read or commit. Missing name and description fields are translated as one engine-neutral field batch through `TranslationService`; strict response validation falls back to individual translations when an engine does not preserve the transport envelope. The established translation broker remains the sole translation pipeline.
+**Architecture:** The Framework callback captures immutable sheet payloads and submits background work to the existing `PersistenceCoordinator`. A ReferenceText adapter performs the short-lived async lookup and coordinator-backed upsert, publishing the existing cache projection only after successful read or commit. Missing name and description fields are translated as one field batch through `TranslationService`; direct machine translators use the established escaped `key|text` convention, while LLM engines retain their structured envelope. Strict response validation falls back to individual translations when an engine does not preserve its transport. The established translation broker remains the sole translation pipeline.
 
 **Tech Stack:** .NET 10, EF Core SQLite async APIs, existing `PersistenceCoordinator`, xUnit.
 
@@ -16,7 +16,7 @@
 - Framework callbacks must not block, construct a context, query EF, save EF changes, or await persistence work.
 - Use only the existing coordinator with background priority for bulk ReferenceText prefetch.
 - Publish cache values only after an async read completes or an async write commits.
-- Field batching must benefit any `ITranslator` that preserves the transport envelope; LLM-specific structured output may optimize the same contract but must not define it.
+- Field batching must benefit every direct `ITranslator` that preserves the pipe transport; LLM-specific structured output retains the same complete-field contract but does not define the direct-translator path.
 - A malformed or incomplete batch response must never be partially persisted; retry the missing fields individually through the same translation service.
 - Leave `Echoglossian.xml` unstaged unless an intentional generated-doc change is validated.
 
@@ -35,6 +35,21 @@
 - [x] Run focused tests and confirm failures are caused by the missing field-batch contract.
 - [x] Implement the minimal engine-neutral API over the existing translator resolution, using an escaped invariant envelope and individual fallback through the same captured translator.
 - [x] Run focused tests, then commit as `perf(#258): batch structured translation fields`.
+
+#### Task 1 provider-preservation correction
+
+- [x] Reproduce the Google V2 behavior observed in the runtime log: the
+  provider translated both fields but normalized the envelope's tab and base64
+  key spacing, which forced the otherwise successful batch into individual
+  fallback.
+- [x] Route every direct machine-translation engine through the established
+  escaped `key|text` convention with opaque ordinal keys, while retaining the
+  structured envelope for every current LLM engine.
+- [x] Keep strict ordered all-field validation and the captured-translator
+  individual fallback for malformed, incomplete, or rejected responses.
+- [x] Cover all eight direct engines, all seven LLM engines, Google-style
+  separator whitespace, delimiter-bearing source values, and incomplete
+  direct responses in focused tests.
 
 ### Task 2: Coordinator-backed ReferenceText adapter
 
@@ -107,3 +122,25 @@
   `docs/issue-258-async-persistence-baseline.md`. The logs do not contain frame
   percentiles or every required coordinator metric, so those values remain
   explicitly unreported rather than inferred.
+
+### Post-validation direct-translator field transport correction
+
+- Runtime evidence showed Google V2 returning both translated fields while
+  normalizing the tab separator and inserting whitespace in the base64 field
+  identifier. The strict envelope decoder therefore rejected every observed
+  successful batch and invoked the individual fallback.
+- Direct machine translators now receive the same escaped `key|text` shape
+  already used by other plugin surfaces, with opaque ordinal keys. This is one
+  shared policy for Google, DeepL, Yandex Cloud, GTranslate, Amazon,
+  Microsoft, LibreTranslate, and Yandex Public; it is not a Google-only branch.
+  ChatGPT, DeepSeek, Gemini, OpenRouter, Ollama, LM Studio, and Claude retain
+  the structured envelope.
+- The corrected field-batch suite passed 34/34 tests, the focused field and
+  ReferenceText suites passed 69/69, the full suite passed 1,482/1,482, the
+  Debug solution build completed with zero errors, and the synchronous DB
+  audit remained at 225 findings with DB-2 at 10.
+- The current Mock/DalaMock source did not compile against the locally updated
+  Dalamud API because its existing `MockDtrBarEntry` does not implement the
+  newly required `IDisposable.Dispose()`. The failure occurs in vendored
+  DalaMock before Mock tests start and is unrelated to the field transport;
+  this correction does not modify that vendor dependency.

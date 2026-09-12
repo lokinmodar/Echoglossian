@@ -11,7 +11,7 @@ using Xunit;
 namespace Echoglossian.Tests;
 
 /// <summary>
-///     Verifies engine-neutral structured field translation batching.
+///     Verifies engine-appropriate complete-field translation batching.
 /// </summary>
 public sealed class TranslationFieldBatchTests
 {
@@ -77,9 +77,13 @@ public sealed class TranslationFieldBatchTests
             TranslationFieldEnvelopeCodec.Encode(fields.Select(field => new TranslationField(field.Name, "captured:" + field.Text))),
             text => "captured:" + text);
         var replacement = new EnvelopeTranslator(_ => throw new InvalidOperationException("Live engine used after capture."));
-        var current = new TranslationService.TranslatorResolution(0, original);
+        var current = new TranslationService.TranslatorResolution(
+            (int)Echoglossian.TransEngines.ChatGPT,
+            original);
         var service = new TranslationService(text => text, original, translatorResolver: _ => current);
-        var captured = service.CaptureTranslatorResolution(0, TranslationSurfaceGroup.Default);
+        var captured = service.CaptureTranslatorResolution(
+            (int)Echoglossian.TransEngines.ChatGPT,
+            TranslationSurfaceGroup.Default);
         current = new TranslationService.TranslatorResolution(4, replacement);
         var result = await service.TranslateFieldsAsync(
             [new TranslationField("Name", "Actions"), new TranslationField("Description", "Open actions.")],
@@ -94,8 +98,16 @@ public sealed class TranslationFieldBatchTests
     ///     Ensures a valid field envelope uses one translator invocation.
     /// </summary>
     /// <returns>The asynchronous test task.</returns>
-    [Fact]
-    public async Task TranslateFieldsAsync_ValidEnvelope_UsesOneCall()
+    [Theory]
+    [InlineData(Echoglossian.TransEngines.ChatGPT)]
+    [InlineData(Echoglossian.TransEngines.DeepSeek)]
+    [InlineData(Echoglossian.TransEngines.Gemini)]
+    [InlineData(Echoglossian.TransEngines.OpenRouter)]
+    [InlineData(Echoglossian.TransEngines.Ollama)]
+    [InlineData(Echoglossian.TransEngines.LmStudio)]
+    [InlineData(Echoglossian.TransEngines.Claude)]
+    public async Task TranslateFieldsAsync_ValidEnvelope_UsesOneCall(
+        Echoglossian.TransEngines engine)
     {
         var translator = new EnvelopeTranslator(static fields =>
             TranslationFieldEnvelopeCodec.Encode(
@@ -103,7 +115,7 @@ public sealed class TranslationFieldBatchTests
                     new TranslationField("Name", "Acoes"),
                     new TranslationField("Description", "Abre a janela."),
                 ]));
-        var service = this.CreateService(translator);
+        var service = this.CreateService(translator, engine);
 
         var result = await service.TranslateFieldsAsync(
             [
@@ -117,6 +129,120 @@ public sealed class TranslationFieldBatchTests
         Assert.Equal("Acoes", result.GetTranslation("Name"));
         Assert.Equal("Abre a janela.", result.GetTranslation("Description"));
         Assert.Equal(1, translator.CallCount);
+    }
+
+    /// <summary>
+    ///     Ensures direct machine translators use the established pipe-delimited
+    ///     field convention and accept harmless whitespace around separators.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Theory]
+    [InlineData(Echoglossian.TransEngines.Google)]
+    [InlineData(Echoglossian.TransEngines.Deepl)]
+    [InlineData(Echoglossian.TransEngines.YandexCloud)]
+    [InlineData(Echoglossian.TransEngines.GTranslate)]
+    [InlineData(Echoglossian.TransEngines.Amazon)]
+    [InlineData(Echoglossian.TransEngines.Microsoft)]
+    [InlineData(Echoglossian.TransEngines.LibreTranslate)]
+    [InlineData(Echoglossian.TransEngines.YandexPublic)]
+    public async Task TranslateFieldsAsync_DirectTranslatorPipeBatch_UsesOneCall(
+        Echoglossian.TransEngines engine)
+    {
+        var translator = new RawResponseTranslator(static text => text switch
+        {
+            "0|Actions|1|Opens the window." =>
+                "0 | Acoes | 1 | Abre a janela.",
+            _ => $"single:{text}",
+        });
+        var service = this.CreateService(translator, engine);
+
+        var result = await service.TranslateFieldsAsync(
+            [
+                new TranslationField("Name", "Actions"),
+                new TranslationField("Description", "Opens the window."),
+            ],
+            new SourceClientLanguage("en", "en"),
+            "pt-BR");
+
+        Assert.False(result.UsedIndividualFallback);
+        Assert.Equal("Acoes", result.GetTranslation("Name"));
+        Assert.Equal("Abre a janela.", result.GetTranslation("Description"));
+        Assert.Equal(["0|Actions|1|Opens the window."], translator.Requests);
+    }
+
+    /// <summary>
+    ///     Ensures direct field values containing transport characters survive
+    ///     one pipe-delimited provider request without field loss.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslateFieldsAsync_DirectPipeDelimiterBearingValues_RoundTripSafely()
+    {
+        const string request =
+            "0|Action\\|Trait\\\\Combo|1|First line\\nSecond\\tline\\|tail";
+        var translator = new RawResponseTranslator(text =>
+            string.Equals(text, request, StringComparison.Ordinal)
+                ? "0|pt:Action\\|Trait\\\\Combo|1|pt:First line\\nSecond\\tline\\|tail"
+                : $"single:{text}");
+        var service = this.CreateService(
+            translator,
+            Echoglossian.TransEngines.Google);
+
+        var result = await service.TranslateFieldsAsync(
+            [
+                new TranslationField("Name", "Action|Trait\\Combo"),
+                new TranslationField(
+                    "Description",
+                    "First line\nSecond\tline|tail"),
+            ],
+            new SourceClientLanguage("en", "en"),
+            "pt-BR");
+
+        Assert.False(result.UsedIndividualFallback);
+        Assert.Equal("pt:Action|Trait\\Combo", result.GetTranslation("Name"));
+        Assert.Equal(
+            "pt:First line\nSecond\tline|tail",
+            result.GetTranslation("Description"));
+        Assert.Equal([request], translator.Requests);
+    }
+
+    /// <summary>
+    ///     Ensures an incomplete direct-translator response cannot publish a
+    ///     partial field batch and instead retries every field individually.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task TranslateFieldsAsync_IncompleteDirectPipeBatch_FallsBackIndividually()
+    {
+        var translator = new RawResponseTranslator(static text => text switch
+        {
+            "0|Actions|1|Opens the window." => "0|batch:Acoes",
+            _ => $"single:{text}",
+        });
+        var service = this.CreateService(
+            translator,
+            Echoglossian.TransEngines.Deepl);
+
+        var result = await service.TranslateFieldsAsync(
+            [
+                new TranslationField("Name", "Actions"),
+                new TranslationField("Description", "Opens the window."),
+            ],
+            new SourceClientLanguage("en", "en"),
+            "pt-BR");
+
+        Assert.True(result.UsedIndividualFallback);
+        Assert.Equal("single:Actions", result.GetTranslation("Name"));
+        Assert.Equal(
+            "single:Opens the window.",
+            result.GetTranslation("Description"));
+        Assert.Equal(
+            [
+                "0|Actions|1|Opens the window.",
+                "Actions",
+                "Opens the window.",
+            ],
+            translator.Requests);
     }
 
     /// <summary>
@@ -400,13 +526,16 @@ public sealed class TranslationFieldBatchTests
         Assert.Equal(0, translator.CallCount);
     }
 
-    private TranslationService CreateService(ITranslator translator)
+    private TranslationService CreateService(
+        ITranslator translator,
+        Echoglossian.TransEngines engine = Echoglossian.TransEngines.ChatGPT)
     {
         return new TranslationService(
             static text => text,
             translator,
+            translationEngine: (int)engine,
             translatorResolver: _ => new TranslationService.TranslatorResolution(
-                (int)Echoglossian.TransEngines.Google,
+                (int)engine,
                 translator));
     }
 
@@ -452,6 +581,35 @@ public sealed class TranslationFieldBatchTests
             return TranslationFieldEnvelopeCodec.TryDecode(text, out var fields)
                 ? this.batchResponse(fields)
                 : this.individualResponse(text);
+        }
+    }
+
+    private sealed class RawResponseTranslator(
+        Func<string, string> response) : ITranslator
+    {
+        /// <summary>Gets the raw provider requests.</summary>
+        internal List<string> Requests { get; } = [];
+
+        /// <inheritdoc />
+        public string? Translate(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            this.Requests.Add(text);
+            return response(text);
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return Task.FromResult(this.Translate(
+                text,
+                sourceLanguage,
+                targetLanguage));
         }
     }
 }

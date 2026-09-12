@@ -235,8 +235,8 @@ public class TranslationService
   }
 
   /// <summary>
-  ///     Translates a complete named field set through one engine-neutral
-  ///     request when the translated response preserves the field envelope.
+  ///     Translates a complete named field set through one engine-appropriate
+  ///     request when the response preserves its field transport.
   /// </summary>
   /// <param name="fields">The named fields to translate.</param>
   /// <param name="sourceLanguage">The operation-captured source contract.</param>
@@ -309,12 +309,17 @@ public class TranslationService
           translatorResolution).ConfigureAwait(false);
     }
 
-    string? translatedEnvelope = null;
+    var usePipeTransport = UsesPipeFieldTransport(
+        translatorResolution.TranslationEngineId);
+    var providerPayload = usePipeTransport
+        ? TranslationFieldPipeCodec.Encode(preparedFields)
+        : TranslationFieldEnvelopeCodec.Encode(preparedFields);
+    string? translatedBatch = null;
     var stopwatch = Stopwatch.StartNew();
     try
     {
-      translatedEnvelope = await translatorResolution.Translator.TranslateAsync(
-          TranslationFieldEnvelopeCodec.Encode(preparedFields),
+      translatedBatch = await translatorResolution.Translator.TranslateAsync(
+          providerPayload,
           sourceLanguage.ProviderCode,
           targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -328,10 +333,17 @@ public class TranslationService
       // established per-field acceptance and failure handling below.
     }
 
-    if (TranslationFieldEnvelopeCodec.TryDecode(
-            translatedEnvelope,
+    IReadOnlyList<TranslationField> translatedFields;
+    var decoded = usePipeTransport
+        ? TranslationFieldPipeCodec.TryDecode(
+            translatedBatch,
             preparedFields,
-            out var translatedFields) &&
+            out translatedFields)
+        : TranslationFieldEnvelopeCodec.TryDecode(
+            translatedBatch,
+            preparedFields,
+            out translatedFields);
+    if (decoded &&
         translatedFields.All(static field =>
             TranslationResultGuard.IsPersistableTranslation(field.Text)))
     {
@@ -1234,8 +1246,26 @@ public class TranslationService
   }
 
   /// <summary>
+  ///     Determines whether one engine should use the established pipe-based
+  ///     direct machine-translation field transport.
+  /// </summary>
+  /// <param name="translationEngineId">The captured translation engine.</param>
+  /// <returns>
+  ///     <see langword="true" /> for direct translation engines; otherwise,
+  ///     <see langword="false" /> so LLM and unknown engines retain the
+  ///     structured envelope.
+  /// </returns>
+  private static bool UsesPipeFieldTransport(int translationEngineId)
+  {
+    var engine = (Echoglossian.TransEngines)translationEngineId;
+    return Enum.IsDefined(engine) &&
+           engine != Echoglossian.TransEngines.All &&
+           !LlmSurfaceGroupRoutingPolicy.IsLlmEngine(engine);
+  }
+
+  /// <summary>
   ///     Applies the standard translation-service admission guards before one
-  ///     field envelope reaches a provider.
+  ///     field batch reaches a provider.
   /// </summary>
   /// <param name="fields">The requested fields.</param>
   /// <param name="sourceLanguage">The captured source-language contract.</param>
