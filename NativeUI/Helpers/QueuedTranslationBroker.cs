@@ -5,6 +5,7 @@
 
 using System.Collections.Concurrent;
 using System.Threading;
+using Echoglossian.Translators;
 
 namespace Echoglossian.NativeUI.Helpers;
 
@@ -387,6 +388,12 @@ public sealed class QueuedTranslationBroker : IDisposable
             {
                 this.failedTranslations[request.Key] = DateTime.UtcNow;
             }
+        }
+        catch (TranslationFieldRejectedException exception)
+        {
+            this.warningLog?.Invoke(
+                $"[QueuedTranslationBroker] Translation field '{exception.FieldName}' was rejected: {exception.FailureReason}{FormatSurfaceIdentitySuffix(request.SurfaceIdentity)}.");
+            this.failedTranslations[request.Key] = DateTime.UtcNow;
         }
         catch (Exception ex)
         {

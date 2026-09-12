@@ -5,6 +5,7 @@
 
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.Properties;
+using Echoglossian.Translators;
 
 using Xunit;
 
@@ -84,6 +85,50 @@ public class QueuedTranslationBrokerTests
             _ => throw new InvalidOperationException("Invalid payload published."), "test", cancelled => terminal.TrySetResult(cancelled)));
         Assert.False(await terminal.Task.WaitAsync(TimeSpan.FromSeconds(2)));
         Assert.False(broker.TryGetCached("terminal-payload", out _));
+    }
+
+    /// <summary>
+    ///     Ensures expected field rejection is summarized as one warning while
+    ///     retaining terminal notification and the per-key failure cooldown.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task Queue_FieldRejection_LogsWarningAndPreservesTerminalFailureCooldown()
+    {
+        var warnings = new List<string>();
+        var errors = new List<string>();
+        var terminalCallbacks = 0;
+        var terminal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var broker = new QueuedTranslationBroker(
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(1),
+            TimeSpan.Zero,
+            maxRateLimitRetries: 0,
+            warningLog: warnings.Add,
+            errorLog: errors.Add);
+
+        Assert.True(broker.Queue(
+            "field-rejection",
+            () => throw new TranslationFieldRejectedException(
+                "Description",
+                "empty-result"),
+            _ => throw new InvalidOperationException("Rejected field was cached."),
+            "ReferenceText",
+            cancelled =>
+            {
+                Interlocked.Increment(ref terminalCallbacks);
+                terminal.TrySetResult(cancelled);
+            }));
+
+        Assert.False(await terminal.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Single(warnings);
+        Assert.Contains("Description", warnings[0], StringComparison.Ordinal);
+        Assert.Contains("empty-result", warnings[0], StringComparison.Ordinal);
+        Assert.Empty(errors);
+        Assert.Equal(1, Volatile.Read(ref terminalCallbacks));
+        Assert.False(broker.TryGetCached("field-rejection", out _));
+        Assert.False(broker.Queue("field-rejection", () => Task.FromResult("retry-too-soon")));
     }
 
     /// <summary>Shutdown reports cancellation for the active request and every queued subscriber.</summary>

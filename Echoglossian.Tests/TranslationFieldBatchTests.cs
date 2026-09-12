@@ -32,7 +32,7 @@ public sealed class TranslationFieldBatchTests
         var service = new TranslationService(text => text, translator,
             recordFailedTranslation: (_, _, _, _, _, _) => failures++,
             recordTransientFailedTranslation: (_, _, _, _, _, _) => failures++);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.TranslateFieldsAsync(
+        await Assert.ThrowsAsync<TranslationFieldRejectedException>(() => service.TranslateFieldsAsync(
             [new TranslationField("Name", "Actions"), new TranslationField("Description", "Open actions.")],
             new SourceClientLanguage("en", "en"), "pt"));
         Assert.Equal(3, translator.CallCount);
@@ -46,7 +46,7 @@ public sealed class TranslationFieldBatchTests
         var translator = new EnvelopeTranslator(_ => throw new InvalidOperationException("Provider should not run."));
         var service = new TranslationService(text => text, translator,
             isKnownFailedTranslation: (_, _, _, _) => true);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.TranslateFieldsAsync(
+        await Assert.ThrowsAsync<TranslationFieldRejectedException>(() => service.TranslateFieldsAsync(
             [new TranslationField("Name", "Actions")], new SourceClientLanguage("en", "en"), "pt"));
         Assert.Equal(0, translator.CallCount);
         Assert.Equal("Actions", await service.TranslateAsync("Actions", "en", "pt"));
@@ -168,6 +168,46 @@ public sealed class TranslationFieldBatchTests
         Assert.Equal("Acoes", result.GetTranslation("Name"));
         Assert.Equal("Abre a janela.", result.GetTranslation("Description"));
         Assert.Equal(["0|Actions|1|Opens the window."], translator.Requests);
+    }
+
+    /// <summary>
+    ///     Ensures one accepted field bypasses every batch transport and calls
+    ///     the captured provider once with its raw text.
+    /// </summary>
+    /// <param name="engine">The captured translation engine.</param>
+    /// <returns>The asynchronous test task.</returns>
+    [Theory]
+    [InlineData(Echoglossian.TransEngines.Google)]
+    [InlineData(Echoglossian.TransEngines.Deepl)]
+    [InlineData(Echoglossian.TransEngines.YandexCloud)]
+    [InlineData(Echoglossian.TransEngines.GTranslate)]
+    [InlineData(Echoglossian.TransEngines.Amazon)]
+    [InlineData(Echoglossian.TransEngines.Microsoft)]
+    [InlineData(Echoglossian.TransEngines.LibreTranslate)]
+    [InlineData(Echoglossian.TransEngines.YandexPublic)]
+    [InlineData(Echoglossian.TransEngines.ChatGPT)]
+    [InlineData(Echoglossian.TransEngines.DeepSeek)]
+    [InlineData(Echoglossian.TransEngines.Gemini)]
+    [InlineData(Echoglossian.TransEngines.OpenRouter)]
+    [InlineData(Echoglossian.TransEngines.Ollama)]
+    [InlineData(Echoglossian.TransEngines.LmStudio)]
+    [InlineData(Echoglossian.TransEngines.Claude)]
+    public async Task TranslateFieldsAsync_SingleField_UsesCapturedTranslatorOnceWithRawText(
+        Echoglossian.TransEngines engine)
+    {
+        var translator = new RawResponseTranslator(static text => "pt:" + text);
+        var service = this.CreateService(translator, engine);
+        var captured = service.CaptureTranslatorResolution((int)engine, TranslationSurfaceGroup.Default);
+
+        var result = await service.TranslateFieldsAsync(
+            [new TranslationField("Name", "Actions")],
+            new SourceClientLanguage("en", "en"),
+            "pt-BR",
+            captured);
+
+        Assert.False(result.UsedIndividualFallback);
+        Assert.Equal("pt:Actions", result.GetTranslation("Name"));
+        Assert.Equal(["Actions"], translator.Requests);
     }
 
     /// <summary>

@@ -309,6 +309,18 @@ public class TranslationService
           translatorResolution).ConfigureAwait(false);
     }
 
+    if (requestedFields.Length == 1)
+    {
+      return await this.TranslateFieldsIndividuallyAsync(
+          requestedFields,
+          sourceLanguage,
+          targetLanguage,
+          originContext,
+          cancellationToken,
+          translatorResolution,
+          usedIndividualFallback: false).ConfigureAwait(false);
+    }
+
     var usePipeTransport = UsesPipeFieldTransport(
         translatorResolution.TranslationEngineId);
     var providerPayload = usePipeTransport
@@ -1213,7 +1225,8 @@ public class TranslationService
       string targetLanguage,
       string? originContext,
       CancellationToken cancellationToken,
-      TranslatorResolution translatorResolution)
+      TranslatorResolution translatorResolution,
+      bool usedIndividualFallback = true)
   {
     var translatedFields = new List<TranslationField>(fields.Count);
     foreach (var field in fields)
@@ -1235,14 +1248,15 @@ public class TranslationService
           translatorResolution).ConfigureAwait(false);
       if (!acceptance.Succeeded)
       {
-        throw new InvalidOperationException(
-            $"Translation field '{field.Name}' was rejected: {acceptance.FailureReason}");
+        throw new TranslationFieldRejectedException(
+            field.Name,
+            acceptance.FailureReason!);
       }
 
       translatedFields.Add(new TranslationField(field.Name, acceptance.Text));
     }
 
-    return new TranslationFieldBatchResult(translatedFields, true);
+    return new TranslationFieldBatchResult(translatedFields, usedIndividualFallback);
   }
 
   /// <summary>

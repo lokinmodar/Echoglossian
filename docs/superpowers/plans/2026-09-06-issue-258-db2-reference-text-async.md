@@ -89,6 +89,46 @@
 - [x] Run the Mock build/test commands and `scripts/audit-sync-db-hotpaths.ps1`.
 - [x] Produce the Debug DLL and record its absolute path and exact commit for manual in-game testing.
 
+### Task 5: Post-validation single-field provider rejection correction
+
+**Files:**
+- Create: `Translators/TranslationFieldRejectedException.cs`
+- Modify: `Translators/TranslationService.cs`
+- Modify: `NativeUI/Helpers/QueuedTranslationBroker.cs`
+- Test: `Echoglossian.Tests/TranslationFieldBatchTests.cs`
+- Test: `Echoglossian.Tests/QueuedTranslationBrokerTests.cs`
+
+- [x] Write a failing engine-matrix test proving that a one-field request calls
+  the captured translator exactly once with the raw field text, without a pipe
+  or structured envelope, and reports that no batch fallback occurred.
+- [x] Write a failing broker test proving that an expected field rejection
+  produces one concise warning, no error/stack trace, one terminal callback,
+  no cached translation, and the existing failure cooldown.
+- [x] Run both focused tests and confirm they fail for the duplicated
+  single-field transport and generic exception logging observed in-game.
+- [x] Implement the minimal one-field fast path through the existing accepted
+  translation flow for every engine family; keep all multi-field pipe/envelope
+  batching, strict validation, and individual fallback unchanged.
+- [x] Represent rejected fields with a typed `InvalidOperationException`
+  carrying the stable field name and failure reason; let the existing broker
+  classify that expected rejection as a summarized warning while preserving
+  terminal notification and cooldown. Unexpected resolver exceptions remain
+  errors with their stack traces.
+- [x] Run the focused suites, the full solution build/test validation, and the
+  synchronous DB audit. Produce a new Debug DLL for another in-game check;
+  leave release metadata, push, and release publication untouched.
+
+#### Task 5 execution evidence
+
+- RED: the 16-case focused regression command failed as expected: each engine
+  reported `UsedIndividualFallback = true`, and the broker emitted no warning
+  for the generic field-rejection exception.
+- GREEN: the same regression command passed 16/16; the complete field-batch
+  and broker suites passed 60/60.
+- Validation: Debug solution build completed with 0 errors; the complete unit
+  suite passed 1,498/1,498; the synchronous audit passed with 225 findings and
+  DB-2 at 10. Debug DLL: `D:\.codex\worktrees\8bb2\Echoglossian\bin\x64\Debug\win-x64\Echoglossian.dll`.
+
 ## Execution Notes
 
 - The complete unit/integration suite passed 1,466/1,466 tests after adding
