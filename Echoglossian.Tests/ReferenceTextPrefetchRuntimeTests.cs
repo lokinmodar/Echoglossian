@@ -703,6 +703,52 @@ public class ReferenceTextPrefetchRuntimeTests
         state.Cancellation.Dispose();
     }
 
+    /// <summary>
+    ///     Ensures a broker-owned retry reaches the provider after a synthetic
+    ///     rate-limit response has populated the service transient-failure cache.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task SyntheticRateLimit_ServiceCacheDoesNotBlockBrokerRetryOrPersistence()
+    {
+        TranslationFailureCacheManager.Clear();
+        try
+        {
+            await using var harness = await Harness.CreateAsync(maxRateLimitRetries: 1);
+            var translator = new RateLimitedThenSuccessfulTranslator();
+            var service = new TranslationService(
+                static text => text,
+                translator,
+                translationEngine: (int)Echoglossian.TransEngines.Google,
+                isKnownFailedTranslation: TranslationFailureCacheManager.Contains,
+                recordTransientFailedTranslation: TranslationFailureCacheManager.RememberTransientFailure);
+            Task<TranslationFieldBatchResult> Translate(
+                IReadOnlyList<TranslationField> fields,
+                SourceClientLanguage source,
+                string target,
+                string? origin,
+                CancellationToken token) => service.TranslateFieldsAsync(
+                    fields,
+                    source,
+                    target,
+                    origin,
+                    token);
+            var payload = Harness.Payload();
+            payload.Description = null;
+
+            Assert.True(await harness.Start(payload, Translate).WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(2, translator.Calls);
+            Assert.Equal(1, harness.Coordinator.GetMetrics().CommittedWrites);
+            await using var context = await harness.Factory.CreateDbContextAsync();
+            var persisted = await context.MainCommandTexts.SingleAsync();
+            Assert.Equal("Acoes", persisted.TranslatedName);
+        }
+        finally
+        {
+            TranslationFailureCacheManager.Clear();
+        }
+    }
+
     /// <summary>A synchronous initial probe exception cannot escape the Framework admission boundary.</summary>
     [Fact]
     public async Task Start_InitialProbeThrows_ReturnsTerminalCompletionWithoutEscaping()
@@ -907,6 +953,34 @@ public class ReferenceTextPrefetchRuntimeTests
         /// <inheritdoc />
         public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage) =>
             Task.FromResult(this.Translate(text, sourceLanguage, targetLanguage));
+    }
+
+    /// <summary>Returns a synthetic rate-limit failure before the next provider call succeeds.</summary>
+    private sealed class RateLimitedThenSuccessfulTranslator : ITranslator
+    {
+        private int calls;
+
+        /// <summary>Gets the actual provider invocation count.</summary>
+        internal int Calls => Volatile.Read(ref this.calls);
+
+        /// <inheritdoc />
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            return this.TranslateCore();
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+        {
+            return Task.FromResult<string?>(this.TranslateCore());
+        }
+
+        private string TranslateCore()
+        {
+            return Interlocked.Increment(ref this.calls) == 1
+                ? "[Translation Error: HTTP 429 Too Many Requests]"
+                : "Acoes";
+        }
     }
 
     /// <summary>Injects one real worker context-open failure to exercise cursor retry outcomes.</summary>

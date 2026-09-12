@@ -2116,8 +2116,21 @@ public class TranslationService
       int translationEngineId)
   {
     if (translationEngineId < 0 ||
-        this.isKnownFailedTranslation == null ||
         string.IsNullOrWhiteSpace(sourceText))
+    {
+      return false;
+    }
+
+    if (TranslationBrokerRateLimitRetryContext.IsActive)
+    {
+      return TranslationFailureCacheManager.ContainsPersistent(
+          sourceText,
+          sourceLanguage,
+          targetLanguage,
+          translationEngineId);
+    }
+
+    if (this.isKnownFailedTranslation == null)
     {
       return false;
     }

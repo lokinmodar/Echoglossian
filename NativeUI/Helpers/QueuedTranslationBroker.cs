@@ -341,6 +341,8 @@ public sealed class QueuedTranslationBroker : IDisposable
         var resolved = false;
         try
         {
+            using var retryScope = TranslationBrokerRateLimitRetryContext.Enter(
+                request.RateLimitAttempt);
             var translatedText = await request.Resolver().WaitAsync(
                 this.requestTimeout,
                 this.shutdownToken).ConfigureAwait(false);
