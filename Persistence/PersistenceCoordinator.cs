@@ -538,18 +538,27 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
   private async Task<WriteAttemptResult> ExecuteWriteAttemptAsync(IReadOnlyList<WriteWork> batch)
   {
+    var cancellationTokens = new CancellationToken[batch.Count + 1];
+    cancellationTokens[0] = this.shutdownCancellation.Token;
+    for (var index = 0; index < batch.Count; index++)
+    {
+      cancellationTokens[index + 1] = batch[index].Request.CancellationToken;
+    }
+
+    using var operationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens);
+    var operationToken = operationCancellation.Token;
     await using var context = await this.contextFactory
-        .CreateDbContextAsync(this.shutdownCancellation.Token)
+        .CreateDbContextAsync(operationToken)
         .ConfigureAwait(false);
     await using var transaction = await context.Database
-        .BeginTransactionAsync(this.shutdownCancellation.Token)
+        .BeginTransactionAsync(operationToken)
         .ConfigureAwait(false);
     try
     {
       var changed = new HashSet<WriteWork>();
       foreach (var work in batch)
       {
-        if ((await work.Request.ApplyAsync(context, this.shutdownCancellation.Token)
+        if ((await work.Request.ApplyAsync(context, operationToken)
             .ConfigureAwait(false)).Changed)
         {
           _ = changed.Add(work);
@@ -558,8 +567,8 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
       var affectedRows = changed.Count == 0
           ? 0
-          : await context.SaveChangesAsync(this.shutdownCancellation.Token).ConfigureAwait(false);
-      await transaction.CommitAsync(this.shutdownCancellation.Token).ConfigureAwait(false);
+          : await context.SaveChangesAsync(operationToken).ConfigureAwait(false);
+      await transaction.CommitAsync(operationToken).ConfigureAwait(false);
       return new WriteAttemptResult(changed, affectedRows);
     }
     catch

@@ -50,3 +50,26 @@ changes between the two captures.
 
 Use summarized counters and lifecycle boundaries. Do not add per-frame or
 per-row production logs to obtain the measurements.
+
+## DB-2 Functional Validation - 2026-09-06/07 BRT
+
+This session validated behavior but was not a controlled before/after
+performance capture under the comparison rule above.
+
+- Build SHA-256:
+  `AE86FFC9FA436611C2492287D108027C03D02001EE1373DF767E187808A84349`.
+- Translator observed in the session log: Google Translator.
+- `Echoglossian.log` records accepted-quest and ReferenceText-adjacent activity
+  through `2026-09-06T23:33:50-03:00`, followed by plugin-owned cache teardown
+  beginning at `2026-09-06T23:33:54-03:00`.
+- `Echoglossian.db-wal` was last written at `2026-09-06 23:33:50-03:00`, showing
+  that the unload test occurred immediately after active persistence traffic.
+- The first Test 5 attempt before owner-lifetime ReferenceText cancellation
+  froze indefinitely on immediate re-enable. After the correction, the user
+  repeated Test 5 and reported no unload/reload errors.
+
+The following required comparison values were not emitted by the available
+logs and therefore remain pending: median/p95/p99 frame time, comparable FPS
+range, queue maximum depth and oldest-item age, batch and written-row counts,
+unchanged-row suppression count, SQLite busy/retry count, and comparable WAL
+write frequency. No performance claim is made from this functional session.
