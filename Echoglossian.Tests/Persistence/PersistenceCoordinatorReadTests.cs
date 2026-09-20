@@ -257,6 +257,122 @@ public sealed class PersistenceCoordinatorReadTests
   }
 
   /// <summary>
+  ///     Ensures transient read failures use the coordinator's bounded retry
+  ///     policy and lease a fresh context for every attempt.
+  /// </summary>
+  /// <returns>A task that completes after the retried read succeeds.</returns>
+  [Fact]
+  public async Task TryScheduleRead_WhenTransientFailuresOccur_RetriesWithFreshContexts()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var attempts = 0;
+    var publications = 0;
+    var delays = new List<TimeSpan>();
+    await using var coordinator = new PersistenceCoordinator(
+        factory,
+        new PersistenceCoordinatorOptions(
+            4,
+            4,
+            1,
+            32,
+            TimeSpan.FromMilliseconds(5),
+            3,
+            new[] { TimeSpan.FromMilliseconds(25), TimeSpan.FromMilliseconds(100) },
+            4,
+            1,
+            TimeSpan.FromSeconds(5)),
+        (delay, _) =>
+        {
+          delays.Add(delay);
+          return Task.CompletedTask;
+        },
+        transientFailureClassifier: _ => true);
+
+    Assert.Equal(
+        PersistenceAdmissionStatus.Accepted,
+        coordinator.TryScheduleRead(
+            new PersistenceWorkKey("test", "transient-read"),
+            PersistencePriority.Interactive,
+            (_, _) =>
+            {
+              if (Interlocked.Increment(ref attempts) < 3)
+              {
+                throw new InvalidOperationException("transient read failure");
+              }
+
+              return Task.FromResult("recovered");
+            },
+            _ => publications++,
+            out var completion));
+
+    var result = await completion.WaitAsync(TimeSpan.FromSeconds(5));
+
+    Assert.Equal(PersistenceCompletionStatus.Succeeded, result.Status);
+    Assert.Equal("recovered", result.Value);
+    Assert.Equal(3, attempts);
+    Assert.Equal(
+        new[] { TimeSpan.FromMilliseconds(25), TimeSpan.FromMilliseconds(100) },
+        delays);
+    Assert.Equal(3, factory.ContextIds.Count);
+    Assert.Equal(1, publications);
+    Assert.Equal(2, coordinator.GetMetrics().RetryCount);
+    Assert.Equal(0, coordinator.GetMetrics().TerminalFailures);
+  }
+
+  /// <summary>
+  ///     Ensures a projection failure does not repeat a successful database
+  ///     read or invoke the projection more than once.
+  /// </summary>
+  /// <returns>A task that completes after the projection fails.</returns>
+  [Fact]
+  public async Task TryScheduleRead_WhenPublishThrows_DoesNotRetryReadOrPublish()
+  {
+    var factory = new PersistenceCoordinatorTestContextFactory();
+    var attempts = 0;
+    var publications = 0;
+    await using var coordinator = new PersistenceCoordinator(
+        factory,
+        new PersistenceCoordinatorOptions(
+            4,
+            4,
+            1,
+            32,
+            TimeSpan.FromMilliseconds(5),
+            3,
+            new[] { TimeSpan.Zero, TimeSpan.Zero },
+            4,
+            1,
+            TimeSpan.FromSeconds(5)),
+        transientFailureClassifier: _ => true);
+
+    Assert.Equal(
+        PersistenceAdmissionStatus.Accepted,
+        coordinator.TryScheduleRead(
+            new PersistenceWorkKey("test", "publish-failure"),
+            PersistencePriority.Interactive,
+            (_, _) =>
+            {
+              attempts++;
+              return Task.FromResult("value");
+            },
+            _ =>
+            {
+              publications++;
+              throw new InvalidOperationException("projection failure");
+            },
+            out var completion));
+
+    var result = await completion.WaitAsync(TimeSpan.FromSeconds(5));
+
+    Assert.Equal(PersistenceCompletionStatus.Failed, result.Status);
+    Assert.Equal(1, attempts);
+    Assert.Equal(1, publications);
+    Assert.Single(factory.ContextIds);
+    Assert.Equal(0, coordinator.GetMetrics().RetryCount);
+    Assert.Equal(1, coordinator.GetMetrics().TerminalFailures);
+  }
+
+  /// <summary>
   ///     Ensures stopped admission rejects later reads without running a query.
   /// </summary>
   [Fact]

@@ -507,6 +507,52 @@ public unsafe partial class Echoglossian
             PersistencePriority.Interactive);
     }
 
+    /// <summary>Resolves cancellation ownership for background and visible requests.</summary>
+    /// <param name="priority">The originating persistence lane.</param>
+    /// <param name="generationCancellationToken">The background registration generation token.</param>
+    /// <param name="ownerCancellationToken">The plugin-owned interactive operation token.</param>
+    /// <returns>The cancellation token whose lifetime matches the request.</returns>
+    internal static CancellationToken ResolveReferenceTextPrefetchCancellationToken(
+        PersistencePriority priority,
+        CancellationToken generationCancellationToken,
+        CancellationToken ownerCancellationToken)
+    {
+        return priority == PersistencePriority.Interactive
+            ? ownerCancellationToken
+            : generationCancellationToken;
+    }
+
+    /// <summary>Coalesces only reference-text operations with compatible cancellation ownership.</summary>
+    /// <param name="operations">The pending operation registry.</param>
+    /// <param name="contentKey">The canonical content identity.</param>
+    /// <param name="priority">The originating persistence lane and cancellation owner.</param>
+    /// <param name="start">Starts a new operation when no compatible operation is pending.</param>
+    /// <returns>The compatible pending operation or the newly started operation.</returns>
+    internal static Task<bool> GetOrStartReferenceTextPrefetchOperation(
+        IDictionary<string, Task<bool>> operations,
+        string contentKey,
+        PersistencePriority priority,
+        Func<Task<bool>> start)
+    {
+        ArgumentNullException.ThrowIfNull(operations);
+        ArgumentNullException.ThrowIfNull(contentKey);
+        ArgumentNullException.ThrowIfNull(start);
+
+        var operationKey = $"{(int)priority}:{contentKey}";
+        if (operations.TryGetValue(operationKey, out var pending) && !pending.IsCompleted)
+        {
+            return pending;
+        }
+
+        var operation = start();
+        if (!operation.IsCompleted)
+        {
+            operations[operationKey] = operation;
+        }
+
+        return operation;
+    }
+
     /// <summary>Captures a sheet payload and admits background persistence work.</summary>
     /// <param name="registration">The captured sheet-family registration.</param>
     /// <param name="referenceId">The sheet row to capture.</param>
@@ -534,18 +580,21 @@ public unsafe partial class Echoglossian
 
             var key = BuildTranslationReuseScopedKey(
                 $"{registration.Key}|{gameVersion}|{payload.Serialize()}", scope);
-            if (this.referenceTextPrefetchOperations.TryGetValue(key, out var pending) && !pending.IsCompleted)
-            {
-                return pending;
-            }
-
-            var operation = registration.Schedule(payload, sourceLanguage, scope, gameVersion, cancellationToken, priority);
-            if (!operation.IsCompleted)
-            {
-                this.referenceTextPrefetchOperations[key] = operation;
-            }
-
-            return operation;
+            var operationCancellationToken = ResolveReferenceTextPrefetchCancellationToken(
+                priority,
+                cancellationToken,
+                this.queuedTranslationBroker.ShutdownToken);
+            return GetOrStartReferenceTextPrefetchOperation(
+                this.referenceTextPrefetchOperations,
+                key,
+                priority,
+                () => registration.Schedule(
+                    payload,
+                    sourceLanguage,
+                    scope,
+                    gameVersion,
+                    operationCancellationToken,
+                    priority));
         }
         catch (OperationCanceledException)
         {

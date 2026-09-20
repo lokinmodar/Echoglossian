@@ -18,6 +18,8 @@ internal enum QueuedTranslationAdmission
     FailureCooldown,
     /// <summary>The exact identity already has an active request.</summary>
     AlreadyInFlight,
+    /// <summary>The caller subscribed to an existing active request.</summary>
+    JoinedInFlight,
     /// <summary>The broker has started shutdown.</summary>
     RejectedShutdown,
 }
@@ -32,13 +34,36 @@ public sealed class QueuedTranslationBroker : IDisposable
     private sealed record QueuedTranslationRequest(
         string Key,
         Func<Task<string>> Resolver,
-        Action<string>? OnResolved,
-        Action<bool>? OnTerminalFailure,
+        QueuedTranslationRequestState State,
         string? SurfaceIdentity,
         int RateLimitAttempt);
 
+    private sealed record QueuedTranslationSubscriber(
+        Action<string>? OnResolved,
+        Action<bool>? OnTerminalFailure);
+
+    private sealed class QueuedTranslationRequestState
+    {
+        /// <summary>Initializes the subscribers and optional lifetime promotion callback.</summary>
+        /// <param name="subscriber">The admitting subscriber.</param>
+        /// <param name="tryRetain">Attempts to promote the resolver lifetime for a later subscriber.</param>
+        internal QueuedTranslationRequestState(
+            QueuedTranslationSubscriber subscriber,
+            Func<bool>? tryRetain)
+        {
+            this.Subscribers.Add(subscriber);
+            this.TryRetain = tryRetain;
+        }
+
+        /// <summary>Gets all callers awaiting this exact resolver generation.</summary>
+        internal List<QueuedTranslationSubscriber> Subscribers { get; } = [];
+
+        /// <summary>Gets the atomic resolver-lifetime promotion callback.</summary>
+        internal Func<bool>? TryRetain { get; }
+    }
+
     private readonly ConcurrentDictionary<string, string> translationCache = new();
-    private readonly ConcurrentDictionary<string, byte> translationInFlight = new();
+    private readonly Dictionary<string, QueuedTranslationRequestState> translationInFlight = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, DateTime> failedTranslations = new();
     private readonly ConcurrentQueue<QueuedTranslationRequest> pendingRequests = new();
     private readonly SemaphoreSlim pendingRequestsSignal = new(0);
@@ -108,6 +133,24 @@ public sealed class QueuedTranslationBroker : IDisposable
         this.warningLog = warningLog;
         this.errorLog = errorLog;
     }
+
+    /// <summary>Gets cancellation owned by the broker lifetime.</summary>
+    internal CancellationToken ShutdownToken => this.shutdownToken;
+
+    /// <summary>Gets the number of subscribers attached to active requests.</summary>
+    internal int InFlightSubscriberCount
+    {
+        get
+        {
+            lock (this.lifecycleGate)
+            {
+                return this.translationInFlight.Values.Sum(state => state.Subscribers.Count);
+            }
+        }
+    }
+
+    /// <summary>Gets the number of admitted requests waiting for the broker pump.</summary>
+    internal int PendingRequestCount => this.pendingRequests.Count;
 
     /// <summary>
     ///     Returns a cached translation if we already resolved it.
@@ -211,6 +254,66 @@ public sealed class QueuedTranslationBroker : IDisposable
         string? surfaceIdentity,
         Action<bool>? onTerminalFailure)
     {
+        return this.TryQueueCore(
+            key,
+            resolver,
+            onResolved,
+            surfaceIdentity,
+            onTerminalFailure,
+            joinExisting: false,
+            retainExisting: false,
+            tryRetainOnJoin: null);
+    }
+
+    /// <summary>Admits a request or subscribes to the matching active request.</summary>
+    /// <param name="key">The stable request identity.</param>
+    /// <param name="resolver">The provider resolver used only for a new request.</param>
+    /// <param name="onResolved">The successful cached-result callback.</param>
+    /// <param name="surfaceIdentity">The diagnostic surface identity.</param>
+    /// <param name="onTerminalFailure">The terminal failure or shutdown callback.</param>
+    /// <param name="retainExisting">Whether this subscriber keeps the active resolver alive.</param>
+    /// <param name="tryRetainOnJoin">Atomically promotes a newly admitted resolver for a retaining subscriber.</param>
+    /// <returns>The admission or subscription decision made under the lifecycle gate.</returns>
+    internal QueuedTranslationAdmission TryQueueOrJoin(
+        string key,
+        Func<Task<string>> resolver,
+        Action<string>? onResolved,
+        string? surfaceIdentity,
+        Action<bool>? onTerminalFailure,
+        bool retainExisting,
+        Func<bool> tryRetainOnJoin)
+    {
+        return this.TryQueueCore(
+            key,
+            resolver,
+            onResolved,
+            surfaceIdentity,
+            onTerminalFailure,
+            joinExisting: true,
+            retainExisting,
+            tryRetainOnJoin);
+    }
+
+    /// <summary>Admits, rejects, or joins one request under the broker lifecycle gate.</summary>
+    /// <param name="key">The stable request identity.</param>
+    /// <param name="resolver">The provider resolver used only for a new request.</param>
+    /// <param name="onResolved">The successful cached-result callback.</param>
+    /// <param name="surfaceIdentity">The diagnostic surface identity.</param>
+    /// <param name="onTerminalFailure">The terminal failure or shutdown callback.</param>
+    /// <param name="joinExisting">Whether to subscribe when the identity is already active.</param>
+    /// <param name="retainExisting">Whether this subscriber keeps the active resolver alive.</param>
+    /// <param name="tryRetainOnJoin">Atomically promotes a newly admitted resolver for a retaining subscriber.</param>
+    /// <returns>The admission decision.</returns>
+    private QueuedTranslationAdmission TryQueueCore(
+        string key,
+        Func<Task<string>> resolver,
+        Action<string>? onResolved,
+        string? surfaceIdentity,
+        Action<bool>? onTerminalFailure,
+        bool joinExisting,
+        bool retainExisting,
+        Func<bool>? tryRetainOnJoin)
+    {
         lock (this.lifecycleGate)
         {
             if (Volatile.Read(ref this.shutdownRequested) != 0)
@@ -224,17 +327,36 @@ public sealed class QueuedTranslationBroker : IDisposable
                 return QueuedTranslationAdmission.FailureCooldown;
             }
 
-            if (!this.translationInFlight.TryAdd(key, 0))
+            if (this.translationInFlight.TryGetValue(key, out var existing))
             {
-                return QueuedTranslationAdmission.AlreadyInFlight;
+                if (!joinExisting)
+                {
+                    return QueuedTranslationAdmission.AlreadyInFlight;
+                }
+
+                var retained = !retainExisting || existing.TryRetain is null || existing.TryRetain();
+                if (retained)
+                {
+                    existing.Subscribers.Add(new QueuedTranslationSubscriber(onResolved, onTerminalFailure));
+                    return QueuedTranslationAdmission.JoinedInFlight;
+                }
+
+                // Cancellation won the promotion race. Replace only the active
+                // registry entry; the cancelled request retains its subscribers
+                // and will finish independently before this successor is pumped.
+                this.translationInFlight.Remove(key);
             }
+
+            var state = new QueuedTranslationRequestState(
+                new QueuedTranslationSubscriber(onResolved, onTerminalFailure),
+                tryRetainOnJoin);
+            this.translationInFlight[key] = state;
 
             this.pendingRequests.Enqueue(
                 new QueuedTranslationRequest(
                     key,
                     resolver,
-                    onResolved,
-                    onTerminalFailure,
+                    state,
                     surfaceIdentity,
                     RateLimitAttempt: 0));
             this.pendingRequestsSignal.Release();
@@ -278,8 +400,9 @@ public sealed class QueuedTranslationBroker : IDisposable
                     }
                     catch (OperationCanceledException)
                     {
-                        this.translationInFlight.TryRemove(request.Key, out _);
-                        this.NotifyTerminalFailure(request, cancelled: true);
+                        this.NotifyTerminalFailure(
+                            this.CompleteRequest(request),
+                            cancelled: true);
                         throw;
                     }
 
@@ -295,8 +418,9 @@ public sealed class QueuedTranslationBroker : IDisposable
         {
             while (this.pendingRequests.TryDequeue(out var pending))
             {
-                this.translationInFlight.TryRemove(pending.Key, out _);
-                this.NotifyTerminalFailure(pending, cancelled: true);
+                this.NotifyTerminalFailure(
+                    this.CompleteRequest(pending),
+                    cancelled: true);
             }
 
             Interlocked.Exchange(ref this.pumpStarted, 0);
@@ -339,6 +463,8 @@ public sealed class QueuedTranslationBroker : IDisposable
     {
         var requeued = false;
         var resolved = false;
+        var cancelled = false;
+        string? resolvedText = null;
         try
         {
             using var retryScope = TranslationBrokerRateLimitRetryContext.Enter(
@@ -371,7 +497,7 @@ public sealed class QueuedTranslationBroker : IDisposable
                 this.translationCache[request.Key] = translatedText;
                 this.failedTranslations.TryRemove(request.Key, out _);
                 resolved = true;
-                request.OnResolved?.Invoke(translatedText);
+                resolvedText = translatedText;
                 return;
             }
 
@@ -382,6 +508,10 @@ public sealed class QueuedTranslationBroker : IDisposable
             this.warningLog?.Invoke(
                 $"[QueuedTranslationBroker] Translation timed out after {this.requestTimeout.TotalSeconds:F0}s for '{request.Key}'{FormatSurfaceIdentitySuffix(request.SurfaceIdentity)}.");
             this.failedTranslations[request.Key] = DateTime.UtcNow;
+        }
+        catch (OperationCanceledException)
+        {
+            cancelled = true;
         }
         catch (Exception ex) when (LooksLikeRateLimitException(ex))
         {
@@ -407,27 +537,76 @@ public sealed class QueuedTranslationBroker : IDisposable
         {
             if (!requeued)
             {
-                this.translationInFlight.TryRemove(request.Key, out _);
-                if (!resolved)
+                var subscribers = this.CompleteRequest(request);
+                if (resolved)
                 {
-                    this.NotifyTerminalFailure(request, Volatile.Read(ref this.shutdownRequested) != 0);
+                    this.NotifyResolved(subscribers, resolvedText!);
+                }
+                else
+                {
+                    this.NotifyTerminalFailure(
+                        subscribers,
+                        cancelled || Volatile.Read(ref this.shutdownRequested) != 0);
                 }
             }
         }
     }
 
-    /// <summary>Reports one terminal failure without allowing a subscriber to stop the broker pump.</summary>
-    /// <param name="request">The failed or cancelled request.</param>
-    /// <param name="cancelled">Whether broker shutdown cancelled the request.</param>
-    private void NotifyTerminalFailure(QueuedTranslationRequest request, bool cancelled)
+    /// <summary>Atomically completes one active request and captures its subscribers.</summary>
+    /// <param name="request">The exact resolver generation completing.</param>
+    /// <returns>The subscribers detached from the completed request.</returns>
+    private IReadOnlyList<QueuedTranslationSubscriber> CompleteRequest(
+        QueuedTranslationRequest request)
     {
-        try
+        lock (this.lifecycleGate)
         {
-            request.OnTerminalFailure?.Invoke(cancelled);
+            if (this.translationInFlight.TryGetValue(request.Key, out var active) &&
+                ReferenceEquals(active, request.State))
+            {
+                this.translationInFlight.Remove(request.Key);
+            }
+
+            return request.State.Subscribers;
         }
-        catch (Exception exception)
+    }
+
+    /// <summary>Reports one success without allowing a subscriber to stop the broker pump.</summary>
+    /// <param name="subscribers">The subscribers detached from the completed request.</param>
+    /// <param name="translatedText">The resolved translation.</param>
+    private void NotifyResolved(
+        IReadOnlyList<QueuedTranslationSubscriber> subscribers,
+        string translatedText)
+    {
+        foreach (var subscriber in subscribers)
         {
-            this.errorLog?.Invoke($"[QueuedTranslationBroker] Terminal callback failed: {exception.Message}");
+            try
+            {
+                subscriber.OnResolved?.Invoke(translatedText);
+            }
+            catch (Exception exception)
+            {
+                this.errorLog?.Invoke($"[QueuedTranslationBroker] Success callback failed: {exception.Message}");
+            }
+        }
+    }
+
+    /// <summary>Reports one terminal failure without allowing a subscriber to stop the broker pump.</summary>
+    /// <param name="subscribers">The subscribers detached from the failed request.</param>
+    /// <param name="cancelled">Whether broker shutdown cancelled the request.</param>
+    private void NotifyTerminalFailure(
+        IReadOnlyList<QueuedTranslationSubscriber> subscribers,
+        bool cancelled)
+    {
+        foreach (var subscriber in subscribers)
+        {
+            try
+            {
+                subscriber.OnTerminalFailure?.Invoke(cancelled);
+            }
+            catch (Exception exception)
+            {
+                this.errorLog?.Invoke($"[QueuedTranslationBroker] Terminal callback failed: {exception.Message}");
+            }
         }
     }
 

@@ -20,6 +20,115 @@ namespace Echoglossian.NativeUI.Helpers;
 /// </summary>
 internal static class ReferenceTextPrefetchOperation
 {
+    private sealed class RetainableCancellationScope : IDisposable
+    {
+        private const int BackgroundOwned = 0;
+        private const int Retained = 1;
+        private const int CancellationWon = 2;
+        private const int Disposed = 3;
+
+        private readonly CancellationTokenSource cancellation = new();
+        private readonly CancellationTokenRegistration ownerRegistration;
+        private readonly CancellationTokenRegistration shutdownRegistration;
+        private int lifetimeState;
+
+        /// <summary>Initializes cancellation that may be retained by a longer-lived subscriber.</summary>
+        /// <param name="ownerToken">The initial request owner.</param>
+        /// <param name="shutdownToken">The process-lifetime broker shutdown owner.</param>
+        /// <param name="retained">Whether the resolver is already owned by the broker lifetime.</param>
+        internal RetainableCancellationScope(
+            CancellationToken ownerToken,
+            CancellationToken shutdownToken,
+            bool retained)
+        {
+            this.lifetimeState = retained ? Retained : BackgroundOwned;
+            this.ownerRegistration = ownerToken.Register(this.CancelUnlessRetained);
+            this.shutdownRegistration = shutdownToken.Register(this.Cancel);
+        }
+
+        /// <summary>Gets the provider-facing cancellation token.</summary>
+        internal CancellationToken Token => this.cancellation.Token;
+
+        /// <summary>Atomically promotes the resolver unless cancellation already won.</summary>
+        /// <returns>True when this resolver can safely serve the retaining subscriber.</returns>
+        internal bool TryRetain()
+        {
+            while (true)
+            {
+                var state = Volatile.Read(ref this.lifetimeState);
+                if (state == Retained)
+                {
+                    return true;
+                }
+
+                if (state != BackgroundOwned)
+                {
+                    return false;
+                }
+
+                if (Interlocked.CompareExchange(
+                        ref this.lifetimeState,
+                        Retained,
+                        BackgroundOwned) == BackgroundOwned)
+                {
+                    return true;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref this.lifetimeState, Disposed) == Disposed)
+            {
+                return;
+            }
+
+            this.ownerRegistration.Dispose();
+            this.shutdownRegistration.Dispose();
+            this.CancelProvider();
+            this.cancellation.Dispose();
+        }
+
+        /// <summary>Cancels the provider for broker shutdown regardless of retention.</summary>
+        private void Cancel()
+        {
+            if (Volatile.Read(ref this.lifetimeState) != Disposed)
+            {
+                this.CancelProvider();
+            }
+        }
+
+        /// <summary>Cancels the provider only while the initial owner remains authoritative.</summary>
+        private void CancelUnlessRetained()
+        {
+            if (Interlocked.CompareExchange(
+                    ref this.lifetimeState,
+                    CancellationWon,
+                    BackgroundOwned) == BackgroundOwned)
+            {
+                this.CancelProvider();
+            }
+        }
+
+        /// <summary>Cancels provider work without letting consumer callbacks disrupt lifecycle progress.</summary>
+        private void CancelProvider()
+        {
+            try
+            {
+                this.cancellation.Cancel();
+            }
+            catch (AggregateException)
+            {
+                // Consumer cancellation callbacks cannot block generation reset or broker shutdown.
+            }
+            catch (ObjectDisposedException)
+            {
+                // Concurrent completion may dispose after the cancellation decision.
+            }
+        }
+    }
+
     /// <summary>Admits a captured operation without running DB or translation work inline.</summary>
     /// <typeparam name="TRow">The concrete canonical row type.</typeparam>
     /// <param name="writer">The process-lifetime persistence adapter.</param>
@@ -192,9 +301,13 @@ internal static class ReferenceTextPrefetchOperation
             {
                 var completion = new TaskCompletionSource<(string? Text, bool Cancelled)>(
                     TaskCreationOptions.RunContinuationsAsynchronously);
-                var brokerAdmission = broker.TryQueue(key, async () =>
+                var translationLifetime = new RetainableCancellationScope(
+                    cancellationToken,
+                    broker.ShutdownToken,
+                    priority == PersistencePriority.Interactive);
+                var brokerAdmission = broker.TryQueueOrJoin(key, async () =>
                     {
-                        var batch = await translate(fields, source, scope.TargetLanguageCode, origin, cancellationToken)
+                        var batch = await translate(fields, source, scope.TargetLanguageCode, origin, translationLifetime.Token)
                             .ConfigureAwait(false);
                         var values = fields.Select(field => new TranslationField(field.Name, batch.GetTranslation(field.Name))).ToArray();
                         if (values.Any(field => string.IsNullOrWhiteSpace(field.Text)))
@@ -204,19 +317,33 @@ internal static class ReferenceTextPrefetchOperation
 
                         return TranslationFieldEnvelopeCodec.Encode(values);
                     },
-                    value => completion.TrySetResult((value, false)),
+                    value =>
+                    {
+                        translationLifetime.Dispose();
+                        completion.TrySetResult((value, false));
+                    },
                     origin,
-                    cancelled => completion.TrySetResult((null, cancelled)));
+                    cancelled =>
+                    {
+                        translationLifetime.Dispose();
+                        completion.TrySetResult((null, cancelled));
+                    },
+                    priority == PersistencePriority.Interactive,
+                    translationLifetime.TryRetain);
+                if (brokerAdmission != QueuedTranslationAdmission.Accepted)
+                {
+                    translationLifetime.Dispose();
+                }
+
                 if (brokerAdmission == QueuedTranslationAdmission.FailureCooldown)
                 {
                     return true;
                 }
 
-                if (brokerAdmission != QueuedTranslationAdmission.Accepted)
+                if (brokerAdmission is not QueuedTranslationAdmission.Accepted and
+                    not QueuedTranslationAdmission.JoinedInFlight)
                 {
-                    // A same-key generation overlap can retry at the existing
-                    // paced tick until the broker's active request terminates.
-                    // Local canonical identity tracking suppresses normal duplicates.
+                    // Shutdown or another rejected admission remains retryable.
                     return false;
                 }
 

@@ -998,6 +998,162 @@ public class ReferenceTextPrefetchRuntimeTests
         restarted.Cancellation.Dispose();
     }
 
+    /// <summary>Overlapping background and interactive requests retain their own cancellation owners.</summary>
+    [Fact]
+    public async Task OnDemandCancellation_RegistrationResetPreservesInteractiveOperation()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var providerStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseProvider = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerCalls = 0;
+        var providerToken = CancellationToken.None;
+        async Task<TranslationFieldBatchResult> Translate(
+            IReadOnlyList<TranslationField> fields,
+            SourceClientLanguage source,
+            string target,
+            string? origin,
+            CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref providerCalls);
+            providerToken = cancellationToken;
+            providerStarted.TrySetResult();
+            await releaseProvider.Task.WaitAsync(cancellationToken);
+            return Harness.Translate(fields);
+        }
+
+        var backgroundToken = PluginEntry.ResolveReferenceTextPrefetchCancellationToken(
+            PersistencePriority.Background,
+            state.Generation.Token,
+            harness.Broker.ShutdownToken);
+        var interactiveToken = PluginEntry.ResolveReferenceTextPrefetchCancellationToken(
+            PersistencePriority.Interactive,
+            state.Generation.Token,
+            harness.Broker.ShutdownToken);
+        var background = harness.Start(
+            Harness.Payload(), Translate, backgroundToken, PersistencePriority.Background);
+        await providerStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var interactive = harness.Start(
+            Harness.Payload(), Translate, interactiveToken, PersistencePriority.Interactive);
+
+        var subscribersObserved = SpinWait.SpinUntil(
+            () => harness.Broker.InFlightSubscriberCount == 2,
+            TimeSpan.FromSeconds(2));
+        Assert.True(subscribersObserved);
+
+        state.ReplaceGeneration();
+
+        Assert.False(await background.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.False(interactive.IsCompleted);
+        Assert.False(providerToken.IsCancellationRequested);
+        releaseProvider.SetResult();
+        Assert.True(await interactive.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(1, Volatile.Read(ref providerCalls));
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>An interactive provider remains owned by broker shutdown after joining the shared runtime.</summary>
+    [Fact]
+    public async Task OnDemandCancellation_BrokerShutdownCancelsInteractiveProvider()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var providerStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerCancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task<TranslationFieldBatchResult> Translate(
+            IReadOnlyList<TranslationField> fields,
+            SourceClientLanguage source,
+            string target,
+            string? origin,
+            CancellationToken cancellationToken)
+        {
+            providerStarted.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                return Harness.Translate(fields);
+            }
+            catch (OperationCanceledException)
+            {
+                providerCancelled.TrySetResult();
+                throw;
+            }
+        }
+
+        var operation = harness.Start(
+            Harness.Payload(),
+            Translate,
+            harness.Broker.ShutdownToken,
+            PersistencePriority.Interactive);
+        await providerStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        harness.Broker.Dispose();
+
+        await providerCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.False(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+    }
+
+    /// <summary>An interactive request is re-admitted when generation cancellation wins the promotion race.</summary>
+    [Fact]
+    public async Task OnDemandCancellation_WhenGenerationWinsRace_ReadmitsInteractiveResolver()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var firstProviderStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstProviderCancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirstProvider = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerCalls = 0;
+        async Task<TranslationFieldBatchResult> Translate(
+            IReadOnlyList<TranslationField> fields,
+            SourceClientLanguage source,
+            string target,
+            string? origin,
+            CancellationToken cancellationToken)
+        {
+            if (Interlocked.Increment(ref providerCalls) == 1)
+            {
+                firstProviderStarted.TrySetResult();
+                try
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    firstProviderCancelled.TrySetResult();
+                    await releaseFirstProvider.Task;
+                    throw;
+                }
+            }
+
+            return Harness.Translate(fields);
+        }
+
+        var background = harness.Start(
+            Harness.Payload(),
+            Translate,
+            state.Generation.Token,
+            PersistencePriority.Background);
+        await firstProviderStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        state.ReplaceGeneration();
+        await firstProviderCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var interactive = harness.Start(
+            Harness.Payload(),
+            Translate,
+            harness.Broker.ShutdownToken,
+            PersistencePriority.Interactive);
+        var replacementQueued = SpinWait.SpinUntil(
+            () => harness.Broker.PendingRequestCount == 1,
+            TimeSpan.FromSeconds(2));
+        Assert.True(replacementQueued);
+
+        releaseFirstProvider.SetResult();
+
+        Assert.False(await background.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await interactive.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(2, Volatile.Read(ref providerCalls));
+        state.InvalidateGeneration();
+    }
+
     /// <summary>A cursor encountering an exact-key failure cooldown advances without repeatedly reading or translating it.</summary>
     [Fact]
     public async Task RuntimeCursor_FailureCooldown_AdvancesOnceWithoutRepeatedReads()
