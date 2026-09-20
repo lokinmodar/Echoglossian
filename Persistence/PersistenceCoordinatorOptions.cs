@@ -19,8 +19,8 @@ internal sealed class PersistenceCoordinatorOptions
   /// <param name="readerConcurrency">The maximum concurrent readers.</param>
   /// <param name="maxBatchSize">The maximum writes in one batch.</param>
   /// <param name="batchCollectionWindow">The maximum batch collection interval.</param>
-  /// <param name="maxAttempts">The maximum total write attempts.</param>
-  /// <param name="retryDelays">The delays between write attempts.</param>
+  /// <param name="maxAttempts">The maximum total read or write attempts.</param>
+  /// <param name="retryDelays">The delays between persistence attempts.</param>
   /// <param name="contextPoolSize">The maximum pooled contexts.</param>
   /// <param name="sqliteDefaultTimeoutSeconds">The SQLite default timeout.</param>
   /// <param name="shutdownTimeout">The maximum drain interval during shutdown.</param>
@@ -106,10 +106,10 @@ internal sealed class PersistenceCoordinatorOptions
   /// <summary>Gets the maximum batch collection interval.</summary>
   internal TimeSpan BatchCollectionWindow { get; }
 
-  /// <summary>Gets the maximum total write attempts.</summary>
+  /// <summary>Gets the maximum total read or write attempts.</summary>
   internal int MaxAttempts { get; }
 
-  /// <summary>Gets the delays between write attempts.</summary>
+  /// <summary>Gets the delays between persistence attempts.</summary>
   internal IReadOnlyList<TimeSpan> RetryDelays { get; }
 
   /// <summary>Gets the maximum pooled contexts.</summary>

@@ -6,21 +6,32 @@ Total findings: 225
 
 ## DB-2
 
+DB-2 runtime migration: ReferenceText Framework/addon admissions now use the shared
+asynchronous persistence coordinator. The cursor polls an asynchronously published
+completion outcome without blocking on a task. Async helper queries materialize
+with `ToListAsync` before applying the existing language/completeness ordering in
+memory; async-suffixed persistence calls are excluded from synchronous findings.
+
+All 10 baseline findings below remain: startup cache preload is deferred to DB-8,
+and the synchronous helpers remain for test/setup compatibility. No baseline
+allowances were added or removed for this migration. Line evidence below was
+refreshed after DB-2; other stages retain their previously recorded evidence.
+
 ### Cache/ReferenceTextCacheStore.cs
-- Line 55: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
-- Line 59: `sync-ef-query` - `ToList( [occurrence 1]`
+- Line 56: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 60: `sync-ef-query` - `ToList( [occurrence 1]`
 
 ### DBHelpers/ReferenceTextDbOperations.cs
-- Line 56: `persistence-helper-call` - `ReferenceTextPersistenceHelper.FindReferenceText( [occurrence 1]`
-- Line 84: `persistence-helper-call` - `ReferenceTextPersistenceHelper.InsertReferenceText( [occurrence 1]`
+- Line 57: `persistence-helper-call` - `ReferenceTextPersistenceHelper.FindReferenceText( [occurrence 1]`
+- Line 85: `persistence-helper-call` - `ReferenceTextPersistenceHelper.InsertReferenceText( [occurrence 1]`
 
 ### DBHelpers/ReferenceTextPersistenceHelper.cs
-- Line 78: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
-- Line 108: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
-- Line 115: `sync-ef-save` - `SaveChanges( [occurrence 1]`
-- Line 125: `sync-ef-save` - `SaveChanges( [occurrence 2]`
-- Line 184: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
-- Line 214: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
+- Line 80: `direct-db-context` - `new EchoglossianDbContext( [occurrence 1]`
+- Line 110: `sync-ef-query` - `FirstOrDefault( [occurrence 1]`
+- Line 117: `sync-ef-save` - `SaveChanges( [occurrence 1]`
+- Line 127: `sync-ef-save` - `SaveChanges( [occurrence 2]`
+- Line 309: `direct-db-context` - `new EchoglossianDbContext( [occurrence 2]`
+- Line 339: `sync-ef-query` - `FirstOrDefault( [occurrence 2]`
 
 ## DB-3
 
