@@ -37,6 +37,7 @@ internal sealed class QuestPlatePersistenceWriter
     internal void DisablePublication()
     {
         Interlocked.Exchange(ref this.publicationEnabled, 0);
+        _ = this.cache.AdvanceGeneration();
         this.cancellation.Cancel();
     }
 
@@ -80,7 +81,7 @@ internal sealed class QuestPlatePersistenceWriter
             {
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, this.cancellation.Token);
                 var candidates = await QuestPlatePersistencePolicy.LoadReadCandidatesAsync(context, capturedProbe, scope, linked.Token).ConfigureAwait(false);
-                return QuestPlatePersistencePolicy.SelectForRead(candidates, capturedProbe, scope)?.Clone();
+                return Echoglossian.SelectPreferredQuestPlate(candidates, capturedProbe, scope)?.Clone();
             },
             projection =>
             {
@@ -141,7 +142,7 @@ internal sealed class QuestPlatePersistenceWriter
                     }
 
                     var before = existing.Clone();
-                    QuestPlatePersistencePolicy.Merge(existing, captured);
+                    Echoglossian.MergeQuestPlateValues(existing, captured);
                     existing.UpdateFieldsAsText();
                     persisted = existing.Clone();
                     return QuestPlatePersistencePolicy.Equivalent(before, existing)
@@ -173,59 +174,23 @@ internal static class QuestPlatePersistencePolicy
     }
 
     /// <summary>Selects a row using the established QuestId, message, name order.</summary>
-    internal static QuestPlate? SelectForRead(IEnumerable<QuestPlate> candidates, QuestPlate probe, TranslationReuseScope scope)
+    internal static QuestPlate? SelectForSave(IEnumerable<QuestPlate> candidates, QuestPlate probe)
     {
         var hasQuestId = !string.IsNullOrWhiteSpace(probe.QuestId);
+        var matching = candidates.Where(row => row.TranslationEngine == probe.TranslationEngine);
         if (hasQuestId)
         {
-            var byId = SelectPreferred(candidates.Where(row => row.QuestId == probe.QuestId), probe, scope);
-            if (byId is not null)
-            {
-                return byId;
-            }
+            var byId = Echoglossian.SelectPreferredQuestPlateForSave(matching.Where(row => row.QuestId == probe.QuestId), probe);
+            if (byId is not null) return byId;
         }
 
         if (!string.IsNullOrWhiteSpace(probe.OriginalQuestMessage))
         {
-            var byMessage = SelectPreferred(candidates.Where(row => row.QuestName == probe.QuestName && row.OriginalQuestMessage == probe.OriginalQuestMessage && (!hasQuestId || string.IsNullOrEmpty(row.QuestId) || row.QuestId == probe.QuestId)), probe, scope);
-            if (byMessage is not null)
-            {
-                return byMessage;
-            }
+            var byMessage = Echoglossian.SelectPreferredQuestPlateForSave(matching.Where(row => row.QuestName == probe.QuestName && row.OriginalQuestMessage == probe.OriginalQuestMessage && (!hasQuestId || string.IsNullOrEmpty(row.QuestId) || row.QuestId == probe.QuestId)), probe);
+            if (byMessage is not null) return byMessage;
         }
 
-        return !hasQuestId && !string.IsNullOrWhiteSpace(probe.QuestName)
-            ? SelectPreferred(candidates.Where(row => row.QuestName == probe.QuestName), probe, scope)
-            : null;
-    }
-
-    internal static QuestPlate? SelectForSave(IEnumerable<QuestPlate> candidates, QuestPlate probe)
-    {
-        return candidates.Where(row => RuntimeLanguageHelper.LanguagesMatch(row.TranslationLang, probe.TranslationLang) && RuntimeLanguageHelper.LanguagesMatch(row.OriginalLang, probe.OriginalLang))
-            .OrderByDescending(row => IdentityScore(row, probe))
-            .ThenByDescending(CompletenessScore)
-            .ThenByDescending(row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
-            .ThenByDescending(row => row.Id)
-            .FirstOrDefault();
-    }
-
-    internal static void Merge(QuestPlate target, QuestPlate source)
-    {
-        target.QuestId = string.IsNullOrWhiteSpace(source.QuestId) ? target.QuestId : source.QuestId;
-        target.QuestName = string.IsNullOrWhiteSpace(source.QuestName) ? target.QuestName : source.QuestName;
-        target.OriginalQuestMessage = string.IsNullOrWhiteSpace(source.OriginalQuestMessage) ? target.OriginalQuestMessage : source.OriginalQuestMessage;
-        target.OriginalLang = string.IsNullOrWhiteSpace(source.OriginalLang) ? target.OriginalLang : source.OriginalLang;
-        target.TranslatedQuestName = string.IsNullOrWhiteSpace(source.TranslatedQuestName) ? target.TranslatedQuestName : source.TranslatedQuestName;
-        target.TranslatedQuestMessage = string.IsNullOrWhiteSpace(source.TranslatedQuestMessage) ? target.TranslatedQuestMessage : source.TranslatedQuestMessage;
-        target.TranslationLang = string.IsNullOrWhiteSpace(source.TranslationLang) ? target.TranslationLang : source.TranslationLang;
-        target.TranslationEngine = source.TranslationEngine ?? target.TranslationEngine;
-        target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion) ? target.GameVersion : source.GameVersion;
-        target.QuestTextSheetName = string.IsNullOrWhiteSpace(source.QuestTextSheetName) ? target.QuestTextSheetName : source.QuestTextSheetName;
-        target.SourceContentHash = string.IsNullOrWhiteSpace(source.SourceContentHash) ? target.SourceContentHash : source.SourceContentHash;
-        if (source.CanonicalRows.Count != 0)
-        {
-            target.MergeCanonicalPayloadFrom(source);
-        }
+        return Echoglossian.SelectPreferredQuestPlateForSave(matching.Where(row => row.QuestName == probe.QuestName && (!hasQuestId || string.IsNullOrEmpty(row.QuestId) || row.QuestId == probe.QuestId)), probe);
     }
 
     internal static bool Equivalent(QuestPlate left, QuestPlate right)

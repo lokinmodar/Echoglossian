@@ -2381,7 +2381,7 @@ public partial class Echoglossian
       var existingQuestPlate = this.TryFindQuestPlateForSave(context, questPlate);
       if (existingQuestPlate != null)
       {
-        this.MergeQuestPlateValues(existingQuestPlate, questPlate);
+        MergeQuestPlateValues(existingQuestPlate, questPlate);
         existingQuestPlate.UpdatedDate = DateTime.Now;
         existingQuestPlate.UpdateFieldsAsText();
 
@@ -2461,7 +2461,7 @@ public partial class Echoglossian
       var existingQuestPlate = this.TryFindQuestPlateForSave(context, questPlate);
       if (existingQuestPlate != null)
       {
-        this.MergeQuestPlateValues(existingQuestPlate, questPlate);
+        MergeQuestPlateValues(existingQuestPlate, questPlate);
         existingQuestPlate.UpdatedDate = DateTime.Now;
         existingQuestPlate.UpdateFieldsAsText();
 
@@ -2574,7 +2574,7 @@ public partial class Echoglossian
   /// <param name="requestedQuestPlate">The requested quest plate.</param>
   /// <param name="scope">The resolved translation reuse scope.</param>
   /// <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
-  private static QuestPlate? SelectPreferredQuestPlate(
+  internal static QuestPlate? SelectPreferredQuestPlate(
       IEnumerable<QuestPlate> candidateQuestPlates,
       QuestPlate requestedQuestPlate,
       TranslationReuseScope scope)
@@ -2660,7 +2660,7 @@ public partial class Echoglossian
   /// <param name="candidateQuestPlates">The candidate persisted quest plates.</param>
   /// <param name="requestedQuestPlate">The incoming quest plate.</param>
   /// <returns>The preferred persisted quest plate, or <see langword="null" />.</returns>
-  private static QuestPlate? SelectPreferredQuestPlateForSave(
+  internal static QuestPlate? SelectPreferredQuestPlateForSave(
       IEnumerable<QuestPlate> candidateQuestPlates,
       QuestPlate requestedQuestPlate)
   {
@@ -3381,7 +3381,7 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="target">The database record to be enriched.</param>
   /// <param name="source">The newer quest plate values.</param>
-  private void MergeQuestPlateValues(
+  internal static void MergeQuestPlateValues(
         QuestPlate target,
         QuestPlate source)
     {

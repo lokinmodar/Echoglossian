@@ -19,6 +19,20 @@ internal sealed class QuestPlateRuntimeCache
 {
     private readonly object gate = new();
     private readonly Dictionary<QuestPlateRuntimeKey, Entry> entries = [];
+    private long generation;
+
+    /// <summary>Gets the current ownership generation.</summary>
+    internal long Generation => Volatile.Read(ref this.generation);
+
+    /// <summary>Invalidates every projection and in-flight owner for reload.</summary>
+    internal long AdvanceGeneration()
+    {
+        lock (this.gate)
+        {
+            this.entries.Clear();
+            return Interlocked.Increment(ref this.generation);
+        }
+    }
 
     /// <summary>Builds the collision-safe identity for one runtime lookup.</summary>
     /// <param name="plate">The immutable lookup payload.</param>
@@ -68,7 +82,8 @@ internal sealed class QuestPlateRuntimeCache
         ArgumentNullException.ThrowIfNull(completion);
         lock (this.gate)
         {
-            if (this.entries.ContainsKey(key))
+            if (this.entries.TryGetValue(key, out var current) &&
+                (current.CooldownUntil is null || current.CooldownUntil > DateTimeOffset.UtcNow))
             {
                 return false;
             }
@@ -125,7 +140,7 @@ internal sealed class QuestPlateRuntimeCache
         {
             if (this.entries.TryGetValue(key, out var entry) && entry.Projection is null)
             {
-                _ = this.entries.Remove(key);
+                entry.CooldownUntil = DateTimeOffset.UtcNow.AddSeconds(1);
             }
         }
     }
@@ -149,6 +164,8 @@ internal sealed class QuestPlateRuntimeCache
         internal Task<QuestPlateRuntimeResult> Completion { get; } = completion;
 
         internal QuestPlate? Projection { get; set; }
+
+        internal DateTimeOffset? CooldownUntil { get; set; }
     }
 }
 
