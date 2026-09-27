@@ -229,3 +229,25 @@
   newly required `IDisposable.Dispose()`. The failure occurs in vendored
   DalaMock before Mock tests start and is unrelated to the field transport;
   this correction does not modify that vendor dependency.
+
+### Final review and lifecycle evidence
+
+- The final review corrections added bounded transient retries for coordinator
+  reads and separated interactive ReferenceText cancellation ownership from
+  the background registration generation. Same-key requests still coalesce
+  when promotion wins, while a cancellation-first race safely installs an
+  interactive successor.
+- The complete unit suite passed 1,512/1,512, the Debug solution build
+  completed with zero errors, and the synchronous database audit passed with
+  225 findings and DB-2 at 10.
+- Both PR review threads received inline replies and were resolved. The final
+  reviewer found no Critical, Important, or Minor issue in commit `11591e0`.
+- On September 26, 2026, the user tested the final Debug DLL while EventItem
+  prefetch was active. Unload completed in approximately 1.0 second, reload
+  completed in approximately 2.2 seconds, database and runtime registration
+  initialized successfully, and prefetch advanced beyond its pre-unload row.
+- The tested source commit is
+  `11591e0bca00e0ee5b62ddb55cd465673885dd73`; the DLL SHA-256 is
+  `040570BC6DF2FFEBFA73DD9854903E8BC0F206DE48B69EED321095E5258EE095`.
+- No release metadata or schema changed. The controlled DB-2 before/after
+  performance capture remains pending and is not inferred from lifecycle logs.
