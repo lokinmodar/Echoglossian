@@ -44,6 +44,17 @@ post-commit callback.
 
 Second GREEN: the same command passed 3/3.
 
+## Review fix round 1
+
+The focused test command was rerun after exposing the existing `Echoglossian`
+QuestPlate selectors and merge routine as internal shared policy. The first
+round was RED at compilation while the writer referred to the wrong enclosing
+type; after correcting the shared call sites it was GREEN, 3/3. The async read
+now invokes the exact legacy read selector and the async write invokes the
+exact legacy merge routine and save selector; cancellation advances the shared
+cache generation, and empty/failed/rejected operation entries hold a one-second
+terminal cooldown rather than immediately admitting another operation.
+
 ## Coverage
 
 - Cache miss starts one async coordinator lookup and publishes only after the
