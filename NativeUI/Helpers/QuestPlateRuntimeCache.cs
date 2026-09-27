@@ -105,10 +105,15 @@ internal sealed class QuestPlateRuntimeCache
         ArgumentNullException.ThrowIfNull(projection);
         lock (this.gate)
         {
-            if (this.entries.TryGetValue(key, out var entry))
+            if (!this.entries.TryGetValue(key, out var entry))
             {
-                entry.Projection = projection.Clone();
+                entry = new Entry(Task.FromResult(new QuestPlateRuntimeResult(
+                    PersistenceCompletionStatus.Succeeded,
+                    projection.Clone())));
+                this.entries.Add(key, entry);
             }
+
+            entry.Projection = projection.Clone();
         }
     }
 

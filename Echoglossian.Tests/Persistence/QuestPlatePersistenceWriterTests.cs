@@ -80,6 +80,44 @@ public sealed class QuestPlatePersistenceWriterTests
         Assert.Same(first.Task, completion);
     }
 
+    /// <summary>
+    ///     Ensures the coordinator-backed write merges a later translation and
+    ///     publishes the committed result to the shared projection.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_ExistingRow_MergesAndPublishesAfterCommit()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var factory = new EchoglossianDbContextRuntimeFactory(directory);
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                await context.Database.MigrateAsync();
+                context.QuestPlate.Add(CreatePlate());
+                await context.SaveChangesAsync();
+            }
+
+            await using var coordinator = new PersistenceCoordinator(factory, CreateOptions());
+            var cache = new QuestPlateRuntimeCache();
+            var writer = new QuestPlatePersistenceWriter(coordinator, cache);
+            var incoming = CreatePlate();
+            incoming.TranslatedQuestMessage = "Mensagem nova";
+            var scope = new TranslationReuseScope("en", "pt-BR", 1, true);
+
+            Assert.Equal(PersistenceAdmissionStatus.Accepted, writer.TryPersist(incoming, scope, PersistencePriority.Background, out var completion));
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, (await completion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+            Assert.True(cache.TryGet(incoming, scope, out var cached));
+            Assert.Equal("Mensagem nova", cached.TranslatedQuestMessage);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>Creates a stable canonical QuestPlate fixture.</summary>
     /// <returns>The requested quest plate.</returns>
     private static QuestPlate CreatePlate()

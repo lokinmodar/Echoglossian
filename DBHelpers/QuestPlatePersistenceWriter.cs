@@ -107,6 +107,56 @@ internal sealed class QuestPlatePersistenceWriter
             TaskScheduler.Default);
         return status;
     }
+
+    /// <summary>Attempts a non-blocking coordinator-backed QuestPlate upsert.</summary>
+    internal PersistenceAdmissionStatus TryPersist(
+        QuestPlate plate,
+        TranslationReuseScope scope,
+        PersistencePriority priority,
+        out Task<PersistenceWriteResult> completion)
+    {
+        ArgumentNullException.ThrowIfNull(plate);
+        var captured = plate.Clone();
+        var key = QuestPlateRuntimeCache.CreateKey(captured, scope);
+        QuestPlate? persisted = null;
+        return this.coordinator.TryScheduleWrite(
+            new PersistenceWriteRequest(
+                new PersistenceWorkKey("quest-plate-write", key.Value),
+                priority,
+                async (context, token) =>
+                {
+                    var candidates = await context.QuestPlate.Where(row =>
+                        row.TranslationEngine == captured.TranslationEngine &&
+                        row.GameVersion == captured.GameVersion &&
+                        ((captured.QuestId != null && row.QuestId == captured.QuestId) ||
+                         (captured.QuestName != null && row.QuestName == captured.QuestName)))
+                        .ToListAsync(token).ConfigureAwait(false);
+                    var existing = QuestPlatePersistencePolicy.SelectForSave(candidates, captured);
+                    if (existing is null)
+                    {
+                        captured.UpdateFieldsAsText();
+                        context.QuestPlate.Add(captured);
+                        persisted = captured.Clone();
+                        return PersistenceWriteMutation.ChangedResult;
+                    }
+
+                    var before = existing.Clone();
+                    QuestPlatePersistencePolicy.Merge(existing, captured);
+                    existing.UpdateFieldsAsText();
+                    persisted = existing.Clone();
+                    return QuestPlatePersistencePolicy.Equivalent(before, existing)
+                        ? PersistenceWriteMutation.UnchangedResult
+                        : PersistenceWriteMutation.ChangedResult;
+                },
+                () =>
+                {
+                    if (persisted is not null && Volatile.Read(ref this.publicationEnabled) != 0)
+                    {
+                        this.cache.Publish(key, persisted);
+                    }
+                }) { CancellationToken = this.cancellation.Token },
+            out completion);
+    }
 }
 
 /// <summary>Contains pure QuestPlate read candidate and selection policy.</summary>
@@ -147,6 +197,42 @@ internal static class QuestPlatePersistencePolicy
         return !hasQuestId && !string.IsNullOrWhiteSpace(probe.QuestName)
             ? SelectPreferred(candidates.Where(row => row.QuestName == probe.QuestName), probe, scope)
             : null;
+    }
+
+    internal static QuestPlate? SelectForSave(IEnumerable<QuestPlate> candidates, QuestPlate probe)
+    {
+        return candidates.Where(row => RuntimeLanguageHelper.LanguagesMatch(row.TranslationLang, probe.TranslationLang) && RuntimeLanguageHelper.LanguagesMatch(row.OriginalLang, probe.OriginalLang))
+            .OrderByDescending(row => IdentityScore(row, probe))
+            .ThenByDescending(CompletenessScore)
+            .ThenByDescending(row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
+            .ThenByDescending(row => row.Id)
+            .FirstOrDefault();
+    }
+
+    internal static void Merge(QuestPlate target, QuestPlate source)
+    {
+        target.QuestId = string.IsNullOrWhiteSpace(source.QuestId) ? target.QuestId : source.QuestId;
+        target.QuestName = string.IsNullOrWhiteSpace(source.QuestName) ? target.QuestName : source.QuestName;
+        target.OriginalQuestMessage = string.IsNullOrWhiteSpace(source.OriginalQuestMessage) ? target.OriginalQuestMessage : source.OriginalQuestMessage;
+        target.OriginalLang = string.IsNullOrWhiteSpace(source.OriginalLang) ? target.OriginalLang : source.OriginalLang;
+        target.TranslatedQuestName = string.IsNullOrWhiteSpace(source.TranslatedQuestName) ? target.TranslatedQuestName : source.TranslatedQuestName;
+        target.TranslatedQuestMessage = string.IsNullOrWhiteSpace(source.TranslatedQuestMessage) ? target.TranslatedQuestMessage : source.TranslatedQuestMessage;
+        target.TranslationLang = string.IsNullOrWhiteSpace(source.TranslationLang) ? target.TranslationLang : source.TranslationLang;
+        target.TranslationEngine = source.TranslationEngine ?? target.TranslationEngine;
+        target.GameVersion = string.IsNullOrWhiteSpace(source.GameVersion) ? target.GameVersion : source.GameVersion;
+        target.QuestTextSheetName = string.IsNullOrWhiteSpace(source.QuestTextSheetName) ? target.QuestTextSheetName : source.QuestTextSheetName;
+        target.SourceContentHash = string.IsNullOrWhiteSpace(source.SourceContentHash) ? target.SourceContentHash : source.SourceContentHash;
+        if (source.CanonicalRows.Count != 0)
+        {
+            target.MergeCanonicalPayloadFrom(source);
+        }
+    }
+
+    internal static bool Equivalent(QuestPlate left, QuestPlate right)
+    {
+        left.UpdateFieldsAsText();
+        right.UpdateFieldsAsText();
+        return left.QuestId == right.QuestId && left.QuestName == right.QuestName && left.OriginalQuestMessage == right.OriginalQuestMessage && left.TranslatedQuestName == right.TranslatedQuestName && left.TranslatedQuestMessage == right.TranslatedQuestMessage && left.CanonicalRowsAsText == right.CanonicalRowsAsText && left.SourceContentHash == right.SourceContentHash;
     }
 
     private static QuestPlate? SelectPreferred(IEnumerable<QuestPlate> candidates, QuestPlate probe, TranslationReuseScope scope)
