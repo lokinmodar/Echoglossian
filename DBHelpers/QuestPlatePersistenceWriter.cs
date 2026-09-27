@@ -118,7 +118,7 @@ internal sealed class QuestPlatePersistenceWriter
         var captured = plate.Clone();
         var key = QuestPlateRuntimeCache.CreateKey(captured, scope);
         var gate = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (!this.cache.TryRegisterOrJoin(key, gate, out var generation, out var existing))
+        if (!this.cache.TryRegisterWriteOrJoin(key, gate, out var generation, out var existing, out var readCompletion))
         {
             completion = existing!.ContinueWith(
                 static task => new PersistenceWriteResult(task.Result.Status, 0, null),
@@ -127,6 +127,47 @@ internal sealed class QuestPlatePersistenceWriter
                 TaskScheduler.Default);
             return PersistenceAdmissionStatus.Joined;
         }
+
+        if (readCompletion is not null)
+        {
+            completion = gate.Task.ContinueWith(
+                static task => new PersistenceWriteResult(task.Result.Status, 0, null),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+            _ = this.ScheduleDeferredPersistAsync(key, generation, gate, readCompletion, captured, priority);
+            return PersistenceAdmissionStatus.Joined;
+        }
+
+        return this.SchedulePersist(key, generation, gate, captured, priority, out completion);
+    }
+
+    private async Task ScheduleDeferredPersistAsync(
+        QuestPlateRuntimeKey key,
+        long generation,
+        TaskCompletionSource<QuestPlateRuntimeResult> gate,
+        Task<QuestPlateRuntimeResult> readCompletion,
+        QuestPlate captured,
+        PersistencePriority priority)
+    {
+        _ = await readCompletion.ConfigureAwait(false);
+        if (!this.cache.TryPromoteDeferredWrite(key, generation, gate))
+        {
+            _ = gate.TrySetResult(new QuestPlateRuntimeResult(PersistenceCompletionStatus.Cancelled, null));
+            return;
+        }
+
+        _ = this.SchedulePersist(key, generation, gate, captured, priority, out _);
+    }
+
+    private PersistenceAdmissionStatus SchedulePersist(
+        QuestPlateRuntimeKey key,
+        long generation,
+        TaskCompletionSource<QuestPlateRuntimeResult> gate,
+        QuestPlate captured,
+        PersistencePriority priority,
+        out Task<PersistenceWriteResult> completion)
+    {
 
         QuestPlate? persisted = null;
         var status = this.coordinator.TryScheduleWrite(
@@ -145,13 +186,11 @@ internal sealed class QuestPlatePersistenceWriter
                         return PersistenceWriteMutation.ChangedResult;
                     }
 
-                    var before = existing.Clone();
                     Echoglossian.MergeQuestPlateValues(existing, captured);
+                    existing.UpdatedDate = DateTime.Now;
                     existing.UpdateFieldsAsText();
                     persisted = existing.Clone();
-                    return QuestPlatePersistencePolicy.Equivalent(before, existing)
-                        ? PersistenceWriteMutation.UnchangedResult
-                        : PersistenceWriteMutation.ChangedResult;
+                    return PersistenceWriteMutation.ChangedResult;
                 },
                 () =>
                 {

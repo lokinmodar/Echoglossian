@@ -81,6 +81,115 @@ public sealed class QuestPlatePersistenceWriterTests
     }
 
     /// <summary>
+    ///     Ensures an upsert claimed while a same-key read is queued remains
+    ///     the key owner until its committed terminal result, rather than being
+    ///     discarded as an ordinary read join.
+    /// </summary>
+    [Fact]
+    public void RuntimeCache_ReadThenWrite_ClaimsOneDeferredWriteUntilTerminalCommit()
+    {
+        var cache = new QuestPlateRuntimeCache();
+        var key = QuestPlateRuntimeCache.CreateKey(CreatePlate(), new TranslationReuseScope("en", "pt-BR", 1, true));
+        var read = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var write = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Assert.True(cache.TryRegister(key, read, out var generation));
+        Assert.True(cache.TryRegisterWriteOrJoin(key, write, out var writeGeneration, out var joined, out var readCompletion));
+        Assert.Equal(generation, writeGeneration);
+        Assert.Null(joined);
+        Assert.Same(read.Task, readCompletion);
+
+        Assert.True(cache.Complete(key, generation, new QuestPlateRuntimeResult(PersistenceCompletionStatus.Succeeded, null)));
+        Assert.True(cache.TryPromoteDeferredWrite(key, generation, write));
+        Assert.True(cache.Complete(key, generation, new QuestPlateRuntimeResult(PersistenceCompletionStatus.Succeeded, CreatePlate())));
+        Assert.True(cache.TryGet(CreatePlate(), new TranslationReuseScope("en", "pt-BR", 1, true), out var projection));
+        Assert.Equal("Missão traduzida", projection.TranslatedQuestName);
+    }
+
+    /// <summary>
+    ///     Ensures a commit-only legacy merge advances and publishes the
+    ///     persisted timestamp instead of exposing an uncommitted projection.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_IdenticalExistingRow_CommitsLegacyTimestampBeforeCachePublication()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var factory = new EchoglossianDbContextRuntimeFactory(directory);
+            var stored = CreatePlate();
+            stored.UpdatedDate = DateTime.UtcNow.AddDays(-1);
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                await context.Database.MigrateAsync();
+                context.QuestPlate.Add(stored);
+                await context.SaveChangesAsync();
+            }
+
+            await using var coordinator = new PersistenceCoordinator(factory, CreateOptions());
+            var cache = new QuestPlateRuntimeCache();
+            var writer = new QuestPlatePersistenceWriter(coordinator, cache);
+            var incoming = CreatePlate();
+            var scope = new TranslationReuseScope("en", "pt-BR", 1, true);
+
+            Assert.Equal(PersistenceAdmissionStatus.Accepted, writer.TryPersist(incoming, scope, PersistencePriority.Background, out var completion));
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, (await completion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+            Assert.True(cache.TryGet(incoming, scope, out var cached));
+            Assert.True(cached.UpdatedDate > stored.UpdatedDate);
+            await using var verification = await factory.CreateDbContextAsync();
+            var persisted = await verification.QuestPlate.SingleAsync();
+            Assert.Equal(persisted.UpdatedDate, cached.UpdatedDate);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    ///     Ensures a write arriving behind a same-key read is serialized through
+    ///     the registry and persists its requested translation after the read's
+    ///     terminal miss.
+    /// </summary>
+    [Fact]
+    public async Task TryFind_ThenTryPersist_SameKey_CommitsDeferredUpsert()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var factory = new EchoglossianDbContextRuntimeFactory(directory);
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                await context.Database.MigrateAsync();
+            }
+
+            await using var coordinator = new PersistenceCoordinator(factory, CreateOptions());
+            var cache = new QuestPlateRuntimeCache();
+            var writer = new QuestPlatePersistenceWriter(coordinator, cache);
+            var incoming = CreatePlate();
+            incoming.TranslatedQuestMessage = "Persistida após leitura";
+            var scope = new TranslationReuseScope("en", "pt-BR", 1, true);
+
+            Assert.Equal(PersistenceAdmissionStatus.Accepted, writer.TryFind(incoming, scope, PersistencePriority.Background, out var read));
+            Assert.Equal(PersistenceAdmissionStatus.Joined, writer.TryPersist(incoming, scope, PersistencePriority.Background, out var write));
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, (await read.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, (await write.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+            await using var verification = await factory.CreateDbContextAsync();
+            Assert.Equal("Persistida após leitura", (await verification.QuestPlate.SingleAsync()).TranslatedQuestMessage);
+            Assert.True(cache.TryGet(incoming, scope, out var cached));
+            Assert.Equal("Persistida após leitura", cached.TranslatedQuestMessage);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
     ///     Ensures a terminal empty operation blocks frame-style retry only until
     ///     the injected cooldown clock expires.
     /// </summary>

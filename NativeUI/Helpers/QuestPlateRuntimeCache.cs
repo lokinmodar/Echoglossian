@@ -134,6 +134,68 @@ internal sealed class QuestPlateRuntimeCache
         }
     }
 
+    /// <summary>Atomically registers a write, joins an existing write, or claims a deferred write after a read.</summary>
+    internal bool TryRegisterWriteOrJoin(
+        QuestPlateRuntimeKey key,
+        TaskCompletionSource<QuestPlateRuntimeResult> completionSource,
+        out long operationGeneration,
+        out Task<QuestPlateRuntimeResult>? joinedCompletion,
+        out Task<QuestPlateRuntimeResult>? readCompletion)
+    {
+        ArgumentNullException.ThrowIfNull(completionSource);
+        lock (this.gate)
+        {
+            operationGeneration = this.generation;
+            if (!this.entries.TryGetValue(key, out var current) ||
+                (current.Projection is null && current.CooldownUntil is not null && current.CooldownUntil <= this.utcNow()))
+            {
+                _ = this.entries.Remove(key);
+                this.entries[key] = new Entry(completionSource, operationGeneration, isWrite: true);
+                joinedCompletion = null;
+                readCompletion = null;
+                return true;
+            }
+
+            if (current.IsWrite)
+            {
+                joinedCompletion = current.Completion;
+                readCompletion = null;
+                return false;
+            }
+
+            if (current.DeferredWriteCompletion is not null)
+            {
+                joinedCompletion = current.DeferredWriteCompletion.Task;
+                readCompletion = null;
+                return false;
+            }
+
+            current.DeferredWriteCompletion = completionSource;
+            joinedCompletion = null;
+            readCompletion = current.Completion;
+            return true;
+        }
+    }
+
+    /// <summary>Promotes a previously claimed deferred write after its read is terminal.</summary>
+    internal bool TryPromoteDeferredWrite(
+        QuestPlateRuntimeKey key,
+        long operationGeneration,
+        TaskCompletionSource<QuestPlateRuntimeResult> completionSource)
+    {
+        lock (this.gate)
+        {
+            if (this.generation != operationGeneration || !this.entries.TryGetValue(key, out var current) ||
+                current.Generation != operationGeneration || current.DeferredWriteCompletion != completionSource)
+            {
+                return false;
+            }
+
+            this.entries[key] = new Entry(completionSource, operationGeneration, isWrite: true);
+            return true;
+        }
+    }
+
     private bool TryRegisterCore(
         QuestPlateRuntimeKey key,
         Task<QuestPlateRuntimeResult> completion,
@@ -280,11 +342,12 @@ internal sealed class QuestPlateRuntimeCache
             this.Generation = generation;
         }
 
-        internal Entry(TaskCompletionSource<QuestPlateRuntimeResult> completionSource, long generation)
+        internal Entry(TaskCompletionSource<QuestPlateRuntimeResult> completionSource, long generation, bool isWrite = false)
         {
             this.completionSource = completionSource;
             this.Completion = completionSource.Task;
             this.Generation = generation;
+            this.IsWrite = isWrite;
         }
 
         internal Task<QuestPlateRuntimeResult> Completion { get; }
@@ -292,6 +355,10 @@ internal sealed class QuestPlateRuntimeCache
         internal QuestPlate? Projection { get; set; }
 
         internal long Generation { get; }
+
+        internal bool IsWrite { get; }
+
+        internal TaskCompletionSource<QuestPlateRuntimeResult>? DeferredWriteCompletion { get; set; }
 
         internal DateTimeOffset? CooldownUntil { get; set; }
 
