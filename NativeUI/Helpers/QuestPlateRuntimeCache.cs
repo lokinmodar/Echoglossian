@@ -34,6 +34,9 @@ internal sealed class QuestPlateRuntimeCache
         }
     }
 
+    /// <summary>Gets whether an operation still belongs to the active generation.</summary>
+    internal bool IsCurrentGeneration(long operationGeneration) => this.Generation == operationGeneration;
+
     /// <summary>Builds the collision-safe identity for one runtime lookup.</summary>
     /// <param name="plate">The immutable lookup payload.</param>
     /// <param name="scope">The captured translation reuse scope.</param>
@@ -82,10 +85,14 @@ internal sealed class QuestPlateRuntimeCache
         ArgumentNullException.ThrowIfNull(completion);
         lock (this.gate)
         {
-            if (this.entries.TryGetValue(key, out var current) &&
-                (current.CooldownUntil is null || current.CooldownUntil > DateTimeOffset.UtcNow))
+            if (this.entries.TryGetValue(key, out var current))
             {
-                return false;
+                if (current.CooldownUntil is null || current.CooldownUntil > DateTimeOffset.UtcNow)
+                {
+                    return false;
+                }
+
+                _ = this.entries.Remove(key);
             }
 
             this.entries.Add(key, new Entry(completion));

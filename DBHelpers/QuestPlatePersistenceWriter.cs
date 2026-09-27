@@ -55,6 +55,7 @@ internal sealed class QuestPlatePersistenceWriter
     {
         ArgumentNullException.ThrowIfNull(probe);
         var capturedProbe = probe.Clone();
+        var generation = this.cache.Generation;
         var key = QuestPlateRuntimeCache.CreateKey(capturedProbe, scope);
         if (this.cache.TryGet(capturedProbe, scope, out var cached))
         {
@@ -85,7 +86,7 @@ internal sealed class QuestPlatePersistenceWriter
             },
             projection =>
             {
-                if (projection is not null && Volatile.Read(ref this.publicationEnabled) != 0)
+                if (projection is not null && Volatile.Read(ref this.publicationEnabled) != 0 && this.cache.IsCurrentGeneration(generation))
                 {
                     this.cache.Publish(key, projection);
                 }
@@ -97,6 +98,7 @@ internal sealed class QuestPlatePersistenceWriter
             {
                 var result = task.Result;
                 var projection = result.Status == PersistenceCompletionStatus.Succeeded ? result.Value?.Clone() : null;
+                if (!this.cache.IsCurrentGeneration(generation)) return;
                 gate.TrySetResult(new QuestPlateRuntimeResult(result.Status, projection));
                 if (projection is null)
                 {
@@ -118,6 +120,7 @@ internal sealed class QuestPlatePersistenceWriter
     {
         ArgumentNullException.ThrowIfNull(plate);
         var captured = plate.Clone();
+        var generation = this.cache.Generation;
         var key = QuestPlateRuntimeCache.CreateKey(captured, scope);
         QuestPlate? persisted = null;
         return this.coordinator.TryScheduleWrite(
@@ -151,7 +154,7 @@ internal sealed class QuestPlatePersistenceWriter
                 },
                 () =>
                 {
-                    if (persisted is not null && Volatile.Read(ref this.publicationEnabled) != 0)
+                    if (persisted is not null && Volatile.Read(ref this.publicationEnabled) != 0 && this.cache.IsCurrentGeneration(generation))
                     {
                         this.cache.Publish(key, persisted);
                     }
@@ -197,7 +200,7 @@ internal static class QuestPlatePersistencePolicy
     {
         left.UpdateFieldsAsText();
         right.UpdateFieldsAsText();
-        return left.QuestId == right.QuestId && left.QuestName == right.QuestName && left.OriginalQuestMessage == right.OriginalQuestMessage && left.TranslatedQuestName == right.TranslatedQuestName && left.TranslatedQuestMessage == right.TranslatedQuestMessage && left.CanonicalRowsAsText == right.CanonicalRowsAsText && left.SourceContentHash == right.SourceContentHash;
+        return left.QuestId == right.QuestId && left.QuestName == right.QuestName && left.OriginalQuestMessage == right.OriginalQuestMessage && left.OriginalLang == right.OriginalLang && left.TranslatedQuestName == right.TranslatedQuestName && left.TranslatedQuestMessage == right.TranslatedQuestMessage && left.TranslationLang == right.TranslationLang && left.TranslationEngine == right.TranslationEngine && left.GameVersion == right.GameVersion && left.QuestTextSheetName == right.QuestTextSheetName && left.SourceContentHash == right.SourceContentHash && left.CanonicalRowsAsText == right.CanonicalRowsAsText && left.ObjectivesAsText == right.ObjectivesAsText && left.TranslatedObjectivesAsText == right.TranslatedObjectivesAsText && left.SummariesAsText == right.SummariesAsText && left.TranslatedSummariesAsText == right.TranslatedSummariesAsText && left.SystemRowsAsText == right.SystemRowsAsText && left.TranslatedSystemRowsAsText == right.TranslatedSystemRowsAsText;
     }
 
     private static QuestPlate? SelectPreferred(IEnumerable<QuestPlate> candidates, QuestPlate probe, TranslationReuseScope scope)
