@@ -136,7 +136,7 @@ internal sealed class QuestPlateRuntimeCache
             {
                 entry = new Entry(Task.FromResult(new QuestPlateRuntimeResult(
                     PersistenceCompletionStatus.Succeeded,
-                    projection.Clone()), operationGeneration);
+                    projection.Clone())), operationGeneration);
                 this.entries.Add(key, entry);
             }
 
