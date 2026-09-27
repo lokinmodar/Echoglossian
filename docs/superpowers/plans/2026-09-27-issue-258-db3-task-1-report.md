@@ -44,6 +44,23 @@ post-commit callback.
 
 Second GREEN: the same command passed 3/3.
 
+## Review fix round 5
+
+The runtime entry now treats a reserved deferred writer as active in-flight
+ownership, even after its preceding read reaches an empty terminal cooldown.
+All admission and completion lookup paths preserve that entry until the
+generation-qualified deferred write is promoted and reaches its own terminal
+completion (or the cache generation is explicitly advanced). This prevents a
+late continuation from losing an already accepted persistence mutation.
+
+RED used the focused test command above and failed at
+`RuntimeCache_DeferredWrite_SurvivesReadCooldownUntilPromotion`: an expired
+read cooldown admitted a competing lookup by removing the entry. GREEN used
+the same command after the registry guard; 10/10 focused tests passed. The new
+deterministic clock regression completes an empty read, advances past the
+cooldown, exercises competing lookup and write admission, then verifies the
+original deferred writer promotes and completes its committed projection.
+
 ## Review fix round 1
 
 The focused test command was rerun after exposing the existing `Echoglossian`

@@ -117,7 +117,7 @@ internal sealed class QuestPlateRuntimeCache
             operationGeneration = this.generation;
             if (this.entries.TryGetValue(key, out var current))
             {
-                if (current.Projection is null && current.CooldownUntil is not null && current.CooldownUntil <= this.utcNow())
+                if (current.Projection is null && current.DeferredWriteCompletion is null && current.CooldownUntil is not null && current.CooldownUntil <= this.utcNow())
                 {
                     _ = this.entries.Remove(key);
                 }
@@ -147,7 +147,7 @@ internal sealed class QuestPlateRuntimeCache
         {
             operationGeneration = this.generation;
             if (!this.entries.TryGetValue(key, out var current) ||
-                (current.Projection is null && current.CooldownUntil is not null && current.CooldownUntil <= this.utcNow()))
+                (current.Projection is null && current.DeferredWriteCompletion is null && current.CooldownUntil is not null && current.CooldownUntil <= this.utcNow()))
             {
                 _ = this.entries.Remove(key);
                 this.entries[key] = new Entry(completionSource, operationGeneration, isWrite: true);
@@ -207,7 +207,7 @@ internal sealed class QuestPlateRuntimeCache
             operationGeneration = this.generation;
             if (this.entries.TryGetValue(key, out var current))
             {
-                if (current.CooldownUntil is null || current.CooldownUntil > this.utcNow())
+                if (current.DeferredWriteCompletion is not null || current.CooldownUntil is null || current.CooldownUntil > this.utcNow())
                 {
                     return false;
                 }
@@ -230,7 +230,7 @@ internal sealed class QuestPlateRuntimeCache
         {
             if (this.entries.TryGetValue(key, out var entry))
             {
-                if (entry.Projection is null && entry.CooldownUntil is not null && entry.CooldownUntil <= this.utcNow())
+                if (entry.Projection is null && entry.DeferredWriteCompletion is null && entry.CooldownUntil is not null && entry.CooldownUntil <= this.utcNow())
                 {
                     _ = this.entries.Remove(key);
                     completion = null!;

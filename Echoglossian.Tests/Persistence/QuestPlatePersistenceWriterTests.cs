@@ -107,6 +107,42 @@ public sealed class QuestPlatePersistenceWriterTests
     }
 
     /// <summary>
+    ///     Ensures a deferred write remains owned after its read terminal
+    ///     cooldown expires, so a competing lookup cannot evict it before the
+    ///     deferred coordinator write is promoted and completed.
+    /// </summary>
+    [Fact]
+    public async Task RuntimeCache_DeferredWrite_SurvivesReadCooldownUntilPromotion()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var cache = new QuestPlateRuntimeCache(() => now, TimeSpan.FromSeconds(1));
+        var key = QuestPlateRuntimeCache.CreateKey(CreatePlate(), new TranslationReuseScope("en", "pt-BR", 1, true));
+        var read = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var write = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Assert.True(cache.TryRegister(key, read, out var generation));
+        Assert.True(cache.TryRegisterWriteOrJoin(key, write, out _, out var joinedWrite, out var readCompletion));
+        Assert.Null(joinedWrite);
+        Assert.Same(read.Task, readCompletion);
+        Assert.True(cache.Complete(key, generation, new QuestPlateRuntimeResult(PersistenceCompletionStatus.Succeeded, null)));
+
+        now = now.AddSeconds(1);
+        var competingLookup = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.False(cache.TryRegisterOrJoin(key, competingLookup, out _, out var joinedLookup));
+        Assert.Same(read.Task, joinedLookup);
+        var competingWrite = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.False(cache.TryRegisterWriteOrJoin(key, competingWrite, out _, out var joinedDeferredWrite, out _));
+        Assert.Same(write.Task, joinedDeferredWrite);
+
+        Assert.True(cache.TryPromoteDeferredWrite(key, generation, write));
+        var committed = CreatePlate();
+        Assert.True(cache.Complete(key, generation, new QuestPlateRuntimeResult(PersistenceCompletionStatus.Succeeded, committed)));
+        Assert.Equal(PersistenceCompletionStatus.Succeeded, (await write.Task).Status);
+        Assert.True(cache.TryGet(committed, new TranslationReuseScope("en", "pt-BR", 1, true), out var projection));
+        Assert.Equal(committed.TranslatedQuestName, projection.TranslatedQuestName);
+    }
+
+    /// <summary>
     ///     Ensures a commit-only legacy merge advances and publishes the
     ///     persisted timestamp instead of exposing an uncommitted projection.
     /// </summary>
