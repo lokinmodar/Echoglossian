@@ -10,6 +10,62 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-01-issue-258-async-persistence-and-translation-toggle-design.md`
 
+## Execution Authority Addendum
+
+This root-authored addendum is authoritative for the remaining execution and supersedes any earlier ambiguity in the task steps.
+
+### Committed projection contract
+
+The single plugin-lifetime `QuestPlateRuntimeCache` must expose five observable states to callback code:
+
+- `Hit`: a defensive managed copy of a row published after a successful read or committed/unchanged write;
+- `Pending`: the same collision-safe key is queued, processing, or already claimed by the coordinator;
+- `ConfirmedMiss`: a successful query returned no compatible row and its bounded miss TTL is active;
+- `Cooldown`: admission rejection, query/write failure, cancellation, or terminal/empty translation recently failed;
+- `NotCached`: no current state, so one non-blocking read may be admitted.
+
+Confirmed DB misses and operational failures are different states. A rejection/failure must never be cached as “not found.” Clone on publish and on retrieval so consumers cannot mutate cache-owned `QuestPlate` data. The collision-safe identity includes lookup kind, QuestId/name/message fallback identity, source-content hash, normalized source/target languages, and conditional engine policy/value.
+
+### Accepted-quest terminal ownership
+
+`AcceptedQuestPrefetchRequestQueue` is a synchronized state machine, not only a FIFO:
+
+```text
+absent -> queued -> processing -> success(remove)
+                              -> failure/empty/rejection -> cooldown -> absent
+```
+
+- `TryDequeue` transitions to `processing` without releasing the quest key.
+- Duplicate sources merge while queued or processing.
+- A later ToDoList duplicate promotes persistence priority to `Interactive`; scan-only work remains `Background`.
+- `Complete` is the only normal terminal transition and runs only after canonical lookup/upsert, every accepted or joined broker subscription, and every resulting persistence completion is terminal.
+- Clearing/replacing a generation cancels owned work and prevents stale cache or queue-state publication.
+- Use `QueuedTranslationBroker.TryQueueOrJoin` (through a narrow adapter if needed) so an in-flight broker request has a terminal callback. Do not create another translation queue.
+
+Within one quest, admit missing translation work in this order: title, visible objective rows, current message, summary rows, then system rows. This is how interactive TODO content precedes background enrichment while still using the shared broker.
+
+### ToDoList callback contract
+
+`TryResolveVisibleQuestEntries` and `TryResolveToDoListFallbackQuestTitle` may only consume the cache-first dependency and submit non-blocking interactive work. They must not call `FindQuestPlate`, `FindQuestPlateByName`, `InsertQuestPlate`, `UpdateQuestPlate`, `.Result`, `.Wait()`, or `GetAwaiter().GetResult()`. Every non-hit state preserves original title/objective text and the existing presentation retry cadence; the cache state prevents per-frame DB admission.
+
+### Scope and release gate
+
+- Other quest handlers retain their current delegates in DB-3; do not broaden this PR into Journal, AreaMap, ScenarioTree, RecommendList, or other surfaces.
+- No schema migration, translation toggle/button, DTR work, DB-4 work, release metadata, tag, manifest change, merge, or release.
+- The executor stops after pushing the branch, opening the PR to `v4-series`, and reporting the exact Debug DLL path plus SHA-256.
+- The user must test that exact DLL before any future release consideration. A release is allowed only after a separate explicit user request.
+
+### Commit boundaries
+
+Keep at most four behavioral commits, plus narrowly justified review fixes/evidence:
+
+1. `perf(#258): add async QuestPlate persistence`
+2. `perf(#258): make accepted quest prefetch async`
+3. `perf(#258): make ToDoList QuestPlate cache-first`
+4. `docs(#258): record DB-3 validation evidence` (omit if there is no legitimate evidence delta)
+
+Push every validated stable commit. Resolve PR conversations only after the correction is committed and validated. Do not request a release review, merge, or release.
+
 ## Global Constraints
 
 - Begin from `77949329c2671f353585763159bcec4d433ef983`; preserve schema, persistence compatibility, canonical QuestPlate identity, lookup order, source-hash and cross-version reuse.
