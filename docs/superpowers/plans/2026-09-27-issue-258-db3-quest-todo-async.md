@@ -19,6 +19,9 @@
 - Retain queued and processing/in-flight deduplication until a terminal result or cooldown. Rejection, empty result, and failure receive a bounded cooldown rather than frame/tick retry.
 - Visible TODO objectives are interactive work and precede summary/system text; background accepted-quest prefetch must honor existing bounded admission.
 - Cache entries are projections: publish only after an async read succeeds or a coordinator-backed transaction commits. The database remains authoritative.
+- Introduce one `QuestPlateRuntimeCache` as the domain's shared projection and state registry, not as a second queue: its collision-safe canonical key owns a committed immutable projection, scheduled/processing/in-flight task, terminal cooldown, and generation. It releases the key only after an observed terminal completion or an explicit cooldown expiry.
+- The registry must join a same-key request even after the coordinator writer has claimed it. It delegates all actual I/O/admission to `PersistenceCoordinator`; it may not hold work items, run EF, or become an alternative persistence path.
+- Extract the existing QuestPlate candidate-selection, merge, and identity policy into pure helpers consumed by the legacy test/design-time entry points and the async adapter. Background code must not call Lumina, native UI, ImGui clipboard, addon, pointer, or game-thread APIs.
 - Do not add a migration/schema change. If one becomes necessary, stop for a separate decision.
 - Do not change global translation toggle, DTR, broker DB-4 work, release metadata, tags, manifests, or publishing.
 - Leave `Echoglossian.xml` unstaged unless a deliberately generated and validated source change requires it.
@@ -37,6 +40,7 @@
 
 **Files:**
 - Create: `DBHelpers/QuestPlatePersistenceWriter.cs`
+- Create: `NativeUI/Helpers/QuestPlateRuntimeCache.cs`
 - Modify: `DBHelpers/DbOperations.cs`
 - Modify: existing QuestPlate cache/projection helper(s) discovered in the current runtime
 - Test: `Echoglossian.Tests/Persistence/QuestPlatePersistenceWriterTests.cs`
@@ -44,12 +48,12 @@
 
 **Interfaces:**
 - Consumes: `IPersistenceCoordinator`, existing `TranslationReuseScope`, current QuestPlate selection/merge semantics, and immutable formatted QuestPlate data.
-- Produces: a non-blocking cache-first scheduling API returning committed-cache state only; coordinator work completes with an immutable projection or terminal result.
+- Produces: `QuestPlateRuntimeCache` collision-safe immutable projection/state API and a non-blocking cache-first scheduling API. The registry joins queued, processing, and claimed coordinator work for one canonical key; coordinator work completes with an immutable projection or terminal result.
 
-- [ ] **Step 1: Write failing real-SQLite tests** for cache-hit/miss lookup scheduling, exact existing QuestId/message/name fallback order, same-key queued and claimed-operation coalescing, bounded admission rejection, cancellation, source-hash/version reuse, unchanged merge suppression, and read/commit-before-cache publication.
+- [ ] **Step 1: Write failing pure-policy and real-SQLite tests** for cache-hit/miss lookup scheduling, exact existing QuestId/message/name fallback order, same-key queued, processing, and claimed-operation coalescing, bounded admission rejection, cancellation, source-hash/version reuse, unchanged merge suppression, and read/commit-before-cache publication. Assert that no worker path invokes Lumina/native/UI/clipboard behavior.
 - [ ] **Step 2: Run the focused test class serially and verify RED** because no asynchronous QuestPlate adapter/projection contract exists.
-- [ ] **Step 3: Implement the minimal `QuestPlatePersistenceWriter`** over the existing coordinator. Use short-lived contexts and EF async materialization/save only; preserve selection and merge behavior, publish immutable cache projections after success/commit, and retain terminal cooldown state without adding schema.
-- [ ] **Step 4: Replace runtime-facing synchronous QuestPlate APIs only where a cache-first equivalent is now consumed**; retain legacy/test/design-time APIs that are outside DB-3 callbacks only if the audit allows them.
+- [ ] **Step 3: Extract pure QuestPlate lookup/merge/identity policy and implement `QuestPlatePersistenceWriter` plus `QuestPlateRuntimeCache`** over the existing coordinator. Use short-lived contexts and EF async materialization/save only; preserve selection and merge behavior, disable clipboard/UI side effects on the worker path, publish immutable cache projections after success/commit, and retain terminal cooldown state without adding schema.
+- [ ] **Step 4: Replace every callback-reachable QuestPlate find/insert/update in accepted-prefetch and ToDoList paths with cache-first dependencies.** Retain legacy/test/design-time APIs only where they are demonstrably outside DB-3 runtime callbacks and audit-allowed; preserve static broker/source-scope test contracts or migrate them explicitly to the new dependency contract.
 - [ ] **Step 5: Run focused persistence and lookup regressions serially, then commit** as `perf(#258): add async QuestPlate persistence`.
 
 ### Task 2: Accepted-quest prefetch scheduling and lifecycle
@@ -68,7 +72,7 @@
 - [ ] **Step 1: Write failing tests** that a Framework/addon callback schedules immutable requests without EF/SQLite, deduplicates the same canonical key while queued and after dequeue, honors backpressure/rejection, prioritizes visible TODO objectives over summary/system candidates, and never sends native pointers across threads.
 - [ ] **Step 2: Add RED tests for failure, empty translation, cancellation, unload/reload/restart generation replacement, and no stale publication after cancellation.**
 - [ ] **Step 3: Run the focused tests serially and verify RED** against the current synchronous/dequeue-removal behavior.
-- [ ] **Step 4: Implement the smallest queue/runtime adaptation** that captures managed snapshots on the game thread, schedules coordinator-backed lookup/persistence and existing broker work without awaiting, retains dedupe ownership through terminal completion/cooldown, and uses the existing lifetime cancellation ownership.
+- [ ] **Step 4: Implement the smallest queue/runtime adaptation** that captures managed snapshots on the game thread, schedules coordinator-backed lookup/persistence and existing broker work without awaiting, retains dedupe ownership through terminal completion/cooldown, and uses the existing lifetime cancellation ownership. Replace all `FindQuestPlate`, `FindQuestPlateByName`, `InsertQuestPlate`, and `UpdateQuestPlate` callbacks passed through the prefetch operation entry.
 - [ ] **Step 5: Run focused tests and commit** as `perf(#258): schedule accepted quest prefetch asynchronously`.
 
 ### Task 3: ToDoList cache-first handler migration
@@ -102,3 +106,4 @@
 
 - The initial audit inventory has no direct `ToDoList`/QuestPlate runtime entry at the DB-3 baseline; audit changes are evidence-driven and must not remove the two DB-3 `QuestProbeCommandHelpers` development-command findings unless this scope actually migrates them.
 - The requested implementation method is subagent-driven: maintain a task ledger under `docs/superpowers/plans/`, dispatch one implementer and one independent reviewer per task, and finish with a separate whole-branch review.
+- Critical interface review (2026-09-27): Task 1 owns the single QuestPlate projection/state registry and pure policy extraction; Task 2 and Task 3 must consume it rather than duplicate state. This revision resolves the pre-implementation blockers recorded in `docs/superpowers/plans/2026-09-27-issue-258-db3-plan-interface-review.md`.
