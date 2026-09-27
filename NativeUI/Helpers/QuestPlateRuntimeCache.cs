@@ -95,7 +95,7 @@ internal sealed class QuestPlateRuntimeCache
                 _ = this.entries.Remove(key);
             }
 
-            this.entries.Add(key, new Entry(completion));
+            this.entries.Add(key, new Entry(completion, this.Generation));
             return true;
         }
     }
@@ -122,30 +122,41 @@ internal sealed class QuestPlateRuntimeCache
     /// <summary>Publishes a projection after its database operation succeeds.</summary>
     /// <param name="key">The operation key.</param>
     /// <param name="projection">The completed projection.</param>
-    internal void Publish(QuestPlateRuntimeKey key, QuestPlate projection)
+    internal bool Publish(QuestPlateRuntimeKey key, long operationGeneration, QuestPlate projection)
     {
         ArgumentNullException.ThrowIfNull(projection);
         lock (this.gate)
         {
+            if (this.Generation != operationGeneration)
+            {
+                return false;
+            }
+
             if (!this.entries.TryGetValue(key, out var entry))
             {
                 entry = new Entry(Task.FromResult(new QuestPlateRuntimeResult(
                     PersistenceCompletionStatus.Succeeded,
-                    projection.Clone())));
+                    projection.Clone()), operationGeneration);
                 this.entries.Add(key, entry);
             }
 
+            if (entry.Generation != operationGeneration)
+            {
+                return false;
+            }
+
             entry.Projection = projection.Clone();
+            return true;
         }
     }
 
     /// <summary>Removes a non-successful operation so a later cooldown owner can retry.</summary>
     /// <param name="key">The terminal operation key.</param>
-    internal void RemoveOperation(QuestPlateRuntimeKey key)
+    internal void RemoveOperation(QuestPlateRuntimeKey key, long operationGeneration)
     {
         lock (this.gate)
         {
-            if (this.entries.TryGetValue(key, out var entry) && entry.Projection is null)
+            if (this.Generation == operationGeneration && this.entries.TryGetValue(key, out var entry) && entry.Generation == operationGeneration && entry.Projection is null)
             {
                 entry.CooldownUntil = DateTimeOffset.UtcNow.AddSeconds(1);
             }
@@ -166,11 +177,13 @@ internal sealed class QuestPlateRuntimeCache
         return builder.ToString();
     }
 
-    private sealed class Entry(Task<QuestPlateRuntimeResult> completion)
+    private sealed class Entry(Task<QuestPlateRuntimeResult> completion, long generation)
     {
         internal Task<QuestPlateRuntimeResult> Completion { get; } = completion;
 
         internal QuestPlate? Projection { get; set; }
+
+        internal long Generation { get; } = generation;
 
         internal DateTimeOffset? CooldownUntil { get; set; }
     }

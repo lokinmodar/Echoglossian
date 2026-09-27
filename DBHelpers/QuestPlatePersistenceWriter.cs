@@ -86,9 +86,9 @@ internal sealed class QuestPlatePersistenceWriter
             },
             projection =>
             {
-                if (projection is not null && Volatile.Read(ref this.publicationEnabled) != 0 && this.cache.IsCurrentGeneration(generation))
+                if (projection is not null && Volatile.Read(ref this.publicationEnabled) != 0)
                 {
-                    this.cache.Publish(key, projection);
+                    _ = this.cache.Publish(key, generation, projection);
                 }
             },
             out completion);
@@ -98,11 +98,10 @@ internal sealed class QuestPlatePersistenceWriter
             {
                 var result = task.Result;
                 var projection = result.Status == PersistenceCompletionStatus.Succeeded ? result.Value?.Clone() : null;
-                if (!this.cache.IsCurrentGeneration(generation)) return;
                 gate.TrySetResult(new QuestPlateRuntimeResult(result.Status, projection));
                 if (projection is null)
                 {
-                    this.cache.RemoveOperation(key);
+                    this.cache.RemoveOperation(key, generation);
                 }
             },
             CancellationToken.None,
@@ -154,9 +153,9 @@ internal sealed class QuestPlatePersistenceWriter
                 },
                 () =>
                 {
-                    if (persisted is not null && Volatile.Read(ref this.publicationEnabled) != 0 && this.cache.IsCurrentGeneration(generation))
+                    if (persisted is not null && Volatile.Read(ref this.publicationEnabled) != 0)
                     {
-                        this.cache.Publish(key, persisted);
+                        _ = this.cache.Publish(key, generation, persisted);
                     }
                 }) { CancellationToken = this.cancellation.Token },
             out completion);
