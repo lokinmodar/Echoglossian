@@ -134,6 +134,49 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     }
 
     /// <summary>
+    /// Ensures the accepted-quest worker uses the committed async QuestPlate
+    /// projection rather than invoking the legacy synchronous database delegates.
+    /// </summary>
+    [Fact]
+    public void ProcessAcceptedQuestPrefetchWorkItem_UsesCacheFirstQuestPlateScheduling()
+    {
+        var source = ReadContractSource(
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs");
+        var methodBody = ExtractMethodBody(
+            source,
+            "private void ProcessAcceptedQuestPrefetchWorkItem(");
+
+        Assert.Contains("this.ScheduleAcceptedQuestPrefetchQuestPlate", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("this.FindQuestPlate", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("this.InsertQuestPlate", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("this.UpdateQuestPlate", methodBody, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures visible TODO objective work is admitted before summary and
+    /// system enrichment for the same accepted quest.
+    /// </summary>
+    [Fact]
+    public void ProcessAcceptedQuestPrefetchWorkItem_PrioritizesObjectivesBeforeSummaryAndSystemRows()
+    {
+        var source = ReadContractSource(
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs");
+        var methodBody = ExtractMethodBody(
+            source,
+            "private void StartAcceptedQuestPrefetchTranslations(");
+
+        var objectives = methodBody.IndexOf("this.PrefetchAcceptedQuestObjectives(", StringComparison.Ordinal);
+        var summaries = methodBody.IndexOf("this.PrefetchAcceptedQuestSummaries(", StringComparison.Ordinal);
+        var system = methodBody.IndexOf("this.PrefetchAcceptedQuestSystemRows(", StringComparison.Ordinal);
+
+        Assert.True(objectives >= 0 && objectives < summaries && summaries < system);
+    }
+
+    /// <summary>
     /// Ensures accepted-quest capture starts dialogue metadata generation in a
     /// separately owned operation instead of performing sheet or database work
     /// on the framework tick.

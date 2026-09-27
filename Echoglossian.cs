@@ -133,6 +133,8 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly ConfigurationSaveCoordinator configurationSaveCoordinator;
   private QueuedTranslationBroker queuedTranslationBroker;
   private PersistenceCoordinator? persistenceCoordinator;
+  private readonly QuestPlateRuntimeCache questPlateRuntimeCache = new();
+  private QuestPlatePersistenceWriter? questPlatePersistenceWriter;
   private ReferenceTextPersistenceWriter? referenceTextPersistenceWriter;
   private LlmCapabilityObservationWriter? capabilityObservationWriter;
   private Task? persistenceCompletionTask;
@@ -272,6 +274,9 @@ public partial class Echoglossian : IDalamudPlugin
           errorLog: PluginRuntimeLog.Error);
       this.capabilityObservationWriter = new LlmCapabilityObservationWriter(this.persistenceCoordinator);
       this.referenceTextPersistenceWriter = new ReferenceTextPersistenceWriter(this.persistenceCoordinator);
+      this.questPlatePersistenceWriter = new QuestPlatePersistenceWriter(
+          this.persistenceCoordinator,
+          this.questPlateRuntimeCache);
       LlmCapabilityObservationRuntime.Register(this.capabilityObservationWriter);
       this.startupAudit.Mark(PluginStartupStage.PersistenceCoordinatorStarted);
       PluginRuntimeLog.Debug("Eglo database created or used successfully.");
@@ -617,6 +622,7 @@ public partial class Echoglossian : IDalamudPlugin
     QuestProgressResolver.Clear();
     QuestTodoProgressResolver.Clear();
     this.ClearAcceptedQuestPrefetchState();
+    this.questPlatePersistenceWriter?.DisablePublication();
     this.acceptedQuestPrefetchActionPump.Dispose();
     this.acceptedQuestDialogueMetadataOperations.Dispose();
     this.acceptedQuestDialogueMetadataGenerationCancellationSource.Dispose();

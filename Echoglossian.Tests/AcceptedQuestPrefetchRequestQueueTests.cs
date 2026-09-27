@@ -14,11 +14,11 @@ namespace Echoglossian.Tests;
 public class AcceptedQuestPrefetchRequestQueueTests
 {
   /// <summary>
-  ///     Ensures repeated UI refreshes request a quest only once until the
-  ///     background prefetch runtime dequeues it.
+  ///     Ensures repeated UI refreshes retain the quest identity through the
+  ///     processing phase, rather than releasing it on dequeue.
   /// </summary>
   [Fact]
-  public void Request_DeduplicatesQuestUntilDequeued()
+  public void Request_DeduplicatesQuestUntilTerminalCompletion()
   {
     var requests = new AcceptedQuestPrefetchRequestQueue();
 
@@ -31,6 +31,11 @@ public class AcceptedQuestPrefetchRequestQueueTests
     Assert.Equal(68799u, questId);
     Assert.Equal("JournalHandler.Translate", sources);
     Assert.Equal(0, requests.Count);
+    Assert.False(requests.Request(68799, "ToDoListHandler.Refresh", out sources));
+    Assert.Equal(
+        "JournalHandler.Translate|ToDoListHandler.Refresh",
+        sources);
+    Assert.True(requests.Complete(questId));
     Assert.True(requests.Request(68799, "JournalHandler.Translate", out sources));
   }
 
@@ -51,7 +56,7 @@ public class AcceptedQuestPrefetchRequestQueueTests
 
   /// <summary>
   ///     Ensures deduplicated requests preserve every visible quest surface
-  ///     that asked for the same accepted quest before the runtime dequeues it.
+  ///     that asked for the same accepted quest while it is queued or processing.
   /// </summary>
   [Fact]
   public void Request_MergesDistinctSourcesUntilDequeued()
@@ -70,5 +75,11 @@ public class AcceptedQuestPrefetchRequestQueueTests
     Assert.Equal(
         "JournalHandler.Translate|ToDoListHandler.Refresh",
         sources);
+
+    Assert.False(requests.Request(questId, "ScenarioTree", out sources));
+    Assert.Equal(
+        "JournalHandler.Translate|ScenarioTree|ToDoListHandler.Refresh",
+        sources);
+    Assert.True(requests.Complete(questId));
   }
 }
