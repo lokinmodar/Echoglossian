@@ -11,7 +11,8 @@ namespace Echoglossian;
 
 /// <summary>
 ///     Provides shared DB and cache operations for canonical reference-text
-///     rows.
+///     rows retained for synchronous setup compatibility. Runtime prefetch
+///     uses the coordinator-backed ReferenceTextPersistenceWriter instead.
 /// </summary>
 public partial class Echoglossian
 {

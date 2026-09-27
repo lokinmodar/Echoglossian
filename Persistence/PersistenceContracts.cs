@@ -127,4 +127,12 @@ internal sealed record PersistenceWriteRequest(
     PersistencePriority Priority,
     Func<EchoglossianDbContext, CancellationToken, Task<PersistenceWriteMutation>> ApplyAsync,
     Action PublishAfterCommit)
-    : PersistenceWriteRequestValidation(ApplyAsync, PublishAfterCommit);
+    : PersistenceWriteRequestValidation(ApplyAsync, PublishAfterCommit)
+{
+  /// <summary>
+  ///     Gets the owner-lifetime cancellation applied to the complete
+  ///     transaction.
+  /// </summary>
+  /// <value>The owner-lifetime cancellation token.</value>
+  internal CancellationToken CancellationToken { get; init; }
+}

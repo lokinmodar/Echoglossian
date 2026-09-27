@@ -5,6 +5,7 @@
 
 using Echoglossian.NativeUI.Helpers;
 using Echoglossian.Properties;
+using Echoglossian.Translators;
 
 using Xunit;
 
@@ -16,6 +17,147 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class QueuedTranslationBrokerTests
 {
+    /// <summary>Atomic admission distinguishes active work, terminal failure cooldown, and shutdown while bool callers remain compatible.</summary>
+    [Fact]
+    public async Task TryQueue_DistinguishesAdmissionReasonsAndPreservesBoolQueue()
+    {
+        using var broker = new QueuedTranslationBroker(TimeSpan.Zero, TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(2), TimeSpan.Zero, 0);
+        var resolver = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var terminal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.Equal(QueuedTranslationAdmission.Accepted,
+            broker.TryQueue("admission-key", () => resolver.Task, null, "test", _ => terminal.TrySetResult()));
+        Assert.Equal(QueuedTranslationAdmission.AlreadyInFlight,
+            broker.TryQueue("admission-key", () => Task.FromResult("unused"), null, "test", null));
+        Assert.False(broker.Queue("admission-key", () => Task.FromResult("unused")));
+        resolver.SetResult("[Translation Error: unavailable]");
+        await terminal.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.Equal(QueuedTranslationAdmission.FailureCooldown,
+            broker.TryQueue("admission-key", () => Task.FromResult("unused"), null, "test", null));
+        Assert.False(broker.Queue("admission-key", () => Task.FromResult("unused")));
+        broker.Dispose();
+        Assert.Equal(QueuedTranslationAdmission.RejectedShutdown,
+            broker.TryQueue("fresh-key", () => Task.FromResult("unused"), null, "test", null));
+        Assert.False(broker.Queue("fresh-key", () => Task.FromResult("unused")));
+    }
+
+    /// <summary>Terminal notification occurs once only after all broker rate-limit attempts fail.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Queue_TerminalFailureOccursAfterRetryExhaustion(bool throws)
+    {
+        using var broker = new QueuedTranslationBroker(TimeSpan.Zero, TimeSpan.Zero,
+            TimeSpan.FromSeconds(1), TimeSpan.Zero, maxRateLimitRetries: 2);
+        var attempts = 0;
+        var failures = 0;
+        var terminal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(broker.Queue("terminal-retry", () =>
+        {
+            Interlocked.Increment(ref attempts);
+            if (throws)
+            {
+                throw new HttpRequestException("HTTP 429 Too Many Requests");
+            }
+
+            return Task.FromResult("[translation error HTTP 429]");
+        }, _ => throw new InvalidOperationException("Failure cached as success."), "test", cancelled =>
+        {
+            Interlocked.Increment(ref failures);
+            terminal.TrySetResult(cancelled);
+        }));
+        Assert.False(await terminal.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(3, Volatile.Read(ref attempts));
+        Assert.Equal(1, Volatile.Read(ref failures));
+        Assert.False(broker.TryGetCached("terminal-retry", out _));
+    }
+
+    /// <summary>Terminal provider payloads notify once without invoking success.</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("[translation error unavailable]")]
+    public async Task Queue_TerminalPayload_NotifiesFailure(string payload)
+    {
+        using var broker = new QueuedTranslationBroker(TimeSpan.Zero, TimeSpan.Zero,
+            TimeSpan.FromSeconds(1), TimeSpan.Zero, 0);
+        var terminal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(broker.Queue("terminal-payload", () => Task.FromResult(payload),
+            _ => throw new InvalidOperationException("Invalid payload published."), "test", cancelled => terminal.TrySetResult(cancelled)));
+        Assert.False(await terminal.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.False(broker.TryGetCached("terminal-payload", out _));
+    }
+
+    /// <summary>
+    ///     Ensures expected field rejection is summarized as one warning while
+    ///     retaining terminal notification and the per-key failure cooldown.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task Queue_FieldRejection_LogsWarningAndPreservesTerminalFailureCooldown()
+    {
+        var warnings = new List<string>();
+        var errors = new List<string>();
+        var terminalCallbacks = 0;
+        var terminal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var broker = new QueuedTranslationBroker(
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(1),
+            TimeSpan.Zero,
+            maxRateLimitRetries: 0,
+            warningLog: warnings.Add,
+            errorLog: errors.Add);
+
+        Assert.True(broker.Queue(
+            "field-rejection",
+            () => throw new TranslationFieldRejectedException(
+                "Description",
+                "empty-result"),
+            _ => throw new InvalidOperationException("Rejected field was cached."),
+            "ReferenceText",
+            cancelled =>
+            {
+                Interlocked.Increment(ref terminalCallbacks);
+                terminal.TrySetResult(cancelled);
+            }));
+
+        Assert.False(await terminal.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Single(warnings);
+        Assert.Contains("Description", warnings[0], StringComparison.Ordinal);
+        Assert.Contains("empty-result", warnings[0], StringComparison.Ordinal);
+        Assert.Empty(errors);
+        Assert.Equal(1, Volatile.Read(ref terminalCallbacks));
+        Assert.False(broker.TryGetCached("field-rejection", out _));
+        Assert.False(broker.Queue("field-rejection", () => Task.FromResult("retry-too-soon")));
+    }
+
+    /// <summary>Shutdown reports cancellation for the active request and every queued subscriber.</summary>
+    [Fact]
+    public async Task Dispose_CancelsActiveAndQueuedTerminalSubscribers()
+    {
+        using var broker = new QueuedTranslationBroker(TimeSpan.Zero, TimeSpan.Zero,
+            TimeSpan.FromSeconds(30), TimeSpan.Zero, 0);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resolver = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var active = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var queued = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(broker.Queue("active-cancel", () => { entered.SetResult(); return resolver.Task; },
+            null, "test", cancelled => active.TrySetResult(cancelled)));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.True(broker.Queue("queued-cancel", () => Task.FromResult("should not execute"),
+            null, "test", cancelled => queued.TrySetResult(cancelled)));
+        broker.Dispose();
+        try
+        {
+            Assert.True(await active.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.True(await queued.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        }
+        finally
+        {
+            resolver.TrySetResult("late success");
+        }
+    }
+
     /// <summary>
     ///     Ensures error payloads do not get cached as successful
     ///     translations.

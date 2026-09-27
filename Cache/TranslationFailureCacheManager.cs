@@ -152,6 +152,48 @@ public static class TranslationFailureCacheManager
     }
 
     /// <summary>
+    ///     Determines whether one exact translation request is cached as a
+    ///     persistent failure, excluding transient runtime-only failures.
+    /// </summary>
+    /// <param name="sourceText">The exact sanitized source text.</param>
+    /// <param name="sourceLanguage">The source language code.</param>
+    /// <param name="targetLanguage">The target language code.</param>
+    /// <param name="translationEngine">The translation engine identifier.</param>
+    /// <returns>
+    ///     <see langword="true" /> when a persistent exact failure exists;
+    ///     otherwise, <see langword="false" />.
+    /// </returns>
+    public static bool ContainsPersistent(
+        string sourceText,
+        string sourceLanguage,
+        string targetLanguage,
+        int translationEngine)
+    {
+        if (string.IsNullOrWhiteSpace(sourceText))
+        {
+            return false;
+        }
+
+        var hash = TranslationFailureKey.ComputeSourceTextHash(sourceText);
+        var lookupKey = TranslationFailureKey.BuildLookupKey(
+            hash,
+            sourceLanguage,
+            targetLanguage,
+            translationEngine);
+        lock (SyncLock)
+        {
+            return Cache.TryGetValue(lookupKey, out var rows) &&
+                   rows.Any(row =>
+                       TranslationPersistenceGuard.IsPersistentFailureReason(
+                           row.FailureReason) &&
+                       string.Equals(
+                           row.SourceText,
+                           sourceText,
+                           StringComparison.Ordinal));
+        }
+    }
+
+    /// <summary>
     ///     Remembers one exact translation request as a transient runtime
     ///     failure without persisting it to the database.
     /// </summary>

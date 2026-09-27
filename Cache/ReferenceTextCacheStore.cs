@@ -16,6 +16,7 @@ namespace Echoglossian.Cache;
 public sealed class ReferenceTextCacheStore<TRow>
     where TRow : ReferenceTextRowBase
 {
+    private readonly object cacheGate = new();
     private readonly Dictionary<uint, List<TRow>> cache = [];
     private readonly string cacheName;
     private readonly Dictionary<string, Dictionary<string, string>>
@@ -58,22 +59,25 @@ public sealed class ReferenceTextCacheStore<TRow>
                 .Where(row => row.ReferenceId > 0)
                 .ToList();
 
-            this.cache.Clear();
-            foreach (var row in allRows)
+            lock (this.cacheGate)
             {
-                if (!this.cache.TryGetValue(row.ReferenceId, out var rows))
+                this.cache.Clear();
+                foreach (var row in allRows)
                 {
-                    rows = [];
-                    this.cache[row.ReferenceId] = rows;
+                    if (!this.cache.TryGetValue(row.ReferenceId, out var rows))
+                    {
+                        rows = [];
+                        this.cache[row.ReferenceId] = rows;
+                    }
+
+                    rows.Add(row);
                 }
 
-                rows.Add(row);
+                this.forwardTextLookupCache.Clear();
+                this.originalTextLookupCache.Clear();
+                this.reverseTextLookupCache.Clear();
+                Interlocked.Increment(ref this.revision);
             }
-
-            this.forwardTextLookupCache.Clear();
-            this.originalTextLookupCache.Clear();
-            this.reverseTextLookupCache.Clear();
-            Interlocked.Increment(ref this.revision);
         }
         catch (Exception ex)
         {
@@ -89,32 +93,35 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// <param name="newRecord">The row to cache.</param>
     public void Update(TRow newRecord)
     {
-        if (newRecord == null || newRecord.ReferenceId == 0)
+        lock (this.cacheGate)
         {
-            return;
+            if (newRecord == null || newRecord.ReferenceId == 0)
+            {
+                return;
+            }
+
+            if (!this.cache.TryGetValue(newRecord.ReferenceId, out var rows))
+            {
+                rows = [];
+                this.cache[newRecord.ReferenceId] = rows;
+            }
+
+            var matchingRows = rows
+                .Where(row => HasSameCacheIdentity(row, newRecord))
+                .ToList();
+            var preferredRecord = matchingRows
+                .Append(newRecord)
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(static row => row.UpdatedDate)
+                .First();
+
+            rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
+            rows.Add(preferredRecord);
+            this.forwardTextLookupCache.Clear();
+            this.originalTextLookupCache.Clear();
+            this.reverseTextLookupCache.Clear();
+            Interlocked.Increment(ref this.revision);
         }
-
-        if (!this.cache.TryGetValue(newRecord.ReferenceId, out var rows))
-        {
-            rows = [];
-            this.cache[newRecord.ReferenceId] = rows;
-        }
-
-        var matchingRows = rows
-            .Where(row => HasSameCacheIdentity(row, newRecord))
-            .ToList();
-        var preferredRecord = matchingRows
-            .Append(newRecord)
-            .OrderByDescending(GetTranslationCompletenessScore)
-            .ThenByDescending(static row => row.UpdatedDate)
-            .First();
-
-        rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
-        rows.Add(preferredRecord);
-        this.forwardTextLookupCache.Clear();
-        this.originalTextLookupCache.Clear();
-        this.reverseTextLookupCache.Clear();
-        Interlocked.Increment(ref this.revision);
     }
 
     /// <summary>
@@ -131,27 +138,30 @@ public sealed class ReferenceTextCacheStore<TRow>
         string? gameVersion,
         string sourceContentHash)
     {
-        if (referenceId == 0 ||
-            string.IsNullOrWhiteSpace(sourceContentHash))
+        lock (this.cacheGate)
         {
-            return null;
-        }
+            if (referenceId == 0 ||
+                string.IsNullOrWhiteSpace(sourceContentHash))
+            {
+                return null;
+            }
 
-        if (!this.cache.TryGetValue(referenceId, out var rows) ||
-            rows.Count == 0)
-        {
-            return null;
-        }
+            if (!this.cache.TryGetValue(referenceId, out var rows) ||
+                rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows.FirstOrDefault(row =>
-            scope.Matches(
-                row.OriginalLang,
-                row.TranslationLang,
-                row.TranslationEngine) &&
-            GameVersionLookupHelper.MatchesStoredVersion(
-            row.GameVersion,
-            gameVersion) &&
-            row.SourceContentHash == sourceContentHash);
+            return rows.FirstOrDefault(row =>
+                scope.Matches(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    row.TranslationEngine) &&
+                GameVersionLookupHelper.MatchesStoredVersion(
+                row.GameVersion,
+                gameVersion) &&
+                row.SourceContentHash == sourceContentHash);
+        }
     }
 
     /// <summary>
@@ -167,32 +177,35 @@ public sealed class ReferenceTextCacheStore<TRow>
         TranslationReuseScope scope,
         string? gameVersion)
     {
-        if (referenceId == 0)
+        lock (this.cacheGate)
         {
-            return null;
-        }
+            if (referenceId == 0)
+            {
+                return null;
+            }
 
-        if (!this.cache.TryGetValue(referenceId, out var rows) ||
-            rows.Count == 0)
-        {
-            return null;
-        }
+            if (!this.cache.TryGetValue(referenceId, out var rows) ||
+                rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows
-            .Where(row =>
-                scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine) &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion) &&
-                HasCompleteTranslation(row))
-            .OrderByDescending(row => ComputeIdentityMatchScore(
-                row,
-                gameVersion))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
+            return rows
+                .Where(row =>
+                    scope.Matches(
+                        row.OriginalLang,
+                        row.TranslationLang,
+                        row.TranslationEngine) &&
+                    GameVersionLookupHelper.MatchesStoredVersion(
+                        row.GameVersion,
+                        gameVersion) &&
+                    HasCompleteTranslation(row))
+                .OrderByDescending(row => ComputeIdentityMatchScore(
+                    row,
+                    gameVersion))
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+        }
     }
 
     /// <summary>
@@ -212,32 +225,35 @@ public sealed class ReferenceTextCacheStore<TRow>
         string originalText,
         out string translatedText)
     {
-        translatedText = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(originalText))
+        lock (this.cacheGate)
         {
+            translatedText = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(originalText))
+            {
+                return false;
+            }
+
+            if (this.TryFindTranslatedTextInScope(
+                    scope,
+                    gameVersion,
+                    originalText,
+                    out translatedText))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(gameVersion))
+            {
+                return this.TryFindTranslatedTextInScope(
+                    scope,
+                    version: null,
+                    originalText,
+                    out translatedText);
+            }
+
             return false;
         }
-
-        if (this.TryFindTranslatedTextInScope(
-                scope,
-                gameVersion,
-                originalText,
-                out translatedText))
-        {
-            return true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gameVersion))
-        {
-            return this.TryFindTranslatedTextInScope(
-                scope,
-                version: null,
-                originalText,
-                out translatedText);
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -258,32 +274,35 @@ public sealed class ReferenceTextCacheStore<TRow>
         string translatedText,
         out string originalText)
     {
-        originalText = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(translatedText))
+        lock (this.cacheGate)
         {
+            originalText = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(translatedText))
+            {
+                return false;
+            }
+
+            if (this.TryFindOriginalTextInScope(
+                    scope,
+                    gameVersion,
+                    translatedText,
+                    out originalText))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(gameVersion))
+            {
+                return this.TryFindOriginalTextInScope(
+                    scope,
+                    version: null,
+                    translatedText,
+                    out originalText);
+            }
+
             return false;
         }
-
-        if (this.TryFindOriginalTextInScope(
-                scope,
-                gameVersion,
-                translatedText,
-                out originalText))
-        {
-            return true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gameVersion))
-        {
-            return this.TryFindOriginalTextInScope(
-                scope,
-                version: null,
-                translatedText,
-                out originalText);
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -302,28 +321,31 @@ public sealed class ReferenceTextCacheStore<TRow>
         string? gameVersion,
         string originalText)
     {
-        if (string.IsNullOrWhiteSpace(originalText))
+        lock (this.cacheGate)
         {
+            if (string.IsNullOrWhiteSpace(originalText))
+            {
+                return false;
+            }
+
+            if (this.ContainsOriginalTextInScope(
+                    scope,
+                    gameVersion,
+                    originalText))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(gameVersion))
+            {
+                return this.ContainsOriginalTextInScope(
+                    scope,
+                    version: null,
+                    originalText);
+            }
+
             return false;
         }
-
-        if (this.ContainsOriginalTextInScope(
-                scope,
-                gameVersion,
-                originalText))
-        {
-            return true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gameVersion))
-        {
-            return this.ContainsOriginalTextInScope(
-                scope,
-                version: null,
-                originalText);
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -337,16 +359,19 @@ public sealed class ReferenceTextCacheStore<TRow>
         TranslationReuseScope scope,
         string? gameVersion)
     {
-        var preferredSnapshot = this.GetExactTextLookupSnapshot(
-            scope,
-            gameVersion);
-        return string.IsNullOrWhiteSpace(gameVersion)
-            ? preferredSnapshot
-            : CanonicalTextLookupSnapshot.Combine(
-                preferredSnapshot,
-                this.GetExactTextLookupSnapshot(
-                    scope,
-                    version: null));
+        lock (this.cacheGate)
+        {
+            var preferredSnapshot = this.GetExactTextLookupSnapshot(
+                scope,
+                gameVersion);
+            return string.IsNullOrWhiteSpace(gameVersion)
+                ? preferredSnapshot
+                : CanonicalTextLookupSnapshot.Combine(
+                    preferredSnapshot,
+                    this.GetExactTextLookupSnapshot(
+                        scope,
+                        version: null));
+        }
     }
 
     /// <summary>
@@ -354,14 +379,17 @@ public sealed class ReferenceTextCacheStore<TRow>
     /// </summary>
     public void Clear()
     {
-        this.cache.Clear();
-        this.forwardTextLookupCache.Clear();
-        this.originalTextLookupCache.Clear();
-        this.reverseTextLookupCache.Clear();
-        Interlocked.Increment(ref this.revision);
-        PluginRuntimeLog.Debug(
-            this.cacheName,
-            "Cleared reference-text cache.");
+        lock (this.cacheGate)
+        {
+            this.cache.Clear();
+            this.forwardTextLookupCache.Clear();
+            this.originalTextLookupCache.Clear();
+            this.reverseTextLookupCache.Clear();
+            Interlocked.Increment(ref this.revision);
+            PluginRuntimeLog.Debug(
+                this.cacheName,
+                "Cleared reference-text cache.");
+        }
     }
 
     /// <summary>

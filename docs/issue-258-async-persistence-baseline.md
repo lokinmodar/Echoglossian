@@ -50,3 +50,53 @@ changes between the two captures.
 
 Use summarized counters and lifecycle boundaries. Do not add per-frame or
 per-row production logs to obtain the measurements.
+
+## DB-2 Functional Validation - 2026-09-06/07 BRT
+
+This session validated behavior but was not a controlled before/after
+performance capture under the comparison rule above.
+
+- Build SHA-256:
+  `AE86FFC9FA436611C2492287D108027C03D02001EE1373DF767E187808A84349`.
+- Translator observed in the session log: Google Translator.
+- `Echoglossian.log` records accepted-quest and ReferenceText-adjacent activity
+  through `2026-09-06T23:33:50-03:00`, followed by plugin-owned cache teardown
+  beginning at `2026-09-06T23:33:54-03:00`.
+- `Echoglossian.db-wal` was last written at `2026-09-06 23:33:50-03:00`, showing
+  that the unload test occurred immediately after active persistence traffic.
+- The first Test 5 attempt before owner-lifetime ReferenceText cancellation
+  froze indefinitely on immediate re-enable. After the correction, the user
+  repeated Test 5 and reported no unload/reload errors.
+
+The following required comparison values were not emitted by the available
+logs and therefore remain pending: median/p95/p99 frame time, comparable FPS
+range, queue maximum depth and oldest-item age, batch and written-row counts,
+unchanged-row suppression count, SQLite busy/retry count, and comparable WAL
+write frequency. No performance claim is made from this functional session.
+
+## DB-2 final lifecycle validation — September 26, 2026 BRT
+
+This session validated the final PR head after the review corrections. It was
+not a controlled before/after performance capture.
+
+- Source commit:
+  `11591e0bca00e0ee5b62ddb55cd465673885dd73`.
+- Build SHA-256:
+  `040570BC6DF2FFEBFA73DD9854903E8BC0F206DE48B69EED321095E5258EE095`.
+- ReferenceText EventItem prefetch remained active through
+  `2026-09-26T23:10:55.217-03:00`, immediately before the manual unload.
+- Dalamud completed unload from `23:10:55.797` through `23:10:56.825` and
+  completed reload from `23:11:02.915` through `23:11:05.130`.
+- Database initialization, cache preloads, handlers, and overlays completed
+  normally after reload. ReferenceText prefetch restarted its bounded scan,
+  passed the prior row position, and translated row `2001322` by `23:13:11`.
+- The validation window contained no Echoglossian error, cancellation,
+  disposed-object, SQLite, coordinator, capacity, or shutdown-rejection
+  exception.
+- Google Translator continued to return known empty results for some inputs,
+  and Dalamud recorded several frame hitch warnings. Neither condition caused
+  an unload/reload failure or a stalled prefetch queue.
+
+The manual lifecycle regression is therefore closed for the final DB-2 code.
+The controlled performance measurements listed under **Required capture**
+remain pending, and this session makes no performance claim.

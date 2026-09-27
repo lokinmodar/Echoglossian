@@ -245,43 +245,105 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
   {
     try
     {
-      await using (var context = await this.contextFactory
-          .CreateDbContextAsync(this.shutdownCancellation.Token)
-          .ConfigureAwait(false))
+      var readSucceeded = false;
+      for (var attempt = 0; attempt < this.options.MaxAttempts; attempt++)
       {
-        this.metrics.RecordReaderStarted();
         try
         {
-          await work.ExecuteAsync(context, this.shutdownCancellation.Token).ConfigureAwait(false);
+          await using (var context = await this.contextFactory
+              .CreateDbContextAsync(this.shutdownCancellation.Token)
+              .ConfigureAwait(false))
+          {
+            this.metrics.RecordReaderStarted();
+            try
+            {
+              await work.ExecuteAsync(context, this.shutdownCancellation.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+              this.metrics.RecordReaderStopped();
+            }
+          }
+
+          readSucceeded = true;
+          break;
         }
-        finally
+        catch (OperationCanceledException exception)
         {
-          this.metrics.RecordReaderStopped();
+          if (work.CompleteCancelled(exception))
+          {
+            this.metrics.RecordCancelled();
+          }
+
+          return;
+        }
+        catch (Exception exception) when (attempt + 1 < this.options.MaxAttempts
+            && this.transientFailureClassifier(exception))
+        {
+          this.metrics.RecordRetry();
+          try
+          {
+            await this.delayAsync(this.options.RetryDelays[attempt], this.shutdownCancellation.Token)
+                .ConfigureAwait(false);
+          }
+          catch (OperationCanceledException cancellation)
+          {
+            if (work.CompleteCancelled(cancellation))
+            {
+              this.metrics.RecordCancelled();
+            }
+
+            return;
+          }
+        }
+        catch (Exception exception)
+        {
+          this.metrics.RecordTerminalFailure();
+          try
+          {
+            this.errorLog?.Invoke($"Persistence read failed for domain '{work.Key.Domain}'.");
+          }
+          catch (Exception)
+          {
+            // Host-provided diagnostics must not disrupt bounded worker progress.
+          }
+
+          work.CompleteFailed(exception);
+          return;
         }
       }
 
-      work.CompleteSucceeded();
-    }
-    catch (OperationCanceledException exception)
-    {
-      if (work.CompleteCancelled(exception))
+      if (!readSucceeded)
       {
-        this.metrics.RecordCancelled();
+        return;
       }
-    }
-    catch (Exception exception)
-    {
-      this.metrics.RecordTerminalFailure();
+
       try
       {
-        this.errorLog?.Invoke($"Persistence read failed for domain '{work.Key.Domain}'.");
+        work.Publish();
+        work.CompleteSucceeded();
       }
-      catch (Exception)
+      catch (OperationCanceledException exception)
       {
-        // Host-provided diagnostics must not disrupt bounded worker progress.
+        if (work.CompleteCancelled(exception))
+        {
+          this.metrics.RecordCancelled();
+        }
       }
+      catch (Exception exception)
+      {
+        this.metrics.RecordTerminalFailure();
+        try
+        {
+          this.errorLog?.Invoke($"Persistence read publication failed for domain '{work.Key.Domain}'.");
+        }
+        catch (Exception)
+        {
+          // Host-provided diagnostics must not disrupt bounded worker progress.
+        }
 
-      work.CompleteFailed(exception);
+        work.CompleteFailed(exception);
+      }
     }
     finally
     {
@@ -538,18 +600,27 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
   private async Task<WriteAttemptResult> ExecuteWriteAttemptAsync(IReadOnlyList<WriteWork> batch)
   {
+    var cancellationTokens = new CancellationToken[batch.Count + 1];
+    cancellationTokens[0] = this.shutdownCancellation.Token;
+    for (var index = 0; index < batch.Count; index++)
+    {
+      cancellationTokens[index + 1] = batch[index].Request.CancellationToken;
+    }
+
+    using var operationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens);
+    var operationToken = operationCancellation.Token;
     await using var context = await this.contextFactory
-        .CreateDbContextAsync(this.shutdownCancellation.Token)
+        .CreateDbContextAsync(operationToken)
         .ConfigureAwait(false);
     await using var transaction = await context.Database
-        .BeginTransactionAsync(this.shutdownCancellation.Token)
+        .BeginTransactionAsync(operationToken)
         .ConfigureAwait(false);
     try
     {
       var changed = new HashSet<WriteWork>();
       foreach (var work in batch)
       {
-        if ((await work.Request.ApplyAsync(context, this.shutdownCancellation.Token)
+        if ((await work.Request.ApplyAsync(context, operationToken)
             .ConfigureAwait(false)).Changed)
         {
           _ = changed.Add(work);
@@ -558,8 +629,8 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
 
       var affectedRows = changed.Count == 0
           ? 0
-          : await context.SaveChangesAsync(this.shutdownCancellation.Token).ConfigureAwait(false);
-      await transaction.CommitAsync(this.shutdownCancellation.Token).ConfigureAwait(false);
+          : await context.SaveChangesAsync(operationToken).ConfigureAwait(false);
+      await transaction.CommitAsync(operationToken).ConfigureAwait(false);
       return new WriteAttemptResult(changed, affectedRows);
     }
     catch
@@ -632,6 +703,8 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
     internal void MarkDequeued() => Interlocked.Exchange(ref this.dequeued, 1);
 
     internal abstract Task ExecuteAsync(EchoglossianDbContext context, CancellationToken cancellationToken);
+
+    internal abstract void Publish();
 
     internal abstract void CompleteSucceeded();
 
@@ -734,8 +807,12 @@ internal sealed class PersistenceCoordinator : IPersistenceCoordinator
         CancellationToken cancellationToken)
     {
       var value = await this.readAsync(context, cancellationToken).ConfigureAwait(false);
-      this.publish?.Invoke(value);
       this.value = value;
+    }
+
+    internal override void Publish()
+    {
+      this.publish?.Invoke(this.value!);
     }
 
     internal override void CompleteSucceeded()

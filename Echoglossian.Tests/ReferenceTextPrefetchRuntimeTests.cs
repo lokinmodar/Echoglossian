@@ -1,0 +1,1553 @@
+// <copyright file="ReferenceTextPrefetchRuntimeTests.cs" company="lokinmodar">
+// Copyright (c) lokinmodar. All rights reserved.
+// Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
+// </copyright>
+
+using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.Cache;
+using Echoglossian.DBHelpers;
+using Echoglossian.EFCoreSqlite;
+using Echoglossian.NativeUI.Helpers;
+using Echoglossian.Persistence;
+using Echoglossian.Translators;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+using PluginEntry = Echoglossian.Echoglossian;
+
+namespace Echoglossian.Tests;
+
+/// <summary>Verifies cache-first canonical prefetch behavior.</summary>
+public class ReferenceTextPrefetchRuntimeTests
+{
+    [ThreadStatic]
+    private static bool snapshotCallActive;
+
+    /// <summary>Completed rows must not cause redundant writes or translation.</summary>
+    [Fact]
+    public void CompletedRow_DoesNotPersistOrTranslate()
+    {
+        using var languageFixture = new PrefetchBrokerSourceScopeTests();
+        var payload = new ReferenceTextCanonicalPayload
+        {
+            ReferenceId = 12,
+            Name = "Actions",
+            Description = "Open actions.",
+            TranslatedName = "Acoes",
+            TranslatedDescription = "Abre acoes.",
+        };
+        var writes = 0;
+        var result = PluginEntry.RunReferenceTextPrefetchOperationEntry(
+            "MainCommandPrefetch", payload, "7.3",
+            () => new SourceClientLanguage("en", "en"),
+            new Config { Lang = 81, ChosenTransEngine = 4 },
+            (string _, out string value) => { value = string.Empty; throw new InvalidOperationException("Broker reached for completed row."); },
+            (_, _, _) => throw new InvalidOperationException("Translation queued for completed row."),
+            (_, _, _, _) => throw new InvalidOperationException("Translation started for completed row."),
+            (source, target, engine, version, original, translated) => ReferenceTextPersistenceHelper.CreateCanonicalRow<MainCommandText>(source, target, engine, version, original, translated),
+            probe => ReferenceTextPersistenceHelper.CreateCanonicalRow<MainCommandText>(probe.OriginalLang!, probe.TranslationLang!, probe.TranslationEngine, probe.GameVersion, payload, payload),
+            _ => writes++, out _, out _, out _);
+        Assert.Equal(0, writes);
+        Assert.Equal(PrefetchTranslationDispatchResult.Rejected, result);
+    }
+
+    /// <summary>Only one canonical write may publish a complete field batch.</summary>
+    [Theory]
+    [InlineData(null, null, 2)]
+    [InlineData("Acoes", null, 1)]
+    [InlineData(null, "Abre acoes.", 1)]
+    public async Task MissingFields_AreTranslatedTogetherAndCommittedAtomically(string? name, string? description, int expectedFields)
+    {
+        await using var harness = await Harness.CreateAsync();
+        if (name is not null || description is not null)
+        {
+            await harness.SeedAsync(name, description);
+        }
+
+        var calls = 0;
+        var capturedPayload = Harness.Payload();
+        var operation = harness.Start(capturedPayload, (fields, source, target, _, _) =>
+        {
+            calls++;
+            Assert.Equal(expectedFields, fields.Count);
+            Assert.Equal("en", source.PersistenceCode);
+            Assert.Equal("pt", target);
+            return Task.FromResult(new TranslationFieldBatchResult(fields.Select(field =>
+                new TranslationField(field.Name, field.Name == "Name" ? "Acoes" : "Abre acoes.")), false));
+        });
+        capturedPayload.Name = "Changed after capture";
+        capturedPayload.CategoryId = 999;
+        Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal(1, calls);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        var persisted = await context.MainCommandTexts.SingleAsync();
+        Assert.Equal("Actions", persisted.OriginalName);
+        Assert.Equal("Acoes", persisted.TranslatedName);
+        Assert.Equal("Abre acoes.", persisted.TranslatedDescription);
+        var canonical = ReferenceTextCanonicalPayload.Deserialize(persisted.CanonicalPayloadAsText)!;
+        Assert.Equal((uint)7, canonical.CategoryId);
+        Assert.Equal((uint)42, canonical.IconId);
+        Assert.Equal((uint)7, persisted.CategoryId);
+        Assert.Equal((uint)42, persisted.IconId);
+        Assert.Equal("7.3", persisted.GameVersion);
+        Assert.Equal(0, persisted.TranslationEngine);
+        Assert.Equal("Acoes", harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!)!.TranslatedName);
+    }
+
+    /// <summary>Complete rows, including unchanged text, require neither translation nor another write.</summary>
+    [Theory]
+    [InlineData(false, "Acoes", "Abre acoes.")]
+    [InlineData(true, "Acoes", "Abre acoes.")]
+    [InlineData(true, "Actions", "Open actions.")]
+    public async Task CompleteCanonicalRow_SkipsTranslationAndWrites(bool prepopulateCache, string name, string description)
+    {
+        await using var harness = await Harness.CreateAsync();
+        var row = await harness.SeedAsync(name, description);
+        if (prepopulateCache)
+        {
+            harness.Cache.Update(row);
+        }
+
+        var before = harness.Coordinator.GetMetrics();
+        Assert.True(await harness.Start(Harness.Payload(), (_, _, _, _, _) => throw new InvalidOperationException("Complete row translated.")).WaitAsync(TimeSpan.FromSeconds(5)));
+        var after = harness.Coordinator.GetMetrics();
+        Assert.Equal(before.CommittedWrites, after.CommittedWrites);
+        Assert.NotNull(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
+    }
+
+    /// <summary>A saturated background lane must leave the request retryable and allow interactive reads.</summary>
+    [Fact]
+    public async Task BackgroundCapacity_RejectedRequestRetries_InteractiveRequestIsAdmitted()
+    {
+        await using var harness = await Harness.CreateAsync(backgroundCapacity: 1);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("test", "active"), PersistencePriority.Background,
+            async (_, token) => { entered.SetResult(); await release.Task.WaitAsync(token); return 1; }, null, out var active);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("test", "queued"), PersistencePriority.Background,
+            (_, _) => Task.FromResult(1), null, out var queued);
+        var rejected = harness.Start(Harness.Payload());
+        Assert.True(rejected.IsCompletedSuccessfully);
+        Assert.False(await rejected);
+        var interactivePayload = Harness.Payload();
+        interactivePayload.ReferenceId = 13;
+        var interactive = harness.Start(interactivePayload, priority: PersistencePriority.Interactive);
+        Assert.False(interactive.IsCompleted);
+        release.SetResult();
+        await Task.WhenAll(active, queued).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(await interactive.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.True(await harness.Start(Harness.Payload()).WaitAsync(TimeSpan.FromSeconds(5)));
+    }
+
+    /// <summary>Admission never opens a context or translates on the caller while the reader is busy.</summary>
+    [Fact]
+    public async Task PendingRead_ReturnsImmediately_AndDefersTranslation()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("test", "active"), PersistencePriority.Background,
+            async (_, token) => { entered.SetResult(); await release.Task.WaitAsync(token); return 1; }, null, out _);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var translated = 0;
+        var operation = harness.Start(Harness.Payload(), (fields, _, _, _, _) =>
+        {
+            Interlocked.Increment(ref translated);
+            return Task.FromResult(Harness.Translate(fields));
+        });
+        Assert.False(operation.IsCompleted);
+        Assert.Equal(0, Volatile.Read(ref translated));
+        release.SetResult();
+        Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(5)));
+    }
+
+    /// <summary>Rejected writes retry from broker cache without losing or retranslating either field.</summary>
+    [Fact]
+    public async Task WriteBackpressure_RetriesCompleteBatchWithoutRetranslation()
+    {
+        await using var harness = await Harness.CreateAsync(backgroundCapacity: 1);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Coordinator.TryScheduleWrite(new PersistenceWriteRequest(new PersistenceWorkKey("test", "active"), PersistencePriority.Background,
+            async (_, token) => { entered.SetResult(); await release.Task.WaitAsync(token); return PersistenceWriteMutation.UnchangedResult; }, () => { }), out var active);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        harness.Coordinator.TryScheduleWrite(new PersistenceWriteRequest(new PersistenceWorkKey("test", "queued"), PersistencePriority.Background,
+            (_, _) => Task.FromResult(PersistenceWriteMutation.UnchangedResult), () => { }), out var queued);
+        var calls = 0;
+        Task<TranslationFieldBatchResult> Translate(IReadOnlyList<TranslationField> fields, SourceClientLanguage source, string target, string? origin, CancellationToken token)
+        {
+            calls++;
+            return Task.FromResult(Harness.Translate(fields));
+        }
+
+        Assert.False(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Null(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
+        release.SetResult();
+        await Task.WhenAll(active, queued).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal(1, calls);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        Assert.Equal("Abre acoes.", (await context.MainCommandTexts.SingleAsync()).TranslatedDescription);
+    }
+
+    /// <summary>Same-row concurrent read continuations share coordinator and broker work.</summary>
+    [Fact]
+    public async Task DuplicateReadAndTranslation_ProduceOneCompleteRow()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("test", "active"), PersistencePriority.Background,
+            async (_, token) => { entered.SetResult(); await release.Task.WaitAsync(token); return 1; }, null, out _);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var translations = 0;
+        Task<TranslationFieldBatchResult> Translate(IReadOnlyList<TranslationField> fields, SourceClientLanguage source, string target, string? origin, CancellationToken token)
+        {
+            Interlocked.Increment(ref translations);
+            return Task.FromResult(Harness.Translate(fields));
+        }
+
+        var first = harness.Start(Harness.Payload(), Translate);
+        var second = harness.Start(Harness.Payload(), Translate);
+        Assert.True(harness.Coordinator.GetMetrics().CoalescedOperations >= 1);
+        release.SetResult();
+        var results = await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Contains(true, results);
+        Assert.Equal(1, translations);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        var row = await context.MainCommandTexts.SingleAsync();
+        Assert.Equal("Acoes", row.TranslatedName);
+        Assert.Equal("Abre acoes.", row.TranslatedDescription);
+    }
+
+    /// <summary>Cancellation and unload prevent late translation from repopulating cleared caches.</summary>
+    [Fact]
+    public async Task CancelledGeneration_DoesNotPublish_AndRestartCanTranslate()
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var cancellation = new CancellationTokenSource();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operation = harness.Start(Harness.Payload(), async (fields, _, _, _, token) =>
+        {
+            entered.SetResult();
+            await release.Task.WaitAsync(token);
+            return Harness.Translate(fields);
+        }, cancellation.Token);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        harness.Writer.DisablePublication();
+        cancellation.Cancel();
+        harness.Cache.Clear();
+        Assert.False(await operation.WaitAsync(TimeSpan.FromSeconds(5)));
+        release.SetResult();
+        Assert.Null(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
+        await using var restarted = await Harness.CreateAsync();
+        Assert.True(await restarted.Start(Harness.Payload()).WaitAsync(TimeSpan.FromSeconds(5)));
+    }
+
+    /// <summary>Disabling publication waits for an active publisher before returning to cache clear.</summary>
+    [Fact]
+    public async Task DisablePublication_SerializesWithActivePublisher()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        var publication = Task.Run(() => harness.Writer.PublishRead(() =>
+        {
+            entered.SetResult();
+            Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
+        }));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var disablingStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var disabled = Task.Run(() => { disablingStarted.SetResult(); harness.Writer.DisablePublication(); });
+        await disablingStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(disabled.IsCompleted);
+        release.Set();
+        await Task.WhenAll(publication, disabled).WaitAsync(TimeSpan.FromSeconds(5));
+        harness.Writer.PublishRead(() => throw new InvalidOperationException("Publication occurred after disable."));
+    }
+
+    /// <summary>A replacement generation joining an old read can still publish the persisted row.</summary>
+    [Fact]
+    public async Task JoinedRead_CancelledFirstSubscriber_DoesNotSuppressReplacementCache()
+    {
+        await using var harness = await Harness.CreateAsync();
+        await harness.SeedAsync("Acoes", "Abre acoes.");
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("test", "active"), PersistencePriority.Background,
+            async (_, token) => { entered.SetResult(); await release.Task.WaitAsync(token); return 1; }, null, out _);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        using var cancellation = new CancellationTokenSource();
+        var first = harness.Start(Harness.Payload(), cancellationToken: cancellation.Token);
+        cancellation.Cancel();
+        var replacement = harness.Start(Harness.Payload());
+        release.SetResult();
+        Assert.False(await first.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.True(await replacement.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal("Acoes", harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!)!.TranslatedName);
+    }
+
+    /// <summary>Concurrent snapshots remain safe while workers replace canonical rows.</summary>
+    [Fact]
+    public async Task Cache_ConcurrentReadPublishAndClear_RemainsConsistent()
+    {
+        var cache = new ReferenceTextCacheStore<MainCommandText>("ConcurrentReferenceTextTest");
+        var row = Harness.Row("en", "pt", 0, "7.3", Harness.Payload(), Harness.Payload());
+        row.TranslatedName = "Acoes";
+        row.TranslatedDescription = "Abre acoes.";
+        await Task.WhenAll(Task.Run(() =>
+        {
+            for (var index = 0; index < 1500; index++)
+            {
+                cache.Update(row);
+                if (index % 10 == 0) { cache.Clear(); }
+            }
+        }), Task.Run(() =>
+        {
+            for (var index = 0; index < 1500; index++)
+            {
+                var found = cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", row.SourceContentHash!);
+                if (found is not null) { Assert.Equal("Acoes", found.TranslatedName); }
+                cache.GetTextLookupSnapshot(Harness.Scope, "7.3");
+                cache.TryFindTranslatedText(Harness.Scope, "7.3", "Actions", out _);
+                cache.TryFindOriginalText(Harness.Scope, "7.3", "Acoes", out _);
+                cache.ContainsOriginalText(Harness.Scope, "7.3", "Actions");
+            }
+        }));
+    }
+
+    /// <summary>A terminal provider failure finishes the attempt without writing an incomplete row.</summary>
+    [Fact]
+    public async Task TerminalTranslationFailure_CompletesAttemptWithoutWrite()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var calls = 0;
+        Assert.True(await harness.Start(Harness.Payload(), (_, _, _, _, _) =>
+        {
+            calls++;
+            throw new InvalidOperationException("Provider failed.");
+        }).WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal(1, calls);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        Assert.Empty(await context.MainCommandTexts.ToListAsync());
+    }
+
+    /// <summary>Legitimate error-like words inside translated fields must survive broker transport.</summary>
+    [Fact]
+    public async Task BatchWithUnavailableVocabulary_PersistsThroughRealBroker()
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var cancellation = new CancellationTokenSource();
+        var operation = harness.Start(Harness.Payload(), (fields, _, _, _, _) => Task.FromResult(
+            new TranslationFieldBatchResult(fields.Select(field => new TranslationField(field.Name,
+                field.Name == "Name" ? "Action unavailable" : "Displays why this action is unavailable.")), false)), cancellation.Token);
+        try
+        {
+            Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+            await using var context = await harness.Factory.CreateDbContextAsync();
+            var row = await context.MainCommandTexts.SingleAsync();
+            Assert.Equal("Action unavailable", row.TranslatedName);
+            Assert.Equal("Displays why this action is unavailable.", row.TranslatedDescription);
+        }
+        finally
+        {
+            cancellation.Cancel();
+        }
+    }
+
+    /// <summary>A rate-limited attempt stays pending until the broker retry resolves successfully.</summary>
+    [Fact]
+    public async Task RateLimitRetry_RemainsPendingAndPersistsCompleteSuccess()
+    {
+        await using var harness = await Harness.CreateAsync(maxRateLimitRetries: 1);
+        using var cancellation = new CancellationTokenSource();
+        var retryEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseRetry = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = 0;
+        var operation = harness.Start(Harness.Payload(), async (fields, _, _, _, token) =>
+        {
+            if (Interlocked.Increment(ref calls) == 1)
+            {
+                throw new HttpRequestException("HTTP 429 Too Many Requests");
+            }
+
+            retryEntered.SetResult();
+            await releaseRetry.Task.WaitAsync(token);
+            return Harness.Translate(fields);
+        }, cancellation.Token);
+        try
+        {
+            await retryEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert.False(operation.IsCompleted);
+            releaseRetry.SetResult();
+            Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(2, calls);
+            await using var context = await harness.Factory.CreateDbContextAsync();
+            var row = await context.MainCommandTexts.SingleAsync();
+            Assert.Equal("Acoes", row.TranslatedName);
+            Assert.Equal("Abre acoes.", row.TranslatedDescription);
+            Assert.Equal(1, harness.Coordinator.GetMetrics().CommittedWrites);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            releaseRetry.TrySetResult();
+        }
+    }
+
+    /// <summary>The broker timeout, rather than a separate operation timer, ends a hung provider attempt.</summary>
+    [Fact]
+    public async Task BrokerTimeout_CompletesAttemptWithoutLocalDeadline()
+    {
+        await using var harness = await Harness.CreateAsync(requestTimeout: TimeSpan.FromMilliseconds(50));
+        using var cancellation = new CancellationTokenSource();
+        var resolver = new TaskCompletionSource<TranslationFieldBatchResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operation = harness.Start(Harness.Payload(), (_, _, _, _, _) => resolver.Task, cancellation.Token);
+        try
+        {
+            Assert.True(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            resolver.TrySetResult(Harness.Translate([new TranslationField("Name", "Actions")]));
+        }
+    }
+
+    /// <summary>Exhausted coordinator failures terminate one row and let later rows proceed without repeated admission.</summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task RuntimeCursor_ExhaustedReadOrWriteFailure_AdvancesWithoutRetry(int failingContext)
+    {
+        await using var harness = await Harness.CreateAsync(failingContext: failingContext);
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var scheduled = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            scheduled.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload);
+        }
+
+        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Null(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
+        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
+        Assert.Equal(1, state.QueueIndex);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(new uint[] { 12, 13 }, scheduled);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        Assert.Equal((uint)13, (await context.MainCommandTexts.SingleAsync()).ReferenceId);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>An unexpected worker-side row construction exception is terminal and cannot repeatedly admit the failed row.</summary>
+    [Fact]
+    public async Task RuntimeCursor_UnexpectedCompletionException_AdvancesToNextRow()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var creations = 0;
+        MainCommandText Create(string source, string target, int? engine, string? version,
+            ReferenceTextCanonicalPayload original, ReferenceTextCanonicalPayload? translated)
+        {
+            if (++creations == 2)
+            {
+                throw new InvalidOperationException("Unexpected complete-row construction failure.");
+            }
+
+            return Harness.Row(source, target, engine, version, original, translated);
+        }
+
+        var scheduled = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            scheduled.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return id == 12 ? ReferenceTextPrefetchOperation.Start(harness.Writer, harness.Broker, harness.Cache,
+                context => context.MainCommandTexts, Create, payload, "7.3", new SourceClientLanguage("en", "en"),
+                Harness.Scope, "ReferenceText/MainCommand/12", (fields, _, _, _, _) => Task.FromResult(Harness.Translate(fields)),
+                CancellationToken.None) : harness.Start(payload);
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(new uint[] { 12, 13 }, scheduled);
+        Assert.Equal(2, state.QueueIndex);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Actual synthetic provider failures must not store a sibling or source fallback.</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("[Translation Error: simulated provider failure]")]
+    [InlineData("unavailable-fixture")]
+    public async Task RejectedProviderPayload_DoesNotPersistPartialOrSourceFallback(string rejected)
+    {
+        if (rejected == "unavailable-fixture")
+        {
+            rejected = global::Echoglossian.Properties.Resources.ChatGPTTranslationUnavailablePleaseCheckYourAPIKey;
+        }
+
+        await using var harness = await Harness.CreateAsync(failureRetryCooldown: TimeSpan.FromSeconds(30));
+        var translator = new PayloadTranslator(rejected);
+        var service = new TranslationService(text => text, translator);
+        Task<TranslationFieldBatchResult> Translate(IReadOnlyList<TranslationField> fields, SourceClientLanguage source,
+            string target, string? origin, CancellationToken token) => service.TranslateFieldsAsync(fields, source, target, origin, token);
+        Assert.True(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(3, translator.Calls);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        Assert.Null(harness.Cache.TryFindCanonicalMatch(12, Harness.Scope, "7.3", harness.Probe.SourceContentHash!));
+        Assert.True(await harness.Start(Harness.Payload(), Translate).WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(3, translator.Calls);
+        await using var context = await harness.Factory.CreateDbContextAsync();
+        Assert.Empty(await context.MainCommandTexts.ToListAsync());
+    }
+
+    /// <summary>A terminal broker failure advances the actual cursor once and admits the next row.</summary>
+    [Fact]
+    public async Task RuntimeCursor_TerminalTranslationFailure_AdvancesToNextRow()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var attempted = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            attempted.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload, (fields, _, _, _, _) => id == 12
+                ? throw new InvalidOperationException("Terminal provider failure")
+                : Task.FromResult(Harness.Translate(fields)));
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(0, harness.Coordinator.GetMetrics().CommittedWrites);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(new uint[] { 12, 13 }, attempted);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Pending and capacity-rejected work do not advance or cause per-tick resubmission.</summary>
+    [Fact]
+    public async Task RuntimeCursor_CapacityAndPendingRead_RemainNonblocking()
+    {
+        await using var harness = await Harness.CreateAsync(backgroundCapacity: 1);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("cursor", "active"), PersistencePriority.Background,
+            async (_, token) => { entered.SetResult(); await release.Task.WaitAsync(token); return 1; }, null, out var active);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        harness.Coordinator.TryScheduleRead(new PersistenceWorkKey("cursor", "queued"), PersistencePriority.Background,
+            (_, _) => Task.FromResult(1), null, out var queued);
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.Add(12);
+        var schedules = 0;
+        Task<bool> Schedule(uint _)
+        {
+            schedules++;
+            return harness.Start(Harness.Payload());
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(0, state.QueueIndex);
+        Assert.Equal(1, schedules);
+        release.SetResult();
+        await Task.WhenAll(active, queued).WaitAsync(TimeSpan.FromSeconds(2));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        var pending = state.Pending!;
+        Assert.NotNull(pending);
+        Assert.True(await pending.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.Equal(2, schedules);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>
+    ///     A restarted registration waits for one snapshot without blocking,
+    ///     removes only unchanged complete rows, and starts at the first pending row.
+    /// </summary>
+    [Fact]
+    public async Task RuntimeRestart_SnapshotRebuildsPendingQueueWithoutSerialCompletedReads()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var snapshot = new TaskCompletionSource<PluginEntry.ReferenceTextPrefetchSnapshotResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var snapshotAdmissions = 0;
+        var rowAdmissions = new List<uint>();
+        var rowPending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var payloads = new Dictionary<uint, ReferenceTextCanonicalPayload>
+        {
+            [12] = Harness.Payload(12),
+            [13] = Harness.Payload(13),
+            [14] = Harness.Payload(14),
+            [15] = Harness.Payload(15),
+        };
+        var completed = Harness.Row("en", "pt", 0, "7.3", payloads[12], Harness.TranslatedPayload(12));
+        var changed = Harness.Row("en", "pt", 0, "7.3", payloads[13], Harness.TranslatedPayload(13));
+        changed.SourceContentHash = "OLD-SOURCE-HASH";
+        var incomplete = Harness.Row("en", "pt", 0, "7.3", payloads[14], Harness.TranslatedPayload(14));
+        incomplete.TranslatedDescription = null;
+
+        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> Load(
+            ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest request,
+            PluginEntry.ReferenceTextPrefetchGeneration _)
+        {
+            snapshotAdmissions++;
+            Assert.Equal(4, request.Keys.Count);
+            Assert.False(string.IsNullOrWhiteSpace(request.Identity));
+            return snapshot.Task;
+        }
+
+        ReferenceTextCanonicalPayload? Capture(uint id) => payloads.GetValueOrDefault(id);
+        string? Hash(ReferenceTextCanonicalPayload payload) =>
+            Harness.Row("en", "pt", 0, "7.3", payload, null).SourceContentHash;
+        Task<bool> Schedule(uint id)
+        {
+            rowAdmissions.Add(id);
+            return rowPending.Task;
+        }
+
+        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 0, 2, Schedule));
+        Assert.Empty(state.Queue);
+        Assert.Empty(rowAdmissions);
+        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, 2, Schedule));
+        Assert.Equal(2, state.Initialization!.ReconstructionIndex);
+        Assert.Empty(state.Queue);
+        Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, 2, Schedule));
+        Assert.Equal(4, state.Initialization!.ReconstructionIndex);
+        Assert.Empty(state.Queue);
+
+        Assert.Equal(1, snapshotAdmissions);
+        snapshot.SetResult(new PluginEntry.ReferenceTextPrefetchSnapshotResult(
+            true,
+            new ReferenceTextRowBase[] { completed, changed, incomplete }));
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(1, PluginEntry.TickReferenceTextPrefetchQueue(
+            state, "generation", payloads.Keys.ToArray(), Load, Capture, Hash, 2, 2, Schedule));
+        Assert.Equal(new uint[] { 13, 14, 15 }, state.Queue);
+        Assert.Equal(new uint[] { 13 }, rowAdmissions);
+        Assert.Equal(1, snapshotAdmissions);
+        state.InvalidateGeneration();
+        rowPending.SetResult(false);
+    }
+
+    /// <summary>A large restart reconstruction advances on the production cadence independently of translation pacing.</summary>
+    [Fact]
+    public async Task RuntimeRestart_LargeRegistrationUsesIndependentProductionReconstructionCadence()
+    {
+        const int rowCount = 4000;
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var referenceIds = Enumerable.Range(1, rowCount).Select(value => (uint)value).ToArray();
+        var snapshotAdmissions = 0;
+        var rowAdmissions = new List<uint>();
+        var capturedRows = 0;
+        var maximumCapturedInOneTick = 0;
+        var lastReconstructionTickUtc = DateTime.MinValue;
+        var lastAdmissionTickUtc = DateTime.MinValue;
+        var startedUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> Load(
+            ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest _,
+            PluginEntry.ReferenceTextPrefetchGeneration __)
+        {
+            snapshotAdmissions++;
+            return Task.FromResult(new PluginEntry.ReferenceTextPrefetchSnapshotResult(true, []));
+        }
+
+        ReferenceTextCanonicalPayload Capture(uint id)
+        {
+            capturedRows++;
+            return Harness.Payload(id);
+        }
+
+        Task<bool> Schedule(uint id)
+        {
+            rowAdmissions.Add(id);
+            return Task.FromResult(true);
+        }
+
+        void Tick(int elapsedMilliseconds)
+        {
+            var budget = PluginEntry.GetDueReferenceTextPrefetchBudget(
+                startedUtc.AddMilliseconds(elapsedMilliseconds),
+                ref lastReconstructionTickUtc,
+                ref lastAdmissionTickUtc);
+            if (budget.AdmissionRows > 0)
+            {
+                _ = PluginEntry.TickReferenceTextPrefetchQueue(
+                    state,
+                    "large-generation",
+                    referenceIds,
+                    Load,
+                    Capture,
+                    _ => "SOURCE-HASH",
+                    0,
+                    budget.AdmissionRows,
+                    Schedule);
+            }
+
+            if (budget.ReconstructionRows > 0)
+            {
+                var before = capturedRows;
+                _ = PluginEntry.TickReferenceTextPrefetchInitialization(
+                    state,
+                    budget.ReconstructionRows);
+                maximumCapturedInOneTick = Math.Max(
+                    maximumCapturedInOneTick,
+                    capturedRows - before);
+            }
+        }
+
+        var elapsedMilliseconds = 0;
+        for (;
+             elapsedMilliseconds <= TimeSpan.FromSeconds(12).TotalMilliseconds && snapshotAdmissions == 0;
+             elapsedMilliseconds += 16)
+        {
+            Tick(elapsedMilliseconds);
+            await Task.Yield();
+        }
+
+        Assert.Equal(1, snapshotAdmissions);
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
+        for (;
+             elapsedMilliseconds <= TimeSpan.FromSeconds(12).TotalMilliseconds && rowAdmissions.Count == 0;
+             elapsedMilliseconds += 16)
+        {
+            Tick(elapsedMilliseconds);
+            await Task.Yield();
+        }
+
+        Assert.Equal(rowCount, capturedRows);
+        Assert.InRange(maximumCapturedInOneTick, 1, 64);
+        Assert.Equal(1, snapshotAdmissions);
+        Assert.Equal(new uint[] { 1, 2, 3, 4, 5, 6, 7, 8 }, rowAdmissions);
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>An already-completed successful read cannot publish a cache batch on the calling thread.</summary>
+    [Fact]
+    public async Task SnapshotCompletion_AlreadyCompletedSuccessPublishesCacheOnSchedulerWorker()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var generation = new PluginEntry.ReferenceTextPrefetchGeneration();
+        var inlinePublications = new System.Collections.Concurrent.ConcurrentBag<bool>();
+        var rows = Enumerable.Range(1, 64)
+            .Select(value => Harness.Row(
+                "en",
+                "pt",
+                0,
+                "7.3",
+                Harness.Payload((uint)value),
+                Harness.TranslatedPayload((uint)value)))
+            .ToArray();
+        var completion = Task.FromResult(
+            new PersistenceReadResult<IReadOnlyList<MainCommandText>>(
+                PersistenceCompletionStatus.Succeeded,
+                rows,
+                null));
+
+        Task<PluginEntry.ReferenceTextPrefetchSnapshotResult> publication;
+        snapshotCallActive = true;
+        try
+        {
+            publication = ReferenceTextPrefetchSnapshotObserver.CompleteAsync(
+                harness.Writer,
+                completion,
+                generation,
+                _ => inlinePublications.Add(snapshotCallActive));
+        }
+        finally
+        {
+            snapshotCallActive = false;
+        }
+
+        var result = await publication.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(rows.Length, inlinePublications.Count);
+        Assert.DoesNotContain(true, inlinePublications);
+        generation.Invalidate();
+    }
+
+    /// <summary>An already-completed snapshot reconstructs its large pending queue on a scheduler worker.</summary>
+    [Fact]
+    public async Task SnapshotInitialization_AlreadyCompletedSuccessReconstructsOnSchedulerWorker()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var inlineEnumerations = new System.Collections.Concurrent.ConcurrentBag<bool>();
+        var referenceIds = Enumerable.Range(1, 128).Select(value => (uint)value).ToArray();
+        var rows = referenceIds.Select(id => (ReferenceTextRowBase)Harness.Row(
+                "en",
+                "pt",
+                0,
+                "7.3",
+                Harness.Payload(id),
+                Harness.TranslatedPayload(id))).ToArray();
+        var trackedRows = new ThreadTrackingReadOnlyList<ReferenceTextRowBase>(
+            rows,
+            inlineEnumerations);
+
+        _ = PluginEntry.TickReferenceTextPrefetchQueue(
+            state,
+            "completed-success",
+            referenceIds,
+            (_, _) => Task.FromResult(
+                new PluginEntry.ReferenceTextPrefetchSnapshotResult(true, trackedRows)),
+            Harness.Payload,
+            payload => rows[(int)payload.ReferenceId - 1].SourceContentHash,
+            referenceIds.Length,
+            0,
+            _ => throw new InvalidOperationException("No pending row should be admitted."));
+        snapshotCallActive = true;
+        try
+        {
+            _ = PluginEntry.TickReferenceTextPrefetchInitialization(state, referenceIds.Length);
+        }
+        finally
+        {
+            snapshotCallActive = false;
+        }
+
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.NotEmpty(inlineEnumerations);
+        Assert.DoesNotContain(true, inlineEnumerations);
+        Assert.Empty(state.Initialization.PendingReferenceIds);
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>An already-completed rejected snapshot skips row enumeration and pending-queue reconstruction.</summary>
+    [Fact]
+    public async Task SnapshotInitialization_AlreadyCompletedRejectionSkipsBulkReconstruction()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var referenceIds = Enumerable.Range(1, 128).Select(value => (uint)value).ToArray();
+        var rejectedRows = new RejectEnumerationReadOnlyList<ReferenceTextRowBase>();
+
+        _ = PluginEntry.TickReferenceTextPrefetchQueue(
+            state,
+            "completed-rejection",
+            referenceIds,
+            (_, _) => Task.FromResult(
+                new PluginEntry.ReferenceTextPrefetchSnapshotResult(false, rejectedRows)),
+            Harness.Payload,
+            _ => "SOURCE-HASH",
+            referenceIds.Length,
+            0,
+            _ => throw new InvalidOperationException("A rejected snapshot cannot admit rows."));
+        _ = PluginEntry.TickReferenceTextPrefetchInitialization(state, referenceIds.Length);
+        await state.Initialization!.Completion!.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(0, rejectedRows.EnumerationAttempts);
+        Assert.False(state.Initialization.Succeeded);
+        Assert.Empty(state.Initialization.PendingReferenceIds);
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>An invalidated generation publishes no cache rows after its current bounded unit.</summary>
+    [Fact]
+    public async Task SnapshotPublication_GenerationReplacementStopsFurtherRows()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var generation = state.Generation;
+        var firstEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirst = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var published = new List<uint>();
+        var rows = new[]
+        {
+            Harness.Row("en", "pt", 0, "7.3", Harness.Payload(12), Harness.TranslatedPayload(12)),
+            Harness.Row("en", "pt", 0, "7.3", Harness.Payload(13), Harness.TranslatedPayload(13)),
+            Harness.Row("en", "pt", 0, "7.3", Harness.Payload(14), Harness.TranslatedPayload(14)),
+        };
+        var completion = new TaskCompletionSource<PersistenceReadResult<IReadOnlyList<MainCommandText>>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var publication = ReferenceTextPrefetchSnapshotObserver.CompleteAsync(
+            harness.Writer,
+            completion.Task,
+            generation,
+            row =>
+            {
+                published.Add(row.ReferenceId);
+                if (row.ReferenceId == 12)
+                {
+                    firstEntered.SetResult();
+                    releaseFirst.Task.GetAwaiter().GetResult();
+                }
+            });
+        completion.SetResult(new PersistenceReadResult<IReadOnlyList<MainCommandText>>(
+            PersistenceCompletionStatus.Succeeded,
+            rows,
+            null));
+        await firstEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var invalidationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var invalidationRegistration = generation.Token.Register(invalidationStarted.SetResult);
+        var invalidation = Task.Run(state.ReplaceGeneration);
+        await invalidationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        releaseFirst.SetResult();
+        await Task.WhenAll(publication, invalidation).WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(new uint[] { 12 }, published);
+        Assert.False((await publication).Succeeded);
+        Assert.NotSame(generation, state.Generation);
+    }
+
+    /// <summary>Repeated Framework ticks do not block or reschedule one incomplete operation.</summary>
+    [Fact]
+    public async Task RuntimeCursor_PendingOperation_IsNotResubmittedOnRepeatedTicks()
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.Add(12);
+        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var schedules = 0;
+        Task<bool> Schedule(uint id)
+        {
+            Assert.Equal((uint)12, id);
+            schedules++;
+            return pending.Task;
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        for (var tick = 0; tick < 100; tick++)
+        {
+            Assert.Equal(0, PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule));
+        }
+
+        Assert.Equal(1, schedules);
+        Assert.Equal(0, state.QueueIndex);
+        pending.SetResult(true);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.Equal(1, schedules);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Cancelled pending work retains its cursor; lifecycle clear cancels and discards the generation.</summary>
+    [Fact]
+    public async Task RuntimeCursor_CancelAndClear_AllowsFreshGeneration()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.Add(12);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, _ => harness.Start(Harness.Payload(), async (fields, _, _, _, token) =>
+        {
+            entered.SetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
+            return Harness.Translate(fields);
+        }, state.Cancellation.Token));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        state.Cancellation.Cancel();
+        Assert.False(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, _ => throw new InvalidOperationException("Retried in same completion tick."));
+        Assert.Equal(0, state.QueueIndex);
+
+        var plugin = (PluginEntry)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(PluginEntry));
+        var states = new Dictionary<string, PluginEntry.ReferenceTextPrefetchState> { ["test"] = state };
+        var operations = new Dictionary<string, Task<bool>> { ["old"] = Task.FromResult(false) };
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        typeof(PluginEntry).GetField("referenceTextPrefetchStates", flags)!.SetValue(plugin, states);
+        typeof(PluginEntry).GetField("referenceTextPrefetchOperations", flags)!.SetValue(plugin, operations);
+        typeof(PluginEntry).GetMethod("ClearReferenceTextPrefetchState", flags)!.Invoke(plugin, null);
+        Assert.Empty(states);
+        Assert.Empty(operations);
+
+        var restarted = new PluginEntry.ReferenceTextPrefetchState();
+        restarted.Queue.Add(13);
+        PluginEntry.TickReferenceTextPrefetchQueue(restarted, 8, id =>
+        {
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload, cancellationToken: restarted.Cancellation.Token);
+        });
+        Assert.True(await restarted.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(restarted, 8, _ => throw new InvalidOperationException("Completed row repeated."));
+        Assert.Equal(1, restarted.QueueIndex);
+        restarted.Cancellation.Dispose();
+    }
+
+    /// <summary>Overlapping background and interactive requests retain their own cancellation owners.</summary>
+    [Fact]
+    public async Task OnDemandCancellation_RegistrationResetPreservesInteractiveOperation()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var providerStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseProvider = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerCalls = 0;
+        var providerToken = CancellationToken.None;
+        async Task<TranslationFieldBatchResult> Translate(
+            IReadOnlyList<TranslationField> fields,
+            SourceClientLanguage source,
+            string target,
+            string? origin,
+            CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref providerCalls);
+            providerToken = cancellationToken;
+            providerStarted.TrySetResult();
+            await releaseProvider.Task.WaitAsync(cancellationToken);
+            return Harness.Translate(fields);
+        }
+
+        var backgroundToken = PluginEntry.ResolveReferenceTextPrefetchCancellationToken(
+            PersistencePriority.Background,
+            state.Generation.Token,
+            harness.Broker.ShutdownToken);
+        var interactiveToken = PluginEntry.ResolveReferenceTextPrefetchCancellationToken(
+            PersistencePriority.Interactive,
+            state.Generation.Token,
+            harness.Broker.ShutdownToken);
+        var background = harness.Start(
+            Harness.Payload(), Translate, backgroundToken, PersistencePriority.Background);
+        await providerStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var interactive = harness.Start(
+            Harness.Payload(), Translate, interactiveToken, PersistencePriority.Interactive);
+
+        var subscribersObserved = SpinWait.SpinUntil(
+            () => harness.Broker.InFlightSubscriberCount == 2,
+            TimeSpan.FromSeconds(2));
+        Assert.True(subscribersObserved);
+
+        state.ReplaceGeneration();
+
+        Assert.False(await background.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.False(interactive.IsCompleted);
+        Assert.False(providerToken.IsCancellationRequested);
+        releaseProvider.SetResult();
+        Assert.True(await interactive.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(1, Volatile.Read(ref providerCalls));
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>An interactive provider remains owned by broker shutdown after joining the shared runtime.</summary>
+    [Fact]
+    public async Task OnDemandCancellation_BrokerShutdownCancelsInteractiveProvider()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var providerStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerCancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task<TranslationFieldBatchResult> Translate(
+            IReadOnlyList<TranslationField> fields,
+            SourceClientLanguage source,
+            string target,
+            string? origin,
+            CancellationToken cancellationToken)
+        {
+            providerStarted.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                return Harness.Translate(fields);
+            }
+            catch (OperationCanceledException)
+            {
+                providerCancelled.TrySetResult();
+                throw;
+            }
+        }
+
+        var operation = harness.Start(
+            Harness.Payload(),
+            Translate,
+            harness.Broker.ShutdownToken,
+            PersistencePriority.Interactive);
+        await providerStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        harness.Broker.Dispose();
+
+        await providerCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.False(await operation.WaitAsync(TimeSpan.FromSeconds(2)));
+    }
+
+    /// <summary>An interactive request is re-admitted when generation cancellation wins the promotion race.</summary>
+    [Fact]
+    public async Task OnDemandCancellation_WhenGenerationWinsRace_ReadmitsInteractiveResolver()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        var firstProviderStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstProviderCancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirstProvider = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerCalls = 0;
+        async Task<TranslationFieldBatchResult> Translate(
+            IReadOnlyList<TranslationField> fields,
+            SourceClientLanguage source,
+            string target,
+            string? origin,
+            CancellationToken cancellationToken)
+        {
+            if (Interlocked.Increment(ref providerCalls) == 1)
+            {
+                firstProviderStarted.TrySetResult();
+                try
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    firstProviderCancelled.TrySetResult();
+                    await releaseFirstProvider.Task;
+                    throw;
+                }
+            }
+
+            return Harness.Translate(fields);
+        }
+
+        var background = harness.Start(
+            Harness.Payload(),
+            Translate,
+            state.Generation.Token,
+            PersistencePriority.Background);
+        await firstProviderStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        state.ReplaceGeneration();
+        await firstProviderCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var interactive = harness.Start(
+            Harness.Payload(),
+            Translate,
+            harness.Broker.ShutdownToken,
+            PersistencePriority.Interactive);
+        var replacementQueued = SpinWait.SpinUntil(
+            () => harness.Broker.PendingRequestCount == 1,
+            TimeSpan.FromSeconds(2));
+        Assert.True(replacementQueued);
+
+        releaseFirstProvider.SetResult();
+
+        Assert.False(await background.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.True(await interactive.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(2, Volatile.Read(ref providerCalls));
+        state.InvalidateGeneration();
+    }
+
+    /// <summary>A cursor encountering an exact-key failure cooldown advances without repeatedly reading or translating it.</summary>
+    [Fact]
+    public async Task RuntimeCursor_FailureCooldown_AdvancesOnceWithoutRepeatedReads()
+    {
+        await using var harness = await Harness.CreateAsync(failureRetryCooldown: TimeSpan.FromSeconds(30));
+        var calls = 0;
+        Task<TranslationFieldBatchResult> Fail(IReadOnlyList<TranslationField> fields, SourceClientLanguage source,
+            string target, string? origin, CancellationToken token)
+        {
+            calls++;
+            throw new InvalidOperationException("Terminal provider failure.");
+        }
+
+        Assert.True(await harness.Start(Harness.Payload(), Fail).WaitAsync(TimeSpan.FromSeconds(2)));
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var scheduled = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            scheduled.Add(id);
+            var payload = Harness.Payload();
+            payload.ReferenceId = id;
+            return harness.Start(payload, id == 12 ? Fail : null);
+        }
+
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(1, state.QueueIndex);
+        Assert.True(await state.Pending!.Completion.WaitAsync(TimeSpan.FromSeconds(2)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        var admissions = harness.Coordinator.GetMetrics().AcceptedOperations;
+        for (var tick = 0; tick < 10; tick++)
+        {
+            PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        }
+
+        Assert.Equal(admissions, harness.Coordinator.GetMetrics().AcceptedOperations);
+        Assert.Equal(1, calls);
+        Assert.Equal(new uint[] { 12, 13 }, scheduled);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>
+    ///     Ensures a broker-owned retry reaches the provider after a synthetic
+    ///     rate-limit response has populated the service transient-failure cache.
+    /// </summary>
+    /// <returns>The asynchronous test task.</returns>
+    [Fact]
+    public async Task SyntheticRateLimit_ServiceCacheDoesNotBlockBrokerRetryOrPersistence()
+    {
+        TranslationFailureCacheManager.Clear();
+        try
+        {
+            await using var harness = await Harness.CreateAsync(maxRateLimitRetries: 1);
+            var translator = new RateLimitedThenSuccessfulTranslator();
+            var service = new TranslationService(
+                static text => text,
+                translator,
+                translationEngine: (int)Echoglossian.TransEngines.Google,
+                isKnownFailedTranslation: TranslationFailureCacheManager.Contains,
+                recordTransientFailedTranslation: TranslationFailureCacheManager.RememberTransientFailure);
+            Task<TranslationFieldBatchResult> Translate(
+                IReadOnlyList<TranslationField> fields,
+                SourceClientLanguage source,
+                string target,
+                string? origin,
+                CancellationToken token) => service.TranslateFieldsAsync(
+                    fields,
+                    source,
+                    target,
+                    origin,
+                    token);
+            var payload = Harness.Payload();
+            payload.Description = null;
+
+            Assert.True(await harness.Start(payload, Translate).WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(2, translator.Calls);
+            Assert.Equal(1, harness.Coordinator.GetMetrics().CommittedWrites);
+            await using var context = await harness.Factory.CreateDbContextAsync();
+            var persisted = await context.MainCommandTexts.SingleAsync();
+            Assert.Equal("Acoes", persisted.TranslatedName);
+        }
+        finally
+        {
+            TranslationFailureCacheManager.Clear();
+        }
+    }
+
+    /// <summary>A synchronous initial probe exception cannot escape the Framework admission boundary.</summary>
+    [Fact]
+    public async Task Start_InitialProbeThrows_ReturnsTerminalCompletionWithoutEscaping()
+    {
+        await using var harness = await Harness.CreateAsync();
+        Task<bool>? operation = null;
+        var exception = Record.Exception(() => { operation = ReferenceTextPrefetchOperation.Start<MainCommandText>(
+            harness.Writer, harness.Broker, harness.Cache, context => context.MainCommandTexts,
+            (_, _, _, _, _, _) => throw new InvalidOperationException("Initial probe failed."), Harness.Payload(), "7.3",
+            new SourceClientLanguage("en", "en"), Harness.Scope, "ProbeTest",
+            (_, _, _, _, _) => throw new InvalidOperationException("Translator must not run."), CancellationToken.None); });
+        Assert.Null(exception);
+        Assert.True(await operation!);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().AcceptedOperations);
+
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var calls = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            calls.Add(id);
+            return id == 13 ? Task.FromResult(true) : ReferenceTextPrefetchOperation.Start<MainCommandText>(
+                harness.Writer, harness.Broker, harness.Cache, context => context.MainCommandTexts,
+                (_, _, _, _, _, _) => throw new InvalidOperationException("Initial probe failed."), Harness.Payload(), "7.3",
+                new SourceClientLanguage("en", "en"), Harness.Scope, "ProbeTest",
+                (_, _, _, _, _) => throw new InvalidOperationException("Translator must not run."), CancellationToken.None);
+        }
+
+        Assert.Null(Record.Exception(() => PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule)));
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(new uint[] { 12, 13 }, calls);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().AcceptedOperations);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Unexpected synchronous schedule exceptions finish only the bad row; cancellation retains it.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RuntimeCursor_SynchronousScheduleException_IsContained(bool cancelled)
+    {
+        var state = new PluginEntry.ReferenceTextPrefetchState();
+        state.Queue.AddRange([12, 13]);
+        var calls = new List<uint>();
+        Task<bool> Schedule(uint id)
+        {
+            calls.Add(id);
+            if (calls.Count == 1)
+            {
+                throw cancelled ? new OperationCanceledException() : new InvalidOperationException("Capture failed.");
+            }
+
+            return Task.FromResult(true);
+        }
+
+        Assert.Null(Record.Exception(() => PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule)));
+        Assert.Equal(cancelled ? 0 : 2, state.QueueIndex);
+        PluginEntry.TickReferenceTextPrefetchQueue(state, 8, Schedule);
+        Assert.Equal(2, state.QueueIndex);
+        Assert.Equal(cancelled ? new uint[] { 12, 12, 13 } : new uint[] { 12, 13 }, calls);
+        state.Cancellation.Dispose();
+    }
+
+    /// <summary>Exhausted coordinator failures have one coordinator log and no duplicate ReferenceText warning.</summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task ExhaustedPersistenceFailure_DoesNotDuplicateCoordinatorLog(int failingContext)
+    {
+        var log = new TestDoubles.CapturingPluginLog();
+        var original = PluginEntry.PluginLog;
+        PluginEntry.PluginLog = log;
+        var coordinatorLogs = 0;
+        try
+        {
+            await using var harness = await Harness.CreateAsync(failingContext: failingContext,
+                coordinatorErrorLog: _ => Interlocked.Increment(ref coordinatorLogs));
+            Assert.True(await harness.Start(Harness.Payload()).WaitAsync(TimeSpan.FromSeconds(2)));
+            Assert.Equal(1, coordinatorLogs);
+            Assert.Empty(log.WarningMessages);
+        }
+        finally
+        {
+            PluginEntry.PluginLog = original;
+        }
+    }
+
+    /// <summary>Owns a real SQLite/coordinator/broker fixture for captured prefetch operations.</summary>
+    private sealed class Harness : IAsyncDisposable
+    {
+        private readonly string directory;
+
+        /// <summary>Initializes one temporary runtime fixture.</summary>
+        private Harness(string directory, IDbContextFactory<EchoglossianDbContext> factory, PersistenceCoordinator coordinator,
+            int maxRateLimitRetries, TimeSpan? requestTimeout, TimeSpan? failureRetryCooldown)
+        {
+            this.directory = directory;
+            this.Factory = factory;
+            this.Coordinator = coordinator;
+            this.Writer = new ReferenceTextPersistenceWriter(coordinator);
+            this.Broker = new QueuedTranslationBroker(TimeSpan.Zero, failureRetryCooldown ?? TimeSpan.Zero,
+                requestTimeout ?? TimeSpan.FromSeconds(5), TimeSpan.Zero, maxRateLimitRetries);
+        }
+
+        /// <summary>Gets the fixed source/target/engine test scope.</summary>
+        internal static TranslationReuseScope Scope => new("en", "pt", 0, true);
+        /// <summary>Gets the real short-lived context factory.</summary>
+        internal IDbContextFactory<EchoglossianDbContext> Factory { get; }
+        /// <summary>Gets the bounded shared coordinator.</summary>
+        internal PersistenceCoordinator Coordinator { get; }
+        /// <summary>Gets the production writer adapter.</summary>
+        internal ReferenceTextPersistenceWriter Writer { get; }
+        /// <summary>Gets the concurrent canonical cache.</summary>
+        internal ReferenceTextCacheStore<MainCommandText> Cache { get; } = new("ReferenceTextOperationTest");
+        /// <summary>Gets the shared broker with test pacing.</summary>
+        internal QueuedTranslationBroker Broker { get; }
+        /// <summary>Gets a probe built by the production MainCommand row creator.</summary>
+        internal MainCommandText Probe => Row("en", "pt", 0, "7.3", Payload(), null);
+
+        /// <summary>Creates and migrates a temporary SQLite fixture.</summary>
+        internal static async Task<Harness> CreateAsync(int backgroundCapacity = 8, int maxRateLimitRetries = 0, TimeSpan? requestTimeout = null, int failingContext = 0, TimeSpan? failureRetryCooldown = null, Action<string>? coordinatorErrorLog = null)
+        {
+            var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            var factory = new EchoglossianDbContextRuntimeFactory(directory);
+            await using var context = await factory.CreateDbContextAsync();
+            await context.Database.MigrateAsync();
+            return new Harness(directory, factory, new PersistenceCoordinator(
+                failingContext == 0 ? factory : new FailingFactory(factory, failingContext),
+                new PersistenceCoordinatorOptions(8, backgroundCapacity, 1, 8, TimeSpan.FromMilliseconds(1), 1, [], 4, 1, TimeSpan.FromSeconds(5)),
+                errorLog: coordinatorErrorLog),
+                maxRateLimitRetries, requestTimeout, failureRetryCooldown);
+        }
+
+        /// <summary>Admits one captured request through the production operation.</summary>
+        internal Task<bool> Start(ReferenceTextCanonicalPayload payload,
+            Func<IReadOnlyList<TranslationField>, SourceClientLanguage, string, string?, CancellationToken, Task<TranslationFieldBatchResult>>? translate = null,
+            CancellationToken cancellationToken = default, PersistencePriority priority = PersistencePriority.Background)
+        {
+            return ReferenceTextPrefetchOperation.Start(this.Writer, this.Broker, this.Cache,
+                static context => context.MainCommandTexts, Row, payload, "7.3", new SourceClientLanguage("en", "en"), Scope,
+                "ReferenceText/MainCommand/" + payload.ReferenceId, translate ?? ((fields, _, _, _, _) => Task.FromResult(Translate(fields))), cancellationToken, priority);
+        }
+
+        /// <summary>Seeds canonical data through the production coordinator writer.</summary>
+        internal async Task<MainCommandText> SeedAsync(string? name, string? description)
+        {
+            var translated = Payload();
+            translated.TranslatedName = name;
+            translated.TranslatedDescription = description;
+            var row = Row("en", "pt", 0, "7.3", Payload(), translated);
+            this.Writer.TryPersist(row, static context => context.MainCommandTexts, null, out var completion);
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, (await completion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+            return row;
+        }
+
+        /// <summary>Creates an independent source payload with MainCommand metadata.</summary>
+        internal static ReferenceTextCanonicalPayload Payload(uint referenceId = 12) => new()
+        {
+            ReferenceId = referenceId, Name = "Actions", Description = "Open actions.", IconId = 42, CategoryId = 7,
+        };
+
+        /// <summary>Creates a complete deterministic translated payload.</summary>
+        internal static ReferenceTextCanonicalPayload TranslatedPayload(uint referenceId)
+        {
+            var payload = Payload(referenceId);
+            payload.TranslatedName = "Acoes";
+            payload.TranslatedDescription = "Abre acoes.";
+            return payload;
+        }
+
+        /// <summary>Provides deterministic engine output at the external-provider boundary.</summary>
+        internal static TranslationFieldBatchResult Translate(IReadOnlyList<TranslationField> fields) => new(
+            fields.Select(field => new TranslationField(field.Name, field.Name == "Name" ? "Acoes" : "Abre acoes.")), false);
+
+        /// <summary>Invokes the production metadata-sensitive MainCommand row creator.</summary>
+        internal static MainCommandText Row(string source, string target, int? engine, string? version,
+            ReferenceTextCanonicalPayload original, ReferenceTextCanonicalPayload? translated)
+        {
+            return (MainCommandText)typeof(PluginEntry).GetMethod("CreateMainCommandTextRow",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!
+                .Invoke(null, [source, target, engine, version, original, translated])!;
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            this.Writer.DisablePublication();
+            this.Broker.Dispose();
+            await this.Coordinator.DisposeAsync();
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(this.directory, true);
+        }
+    }
+
+    /// <summary>Returns real provider error payloads alongside a successfully translated sibling.</summary>
+    private sealed class PayloadTranslator(string rejected) : ITranslator
+    {
+        /// <summary>Gets the actual provider invocation count.</summary>
+        internal int Calls { get; private set; }
+
+        /// <inheritdoc />
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            this.Calls++;
+            return text.StartsWith("EGLO-FIELDS-1", StringComparison.Ordinal) ? "invalid envelope"
+                : text == "Actions" ? "Acoes" : rejected;
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage) =>
+            Task.FromResult(this.Translate(text, sourceLanguage, targetLanguage));
+    }
+
+    /// <summary>Returns a synthetic rate-limit failure before the next provider call succeeds.</summary>
+    private sealed class RateLimitedThenSuccessfulTranslator : ITranslator
+    {
+        private int calls;
+
+        /// <summary>Gets the actual provider invocation count.</summary>
+        internal int Calls => Volatile.Read(ref this.calls);
+
+        /// <inheritdoc />
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            return this.TranslateCore();
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+        {
+            return Task.FromResult<string?>(this.TranslateCore());
+        }
+
+        private string TranslateCore()
+        {
+            return Interlocked.Increment(ref this.calls) == 1
+                ? "[Translation Error: HTTP 429 Too Many Requests]"
+                : "Acoes";
+        }
+    }
+
+    /// <summary>Records the threads that enumerate a real immutable row collection.</summary>
+    private sealed class ThreadTrackingReadOnlyList<T>(
+        IReadOnlyList<T> values,
+        System.Collections.Concurrent.ConcurrentBag<bool> inlineEnumerations) : IReadOnlyList<T>
+    {
+        /// <inheritdoc />
+        public int Count => values.Count;
+
+        /// <inheritdoc />
+        public T this[int index] => values[index];
+
+        /// <inheritdoc />
+        public IEnumerator<T> GetEnumerator()
+        {
+            inlineEnumerations.Add(snapshotCallActive);
+            return values.GetEnumerator();
+        }
+
+        /// <inheritdoc />
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
+    }
+
+    /// <summary>Fails the test boundary if a rejected result tries to inspect its rows.</summary>
+    private sealed class RejectEnumerationReadOnlyList<T> : IReadOnlyList<T>
+    {
+        /// <summary>Gets the number of invalid enumeration attempts.</summary>
+        internal int EnumerationAttempts { get; private set; }
+
+        /// <inheritdoc />
+        public int Count => 0;
+
+        /// <inheritdoc />
+        public T this[int index] => throw new ArgumentOutOfRangeException(nameof(index));
+
+        /// <inheritdoc />
+        public IEnumerator<T> GetEnumerator()
+        {
+            this.EnumerationAttempts++;
+            throw new InvalidOperationException("Rejected rows must not be enumerated.");
+        }
+
+        /// <inheritdoc />
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
+    }
+
+    /// <summary>Injects one real worker context-open failure to exercise cursor retry outcomes.</summary>
+    private sealed class FailingFactory(IDbContextFactory<EchoglossianDbContext> inner, int failingContext) : IDbContextFactory<EchoglossianDbContext>
+    {
+        private int opens;
+
+        /// <inheritdoc />
+        public EchoglossianDbContext CreateDbContext() => throw new InvalidOperationException("Synchronous context creation is forbidden.");
+
+        /// <inheritdoc />
+        public Task<EchoglossianDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+        {
+            if (Interlocked.Increment(ref this.opens) == failingContext)
+            {
+                throw new InvalidOperationException("Injected worker context-open failure.");
+            }
+
+            return inner.CreateDbContextAsync(cancellationToken);
+        }
+    }
+}
