@@ -19,7 +19,18 @@ internal sealed class QuestPlateRuntimeCache
 {
     private readonly object gate = new();
     private readonly Dictionary<QuestPlateRuntimeKey, Entry> entries = [];
+    private readonly TimeSpan cooldown;
+    private readonly Func<DateTimeOffset> utcNow;
     private long generation;
+
+    /// <summary>Initializes a cache with a deterministic clock seam.</summary>
+    internal QuestPlateRuntimeCache(
+        Func<DateTimeOffset>? utcNow = null,
+        TimeSpan? cooldown = null)
+    {
+        this.utcNow = utcNow ?? (() => DateTimeOffset.UtcNow);
+        this.cooldown = cooldown ?? TimeSpan.FromSeconds(1);
+    }
 
     /// <summary>Gets the current ownership generation.</summary>
     internal long Generation => Volatile.Read(ref this.generation);
@@ -81,13 +92,60 @@ internal sealed class QuestPlateRuntimeCache
     /// <param name="completion">The terminal operation completion.</param>
     /// <returns>True only for the operation owner.</returns>
     internal bool TryRegister(QuestPlateRuntimeKey key, Task<QuestPlateRuntimeResult> completion)
+        => this.TryRegisterCore(key, completion, out _);
+
+    /// <summary>Atomically captures generation and registers one operation owner.</summary>
+    internal bool TryRegister(
+        QuestPlateRuntimeKey key,
+        TaskCompletionSource<QuestPlateRuntimeResult> completionSource,
+        out long operationGeneration)
+    {
+        ArgumentNullException.ThrowIfNull(completionSource);
+        return this.TryRegisterCore(key, completionSource.Task, out operationGeneration);
+    }
+
+    /// <summary>Atomically either registers an owner or returns the current owner completion.</summary>
+    internal bool TryRegisterOrJoin(
+        QuestPlateRuntimeKey key,
+        TaskCompletionSource<QuestPlateRuntimeResult> completionSource,
+        out long operationGeneration,
+        out Task<QuestPlateRuntimeResult>? joinedCompletion)
+    {
+        ArgumentNullException.ThrowIfNull(completionSource);
+        lock (this.gate)
+        {
+            operationGeneration = this.generation;
+            if (this.entries.TryGetValue(key, out var current))
+            {
+                if (current.Projection is null && current.CooldownUntil is not null && current.CooldownUntil <= this.utcNow())
+                {
+                    _ = this.entries.Remove(key);
+                }
+                else
+                {
+                    joinedCompletion = current.Completion;
+                    return false;
+                }
+            }
+
+            this.entries.Add(key, new Entry(completionSource, operationGeneration));
+            joinedCompletion = null;
+            return true;
+        }
+    }
+
+    private bool TryRegisterCore(
+        QuestPlateRuntimeKey key,
+        Task<QuestPlateRuntimeResult> completion,
+        out long operationGeneration)
     {
         ArgumentNullException.ThrowIfNull(completion);
         lock (this.gate)
         {
+            operationGeneration = this.generation;
             if (this.entries.TryGetValue(key, out var current))
             {
-                if (current.CooldownUntil is null || current.CooldownUntil > DateTimeOffset.UtcNow)
+                if (current.CooldownUntil is null || current.CooldownUntil > this.utcNow())
                 {
                     return false;
                 }
@@ -95,7 +153,7 @@ internal sealed class QuestPlateRuntimeCache
                 _ = this.entries.Remove(key);
             }
 
-            this.entries.Add(key, new Entry(completion, this.Generation));
+            this.entries.Add(key, new Entry(completion, operationGeneration));
             return true;
         }
     }
@@ -110,6 +168,13 @@ internal sealed class QuestPlateRuntimeCache
         {
             if (this.entries.TryGetValue(key, out var entry))
             {
+                if (entry.Projection is null && entry.CooldownUntil is not null && entry.CooldownUntil <= this.utcNow())
+                {
+                    _ = this.entries.Remove(key);
+                    completion = null!;
+                    return false;
+                }
+
                 completion = entry.Completion;
                 return true;
             }
@@ -158,8 +223,36 @@ internal sealed class QuestPlateRuntimeCache
         {
             if (this.Generation == operationGeneration && this.entries.TryGetValue(key, out var entry) && entry.Generation == operationGeneration && entry.Projection is null)
             {
-                entry.CooldownUntil = DateTimeOffset.UtcNow.AddSeconds(1);
+                entry.CooldownUntil = this.utcNow().Add(this.cooldown);
             }
+        }
+    }
+
+    /// <summary>Completes a registered operation and atomically records its terminal state.</summary>
+    internal bool Complete(
+        QuestPlateRuntimeKey key,
+        long operationGeneration,
+        QuestPlateRuntimeResult result)
+    {
+        lock (this.gate)
+        {
+            if (this.generation != operationGeneration || !this.entries.TryGetValue(key, out var entry) || entry.Generation != operationGeneration)
+            {
+                return false;
+            }
+
+            if (result.Projection is not null && result.Status is PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged)
+            {
+                entry.Projection = result.Projection.Clone();
+                entry.CooldownUntil = null;
+            }
+            else
+            {
+                entry.CooldownUntil = this.utcNow().Add(this.cooldown);
+            }
+
+            entry.Complete(result);
+            return true;
         }
     }
 
@@ -177,15 +270,33 @@ internal sealed class QuestPlateRuntimeCache
         return builder.ToString();
     }
 
-    private sealed class Entry(Task<QuestPlateRuntimeResult> completion, long generation)
+    private sealed class Entry
     {
-        internal Task<QuestPlateRuntimeResult> Completion { get; } = completion;
+        private readonly TaskCompletionSource<QuestPlateRuntimeResult>? completionSource;
+
+        internal Entry(Task<QuestPlateRuntimeResult> completion, long generation)
+        {
+            this.Completion = completion;
+            this.Generation = generation;
+        }
+
+        internal Entry(TaskCompletionSource<QuestPlateRuntimeResult> completionSource, long generation)
+        {
+            this.completionSource = completionSource;
+            this.Completion = completionSource.Task;
+            this.Generation = generation;
+        }
+
+        internal Task<QuestPlateRuntimeResult> Completion { get; }
 
         internal QuestPlate? Projection { get; set; }
 
-        internal long Generation { get; } = generation;
+        internal long Generation { get; }
 
         internal DateTimeOffset? CooldownUntil { get; set; }
+
+        internal void Complete(QuestPlateRuntimeResult result) => _ = this.completionSource?.TrySetResult(result);
+
     }
 }
 

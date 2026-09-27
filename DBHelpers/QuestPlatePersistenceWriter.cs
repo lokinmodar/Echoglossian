@@ -55,7 +55,6 @@ internal sealed class QuestPlatePersistenceWriter
     {
         ArgumentNullException.ThrowIfNull(probe);
         var capturedProbe = probe.Clone();
-        var generation = this.cache.Generation;
         var key = QuestPlateRuntimeCache.CreateKey(capturedProbe, scope);
         if (this.cache.TryGet(capturedProbe, scope, out var cached))
         {
@@ -64,10 +63,9 @@ internal sealed class QuestPlatePersistenceWriter
         }
 
         var gate = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (!this.cache.TryRegister(key, gate.Task))
+        if (!this.cache.TryRegisterOrJoin(key, gate, out var generation, out var existing))
         {
-            _ = this.cache.TryGetCompletion(key, out var existing);
-            completion = existing.ContinueWith(
+            completion = existing!.ContinueWith(
                 static task => new PersistenceReadResult<QuestPlate?>(task.Result.Status, task.Result.Projection, null),
                 CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously,
@@ -82,14 +80,11 @@ internal sealed class QuestPlatePersistenceWriter
             {
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, this.cancellation.Token);
                 var candidates = await QuestPlatePersistencePolicy.LoadReadCandidatesAsync(context, capturedProbe, scope, linked.Token).ConfigureAwait(false);
-                return Echoglossian.SelectPreferredQuestPlate(candidates, capturedProbe, scope)?.Clone();
+                return QuestPlatePersistencePolicy.SelectForRead(candidates, capturedProbe, scope)?.Clone();
             },
             projection =>
             {
-                if (projection is not null && Volatile.Read(ref this.publicationEnabled) != 0)
-                {
-                    _ = this.cache.Publish(key, generation, projection);
-                }
+                // The cache is completed only by the terminal continuation below.
             },
             out completion);
 
@@ -98,11 +93,13 @@ internal sealed class QuestPlatePersistenceWriter
             {
                 var result = task.Result;
                 var projection = result.Status == PersistenceCompletionStatus.Succeeded ? result.Value?.Clone() : null;
-                gate.TrySetResult(new QuestPlateRuntimeResult(result.Status, projection));
-                if (projection is null)
+                var terminal = new QuestPlateRuntimeResult(result.Status, projection);
+                if (Volatile.Read(ref this.publicationEnabled) != 0)
                 {
-                    this.cache.RemoveOperation(key, generation);
+                    _ = this.cache.Complete(key, generation, terminal);
                 }
+
+                _ = gate.TrySetResult(terminal);
             },
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
@@ -119,21 +116,26 @@ internal sealed class QuestPlatePersistenceWriter
     {
         ArgumentNullException.ThrowIfNull(plate);
         var captured = plate.Clone();
-        var generation = this.cache.Generation;
         var key = QuestPlateRuntimeCache.CreateKey(captured, scope);
+        var gate = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!this.cache.TryRegisterOrJoin(key, gate, out var generation, out var existing))
+        {
+            completion = existing!.ContinueWith(
+                static task => new PersistenceWriteResult(task.Result.Status, 0, null),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+            return PersistenceAdmissionStatus.Joined;
+        }
+
         QuestPlate? persisted = null;
-        return this.coordinator.TryScheduleWrite(
+        var status = this.coordinator.TryScheduleWrite(
             new PersistenceWriteRequest(
-                new PersistenceWorkKey("quest-plate-write", key.Value),
+                new PersistenceWorkKey("quest-plate", key.Value),
                 priority,
                 async (context, token) =>
                 {
-                    var candidates = await context.QuestPlate.Where(row =>
-                        row.TranslationEngine == captured.TranslationEngine &&
-                        row.GameVersion == captured.GameVersion &&
-                        ((captured.QuestId != null && row.QuestId == captured.QuestId) ||
-                         (captured.QuestName != null && row.QuestName == captured.QuestName)))
-                        .ToListAsync(token).ConfigureAwait(false);
+                    var candidates = await QuestPlatePersistencePolicy.LoadSaveCandidatesAsync(context, captured, token).ConfigureAwait(false);
                     var existing = QuestPlatePersistencePolicy.SelectForSave(candidates, captured);
                     if (existing is null)
                     {
@@ -153,18 +155,69 @@ internal sealed class QuestPlatePersistenceWriter
                 },
                 () =>
                 {
-                    if (persisted is not null && Volatile.Read(ref this.publicationEnabled) != 0)
-                    {
-                        _ = this.cache.Publish(key, generation, persisted);
-                    }
+                    // Completion below publishes only after this committed callback.
                 }) { CancellationToken = this.cancellation.Token },
             out completion);
+
+        _ = completion.ContinueWith(
+            task =>
+            {
+                var result = task.Result;
+                var projection = result.Status is PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged
+                    ? persisted?.Clone()
+                    : null;
+                var terminal = new QuestPlateRuntimeResult(result.Status, projection);
+                if (Volatile.Read(ref this.publicationEnabled) != 0)
+                {
+                    _ = this.cache.Complete(key, generation, terminal);
+                }
+
+                _ = gate.TrySetResult(terminal);
+            },
+            CancellationToken.None,
+            TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
+        return status;
     }
 }
 
 /// <summary>Contains pure QuestPlate read candidate and selection policy.</summary>
 internal static class QuestPlatePersistencePolicy
 {
+    /// <summary>Selects a runtime row with the legacy QuestId/message/name fallback order.</summary>
+    internal static QuestPlate? SelectForRead(
+        IEnumerable<QuestPlate> candidates,
+        QuestPlate probe,
+        TranslationReuseScope scope)
+    {
+        var hasQuestId = !string.IsNullOrWhiteSpace(probe.QuestId);
+        if (hasQuestId)
+        {
+            var byId = Echoglossian.SelectPreferredQuestPlate(candidates.Where(row => row.QuestId == probe.QuestId), probe, scope);
+            if (byId is not null)
+            {
+                return byId;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(probe.OriginalQuestMessage))
+        {
+            var messageCandidates = candidates.Where(row =>
+                row.QuestName == probe.QuestName &&
+                row.OriginalQuestMessage == probe.OriginalQuestMessage &&
+                (!hasQuestId || row.QuestId == probe.QuestId || string.IsNullOrEmpty(row.QuestId)));
+            var byMessage = Echoglossian.SelectPreferredQuestPlate(messageCandidates, probe, scope);
+            if (byMessage is not null)
+            {
+                return byMessage;
+            }
+        }
+
+        return hasQuestId
+            ? null
+            : Echoglossian.SelectPreferredQuestPlate(candidates.Where(row => row.QuestName == probe.QuestName), probe, scope);
+    }
+
     /// <summary>Loads the finite candidate set needed by the legacy read order.</summary>
     internal static Task<List<QuestPlate>> LoadReadCandidatesAsync(EchoglossianDbContext context, QuestPlate probe, TranslationReuseScope scope, CancellationToken cancellationToken)
     {
@@ -173,6 +226,21 @@ internal static class QuestPlatePersistencePolicy
                 ((probe.QuestId != null && row.QuestId == probe.QuestId) ||
                  (probe.QuestName != null && row.QuestName == probe.QuestName)))
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>Loads the complete finite candidate set used by legacy save lookup.</summary>
+    internal static Task<List<QuestPlate>> LoadSaveCandidatesAsync(EchoglossianDbContext context, QuestPlate probe, CancellationToken cancellationToken)
+    {
+        var query = context.QuestPlate.Where(row =>
+            row.TranslationEngine == probe.TranslationEngine &&
+            ((probe.QuestId != null && row.QuestId == probe.QuestId) ||
+             (probe.QuestName != null && row.QuestName == probe.QuestName)));
+        if (!string.IsNullOrWhiteSpace(probe.GameVersion))
+        {
+            query = query.Where(row => row.GameVersion == probe.GameVersion);
+        }
+
+        return query.ToListAsync(cancellationToken);
     }
 
     /// <summary>Selects a row using the established QuestId, message, name order.</summary>

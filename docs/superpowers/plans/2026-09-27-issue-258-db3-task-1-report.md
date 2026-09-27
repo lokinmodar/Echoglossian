@@ -83,3 +83,23 @@ terminal cooldown rather than immediately admitting another operation.
   a pure equivalent for its managed inputs, but a complete differential suite
   against every historic `DbOperations` merge edge remains desirable before
   expanding its runtime callers.
+
+## Replacement correction (2026-09-27)
+
+- The runtime cache now atomically captures an owner generation at admission,
+  performs generation-qualified terminal publication under the same lock, and
+  clears expired terminal entries during the joining lookup. A reload cannot
+  publish an old completion into, or leave a completion blocking, its
+  replacement generation.
+- Reads and writes use the same `QuestPlateRuntimeKey` registry. A write now
+  joins queued, claimed, or processing work rather than bypassing the registry;
+  rejected, failed, cancelled, and empty terminal outcomes retain the bounded
+  cooldown.
+- The async read selector restores the legacy QuestId, message, then name-only
+  fallback filters. The save candidate query retains legacy engine and optional
+  game-version filtering before the shared legacy selector/merge routines.
+- RED evidence: focused test compilation failed for the new deterministic
+  cache-generation/cooldown and fallback-policy contracts. GREEN evidence:
+  `dotnet test Echoglossian.Tests\\Echoglossian.Tests.csproj -c Debug --filter
+  FullyQualifiedName~QuestPlatePersistenceWriterTests --no-restore
+  -p:VSTestMaxCpuCount=1` passed 6/6. Existing solution warnings remain.

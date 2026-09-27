@@ -81,6 +81,67 @@ public sealed class QuestPlatePersistenceWriterTests
     }
 
     /// <summary>
+    ///     Ensures a terminal empty operation blocks frame-style retry only until
+    ///     the injected cooldown clock expires.
+    /// </summary>
+    [Fact]
+    public void RuntimeCache_EmptyCompletion_AdmitsRetryAfterCooldown()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var cache = new QuestPlateRuntimeCache(() => now, TimeSpan.FromSeconds(1));
+        var key = QuestPlateRuntimeCache.CreateKey(CreatePlate(), new TranslationReuseScope("en", "pt-BR", 1, true));
+        var first = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Assert.True(cache.TryRegister(key, first, out var generation));
+        Assert.True(cache.Complete(key, generation, new QuestPlateRuntimeResult(PersistenceCompletionStatus.Succeeded, null)));
+        Assert.True(cache.TryGetCompletion(key, out _));
+
+        now = now.AddSeconds(1);
+        Assert.False(cache.TryGetCompletion(key, out _));
+        Assert.True(cache.TryRegister(key, new TaskCompletionSource<QuestPlateRuntimeResult>(), out _));
+    }
+
+    /// <summary>
+    ///     Ensures a generation replacement atomically rejects an old owner and
+    ///     lets the replacement own the same key.
+    /// </summary>
+    [Fact]
+    public void RuntimeCache_ReloadRace_DoesNotPublishOrBlockReplacement()
+    {
+        var cache = new QuestPlateRuntimeCache();
+        var key = QuestPlateRuntimeCache.CreateKey(CreatePlate(), new TranslationReuseScope("en", "pt-BR", 1, true));
+        var oldOwner = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(cache.TryRegister(key, oldOwner, out var oldGeneration));
+
+        _ = cache.AdvanceGeneration();
+        var replacement = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(cache.TryRegister(key, replacement, out var replacementGeneration));
+        Assert.False(cache.Complete(key, oldGeneration, new QuestPlateRuntimeResult(PersistenceCompletionStatus.Succeeded, CreatePlate())));
+        Assert.True(cache.Complete(key, replacementGeneration, new QuestPlateRuntimeResult(PersistenceCompletionStatus.Succeeded, CreatePlate())));
+        Assert.True(cache.TryGet(CreatePlate(), new TranslationReuseScope("en", "pt-BR", 1, true), out _));
+    }
+
+    /// <summary>
+    ///     Ensures the async read policy retains the legacy message fallback
+    ///     exclusion for a row belonging to a different canonical QuestId.
+    /// </summary>
+    [Fact]
+    public void SelectForRead_QuestIdMiss_DoesNotReuseDifferentQuestIdMessageRow()
+    {
+        var probe = CreatePlate();
+        var other = CreatePlate();
+        other.QuestId = "other";
+        other.Id = 99;
+
+        var selected = QuestPlatePersistencePolicy.SelectForRead(
+            [other],
+            probe,
+            new TranslationReuseScope("en", "pt-BR", 1, true));
+
+        Assert.Null(selected);
+    }
+
+    /// <summary>
     ///     Ensures the coordinator-backed write merges a later translation and
     ///     publishes the committed result to the shared projection.
     /// </summary>
