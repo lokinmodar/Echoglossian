@@ -1094,19 +1094,19 @@ public class QuestAddonHandlerLifecycleTests
         var fallbackResolver = typeof(ToDoListHandler).GetMethod(
             "TryResolveToDoListFallbackQuestTitle",
             BindingFlags.Instance | BindingFlags.NonPublic);
-        var findByName = typeof(QuestAddonHandlerBase).GetMethod(
-            "FindQuestPlateByName",
+        var findCacheFirst = typeof(QuestAddonHandlerBase).GetMethod(
+            "FindQuestPlateCacheFirst",
             BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.NotNull(resolver);
         Assert.NotNull(fallbackResolver);
-        Assert.NotNull(findByName);
+        Assert.NotNull(findCacheFirst);
         Assert.True(
             MethodReferences(resolver!, fallbackResolver!),
             "ToDoList must attempt a persisted quest-title fallback before waiting on live todo progress.");
         Assert.True(
-            MethodReferences(fallbackResolver!, findByName!),
-            "ToDoList persisted quest-title fallback must reuse the shared QuestPlate lookup by name.");
+            MethodReferences(fallbackResolver!, findCacheFirst!),
+            "ToDoList persisted quest-title fallback must reuse the shared cache-first QuestPlate lookup.");
     }
 
     /// <summary>

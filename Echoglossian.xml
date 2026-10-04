@@ -6795,6 +6795,15 @@
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.FindQuestPlateCacheFirst(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage)">
+            <summary>
+                Resolves a committed QuestPlate cache projection and admits exactly
+                one shared interactive read for a cache miss without blocking an
+                addon callback.
+            </summary>
+            <param name="questPlate">The managed QuestPlate lookup payload.</param>
+            <returns>A committed cloned projection when present; otherwise null.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
             <summary>
                 Handles the quest probe command.
@@ -21947,6 +21956,15 @@
             <param name="questPlate">The quest plate to look up.</param>
             <returns>The matching quest plate, if one exists.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.FindQuestPlateCacheFirst(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage)">
+            <summary>
+                Resolves a committed QuestPlate projection, scheduling a shared
+                non-blocking lookup when the projection is not cached.
+            </summary>
+            <param name="questPlate">The managed callback-captured lookup payload.</param>
+            <param name="sourceLanguage">The source language captured by the callback.</param>
+            <returns>The committed projection when already available.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerBase.FindQuestPopupText(Echoglossian.EFCoreSqlite.Models.Journal.QuestPopupText)">
             <summary>
                 Resolves dedicated popup text using the popup lookup delegate.
@@ -22257,6 +22275,12 @@
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.FindQuestPlateByName">
             <summary>Gets or sets the name-only quest lookup delegate.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.FindQuestPlateCacheFirst">
+            <summary>
+                Gets or sets the non-blocking cache-first QuestPlate lookup delegate
+                used by callback-reachable quest surfaces.
+            </summary>
         </member>
         <member name="P:Echoglossian.NativeUI.AddonHandlers.Quest.QuestAddonHandlerDependencies.FindQuestPopupText">
             <summary>Gets or sets the dedicated popup-text lookup delegate.</summary>
